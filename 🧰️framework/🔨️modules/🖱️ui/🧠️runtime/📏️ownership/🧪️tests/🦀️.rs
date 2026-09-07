@@ -322,13 +322,13 @@ fn surface_ownership_transfer_preserves_backing_without_allocating_replacement()
     let mut source = SurfaceFixedVec::<u64, 4>::default();
     for value in case["values"].as_array().unwrap() { source.try_push(value.as_u64().unwrap()).unwrap(); }
     let original = source.entries.as_ptr();
-    let original_bytes = std::mem::size_of_val(source.entries.as_ref());
+    let original_bytes = size_of_val(source.entries.as_ref());
     let mut moved = source.take_all();
     assert_eq!(moved.entries.as_ptr(), original);
-    assert_eq!(std::mem::size_of_val(moved.entries.as_ref()), original_bytes);
+    assert_eq!(size_of_val(moved.entries.as_ref()), original_bytes);
     assert_eq!(serde_json::to_value(moved.iter().copied().collect::<Vec<_>>()).unwrap(), case["values"]);
     assert_eq!(source.len(), case["sourceItems"].as_u64().unwrap() as usize);
-    let source_bytes = std::mem::size_of_val(source.entries.as_ref());
+    let source_bytes = size_of_val(source.entries.as_ref());
     while moved.pop().is_some() {}
     eprintln!("[DEBUG] surface-backing-transfer source-bytes={source_bytes} moved-bytes={original_bytes}");
     assert_eq!(source_bytes, case["sourceBackingBytes"].as_u64().unwrap() as usize, "a moved-from owner must not allocate a replacement full backing");
@@ -341,7 +341,7 @@ fn surface_ownership_transfer_preserves_backing_without_allocating_replacement()
     assert_eq!(returned, case["rejectedPayload"].as_str().unwrap());
     assert_eq!(returned.as_ptr(), pointer);
     assert_eq!(returned.capacity(), capacity);
-    assert_eq!(std::mem::size_of_val(source.entries.as_ref()), 0);
+    assert_eq!(size_of_val(source.entries.as_ref()), 0);
     assert!(source.is_empty());
     assert!(moved.is_empty());
     eprintln!("[DEBUG] surface-moved-source rejected-exact-payload=true payload-capacity={capacity} replacement-bytes=0");
@@ -395,7 +395,7 @@ fn surface_ownership_finalize_transfers_exact_record_and_index_allocations() {
     assert_eq!(reconciler.assembly.root_identity(), records);
     assert_eq!(reconciler.key_index.entries.entries.as_ptr(), indexes);
     assert!(cursor.assembly.terminal_is_empty());
-    assert_eq!(std::mem::size_of_val(cursor.new_key_index.entries.entries.as_ref()), 0);
+    assert_eq!(size_of_val(cursor.new_key_index.entries.entries.as_ref()), 0);
     let mut complete = false;
     for _ in 0..10_000 { if cursor.retire_one() { complete = true; break; } }
     assert!(complete);

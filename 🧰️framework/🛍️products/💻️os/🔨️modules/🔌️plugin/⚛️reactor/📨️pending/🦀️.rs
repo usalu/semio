@@ -135,7 +135,7 @@ impl PendingPatchAuthority {
                 Ok(None)
             }
             PendingPatchOwner::External(patch) => {
-                if admitted_bytes < std::mem::size_of::<UiPatch>() {
+                if admitted_bytes < size_of::<UiPatch>() {
                     return Ok(None);
                 }
                 *self.turn_handback.source_mut()? = patch.source_mut()?.take();

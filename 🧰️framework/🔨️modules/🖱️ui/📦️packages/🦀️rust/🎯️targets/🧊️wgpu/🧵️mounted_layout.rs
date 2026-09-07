@@ -23,7 +23,6 @@ pub(crate) enum MountedLayoutFault {
     GlyphCredits,
     DepthCredits,
     Stale,
-    RevisionExhausted,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -222,6 +221,7 @@ pub(crate) struct MountedLayoutJob {
     publish_cursor: usize,
     publication_committed: bool,
     close_requested: bool,
+    #[cfg(test)]
     worker_thread_observed: bool,
     fault: Option<MountedLayoutFault>,
     text_worker: DeterministicTextWorker,
@@ -273,6 +273,7 @@ impl MountedLayoutJob {
             publish_cursor: 0,
             publication_committed: false,
             close_requested: false,
+            #[cfg(test)]
             worker_thread_observed: false,
             fault: None,
             text_worker: DeterministicTextWorker::default(),
@@ -408,7 +409,8 @@ impl MountedLayoutJob {
     }
 
     fn worker_one(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-        self.worker_thread_observed = std::thread::current().name().is_some_and(|name| name.starts_with("semio-pool-worker-"));
+        #[cfg(test)]
+        { self.worker_thread_observed = std::thread::current().name().is_some_and(|name| name.starts_with("semio-pool-worker-")); }
         if self.close_requested || cx.is_cancelled() {
             return semio_framework_job::StepOutcome::Cancelled;
         }
@@ -583,6 +585,7 @@ impl MountedLayoutJob {
         self.glyph_previews.get(self.glyph_cursor.saturating_sub(1)).copied()
     }
 
+    #[cfg(test)]
     pub(crate) fn worker_thread_observed(&self) -> bool {
         self.worker_thread_observed
     }
@@ -639,6 +642,7 @@ impl MountedLayoutJob {
             LayoutJobStage::MeasureFallback => "Layout.MeasureFallback",
             LayoutJobStage::ArrangeFallback => "Layout.ArrangeFallback",
             LayoutJobStage::PublishResults => "Layout.PublishResults",
+            #[cfg(test)]
             _ => "Layout.CursorBoundary",
         }
     }
@@ -694,7 +698,6 @@ impl MountedLayoutFault {
             Self::GlyphCredits => "layout.glyph-credits",
             Self::DepthCredits => "layout.depth-credits",
             Self::Stale => "layout.stale",
-            Self::RevisionExhausted => "layout.revision-exhausted",
         }
     }
 }

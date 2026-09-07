@@ -16,7 +16,7 @@ pub struct ApplyAnimation {
 impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyAnimation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "apply", entity: "animation", kind: "apply-animation", record: "ApplyAnimation" };
 
-    fn diff(&self, base: &SemioSnapshot) -> protocol::MutationOutcome<<SemioMutation as protocol::Mutation<SemioSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioSnapshot) -> protocol::MutationOutcome<<SemioMutation as Mutation<SemioSnapshot>>::Diff> {
         agg_diff(&SemioMutation::ApplyAnimation(self.clone()), base)
     }
     fn inverse(&self, base: &SemioSnapshot) -> Vec<SemioMutation> {

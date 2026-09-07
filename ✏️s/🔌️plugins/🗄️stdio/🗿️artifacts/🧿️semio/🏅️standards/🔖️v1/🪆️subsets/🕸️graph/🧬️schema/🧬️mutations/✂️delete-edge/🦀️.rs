@@ -1,6 +1,6 @@
 //! ✂️ `delete-edge` — removes an id-keyed edge; no cascade needed (edges don't own other entities).
 
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::{SemioGraphMutation, create_edge};
+use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload

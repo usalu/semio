@@ -15,7 +15,7 @@ pub struct SetGlobalColorTable {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetGlobalColorTable {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "global-color-table", kind: "set-global-color-table", record: "SetGlobalColorTable" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as protocol::Mutation<GifSnapshot>>::Diff> {
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
         agg_diff(&GifMutation::SetGlobalColorTable(self.clone()), base)
     }
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {

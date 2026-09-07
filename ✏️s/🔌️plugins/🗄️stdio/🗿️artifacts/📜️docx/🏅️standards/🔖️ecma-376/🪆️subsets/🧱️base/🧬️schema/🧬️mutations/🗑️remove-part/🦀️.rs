@@ -14,7 +14,7 @@ pub struct RemovePart {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemovePart {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "part", kind: "remove-part", record: "RemovePart" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as protocol::Mutation<DocxSnapshot>>::Diff> {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
         agg_diff(&DocxMutation::RemovePart(self.clone()), base)
     }
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {

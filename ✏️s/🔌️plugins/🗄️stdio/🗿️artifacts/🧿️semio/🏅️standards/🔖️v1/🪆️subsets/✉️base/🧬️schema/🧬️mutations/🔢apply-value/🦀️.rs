@@ -16,7 +16,7 @@ pub struct ApplyValue {
 impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyValue {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "apply", entity: "value", kind: "apply-value", record: "ApplyValue" };
 
-    fn diff(&self, base: &SemioSnapshot) -> protocol::MutationOutcome<<SemioMutation as protocol::Mutation<SemioSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioSnapshot) -> protocol::MutationOutcome<<SemioMutation as Mutation<SemioSnapshot>>::Diff> {
         agg_diff(&SemioMutation::ApplyValue(self.clone()), base)
     }
     fn inverse(&self, base: &SemioSnapshot) -> Vec<SemioMutation> {

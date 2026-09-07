@@ -123,13 +123,13 @@ impl Page {
 const RETAINED_STATE_ENTRIES: usize = 64;
 
 pub struct StateCursorControl {
-    cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    cancelled: Arc<std::sync::atomic::AtomicBool>,
     deadline: std::time::Instant,
     fuel: usize,
 }
 
 impl StateCursorControl {
-    pub fn new(cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>, deadline: std::time::Instant, fuel: usize) -> Result<Self, DbError> {
+    pub fn new(cancelled: Arc<std::sync::atomic::AtomicBool>, deadline: std::time::Instant, fuel: usize) -> Result<Self, DbError> {
         if fuel == 0 {
             return Err(DbError::LimitExceeded("state cursor fuel"));
         }
@@ -1755,7 +1755,7 @@ mod tests {
     //#region 🔖️Pages
     #[semio_framework_async_macros::async_test]
     async fn retained_state_exact_backing_cancel_capacity_and_close_are_hostile() {
-        let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let mut control = StateCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
         let mut source = Vec::with_capacity(db_storage::DB_IO_PAGE_BYTES + 1);
         source.push(0x41);
@@ -1796,7 +1796,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn retained_state_sorted_fixed_capacity_hash_and_terminal_close_are_deterministic() {
         let mut map = RetainedStateMap::new();
-        let mut control = StateCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
+        let mut control = StateCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
         for index in (0..RETAINED_STATE_ENTRIES).rev() {
             let entry = StateEntry::try_admit(&format!("key-{index:02}"), vec![index as u8], 1, &mut control).await.unwrap();
             assert!(map.insert(entry).unwrap().is_none());

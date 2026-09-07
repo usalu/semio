@@ -15,7 +15,7 @@ pub struct InsertVmlPart {
 impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for InsertVmlPart {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "vml-part", kind: "insert-vml-part", record: "InsertVmlPart" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxStrictMutation as protocol::Mutation<DocxSnapshot>>::Diff> {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxStrictMutation as Mutation<DocxSnapshot>>::Diff> {
         agg_diff(&DocxStrictMutation::InsertVmlPart(self.clone()), base)
     }
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxStrictMutation> {

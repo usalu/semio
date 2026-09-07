@@ -9,10 +9,10 @@ use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin,
 /// 🗃️ Closed runtime app fleet for both GIS artifact surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum GisApps: PluginApp {
-        Gis2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::gis2d::Gis2dPlayApp>>),
-        GisMapViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::gismap::GisMapViewer>>),
-        Gis3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::gis3d::Gis3dPlayApp>>),
-        GisTerrainViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::gisterrain::GisTerrainViewer>>),
+        Gis2dEditor(VcsArtifactApp<EditorApp<crate::editor::gis2d::Gis2dPlayApp>>),
+        GisMapViewer(VcsArtifactApp<ViewerApp<crate::viewer::gismap::GisMapViewer>>),
+        Gis3dEditor(VcsArtifactApp<EditorApp<crate::editor::gis3d::Gis3dPlayApp>>),
+        GisTerrainViewer(VcsArtifactApp<ViewerApp<crate::viewer::gisterrain::GisTerrainViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -23,14 +23,14 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// automatically by each `.editor()` call below. `.editor()`/`.viewer()` (ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) replace the retired `.document_app()` — each
 /// subset now registers an independent editor and viewer surface.
-pub fn plugin() -> Result<Plugin<GisApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
     Plugin::<GisApps>::builder("gis")
         .label("GIS")
         .version("0.1.0")
         .package_id("semio:gis")
         .artifact_kind(crate::artifacts::gismap::artifact_kind())
-        .artifact(crate::artifacts::gismap::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .artifact(crate::artifacts::gisterrain::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::gismap::declaration().map_err(PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::gisterrain::declaration().map_err(PluginAssemblyError::definition)?)
         .host_media_handler(HostMediaHandlerDeclaration::two_d_svg_export(
             "s.gis.host-media.two-d-svg",
             crate::artifacts::gismap::artifact_kind(),

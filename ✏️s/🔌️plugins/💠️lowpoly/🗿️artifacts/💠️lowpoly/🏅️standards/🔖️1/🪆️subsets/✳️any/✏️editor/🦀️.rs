@@ -27,7 +27,7 @@ use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactComm
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDescriptor, ActionRef, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, DraftView,
     Editor, EditorApp, EphemeralEmit, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, LabelText, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode,
-    NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus,
+    NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus,
     WindowMeasure,
 };
 use std::collections::HashMap;
@@ -585,7 +585,7 @@ fn lowpoly_retained_reduce(
     command: &LowpolyCommand,
     snapshot: &LowpolySnapshot,
     config: &LowpolyConfig,
-    history: &semio_framework_plugin::HistoryView,
+    history: &HistoryView,
     interaction: &protocol::InteractionState,
     context: &ArtifactOwnedToolJobContext<EditorApp<LowpolyPlayApp>>,
     operation: &AppOperationContext,
@@ -836,7 +836,7 @@ impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWo
         command: &LowpolyCommand,
         snapshot: &LowpolySnapshot,
         config: &LowpolyConfig,
-        history: &semio_framework_plugin::HistoryView,
+        history: &HistoryView,
         interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
         context: Option<&ArtifactOwnedToolJobContext<EditorApp<LowpolyPlayApp>>>,
@@ -952,7 +952,7 @@ impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWo
             self.paint_open_offset = None;
             return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
         }
-        let outer_bytes = self.paint_runs.capacity().saturating_mul(std::mem::size_of::<crate::artifacts::lowpoly::mutations::PixelRun>());
+        let outer_bytes = self.paint_runs.capacity().saturating_mul(size_of::<crate::artifacts::lowpoly::mutations::PixelRun>());
         if outer_bytes != 0 {
             if maximum_bytes < outer_bytes {
                 return InteractiveJobCloseStep::Blocked;
@@ -986,7 +986,7 @@ impl LowpolyCommandJobFactory {
     }
 }
 
-impl semio_framework::ToolJobFactory for LowpolyCommandJobFactory {
+impl ToolJobFactory for LowpolyCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<LowpolyPlayApp>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<LowpolyPlayApp>>;
 
@@ -1027,8 +1027,8 @@ impl semio_framework::ToolJobFactory for LowpolyCommandJobFactory {
     }
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LowpolyCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<LowpolyPlayApp>;
+impl ArtifactOwnedToolJobFactory for LowpolyCommandJobFactory {
+    type Owner = EditorApp<LowpolyPlayApp>;
     const TOOL_IDS: &'static [&'static str] = LOWPOLY_MIGRATED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
@@ -1136,7 +1136,7 @@ fn lowpoly_artifact_mutation_retained_bytes(mutation: &LowpolyMutation) -> Resul
             Ok(payload
                 .object_id
                 .len()
-                .saturating_add(payload.runs.len().saturating_mul(std::mem::size_of::<crate::artifacts::lowpoly::mutations::PixelRun>()))
+                .saturating_add(payload.runs.len().saturating_mul(size_of::<crate::artifacts::lowpoly::mutations::PixelRun>()))
                 .saturating_add(payload.runs.iter().fold(0_usize, |bytes, run| bytes.saturating_add(run.bytes.len()))))
         }
         LowpolyMutation::EditPaintLayer(_) => Err("Lowpoly paint edit exceeds its fixed run envelope".into()),
@@ -1605,60 +1605,60 @@ impl ArtifactEditor for LowpolyPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<LowpolyPlayApp>,
+        owner: EditorApp<LowpolyPlayApp>,
         owner_file: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.lowpoly.lowpoly@1/*#editor",
         document_schema: "lowpoly.document",
         factory: "LowpolyCommandJobFactory",
         factory_type: LowpolyCommandJobFactory,
         tools: {
-            "patchObject" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "addPaintLayer" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "paintStrokeEnd" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setActiveObject" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setActivePaintLayer" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setUtilityParam" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "engagementInput" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "toggleShowEdges" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "toggleSun" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setSunAzimuth" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setSunElevation" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setSunIntensity" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setCamera" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "importSnapshotJson" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setFixtureJson" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "paintSample" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "paintStrokeBegin" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "transformBegin" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setActiveUtility" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "extrude" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "inset" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "bevel" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "loopCut" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "subdivide" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "triangulate" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "mirror" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "decimate" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "flipFaces" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "merge" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "dissolve" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "snap" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "toggleSmooth" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "unwrapActive" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "markUvSeam" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "clearSeam" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "engagementSubmit" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "translateSelection" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "rotateSelection" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "scaleSelection" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "transformEnd" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "paintStroke" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "paintAt" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "canvasPointerDown" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "canvasPointerMove" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "paintFill" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "fillBucket" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "addPrimitive" => semio_framework::ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "patchObject" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "addPaintLayer" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "paintStrokeEnd" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "setActiveObject" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "setActivePaintLayer" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "setUtilityParam" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "engagementInput" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "toggleShowEdges" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "toggleSun" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "setSunAzimuth" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "setSunElevation" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "setSunIntensity" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "setCamera" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "importSnapshotJson" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "setFixtureJson" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "paintSample" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "paintStrokeBegin" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "transformBegin" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "setActiveUtility" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "extrude" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "inset" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "bevel" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "loopCut" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "subdivide" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "triangulate" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "mirror" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "decimate" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "flipFaces" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "merge" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "dissolve" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "snap" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "toggleSmooth" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "unwrapActive" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "markUvSeam" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "clearSeam" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "engagementSubmit" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "translateSelection" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "rotateSelection" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "scaleSelection" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "transformEnd" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "paintStroke" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "paintAt" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "canvasPointerDown" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "canvasPointerMove" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "paintFill" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "fillBucket" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
+            "addPrimitive" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
         }
     }
 
@@ -2105,7 +2105,7 @@ pub(crate) mod testkit {
     pub async fn select_face(app: &mut LowpolyApp, object_id: &str, face_id: u32) {
         let target_id = crate::editor::lowpoly::view::document_target_row_id(object_id, 0, "face", face_id);
         let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "face", "id": target_id }])).expect("targets json");
-        app.handle_action("interactionSelect", Some(&protocol::DslValue::from(&serde_json::json!({ "domainId": crate::editor::lowpoly::view::MESH_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" }))), &meta("test")).await.expect("interactionSelect");
+        app.handle_action("interactionSelect", Some(&protocol::DslValue::from(&serde_json::json!({ "domainId": MESH_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" }))), &meta("test")).await.expect("interactionSelect");
     }
 }
 //#endregion 🧪️Testkit
@@ -2151,7 +2151,7 @@ mod tests {
         let config = LowpolyConfig::default();
         let interaction = protocol::InteractionState::default();
         let hover = semio_framework_plugin::app::InteractionHoverState::default();
-        let history = semio_framework_plugin::HistoryView::empty();
+        let history = HistoryView::empty();
         let operation = retained_operation();
         let context = retained_context(LowpolyTransient::default(), 19);
         let context_identity = context.identity_digest();
@@ -2183,7 +2183,7 @@ mod tests {
         let config = LowpolyConfig::default();
         let interaction = protocol::InteractionState::default();
         let hover = semio_framework_plugin::app::InteractionHoverState::default();
-        let history = semio_framework_plugin::HistoryView::empty();
+        let history = HistoryView::empty();
         let operation = retained_operation();
         let context = retained_context(LowpolyTransient::default(), 29);
         for command in every_command().into_iter().filter(|command| LOWPOLY_MIGRATED_TOOL_IDS.contains(&command.command_id())) {
@@ -2374,7 +2374,7 @@ mod tests {
         let json = serde_json::to_string(&mesh_document).expect("mesh document json");
         let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } };
         let projection = crate::artifacts::lowpoly::schema::default_snapshot();
-        let history = semio_framework_plugin::HistoryView::empty();
+        let history = HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);
         let emit = LowpolyPlayApp::import_media("mesh:in", &media, &doc).expect("import mesh:in");
         assert!(emit.artifact_mutations.is_empty(), "whole-document replace is an effect, not a mutation");

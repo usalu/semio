@@ -1,6 +1,5 @@
 //! 💾️ Direct remove-unknown-chunk binary codec.
 use super::*;
-use crate::artifacts::png::schema::diff::{self, *};
 use crate::artifacts::png::schema::mutations::binary::Entry;
 pub const BINARY_TAG: u8 = 16;
 pub const CODEC: Entry = Entry { tag: BINARY_TAG, encode, decode };
@@ -20,8 +19,7 @@ fn op_pack_err(error: dsl::PackError) -> protocol::ProtocolError {
 }
 pub fn decode(bytes: &[u8]) -> Result<PngMutation, protocol::ProtocolError> {
     let mut r = dsl::ByteReader::new(bytes);
-    let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-    let result: Result<PngMutation, protocol::ProtocolError> = Ok(PngMutation::RemoveUnknownChunk(crate::artifacts::png::schema::mutations::RemoveUnknownChunkMutation { index: r.read_varint_u64().map_err(op_pack_err)? as usize }));
+    let result: Result<PngMutation, protocol::ProtocolError> = Ok(PngMutation::RemoveUnknownChunk(RemoveUnknownChunkMutation { index: r.read_varint_u64().map_err(op_pack_err)? as usize }));
     let position = r.position();
     if position != bytes.len() {
         return Err(protocol::ProtocolError::Malformed { what: "remove-unknown-chunk", offset: position as u64, detail: "trailing payload bytes".into() });

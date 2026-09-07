@@ -1,5 +1,5 @@
 //! 🧬️ Direct remove-array-element mutation owner.
-use crate::artifacts::json::schema::diff::{JsonArrayAdded, JsonArrayDiff, JsonDiff, JsonObjectAdded, JsonObjectDiff, JsonObjectModified, JsonValueDiff};
+use crate::artifacts::json::schema::diff::{JsonArrayDiff, JsonDiff, JsonValueDiff};
 use crate::artifacts::json::schema::mutation_support::{diff_at_path, resolve, JsonPath};
 use crate::artifacts::json::schema::snapshot::JsonValue;
 use crate::artifacts::json::JsonSnapshot;

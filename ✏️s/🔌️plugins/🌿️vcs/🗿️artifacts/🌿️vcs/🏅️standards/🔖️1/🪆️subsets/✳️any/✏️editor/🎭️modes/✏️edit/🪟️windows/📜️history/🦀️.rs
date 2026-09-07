@@ -1,6 +1,5 @@
 //! 📜️ VCS play app — the history window: the checkpoint/alternative swimlane graph.
 
-use crate::editor::vcs::VCS_PLAY_APP_ID;
 use semio_framework_plugin::{scene_surface, BuiltNode, HistoryView, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_scene::GraphTimelineScene;
 

@@ -949,6 +949,7 @@ function compositionSessionEngines(packageJsonPath: string): readonly string[] {
 }
 //#endregion 🌉️LinkedSessionEngines
 
+/** 🧱️Builds browser engines with an opt-in build deadline, including time spent waiting for Cargo locks. */
 export async function buildEngineWasm(
   variant: string,
   renderer: string,
@@ -958,9 +959,6 @@ export async function buildEngineWasm(
 ): Promise<void> {
   ensureAppleDeveloperDir();
   if (renderer !== "react" || process.env.SKIP_ENGINE_BUILD === "1") return;
-  // Each recurses into a crate's own `wasm` script (wasm-pack/cargo build under the hood) — budgeted at
-  // the build class rather than the generic command default since those inner builds can legitimately
-  // approach [[buildBudgetMs]] themselves.
   const graphScript = join(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/📜️script.ts");
   if (buildEngine(graphScript) !== 0) throw new Error("framework-surface-node-graph wasm build failed");
   const editorScript = join(repoRoot, "./🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/📜️script.ts");

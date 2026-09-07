@@ -9,63 +9,63 @@ use semio_framework_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtens
 #[allow(unused_doc_comments, unused_qualifications)]
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum ProceduralApps: PluginApp {
-        Generation2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::generation2d::Generation2dPlayApp>>),
-        Generation2dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::generation2d::Generation2dViewer>>),
-        Generation3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::generation3d::Generation3dPlayApp>>),
-        Generation3dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::generation3d::Generation3dViewer>>),
+        Generation2dEditor(VcsArtifactApp<EditorApp<crate::editor::generation2d::Generation2dPlayApp>>),
+        Generation2dViewer(VcsArtifactApp<ViewerApp<crate::viewer::generation2d::Generation2dViewer>>),
+        Generation3dEditor(VcsArtifactApp<EditorApp<crate::editor::generation3d::Generation3dPlayApp>>),
+        Generation3dViewer(VcsArtifactApp<ViewerApp<crate::viewer::generation3d::Generation3dViewer>>),
     }
 }
 //#endregion 🗃️Apps
 
 //#region 🖼️SemanticUi
-fn ui_assembly_error(code: &'static str) -> semio_framework_plugin::PluginAssemblyError {
-    semio_framework_plugin::PluginAssemblyError::new(code, "fixed UI admission failed")
+fn ui_assembly_error(code: &'static str) -> PluginAssemblyError {
+    PluginAssemblyError::new(code, "fixed UI admission failed")
 }
 
-pub(crate) fn ui_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiText> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref()).ok_or_else(|| ui_assembly_error("ui.text"))
+pub(crate) fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<UiText> {
+    UiText::try_from_str(value.as_ref()).ok_or_else(|| ui_assembly_error("ui.text"))
 }
 
-pub(crate) fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| ui_assembly_error("ui.label"))
+pub(crate) fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<Label> {
+    Label::try_from(value.as_ref()).map_err(|_| ui_assembly_error("ui.label"))
 }
 
-fn ui_id<B: HasBase>(builder: B, id: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<B> {
+fn ui_id<B: HasBase>(builder: B, id: impl AsRef<str>) -> UiAssemblyResult<B> {
     builder.try_id(id).map_err(|_| ui_assembly_error("ui.node.id"))
 }
 
-fn ui_child<B: HasChildren>(builder: B, child: impl Into<semio_framework_plugin::BuiltNode>) -> semio_framework_plugin::UiAssemblyResult<B> {
+fn ui_child<B: HasChildren>(builder: B, child: impl Into<BuiltNode>) -> UiAssemblyResult<B> {
     builder.try_child(child).map_err(|_| ui_assembly_error("ui.node.child"))
 }
 
-fn ui_build<B: Buildable>(builder: B) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn ui_build<B: Buildable>(builder: B) -> UiAssemblyResult<BuiltNode> {
     builder.try_build().map_err(|_| ui_assembly_error("ui.node.build"))
 }
 
-pub(crate) fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| ui_assembly_error("ui.value.text"))
+pub(crate) fn ui_value_text(value: impl AsRef<str>) -> UiAssemblyResult<UiValue> {
+    UiText::try_from_str(value.as_ref()).map(UiValue::Text).ok_or_else(|| ui_assembly_error("ui.value.text"))
 }
 
-pub(crate) fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| ui_assembly_error("ui.value.list"))?;
+pub(crate) fn ui_value_list(values: impl IntoIterator<Item = UiValue>) -> UiAssemblyResult<UiValue> {
+    let mut builder = UiListBuilder::try_new().ok_or_else(|| ui_assembly_error("ui.value.list"))?;
     for value in values {
         builder.push(value).map_err(|_| ui_assembly_error("ui.value.list.item"))?;
     }
-    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+    Ok(UiValue::List(builder.finish()))
 }
 
-pub(crate) fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("ui.value.map"))?;
+pub(crate) fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -> UiAssemblyResult<UiValue> {
+    let mut builder = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("ui.value.map"))?;
     for (key, value) in values {
         builder.push(key.to_owned(), value).map_err(|_| ui_assembly_error("ui.value.map.entry"))?;
     }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+    Ok(UiValue::Map(builder.finish()))
 }
 
 pub(crate) fn ui_node_list(
-    values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    values: impl IntoIterator<Item = UiAssemblyResult<BuiltNode>>,
+) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let mut nodes = UiFixedList::default();
     for value in values {
         nodes.try_push(value?).map_err(|_| ui_assembly_error("ui.node-list.item"))?;
     }
@@ -73,7 +73,7 @@ pub(crate) fn ui_node_list(
 }
 
 /// 🖼️ Encodes one typed scene into the renderer-neutral semantic surface contract.
-pub(crate) fn scene_surface<T: ui_wgpu::wgpu::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn scene_surface<T: ui_wgpu::wgpu::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
     let id = id.into();
     semio_framework_plugin::scene_surface(&id, kind, scene)
 }
@@ -83,36 +83,36 @@ pub(crate) fn generation_tree(
     controller_id: &'static str,
     surface_prefix: &str,
     generation: &flow::playbook::GenerationPlayState,
-    locale: ui_wgpu::wgpu::Locale,
-    terminology: ui_wgpu::wgpu::Terminology,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    locale: Locale,
+    terminology: Terminology,
+) -> UiAssemblyResult<BuiltNode> {
     let _ = terminology;
     let label = |key: &str| {
         match (key, locale) {
-            ("remove", ui_wgpu::wgpu::Locale::De) => "Entfernen",
+            ("remove", Locale::De) => "Entfernen",
             ("remove", _) => "Remove",
-            ("rename", ui_wgpu::wgpu::Locale::De) => "Umbenennen",
+            ("rename", Locale::De) => "Umbenennen",
             ("rename", _) => "Rename",
-            ("generations", ui_wgpu::wgpu::Locale::De) => "Generierungen",
+            ("generations", Locale::De) => "Generierungen",
             ("generations", _) => "Generations",
-            ("add", ui_wgpu::wgpu::Locale::De) => "Generierung hinzufügen",
+            ("add", Locale::De) => "Generierung hinzufügen",
             ("add", _) => "Add Generation",
-            ("empty", ui_wgpu::wgpu::Locale::De) => "(keine Generierungen)",
+            ("empty", Locale::De) => "(keine Generierungen)",
             ("empty", _) => "(no generations)",
-            ("actions", ui_wgpu::wgpu::Locale::De) => "Aktionen",
+            ("actions", Locale::De) => "Aktionen",
             ("actions", _) => "Actions",
             _ => key,
         }
         .to_string()
     };
     let factory = ActionFactory::new(controller_id);
-    let mut items = semio_framework_plugin::UiFixedList::default();
+    let mut items = UiFixedList::default();
     for entry in &generation.generations {
         let args = ui_value_map([("id", ui_value_text(&entry.id)?)])?;
         let mut item = tree_item_with_action(format!("{surface_prefix}.generation.{}", entry.id), entry.name.clone(), Some(format!("{} values", entry.values.len())), factory.action("selectGeneration", Some(args))?)?;
         if let Component::TreeItem(props) = &mut item.component {
             props.icon = Some(ui_text("layers")?);
-            let mut row_actions = semio_framework_plugin::UiFixedList::default();
+            let mut row_actions = UiFixedList::default();
             let rename_args = ui_value_map([("id", ui_value_text(&entry.id)?), ("name", ui_value_text(format!("{} copy", entry.name))?)])?;
             let (rename_action, rename_args) = factory.action("renameGeneration", Some(rename_args))?;
             row_actions
@@ -143,7 +143,7 @@ pub(crate) fn generation_tree(
         .build()
 }
 
-fn generation_control_action<B: HasBase>(builder: B, controller_id: &'static str, action: &str, args: semio_framework_plugin::UiValue) -> semio_framework_plugin::UiAssemblyResult<B> {
+fn generation_control_action<B: HasBase>(builder: B, controller_id: &'static str, action: &str, args: UiValue) -> UiAssemblyResult<B> {
     let (action, args) = ActionFactory::new(controller_id).action(action, Some(args))?;
     match args {
         Some(args) => builder.try_on_with(Trigger::Change, action, args).map_err(|_| ui_assembly_error("ui.control.binding")),
@@ -151,10 +151,10 @@ fn generation_control_action<B: HasBase>(builder: B, controller_id: &'static str
     }
 }
 
-fn generation_control_args(generation_id: &str, question_id: &str, field_index: Option<usize>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+fn generation_control_args(generation_id: &str, question_id: &str, field_index: Option<usize>) -> UiAssemblyResult<UiValue> {
     let mut values = vec![("generationId", ui_value_text(generation_id)?), ("questionId", ui_value_text(question_id)?)];
     if let Some(field_index) = field_index {
-        values.push(("fieldIndex", semio_framework_plugin::UiValue::Number(field_index as f64)));
+        values.push(("fieldIndex", UiValue::Number(field_index as f64)));
     }
     ui_value_map(values)
 }
@@ -166,7 +166,7 @@ pub(crate) fn generation_form(
     controller_id: &'static str,
     action: &str,
     generation_id: &str,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+) -> UiAssemblyResult<BuiltNode> {
     let mut root = ui_id(column(), "generate.form")?;
     let mut has_children = false;
     for step in &spec.steps {
@@ -208,7 +208,7 @@ pub(crate) fn generation_form(
                     ui_build(generation_control_action(ui_id(select, format!("{field_id}.select"))?, controller_id, action, args()?)?)?
                 }
                 "vector" => {
-                    let numbers = value.as_array().map(<[dsl::DslValue]>::to_vec).unwrap_or_else(|| question.fields.as_deref().unwrap_or_default().iter().map(|field| dsl::DslValue::float(field.value.unwrap_or(0.0))).collect());
+                    let numbers = value.as_array().map(<[DslValue]>::to_vec).unwrap_or_else(|| question.fields.as_deref().unwrap_or_default().iter().map(|field| DslValue::float(field.value.unwrap_or(0.0))).collect());
                     let labels: Vec<String> = question
                         .fields
                         .as_deref()
@@ -228,7 +228,7 @@ pub(crate) fn generation_form(
                 "note" => ui_build(ui_id(text(ui_label(question.text.clone().unwrap_or_default())?), format!("{field_id}.note"))?)?,
                 "image" => ui_build(ui_id(text(ui_label(question.src.clone().unwrap_or_else(|| "(no image)".into()))?), format!("{field_id}.image"))?)?,
                 _ => {
-                    let input = input(InputKind::Text).value(ui_text(serde_json::Value::from(&value).to_string())?);
+                    let input = input(InputKind::Text).value(ui_text(Value::from(&value).to_string())?);
                     ui_build(generation_control_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
                 }
             };
@@ -245,16 +245,16 @@ pub(crate) fn generation_form(
 //#endregion 🖼️SemanticUi
 
 /// 🔌️ Builds the plugin surface for host registration.
-pub fn plugin() -> Result<Plugin<ProceduralApps>, semio_framework_plugin::PluginAssemblyError> {
-    crate::artifacts::assembly::standards::v1::subsets::any::schema::inferences::register_assembly_inference_factory(&semio_framework::ActionBus::production())
-        .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("assembly-inference-factory", error.to_string()))?;
+pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
+    crate::artifacts::assembly::standards::v1::subsets::any::schema::inferences::register_assembly_inference_factory(&ActionBus::production())
+        .map_err(|error| PluginAssemblyError::new("assembly-inference-factory", error.to_string()))?;
     Plugin::<ProceduralApps>::builder("procedural")
         .label("Procedural")
         .version("0.1.0")
         .package_id("semio:procedural")
         .routed_inference(crate::artifacts::assembly::standards::v1::subsets::any::schema::inferences::assembly_inference_metadata())
-        .artifact(crate::artifacts::generation2d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .artifact(crate::artifacts::generation3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::generation2d::declaration().map_err(PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::generation3d::declaration().map_err(PluginAssemblyError::definition)?)
         .host_media_handler(HostMediaHandlerDeclaration::mesh_import(
             "s.procedural.host-media.mesh-import",
             crate::artifacts::generation3d::artifact_kind(),

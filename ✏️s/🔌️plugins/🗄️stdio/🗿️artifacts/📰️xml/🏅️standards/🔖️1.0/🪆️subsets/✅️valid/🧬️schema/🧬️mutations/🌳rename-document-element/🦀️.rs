@@ -14,7 +14,7 @@ pub struct RenameDocumentElement {
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for RenameDocumentElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "document-element", kind: "rename-document-element", record: "RenameDocumentElement" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as protocol::Mutation<XmlSnapshot>>::Diff> {
+    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
         agg_diff(&XmlValidMutation::RenameDocumentElement(self.clone()), base)
     }
     fn inverse(&self, base: &XmlSnapshot) -> Vec<XmlValidMutation> {

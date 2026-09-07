@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔍️update-layer-trace-params",
+  "semanticKind": "update-layer-trace-params",
+  "displayName": "Update Layer Trace Params",
+  "emoji": "🔍️",
+  "aggregateVariant": "UpdateLayerTraceParams",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "update-layer-trace-params",
+  "binaryTag": 9,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "error",
+    "warning",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

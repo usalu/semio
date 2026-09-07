@@ -15,7 +15,7 @@ pub struct SetValue {
 impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for SetValue {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "value", kind: "set-value", record: "SetValue" };
 
-    fn diff(&self, base: &SemioValueSnapshot) -> protocol::MutationOutcome<<SemioValueMutation as protocol::Mutation<SemioValueSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioValueSnapshot) -> protocol::MutationOutcome<<SemioValueMutation as Mutation<SemioValueSnapshot>>::Diff> {
         agg_diff(&SemioValueMutation::SetValue(self.clone()), base)
     }
     fn inverse(&self, base: &SemioValueSnapshot) -> Vec<SemioValueMutation> {

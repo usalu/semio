@@ -362,6 +362,49 @@ pub struct ArtifactCommittedDurableGroupDecisionV1 {
     record: store::durable_group::DurableOwnedGroupJournalRecordV1,
 }
 
+/// 📍️ Read-only actor projection recovered from one sole committed fixed-three Event.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ArtifactDurableGroupRecoveredCheckpointV1 {
+    receipt: store::durable_group::DurableOwnedGroupJournalReceiptV1,
+    head_edit_id: protocol::MutationId,
+    chain_hash: [u8; 32],
+    record: store::durable_group::DurableOwnedGroupJournalRecordV1,
+    already_applied: bool,
+}
+
+impl ArtifactDurableGroupRecoveredCheckpointV1 {
+    pub fn receipt(&self) -> &store::durable_group::DurableOwnedGroupJournalReceiptV1 {
+        &self.receipt
+    }
+
+    pub fn head_edit_id(&self) -> &protocol::MutationId {
+        &self.head_edit_id
+    }
+
+    pub fn chain_hash(&self) -> [u8; 32] {
+        self.chain_hash
+    }
+
+    pub fn already_applied(&self) -> bool {
+        self.already_applied
+    }
+
+    /// 🔎️ Projects immutable typed edits only after revalidating the DB-consumed committed record.
+    pub fn verify_fixed_three_edits<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
+        &self,
+    ) -> Result<store::durable_group::DurableOwnedGroupVerifiedThreeEditsV1<ParentMutation, DrawingMutation, ValueMutation>, store::durable_group::DurableOwnedGroupDecisionError>
+    where
+        ParentP: store::ArtifactPack,
+        ParentMutation: store::ToValue + store::FromValue,
+        DrawingP: store::ArtifactPack,
+        DrawingMutation: store::ToValue + store::FromValue,
+        ValueP: store::ArtifactPack,
+        ValueMutation: store::ToValue + store::FromValue,
+    {
+        self.record.verify_fixed_three_edits::<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>()
+    }
+}
+
 impl ArtifactCommittedDurableGroupDecisionV1 {
     pub(crate) fn document(&self) -> &ArtifactId {
         &self.document
@@ -381,6 +424,16 @@ impl ArtifactCommittedDurableGroupDecisionV1 {
             decision_sha256: self.record.decision_sha256().to_string(),
             transaction_id: self.transaction_id,
             segment_index: self.segment_index,
+        }
+    }
+
+    fn recovered_checkpoint(&self) -> ArtifactDurableGroupRecoveredCheckpointV1 {
+        ArtifactDurableGroupRecoveredCheckpointV1 {
+            receipt: self.receipt(),
+            head_edit_id: protocol::MutationId(self.record.parent_edit_id().to_string()),
+            chain_hash: self.record.parent_post_revision(),
+            record: self.record.clone(),
+            already_applied: false,
         }
     }
 
@@ -604,7 +657,10 @@ where
     }
 }
 
-pub(crate) fn committed_durable_group_decision_from_transaction<S: db_storage::WalStorage>(document: &ArtifactId, mut transaction: db_wal::WalCommittedTransaction<'_, '_, S>) -> Result<Option<ArtifactCommittedDurableGroupDecisionV1>, DbError> {
+pub(crate) async fn committed_durable_group_decision_from_transaction<S: WalStorage>(
+    document: &ArtifactId,
+    mut transaction: db_wal::WalCommittedTransaction<'_, '_, S>,
+) -> Result<Option<ArtifactCommittedDurableGroupDecisionV1>, DbError> {
     let transaction_id = transaction.transaction_id();
     let segment_index = transaction.segment_index();
     let record_count = transaction.record_count();
@@ -624,10 +680,17 @@ pub(crate) fn committed_durable_group_decision_from_transaction<S: db_storage::W
                 }
             }
             db_wal::WalCommittedRecordStep::Record(_) => mixed = event.is_some() || record_count > 1,
-            db_wal::WalCommittedRecordStep::Yield => continue,
+            db_wal::WalCommittedRecordStep::Yield => {
+                transaction.replenish(std::time::Instant::now() + std::time::Duration::from_secs(2), 65_536)?;
+                semio_framework_async::yield_once().await;
+                continue;
+            }
             db_wal::WalCommittedRecordStep::Done => break,
         }
-        while transaction.close_record_step()? {}
+        while transaction.close_record_step()? {
+            transaction.replenish(std::time::Instant::now() + std::time::Duration::from_secs(2), 65_536)?;
+            semio_framework_async::yield_once().await;
+        }
     }
     transaction.finish()?;
     let Some(canonical_pack) = event else { return Ok(None) };
@@ -639,6 +702,277 @@ pub(crate) fn committed_durable_group_decision_from_transaction<S: db_storage::W
         return Err(DbError::Corrupt("committed durable group decision targets a different replay document".to_string()));
     }
     Ok(Some(ArtifactCommittedDurableGroupDecisionV1 { document: document.clone(), transaction_id, segment_index, record }))
+}
+
+enum ArtifactDurableGroupRecoveryTargetStateV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + store::ToValue + store::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
+    DrawingP: Clone + store::ToValue + store::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
+    ValueP: Clone + store::ToValue + store::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+{
+    Admitting(store::durable_group::DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
+    Recovering {
+        owner: ArtifactCommittedDurableGroupRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
+        checkpoint: ArtifactDurableGroupRecoveredCheckpointV1,
+    },
+    Complete(store::durable_group::DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
+    Empty,
+}
+
+struct ArtifactDurableGroupRecoveryTargetSharedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + store::ToValue + store::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
+    DrawingP: Clone + store::ToValue + store::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
+    ValueP: Clone + store::ToValue + store::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+{
+    document: ArtifactId,
+    state: std::sync::Mutex<ArtifactDurableGroupRecoveryTargetStateV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>,
+    scan_complete: std::sync::atomic::AtomicBool,
+    recovered_checkpoint: std::sync::Mutex<Option<ArtifactDurableGroupRecoveredCheckpointV1>>,
+}
+
+trait ArtifactDurableGroupRecoveryDriverCoreV1: Send {
+    fn document(&self) -> &ArtifactId;
+    fn drive_recovery_step(&mut self) -> Result<bool, DbError>;
+    fn accept(&mut self, witness: ArtifactCommittedDurableGroupDecisionV1) -> Result<(), DbError>;
+    fn finish_scan(&mut self) -> Result<(), DbError>;
+}
+
+/// 🧭 Opaque actor-mailbox owner for one exact-three Store recovery scan.
+pub struct ArtifactDurableGroupRecoveryDriverV1 {
+    owner: Box<dyn ArtifactDurableGroupRecoveryDriverCoreV1>,
+}
+
+struct ArtifactDurableGroupRecoveryTargetDriverV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + store::ToValue + store::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
+    DrawingP: Clone + store::ToValue + store::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
+    ValueP: Clone + store::ToValue + store::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+{
+    shared: Arc<ArtifactDurableGroupRecoveryTargetSharedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>,
+}
+
+impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> ArtifactDurableGroupRecoveryDriverCoreV1
+    for ArtifactDurableGroupRecoveryTargetDriverV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+    DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+    ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+{
+    fn document(&self) -> &ArtifactId {
+        &self.shared.document
+    }
+
+    fn drive_recovery_step(&mut self) -> Result<bool, DbError> {
+        let mut state = self.shared.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let current = std::mem::replace(&mut *state, ArtifactDurableGroupRecoveryTargetStateV1::Empty);
+        let ArtifactDurableGroupRecoveryTargetStateV1::Recovering { owner: mut recovery, checkpoint } = current else {
+            *state = current;
+            return Ok(true);
+        };
+        match recovery.advance(store::ArtifactStoreOneItemGrant {
+            maximum_items: 1,
+            maximum_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,
+        }) {
+            ArtifactCommittedDurableGroupRecoveryAdvanceV1::Progress(_) | ArtifactCommittedDurableGroupRecoveryAdvanceV1::Blocked => {
+                *state = ArtifactDurableGroupRecoveryTargetStateV1::Recovering { owner: recovery, checkpoint };
+                Ok(false)
+            }
+            ArtifactCommittedDurableGroupRecoveryAdvanceV1::Fault(error) => {
+                *state = ArtifactDurableGroupRecoveryTargetStateV1::Recovering { owner: recovery, checkpoint };
+                Err(DbError::Unavailable(format!("committed durable group recovery retained a fault: {error:?}")))
+            }
+            ArtifactCommittedDurableGroupRecoveryAdvanceV1::Complete => {
+                let Some(terminal) = recovery.take_terminal() else {
+                    *state = ArtifactDurableGroupRecoveryTargetStateV1::Recovering { owner: recovery, checkpoint };
+                    return Err(DbError::Internal("committed durable group recovery completed without exact Store owners".to_string()));
+                };
+                drop(recovery);
+                if terminal.document != self.shared.document {
+                    *state = ArtifactDurableGroupRecoveryTargetStateV1::Admitting(store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(
+                        terminal.owners.parent,
+                        terminal.owners.drawing,
+                        terminal.owners.value,
+                    ));
+                    return Err(DbError::Corrupt("committed durable group recovery returned a different document".to_string()));
+                }
+                if terminal.receipt != *checkpoint.receipt() {
+                    *state = ArtifactDurableGroupRecoveryTargetStateV1::Admitting(store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(
+                        terminal.owners.parent,
+                        terminal.owners.drawing,
+                        terminal.owners.value,
+                    ));
+                    return Err(DbError::Corrupt("committed durable group recovery returned a different receipt".to_string()));
+                }
+                let mut checkpoint = checkpoint;
+                checkpoint.already_applied = terminal.already_applied;
+                *self.shared.recovered_checkpoint.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(checkpoint);
+                *state = ArtifactDurableGroupRecoveryTargetStateV1::Admitting(store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(
+                    terminal.owners.parent,
+                    terminal.owners.drawing,
+                    terminal.owners.value,
+                ));
+                Ok(true)
+            }
+        }
+    }
+
+    fn accept(&mut self, witness: ArtifactCommittedDurableGroupDecisionV1) -> Result<(), DbError> {
+        if witness.document() != &self.shared.document {
+            return Err(DbError::Corrupt("committed durable group recovery witness targets a different document".to_string()));
+        }
+        let mut state = self.shared.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let current = std::mem::replace(&mut *state, ArtifactDurableGroupRecoveryTargetStateV1::Empty);
+        let ArtifactDurableGroupRecoveryTargetStateV1::Admitting(admission) = current else {
+            *state = current;
+            return Err(DbError::Conflict("committed durable group recovery target is not ready for another witness".to_string()));
+        };
+        let checkpoint = witness.recovered_checkpoint();
+        *state = ArtifactDurableGroupRecoveryTargetStateV1::Recovering { owner: witness.into_store_owned_recovery(admission), checkpoint };
+        Ok(())
+    }
+
+    fn finish_scan(&mut self) -> Result<(), DbError> {
+        let mut state = self.shared.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let current = std::mem::replace(&mut *state, ArtifactDurableGroupRecoveryTargetStateV1::Empty);
+        match current {
+            ArtifactDurableGroupRecoveryTargetStateV1::Admitting(admission) => {
+                *state = ArtifactDurableGroupRecoveryTargetStateV1::Complete(admission.into_owners());
+                self.shared.scan_complete.store(true, std::sync::atomic::Ordering::Release);
+                Ok(())
+            }
+            current @ ArtifactDurableGroupRecoveryTargetStateV1::Complete(_) => {
+                *state = current;
+                Ok(())
+            }
+            current => {
+                *state = current;
+                Err(DbError::Conflict("committed durable group recovery scan ended with an active witness".to_string()))
+            }
+        }
+    }
+}
+
+/// 🧰 Retains one actor scan and the exact three Stores across caller cancellation and retry.
+#[must_use = "durable group recovery must return its exact three Store owners"]
+pub struct ArtifactDurableGroupRecoveryOwnerV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: Clone + store::ToValue + store::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
+    DrawingP: Clone + store::ToValue + store::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
+    ValueP: Clone + store::ToValue + store::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+{
+    shared: Arc<ArtifactDurableGroupRecoveryTargetSharedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>,
+    request: Option<Pin<Box<db_actor::AskFuture<ArtifactMessage, Result<(), DbError>>>>>,
+}
+
+impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+    ArtifactDurableGroupRecoveryOwnerV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+where
+    ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+    DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+    ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+{
+    fn new(
+        document: ArtifactId,
+        admission: store::durable_group::DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
+    ) -> (Self, ArtifactDurableGroupRecoveryDriverV1) {
+        let shared = Arc::new(ArtifactDurableGroupRecoveryTargetSharedV1 {
+            document,
+            state: std::sync::Mutex::new(ArtifactDurableGroupRecoveryTargetStateV1::Admitting(admission)),
+            scan_complete: std::sync::atomic::AtomicBool::new(false),
+            recovered_checkpoint: std::sync::Mutex::new(None),
+        });
+        let driver = ArtifactDurableGroupRecoveryDriverV1 {
+            owner: Box::new(ArtifactDurableGroupRecoveryTargetDriverV1 { shared: shared.clone() }),
+        };
+        (Self { shared, request: None }, driver)
+    }
+
+    fn driver(&self) -> ArtifactDurableGroupRecoveryDriverV1 {
+        ArtifactDurableGroupRecoveryDriverV1 {
+            owner: Box::new(ArtifactDurableGroupRecoveryTargetDriverV1 { shared: self.shared.clone() }),
+        }
+    }
+
+    pub async fn advance(&mut self) -> Result<bool, DbError> {
+        let Some(request) = self.request.as_mut() else {
+            return Ok(self.shared.scan_complete.load(std::sync::atomic::Ordering::Acquire));
+        };
+        let result = request.as_mut().await;
+        self.request = None;
+        result??;
+        Ok(self.shared.scan_complete.load(std::sync::atomic::Ordering::Acquire))
+    }
+
+    pub fn take_terminal_owners(
+        &mut self,
+    ) -> Option<store::durable_group::DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
+        if self.request.is_some() || !self.shared.scan_complete.load(std::sync::atomic::Ordering::Acquire) {
+            return None;
+        }
+        let mut state = self.shared.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let current = std::mem::replace(&mut *state, ArtifactDurableGroupRecoveryTargetStateV1::Empty);
+        match current {
+            ArtifactDurableGroupRecoveryTargetStateV1::Complete(owners) => Some(owners),
+            current => {
+                *state = current;
+                None
+            }
+        }
+    }
+
+    /// 🧹 Returns exact Stores only when a failed scan has no accepted committed witness in
+    /// flight. Once a witness is accepted, recovery is non-cancellable and must be resumed.
+    pub fn take_idle_owners(
+        &mut self,
+    ) -> Option<store::durable_group::DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
+        if self.request.is_some() {
+            return None;
+        }
+        let mut state = self.shared.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let current = std::mem::replace(&mut *state, ArtifactDurableGroupRecoveryTargetStateV1::Empty);
+        match current {
+            ArtifactDurableGroupRecoveryTargetStateV1::Admitting(admission) => Some(admission.into_owners()),
+            current => {
+                *state = current;
+                None
+            }
+        }
+    }
+
+    pub fn scan_is_active(&self) -> bool {
+        self.request.is_some()
+    }
+
+    /// 📍️ Returns the last fully restored committed Event projection without exposing its WAL witness.
+    pub fn recovered_checkpoint(&self) -> Option<ArtifactDurableGroupRecoveredCheckpointV1> {
+        self.shared.recovered_checkpoint.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        matches!(
+            &*self.shared.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner),
+            ArtifactDurableGroupRecoveryTargetStateV1::Empty
+        )
+    }
 }
 //#endregion 🔖️Receipt
 
@@ -1193,6 +1527,7 @@ fn install_reserved_artifact_state_owner(owner: ArtifactStateRetirementCursor) {
     }
 }
 
+#[cfg(test)]
 fn retire_artifact_state_owner(owner: ArtifactStateRetirementCursor) -> Result<(), ArtifactStateRetirementCursor> {
     if owner.retirement.is_some() {
         install_reserved_artifact_state_owner(owner);
@@ -1479,6 +1814,7 @@ pub struct ArtifactEngine<A: AuthzHook + 'static = AllowAll, V: VersionGraph + '
     vcs_head: Option<String>,
     applied: HashMap<String, protocol::MutationEnvelope>,
     applied_receipts: HashMap<String, CommandReceipt>,
+    durable_group_receipts: HashMap<String, store::durable_group::DurableOwnedGroupJournalReceiptV1>,
     actor_seq: HashMap<String, u64>,
     frontier: Frontier,
     head_edit_id: Option<protocol::MutationId>,
@@ -1536,13 +1872,12 @@ impl ArtifactEngineOpenRejected {
         match self {
             Self::BeforeWal(cause) => Ok(cause),
             Self::WalOpen(rejected) => rejected.retry_close().await.map_err(Self::WalOpen),
-            Self::RetainedWal { cause, mut close_error, mut wal } => loop {
+            Self::RetainedWal { cause, close_error: _, mut wal } => loop {
                 match wal.close_step() {
                     Ok(true) => semio_framework_async::yield_once().await,
                     Ok(false) => return Ok(cause),
                     Err(error) => {
-                        close_error = Some(error);
-                        return Err(Self::RetainedWal { cause, close_error, wal });
+                        return Err(Self::RetainedWal { cause, close_error: Some(error), wal });
                     }
                 }
             },
@@ -1610,12 +1945,12 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         if let Some((generation, descriptor)) = snapshot_manager.load_latest(&core_id).await? {
             report.from_snapshot = true;
             report.snapshot_generation = Some(generation);
-            let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
             let control = db_snapshot::SnapshotCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
             let mut snapshot_cursor = snapshot_manager.chain_cursor(&core_id, generation, control);
             for hash in &descriptor.roots {
                 let mut page_bytes = snapshot_cursor.read_page(*hash).await?;
-                let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+                let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
                 let mut decoder = StatePageDecodeCursor::new(&page_bytes, cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
                 while let Some(entry) = decoder.next().await? {
                     let replaced = match state.values.insert(entry) {
@@ -1650,11 +1985,14 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
 
         let replay = async {
             let wal_facet = storage.wal().await;
-            let replay_cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let replay_cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
             let replay_control = db_wal::WalCursorControl::new(replay_cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
             let mut records = db_wal::replay_committed_document(&wal_facet, &core_id, replay_control).await?;
             let mut batch_ids: HashSet<String> = HashSet::new();
             let mut seen: u64 = 0;
+            let mut replay_frontier = Frontier::genesis(core_id.clone());
+            let mut replay_head_edit_id = None;
+            let mut replay_projected = false;
             let result = async {
                 loop {
                     let mut transaction = match records.next_transaction_step().await? {
@@ -1665,8 +2003,12 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                         }
                         db_wal::WalCommittedStep::Done => break,
                     };
+                    let transaction_id = transaction.transaction_id();
+                    let segment_index = transaction.segment_index();
                     batch_ids.clear();
                     let mut frontier_seen = false;
+                    let mut body_records = 0usize;
+                    let mut durable_group = None;
                     loop {
                         let record = match transaction.next_record_step()? {
                             db_wal::WalCommittedRecordStep::Record(record) => record,
@@ -1679,6 +2021,10 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                         if frontier_seen {
                             return Err(DbError::Corrupt("artifact committed frontier is not terminal".to_string()));
                         }
+                        body_records = body_records.checked_add(1).ok_or_else(|| DbError::LimitExceeded("artifact committed body records"))?;
+                        if durable_group.is_some() {
+                            return Err(DbError::Corrupt("durable group decision must be the sole committed transaction body".to_string()));
+                        }
                         match record {
                             db_wal::WalRecord::Command(bytes) => {
                                 let mut control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
@@ -1687,7 +2033,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                                 if envelope.document_id.0 != core_id.0 {
                                     return Err(DbError::Corrupt("artifact envelope document differs".to_string()));
                                 }
-                                engine.head_edit_id = Some(envelope.mutation_id.clone());
+                                replay_head_edit_id = Some(envelope.mutation_id.clone());
                                 seen += 1;
                                 batch_ids.insert(envelope.mutation_id.0.clone());
                                 if seen <= applied_head_seq {
@@ -1707,7 +2053,23 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                                     return Err(DbError::Corrupt("artifact frontier document differs".to_string()));
                                 }
                                 frontier_seen = true;
-                                engine.frontier = frontier.clone();
+                                replay_frontier = frontier.clone();
+                                replay_projected = true;
+                            }
+                            db_wal::WalRecord::Event(bytes) => {
+                                if body_records != 1 {
+                                    return Err(DbError::Corrupt("durable group decision must be the sole committed transaction body".to_string()));
+                                }
+                                let mut canonical_pack = Vec::with_capacity(bytes.len());
+                                for fragment in bytes.fragments() {
+                                    canonical_pack.extend_from_slice(fragment);
+                                }
+                                let record = store::durable_group::DurableOwnedGroupJournalRecordV1::admit_canonical(canonical_pack)
+                                    .map_err(|error| DbError::Corrupt(format!("committed durable group decision is invalid: {error}")))?;
+                                if record.document().artifact_id != core_id.0 {
+                                    return Err(DbError::Corrupt("committed durable group decision targets a different replay document".to_string()));
+                                }
+                                durable_group = Some(record);
                             }
                             _ => {}
                         }
@@ -1718,7 +2080,35 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                     if !batch_ids.is_empty() && !frontier_seen {
                         return Err(DbError::Corrupt("artifact committed commands have no frontier".to_string()));
                     }
+                    if let Some(record) = durable_group {
+                        if body_records != 1 {
+                            return Err(DbError::Corrupt("durable group decision must be the sole committed transaction body".to_string()));
+                        }
+                        seen = seen.checked_add(1).ok_or_else(|| DbError::LimitExceeded("artifact replay head sequence"))?;
+                        let receipt = store::durable_group::DurableOwnedGroupJournalReceiptV1 {
+                            anchor_sha256: record.anchor_sha256().to_string(),
+                            decision_sha256: record.decision_sha256().to_string(),
+                            transaction_id,
+                            segment_index,
+                        };
+                        let duplicate = engine.durable_group_receipts.insert(receipt.decision_sha256.clone(), receipt).is_some();
+                        if !duplicate {
+                            replay_frontier = Frontier {
+                                document: core_id.clone(),
+                                head_seq: replay_frontier.head_seq.checked_add(1).ok_or_else(|| DbError::LimitExceeded("durable group replay head sequence"))?,
+                                commit_seq: replay_frontier.commit_seq.checked_add(1).ok_or_else(|| DbError::LimitExceeded("durable group replay commit sequence"))?,
+                                chain_hash: record.parent_post_revision(),
+                                epoch: replay_frontier.epoch,
+                            };
+                            replay_head_edit_id = Some(protocol::MutationId(record.parent_edit_id().to_string()));
+                            replay_projected = true;
+                        }
+                    }
                     transaction.finish()?;
+                }
+                if replay_projected {
+                    engine.frontier = replay_frontier;
+                    engine.head_edit_id = replay_head_edit_id;
                 }
                 Ok::<(), DbError>(())
             }
@@ -1769,6 +2159,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             vcs_head,
             applied: HashMap::new(),
             applied_receipts: HashMap::new(),
+            durable_group_receipts: HashMap::new(),
             actor_seq: HashMap::new(),
             frontier: Frontier::genesis(core_id.clone()),
             head_edit_id: None,
@@ -1832,7 +2223,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
 
         let mut batch_ids: HashSet<String> = HashSet::new();
         let mut records = db_wal::WalRecordBatch::new();
-        let wal_cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let wal_cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let mut wal_control = db_wal::WalCursorControl::new(wal_cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
         let mut touched_all = db_state::TouchedSet::new();
         let mut conflicts_all: Vec<ConflictRecord> = Vec::new();
@@ -2053,9 +2444,20 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     /// authority's already-retained WAL writer. Admission and capacity rejection complete before
     /// storage I/O; every error returned by `submit` remains an uncertain durable outcome.
     async fn append_durable_group_decision(&mut self, record: store::durable_group::DurableOwnedGroupJournalRecordV1, cancelled: Arc<std::sync::atomic::AtomicBool>, now_ms: u64) -> Result<ArtifactDurableGroupJournalAppendV1, DbError> {
+        if let Some(receipt) = self.durable_group_receipts.get(record.decision_sha256()) {
+            return Ok(ArtifactDurableGroupJournalAppendV1::Committed(receipt.clone()));
+        }
         if cancelled.load(std::sync::atomic::Ordering::Acquire) {
             return Ok(ArtifactDurableGroupJournalAppendV1::Absent);
         }
+        let head_edit_id = protocol::MutationId(record.parent_edit_id().to_string());
+        let next_frontier = Frontier {
+            document: self.document.clone(),
+            head_seq: self.frontier.head_seq.checked_add(1).ok_or_else(|| DbError::LimitExceeded("durable group head sequence"))?,
+            commit_seq: self.frontier.commit_seq.checked_add(1).ok_or_else(|| DbError::LimitExceeded("durable group commit sequence"))?,
+            chain_hash: record.parent_post_revision(),
+            epoch: self.frontier.epoch,
+        };
         let (canonical_pack, decision_sha256, anchor_sha256, document) = record.into_parts();
         if document.artifact_id != self.protocol_document.0 {
             return Ok(ArtifactDurableGroupJournalAppendV1::Rejected(DbError::InvalidArgument("durable group decision anchor targets a different document".to_string())));
@@ -2091,7 +2493,60 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         if !receipt.committed {
             return Err(DbError::Internal("forced-Fsync durable group decision did not commit".to_string()));
         }
-        Ok(ArtifactDurableGroupJournalAppendV1::Committed(store::durable_group::DurableOwnedGroupJournalReceiptV1 { anchor_sha256, decision_sha256, transaction_id: receipt.tx_id, segment_index: receipt.segment_index }))
+        let receipt = store::durable_group::DurableOwnedGroupJournalReceiptV1 { anchor_sha256, decision_sha256, transaction_id: receipt.tx_id, segment_index: receipt.segment_index };
+        self.frontier = next_frontier.clone();
+        self.head_edit_id = Some(head_edit_id.clone());
+        self.commit_log.push(CommitNotification { frontier: next_frontier, operation_ids: vec![head_edit_id], touched: db_state::TouchedSet::new() });
+        self.durable_group_receipts.insert(receipt.decision_sha256.clone(), receipt.clone());
+        Ok(ArtifactDurableGroupJournalAppendV1::Committed(receipt))
+    }
+
+    /// 🧭 Replays every committed fixed-three Event in physical WAL order into one opaque
+    /// retained target. The target, cursor pages, transaction gate and current Store recovery
+    /// never cross the caller reply boundary.
+    async fn recover_durable_group_decisions(&mut self, mut driver: ArtifactDurableGroupRecoveryDriverV1) -> Result<(), DbError> {
+        if driver.owner.document() != &self.document {
+            return Err(DbError::InvalidArgument("durable group recovery target differs from the document authority".to_string()));
+        }
+        while !driver.owner.drive_recovery_step()? {
+            semio_framework_async::yield_once().await;
+        }
+        let wal_facet = self.storage.wal().await;
+        let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let control = db_wal::WalCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(2), 65_536)?;
+        let mut replay = db_wal::replay_committed_document(&wal_facet, &self.document, control).await?;
+        let outcome = async {
+            loop {
+                replay.replenish(std::time::Instant::now() + std::time::Duration::from_secs(2), 65_536)?;
+                let transaction = match replay.next_transaction_step().await? {
+                    db_wal::WalCommittedStep::Transaction(transaction) => transaction,
+                    db_wal::WalCommittedStep::Yield => {
+                        semio_framework_async::yield_once().await;
+                        continue;
+                    }
+                    db_wal::WalCommittedStep::Done => break,
+                };
+                if let Some(witness) = committed_durable_group_decision_from_transaction(&self.document, transaction).await? {
+                    driver.owner.accept(witness)?;
+                    while !driver.owner.drive_recovery_step()? {
+                        semio_framework_async::yield_once().await;
+                    }
+                }
+            }
+            driver.owner.finish_scan()
+        }
+        .await;
+        loop {
+            replay.replenish(std::time::Instant::now() + std::time::Duration::from_secs(2), 65_536)?;
+            if !replay.close_owner_step()? {
+                break;
+            }
+            semio_framework_async::yield_once().await;
+        }
+        if !replay.terminal_is_empty() {
+            return Err(DbError::Internal("durable group WAL recovery cursor did not retire terminally".to_string()));
+        }
+        outcome
     }
 
     /// 🧹 Runs compaction inside this document authority while its WAL writer stays retained.
@@ -2115,7 +2570,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     /// @emoji 📸️ Publishes a new `db_snapshot` generation of the whole current `DocumentState` —
     /// new this revision; the counterpart `open` reads back to accelerate materialization.
     pub async fn snapshot_now(&self, now_ms: u64) -> Result<u64, DbError> {
-        let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let encoder = StatePageEncodeCursor::try_new(&self.state.values, cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
         let page = db_state::Page::try_from_pages(encoder.finish().await?).await?;
         let snapshot_facet = self.storage.snapshot().await;
@@ -2554,7 +3009,6 @@ pub struct MaterializeReport {
 //#region 🔖️HistoryReplay
 const HISTORY_REPLAY_PAGE_BYTES: u64 = 16 * 1024;
 const HISTORY_REPLAY_SEGMENT_PAGES: u64 = 1_024;
-const HISTORY_REPLAY_SEGMENT_BYTES: u64 = HISTORY_REPLAY_PAGE_BYTES * HISTORY_REPLAY_SEGMENT_PAGES;
 const HISTORY_REPLAY_RESULT_BYTES: u64 = 15 * 1024 * 1024;
 const HISTORY_REPLAY_OPERATION_BYTES: u64 = 32 * 1024 * 1024;
 const HISTORY_REPLAY_MAX_FRAME_BYTES: u64 = 1024 * 1024;
@@ -2754,10 +3208,10 @@ impl HistoryReplayReservation {
                 let source = cursor.source_pages.as_ref().map(Vec::capacity);
                 match (result, operations, entries, source) {
                     (Some(result), Some(operations), Some(entries), Some(source)) => Some((
-                        (result * std::mem::size_of::<Option<Vec<u8>>>()) as u64,
-                        (operations * std::mem::size_of::<HistoryTextRange>()) as u64,
-                        (entries * std::mem::size_of::<ArtifactHistoryEntry>()) as u64,
-                        (source * std::mem::size_of::<Option<Vec<u8>>>()) as u64,
+                        (result * size_of::<Option<Vec<u8>>>()) as u64,
+                        (operations * size_of::<HistoryTextRange>()) as u64,
+                        (entries * size_of::<ArtifactHistoryEntry>()) as u64,
+                        (source * size_of::<Option<Vec<u8>>>()) as u64,
                     )),
                     _ => None,
                 }
@@ -2985,6 +3439,7 @@ fn release_history_replay_reservation_construction(token: &HistoryReplayReservat
     true
 }
 
+#[cfg(test)]
 pub(crate) fn take_history_replay_reservation_construction_fault(generation: u64) -> Option<HistoryReplayReservationConstructionFault> {
     let mut registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let slot_index = registry.slots.iter().position(|slot| slot.occupied && !slot.checked_out && slot.generation == generation)?;
@@ -3756,7 +4211,7 @@ impl HistoryReplayFuture {
                             .and_then(HistoryReplayReservation::retained_bytes)
                             .and_then(|bytes| bytes.checked_add(len))
                             .and_then(|bytes| bytes.checked_add(inventory_bytes))
-                            .and_then(|bytes| bytes.checked_add(std::mem::size_of::<Self>() as u64));
+                            .and_then(|bytes| bytes.checked_add(size_of::<Self>() as u64));
                         if len < protocol::format::HEADER_SIZE as u64 || page_count > HISTORY_REPLAY_SEGMENT_PAGES || simultaneous.is_none_or(|bytes| bytes > HISTORY_REPLAY_OPERATION_BYTES) {
                             fault = Some(DbError::LimitExceeded("history replay page/source byte credit"));
                         } else {
@@ -4053,6 +4508,10 @@ pub enum ArtifactMessage {
         cancelled: Arc<std::sync::atomic::AtomicBool>,
         now_ms: u64,
         reply: db_actor::ReplySender<Result<ArtifactDurableGroupJournalAppendV1, DbError>>,
+    },
+    RecoverDurableGroupDecisions {
+        driver: ArtifactDurableGroupRecoveryDriverV1,
+        reply: db_actor::ReplySender<Result<(), DbError>>,
     },
     Submit {
         batch: CommandBatch,
@@ -4358,7 +4817,7 @@ fn artifact_runner_retirement_step([index, generation]: [u64; 2]) -> semio_frame
 impl ArtifactRunnerRetirementReservation {
     fn try_reserve(pool: Arc<semio_framework_async::WorkerPool>) -> Result<Self, DbError> {
         let generation = ARTIFACT_RUNNER_RETIREMENT_NEXT_GENERATION
-            .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |generation| generation.checked_add(1).filter(|next| *next != 0))
+            .try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |generation| generation.checked_add(1).filter(|next| *next != 0))
             .map_err(|_| DbError::LimitExceeded("artifact runner retirement generation"))?;
         for (index, slot) in ARTIFACT_RUNNER_RETIREMENT_GENERATIONS.iter().enumerate() {
             if slot.compare_exchange(0, generation, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
@@ -4612,7 +5071,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
         if self.retry_armed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return;
         }
-        let generation = match self.retry_generation.fetch_update(Ordering::AcqRel, Ordering::Acquire, |generation| generation.checked_add(1).filter(|next| *next != 0)) {
+        let generation = match self.retry_generation.try_update(Ordering::AcqRel, Ordering::Acquire, |generation| generation.checked_add(1).filter(|next| *next != 0)) {
             Ok(previous) => match previous.checked_add(1) {
                 Some(generation) => generation,
                 None => {
@@ -4726,6 +5185,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
                 let mut engine = engine;
                 match message {
                     ArtifactMessage::AppendDurableGroupDecision { record, cancelled, now_ms, reply } => reply.send(engine.append_durable_group_decision(record, cancelled, now_ms).await),
+                    ArtifactMessage::RecoverDurableGroupDecisions { driver, reply } => reply.send(engine.recover_durable_group_decisions(driver).await),
                     ArtifactMessage::Submit { batch, options, now_ms, reply } => reply.send(engine.submit(batch, options, now_ms).await),
                     ArtifactMessage::Query { path, reply } => reply.send(engine.get(&path).await),
                     ArtifactMessage::Frontier { reply } => reply.send(engine.frontier().await),
@@ -4990,6 +5450,46 @@ impl ArtifactAuthority {
     /// it never acquires or opens another WAL writer.
     pub fn durable_group_journal_sink(&self, now_ms: u64) -> Box<dyn store::durable_group::DurableOwnedGroupJournalSinkV1> {
         Box::new(ArtifactDurableGroupJournalSinkV1 { address: self.address.clone(), now_ms })
+    }
+
+    /// 🧭 Starts one actor-serialized committed-Event replay while the returned owner retains
+    /// every exact Store across caller cancellation.
+    pub fn durable_group_recovery_retained<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
+        &self,
+        document: ArtifactId,
+        admission: store::durable_group::DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
+    ) -> ArtifactDurableGroupRecoveryOwnerV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+    where
+        ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+        ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+        DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+        ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+    {
+        let (mut owner, driver) = ArtifactDurableGroupRecoveryOwnerV1::new(document, admission);
+        owner.request = Some(Box::pin(self.address.ask(Priority::Command, |reply| ArtifactMessage::RecoverDurableGroupDecisions { driver, reply })));
+        owner
+    }
+
+    pub fn resume_durable_group_recovery<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
+        &self,
+        owner: &mut ArtifactDurableGroupRecoveryOwnerV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
+    ) -> Result<(), DbError>
+    where
+        ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+        ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+        DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+        ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+    {
+        if owner.request.is_some() || owner.shared.scan_complete.load(std::sync::atomic::Ordering::Acquire) {
+            return Err(DbError::Conflict("durable group recovery scan is already active or complete".to_string()));
+        }
+        let driver = owner.driver();
+        owner.request = Some(Box::pin(self.address.ask(Priority::Command, |reply| ArtifactMessage::RecoverDurableGroupDecisions { driver, reply })));
+        Ok(())
     }
 
     /// @emoji 📨️ Nonblocking retained submit cursor used by `db_engine::SubmitFuture`.
@@ -6494,6 +6994,8 @@ mod tests {
         let canonical_pack = record.canonical_pack().to_vec();
         let decision_sha256 = record.decision_sha256().to_string();
         let anchor_sha256 = record.anchor_sha256().to_string();
+        let durable_head_edit_id = protocol::MutationId(record.parent_edit_id().to_string());
+        let durable_chain_hash = record.parent_post_revision();
         let mut sink = authority.durable_group_journal_sink(7);
         let mut commit = sink.begin_commit(canonical_pack.clone(), decision_sha256.clone());
         let receipt = loop {
@@ -6505,13 +7007,31 @@ mod tests {
         };
         assert_eq!(receipt.anchor_sha256, anchor_sha256);
         assert_eq!(receipt.decision_sha256, decision_sha256);
+        let durable_snapshot = authority.checkpoint_publication_snapshot().await.unwrap();
+        assert_eq!(durable_snapshot.frontier.head_seq, 1);
+        assert_eq!(durable_snapshot.frontier.commit_seq, 1);
+        assert_eq!(durable_snapshot.frontier.chain_hash, durable_chain_hash);
+        assert_eq!(durable_snapshot.head_edit_id, Some(durable_head_edit_id.clone()));
         close_journal_commit(commit.as_mut());
         drop(commit);
         drop(sink);
         let mut ordinary = envelope("ordinary-after-durable-decision", &[], "map-owner", &[("/ordinary", serde_json::json!(true))]).await;
         ordinary.document_id = protocol::ArtifactId("map-a".to_string());
         authority.submit(CommandBatch::new(vec![ordinary]).await.unwrap(), SubmitOptions { durability: DurabilityClass::Fsync, ..SubmitOptions::default() }, 8).await.unwrap();
+        let ordinary_snapshot = authority.checkpoint_publication_snapshot().await.unwrap();
+        assert_eq!(ordinary_snapshot.frontier.head_seq, 2);
+        assert_eq!(ordinary_snapshot.frontier.commit_seq, 2);
+        assert_eq!(ordinary_snapshot.head_edit_id, Some(protocol::MutationId("ordinary-after-durable-decision".to_string())));
         shutdown_journal_authority(&authority, &pool).await;
+
+        let (mut reopened, report) = ArtifactEngine::open_retained(protocol::ArtifactId("map-a".to_string()), storage.clone(), ArtifactEngineConfig::default(), 9).await.unwrap();
+        assert_eq!(report.commands_replayed, 1);
+        let reopened_snapshot = reopened.checkpoint_publication_snapshot().await;
+        assert_eq!(reopened_snapshot, ordinary_snapshot, "reopen must reconstruct the exact Event-plus-Command publication frontier");
+        while reopened.close_step().unwrap() {
+            semio_framework_async::yield_once().await;
+        }
+        drop(reopened);
 
         let wal_facet = storage.wal().await;
         let mut replay = db_wal::replay_committed_document(
@@ -6531,7 +7051,7 @@ mod tests {
                 db_wal::WalCommittedStep::Done => break,
             };
             committed_transactions += 1;
-            if let Some(witness) = committed_durable_group_decision_from_transaction(&replay_document, transaction).unwrap() {
+            if let Some(witness) = committed_durable_group_decision_from_transaction(&replay_document, transaction).await.unwrap() {
                 witnesses.push(witness);
             }
         }
@@ -6551,7 +7071,7 @@ mod tests {
         assert!(witness_api.contains("into_store_owned_recovery") && witness_api.contains("take_rejected_terminal"));
         assert!(!witness_api.contains("fn record(&self)") && !witness_api.contains("fn into_record("));
         assert!(!witness_api.contains("fn cancel("));
-        eprintln!("[DEBUG] typed authority journal committed one exact canonical Store decision through its retained WAL writer and forced Fsync");
+        eprintln!("[DEBUG] typed authority journal committed one exact canonical Store decision, projected its actor frontier before acknowledgement, and reconstructed that exact frontier on reopen");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6584,7 +7104,7 @@ mod tests {
                 }
             };
             let replay_document = if row["replayDocument"] == "foreign" { ArtifactId::from("foreign-map") } else { document.clone() };
-            let outcome = committed_durable_group_decision_from_transaction(&replay_document, transaction);
+            let outcome = committed_durable_group_decision_from_transaction(&replay_document, transaction).await;
             match row["expected"].as_str().unwrap() {
                 "witness" => {
                     let witness = outcome.unwrap().expect("one exact Event must produce a committed decision witness");
@@ -6649,7 +7169,7 @@ mod tests {
                 db_wal::WalCommittedStep::Done => panic!("committed recovery fixture lost its decision transaction"),
             }
         };
-        let witness = committed_durable_group_decision_from_transaction(&document, transaction).unwrap().expect("one committed Event produces one opaque DB witness");
+        let witness = committed_durable_group_decision_from_transaction(&document, transaction).await.unwrap().expect("one committed Event produces one opaque DB witness");
         while replay.close_owner_step().unwrap() {}
 
         let parent_dialect = store::os_io::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() };

@@ -1,7 +1,7 @@
 //! 📉 `change-delta-tau-stud-mpa` — sets the En 1994 stud fatigue shear stress range Δτ [MPa] scalar.
 
 
-use crate::artifacts::en1994::{En1994Diff, En1994Mutation, En1994Snapshot};
+use crate::artifacts::en1994::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

@@ -31,11 +31,6 @@ pub(crate) struct GrowBuffer {
 }
 
 impl GrowBuffer {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub(crate) fn slice(&self) -> Option<wgpu::BufferSlice<'_>> {
-        self.buffer.as_ref().map(|buffer| buffer.slice(..))
-    }
-
     /// 📤️ Uploads `data`, growing the backing buffer first if needed. Returns `None` for empty data
     /// (nothing to bind, matching `draw.rs`'s own early return) rather than an empty-but-valid slice.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -87,7 +82,7 @@ impl WorldGlobalsRing {
         device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("world3d_bind_group"),
             layout,
-            entries: &[wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding { buffer, offset: 0, size: std::num::NonZeroU64::new(std::mem::size_of::<World3dGlobals>() as u64) }) }],
+            entries: &[wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding { buffer, offset: 0, size: std::num::NonZeroU64::new(size_of::<World3dGlobals>() as u64) }) }],
         })
     }
 

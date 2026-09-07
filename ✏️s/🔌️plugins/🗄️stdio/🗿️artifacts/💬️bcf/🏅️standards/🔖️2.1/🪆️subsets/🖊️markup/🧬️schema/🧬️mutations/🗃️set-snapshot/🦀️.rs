@@ -14,7 +14,7 @@ pub struct SetSnapshot {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetSnapshot {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "snapshot", kind: "set-snapshot", record: "SetSnapshot" };
 
-    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as protocol::Mutation<BcfSnapshot>>::Diff> {
+    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
         agg_diff(&BcfMutation::SetSnapshot(self.clone()), base)
     }
     fn inverse(&self, base: &BcfSnapshot) -> Vec<BcfMutation> {

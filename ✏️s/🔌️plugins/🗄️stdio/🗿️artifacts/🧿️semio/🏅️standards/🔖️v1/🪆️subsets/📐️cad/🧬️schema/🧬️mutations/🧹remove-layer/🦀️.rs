@@ -14,7 +14,7 @@ pub struct RemoveLayer {
 impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for RemoveLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "layer", kind: "remove-layer", record: "RemoveLayer" };
 
-    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<SemioCadMutation as protocol::Mutation<SemioCadSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<SemioCadMutation as Mutation<SemioCadSnapshot>>::Diff> {
         agg_diff(&SemioCadMutation::RemoveLayer(self.clone()), base)
     }
     fn inverse(&self, base: &SemioCadSnapshot) -> Vec<SemioCadMutation> {

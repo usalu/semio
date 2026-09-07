@@ -1,8 +1,7 @@
 //! ➕ Note mutation — `CreateBlock`: brings a new block into existence at an addressed position.
 
 use crate::artifacts::note::{NoteDiff, NoteSnapshot};
-use crate::artifacts::note::schema::diff::note_block_added_diff;
-use crate::artifacts::note::schema::mutations::{DeleteBlock, NoteMutation};
+use crate::artifacts::note::schema::mutations::NoteMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};

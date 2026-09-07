@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `CreateVortex`.
 
-use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexTemplate};
+use crate::artifacts::block3d::Block3dSnapshot;
 use crate::artifacts::block3d::diff::{Block3dDiff, Block3dVorticesDelta};
 
 //#region 🔖️Diff

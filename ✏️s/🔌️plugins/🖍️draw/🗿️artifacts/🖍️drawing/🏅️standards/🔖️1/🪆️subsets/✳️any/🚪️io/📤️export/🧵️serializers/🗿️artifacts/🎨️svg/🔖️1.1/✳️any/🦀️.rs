@@ -16,7 +16,7 @@ pub struct DrawingIntoSvg;
 impl Serializer<DrawingSnapshot> for DrawingIntoSvg {
     const INTO: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(from: &DrawingSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &DrawingSnapshot) -> IoResult<IoPayload> {
         let (svg_text, _width, _height) = crate::artifacts::drawing::io::drawing_document_to_svg(from).map_err(|message| IoError { message: format!("DrawingIntoSvg: {message}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Text(svg_text)))
     }

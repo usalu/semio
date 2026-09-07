@@ -3,7 +3,7 @@
 use crate::artifacts::presentation::PresentationSnapshot;
 use crate::editor::animate::terminology::AnimatePresentationLabels;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
-use semio_framework_ui_contract::{button, column, field, input, section, text, ActionId, Buildable, BuiltNode, HasBase, HasChildren, InputKind, Label, Trigger, UiValue};
+use semio_framework_ui_contract::{button, column, field, input, section, text, ActionId, BuiltNode, InputKind, Label, Trigger, UiValue};
 
 //#region 🔖️Constants
 pub const PRESENTATION_PLAY_BODY_CATALOGUE: &str = "animate.presentation.play.catalogue";

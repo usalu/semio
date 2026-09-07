@@ -1,8 +1,6 @@
 //! 🟢️ `create-node` — brings a new id-keyed graph node into existence.
 
-use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::delete_node;
-use crate::artifacts::equation::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationMutation, EquationNode, EquationSnapshot};
-use semio_framework_os_kernel::{FromValue, ToValue};
+use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload

@@ -53,6 +53,7 @@ import {
   decodeBackboneWorkerRequest,
   decodeBackboneWorkerResponse,
   decodeDocumentPackBytes,
+  decodePackWire,
   decodePackValue,
   documentRuntimeKeyV1,
   encodeBackboneWorkerRequest,
@@ -61,6 +62,7 @@ import {
   encodePackValue,
   isPackInteger,
   packUIntSafeOrNull,
+  packWireNatural,
   parseBrowserBrokerPortRequestV1,
   parseSocketGrantReceiptV1,
   socketGrantProtocolsV1,
@@ -69,6 +71,10 @@ import type { PackValue } from "./🟦️";
 import { browserActorChildCapacity, reserveBrowserActorChild, type BrowserActorChildValue } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts";
 import { assertBrowserActorDescribeCapacityV1, verifyBrowserActorDescribeV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts";
 import { BROWSER_ACTOR_CHILD_LIMITS, measureChildValue } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
+import { coldDocumentPairCursorEquals, coldDocumentPairFrontierEquals, parseColdDocumentPairLifetime, parseWitColdPairIngressStatus, type ColdDocumentPairFrontier, type ColdPairIngressStatus } from "../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts";
+import { actorInstanceCapturedReceiptMatches, actorInstanceLifetimeEquals, type ActorInstanceLifecycleReceipt, type ActorInstanceLifetime, type ActorInstanceOpenRequest } from "../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
+import { encodeActorUiPatchReceipt } from "../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
+import { browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
 import type {
   DirectoryCommandErrorCodeV1,
   DirectoryCommandOutcomeV1,
@@ -184,6 +190,10 @@ function ownedDocumentRuntimeKey(documentId: string, spaceId?: string): string |
 function dispatchBackboneWorkerRequest(request: BackboneWorkerRequest, host: RustWorkerHost | null, typescriptDispatch: (request: BackboneWorkerRequest) => void = handleTsRequest): void {
   const rustDispatch = (value: BackboneWorkerRequest): void => host?.handleRequestBytes(encodeBackboneWorkerRequest(value));
   if (request.kind === "directory-bootstrap-open" || request.kind === "directory-bootstrap-ack" || request.kind === "directory-bootstrap-reject" || request.kind === "directory-bootstrap-close") {
+    typescriptDispatch(request);
+    return;
+  }
+  if (request.kind === "browser-actor-ui-patch-result") {
     typescriptDispatch(request);
     return;
   }
@@ -370,6 +380,7 @@ type ArtifactState = {
   artifactBootstrapDeadlineMs: number | null;
   artifactBootstrapProgress: ArtifactBootstrapProgress[];
   canonicalFolderMirror: FolderCanonicalBootstrapMirrorOwner | null;
+  verifiedColdPair: VerifiedColdDocumentPair | null;
   currentPack: Uint8Array | null;
   currentSpr: Uint8Array | null;
   hubFrameChain: Promise<void>;
@@ -599,6 +610,9 @@ async function readDocumentOpenJson(response: FetchTimeoutResponse, control: Exe
 //#region 🪪️ExecutionTargetLease
 /** 📶️ Bounded streaming progress unit for a verified execution-target body. */
 const EXECUTION_TARGET_PROGRESS_UNIT_BYTES = 64 * 1024;
+const COLD_DOCUMENT_PAIR_PAGE_BYTES = 64 * 1024;
+const COLD_DOCUMENT_PAIR_MAXIMUM_PAGES = 64;
+const COLD_DOCUMENT_PAIR_MAXIMUM_BYTES = 4 * 1024 * 1024;
 /** 🧯️ Bound on the strict lease manifest JSON body. */
 const EXECUTION_TARGET_MANIFEST_MAX_BYTES = 8 * 1024;
 
@@ -606,6 +620,169 @@ type DocumentExecutionTargetAssetV1 = "manifest" | "component" | "descriptor" | 
 
 const documentExecutionTargetLeaseMintToken = Symbol("semio.os.document-execution-target-lease.mint/v1");
 const documentExecutionTargetLeaseBrand = Symbol("semio.os.document-execution-target-lease/v1");
+const verifiedColdDocumentPairMintToken = Symbol("semio.os.verified-cold-document-pair.mint/v1");
+let verifiedColdDocumentPairGeneration = 0n;
+
+class VerifiedColdDocumentPair {
+  readonly transferGeneration: bigint;
+  readonly pageCount: number;
+  readonly frontier: ColdDocumentPairFrontier;
+  private readonly runtimeKey: string;
+  private readonly config: ArtifactActorConfig;
+  private readonly socket: WebSocket | null;
+  private readonly clientInstanceId: string;
+  private readonly lease: DocumentExecutionTargetLease;
+  private readonly publishedPack: Uint8Array;
+  private readonly publishedSpr: Uint8Array;
+  private readonly descriptorSha256: Uint8Array;
+  private readonly packSha256: Uint8Array;
+  private readonly sprSha256: Uint8Array;
+  private readonly aggregateSha256: Uint8Array;
+  private pack: Uint8Array | null;
+  private spr: Uint8Array | null;
+
+  constructor(
+    token: symbol,
+    private readonly state: ArtifactState,
+    lease: DocumentExecutionTargetLease,
+    bootstrap: WireArtifactBootstrap,
+    pair: Readonly<{ pack: Uint8Array; spr: Uint8Array }>,
+    published: Readonly<{ pack: Uint8Array; spr: Uint8Array }>,
+  ) {
+    if (token !== verifiedColdDocumentPairMintToken || verifiedColdDocumentPairGeneration === 0xffffffffffffffffn) throw new Error("cold document pair: private owner");
+    const total = pair.pack.byteLength + pair.spr.byteLength;
+    if (pair.pack.byteLength !== bootstrap.pack_length || pair.spr.byteLength !== bootstrap.spr_length || total < 2 || total > COLD_DOCUMENT_PAIR_MAXIMUM_BYTES || Math.ceil(total / COLD_DOCUMENT_PAIR_PAGE_BYTES) > COLD_DOCUMENT_PAIR_MAXIMUM_PAGES)
+      throw new Error("cold document pair: invalid capacity");
+    const fields = lease.fields(),
+      checkpoint = fields.checkpoint;
+    if (
+      fields.browserActor.kind !== "closed-browser-actor" ||
+      !checkpoint ||
+      checkpoint.descriptorDigestV1 !== fields.descriptorDigestV1 ||
+      checkpoint.aggregateSha256 !== executionTargetHex(new Uint8Array(bootstrap.aggregate_hash)) ||
+      fields.descriptorDigestV1 !== executionTargetHex(new Uint8Array(bootstrap.descriptor_hash))
+    )
+      throw new Error("cold document pair: invalid lease");
+    this.transferGeneration = ++verifiedColdDocumentPairGeneration;
+    this.pageCount = Math.ceil(total / COLD_DOCUMENT_PAIR_PAGE_BYTES);
+    this.frontier = Object.freeze({
+      documentId: bootstrap.baseline_frontier.document_id,
+      headEditOrdinal: BigInt(bootstrap.baseline_frontier.head_edit_ordinal),
+      headEditId: bootstrap.baseline_frontier.head_edit_id,
+      lastCommitSeq: BigInt(bootstrap.baseline_frontier.last_commit_seq),
+      chainSha256: Uint8Array.from(bootstrap.baseline_frontier.chain_hash),
+    });
+    this.runtimeKey = state.runtimeKey;
+    this.config = state.config;
+    this.socket = state.socket;
+    this.clientInstanceId = state.openClientInstanceId;
+    this.lease = lease;
+    this.publishedPack = published.pack;
+    this.publishedSpr = published.spr;
+    this.descriptorSha256 = Uint8Array.from(bootstrap.descriptor_hash);
+    this.packSha256 = Uint8Array.from(bootstrap.pack_hash);
+    this.sprSha256 = Uint8Array.from(bootstrap.spr_hash);
+    this.aggregateSha256 = Uint8Array.from(bootstrap.aggregate_hash);
+    this.pack = Uint8Array.from(pair.pack);
+    this.spr = Uint8Array.from(pair.spr);
+    Object.freeze(this.frontier);
+  }
+
+  assertCurrent(): void {
+    const pack = this.pack,
+      spr = this.spr;
+    if (
+      !pack ||
+      !spr ||
+      this.state.closed ||
+      this.state.docAbort.signal.aborted ||
+      this.state.verifiedColdPair !== this ||
+      this.state.config !== this.config ||
+      this.state.runtimeKey !== this.runtimeKey ||
+      artifacts.get(this.runtimeKey) !== this.state ||
+      this.state.socket !== this.socket ||
+      this.state.openClientInstanceId !== this.clientInstanceId ||
+      this.state.executionTargetLease !== this.lease ||
+      !this.lease.live ||
+      this.state.currentPack !== this.publishedPack ||
+      this.state.currentSpr !== this.publishedSpr ||
+      !this.state.frontier ||
+      !equalFrontiers(this.state.frontier, {
+        document_id: this.frontier.documentId,
+        head_edit_ordinal: Number(this.frontier.headEditOrdinal),
+        head_edit_id: this.frontier.headEditId,
+        last_commit_seq: Number(this.frontier.lastCommitSeq),
+        chain_hash: this.frontier.chainSha256,
+      })
+    )
+      throw new Error("cold document pair: stale owner");
+    documentBrowserActorLease(this.state);
+  }
+
+  page(lifetime: ActorInstanceLifetime, pageIndex: number): BrowserActorChildValue {
+    this.assertCurrent();
+    const pack = this.pack!,
+      spr = this.spr!;
+    if (!Number.isInteger(pageIndex) || pageIndex < 0 || pageIndex >= this.pageCount) throw new Error("cold document pair: invalid cursor");
+    const start = pageIndex * COLD_DOCUMENT_PAIR_PAGE_BYTES;
+    const end = Math.min(start + COLD_DOCUMENT_PAIR_PAGE_BYTES, pack.byteLength + spr.byteLength);
+    let bytes: Uint8Array;
+    if (end <= pack.byteLength) bytes = pack.slice(start, end);
+    else if (start >= pack.byteLength) bytes = spr.slice(start - pack.byteLength, end - pack.byteLength);
+    else {
+      bytes = new Uint8Array(end - start);
+      bytes.set(pack.subarray(start), 0);
+      bytes.set(spr.subarray(0, end - pack.byteLength), pack.byteLength - start);
+    }
+    return {
+      header: {
+        lifetime: { ...lifetime },
+        transferGeneration: this.transferGeneration,
+        descriptorSha256: Array.from(this.descriptorSha256),
+        baselineFrontier: {
+          documentId: this.frontier.documentId,
+          headEditOrdinal: this.frontier.headEditOrdinal,
+          headEditId: this.frontier.headEditId,
+          lastCommitSeq: this.frontier.lastCommitSeq,
+          chainSha256: Array.from(this.frontier.chainSha256),
+        },
+        packSha256: Array.from(this.packSha256),
+        sprSha256: Array.from(this.sprSha256),
+        aggregateSha256: Array.from(this.aggregateSha256),
+        packLength: BigInt(pack.byteLength),
+        sprLength: BigInt(spr.byteLength),
+        pageCount: this.pageCount,
+      },
+      pageIndex,
+      bytes,
+    };
+  }
+
+  assertApplied(status: ColdPairIngressStatus, lifetime: ActorInstanceLifetime): void {
+    this.assertCurrent();
+    if (
+      status.kind !== "applied" ||
+      !actorInstanceLifetimeEquals(status.receipt.lifetime, lifetime) ||
+      status.receipt.transferGeneration !== this.transferGeneration ||
+      !coldDocumentPairFrontierEquals(status.receipt.baselineFrontier, this.frontier) ||
+      !equalByteArrays(status.receipt.aggregateSha256, this.aggregateSha256)
+    )
+      throw new Error("cold document pair: invalid applied receipt");
+  }
+
+  drop(): void {
+    this.pack?.fill(0);
+    this.spr?.fill(0);
+    this.pack = null;
+    this.spr = null;
+  }
+}
+
+function dropVerifiedColdDocumentPair(state: ArtifactState): void {
+  const owner = state.verifiedColdPair;
+  state.verifiedColdPair = null;
+  owner?.drop();
+}
 
 /** 🪪️ Private non-serializable owner of one verified execution target. Its constructor is
  * unreachable outside this module (a module-private mint token), it owns the verified component and
@@ -989,6 +1166,7 @@ async function installDocumentExecutionTargetLease(state: ArtifactState, binding
 }
 
 function dropDocumentExecutionTargetLease(state: ArtifactState): void {
+  dropVerifiedColdDocumentPair(state);
   const mirror = state.canonicalFolderMirror;
   state.canonicalFolderMirror = null;
   if (mirror) void retireFolderCanonicalBootstrapMirror(mirror);
@@ -1002,13 +1180,66 @@ type DocumentBrowserActorOpen = Readonly<{ binding: Extract<PersistenceBinding, 
 type DocumentBrowserActorGrant = Readonly<{ actorId: string; reserveBeforeMs: number; retireAtMs: number }>;
 let documentBrowserActorGeneration = 0n;
 
+function browserActorRecord(value: BrowserActorChildValue, code: string): Record<string, BrowserActorChildValue> {
+  if (!value || typeof value !== "object" || Array.isArray(value) || value instanceof Uint8Array || value instanceof ArrayBuffer) throw new Error(code);
+  return value;
+}
+
+function unwrapBrowserActorOption(value: BrowserActorChildValue | undefined): BrowserActorChildValue | undefined {
+  if (value === null || value === undefined) return undefined;
+  const record = browserActorRecord(value, "document browser actor: invalid option");
+  if (record.tag === "none" && Object.keys(record).length === 1) return undefined;
+  if (record.tag === "some" && Object.keys(record).length === 2 && Object.hasOwn(record, "val")) return record.val;
+  return value;
+}
+
+function browserActorTurnResult(value: BrowserActorChildValue): Record<string, BrowserActorChildValue> {
+  const result = browserActorRecord(value, "document browser actor: invalid turn result");
+  const status = browserActorRecord(result.status, "document browser actor: invalid turn status");
+  if (status.tag === "faulted") throw new Error("document browser actor: guest turn fault");
+  if (status.tag !== "idle" && status.tag !== "more-work" && status.tag !== "checkpoint-ready") throw new Error("document browser actor: invalid turn status");
+  return result;
+}
+
+function browserActorCapturedReceipt(value: BrowserActorChildValue, request: ActorInstanceOpenRequest): ActorInstanceLifecycleReceipt {
+  const result = browserActorTurnResult(value);
+  const raw = unwrapBrowserActorOption(result.lifecycleReceipt);
+  const tagged = browserActorRecord(raw ?? null, "document browser actor: missing captured receipt");
+  const body = browserActorRecord(tagged.val, "document browser actor: invalid captured receipt");
+  const sequence = body.requestSequence;
+  if (tagged.tag !== "captured" || typeof sequence !== "bigint" || sequence < 1n || sequence > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("document browser actor: invalid captured receipt");
+  const receipt: ActorInstanceLifecycleReceipt = { kind: "captured", lifetime: parseColdDocumentPairLifetime(body.lifetime), requestSequence: Number(sequence) };
+  if (!actorInstanceCapturedReceiptMatches(request, receipt)) throw new Error("document browser actor: captured receipt mismatch");
+  return receipt;
+}
+
+function browserActorColdStatus(value: BrowserActorChildValue, allowLifecycleReceipt = false): ColdPairIngressStatus {
+  const result = browserActorTurnResult(value);
+  if (!allowLifecycleReceipt && unwrapBrowserActorOption(result.lifecycleReceipt) !== undefined) throw new Error("document browser actor: unexpected lifecycle receipt");
+  return parseWitColdPairIngressStatus(result.coldPairIngress);
+}
+
+function wipeBrowserActorValue(value: BrowserActorChildValue): void {
+  for (const buffer of measureChildValue(value, BROWSER_ACTOR_CHILD_LIMITS.outputBytes).transfers) if (buffer.byteLength) new Uint8Array(buffer).fill(0);
+}
+
+function browserActorTurnBudget(): BrowserActorChildValue {
+  return { fuel: 80_000_000n, deadlineMs: BROWSER_ACTOR_CHILD_LIMITS.invokeMs, maxEffects: 512, maxPatchBytes: 2_097_152, maxFrames: 8 };
+}
+
 /** 🧷️ Owns one document's reserved child; only the live private lease and exchanged grant select it. */
 class DocumentBrowserActorReservation {
   readonly generation: bigint;
   private readonly abort = new AbortController();
   private child: DocumentBrowserActorChild | null = null;
   private activation: Promise<void> | null = null;
+  private lifetime: ActorInstanceLifetime | null = null;
+  private coldOwner: VerifiedColdDocumentPair | null = null;
+  private coldApplied: VerifiedColdDocumentPair | null = null;
+  private coldTransfer: Promise<void> | null = null;
   private socket: WebSocket | null = null;
+  private pendingUiPatch: { readonly offer: BrowserActorUiPatchOfferV1; readonly resolve: (result: BrowserActorUiPatchResultV1) => void; readonly reject: (error: Error) => void; readonly timer: ReturnType<typeof setTimeout> } | null = null;
+  private renderedUiPatch = false;
   private closed = false;
   private readonly timer: ReturnType<typeof setTimeout>;
   private readonly retire = () => this.close();
@@ -1068,11 +1299,196 @@ class DocumentBrowserActorReservation {
         emitExecutionTargetStatus(this.state, binding, "verifying", progress);
       });
       assertCurrent();
-      emitExecutionTargetStatus(this.state, binding, "renderer-unavailable");
+      this.lifetime = await this.openGuest(child, assertCurrent);
       assertCurrent();
+      const owner = this.state.verifiedColdPair;
+      if (owner) await this.transferColdPair(owner, child, binding, assertCurrent);
     })();
     return this.activation;
   }
+
+  async installColdPair(owner: VerifiedColdDocumentPair): Promise<void> {
+    if (this.closed) throw new Error("document browser actor: closed reservation");
+    if (!this.lifetime || !this.child || !this.socket || !this.activation) return;
+    await this.activation;
+    const binding = hubBinding(this.state.config),
+      socket = this.socket;
+    if (!binding) throw new Error("document browser actor: missing hub binding");
+    const assertCurrent = () => {
+      if (this.closed || this.state.socket !== socket || this.state.browserActorReservation !== this || documentBrowserActorLease(this.state) !== this.lease) throw new Error("document browser actor: stale cold transfer");
+      owner.assertCurrent();
+    };
+    await this.transferColdPair(owner, this.child, binding, assertCurrent);
+  }
+
+  private async openGuest(child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<ActorInstanceLifetime> {
+    const fields = this.lease.fields();
+    const request: ActorInstanceOpenRequest = { kind: "open", activationGeneration: this.generation, instanceId: 0, requestSequence: 1 };
+    const config = new Uint8Array(0),
+      quotas = new Uint8Array(0);
+    let result: BrowserActorChildValue | null = null;
+    try {
+      result = await child.invoke(
+        ["reactor", "poll"],
+        [
+          [
+            {
+              tag: "instance-open",
+              val: {
+                instance: request.instanceId,
+                activationGeneration: request.activationGeneration,
+                requestSequence: BigInt(request.requestSequence),
+                appId: fields.surface.appId,
+                actor: this.grant.actorId,
+                config,
+                assets: [],
+                capabilities: [],
+                quotas,
+              },
+            },
+          ],
+          null,
+          null,
+          browserActorTurnBudget(),
+        ],
+      );
+      assertCurrent();
+      const captured = browserActorCapturedReceipt(result, request);
+      if (browserActorColdStatus(result, true).kind !== "idle") throw new Error("document browser actor: cold ingress before ACK");
+      if (this.captureUiPatch(result, captured.lifetime) !== null) throw new Error("document browser actor: patch before lifecycle ACK");
+      const acknowledged = await child.invoke(
+        ["reactor", "poll"],
+        [[{ tag: "instance-lifecycle-ack", val: { tag: "captured", val: { lifetime: { ...captured.lifetime }, requestSequence: BigInt(captured.requestSequence) } } }], null, null, browserActorTurnBudget()],
+      );
+      wipeBrowserActorValue(result);
+      result = acknowledged;
+      assertCurrent();
+      if (browserActorColdStatus(acknowledged).kind !== "idle") throw new Error("document browser actor: cold ingress during ACK");
+      if (this.captureUiPatch(acknowledged, captured.lifetime) !== null) throw new Error("document browser actor: patch before cold load");
+      return captured.lifetime;
+    } finally {
+      if (config.byteLength) config.fill(0);
+      if (quotas.byteLength) quotas.fill(0);
+      if (result !== null) wipeBrowserActorValue(result);
+    }
+  }
+
+  private transferColdPair(owner: VerifiedColdDocumentPair, child: DocumentBrowserActorChild, binding: Extract<PersistenceBinding, { kind: "hub" }>, assertCurrent: () => void): Promise<void> {
+    if (this.coldApplied === owner) return Promise.resolve();
+    if (this.coldOwner === owner && this.coldTransfer) return this.coldTransfer;
+    if (this.coldTransfer) return Promise.reject(new Error("document browser actor: cold transfer already active"));
+    const lifetime = this.lifetime;
+    if (!lifetime) return Promise.reject(new Error("document browser actor: guest not live"));
+    this.coldOwner = owner;
+    this.coldTransfer = (async () => {
+      for (let pageIndex = 0; pageIndex < owner.pageCount; pageIndex += 1) {
+        assertCurrent();
+        const page = owner.page(lifetime, pageIndex);
+        const pageRecord = browserActorRecord(page, "document browser actor: invalid cold page");
+        const bytes = pageRecord.bytes;
+        if (!(bytes instanceof Uint8Array)) throw new Error("document browser actor: invalid cold bytes");
+        let result: BrowserActorChildValue | null = null;
+        try {
+          result = await child.invoke(["reactor", "poll"], [[], null, page, browserActorTurnBudget()]);
+          if (bytes.byteLength !== 0) throw new Error("document browser actor: cold page ownership not transferred");
+          assertCurrent();
+          const status = browserActorColdStatus(result);
+          if (pageIndex + 1 === owner.pageCount) {
+            owner.assertApplied(status, lifetime);
+            await this.reconcileUiPatches(result, child, assertCurrent);
+          }
+          else {
+            const expected = { lifetime, transferGeneration: owner.transferGeneration, pageIndex, pageCount: owner.pageCount };
+            if (status.kind !== "pageAccepted" || !coldDocumentPairCursorEquals(status.cursor, expected)) throw new Error("document browser actor: invalid page receipt");
+            if (this.captureUiPatch(result, lifetime) !== null) throw new Error("document browser actor: patch before cold pair applied");
+          }
+        } finally {
+          if (bytes.byteLength) bytes.fill(0);
+          if (result !== null) wipeBrowserActorValue(result);
+        }
+      }
+      assertCurrent();
+      this.coldApplied = owner;
+      if (!this.renderedUiPatch) emitExecutionTargetStatus(this.state, binding, "renderer-unavailable");
+    })().finally(() => {
+      if (this.coldOwner === owner) this.coldOwner = null;
+      this.coldTransfer = null;
+    });
+    return this.coldTransfer;
+  }
+
+  private captureUiPatch(value: BrowserActorChildValue, lifetime: ActorInstanceLifetime) {
+    const result = browserActorTurnResult(value),
+      fields = this.lease.fields();
+    const rawReceipt = result.uiPatchReceipt;
+    return captureBrowserActorUiPatchV1(result.uiPatches, rawReceipt instanceof Uint8Array ? rawReceipt : unwrapBrowserActorOption(rawReceipt), lifetime, fields.surface.windowKindId, { decodePack: decodePackWire, natural: packWireNatural });
+  }
+
+  private awaitUiPatchResult(offer: BrowserActorUiPatchOfferV1): Promise<BrowserActorUiPatchResultV1> {
+    if (this.pendingUiPatch !== null) return Promise.reject(new Error("document browser actor: patch result already pending"));
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        if (this.pendingUiPatch?.offer !== offer) return;
+        this.pendingUiPatch = null;
+        reject(new Error("document browser actor: patch result deadline"));
+        this.close();
+      }, Math.min(15_000, BROWSER_ACTOR_CHILD_LIMITS.invokeMs));
+      this.pendingUiPatch = { offer, resolve, reject, timer };
+      post(offer);
+    });
+  }
+
+  settleUiPatch(result: BrowserActorUiPatchResultV1): void {
+    const pending = this.pendingUiPatch;
+    if (pending === null || !browserActorUiPatchOwnerMatchesV1(pending.offer, result)) return;
+    clearTimeout(pending.timer);
+    this.pendingUiPatch = null;
+    pending.resolve(result);
+  }
+
+  private async reconcileUiPatches(initial: BrowserActorChildValue, child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<void> {
+    const lifetime = this.lifetime;
+    if (lifetime === null) throw new Error("document browser actor: missing patch lifetime");
+    let value: BrowserActorChildValue | null = initial;
+    try {
+      for (let patchCount = 0; patchCount < 8; patchCount += 1) {
+        const captured = this.captureUiPatch(value, lifetime);
+        if (captured === null) return;
+        const fields = this.lease.fields();
+        const offer: BrowserActorUiPatchOfferV1 = {
+          kind: "browser-actor-ui-patch",
+          scope: { ...fields.scope },
+          verifiedSurfaceId: fields.surface.surfaceId,
+          activationGeneration: this.generation.toString(),
+          instanceId: captured.instanceId,
+          patch: captured.patch,
+          receipt: Array.from(encodeActorUiPatchReceipt(captured.receipt)),
+        };
+        wipeBrowserActorValue(value);
+        value = null;
+        const result = await this.awaitUiPatchResult(offer);
+        assertCurrent();
+        if (result.outcome === "acknowledged" && result.revision !== captured.patch.revision) throw new Error("document browser actor: acknowledged revision mismatch");
+        if (result.outcome === "acknowledged") this.renderedUiPatch = true;
+        const feedback = {
+          tag: result.outcome === "acknowledged" ? "patch-ack" : "patch-rejected",
+          val: {
+            receipt: { lifetime: { ...captured.receipt.lifetime }, patchSequence: captured.receipt.patchSequence },
+            surface: { instance: captured.instanceId, surface: captured.patch.surface },
+            revision: BigInt(result.revision),
+            ...(result.outcome === "rejected" ? { reason: result.reason } : {}),
+          },
+        };
+        value = await child.invoke(["reactor", "poll"], [[feedback], null, null, browserActorTurnBudget()]);
+        assertCurrent();
+        if (browserActorColdStatus(value).kind !== "idle") throw new Error("document browser actor: cold ingress after patch feedback");
+      }
+      throw new Error("document browser actor: patch feedback limit");
+    } finally {
+      if (value !== null) wipeBrowserActorValue(value);
+    }
+  }
+
   close(): void {
     if (this.closed) return;
     this.closed = true;
@@ -1080,6 +1496,16 @@ class DocumentBrowserActorReservation {
     this.state.docAbort.signal.removeEventListener("abort", this.retire);
     this.lease.retirement.removeEventListener("abort", this.retire);
     this.abort.abort();
+    if (this.pendingUiPatch !== null) {
+      const pending = this.pendingUiPatch;
+      this.pendingUiPatch = null;
+      clearTimeout(pending.timer);
+      pending.reject(new Error("document browser actor: closed with pending patch"));
+    }
+    this.lifetime = null;
+    this.coldOwner = null;
+    this.coldApplied = null;
+    this.renderedUiPatch = false;
     this.child?.close();
     this.child = null;
     if (this.state.browserActorReservation === this) this.state.browserActorReservation = null;
@@ -1561,11 +1987,7 @@ function folderCanonicalBootstrapMirrorHeaders(owner: FolderCanonicalBootstrapMi
   return { authorization: `SemioFolderBootstrap ${owner.capability}`, "x-semio-canonical-bootstrap-epoch": String(owner.epoch) };
 }
 
-async function reserveFolderCanonicalBootstrapMirror(
-  state: ArtifactState,
-  binding: Extract<PersistenceBinding, { kind: "folder" }>,
-  bootstrap: WireArtifactBootstrap,
-): Promise<FolderCanonicalBootstrapMirrorOwner> {
+async function reserveFolderCanonicalBootstrapMirror(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder" }>, bootstrap: WireArtifactBootstrap): Promise<FolderCanonicalBootstrapMirrorOwner> {
   const identity = { binding, documentId: state.config.documentId };
   const source = JSON.stringify({
     schema: "semio.backbone.canonical-bootstrap-folder-mirror-reserve/v1",
@@ -2139,6 +2561,7 @@ function rejectArtifactBootstrap(state: ArtifactState, error: unknown, owner = s
 async function requireArtifactRebootstrap(state: ArtifactState): Promise<void> {
   await retireCurrentFolderCanonicalBootstrapMirror(state);
   abortArtifactBootstrap(state);
+  dropVerifiedColdDocumentPair(state);
   state.currentPack = null;
   state.currentSpr = null;
   state.frontier = null;
@@ -2198,7 +2621,13 @@ function finishCatchupIfReady(state: ArtifactState): void {
 async function installArtifactBootstrap(state: ArtifactState, owner: DocumentArtifactBootstrapOwner, done: { readonly descriptor_hash: readonly number[]; readonly chunk_count: number } | null): Promise<void> {
   const assembler = owner.assembler;
   if (!assembler) throw new Error("artifact bootstrap missing assembler");
+  const previousPack = state.currentPack,
+    previousSpr = state.currentSpr,
+    previousFrontier = state.frontier;
   let pair: { readonly pack: Uint8Array; readonly spr: Uint8Array } | undefined;
+  let publishedPack: Uint8Array | null = null,
+    publishedSpr: Uint8Array | null = null,
+    coldOwner: VerifiedColdDocumentPair | null = null;
   try {
     owner.assertCurrent();
     pair = await assembler.finish(done, bootstrapControl(state, owner));
@@ -2219,9 +2648,20 @@ async function installArtifactBootstrap(state: ArtifactState, owner: DocumentArt
         throw error;
       }
     }
-    state.currentPack = Uint8Array.from(pair.pack);
-    state.currentSpr = Uint8Array.from(pair.spr);
+    publishedPack = Uint8Array.from(pair.pack);
+    publishedSpr = Uint8Array.from(pair.spr);
+    state.currentPack = publishedPack;
+    state.currentSpr = publishedSpr;
     state.frontier = assembler.bootstrap.baseline_frontier;
+    const lease = state.executionTargetLease;
+    if (lease?.fields().browserActor.kind === "closed-browser-actor") {
+      coldOwner = new VerifiedColdDocumentPair(verifiedColdDocumentPairMintToken, state, lease, assembler.bootstrap, pair, { pack: publishedPack, spr: publishedSpr });
+      state.verifiedColdPair = coldOwner;
+      coldOwner.assertCurrent();
+      await state.browserActorReservation?.installColdPair(coldOwner);
+      owner.assertCurrent();
+      coldOwner.assertCurrent();
+    }
     emitEvent(state, { kind: "snapshotReplaced", pack: Array.from(pair.pack), spr: Array.from(pair.spr) });
     owner.assertCurrent();
     if (state.outbox.length > 0) {
@@ -2232,6 +2672,18 @@ async function installArtifactBootstrap(state: ArtifactState, owner: DocumentArt
     state.artifactBootstrapOwner = null;
     state.artifactBootstrapDeadlineMs = null;
     finishCatchupIfReady(state);
+  } catch (error) {
+    if (state.verifiedColdPair === coldOwner) dropVerifiedColdDocumentPair(state);
+    if (state.currentPack === publishedPack) {
+      publishedPack?.fill(0);
+      state.currentPack = previousPack;
+    }
+    if (state.currentSpr === publishedSpr) {
+      publishedSpr?.fill(0);
+      state.currentSpr = previousSpr;
+    }
+    if (state.currentPack === previousPack && state.currentSpr === previousSpr) state.frontier = previousFrontier;
+    throw error;
   } finally {
     pair?.pack.fill(0);
     pair?.spr.fill(0);
@@ -2240,6 +2692,7 @@ async function installArtifactBootstrap(state: ArtifactState, owner: DocumentArt
 
 async function startArtifactBootstrap(state: ArtifactState, bootstrap: WireArtifactBootstrap, resumeToken: string, serverFrontier: WireFrontierSummary): Promise<void> {
   abortArtifactBootstrap(state);
+  dropVerifiedColdDocumentPair(state);
   state.artifactBootstrapProgress = [];
   validateArtifactBootstrapIdentity(state, bootstrap, serverFrontier);
   const owner = captureArtifactBootstrapOwner(state);
@@ -3567,6 +4020,7 @@ function openArtifact(config: ArtifactActorConfig): void {
     artifactBootstrapDeadlineMs: null,
     artifactBootstrapProgress: [],
     canonicalFolderMirror: null,
+    verifiedColdPair: null,
     currentPack: null,
     currentSpr: null,
     hubFrameChain: Promise.resolve(),
@@ -3758,6 +4212,11 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
     case "inference-close":
       closeInferencePort(request.operationEpoch);
       break;
+    case "browser-actor-ui-patch-result": {
+      const state = artifactState(request.scope.documentId, request.scope.spaceId);
+      state?.browserActorReservation?.settleUiPatch(request);
+      break;
+    }
   }
 }
 //#endregion 🔖️MessageBridge
@@ -4325,7 +4784,13 @@ if (import.meta.vitest) {
       let puts = 0;
       globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
         if (String(input).includes("/reserve")) {
-          return { ok: true, status: 201, headers: { get: () => "application/json" }, json: async () => ({ schema: "semio.backbone.canonical-bootstrap-folder-mirror-owner/v1", epoch: 1, capability: "a".repeat(64) }), text: async () => "" } as unknown as Response;
+          return {
+            ok: true,
+            status: 201,
+            headers: { get: () => "application/json" },
+            json: async () => ({ schema: "semio.backbone.canonical-bootstrap-folder-mirror-owner/v1", epoch: 1, capability: "a".repeat(64) }),
+            text: async () => "",
+          } as unknown as Response;
         }
         if (init?.method === "PUT") puts += 1;
         return { ok: false, status: 500, statusText: "fixture failure", headers: { get: () => null }, json: async () => ({}), text: async () => "" } as unknown as Response;
@@ -6325,16 +6790,32 @@ if (import.meta.vitest) {
                   }
                 }
                 if (message.kind === "invoke") {
-                  describes++;
-                  expect(message.path).toEqual(["describe", "describe"]);
-                  expect(message.args).toEqual([]);
-                  const value = structuredClone(guest);
-                  if (row.name === "descriptor-mismatch") value.manifest.pluginId = "foreign";
-                  const encoded = encodePackValue(value);
-                  const bytes = row.name === "descriptor-noncanonical" ? new Uint8Array([...encoded, 0]) : encoded;
-                  this.port.postMessage({ ...this.binding, kind: "result", sequence: message.sequence, value: row.name === "descriptor-result-shape" ? [bytes] : bytes }, [bytes.buffer]);
-                  expect(bytes.byteLength).toBe(0);
-                  this.port.postMessage({ ...this.binding, kind: "transferred", sequence: message.sequence, detached: 1 });
+                  if (message.path[0] === "describe") {
+                    describes++;
+                    expect(message.path).toEqual(["describe", "describe"]);
+                    expect(message.args).toEqual([]);
+                    const value = structuredClone(guest);
+                    if (row.name === "descriptor-mismatch") value.manifest.pluginId = "foreign";
+                    const encoded = encodePackValue(value);
+                    const bytes = row.name === "descriptor-noncanonical" ? new Uint8Array([...encoded, 0]) : encoded;
+                    this.port.postMessage({ ...this.binding, kind: "result", sequence: message.sequence, value: row.name === "descriptor-result-shape" ? [bytes] : bytes }, [bytes.buffer]);
+                    expect(bytes.byteLength).toBe(0);
+                    this.port.postMessage({ ...this.binding, kind: "transferred", sequence: message.sequence, detached: 1 });
+                    return;
+                  }
+                  expect(message.path).toEqual(["reactor", "poll"]);
+                  const events = message.args[0] as Record<string, any>[];
+                  const open = events[0]?.tag === "instance-open" ? events[0].val : null;
+                  const acknowledged = events[0]?.tag === "instance-lifecycle-ack";
+                  const lifecycleReceipt = open ? { tag: "captured", val: { lifetime: { activationGeneration: open.activationGeneration, instanceId: open.instance, guestLifetime: 1n }, requestSequence: open.requestSequence } } : null;
+                  if (acknowledged) activated++;
+                  this.port.postMessage({
+                    ...this.binding,
+                    kind: "result",
+                    sequence: message.sequence,
+                    value: { uiPatches: [], effects: [], presence: [], nextWake: null, status: { tag: "idle" }, fuelUsed: 1n, commandIngress: { tag: "idle" }, coldPairIngress: { tag: "idle" }, lifecycleReceipt, uiPatchReceipt: null },
+                  });
+                  this.port.postMessage({ ...this.binding, kind: "transferred", sequence: message.sequence, detached: 0 });
                 }
               };
               this.port.start();
@@ -6362,7 +6843,7 @@ if (import.meta.vitest) {
               bodyProgress.add(status.spaceId);
               if (row.name === "client-change-during-progress") records[0]!.state.openClientInstanceId = "replaced-by-progress-observer";
             }
-            if (status.code === "renderer-unavailable" && bodyProgress.delete(status.spaceId)) activated++;
+            if (status.code === "renderer-unavailable") bodyProgress.delete(status.spaceId);
           };
           clearLocalBrowserBrokerProof();
           installLocalBrowserBrokerProof("a".repeat(64));
@@ -6400,13 +6881,12 @@ if (import.meta.vitest) {
             return Response.json(current.socketGrant, { headers: { "x-semio-browser-broker-advanced": "1" } });
           };
           const setup = async (spaceId: string) => {
-            const current = structuredClone(fixture);
+            const current = { ...structuredClone(fixture), socketGrant: { ...structuredClone(fixture.socketGrant), expiresAtMs: Date.now() + 25000 } };
             current.intent.scope.spaceId = spaceId;
             current.plan.scope.spaceId = spaceId;
             current.manifest.scope.spaceId = spaceId;
             current.plan.expiresAtUnixMs = Date.now() + 30000;
-            current.socketGrant.expiresAtMs = Date.now() + 25000;
-            openArtifact({ documentId: current.intent.scope.documentId, schema: current.plan.artifact.schema, bindings: [] });
+            openArtifact({ documentId: current.intent.scope.documentId, schema: current.plan.artifact.schema, bindings: [], actor: "untrusted-ui-actor" });
             const state = artifactState(current.intent.scope.documentId)!;
             state.openClientInstanceId = current.intent.clientInstanceId;
             artifacts.delete(state.runtimeKey);
@@ -6500,6 +6980,267 @@ if (import.meta.vitest) {
         globalThis.fetch = originalFetch;
         (globalThis as unknown as { Worker: unknown }).Worker = originalWorker;
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalSocket;
+      }
+    });
+
+    it("browser document actor transfers one verified cold pair only after lifecycle ACK and exact page receipts", async () => {
+      const fixture = await executionTargetLeaseFixture();
+      const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
+      const exact = corpus.exact as {
+        packLength: number;
+        sprLength: number;
+        pageCount: number;
+        packPattern: { multiplier: number; addend: number };
+        sprPattern: { multiplier: number; addend: number };
+        packSha256: string;
+        sprSha256: string;
+        aggregateSha256: string;
+      };
+      const pattern = (length: number, multiplier: number, addend: number): Uint8Array => Uint8Array.from({ length }, (_unused, index) => (index * multiplier + addend) & 255);
+      const pack = pattern(exact.packLength, exact.packPattern.multiplier, exact.packPattern.addend),
+        spr = pattern(exact.sprLength, exact.sprPattern.multiplier, exact.sprPattern.addend),
+        publishedPack = Uint8Array.from(pack),
+        publishedSpr = Uint8Array.from(spr),
+        actorBytes = new TextEncoder().encode("abc"),
+        descriptor = executionTargetBytes(fixture.descriptorHex),
+        guest = decodePackValue(descriptor) as Record<string, any>,
+        originalWorker = globalThis.Worker,
+        originalFetch = globalThis.fetch;
+      const { UiDocumentStore } = await import("./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx");
+      const windowKindId = fixture.manifest.surface.windowKindId;
+      for (const key of Object.keys(guest.hashes)) guest.hashes[key] = "";
+      const received = new Uint8Array(pack.byteLength + spr.byteLength),
+        pageIndexes: number[] = [],
+        statuses: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>[] = [],
+        patchOffers: BrowserActorUiPatchOfferV1[] = [],
+        uiStore = new UiDocumentStore(windowKindId);
+      let lifecycleAcknowledged = false,
+        patchAcknowledged = false,
+        patchRejected = false,
+        loaded = 0,
+        described = 0,
+        terminated = 0;
+      class ColdPairWorker {
+        port!: MessagePort;
+        binding!: { schema: string; nonce: string; generation: string };
+        postMessage(init: Record<string, any>): void {
+          this.port = init.port;
+          this.binding = { schema: init.schema, nonce: init.nonce, generation: init.generation };
+          this.port.onmessage = (event) => {
+            const message = event.data;
+            if (message.kind === "load") {
+              loaded++;
+              expect(new Uint8Array(message.bytes)).toEqual(actorBytes);
+              const byteLength = message.bytes.byteLength;
+              new Uint8Array(message.bytes).fill(0);
+              this.port.postMessage({ ...this.binding, kind: "loaded", byteLength, sha256: message.sha256 });
+              return;
+            }
+            if (message.kind !== "invoke") return;
+            if (message.path[0] === "describe") {
+              described++;
+              const bytes = encodePackValue(guest);
+              this.port.postMessage({ ...this.binding, kind: "result", sequence: message.sequence, value: bytes }, [bytes.buffer]);
+              this.port.postMessage({ ...this.binding, kind: "transferred", sequence: message.sequence, detached: 1 });
+              return;
+            }
+            expect(message.path).toEqual(["reactor", "poll"]);
+            const events = message.args[0] as Record<string, any>[];
+            const open = events[0]?.tag === "instance-open" ? events[0].val : null;
+            const acknowledged = events[0]?.tag === "instance-lifecycle-ack";
+            const patchAck = events[0]?.tag === "patch-ack" ? events[0].val : null;
+            const patchRejection = events[0]?.tag === "patch-rejected" ? events[0].val : null;
+            const page = message.args[2] as Record<string, any> | null;
+            let coldPairIngress: Record<string, any> = { tag: "idle" };
+            if (acknowledged) lifecycleAcknowledged = true;
+            if (patchAck) {
+              expect(patchAck.surface).toEqual({ instance: 0, surface: windowKindId });
+              expect(patchAck.revision).toBe(1n);
+              expect(patchAck.receipt.patchSequence).toBe(1n);
+              patchAcknowledged = true;
+            }
+            if (patchRejection) {
+              expect(patchRejection.surface).toEqual({ instance: 0, surface: windowKindId });
+              expect(patchRejection.revision).toBe(1n);
+              expect(patchRejection.receipt.patchSequence).toBe(2n);
+              expect(patchRejection.reason).toBe("revisionMismatch");
+              patchRejected = true;
+            }
+            if (page) {
+              expect(lifecycleAcknowledged).toBe(true);
+              const header = page.header as Record<string, any>,
+                pageIndex = page.pageIndex as number,
+                bytes = page.bytes as Uint8Array,
+                start = pageIndex * corpus.limits.pageBytes;
+              expect(pageIndexes).toHaveLength(pageIndex);
+              expect(bytes.byteLength).toBe(Math.min(corpus.limits.pageBytes, received.byteLength - start));
+              received.set(bytes, start);
+              bytes.fill(0);
+              pageIndexes.push(pageIndex);
+              const cursor = { lifetime: header.lifetime, transferGeneration: header.transferGeneration, pageIndex, pageCount: header.pageCount };
+              coldPairIngress =
+                pageIndex + 1 === header.pageCount
+                  ? { tag: "applied", val: { lifetime: header.lifetime, transferGeneration: header.transferGeneration, baselineFrontier: header.baselineFrontier, aggregateSha256: header.aggregateSha256 } }
+                  : { tag: "page-accepted", val: cursor };
+            }
+            const lifecycleReceipt = open ? { tag: "captured", val: { lifetime: { activationGeneration: open.activationGeneration, instanceId: open.instance, guestLifetime: 1n }, requestSequence: open.requestSequence } } : null;
+            const finalPage = Boolean(page && page.pageIndex + 1 === page.header.pageCount);
+            const lifetime = finalPage ? page!.header.lifetime : patchAck?.receipt.lifetime ?? null;
+            const node = {
+              id: 0,
+              key: "map-root",
+              component: { type: "surface", kind: "tiled-map", docSchema: "tiled-map@1", doc: { bytes: [1, 3, 5] }, bindings: [] },
+              layout: { kind: "leaf", width: "fill", height: "fill" },
+              style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" },
+              activity: "idle",
+              disabled: false,
+              transition: null,
+              accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false },
+              bindings: [],
+              menu: null,
+              children: [],
+            };
+            const emitsPatch = finalPage || Boolean(patchAck);
+            const nodeBytes = finalPage ? encodePackValue(node) : null;
+            const patchReceiptBytes = emitsPatch ? encodeActorUiPatchReceipt({ lifetime: lifetime!, patchSequence: finalPage ? 1n : 2n }) : null;
+            const resultTransfers = finalPage ? [nodeBytes!.buffer, patchReceiptBytes!.buffer] : patchReceiptBytes ? [patchReceiptBytes.buffer] : [];
+            this.port.postMessage({
+              ...this.binding,
+              kind: "result",
+              sequence: message.sequence,
+              value: {
+                uiPatches: finalPage
+                  ? [{ surface: { instance: 0, surface: windowKindId }, baseRevision: 0n, revision: 1n, ops: [{ tag: "upsert", val: { node: nodeBytes } }, { tag: "set-root", val: 0n }] }]
+                  : patchAck
+                    ? [{ surface: { instance: 0, surface: windowKindId }, baseRevision: 0n, revision: 2n, ops: [] }]
+                    : [],
+                effects: [],
+                presence: [],
+                nextWake: null,
+                status: { tag: "idle" },
+                fuelUsed: 1n,
+                commandIngress: { tag: "idle" },
+                coldPairIngress,
+                lifecycleReceipt,
+                uiPatchReceipt: patchReceiptBytes,
+              },
+            }, resultTransfers);
+            this.port.postMessage({ ...this.binding, kind: "transferred", sequence: message.sequence, detached: resultTransfers.length });
+          };
+          this.port.start();
+          this.port.postMessage({ ...this.binding, kind: "ready" });
+        }
+        terminate(): void {
+          terminated++;
+          this.port?.close();
+        }
+      }
+      const documentId = "cold-browser-pair";
+      openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "untrusted-ui-actor" });
+      const state = artifactState(documentId)!;
+      artifacts.delete(state.runtimeKey);
+      const binding = { kind: "hub", baseUrl: fixture.hubOrigin, spaceId: "cold-browser-space", requestedSurfaceId: fixture.manifest.surface.surfaceId } as const;
+      state.config = { ...state.config, documentId, schema: fixture.manifest.artifact.schema, bindings: [binding] };
+      state.runtimeKey = documentRuntimeKeyForConfig(state.config);
+      artifacts.set(state.runtimeKey, state);
+      const fields = structuredClone(fixture.manifest);
+      fields.scope = { spaceId: binding.spaceId, documentId };
+      fields.checkpoint = {
+        ...fields.checkpoint!,
+        aggregateSha256: exact.aggregateSha256,
+        baselineFrontier: { ...fields.checkpoint!.baselineFrontier, documentId },
+      };
+      const lease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(fields), fixture.hubOrigin, executionTargetBytes(fixture.componentHex), descriptor);
+      state.executionTargetLease = lease;
+      state.currentPack = publishedPack;
+      state.currentSpr = publishedSpr;
+      state.frontier = {
+        document_id: documentId,
+        head_edit_ordinal: fields.checkpoint.baselineFrontier.headEditOrdinal,
+        head_edit_id: fields.checkpoint.baselineFrontier.headEditId,
+        last_commit_seq: fields.checkpoint.baselineFrontier.lastCommitSeq,
+        chain_hash: fields.checkpoint.baselineFrontier.chainHash,
+      };
+      const intent = { ...structuredClone(fixture.intent), scope: { spaceId: binding.spaceId, documentId } };
+      const receipt = { ...structuredClone(fixture.socketGrant), expiresAtMs: Date.now() + 25_000 };
+      lease.admitBrowserActor(documentExecutionTargetLeaseMintToken, receipt, Date.now() + 30_000, { binding, intent, assertCurrent() {} });
+      state.actor = receipt.actorId;
+      state.hubActorReady = true;
+      state.pendingSocketActorId = null;
+      const socket = new FakeHubWebSocket("ws://hub.test/cold");
+      state.socket = socket as unknown as WebSocket;
+      socket.open();
+      executionTargetStatusObserver = (status) => statuses.push(status);
+      workerPostTestSink = (message) => {
+        if (message.kind !== "browser-actor-ui-patch") return;
+        patchOffers.push(message);
+        const before = uiStore.getState();
+        const applied = uiStore.applyPatch(message.patch);
+        if (applied.ok) {
+          handleTsRequest({ kind: "browser-actor-ui-patch-result", scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "acknowledged", revision: uiStore.getRevisionSnapshot() });
+          return;
+        }
+        expect(uiStore.getState()).toBe(before);
+        handleTsRequest({ kind: "browser-actor-ui-patch-result", scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "rejected", revision: uiStore.getRevisionSnapshot(), reason: applied.rejection.type });
+      };
+      (globalThis as unknown as { Worker: unknown }).Worker = ColdPairWorker;
+      globalThis.fetch = async (input) => {
+        expect(String(input).endsWith("/execution-target/browser-actor")).toBe(true);
+        return executionTargetBodyResponse(actorBytes);
+      };
+      let owner: VerifiedColdDocumentPair | null = null;
+      try {
+        const reservation = await reserveDocumentBrowserActorChild(state);
+        expect(reservation).not.toBeNull();
+        await reservation!.activate(state.socket);
+        const bootstrap: WireArtifactBootstrap = {
+          format_version: 1,
+          descriptor_hash: Array.from(executionTargetBytes(fields.descriptorDigestV1)),
+          artifact_schema: fields.artifact.schema,
+          artifact_kind: fields.artifact.kind,
+          pack_schema_hash: Array.from(executionTargetBytes(fields.artifact.packSchemaHash)),
+          baseline_frontier: state.frontier,
+          pack_hash: Array.from(executionTargetBytes(exact.packSha256)),
+          spr_hash: Array.from(executionTargetBytes(exact.sprSha256)),
+          pack_length: pack.byteLength,
+          spr_length: spr.byteLength,
+          chunk_count: 2,
+          aggregate_hash: Array.from(executionTargetBytes(exact.aggregateSha256)),
+          required_tail_frontier: state.frontier,
+          inline: null,
+        };
+        owner = new VerifiedColdDocumentPair(verifiedColdDocumentPairMintToken, state, lease, bootstrap, { pack, spr }, { pack: publishedPack, spr: publishedSpr });
+        state.verifiedColdPair = owner;
+        expect(owner.pageCount).toBe(exact.pageCount);
+        await reservation!.installColdPair(owner);
+        expect(pageIndexes).toEqual(Array.from({ length: exact.pageCount }, (_unused, index) => index));
+        expect(received.subarray(0, pack.byteLength)).toEqual(pack);
+        expect(received.subarray(pack.byteLength)).toEqual(spr);
+        expect(statuses.filter((status) => status.code === "renderer-unavailable")).toHaveLength(0);
+        expect(patchOffers).toHaveLength(2);
+        expect(patchAcknowledged).toBe(true);
+        expect(patchRejected).toBe(true);
+        expect(uiStore.getRevisionSnapshot()).toBe(1);
+        expect(uiStore.getState().nodes.get(uiStore.getState().root!)?.component).toMatchObject({ type: "surface", kind: "tiled-map" });
+        dropVerifiedColdDocumentPair(state);
+        expect(() => owner!.page({ activationGeneration: reservation!.generation, instanceId: 0, guestLifetime: 1n }, 0)).toThrow("stale owner");
+        expect({ loaded, described, lifecycleAcknowledged, pages: pageIndexes.length, networkChunks: bootstrap.chunk_count, terminated }).toEqual({
+          loaded: 1,
+          described: 1,
+          lifecycleAcknowledged: true,
+          pages: exact.pageCount,
+          networkChunks: 2,
+          terminated: 0,
+        });
+        console.log(`browser-cold-pair-transfer: pages=${pageIndexes.length} bytes=${received.byteLength} lifecycle-ack=1 applied=1 patch-ack=1 patch-rejected=1 tiled-map=1 network-chunks=${bootstrap.chunk_count}`);
+      } finally {
+        closeArtifactRuntime(state.runtimeKey);
+        expect(terminated).toBe(1);
+        expect(browserActorChildCapacity()).toEqual({ actors: 0, bytes: 0 });
+        executionTargetStatusObserver = null;
+        workerPostTestSink = null;
+        globalThis.fetch = originalFetch;
+        (globalThis as unknown as { Worker: unknown }).Worker = originalWorker;
       }
     });
 

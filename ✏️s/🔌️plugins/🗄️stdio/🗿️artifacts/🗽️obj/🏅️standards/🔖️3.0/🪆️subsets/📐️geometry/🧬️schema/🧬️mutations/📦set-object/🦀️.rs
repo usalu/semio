@@ -22,7 +22,7 @@ pub struct SetObject {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetObject {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "object", kind: "set-object", record: "SetObject" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as protocol::Mutation<ObjSnapshot>>::Diff> {
+    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         agg_diff(&ObjMutation::SetObject(self.clone()), base)
     }
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {

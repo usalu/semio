@@ -12,13 +12,13 @@ impl SetSurfaceCount {
     const TAG: u8 = 0x65;
 }
 impl OpText for SetSurfaceCount {
-    fn parse_op(line: &str) -> Result<Self, crate::store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(Self {
             value: line
                 .strip_prefix("set-surface-count ")
-                .ok_or_else(|| crate::store::TextError::new("expected set-surface-count", crate::store::TextSpan::at(1, 1)))?
+                .ok_or_else(|| store::TextError::new("expected set-surface-count", store::TextSpan::at(1, 1)))?
                 .parse()
-                .map_err(|_| crate::store::TextError::new("surface count must be i32", crate::store::TextSpan::at(1, 1)))?,
+                .map_err(|_| store::TextError::new("surface count must be i32", store::TextSpan::at(1, 1)))?,
         })
     }
     fn print_op(&self) -> String {

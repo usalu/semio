@@ -15,7 +15,7 @@ pub struct SetStructuralEntity {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetStructuralEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "structural-entity", kind: "set-structural-entity", record: "SetStructuralEntity" };
 
-    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3Cv20Mutation as protocol::Mutation<Ifc2x3Snapshot>>::Diff> {
+    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3Cv20Mutation as Mutation<Ifc2x3Snapshot>>::Diff> {
         agg_diff(&Ifc2x3Cv20Mutation::SetStructuralEntity(self.clone()), base)
     }
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3Cv20Mutation> {

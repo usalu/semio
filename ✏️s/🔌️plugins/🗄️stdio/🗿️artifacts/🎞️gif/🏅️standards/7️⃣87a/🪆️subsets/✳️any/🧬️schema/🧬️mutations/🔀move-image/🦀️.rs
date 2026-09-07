@@ -15,7 +15,7 @@ pub struct MoveImage {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for MoveImage {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "image", kind: "move-image", record: "MoveImage" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as protocol::Mutation<GifSnapshot>>::Diff> {
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
         agg_diff(&GifMutation::MoveImage(self.clone()), base)
     }
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {

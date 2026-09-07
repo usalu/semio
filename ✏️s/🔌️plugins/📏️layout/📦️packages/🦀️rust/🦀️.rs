@@ -103,7 +103,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖨️change-print-target/🧪️tests/🖨️sets-a-cmyk-print-target/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖨️change-print-target/🧪️tests/🖨️sets-a-cmyk-643402/🦀️.rs"]
                                     mod tests_sets_a_cmyk_print_target;
                                 }
                                 #[path = "."]
@@ -112,7 +112,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾change-data-fields/🧪️tests/🧾️attaches-a-data-fields-payload/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾change-data-fields/🧪️tests/🧾️attaches-a-data-a135f0/🦀️.rs"]
                                     mod tests_attaches_a_data_fields_payload;
                                 }
                                 #[path = "."]
@@ -166,7 +166,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-page-margins/🧪️tests/📐️sets-asymmetric-margins-on-page-1/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-page-margins/🧪️tests/📐️sets-asymmetric-c18051/🦀️.rs"]
                                     mod tests_sets_asymmetric_margins_on_page_1;
                                 }
                                 #[path = "."]
@@ -175,7 +175,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️update-page-columns/🧪️tests/🏛️splits-page-1-into-three-columns/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️update-page-columns/🧪️tests/🏛️splits-page-1-e73e69/🦀️.rs"]
                                     mod tests_splits_page_1_into_three_columns;
                                 }
                                 #[path = "."]
@@ -238,7 +238,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️change-link-path/🧪️tests/🔗️relinks-link-1-to-a-new-file/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️change-link-path/🧪️tests/🔗️relinks-link-1-3529aa/🦀️.rs"]
                                     mod tests_relinks_link_1_to_a_new_file;
                                 }
                                 #[path = "."]
@@ -247,7 +247,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-frame/🧪️tests/🔲️inserts-a-rect-frame-at-index-1/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-frame/🧪️tests/🔲️inserts-a-rect-frame-83a923/🦀️.rs"]
                                     mod tests_inserts_a_rect_frame_at_index_1;
                                 }
                                 #[path = "."]
@@ -256,7 +256,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-frame/🧪️tests/🚫️removes-the-text-frame-and-its-layer-membership/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-frame/🧪️tests/🚫️removes-the-text-3a2a11/🦀️.rs"]
                                     mod tests_removes_the_text_frame_and_its_layer_membership;
                                 }
                                 #[path = "."]
@@ -283,7 +283,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-frame-fill/🧪️tests/🎨️repaints-the-rect-frame-fill/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-frame-fill/🧪️tests/🎨️repaints-the-6ad3ff/🦀️.rs"]
                                     mod tests_repaints_the_rect_frame_fill;
                                 }
                                 #[path = "."]
@@ -292,7 +292,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️change-frame-stroke/🧪️tests/🖊️adds-a-stroke-to-the-rect-frame/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️change-frame-stroke/🧪️tests/🖊️adds-a-stroke-to-f51cb1/🦀️.rs"]
                                     mod tests_adds_a_stroke_to_the_rect_frame;
                                 }
                                 #[path = "."]
@@ -301,7 +301,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-frame-wrap-mode/🧪️tests/🔤️switches-the-text-frame-to-column-wrap/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-frame-wrap-mode/🧪️tests/🔤️switches-the-4d23be/🦀️.rs"]
                                     mod tests_switches_the_text_frame_to_column_wrap;
                                 }
                                 #[path = "."]
@@ -310,7 +310,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-frame-columns/🧪️tests/🔤️splits-the-text-frame-into-two-columns/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-frame-columns/🧪️tests/🔤️splits-the-text-a77063/🦀️.rs"]
                                     mod tests_splits_the_text_frame_into_two_columns;
                                 }
                             }
@@ -701,7 +701,7 @@ pub mod viewer {
 #[path = "../../🦀️.rs"]
 mod plugin;
 pub use plugin::LayoutApps;
-semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::LayoutApps);
+semio_framework_plugin::plugin_exports!(plugin::plugin, LayoutApps);
 
 //#region 📚️Examples
 #[path = "."]

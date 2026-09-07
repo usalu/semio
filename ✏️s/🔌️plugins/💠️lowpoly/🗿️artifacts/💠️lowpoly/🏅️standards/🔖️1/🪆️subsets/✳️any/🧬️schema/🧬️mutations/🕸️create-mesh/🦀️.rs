@@ -8,7 +8,6 @@
 //! (`26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`).
 
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

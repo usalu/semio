@@ -17,7 +17,7 @@ pub struct InsertListItem {
 impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for InsertListItem {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "list-item", kind: "insert-list-item", record: "InsertListItem" };
 
-    fn diff(&self, base: &SemioValueSnapshot) -> protocol::MutationOutcome<<SemioValueMutation as protocol::Mutation<SemioValueSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioValueSnapshot) -> protocol::MutationOutcome<<SemioValueMutation as Mutation<SemioValueSnapshot>>::Diff> {
         agg_diff(&SemioValueMutation::InsertListItem(self.clone()), base)
     }
     fn inverse(&self, base: &SemioValueSnapshot) -> Vec<SemioValueMutation> {

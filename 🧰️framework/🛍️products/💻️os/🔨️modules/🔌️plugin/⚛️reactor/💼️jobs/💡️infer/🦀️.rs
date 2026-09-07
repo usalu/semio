@@ -7,7 +7,7 @@
 
 use super::{JobCtx, run_two_phase};
 use semio_framework_job::{CommitCandidate, Generation, Operation, OperationId, RevisionId, StepOutcome};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value_derive::ToValue;
 use std::collections::VecDeque;
 use std::future::Future;
 use std::pin::Pin;
@@ -506,7 +506,7 @@ mod tests {
 
     #[test]
     fn interactive_bridge_coalesces_preview_but_backpressures_lossless_items() {
-        let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(7), semio_framework_job::RevisionId(11), semio_framework_job::Generation(3), 0);
+        let operation = Operation::new(OperationId(7), RevisionId(11), Generation(3), 0);
         let mut bridge = InferenceBridge::new(operation);
         bridge.publish_preview(vec![1]).expect("first preview");
         bridge.publish_preview(vec![2, 3]).expect("latest preview");
@@ -531,7 +531,7 @@ mod tests {
 
     #[test]
     fn interactive_bridge_diagnostic_ring_is_item_and_byte_bounded() {
-        let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(8), semio_framework_job::RevisionId(11), semio_framework_job::Generation(3), 0);
+        let operation = Operation::new(OperationId(8), RevisionId(11), Generation(3), 0);
         let mut bridge = InferenceBridge::new(operation);
         for index in 0..(DIAGNOSTIC_MAX_ITEMS + 9) {
             bridge.publish_diagnostic(vec![index as u8; 8]);

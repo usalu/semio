@@ -1,6 +1,5 @@
 //! 📝️ Direct replace-pixel-data text codec.
 use super::*;
-use crate::artifacts::bmp::schema::diff::*;
 use crate::artifacts::bmp::schema::mutations::text::Entry;
 pub const TEXT_OPCODE: &str = "replace-pixel-data";
 pub const CODEC: Entry = Entry { opcode: TEXT_OPCODE, print, parse };

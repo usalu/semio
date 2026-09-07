@@ -21,7 +21,7 @@ fn main() {
         unsafe extern "C" {
             fn fcntl(fd: i32, command: i32, ...) -> i32;
         }
-        unsafe { fcntl(3, 1) } < 0
+        (unsafe { fcntl(3, 1) }) < 0
     }
 
     #[cfg(windows)]
@@ -29,7 +29,7 @@ fn main() {
         unsafe extern "C" {
             fn _get_osfhandle(fd: i32) -> isize;
         }
-        unsafe { _get_osfhandle(3) } == -1
+        (unsafe { _get_osfhandle(3) }) == -1
     }
 
     fn protected_credential_environment_is_absent() -> bool {

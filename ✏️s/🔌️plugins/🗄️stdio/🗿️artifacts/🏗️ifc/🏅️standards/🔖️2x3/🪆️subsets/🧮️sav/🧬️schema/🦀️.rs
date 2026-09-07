@@ -14,7 +14,9 @@ pub mod mutations;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
-    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, remove_instance, upsert_instance, Ifc2x3Mutation};
+    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, upsert_instance, Ifc2x3Mutation};
+    #[cfg(test)]
+    use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::mutations::{remove_instance};
     use crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use crate::artifacts::ifc::standards::v2x3::subsets::sav::schema::check_sav_conformance;
     use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};

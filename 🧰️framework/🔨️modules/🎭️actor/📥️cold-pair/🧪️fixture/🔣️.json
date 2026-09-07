@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "statusRows": [
+    {"kind": "idle"},
+    {"kind": "pageAccepted", "cursor": {"lifetime": {"activationGeneration": 7, "instanceId": 3, "guestLifetime": 11}, "transferGeneration": 13, "pageIndex": 0, "pageCount": 2}},
+    {"kind": "backpressure", "cursor": {"lifetime": {"activationGeneration": 7, "instanceId": 3, "guestLifetime": 11}, "transferGeneration": 13, "pageIndex": 0, "pageCount": 2}},
+    {"kind": "loading", "cursor": {"lifetime": {"activationGeneration": 7, "instanceId": 3, "guestLifetime": 11}, "transferGeneration": 13, "pageIndex": 1, "pageCount": 2}},
+    {"kind": "applied", "receipt": {"lifetime": {"activationGeneration": 7, "instanceId": 3, "guestLifetime": 11}, "transferGeneration": 13, "baselineFrontier": {"documentId": "shared-map", "headEditOrdinal": 17, "headEditId": "edit-17", "lastCommitSeq": 15, "chainSha256": [34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34]}, "aggregateSha256": [51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51]}},
+    {"kind": "fault", "cursor": {"lifetime": {"activationGeneration": 7, "instanceId": 3, "guestLifetime": 11}, "transferGeneration": 13, "pageIndex": 1, "pageCount": 2}, "fault": [99,111,108,100,45,112,97,105,114,46,104,97,115,104]}
+  ],
+  "hostileRows": [
+    {"kind": "pageAccepted", "cursor": {"lifetime": {"activationGeneration": 0, "instanceId": 3, "guestLifetime": 11}, "transferGeneration": 13, "pageIndex": 0, "pageCount": 2}},
+    {"kind": "loading", "cursor": {"lifetime": {"activationGeneration": 7, "instanceId": 3, "guestLifetime": 11}, "transferGeneration": 0, "pageIndex": 1, "pageCount": 2}},
+    {"kind": "backpressure", "cursor": {"lifetime": {"activationGeneration": 7, "instanceId": 3, "guestLifetime": 11}, "transferGeneration": 13, "pageIndex": 2, "pageCount": 2}},
+    {"kind": "applied", "receipt": {"lifetime": {"activationGeneration": 7, "instanceId": 3, "guestLifetime": 11}, "transferGeneration": 13, "baselineFrontier": {"documentId": "shared-map", "headEditOrdinal": 14, "headEditId": "edit-14", "lastCommitSeq": 15, "chainSha256": [34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34]}, "aggregateSha256": [51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51,51]}},
+    {"kind": "fault", "cursor": {"lifetime": {"activationGeneration": 7, "instanceId": 3, "guestLifetime": 11}, "transferGeneration": 13, "pageIndex": 1, "pageCount": 2}, "fault": []}
+  ],
+  "wireTags": {"idle": 0, "pageAccepted": 1, "backpressure": 2, "loading": 3, "applied": 4, "fault": 5},
+  "laws": ["exact-lifetime", "exact-cursor", "active-frontier", "bounded-fault", "canonical-pack", "unknown-fields-refused"]
+}

@@ -18,7 +18,7 @@ pub struct SetImageBlock {
 impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for SetImageBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "image-block", kind: "set-image-block", record: "SetImageBlock" };
 
-    fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<<SemioDocumentMutation as protocol::Mutation<SemioDocumentSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<<SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::Diff> {
         agg_diff(&SemioDocumentMutation::SetImageBlock(self.clone()), base)
     }
     fn inverse(&self, base: &SemioDocumentSnapshot) -> Vec<SemioDocumentMutation> {

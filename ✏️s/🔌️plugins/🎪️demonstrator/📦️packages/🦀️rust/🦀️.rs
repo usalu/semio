@@ -96,7 +96,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/💾️binary/🦀️.rs"]
                                     pub mod binary;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-playground-document-schema/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-4f474c/🦀️.rs"]
                                     mod tests_retags_the_playground_document_schema;
                                 }
                             }

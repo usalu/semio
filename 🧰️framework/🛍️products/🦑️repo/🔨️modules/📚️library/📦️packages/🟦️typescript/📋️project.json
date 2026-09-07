@@ -4,6 +4,14 @@
   "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
   "projectType": "library",
   "targets": {
+    "test-process-budgets": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test process-budgets"
+      }
+    },
     "test-exact-cargo-laws": {
       "executor": "nx:run-commands",
       "cache": false,

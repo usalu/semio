@@ -816,8 +816,8 @@ mod scene_compute {
     /// exact ambient-reach anti-pattern the ticket exists to remove even though it was write-once).
     /// Every call site already builds, uses and drops its handles within the one call that owns
     /// this kernel, so no cross-call registry was ever load-bearing.
-    pub fn cad_brep_kernel() -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep {
-        semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep::new()
+    pub fn cad_brep_kernel() -> Brep {
+        Brep::new()
     }
 
     /// @emoji 📐️ Tessellates a typology's primitive sized from authored geometry (or a universal

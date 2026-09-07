@@ -17,7 +17,7 @@ pub struct AddSupport {
 pub fn handle(payload: &AddSupport, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.supports.iter().map(|s| s.id.clone()), "sup");
-    Ok(Emit::mutations(vec![Fem3dMutation::CreateSupport(crate::artifacts::fem3d::mutations::create_support::mutation::CreateSupport {
+    Ok(Emit::mutations(vec![Fem3dMutation::CreateSupport(crate::artifacts::fem3d::mutations::create_support::CreateSupport {
         support: crate::artifacts::fem3d::FemSupport { id, node_id: payload.node_id.clone(), fixed: payload.fixed.clone() },
     })]))
 }

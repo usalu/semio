@@ -16,7 +16,7 @@ pub struct InsertEntity {
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for InsertEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "entity", kind: "insert-entity", record: "InsertEntity" };
 
-    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<<IfcMutation as protocol::Mutation<IfcSnapshot>>::Diff> {
+    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<<IfcMutation as Mutation<IfcSnapshot>>::Diff> {
         agg_diff(&IfcMutation::InsertEntity(self.clone()), base)
     }
     fn inverse(&self, base: &IfcSnapshot) -> Vec<IfcMutation> {

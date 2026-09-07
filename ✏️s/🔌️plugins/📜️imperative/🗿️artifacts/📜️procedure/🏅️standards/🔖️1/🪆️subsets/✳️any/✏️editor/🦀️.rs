@@ -311,13 +311,13 @@ impl ArtifactEditor for ImperativePlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<ImperativePlayApp>,
+        owner: EditorApp<ImperativePlayApp>,
         owner_file: "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.imperative.procedure@1/*#editor",
         document_schema: "procedure.document/v1",
         factory: "ImperativeRetainedCommandJobFactory",
         factory_type: ImperativeRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 16, 1, 16_384, 7_500),
+        contract: ToolExecutionContract::bounded_first_step(8_192, 16, 1, 16_384, 7_500),
         tools: ["setLocale"]
     }
 

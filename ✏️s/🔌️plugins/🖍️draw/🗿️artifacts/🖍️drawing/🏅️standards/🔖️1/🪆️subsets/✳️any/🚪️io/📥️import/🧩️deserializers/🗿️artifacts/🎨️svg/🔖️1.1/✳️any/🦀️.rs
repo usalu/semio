@@ -17,7 +17,7 @@ pub struct SvgIntoDraw;
 impl Deserializer<DrawingSnapshot> for SvgIntoDraw {
     const FROM: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(_payload: &IoPayload) -> IoResult<DrawingSnapshot> {
+    async fn deserialize(_payload: &IoPayload) -> IoResult<DrawingSnapshot> {
         let mut snap = empty_drawing_snapshot();
         snap.id = create_drawing_id("svg-import", b"svg");
         snap.title = Some("Imported svg".into());

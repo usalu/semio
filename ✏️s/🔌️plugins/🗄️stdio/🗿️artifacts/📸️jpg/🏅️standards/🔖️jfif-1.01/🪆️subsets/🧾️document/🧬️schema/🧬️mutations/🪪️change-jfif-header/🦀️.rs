@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative change-jfif-header mutation.
-use crate::artifacts::jpg::schema::diff::{self, *};
+use crate::artifacts::jpg::schema::diff::*;
 use crate::artifacts::jpg::schema::mutations::JpgMutation;
 use crate::artifacts::jpg::schema::snapshot::*;
 
@@ -31,13 +31,12 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ChangeJfifHeaderMutati
         protocol::MutationOutcome::new(contribute(base, *version, *density_units, *x_density, *y_density, thumbnail.clone()))
     }
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgMutation> {
-        let Self { version, density_units, x_density, y_density, thumbnail } = self;
         let outcome = <Self as protocol::MutationKind<JpgSnapshot, JpgMutation>>::diff(self, base);
         if <JpgDiff as protocol::DiffAlgebra<JpgSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
         {
-            vec![JpgMutation::ChangeJfifHeader(crate::artifacts::jpg::schema::mutations::ChangeJfifHeaderMutation {
+            vec![JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation {
                 version: base.jfif_version,
                 density_units: base.jfif_density_units,
                 x_density: base.jfif_x_density,

@@ -8,6 +8,7 @@
 
 use crate::artifacts::sequence::SequenceCamera;
 use protocol::Mutation;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
@@ -18,8 +19,11 @@ use serde::{Deserialize, Serialize};
 /// shape `shooting_engine::ShootingConfig` established for the pilot. 🕹️ ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_step_ids` no longer lives here —
 /// selection is framework-owned now, read via `InteractionView::selection("steps")`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::DslArtifact)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[derive(dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "sequencecfg")]
 #[dsl(id = "sequence.config")]
 #[dsl(layout = "lines")]
@@ -98,7 +102,9 @@ store::impl_whole_record_config!(SequenceConfig);
 /// `SequencePlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()`
 /// returns — same "whole-config snapshot is the simplest correct inverse" shape as
 /// `shooting_op::ShootingConfigMutation`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+#[derive(dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 pub enum SequenceConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

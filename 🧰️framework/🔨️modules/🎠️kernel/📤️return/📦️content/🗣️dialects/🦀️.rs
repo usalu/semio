@@ -10,7 +10,7 @@ fn unhex(value: &str) -> Vec<u8> {
 
 #[semio_framework_async_macros::async_test]
 async fn return_content_existing_dialect_invocation_remains_exact_app_frame() {
-    use semio_framework_os_kernel::channel::{AppFrame, decode_app_frame, encode_app_frame};
+    use semio_framework_os_kernel::channel::{decode_app_frame, encode_app_frame, AppFrame};
     let fixture = fixture();
     let row = &fixture["invocation"];
     let bytes = |name: &str| serde_json::from_value::<Vec<u8>>(row[name].clone()).unwrap();

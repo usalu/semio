@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the process editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum ProcessApps: PluginApp {
-        Process3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::process3d::Process3dPlayApp>>),
-        Process3dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::process3d::Process3dViewer>>),
+        Process3dEditor(VcsArtifactApp<EditorApp<crate::editor::process3d::Process3dPlayApp>>),
+        Process3dViewer(VcsArtifactApp<ViewerApp<crate::viewer::process3d::Process3dViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -22,12 +22,12 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// plugin's own actor runs `Isolated` (its 4 `🧩️extensions/` — metal, robotic, concrete, wood — run
 /// `Declarative` instead, see each extension's own `bundle()`), and it asks the broker for document
 /// write access to persist edits.
-pub fn plugin() -> Result<Plugin<ProcessApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<ProcessApps>, PluginAssemblyError> {
     Plugin::<ProcessApps>::builder("process")
         .label("Process")
         .version("0.1.0")
         .package_id("semio:process")
-        .artifact(crate::artifacts::process3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::process3d::declaration().map_err(PluginAssemblyError::definition)?)
         .editor::<crate::editor::process3d::Process3dPlayApp>(crate::editor::process3d::create_process3d_app())
         .editor_mutation_roster::<crate::editor::process3d::Process3dPlayApp>()
         .viewer::<crate::viewer::process3d::Process3dViewer>(crate::viewer::process3d::create_process3d_viewer())

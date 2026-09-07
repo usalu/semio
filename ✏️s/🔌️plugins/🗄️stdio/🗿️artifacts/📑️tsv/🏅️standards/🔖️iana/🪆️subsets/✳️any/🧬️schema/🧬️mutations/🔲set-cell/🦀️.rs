@@ -17,7 +17,7 @@ pub struct SetCell {
 impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetCell {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "cell", kind: "set-cell", record: "SetCell" };
 
-    fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as protocol::Mutation<TsvSnapshot>>::Diff> {
+    fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as Mutation<TsvSnapshot>>::Diff> {
         agg_diff(&TsvMutation::SetCell(self.clone()), base)
     }
     fn inverse(&self, base: &TsvSnapshot) -> Vec<TsvMutation> {

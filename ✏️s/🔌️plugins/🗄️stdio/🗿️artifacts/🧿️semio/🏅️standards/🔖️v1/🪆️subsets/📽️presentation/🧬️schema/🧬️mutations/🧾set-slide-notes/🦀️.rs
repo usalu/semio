@@ -15,7 +15,7 @@ pub struct SetSlideNotes {
 impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation> for SetSlideNotes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "slide-notes", kind: "set-slide-notes", record: "SetSlideNotes" };
 
-    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<SemioPresentationMutation as protocol::Mutation<SemioPresentationSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::Diff> {
         agg_diff(&SemioPresentationMutation::SetSlideNotes(self.clone()), base)
     }
     fn inverse(&self, base: &SemioPresentationSnapshot) -> Vec<SemioPresentationMutation> {

@@ -5,7 +5,7 @@ use crate::editor::forms::commands::set_try_value::{cancel_pending_generations, 
 use crate::editor::forms::config::{discard_staged_try_value, discard_staged_try_values_batch, FormsConfig, FormsConfigMutation};
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
-use serde_json::json;
+
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
@@ -102,15 +102,10 @@ fn bulk_queue(generation: u64, cursor: usize, session: &BulkSession) -> Effect {
     Effect::DispatchAction {
         req: RequestId(NEXT_BULK_REQUEST.fetch_add(1, Ordering::Relaxed)),
         action: SET_TRY_VALUE_STEP_ACTION_ID.into(),
-        args: semio_framework::optional_json_to_dsl(Some(json!({
-            "appId": session.app_id,
-            "documentId": session.document_id,
-            "operationId": session.operation_id,
-            "generation": generation,
-            "cursor": cursor as u64,
-            "targetIndex": u64::MAX
-            ,"baseRevision": session.base_revision
-        }))),
+        args: Some(dsl::ToValue::to_value(&SetTryValueStep {
+            app_id: session.app_id.clone(), document_id: session.document_id.clone(), operation_id: session.operation_id.clone(),
+            generation, cursor: cursor as u64, target_index: u64::MAX, base_revision: session.base_revision.clone(),
+        })),
         delay_ms: 0,
     }
 }
@@ -206,7 +201,7 @@ fn scan_bulk(session: &mut BulkSession) -> Result<(), Fault> {
                     if key_token_len > MAX_BULK_KEY_BYTES {
                         return Err(Fault::new(FaultOrigin::App, FaultCode::new("forms.try-values.key-too-large"), "a bulk Forms key exceeds the bounded key limit"));
                     }
-                    session.key = session.source.bounded_range(session.key_start, session.key_end).and_then(|token| serde_json::from_str(&token).ok()).unwrap_or_default();
+                    session.key = session.source.bounded_range(session.key_start, session.key_end).and_then(|token| dsl::os_pack::json::from_json_str(&token).ok()).unwrap_or_default();
                     session.phase = BulkPhase::Value;
                 }
             }

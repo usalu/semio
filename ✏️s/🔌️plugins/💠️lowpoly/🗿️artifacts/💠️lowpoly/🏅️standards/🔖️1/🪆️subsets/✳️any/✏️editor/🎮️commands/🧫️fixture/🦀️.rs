@@ -87,7 +87,7 @@ mod tests {
     async fn set_fixture_json_with_invalid_json_is_a_no_op() {
         let mut a = app().await;
         let before = a.snapshot().expect("projection");
-        dispatch(&mut a, LowpolyCommand::SetFixtureJson(super::set_fixture_json::SetFixtureJson { json: "not json".into() })).await;
+        dispatch(&mut a, LowpolyCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "not json".into() })).await;
         assert_eq!(a.snapshot().expect("projection"), before);
     }
 }

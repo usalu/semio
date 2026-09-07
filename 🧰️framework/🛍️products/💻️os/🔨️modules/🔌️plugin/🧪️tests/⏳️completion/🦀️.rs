@@ -4,20 +4,20 @@ const TEST_RESTART_SCHEMA: &str = "semio.test.restart-command.v1";
 
 fn test_restart_proofs<const RETAINED: bool>() -> Vec<ArtifactBoundedFirstStepProof> {
     if !RETAINED { return Vec::new(); }
-    vec![ArtifactBoundedFirstStepProof::new::<TestApp<RETAINED>>(file!(), TestApp::<RETAINED>::APP_ID, "TestRestartFactory<true>", TEST_RESTART_TOOL, TestApp::<RETAINED>::DOCUMENT_SCHEMA, semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1)).with_factory_type::<TestApp<RETAINED>, TestRestartFactory<RETAINED>>()]
+    vec![ArtifactBoundedFirstStepProof::new::<TestApp<RETAINED>>(file!(), TestApp::<RETAINED>::APP_ID, "TestRestartFactory<true>", TEST_RESTART_TOOL, TestApp::<RETAINED>::DOCUMENT_SCHEMA, ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1)).with_factory_type::<TestApp<RETAINED>, TestRestartFactory<RETAINED>>()]
 }
 
-fn test_restart_register<const RETAINED: bool>(registry: &mut crate::app::ArtifactToolFactoryRegistry<'_, TestApp<RETAINED>>) -> Result<(), Fault> {
+fn test_restart_register<const RETAINED: bool>(registry: &mut ArtifactToolFactoryRegistry<'_, TestApp<RETAINED>>) -> Result<(), Fault> {
     if !RETAINED { return Ok(()); }
-    registry.register(TestRestartFactory::<RETAINED> { keys: vec![semio_framework::ToolFactoryKey::new(registry.controller_id(), TEST_RESTART_TOOL)] })
+    registry.register(TestRestartFactory::<RETAINED> { keys: vec![ToolFactoryKey::new(registry.controller_id(), TEST_RESTART_TOOL)] })
 }
 
-async fn test_restart_build<const RETAINED: bool>(request: ArtifactOwnedToolJobRequest<TestApp<RETAINED>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+async fn test_restart_build<const RETAINED: bool>(request: ArtifactOwnedToolJobRequest<TestApp<RETAINED>>) -> Result<Option<ToolOperationSpec>, Fault> {
     if !RETAINED { return Ok(None); }
     assert!(matches!(request.command.as_ref(), TestCommand::ApplyCountFromTask { .. }));
     assert!(request.snapshot.label.is_empty(), "restart fixture begins from its actual fresh snapshot");
     let job = TestRestartJob { command: Some(request.command), completion: Some(request.completion), raw: None, page: 0, closing: false };
-    Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
+    Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
 }
 
 async fn test_restart_registry() -> AppActionRegistry {
@@ -27,12 +27,12 @@ async fn test_restart_registry() -> AppActionRegistry {
             .mode("edit", LocalizedLabel::data("Edit"), "pencil").await
             .window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", semio_framework_ui_contract::SurfaceKind::Canvas2d, IconName::AppWindow).await
             .app_command(TEST_RESTART_TOOL, LocalizedLabel::data("Apply Count From Task"), "task", ActionKind::Mutation).await
-            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated).await,
+            .interactive_jobs(InteractiveJobClassification::Migrated).await,
     ).await;
     AppActionRegistry::from_definition(&manifest.definition)
 }
 
-async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta, fixture: &serde_json::Value) {
+async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta, fixture: &Value) {
     let law = &fixture["restartAuthority"];
     let items = law["closeItems"].as_u64().unwrap() as usize;
     let bytes = law["closeBytes"].as_u64().unwrap() as usize;
@@ -52,10 +52,10 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
             app.advance_typed_operation_publication().await?;
             if let Some(page) = app.take_typed_operation_result_page(meta.instance_id) {
                 let fault = match page.lane {
-                    crate::app::TypedOperationResultLane::Artifact => { artifact += 1; None }
-                    crate::app::TypedOperationResultLane::Ui => { ui += 1; None }
-                    crate::app::TypedOperationResultLane::Terminal => { terminal += 1; None }
-                    crate::app::TypedOperationResultLane::Fault => Some(Fault::from(format!("restart publication fault: {}", String::from_utf8_lossy(page.bytes())))),
+                    TypedOperationResultLane::Artifact => { artifact += 1; None }
+                    TypedOperationResultLane::Ui => { ui += 1; None }
+                    TypedOperationResultLane::Terminal => { terminal += 1; None }
+                    TypedOperationResultLane::Fault => Some(Fault::from(format!("restart publication fault: {}", String::from_utf8_lossy(page.bytes())))),
                     _ => Some(Fault::from("restart publication produced an undeclared lane")),
                 };
                 if !app.acknowledge_typed_operation_result(page.token)? { return Err(Fault::from("restart publication rejected its exact result ACK")); }
@@ -99,7 +99,7 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
 struct TestRestartJob<const RETAINED: bool> {
     command: Option<Box<TestCommand>>,
     completion: Option<ArtifactToolCompletion<TestApp<RETAINED>>>,
-    raw: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    raw: Option<action_bus::RetainedToolWireInput>,
     page: usize,
     closing: bool,
 }
@@ -129,7 +129,7 @@ impl<const RETAINED: bool> semio_framework_job::InteractiveJob for TestRestartJo
             return raw.close_step(1, maximum_bytes);
         }
         if self.command.is_some() {
-            let bytes = std::mem::size_of::<TestCommand>();
+            let bytes = size_of::<TestCommand>();
             if maximum_bytes < bytes { return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
             assert!(matches!(self.command.as_deref(), Some(TestCommand::ApplyCountFromTask { .. })));
             self.command = None;
@@ -142,18 +142,18 @@ impl<const RETAINED: bool> semio_framework_job::InteractiveJob for TestRestartJo
     fn terminal_is_empty(&self) -> bool { self.closing && self.command.is_none() && self.completion.is_none() && self.raw.is_none() }
 }
 
-struct TestRestartFactory<const RETAINED: bool> { keys: Vec<semio_framework::ToolFactoryKey> }
+struct TestRestartFactory<const RETAINED: bool> { keys: Vec<ToolFactoryKey> }
 
-impl<const RETAINED: bool> semio_framework::ToolJobFactory for TestRestartFactory<RETAINED> {
+impl<const RETAINED: bool> ToolJobFactory for TestRestartFactory<RETAINED> {
     type Payload = TestRestartJob<RETAINED>;
     type Job = TestRestartJob<RETAINED>;
-    fn keys(&self) -> &[semio_framework::ToolFactoryKey] { &self.keys }
+    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
     fn payload_schema_id(&self) -> &str { TEST_RESTART_SCHEMA }
-    fn classification(&self) -> semio_framework::InteractiveJobClassification { semio_framework::InteractiveJobClassification::Migrated }
-    fn execution_contract(&self) -> semio_framework::ToolExecutionContract { semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1) }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> { Ok(payload) }
-    fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, mut payload: Self::Payload, input: semio_framework::action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if checkpoint.is_some() { return Err((semio_framework::ToolJobFactoryError::new("restart resume starts a fresh command owner"), input, checkpoint)); }
+    fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
+    fn execution_contract(&self) -> ToolExecutionContract { ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1) }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(payload) }
+    fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, mut payload: Self::Payload, input: action_bus::RetainedToolWireInput, checkpoint: Option<action_bus::RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, action_bus::RetainedToolWireInput, Option<action_bus::RetainedToolWireInput>)> {
+        if checkpoint.is_some() { return Err((ToolJobFactoryError::new("restart resume starts a fresh command owner"), input, checkpoint)); }
         payload.raw = Some(input);
         Ok(payload)
     }
@@ -205,13 +205,13 @@ impl Drop for TestRestartTransientDisposer {
 
 #[test]
 fn checkpoint_restart_transient_close_retains_the_exact_store_until_granted() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixture/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("🧪️fixture/🔣️.json")).unwrap();
     let law = &fixture["transientClose"];
     let mut owner = store::TransientStore::<PublicationTransient, PublicationTransientMutation>::new(PublicationTransient { revision: 9 });
     let original = std::sync::Arc::downgrade(&owner.current_root());
     let mut close = TestApp::<true>::build_transient_store_disposer().expect("exact restart transient disposer");
     assert_eq!(close.terminal_is_empty(&owner), law["initiallyTerminal"].as_bool().unwrap());
-    assert!(std::mem::size_of::<PublicationTransient>() + std::mem::size_of_val(&owner) + 2 * std::mem::size_of::<usize>() <= 4_096);
+    assert!(size_of::<PublicationTransient>() + size_of_val(&owner) + 2 * size_of::<usize>() <= 4_096);
     assert_eq!(close.close_step(&mut owner, 0, 4_096).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
     assert_eq!(close.close_step(&mut owner, 1, law["shortBytes"].as_u64().unwrap() as usize).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
     assert!(std::sync::Arc::ptr_eq(&original.upgrade().unwrap(), &owner.current_root()));

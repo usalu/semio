@@ -22,7 +22,7 @@ use semio_framework_plugin::{
     world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene_extended, world3d_selection_json, SurfaceKind, WindowEngagement,
     WindowEngagementInput, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
 };
-use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase};
+use semio_framework_ui_contract::BuiltNode;
 use serde_json::{json, Value};
 use std::hash::{Hash, Hasher};
 

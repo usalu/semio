@@ -15,7 +15,7 @@ pub struct SetProjectUnits {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetProjectUnits {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "project-units", kind: "set-project-units", record: "SetProjectUnits" };
 
-    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3Cv20Mutation as protocol::Mutation<Ifc2x3Snapshot>>::Diff> {
+    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3Cv20Mutation as Mutation<Ifc2x3Snapshot>>::Diff> {
         agg_diff(&Ifc2x3Cv20Mutation::SetProjectUnits(self.clone()), base)
     }
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3Cv20Mutation> {

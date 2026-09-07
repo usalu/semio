@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the imperative plugin's editor and viewer.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum ImperativeApps: PluginApp {
-        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::procedure::ImperativePlayApp>>),
-        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::procedure::ImperativeViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::procedure::ImperativePlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::procedure::ImperativeViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -28,12 +28,12 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// opened, this plugin's own actor runs `Isolated` (its 5 `🧩️extensions/` run `Linked` instead —
 /// see each extension's own `bundle()`), and it asks the broker for document write access to
 /// persist edits.
-pub fn plugin() -> Result<Plugin<ImperativeApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<ImperativeApps>, PluginAssemblyError> {
     Plugin::<ImperativeApps>::builder("imperative")
         .label("Imperative")
         .version("0.1.0")
         .package_id("semio:imperative")
-        .artifact(crate::artifacts::procedure::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::procedure::declaration().map_err(PluginAssemblyError::definition)?)
         .editor::<crate::editor::procedure::ImperativePlayApp>(crate::editor::procedure::create_imperative_app())
         .editor_mutation_roster::<crate::editor::procedure::ImperativePlayApp>()
         .viewer::<crate::viewer::procedure::ImperativeViewer>(crate::viewer::procedure::create_imperative_viewer())

@@ -14,7 +14,7 @@ pub struct RemoveEdge {
 impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for RemoveEdge {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "edge", kind: "remove-edge", record: "RemoveEdge" };
 
-    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as Mutation<SemioFlowSnapshot>>::Diff> {
         agg_diff(&SemioFlowMutation::RemoveEdge(self.clone()), base)
     }
     fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {

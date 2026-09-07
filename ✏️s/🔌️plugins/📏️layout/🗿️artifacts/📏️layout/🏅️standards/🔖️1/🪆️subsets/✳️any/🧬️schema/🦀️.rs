@@ -563,8 +563,8 @@ mod document_tests {
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec LayoutBuilderFacets {
-        construction: derived_construction::LayoutBuilderConstruction,
-        analysis: derived_analysis::LayoutAnalyzerAnalysis,
+        construction: LayoutBuilderConstruction,
+        analysis: LayoutAnalyzerAnalysis,
         composition: super::super::io::derived_composition::LayoutComposerComposition,
     }
     builder: LayoutBuilder,

@@ -1,7 +1,7 @@
 //! 🏷️ `create-properties` — sets the object's `properties` CHILD slot to a new owned `value` tree
 //! handle (overwrite-aware, same convention as `create-brep`/`create-mesh`).
 
-use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::{SemioObjectMutation, delete_properties};
+use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Payload

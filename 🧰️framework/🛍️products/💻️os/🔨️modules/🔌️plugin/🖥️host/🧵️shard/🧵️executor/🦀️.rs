@@ -23,7 +23,7 @@
 //! `semio-os-host-kernel-shard-forward-*` threads) no longer exists.
 
 use super::{AdmissionLimit, DeferredAuthority, FixedOwnerRing, SHARD_DEFERRED_BYTES, SHARD_DEFERRED_ITEMS, SHARD_FRAME_MAX_BYTES, ShardDrive, ShardLoop, ShardOutcome, ShardTransports};
-use crate::{GuestInstance, GuestRuntimes};
+use crate::{GuestInstance, GuestRuntime, GuestRuntimes};
 use semio_framework_actor::{ActorId, Lane as ActorLane, ShardTransport, ThreadTransport};
 use semio_framework_async::{Job as PoolJob, Lane as PoolLane, WorkerPool, WorkerSubmitErrorKind};
 use std::collections::VecDeque;
@@ -194,11 +194,15 @@ type ShardDriveFuture = Pin<Box<dyn Future<Output = (ShardLoop, ShardDrive)> + S
 struct ShardExecutorState {
     shard: Option<ShardLoop>,
     drive: Option<ShardDriveFuture>,
-    registrations: FixedOwnerRing<(ActorId, GuestInstance), SHARD_DEFERRED_ITEMS>,
+    polling: bool,
+    registrations: FixedOwnerRing<(ActorId, GuestInstance, Option<tokio::sync::oneshot::Sender<RegistrationAdmission>>), SHARD_DEFERRED_ITEMS>,
 }
 
+#[must_use]
 pub enum RegistrationAdmission {
-    Admitted,
+    Admitted(super::ShardActorAllocation),
+    Refused(super::ShardRegistrationRejected),
+    Stopped,
     Rejected { actor: ActorId, instance: GuestInstance, limit: AdmissionLimit },
 }
 
@@ -299,10 +303,13 @@ impl ShardExecutor {
         let (kernel_side, shard_side) = ThreadTransport::new_pair().await;
         let mut shard = ShardLoop::new(runtime, ShardTransports::SharedThread(SharedThreadTransport(Arc::new(shard_side)))).await;
         for (actor, instance) in initial {
-            shard.register(actor, instance);
+            if let Err(rejected) = shard.register(actor, instance) {
+                shard.runtime.drop_instance(rejected.instance).await;
+                let _ = shard.send_outcome(&ShardOutcome::Fault { actor: actor.0, message: format!("initial shard registration refused: {:?}", rejected.reason) }).await;
+            }
         }
         Arc::new(ShardExecutor {
-            state: Mutex::new(ShardExecutorState { shard: Some(shard), drive: None, registrations: FixedOwnerRing::new(SHARD_DEFERRED_BYTES) }),
+            state: Mutex::new(ShardExecutorState { shard: Some(shard), drive: None, polling: false, registrations: FixedOwnerRing::new(SHARD_DEFERRED_BYTES) }),
             kernel_side,
             ingress: Mutex::new(FixedOwnerRing::new(SHARD_DEFERRED_BYTES)),
             outcomes,
@@ -328,30 +335,28 @@ impl ShardExecutor {
         })
     }
 
-    /// 🆕️ Registers `instance` on this shard's `ShardLoop` directly, under `state`'s mutex — no
-    /// thread to hand a `RegisterRequest` to anymore, so no ack rendezvous, no
-    /// `REGISTER_ACK_TIMEOUT`: a caller blocks (briefly — bounded by however long the CURRENT pump
-    /// job, if any, takes to finish its `wasmtime` turn budget) on the same mutex a pump job would,
-    /// then applies immediately. The interleaving `terra-shard-routing`'s ack fixed (a `Grant` sent
-    /// right after `register()` returning reaching a still-parked executor thread BEFORE that
-    /// thread's own registration drain) cannot recur: there is no second thread with its own drain
-    /// cadence to race against — `register` and every pump job serialize on the SAME lock.
+    /// 🆕️ Acknowledges physical admission; a running drive retains the incoming owner in its fixed ring.
+    /// Refusal returns the exact guest instance, and a cancelled receiver leaves a discoverable close owner.
     pub async fn register(self: &Arc<Self>, actor: ActorId, instance: GuestInstance) -> RegistrationAdmission {
-        let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
-        match state.shard.as_mut() {
-            Some(shard) => {
-                shard.register(actor, instance);
-                RegistrationAdmission::Admitted
+        let receive = {
+            let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
+            if self.closed.load(Ordering::Acquire) || self.ingress_state.load(Ordering::Acquire) != 0 || self.pool.is_shutdown() {
+                return RegistrationAdmission::Refused(super::ShardRegistrationRejected { actor, instance, reason: super::ShardRegistrationReason::Stopped });
             }
-            None => match state.registrations.try_push((actor, instance), std::mem::size_of::<(ActorId, GuestInstance)>()) {
-                Ok(_) => {
-                    drop(state);
-                    self.schedule();
-                    RegistrationAdmission::Admitted
-                }
-                Err(rejected) => RegistrationAdmission::Rejected { actor: rejected.owner.0, instance: rejected.owner.1, limit: rejected.limit },
-            },
-        }
+            if let Some(shard) = state.shard.as_mut() {
+                return match shard.register(actor, instance) {
+                    Ok(allocation) => RegistrationAdmission::Admitted(allocation),
+                    Err(rejected) => RegistrationAdmission::Refused(rejected),
+                };
+            }
+            let (reply, receive) = tokio::sync::oneshot::channel();
+            match state.registrations.try_push((actor, instance, Some(reply)), size_of::<(ActorId, GuestInstance)>()) {
+                Ok(_) => receive,
+                Err(rejected) => return RegistrationAdmission::Rejected { actor: rejected.owner.0, instance: rejected.owner.1, limit: rejected.limit },
+            }
+        };
+        self.schedule();
+        receive.await.unwrap_or(RegistrationAdmission::Stopped)
     }
 
     /// 🧯️ Transfers the exact last malformed-frame or shard-drive failure to the host.
@@ -484,13 +489,13 @@ impl ShardExecutor {
     /// send_frame`] before this is ever reached) is the sole signal [`Self::run`] trusts for "is
     /// there real work left."
     fn schedule(self: &Arc<Self>) {
-       if self.closed.load(Ordering::Acquire) {
-           return;
-       }
-       if self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
-           return;
-       }
-       let admitted_epoch = self.epoch.load(Ordering::Acquire);
+        if self.closed.load(Ordering::Acquire) {
+            return;
+        }
+        if self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return;
+        }
+        let admitted_epoch = self.epoch.load(Ordering::Acquire);
         let retained = self.handoff.lock().unwrap_or_else(PoisonError::into_inner).take();
         let (lane, job) = retained.unwrap_or_else(|| {
             let rank = self.pending_lane_rank.swap(NO_LANE, Ordering::AcqRel);
@@ -550,6 +555,40 @@ impl ShardExecutor {
         });
     }
 
+    fn refuse_pending_registrations(&self) {
+        let count = self.state.lock().unwrap_or_else(PoisonError::into_inner).registrations.len;
+        for _ in 0..count {
+            let (bytes, owner) = {
+                let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
+                let before = state.registrations.bytes;
+                let owner = state.registrations.pop_front();
+                (before - state.registrations.bytes, owner)
+            };
+            let Some((_, (actor, instance, reply))) = owner else { break };
+            let unclaimed = match reply {
+                Some(reply) => {
+                    let refusal = RegistrationAdmission::Refused(super::ShardRegistrationRejected { actor, instance, reason: super::ShardRegistrationReason::Stopped });
+                    match reply.send(refusal) {
+                        Ok(()) => None,
+                        Err(RegistrationAdmission::Refused(owner)) => Some(owner.instance),
+                        Err(_) => unreachable!("only an owner-bearing refusal was sent"),
+                    }
+                }
+                None => Some(instance),
+            };
+            if let Some(instance) = unclaimed {
+                let returned = self.state.lock().unwrap_or_else(PoisonError::into_inner).registrations.try_push((actor, instance, None), bytes);
+                assert!(returned.is_ok(), "terminal handback must retain its original fixed slot credit");
+            }
+        }
+    }
+
+    pub fn take_unclaimed_registration(&self) -> Option<(ActorId, GuestInstance)> {
+        let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
+        let offset = (0..state.registrations.len).find(|index| state.registrations.get(*index).is_some_and(|(_, _, reply)| reply.is_none()))?;
+        state.registrations.pop_at(offset).map(|(_, (actor, instance, _))| (actor, instance))
+    }
+
     fn terminalize_handoff(&self, kind: WorkerSubmitErrorKind, lane: PoolLane, job: PoolJob) {
         self.close_ingress(match kind {
             WorkerSubmitErrorKind::Shutdown => IngressCloseReason::Shutdown,
@@ -557,24 +596,26 @@ impl ShardExecutor {
             WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated => IngressCloseReason::Closing,
         });
         self.closed.store(true, Ordering::Release);
+        self.refuse_pending_registrations();
         let previous = self.terminal_handoff.lock().unwrap_or_else(PoisonError::into_inner).replace((kind, lane, job));
         debug_assert!(previous.is_none(), "ShardExecutor: exactly one terminal handoff owner");
-   }
+    }
 
-   fn request_drive_wake(self: &Arc<Self>, generation: u64) {
-       if !claim_drive_wake(self.drive_generation.load(Ordering::Acquire), generation, &self.drive_wake_queued) {
-           return;
-       }
-       if self.drive_waiting.swap(false, Ordering::AcqRel) {
-           self.schedule();
-       }
+    fn request_drive_wake(self: &Arc<Self>, generation: u64) {
+        if !claim_drive_wake(self.drive_generation.load(Ordering::Acquire), generation, &self.drive_wake_queued) {
+            return;
+        }
+        if self.drive_waiting.swap(false, Ordering::AcqRel) {
+            self.schedule();
+        }
     }
 
     fn retain_failure(&self, failure: crate::PluginHostError) {
-        let result = self.failure.lock().unwrap_or_else(PoisonError::into_inner).try_push(failure, std::mem::size_of::<crate::PluginHostError>());
+        let result = self.failure.lock().unwrap_or_else(PoisonError::into_inner).try_push(failure, size_of::<crate::PluginHostError>());
         if let Err(rejected) = result {
             self.close_ingress(IngressCloseReason::Closing);
             self.closed.store(true, Ordering::Release);
+            self.refuse_pending_registrations();
             let previous = self.terminal_failure.lock().unwrap_or_else(PoisonError::into_inner).replace(rejected.owner);
             debug_assert!(previous.is_none(), "ShardExecutor: exactly one terminal failure owner");
         }
@@ -589,33 +630,57 @@ impl ShardExecutor {
 
     /// 🏃 The `WorkerPool` job body. A stale admitted epoch yields before locking shard state.
     /// A current admission polls exactly one bounded drive opportunity and takes at most one already
-   /// buffered outcome with [`ThreadTransport::try_recv_now`]. A successor is attempted only when
-   /// retained shard or ingress work remains; finite admission rejection stores the exact closure
-   /// returned by [`WorkerPool::try_submit`] for the next retry.
-   fn run(self: Arc<Self>, admitted_epoch: u64) {
-       if admitted_epoch != self.epoch.load(Ordering::Acquire) {
+    /// buffered outcome with [`ThreadTransport::try_recv_now`]. A successor is attempted only when
+    /// retained shard or ingress work remains; finite admission rejection stores the exact closure
+    /// returned by [`WorkerPool::try_submit`] for the next retry.
+    fn run(self: Arc<Self>, admitted_epoch: u64) {
+        if admitted_epoch != self.epoch.load(Ordering::Acquire) {
             self.scheduled.store(false, Ordering::Release);
             self.schedule();
             return;
         }
         self.drive_waiting.store(false, Ordering::Release);
         self.drive_wake_queued.store(false, Ordering::Release);
-        let (polled, registrations_remain) = {
+        let mut drive = {
             let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
+            assert!(!state.polling, "ShardExecutor: a drive already owns this poll opportunity");
             if state.drive.is_none() {
                 let mut shard = state.shard.take().expect("ShardExecutor: retained drive lost shard ownership");
-                if let Some((_, (actor, instance))) = state.registrations.pop_front() {
-                    shard.register(actor, instance);
-                }
+                let registration = state.registrations.pop_front().map(|(_, owner)| owner);
                 let primed = shard.can_accept_primed_frame().then(|| self.take_next_ingress_frame()).flatten();
                 self.drive_generation.fetch_add(1, Ordering::AcqRel);
                 state.drive = Some(Box::pin(async move {
+                    if let Some((actor, instance, reply)) = registration {
+                        if let Some(reply) = reply.filter(|reply| !reply.is_closed()) {
+                            let outcome = match shard.register(actor, instance) {
+                                Ok(allocation) => RegistrationAdmission::Admitted(allocation),
+                                Err(rejected) => RegistrationAdmission::Refused(rejected),
+                            };
+                            if let Err(unreceived) = reply.send(outcome) {
+                                match unreceived {
+                                    RegistrationAdmission::Admitted(_) => shard.unregister(actor).await,
+                                    RegistrationAdmission::Refused(rejected) => shard.runtime.drop_instance(rejected.instance).await,
+                                    RegistrationAdmission::Rejected { instance, .. } => shard.runtime.drop_instance(instance).await,
+                                    RegistrationAdmission::Stopped => {}
+                                }
+                            }
+                        } else {
+                            shard.runtime.drop_instance(instance).await;
+                        }
+                    }
                     let drive = shard.drive_one_primed(primed).await;
                     (shard, drive)
                 }));
             }
-            let generation = self.drive_generation.load(Ordering::Acquire);
-            let polled = match poll_retained_drive_once(state.drive.as_mut().expect("ShardExecutor: drive cursor missing"), &self, generation) {
+            state.polling = true;
+            state.drive.take().expect("ShardExecutor: drive cursor missing")
+        };
+        let generation = self.drive_generation.load(Ordering::Acquire);
+        let result = poll_retained_drive_once(&mut drive, &self, generation);
+        let (polled, registrations_remain) = {
+            let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
+            state.polling = false;
+            let polled = match result {
                 Some((shard, drive)) => {
                     if matches!(&drive, ShardDrive::Fault { terminal_overflow: true, .. }) {
                         self.terminal_overflow_occupied.store(true, Ordering::Release);
@@ -623,34 +688,36 @@ impl ShardExecutor {
                     } else if matches!(&drive, ShardDrive::Fault { terminal_frame: true, .. }) {
                         self.close_ingress(IngressCloseReason::Closing);
                     }
-                    state.drive = None;
                     state.shard = Some(shard);
                     Some(drive)
                 }
-                None => None,
+                None => {
+                    state.drive = Some(drive);
+                    None
+                }
             };
             (polled, !state.registrations.is_empty())
-       };
-       let Some(drive) = polled else {
-           self.scheduled.store(false, Ordering::Release);
+        };
+        let Some(drive) = polled else {
+            self.scheduled.store(false, Ordering::Release);
             self.drive_waiting.store(true, Ordering::Release);
             if self.drive_wake_queued.swap(false, Ordering::AcqRel) && self.drive_waiting.swap(false, Ordering::AcqRel) {
                 self.schedule();
-           }
-           return;
-       };
-       self.drive_generation.fetch_add(1, Ordering::AcqRel);
+            }
+            return;
+        };
+        self.drive_generation.fetch_add(1, Ordering::AcqRel);
         let (consumed_epoch, shard_more, terminal_overflow) = match &drive {
             ShardDrive::Idle { consumed_epoch } => (*consumed_epoch, false, false),
             ShardDrive::MoreWork { consumed_epoch } => (*consumed_epoch, true, false),
             ShardDrive::Blocked => (None, false, false),
             ShardDrive::Fault { consumed_epoch, work_remains, terminal_overflow, .. } => (*consumed_epoch, *work_remains, *terminal_overflow),
         };
-       if let Some(epoch) = consumed_epoch {
-           self.acknowledge_consumed_epoch(epoch);
-       }
-       if let Some(bytes) = self.kernel_side.try_recv_now() {
-           let mut pos = 0usize;
+        if let Some(epoch) = consumed_epoch {
+            self.acknowledge_consumed_epoch(epoch);
+        }
+        if let Some(bytes) = self.kernel_side.try_recv_now() {
+            let mut pos = 0usize;
             match poll_drive_once(ShardOutcome::pack_decode(&bytes, &mut pos)) {
                 Some(Ok(outcome)) => self.outcomes.push(outcome),
                 Some(Err(error)) => self.retain_failure(crate::PluginHostError::Plugin(format!("ShardExecutor: malformed outcome: {error:?}"))),
@@ -700,12 +767,157 @@ mod tests {
         assert!(std::mem::size_of::<ShardLoop>() <= maximum);
         assert!(std::mem::size_of::<ShardExecutorState>() <= maximum);
         assert!(std::mem::size_of::<ShardExecutor>() <= maximum);
-   }
+    }
 
     async fn encode_frame(frame: super::super::ShardFrame) -> Vec<u8> {
         let mut bytes = Vec::new();
         frame.pack_encode(&mut bytes).await;
         bytes
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn registration_acknowledgement_and_terminal_refusal_preserve_exact_owners() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔁️lifecycle/🧫️fixture/🔣️.json")).unwrap();
+        for row in fixture["registrationStages"].as_array().unwrap() {
+            let stage = row.as_str().unwrap();
+            let mock = Arc::new(MockGuestRuntime::new().await);
+            let runtime = Arc::new(GuestRuntimes::Mock(Arc::clone(&mock)));
+            let pool = test_pool();
+            let executor = ShardExecutor::new(Arc::clone(&pool), runtime, Vec::new(), OutcomeSink::new()).await;
+            let actor = ActorId(717);
+            let package = PackageRef { package: PackageId("registration-owner".into()), hash: PackageHash([0; 32]) };
+            let compiled = mock.compile(&package, &[]).await.unwrap();
+            let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.unwrap();
+            if stage == "wrong-actor" {
+                let RegistrationAdmission::Refused(owner) = executor.register(ActorId(718), instance).await else { panic!("mismatched guest identity must return its exact owner") };
+                assert_eq!(owner.actor, ActorId(718));
+                assert_eq!(owner.instance.actor, actor);
+                assert_eq!(owner.reason, super::super::ShardRegistrationReason::WrongActor);
+                {
+                    let state = executor.state.lock().unwrap();
+                    let shard = state.shard.as_ref().unwrap();
+                    assert!(shard.current_allocation(actor.0).is_none());
+                    assert!(shard.current_allocation(718).is_none());
+                    assert_eq!(shard.next_registration, 1);
+                }
+                mock.drop_instance(owner.instance).await;
+            } else if stage == "closed" {
+                pool.shutdown().unwrap();
+                let RegistrationAdmission::Refused(owner) = executor.register(actor, instance).await else { panic!("closed registration must return its owner") };
+                assert_eq!(owner.actor, actor);
+                assert_eq!(owner.instance.actor, actor);
+                assert_eq!(owner.reason, super::super::ShardRegistrationReason::Stopped);
+                mock.drop_instance(owner.instance).await;
+            } else {
+                executor.scheduled.store(true, Ordering::Release);
+                let shard = executor.state.lock().unwrap().shard.take().unwrap();
+                let mut pending = Box::pin(executor.register(actor, instance));
+                let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+                assert!(pending.as_mut().poll(&mut context).is_pending());
+                assert_eq!(executor.state.lock().unwrap().registrations.len, 1);
+                if stage == "pending" {
+                    executor.state.lock().unwrap().shard = Some(shard);
+                    Arc::clone(&executor).run(executor.epoch.load(Ordering::Acquire));
+                    assert!(matches!(pending.await, RegistrationAdmission::Admitted(_)));
+                    assert_eq!(executor.state.lock().unwrap().registrations.len, 0);
+                    assert!(executor.state.lock().unwrap().shard.as_ref().unwrap().current_allocation(actor.0).is_some());
+                    assert_eq!(mock.drop_admissions.load(Ordering::Acquire), 0);
+                } else {
+                    drop(pending);
+                    executor.closed.store(true, Ordering::Release);
+                    executor.refuse_pending_registrations();
+                    assert_eq!(executor.state.lock().unwrap().registrations.len, 1);
+                    let (returned_actor, returned) = executor.take_unclaimed_registration().expect("cancelled receiver remains discoverable");
+                    assert_eq!(returned_actor, actor);
+                    assert_eq!(returned.actor, actor);
+                    mock.drop_instance(returned).await;
+                    executor.state.lock().unwrap().shard = Some(shard);
+                }
+            }
+            assert_eq!(executor.state.lock().unwrap().registrations.bytes, 0);
+            assert_eq!(mock.drop_admissions.load(Ordering::Acquire), usize::from(stage != "pending"));
+            eprintln!("[DEBUG] registration ownership stage={stage} hidden-credit=0 exact-owner=1");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn terminal_registration_reply_wakes_outside_the_state_lock() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔁️lifecycle/🧫️fixture/🔣️.json")).unwrap();
+        struct Probe {
+            executor: std::sync::Weak<ShardExecutor>,
+            lockable: AtomicBool,
+            woke: AtomicBool,
+        }
+        impl std::task::Wake for Probe {
+            fn wake(self: Arc<Self>) {
+                let executor = self.executor.upgrade().unwrap();
+                self.lockable.store(executor.state.try_lock().is_ok(), Ordering::Release);
+                self.woke.store(true, Ordering::Release);
+            }
+        }
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::clone(&mock))), Vec::new(), OutcomeSink::new()).await;
+        executor.scheduled.store(true, Ordering::Release);
+        let shard = executor.state.lock().unwrap().shard.take().unwrap();
+        let actor = ActorId(718);
+        let package = PackageRef { package: PackageId("registration-wake".into()), hash: PackageHash([0; 32]) };
+        let compiled = mock.compile(&package, &[]).await.unwrap();
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.unwrap();
+        let probe = Arc::new(Probe { executor: Arc::downgrade(&executor), lockable: AtomicBool::new(false), woke: AtomicBool::new(false) });
+        let waker = std::task::Waker::from(Arc::clone(&probe));
+        let mut context = std::task::Context::from_waker(&waker);
+        let mut pending = Box::pin(executor.register(actor, instance));
+        assert!(pending.as_mut().poll(&mut context).is_pending());
+        executor.closed.store(true, Ordering::Release);
+        executor.refuse_pending_registrations();
+        assert!(probe.woke.load(Ordering::Acquire));
+        assert_eq!(probe.lockable.load(Ordering::Acquire), fixture["terminalWakeOutsideLock"].as_bool().unwrap(), "registration receiver must be able to re-enter the executor");
+        let RegistrationAdmission::Refused(owner) = pending.await else { panic!("terminal refusal must return exact owner") };
+        assert_eq!(owner.instance.actor, actor);
+        mock.drop_instance(owner.instance).await;
+        executor.state.lock().unwrap().shard = Some(shard);
+        eprintln!("[DEBUG] registration terminal reply inline-wake=1 mutex-free=1 exact-owner=1");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn admitted_registration_reply_wakes_outside_the_state_lock() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔁️lifecycle/🧫️fixture/🔣️.json")).unwrap();
+        struct Probe {
+            executor: std::sync::Weak<ShardExecutor>,
+            lockable: AtomicBool,
+            woke: AtomicBool,
+        }
+        impl std::task::Wake for Probe {
+            fn wake(self: Arc<Self>) {
+                let executor = self.executor.upgrade().unwrap();
+                self.lockable.store(executor.state.try_lock().is_ok(), Ordering::Release);
+                self.woke.store(true, Ordering::Release);
+            }
+        }
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::clone(&mock))), Vec::new(), OutcomeSink::new()).await;
+        executor.scheduled.store(true, Ordering::Release);
+        let shard = executor.state.lock().unwrap().shard.take().unwrap();
+        let actor = ActorId(718);
+        let package = PackageRef { package: PackageId("registration-wake".into()), hash: PackageHash([0; 32]) };
+        let compiled = mock.compile(&package, &[]).await.unwrap();
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.unwrap();
+        let probe = Arc::new(Probe { executor: Arc::downgrade(&executor), lockable: AtomicBool::new(false), woke: AtomicBool::new(false) });
+        let waker = std::task::Waker::from(Arc::clone(&probe));
+        let mut context = std::task::Context::from_waker(&waker);
+        let mut pending = Box::pin(executor.register(actor, instance));
+        assert!(pending.as_mut().poll(&mut context).is_pending());
+        executor.state.lock().unwrap().shard = Some(shard);
+        Arc::clone(&executor).run(executor.epoch.load(Ordering::Acquire));
+        assert!(probe.woke.load(Ordering::Acquire));
+        assert_eq!(probe.lockable.load(Ordering::Acquire), fixture["admittedWakeOutsideLock"].as_bool().unwrap(), "registration receiver must be able to re-enter the executor");
+        let RegistrationAdmission::Admitted(allocation) = pending.await else { panic!("queued registration must acknowledge physical ownership") };
+        assert_eq!(allocation.key(semio_framework_actor::ShardId(0)).actor, actor);
+        let mut shard = executor.state.lock().unwrap().shard.take().unwrap();
+        shard.unregister(actor).await;
+        assert_eq!(mock.drop_admissions.load(Ordering::Acquire), 1);
+        executor.state.lock().unwrap().shard = Some(shard);
+        eprintln!("[DEBUG] registration admitted reply inline-wake=1 mutex-free=1 exact-owner=1");
     }
 
     fn test_pool() -> Arc<WorkerPool> {
@@ -789,10 +1001,13 @@ mod tests {
         let pool = Arc::new(WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1)));
         let (entered_tx, entered_rx) = std::sync::mpsc::sync_channel(1);
         let (release_tx, release_rx) = std::sync::mpsc::sync_channel(1);
-        pool.submit(PoolLane::Interactive, Box::new(move || {
-            let _ = entered_tx.send(());
-            let _ = release_rx.recv();
-        }));
+        pool.submit(
+            PoolLane::Interactive,
+            Box::new(move || {
+                let _ = entered_tx.send(());
+                let _ = release_rx.recv();
+            }),
+        );
         entered_rx.recv_timeout(Duration::from_secs(2)).expect("pool blocker entered");
 
         let outcomes = OutcomeSink::new();
@@ -829,8 +1044,12 @@ mod tests {
         assert_eq!(collected.len(), 2);
         let expected = case["expectedActors"].as_array().expect("expected ingress actors");
         assert_eq!(case["maxFramesPerDrive"].as_u64(), Some(1));
-        assert!(matches!(&collected[0], ShardOutcome::Turn { actor, result } if u64::from(ActorId(*actor).ordinal()) == expected[0].as_u64().expect("first expected actor") && result.usage.fuel == frames[1]["fuel"].as_u64().expect("interactive fuel")));
-        assert!(matches!(&collected[1], ShardOutcome::Turn { actor, result } if u64::from(ActorId(*actor).ordinal()) == expected[1].as_u64().expect("second expected actor") && result.usage.fuel == frames[0]["fuel"].as_u64().expect("background fuel")));
+        assert!(
+            matches!(&collected[0], ShardOutcome::Turn { actor, result } if u64::from(ActorId(*actor).ordinal()) == expected[0].as_u64().expect("first expected actor") && result.usage.fuel == frames[1]["fuel"].as_u64().expect("interactive fuel"))
+        );
+        assert!(
+            matches!(&collected[1], ShardOutcome::Turn { actor, result } if u64::from(ActorId(*actor).ordinal()) == expected[1].as_u64().expect("second expected actor") && result.usage.fuel == frames[0]["fuel"].as_u64().expect("background fuel"))
+        );
         pool.shutdown();
     }
 
@@ -887,9 +1106,7 @@ mod tests {
             let step = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
             executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![step] }).await, semio_framework_actor::Lane::Interactive).await;
             let original = wait_for_one(&outcomes);
-            assert!(
-                matches!(&original, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::PreviewReady { preview } if *preview == [11, 13]))
-            );
+            assert!(matches!(&original, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::PreviewReady { preview } if *preview == [11, 13])));
 
             let replay = Envelope {
                 to: actor,
@@ -1032,8 +1249,11 @@ mod tests {
                 other => panic!("actor {i}: expected Checkpoint outcome for Suspend, got {other:?} — a just-registered actor's own Suspend must never fault"),
             };
 
+            let retire = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Background, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Cancel { seq: 2 } };
+            assert!(matches!(executor.send_frame(encode_frame(super::super::ShardFrame::Envelope(retire)).await, semio_framework_actor::Lane::Background).await, FrameIngress::Admitted));
+            assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Cancelled { actor: retired } if retired == actor.0));
             let fresh_instance = mock.instantiate(&compiled, actor, &[], &instantiate_budget).await.expect("mock instantiate (fresh)");
-            executor.register(actor, fresh_instance).await;
+            assert!(matches!(executor.register(actor, fresh_instance).await, RegistrationAdmission::Admitted(_)));
             let resume =
                 Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Background, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Resume { operation, checkpoint: state } };
             executor.send_frame(encode_frame(super::super::ShardFrame::Envelope(resume)).await, semio_framework_actor::Lane::Background).await;

@@ -15,7 +15,7 @@ pub struct InsertFrameComponent {
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for InsertFrameComponent {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "frame-component", kind: "insert-frame-component", record: "InsertFrameComponent" };
 
-    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<<JpgBaselineMutation as protocol::Mutation<JpgSnapshot>>::Diff> {
+    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<<JpgBaselineMutation as Mutation<JpgSnapshot>>::Diff> {
         agg_diff(&JpgBaselineMutation::InsertFrameComponent(self.clone()), base)
     }
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {

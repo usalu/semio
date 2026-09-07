@@ -14,6 +14,7 @@ use semio_framework::{Fault, FaultCode, FaultOrigin};
 /// to keep a `StreamReader<u8>::read` call's per-read allocation modest without forcing a host
 /// round-trip per BYTE the way the crate's own built-in `.next()` convenience method would (see
 /// `wit-bindgen-0.57.1`'s `RawStreamReader::next`, which always reads with capacity 1).
+#[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
 const DIRECT_READ_CHUNK: usize = 64 * 1024;
 
 /// 📖️ See module doc. Never constructed directly outside `🌐host/🦀️.rs` — use

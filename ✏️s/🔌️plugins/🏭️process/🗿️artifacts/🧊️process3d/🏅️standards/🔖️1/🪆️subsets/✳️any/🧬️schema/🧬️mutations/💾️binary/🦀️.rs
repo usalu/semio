@@ -227,7 +227,7 @@ struct Process3dPublicationLease {
 
 impl semio_framework_job::FixedOperationOwner for Process3dPublicationLease {
     fn retained_bytes(&self) -> usize {
-        std::mem::size_of::<Self>()
+        size_of::<Self>()
     }
 
     fn cancel(&mut self) {
@@ -239,12 +239,12 @@ impl semio_framework_job::FixedOperationOwner for Process3dPublicationLease {
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 || maximum_bytes < std::mem::size_of::<Self>() {
+        if !self.closing || maximum_items == 0 || maximum_bytes < size_of::<Self>() {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
         if !self.terminal {
             self.terminal = true;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<Self>() };
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: size_of::<Self>() };
         }
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
@@ -258,7 +258,7 @@ type Process3dPublicationRegistry = semio_framework_job::FixedOperationRegistry<
 
 fn process3d_publication_leases() -> &'static std::sync::Mutex<Process3dPublicationRegistry> {
     static LEASES: std::sync::OnceLock<std::sync::Mutex<semio_framework_job::FixedOperationRegistry<Process3dPublicationLease, PROCESS3D_PUBLICATION_SLOTS>>> = std::sync::OnceLock::new();
-    LEASES.get_or_init(|| std::sync::Mutex::new(Process3dPublicationRegistry::new(PROCESS3D_PUBLICATION_SLOTS * std::mem::size_of::<Process3dPublicationLease>())))
+    LEASES.get_or_init(|| std::sync::Mutex::new(Process3dPublicationRegistry::new(PROCESS3D_PUBLICATION_SLOTS * size_of::<Process3dPublicationLease>())))
 }
 
 fn process3d_publication_key(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::FixedOperationKey {
@@ -592,7 +592,7 @@ impl Process3dRetirementStack {
                 }
                 0 => {
                     let backing = std::mem::take(&mut value.tool_solids);
-                    released_bytes = backing.capacity().saturating_mul(std::mem::size_of_val(&process3d_empty_child::<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>()));
+                    released_bytes = backing.capacity().saturating_mul(size_of_val(&process3d_empty_child::<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>()));
                     drop(backing);
                     released_items = 1;
                     parent = Some(Process3dRetirementOwner::Snapshot { value, phase: 1 });
@@ -603,7 +603,7 @@ impl Process3dRetirementStack {
                 }
                 1 => {
                     let backing = std::mem::take(&mut value.step_payloads);
-                    released_bytes = backing.capacity().saturating_mul(std::mem::size_of::<ProcessStep>());
+                    released_bytes = backing.capacity().saturating_mul(size_of::<ProcessStep>());
                     drop(backing);
                     released_items = 1;
                     parent = Some(Process3dRetirementOwner::Snapshot { value, phase: 2 });
@@ -614,7 +614,7 @@ impl Process3dRetirementStack {
                 }
                 2 => {
                     let backing = std::mem::take(&mut value.workshop.machines);
-                    released_bytes = backing.capacity().saturating_mul(std::mem::size_of::<WorkshopMachine>());
+                    released_bytes = backing.capacity().saturating_mul(size_of::<WorkshopMachine>());
                     drop(backing);
                     released_items = 1;
                     parent = Some(Process3dRetirementOwner::Snapshot { value, phase: 3 });
@@ -644,7 +644,7 @@ impl Process3dRetirementStack {
                 }
                 0 => {
                     let backing = std::mem::take(&mut value.capabilities);
-                    released_bytes = backing.capacity().saturating_mul(std::mem::size_of::<Capability>());
+                    released_bytes = backing.capacity().saturating_mul(size_of::<Capability>());
                     drop(backing);
                     released_items = 1;
                     parent = Some(Process3dRetirementOwner::Machine { value, phase: 1 });
@@ -665,7 +665,7 @@ impl Process3dRetirementStack {
                 }
                 0 => {
                     let backing = std::mem::take(&mut value.rules);
-                    released_bytes = backing.capacity().saturating_mul(std::mem::size_of::<CapabilityRule>());
+                    released_bytes = backing.capacity().saturating_mul(size_of::<CapabilityRule>());
                     drop(backing);
                     released_items = 1;
                     parent = Some(Process3dRetirementOwner::Capability { value, phase: 1 });
@@ -676,7 +676,7 @@ impl Process3dRetirementStack {
                 }
                 1 => {
                     let backing = std::mem::take(&mut value.parameters);
-                    released_bytes = backing.capacity().saturating_mul(std::mem::size_of::<CapabilityParameter>());
+                    released_bytes = backing.capacity().saturating_mul(size_of::<CapabilityParameter>());
                     drop(backing);
                     released_items = 1;
                     parent = Some(Process3dRetirementOwner::Capability { value, phase: 2 });
@@ -816,7 +816,7 @@ impl Process3dRetirementStack {
                     child = Some(Process3dRetirementOwner::Capability { value, phase: 0 });
                     parent = Some(Process3dRetirementOwner::Capabilities { values });
                 } else {
-                    released_bytes = values.capacity().saturating_mul(std::mem::size_of::<Capability>());
+                    released_bytes = values.capacity().saturating_mul(size_of::<Capability>());
                     drop(values);
                     released_items = 1;
                 }
@@ -2248,12 +2248,12 @@ impl Process3dOwnerCensusCursor {
             items += 1;
             bytes = bytes.checked_add(catalog_id.capacity()).ok_or("process3d-owner.bytes-overflow")?;
         }
-        bytes = bytes.checked_add(machine.capabilities.capacity().saturating_mul(std::mem::size_of::<Capability>())).ok_or("process3d-owner.bytes-overflow")?;
+        bytes = bytes.checked_add(machine.capabilities.capacity().saturating_mul(size_of::<Capability>())).ok_or("process3d-owner.bytes-overflow")?;
         for capability in &machine.capabilities {
             items = items.checked_add(4 + capability.parameters.len() * 3 + capability.rules.len() * 2).ok_or("process3d-owner.items-overflow")?;
             bytes = bytes.checked_add(Self::string_bytes(&[&capability.id, &capability.label, &capability.icon_id])?).ok_or("process3d-owner.bytes-overflow")?;
-            bytes = bytes.checked_add(capability.parameters.capacity().saturating_mul(std::mem::size_of::<CapabilityParameter>())).ok_or("process3d-owner.bytes-overflow")?;
-            bytes = bytes.checked_add(capability.rules.capacity().saturating_mul(std::mem::size_of::<CapabilityRule>())).ok_or("process3d-owner.bytes-overflow")?;
+            bytes = bytes.checked_add(capability.parameters.capacity().saturating_mul(size_of::<CapabilityParameter>())).ok_or("process3d-owner.bytes-overflow")?;
+            bytes = bytes.checked_add(capability.rules.capacity().saturating_mul(size_of::<CapabilityRule>())).ok_or("process3d-owner.bytes-overflow")?;
             for parameter in &capability.parameters {
                 bytes = bytes.checked_add(Self::string_bytes(&[&parameter.id, &parameter.label])?).ok_or("process3d-owner.bytes-overflow")?;
             }
@@ -2274,10 +2274,10 @@ impl Process3dOwnerCensusCursor {
         match self.phase {
             Process3dCensusPhase::Root => {
                 let bytes = Self::string_bytes(&[&source.stock_id, &source.stock_label])?
-                    .checked_add(source.workshop.machines.capacity().saturating_mul(std::mem::size_of::<WorkshopMachine>()))
-                    .and_then(|value| value.checked_add(source.step_payloads.capacity().saturating_mul(std::mem::size_of::<ProcessStep>())))
+                    .checked_add(source.workshop.machines.capacity().saturating_mul(size_of::<WorkshopMachine>()))
+                    .and_then(|value| value.checked_add(source.step_payloads.capacity().saturating_mul(size_of::<ProcessStep>())))
                     .and_then(|value| {
-                        value.checked_add(source.tool_solids.capacity().saturating_mul(std::mem::size_of_val(&process3d_empty_child::<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>())))
+                        value.checked_add(source.tool_solids.capacity().saturating_mul(size_of_val(&process3d_empty_child::<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>())))
                     })
                     .ok_or("process3d-owner.bytes-overflow")?;
                 self.totals.admit(10, bytes, 4)?;
@@ -2889,7 +2889,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                             return semio_framework_job::StepOutcome::Yield;
                         }
                     };
-                    if machine_capacity.checked_mul(std::mem::size_of::<WorkshopMachine>()).is_none_or(|bytes| bytes > PROCESS3D_MAXIMUM_DOMAIN_BYTES) {
+                    if machine_capacity.checked_mul(size_of::<WorkshopMachine>()).is_none_or(|bytes| bytes > PROCESS3D_MAXIMUM_DOMAIN_BYTES) {
                         self.fail(b"process3d-store.initializer-machine-bytes");
                         return semio_framework_job::StepOutcome::Yield;
                     }

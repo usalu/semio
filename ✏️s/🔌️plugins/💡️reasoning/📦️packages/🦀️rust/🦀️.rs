@@ -90,7 +90,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects-a-node-id-the-board-already-holds/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects-a-node-id-be1d7d/🦀️.rs"]
                                     mod tests_rejects_a_node_id_the_board_already_holds;
                                 }
                                 #[path = "."]
@@ -103,7 +103,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-a-node-the-board-never-held/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-41bc08/🦀️.rs"]
                                     mod tests_rejects_deleting_a_node_the_board_never_held;
                                 }
                                 #[path = "."]
@@ -116,7 +116,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭move-node/🧪️tests/📓️reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭move-node/🧪️tests/📓️reports-a-no-op-when-ba77ae/🦀️.rs"]
                                     mod tests_reports_a_no_op_when_a_y_less_node_is_moved_to_y_zero;
                                 }
                                 #[path = "."]
@@ -129,7 +129,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/📖️reports-a-no-op-when-the-radius-already-matches/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/📖️reports-a-no-op-ce97eb/🦀️.rs"]
                                     mod tests_reports_a_no_op_when_the_radius_already_matches;
                                 }
                                 #[path = "."]
@@ -142,7 +142,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-node-kind/🧪️tests/📖️reports-a-no-op-when-the-kind-already-reads-topic/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-node-kind/🧪️tests/📖️reports-a-no-op-da417d/🦀️.rs"]
                                     mod tests_reports_a_no_op_when_the_kind_already_reads_topic;
                                 }
                                 #[path = "."]
@@ -155,7 +155,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷change-node-shape/🧪️tests/📖️reports-a-no-op-when-the-shape-already-reads-circle/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷change-node-shape/🧪️tests/📖️reports-a-no-op-adc55e/🦀️.rs"]
                                     mod tests_reports_a_no_op_when_the_shape_already_reads_circle;
                                 }
                                 #[path = "."]
@@ -168,7 +168,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/🔤️reports-a-no-op-when-the-label-is-retyped-verbatim/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/🔤️reports-a-no-op-e94c5f/🦀️.rs"]
                                     mod tests_reports_a_no_op_when_the_label_is_retyped_verbatim;
                                 }
                                 #[path = "."]
@@ -181,7 +181,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚩set-node-root/🧪️tests/📓️reports-a-no-op-when-an-unflagged-node-is-set-to-not-root/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚩set-node-root/🧪️tests/📓️reports-a-no-op-22ecc5/🦀️.rs"]
                                     mod tests_reports_a_no_op_when_an_unflagged_node_is_set_to_not_root;
                                 }
                                 #[path = "."]
@@ -194,7 +194,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🚫️rejects-an-edge-whose-source-node-is-absent/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🚫️rejects-an-edge-6bdb01/🦀️.rs"]
                                     mod tests_rejects_an_edge_whose_source_node_is_absent;
                                 }
                                 #[path = "."]
@@ -207,7 +207,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🚫️rejects-cutting-an-edge-the-board-never-carried/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🚫️rejects-cutting-54b5a8/🦀️.rs"]
                                     mod tests_rejects_cutting_an_edge_the_board_never_carried;
                                 }
                             }

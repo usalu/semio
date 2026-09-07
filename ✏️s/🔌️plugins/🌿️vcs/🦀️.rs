@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the VCS editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum VcsApps: PluginApp {
-        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::vcs::VcsPlayApp>>),
-        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::vcs::VcsViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::vcs::VcsPlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::vcs::VcsViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -25,7 +25,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// — not a second registration of the artifact/schema/io itself. `.activation(…)`/`.execution(…)`/
 /// `.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining,
 /// `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s shape.
-pub fn plugin() -> Result<Plugin<VcsApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<VcsApps>, PluginAssemblyError> {
     Plugin::<VcsApps>::builder("vcs")
         .label("VCS")
         .version("0.1.0")

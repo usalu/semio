@@ -14,7 +14,7 @@ pub struct InsertElement {
 impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for InsertElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "element", kind: "insert-element", record: "InsertElement" };
 
-    fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<<SemioModelMutation as protocol::Mutation<SemioModelSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<<SemioModelMutation as Mutation<SemioModelSnapshot>>::Diff> {
         agg_diff(&SemioModelMutation::InsertElement(self.clone()), base)
     }
     fn inverse(&self, base: &SemioModelSnapshot) -> Vec<SemioModelMutation> {

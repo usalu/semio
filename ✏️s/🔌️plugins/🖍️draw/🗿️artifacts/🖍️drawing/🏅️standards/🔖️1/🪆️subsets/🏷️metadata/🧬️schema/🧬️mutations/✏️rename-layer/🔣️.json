@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer",
+  "semanticKind": "rename-layer",
+  "displayName": "Rename Layer",
+  "emoji": "✏️",
+  "aggregateVariant": "RenameLayer",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "rename-layer",
+  "binaryTag": 4,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "error",
+    "warning",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

@@ -14,7 +14,7 @@ pub struct InsertTopic {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for InsertTopic {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "topic", kind: "insert-topic", record: "InsertTopic" };
 
-    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as protocol::Mutation<BcfSnapshot>>::Diff> {
+    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
         agg_diff(&BcfMutation::InsertTopic(self.clone()), base)
     }
     fn inverse(&self, base: &BcfSnapshot) -> Vec<BcfMutation> {

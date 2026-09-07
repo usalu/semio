@@ -284,7 +284,7 @@ impl HttpTransport {
         let events = Arc::new(Mutex::new(EventLog::default()));
         let bridge = crate::bridge::BridgeHandle::with_pool(pool.clone());
         if let Some(slot) = self.bridge_slot.as_ref() {
-            let _ = slot.set(std::sync::Arc::new(bridge.clone()));
+            let _ = slot.set(Arc::new(bridge.clone()));
         }
         let state = HttpTransportState::new(listener, server, &self.options, events, bridge.clone());
         let inner = Arc::new(HttpTransportAuthority {
@@ -2400,7 +2400,7 @@ mod long {
         assert!(text.contains("Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo="));
         assert!(text.contains("Sec-WebSocket-Protocol: semio.mcp.bridge.v1"));
 
-        let hello = super::quick::masked_client_frame(
+        let hello = quick::masked_client_frame(
             0x2,
             &crate::bridge::ShellToGateway::Hello {
                 bridge_version: crate::bridge::BRIDGE_VERSION,
@@ -2413,9 +2413,9 @@ mod long {
             true,
         );
         assert!(matches!(decode_client_websocket_frame(&hello).unwrap().unwrap().opcode, 0x2));
-        let close = super::quick::masked_client_frame(0x8, &[], true);
+        let close = quick::masked_client_frame(0x8, &[], true);
         assert_eq!(decode_client_websocket_frame(&close).unwrap().unwrap().opcode, 0x8);
-        let text_frame = super::quick::masked_client_frame(0x1, b"unsupported", true);
+        let text_frame = quick::masked_client_frame(0x1, b"unsupported", true);
         assert!(matches!(decode_client_websocket_frame(&text_frame), Err(HttpTerminalReason::Unsupported)));
     }
 

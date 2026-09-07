@@ -718,3 +718,56 @@ finish in 10m54s. Kill the cargo **parent** by pid, then the rustc, and verify w
 `pgrep -f "rustc --crate-name semio_s_plugin"` before relaunching. Also note `ps -o pcpu` reports a
 **lifetime average**, so a long-lived rustc reads ~1-2% even while working — use `top -l 2` for
 instantaneous CPU before concluding a build is stalled.
+
+## Two more blockers found and diagnosed (both framework-wide, neither lowpoly's)
+
+### 1. Broken TypeScript import depth — `📥️cold-pair` (FIXED)
+
+Vite served **HTTP 500** for the actor module:
+
+```
+[vite] Internal server error: Failed to resolve import "../../../📥️cold-pair/🟦️.ts"
+       from "🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts"
+```
+
+From `🎭️actor/📦️packages/🟦️typescript/`, three levels up is `🔨️modules/`, which has no
+`📥️cold-pair`. The directory is at `🔨️modules/🎭️actor/📥️cold-pair`, i.e. **two** levels up —
+independently confirmed by `🧵️backbone-worker.ts:79`, which imports
+`"../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts"`. Verified the target exports both imported symbols
+(`ColdPairIngressStatus` at `:28`, `parseWitColdPairIngressStatus` at `:114`) before editing.
+Fixed `🖼️wire-turn.ts:17` to `../../📥️cold-pair/🟦️.ts`; no further resolve errors. Note the sibling
+import on `:16` (`../../../🎠️kernel/🟦️.ts`) is correct — `🎠️kernel` really is at `🔨️modules/` level,
+which is why only one of the two lines was wrong.
+
+### 2. Stale generated plugin bridge — missing `coldPairPage` argument
+
+After the 500s cleared, the actor trapped with:
+
+```
+TypeError: Cannot read properties of undefined (reading 'fuel')
+  at Object.poll (/🔌️plugin-modules/💠️lowpoly/🌉️bridge.js:137)
+  at /🔌️plugin-modules/🧵️shard/🟨️shard-worker.js:282
+```
+
+The contract has drifted by one parameter:
+
+| Side | Signature |
+|---|---|
+| generated `🌉️bridge.js` (09-06 **20:22**) | `poll: async (events, commandPage, budget)` — **3** params |
+| `🟨️shard-worker.js` caller | `actor.api.poll(events, msg.commandPage, undefined, msg.budget)` — **4** args |
+| canonical template `🔌️plugin/📦️packages/🟦️typescript/🟦️.ts:578` (mtime 09-07 **07:07**) | `poll: async (events, commandPage, coldPairPage, budget)` — **4** params |
+
+So `budget` arrived as `undefined` and `BigInt(budget.fuel)` threw. The template gained
+`coldPairPage` (3 occurrences) at 07:07 today; lowpoly's bridge was generated the evening before and
+has **0**. The generator (`pluginComponentBridgeSource`, `🟦️.ts:496`) is correct — the *materialized
+artifact* is stale.
+
+**This is not lowpoly-specific**: `diff` of lowpoly's and procedural's bridges, with plugin names
+normalised, is **empty** — the bridges are byte-identical. Every plugin whose module was materialized
+before 09-07 07:07 has the same dead `poll`. Any session booting a pre-07:07 plugin module will hit
+this identical `reading 'fuel'` TypeError.
+
+Fix is to re-materialize (regenerate the bridge), which requires **not** passing
+`SKIP_PLUGIN_BUILD=1` — that flag skips `materializePlugin` entirely, so it preserves the stale
+bridge. Re-materialization is in flight; the peer's 07:07 framework edit also invalidated stdio and
+lowpoly, so both recompile first.

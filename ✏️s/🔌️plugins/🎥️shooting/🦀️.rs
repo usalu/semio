@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the shooting editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum ShootingApps: PluginApp {
-        ShootingEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::shooting::ShootingPlayApp>>),
-        ShootingViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::shooting::ShootingViewer>>),
+        ShootingEditor(VcsArtifactApp<EditorApp<crate::editor::shooting::ShootingPlayApp>>),
+        ShootingViewer(VcsArtifactApp<ViewerApp<crate::viewer::shooting::ShootingViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -21,12 +21,12 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining, `📓️design-abi.md` §3/§6) are this
 /// crate's migration proof, mirroring `🗒️note`'s shape.
-pub fn plugin() -> Result<Plugin<ShootingApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<ShootingApps>, PluginAssemblyError> {
     Plugin::<ShootingApps>::builder("shooting")
         .label("Shooting")
         .version("0.1.0")
         .package_id("semio:shooting")
-        .artifact(crate::artifacts::shooting::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::shooting::declaration().map_err(PluginAssemblyError::definition)?)
         .editor::<crate::editor::shooting::ShootingPlayApp>(crate::editor::shooting::create_shooting_app())
         .editor_mutation_roster::<crate::editor::shooting::ShootingPlayApp>()
         .viewer::<crate::viewer::shooting::ShootingViewer>(crate::viewer::shooting::create_shooting_viewer())

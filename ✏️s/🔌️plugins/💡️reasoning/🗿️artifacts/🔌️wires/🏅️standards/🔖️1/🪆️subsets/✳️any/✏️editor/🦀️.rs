@@ -402,13 +402,13 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<ReasoningWiresPlayApp>,
+        owner: EditorApp<ReasoningWiresPlayApp>,
         owner_file: "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.reasoning.wires@1/*#editor",
         document_schema: "reasoning.wires.fixture",
         factory: "WiresRetainedCommandJobFactory",
         factory_type: WiresRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 16, 1, 16_384, 7_500),
+        contract: ToolExecutionContract::bounded_first_step(8_192, 16, 1, 16_384, 7_500),
         tools: ["canvasPointerUp", "setLocale"]
     }
 

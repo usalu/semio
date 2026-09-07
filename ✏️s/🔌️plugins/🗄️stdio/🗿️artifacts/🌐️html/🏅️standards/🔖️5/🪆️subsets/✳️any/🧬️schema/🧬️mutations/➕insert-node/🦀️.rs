@@ -16,7 +16,7 @@ pub struct InsertNode {
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for InsertNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "node", kind: "insert-node", record: "InsertNode" };
 
-    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as protocol::Mutation<HtmlSnapshot>>::Diff> {
+    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
         agg_diff(&HtmlMutation::InsertNode(self.clone()), base)
     }
     fn inverse(&self, base: &HtmlSnapshot) -> Vec<HtmlMutation> {

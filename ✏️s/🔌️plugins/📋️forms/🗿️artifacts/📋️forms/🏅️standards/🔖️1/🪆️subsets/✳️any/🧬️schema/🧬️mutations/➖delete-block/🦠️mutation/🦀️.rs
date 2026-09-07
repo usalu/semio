@@ -9,6 +9,8 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// ✂️ Removes a block by id from `step_id`'s `blocks`. Inverse recreates it (with its captured base
 /// position) via `create-block`.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
 pub struct DeleteBlock {
     pub step_id: String,
     pub id: String,

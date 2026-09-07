@@ -169,6 +169,7 @@ pub trait SceneHost {
 /// reachable leaf regardless of `DIRTY_PAINT`/`DIRTY_LAYOUT` — scene/image leaves are always-dirty
 /// unless the host opts into its own caching, so `ui_wgpu` doesn't try to cache on the host's behalf
 /// this milestone.
+#[cfg(test)]
 pub(crate) fn collect_scene_slots<'tree>(tree: &'tree UiTree, root: NodeId) -> Vec<SceneSlot<'tree>> {
     let mut slots = Vec::new();
     collect_scene_slots_node(tree, root, 0.0, 0.0, &mut slots);
@@ -186,6 +187,7 @@ pub(crate) fn scene_slot_for_node<'tree>(tree: &'tree UiTree, id: NodeId, origin
     }
 }
 
+#[cfg(test)]
 fn collect_scene_slots_node<'tree>(tree: &'tree UiTree, id: NodeId, origin_x: f32, origin_y: f32, out: &mut Vec<SceneSlot<'tree>>) {
     let Some(node) = tree.node(id) else { return };
     let Some(layout) = tree.accepted_layout(id) else { return };

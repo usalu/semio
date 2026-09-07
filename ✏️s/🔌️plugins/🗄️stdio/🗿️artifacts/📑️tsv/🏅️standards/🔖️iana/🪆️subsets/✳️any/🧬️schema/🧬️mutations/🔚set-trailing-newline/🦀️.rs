@@ -15,7 +15,7 @@ pub struct SetTrailingNewline {
 impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetTrailingNewline {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "trailing-newline", kind: "set-trailing-newline", record: "SetTrailingNewline" };
 
-    fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as protocol::Mutation<TsvSnapshot>>::Diff> {
+    fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as Mutation<TsvSnapshot>>::Diff> {
         agg_diff(&TsvMutation::SetTrailingNewline(self.clone()), base)
     }
     fn inverse(&self, base: &TsvSnapshot) -> Vec<TsvMutation> {

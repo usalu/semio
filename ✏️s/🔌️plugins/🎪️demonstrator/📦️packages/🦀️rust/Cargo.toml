@@ -24,6 +24,11 @@ package = "semio:demonstrator"
 [package.metadata.semio]
 role = "plugin"
 consumes = ["forms.questionKind", "flow.extension", "process.machines"]
+# 🔗️ Runtime actor dependencies — the six plugins whose editor/viewer surfaces this crate registers
+# over THEIR artifact kinds (`🪪️manifest/🎪️demonstrator/🦀️.rs`'s `.depends_on(…)` rows must match this
+# list exactly). `stdio` is deliberately absent: every `semio_s_plugin_stdio::artifacts::…` call here
+# is an in-process codec call into a linked rlib, not a message to a separate stdio actor.
+depends-on = ["cad", "gis", "procedural", "process", "puzzle", "sourcing"]
 
 [[package.metadata.semio.playground]]
 variant = "demonstrator"

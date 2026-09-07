@@ -14,7 +14,7 @@ pub struct RemoveBlock {
 impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for RemoveBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "block", kind: "remove-block", record: "RemoveBlock" };
 
-    fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<<SemioDocumentMutation as protocol::Mutation<SemioDocumentSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<<SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::Diff> {
         agg_diff(&SemioDocumentMutation::RemoveBlock(self.clone()), base)
     }
     fn inverse(&self, base: &SemioDocumentSnapshot) -> Vec<SemioDocumentMutation> {

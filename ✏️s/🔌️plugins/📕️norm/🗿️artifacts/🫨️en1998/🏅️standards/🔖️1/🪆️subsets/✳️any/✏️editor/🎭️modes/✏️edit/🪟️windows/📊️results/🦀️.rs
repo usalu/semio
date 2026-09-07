@@ -2,7 +2,7 @@
 
 use crate::document::NormHost;
 use crate::editor::en1998::En1998Family;
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_RESULTS: &str = "norm-en1998-results";

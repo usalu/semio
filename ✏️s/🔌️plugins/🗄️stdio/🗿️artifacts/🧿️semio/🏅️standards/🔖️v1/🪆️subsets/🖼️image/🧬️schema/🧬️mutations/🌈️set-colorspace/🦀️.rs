@@ -14,7 +14,7 @@ pub struct SetColorspace {
 impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetColorspace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "colorspace", kind: "set-colorspace", record: "SetColorspace" };
 
-    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<SemioImageMutation as protocol::Mutation<SemioImageSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<SemioImageMutation as Mutation<SemioImageSnapshot>>::Diff> {
         agg_diff(&SemioImageMutation::SetColorspace(self.clone()), base)
     }
     fn inverse(&self, base: &SemioImageSnapshot) -> Vec<SemioImageMutation> {

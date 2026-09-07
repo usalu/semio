@@ -1,7 +1,6 @@
 //! 👥️ Lowpoly presence — shareable live ephemeral state + mutations.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence

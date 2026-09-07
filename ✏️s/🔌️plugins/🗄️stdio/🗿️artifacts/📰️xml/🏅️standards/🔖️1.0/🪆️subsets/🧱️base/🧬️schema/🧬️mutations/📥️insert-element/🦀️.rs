@@ -1,7 +1,7 @@
 //! 🧬️ Direct insert-element mutation owner.
-use crate::artifacts::xml::schema::diff::{diff_at_path, XmlAttrAdded, XmlAttrModified, XmlAttributesDiff, XmlChildAdded, XmlChildrenDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
+use crate::artifacts::xml::schema::diff::{diff_at_path, XmlChildAdded, XmlChildrenDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
 use crate::artifacts::xml::schema::mutation_support::XmlNodePath;
-use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlNode};
+use crate::artifacts::xml::schema::snapshot::XmlNode;
 use crate::artifacts::xml::XmlSnapshot;
 
 #[path = "📝️text/🦀️.rs"]
@@ -26,7 +26,7 @@ pub enum InsertElementMutation { Apply(InsertElementPayload), Restore(XmlDiff) }
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for InsertElementMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "element", kind: "insert-element", record: "InsertedElement" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
+    fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
         match self {
             Self::Apply(payload) => protocol::MutationOutcome::new(diff_at_path(&payload.path.0, XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![XmlChildAdded { index: payload.index, item: payload.node.clone() }] }) }))),
             Self::Restore(diff) => protocol::MutationOutcome::new(diff.clone()),

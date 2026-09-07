@@ -2,7 +2,7 @@
 
 #![allow(clippy::result_large_err)]
 
-use crate::artifacts::presentation::mutations::resize_tile_crop::mutation::ResizeTileCrop;
+use crate::artifacts::presentation::mutations::resize_tile_crop::ResizeTileCrop;
 use crate::artifacts::presentation::op::PresentationMutation;
 use crate::artifacts::presentation::schema::clamp_tile_crop;
 use crate::artifacts::presentation::PresentationSnapshot;

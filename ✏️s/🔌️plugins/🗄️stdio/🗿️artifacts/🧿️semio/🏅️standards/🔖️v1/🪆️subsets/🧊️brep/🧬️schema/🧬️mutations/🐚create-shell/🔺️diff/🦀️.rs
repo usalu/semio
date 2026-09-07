@@ -2,7 +2,7 @@
 
 use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::NamedTripleDiff;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::SemioBrepDiff;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepShell, BrepShellFace, SemioBrepSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepShell, SemioBrepSnapshot};
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

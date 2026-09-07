@@ -14,7 +14,7 @@ pub struct RemoveEntity {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "entity", kind: "remove-entity", record: "RemoveEntity" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as protocol::Mutation<DxfSnapshot>>::Diff> {
+    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
         agg_diff(&DxfMutation::RemoveEntity(self.clone()), base)
     }
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {

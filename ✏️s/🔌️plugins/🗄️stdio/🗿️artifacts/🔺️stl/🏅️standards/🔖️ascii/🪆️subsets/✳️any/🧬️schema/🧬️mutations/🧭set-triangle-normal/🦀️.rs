@@ -17,7 +17,7 @@ pub struct SetTriangleNormal {
 impl protocol::MutationKind<StlSnapshot, StlMutation> for SetTriangleNormal {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "triangle-normal", kind: "set-triangle-normal", record: "SetTriangleNormal" };
 
-    fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as protocol::Mutation<StlSnapshot>>::Diff> {
+    fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as Mutation<StlSnapshot>>::Diff> {
         agg_diff(&StlMutation::SetTriangleNormal(self.clone()), base)
     }
     fn inverse(&self, base: &StlSnapshot) -> Vec<StlMutation> {

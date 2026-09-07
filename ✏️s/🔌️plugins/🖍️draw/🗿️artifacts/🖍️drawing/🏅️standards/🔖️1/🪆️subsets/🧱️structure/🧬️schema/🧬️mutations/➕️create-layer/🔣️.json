@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/➕️create-layer",
+  "semanticKind": "create-layer",
+  "displayName": "Create Layer",
+  "emoji": "➕️",
+  "aggregateVariant": "CreateLayer",
+  "payloadSchema": "🦠️mutation/🦀️.rs#CreateLayer",
+  "textOpcode": "create-layer",
+  "binaryTag": 10,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "fatal",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary"
+  ]
+}

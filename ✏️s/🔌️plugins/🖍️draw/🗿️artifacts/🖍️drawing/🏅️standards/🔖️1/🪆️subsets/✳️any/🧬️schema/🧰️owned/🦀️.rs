@@ -684,10 +684,10 @@ struct DrawingMutationArenaOwner {
 impl DrawingMutationArenaOwner {
     fn admitted_totals(&self) -> Result<(usize, usize), &'static str> {
         let items = self.reverse.capacity().checked_add(self.output.capacity()).and_then(|items| items.checked_add(self.pages.capacity())).and_then(|items| items.checked_add(1)).ok_or("drawing-store.mutation-arena-item-overflow")?;
-        let bytes = std::mem::size_of::<Self>()
-            .checked_add(self.reverse.capacity().checked_mul(std::mem::size_of::<DrawingLayerNode>()).ok_or("drawing-store.mutation-arena-byte-overflow")?)
-            .and_then(|bytes| bytes.checked_add(self.output.capacity().checked_mul(std::mem::size_of::<DrawingLayerNode>())?))
-            .and_then(|bytes| bytes.checked_add(self.pages.capacity().checked_mul(std::mem::size_of::<String>())?))
+        let bytes = size_of::<Self>()
+            .checked_add(self.reverse.capacity().checked_mul(size_of::<DrawingLayerNode>()).ok_or("drawing-store.mutation-arena-byte-overflow")?)
+            .and_then(|bytes| bytes.checked_add(self.output.capacity().checked_mul(size_of::<DrawingLayerNode>())?))
+            .and_then(|bytes| bytes.checked_add(self.pages.capacity().checked_mul(size_of::<String>())?))
             .and_then(|bytes| self.pages.iter().try_fold(bytes, |total, page| total.checked_add(page.capacity())))
             .and_then(|bytes| bytes.checked_add(self.duplicate_id.capacity()))
             .ok_or("drawing-store.mutation-arena-byte-overflow")?;
@@ -841,17 +841,17 @@ impl DrawingMutationArenaOwnerBuilder {
             }
         }
         if let Some(value) = self.pages.take() {
-            let released_bytes = value.capacity().saturating_mul(std::mem::size_of::<String>());
+            let released_bytes = value.capacity().saturating_mul(size_of::<String>());
             drop(value);
             return store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes };
         }
         if let Some(value) = self.output.take() {
-            let released_bytes = value.capacity().saturating_mul(std::mem::size_of::<DrawingLayerNode>());
+            let released_bytes = value.capacity().saturating_mul(size_of::<DrawingLayerNode>());
             drop(value);
             return store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes };
         }
         if let Some(value) = self.reverse.take() {
-            let released_bytes = value.capacity().saturating_mul(std::mem::size_of::<DrawingLayerNode>());
+            let released_bytes = value.capacity().saturating_mul(size_of::<DrawingLayerNode>());
             drop(value);
             return store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes };
         }
@@ -1481,11 +1481,11 @@ impl DrawingSnapshotBoundsAuthority {
     }
 
     fn string_owner(value: &String) -> (usize, usize, usize, usize) {
-        (1, std::mem::size_of::<String>().saturating_add(value.capacity()), 0, 0)
+        (1, size_of::<String>().saturating_add(value.capacity()), 0, 0)
     }
 
     fn vec_owner<T>(value: &Vec<T>) -> (usize, usize, usize, usize) {
-        (1usize.saturating_add(value.capacity()), std::mem::size_of::<Vec<T>>().saturating_add(value.capacity().saturating_mul(std::mem::size_of::<T>())), 0, 0)
+        (1usize.saturating_add(value.capacity()), size_of::<Vec<T>>().saturating_add(value.capacity().saturating_mul(size_of::<T>())), 0, 0)
     }
 
     fn merge(target: &mut (usize, usize, usize, usize), value: (usize, usize, usize, usize)) {
@@ -1505,13 +1505,13 @@ impl DrawingSnapshotBoundsAuthority {
             DrawingLayerNode::Boolean(value) => &value.base,
             DrawingLayerNode::Trace(value) => &value.base,
         };
-        let mut total = (1, std::mem::size_of::<DrawingLayerNode>(), 0, 0);
+        let mut total = (1, size_of::<DrawingLayerNode>(), 0, 0);
         Self::merge(&mut total, Self::string_owner(&base.id));
         Self::merge(&mut total, Self::string_owner(&base.name));
         Self::merge(&mut total, Self::string_owner(&base.blend_mode));
         if let Some(fill) = &base.attributes.fill {
             total.0 += 1;
-            total.1 += std::mem::size_of::<FillStyle>();
+            total.1 += size_of::<FillStyle>();
             match fill {
                 FillStyle::Solid { .. } => {}
                 FillStyle::LinearGradient { stops, .. } | FillStyle::RadialGradient { stops, .. } => Self::merge(&mut total, Self::vec_owner(stops)),
@@ -1519,7 +1519,7 @@ impl DrawingSnapshotBoundsAuthority {
         }
         if let Some(stroke) = &base.attributes.stroke {
             total.0 += 1;
-            total.1 += std::mem::size_of::<StrokeStyle>();
+            total.1 += size_of::<StrokeStyle>();
             Self::merge(&mut total, Self::string_owner(&stroke.cap));
             Self::merge(&mut total, Self::string_owner(&stroke.join));
             if let Some(dash) = &stroke.dash {
@@ -1554,7 +1554,7 @@ impl DrawingSnapshotBoundsAuthority {
             self.maximum_container = self.maximum_container.max(source.layers.len());
             let Some(root) = source.layers.get(self.root) else {
                 self.layers_complete = true;
-                let mut owners = (1, std::mem::size_of::<DrawingSnapshot>(), 0, 0);
+                let mut owners = (1, size_of::<DrawingSnapshot>(), 0, 0);
                 Self::merge(&mut owners, Self::string_owner(&source.schema));
                 Self::merge(&mut owners, Self::string_owner(&source.id));
                 if let Some(title) = &source.title {
@@ -1562,7 +1562,7 @@ impl DrawingSnapshotBoundsAuthority {
                 }
                 Self::merge(&mut owners, Self::vec_owner(&source.layers));
                 owners.0 += 1;
-                owners.1 += std::mem::size_of_val(&source.assets);
+                owners.1 += size_of_val(&source.assets);
                 self.add(owners.0, owners.1, owners.2, owners.3)?;
                 cx.consume_fuel(1);
                 return Ok(false);
@@ -1612,7 +1612,7 @@ impl DrawingSnapshotBoundsAuthority {
             self.terminal = true;
             return Ok(true);
         };
-        let mut owners = (1, std::mem::size_of::<(String, DrawingImageAsset)>(), 0, 0);
+        let mut owners = (1, size_of::<(String, DrawingImageAsset)>(), 0, 0);
         Self::merge(&mut owners, Self::string_owner(key));
         Self::merge(&mut owners, Self::string_owner(&value.mime));
         Self::merge(&mut owners, Self::string_owner(&value.data));
@@ -2724,7 +2724,7 @@ impl Default for DrawingSemanticDigestCredit {
             items: 0,
             bytes: 0,
             source_owner_items: 1,
-            source_owner_bytes: std::mem::size_of::<DrawingMutation>(),
+            source_owner_bytes: size_of::<DrawingMutation>(),
             derived_owner_items: 0,
             derived_owner_bytes: 0,
             owner_census: DrawingFixedOwnerCensus::new(),
@@ -2761,7 +2761,7 @@ impl DrawingSemanticDigestCredit {
     }
 
     fn source_string(&mut self, value: &String) -> Result<(), &'static str> {
-        self.add_source_owner(1, std::mem::size_of::<String>() + value.capacity())
+        self.add_source_owner(1, size_of::<String>() + value.capacity())
     }
 
     fn derived_string(&mut self, value: &String) -> Result<(), &'static str> {
@@ -2773,12 +2773,12 @@ impl DrawingSemanticDigestCredit {
 
     fn source_vec<T>(&mut self, value: &Vec<T>) -> Result<(), &'static str> {
         let items = 1usize.checked_add(value.capacity()).ok_or("drawing-store.mutation-source-owner-item-overflow")?;
-        let bytes = value.capacity().checked_mul(std::mem::size_of::<T>()).and_then(|bytes| bytes.checked_add(std::mem::size_of::<Vec<T>>())).ok_or("drawing-store.mutation-source-owner-byte-overflow")?;
+        let bytes = value.capacity().checked_mul(size_of::<T>()).and_then(|bytes| bytes.checked_add(size_of::<Vec<T>>())).ok_or("drawing-store.mutation-source-owner-byte-overflow")?;
         self.add_source_owner(items, bytes)
     }
 
     fn derived_vec<T>(&mut self, value: &Vec<T>) -> Result<(), &'static str> {
-        let bytes = value.len().checked_mul(std::mem::size_of::<T>()).ok_or("drawing-store.mutation-derived-owner-byte-overflow")?;
+        let bytes = value.len().checked_mul(size_of::<T>()).ok_or("drawing-store.mutation-derived-owner-byte-overflow")?;
         let pages = bytes.checked_add(DRAWING_MUTATION_RETAINED_PAGE_BYTES - 1).ok_or("drawing-store.mutation-derived-owner-byte-overflow")? / DRAWING_MUTATION_RETAINED_PAGE_BYTES;
         self.add_derived_owner(pages.max(1), 0)
     }
@@ -3262,8 +3262,8 @@ impl DrawingLayerDigestAuthority {
         let phase = self.frames[self.depth].phase;
         match phase {
             0 => {
-                credit.add_source_owner(1, std::mem::size_of::<DrawingLayerNode>())?;
-                credit.add_derived_owner(1, std::mem::size_of::<DrawingLayerNode>())?;
+                credit.add_source_owner(1, size_of::<DrawingLayerNode>())?;
+                credit.add_derived_owner(1, size_of::<DrawingLayerNode>())?;
                 let variant = match node {
                     DrawingLayerNode::Shape(_) => 1,
                     DrawingLayerNode::Path(_) => 2,
@@ -3419,8 +3419,8 @@ impl DrawingMutationDigestAuthority {
         if self.phase == 1 {
             match mutation {
                 DrawingMutation::CreateLayer(value) => {
-                    self.credit.add_source_owner(1, std::mem::size_of::<Box<DrawingLayerNode>>())?;
-                    self.credit.add_derived_owner(1, std::mem::size_of::<Box<DrawingLayerNode>>())?;
+                    self.credit.add_source_owner(1, size_of::<Box<DrawingLayerNode>>())?;
+                    self.credit.add_derived_owner(1, size_of::<Box<DrawingLayerNode>>())?;
                     self.credit.observe(digest, 2, &[u8::from(value.parent_id.is_some())], cx)?;
                     self.phase = if value.parent_id.is_some() { 2 } else { 3 };
                 }
@@ -3643,10 +3643,10 @@ impl DrawingMutationAggregateReservation {
     ) -> Result<Self, &'static str> {
         let container_slots = reverse_slots.checked_add(output_slots).ok_or("drawing-store.mutation-container-credit-overflow")?;
         let container_items = 2;
-        let container_bytes = container_slots.checked_mul(std::mem::size_of::<DrawingLayerNode>()).ok_or("drawing-store.mutation-container-credit-overflow")?;
+        let container_bytes = container_slots.checked_mul(size_of::<DrawingLayerNode>()).ok_or("drawing-store.mutation-container-credit-overflow")?;
         let (duplicate_candidate_items, duplicate_candidate_bytes) = if matches!(operation, DrawingMutation::DuplicateLayer(_)) { (1, duplicate_id_bytes) } else { (0, 0) };
         let authority_items = 1;
-        let authority_bytes = std::mem::size_of::<DrawingMutationCandidateAuthority>();
+        let authority_bytes = size_of::<DrawingMutationCandidateAuthority>();
         let reservation = Self {
             source_items: source.source_items,
             candidate_items: source.candidate_items,
@@ -4276,8 +4276,8 @@ impl DrawingMutationCandidateAuthority {
                 }
                 let overlay_bytes = overlay_pages
                     .iter()
-                    .try_fold(overlay_slots.checked_mul(std::mem::size_of::<String>()).ok_or("drawing-store.mutation-overlay-byte-overflow")?, |total, page| total.checked_add(page.capacity()).ok_or("drawing-store.mutation-overlay-byte-overflow"))?;
-                let duplicate_id_bytes = self.duplicate_id_owner.as_ref().map_or(0, |value| std::mem::size_of::<String>().saturating_add(value.capacity()));
+                    .try_fold(overlay_slots.checked_mul(size_of::<String>()).ok_or("drawing-store.mutation-overlay-byte-overflow")?, |total, page| total.checked_add(page.capacity()).ok_or("drawing-store.mutation-overlay-byte-overflow"))?;
+                let duplicate_id_bytes = self.duplicate_id_owner.as_ref().map_or(0, |value| size_of::<String>().saturating_add(value.capacity()));
                 self.reservation = Some(DrawingMutationAggregateReservation::admit(source_credit, mutation_credit, mutation, reverse_slots, output_slots, overlay_slots, overlay_bytes, duplicate_id_bytes)?);
                 drop(self.preflight_mutation.take());
                 self.preflight_source = None;

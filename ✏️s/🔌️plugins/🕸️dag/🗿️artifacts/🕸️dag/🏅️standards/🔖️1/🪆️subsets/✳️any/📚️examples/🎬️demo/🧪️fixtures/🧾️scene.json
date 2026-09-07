@@ -1,0 +1,15 @@
+{
+  "nodes": [
+    ["slider", "Amount", -400.0, -40.0],
+    ["mode", "Mode", -400.0, 80.0],
+    ["scale", "Scale", -120.0, -40.0],
+    ["combine", "Combine", 120.0, 0.0],
+    ["screen", "Preview", 400.0, 0.0]
+  ],
+  "edges": [
+    ["e1", "slider@out", "scale@in"],
+    ["e2", "scale@out", "combine@a"],
+    ["e3", "mode@out", "combine@b"],
+    ["e4", "combine@out", "screen@in"]
+  ]
+}

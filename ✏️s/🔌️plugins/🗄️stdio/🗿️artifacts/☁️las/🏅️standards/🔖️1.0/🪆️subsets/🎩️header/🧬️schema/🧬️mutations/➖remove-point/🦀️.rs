@@ -17,7 +17,7 @@ pub struct RemovePoint {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for RemovePoint {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "point", kind: "remove-point", record: "RemovePoint" };
 
-    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as protocol::Mutation<LasSnapshot>>::Diff> {
+    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
         agg_diff(&LasMutation::RemovePoint(self.clone()), base)
     }
     fn inverse(&self, base: &LasSnapshot) -> Vec<LasMutation> {

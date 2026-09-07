@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🎨️replace-layer-fill",
+  "semanticKind": "replace-layer-fill",
+  "displayName": "Replace Layer Fill",
+  "emoji": "🎨️",
+  "aggregateVariant": "ReplaceLayerFill",
+  "payloadSchema": "🦠️mutation/🦀️.rs#ReplaceLayerFill",
+  "textOpcode": "replace-layer-fill",
+  "binaryTag": 6,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "error",
+    "warning",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary"
+  ]
+}

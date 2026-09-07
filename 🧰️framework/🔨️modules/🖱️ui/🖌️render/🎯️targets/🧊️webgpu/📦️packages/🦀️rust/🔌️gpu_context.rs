@@ -135,11 +135,9 @@ impl GpuContext {
 /// reconfigure — both need the exact same `SurfaceConfiguration` shape.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub(crate) fn configure_surface(device: &wgpu::Device, surface: &wgpu::Surface<'static>, surface_format: wgpu::TextureFormat, view_format: wgpu::TextureFormat, alpha_mode: wgpu::CompositeAlphaMode, width: u32, height: u32) {
-    let mut usage = wgpu::TextureUsages::RENDER_ATTACHMENT;
+    let usage = wgpu::TextureUsages::RENDER_ATTACHMENT;
     #[cfg(feature = "backend-testing")]
-    {
-        usage |= wgpu::TextureUsages::COPY_SRC;
-    }
+    let usage = usage | wgpu::TextureUsages::COPY_SRC;
     let config = wgpu::SurfaceConfiguration { usage, format: surface_format, width: width.max(1), height: height.max(1), present_mode: wgpu::PresentMode::AutoVsync, alpha_mode, view_formats: vec![view_format], desired_maximum_frame_latency: 2 };
     surface.configure(device, &config);
 }

@@ -243,11 +243,14 @@ pub struct DurableOwnedGroupJournalReceiptV1 {
 
 /// 🔐️ Store-admitted decision event whose private bytes and identities can only come from
 /// one fully verified canonical fixed-three decision Pack.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DurableOwnedGroupJournalRecordV1 {
     canonical_pack: Vec<u8>,
     decision_sha256: String,
     anchor_sha256: String,
     document: crate::os_io::ArtifactRef,
+    parent_edit_id: String,
+    parent_post_revision: [u8; 32],
 }
 
 /// 🔎️ Immutable typed edits projected only after Store verifies every bound fixed-three outcome.
@@ -291,7 +294,20 @@ impl DurableOwnedGroupJournalRecordV1 {
     /// the Store-verified fixed-three envelope.
     pub fn admit_canonical(canonical_pack: Vec<u8>) -> Result<Self, DurableOwnedGroupDecisionError> {
         let decision = DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&canonical_pack)?;
-        Ok(Self { canonical_pack, decision_sha256: decision.decision_sha256, anchor_sha256: decision.anchor_sha256, document: decision.anchor.parent })
+        let parent = DurableBoundOneItemOutcomeV1::decode_canonical_pack(&decision.parent.recovery_pack)?;
+        let edit: DslValue = parse_canonical_json_value(&parent.edit_canonical_json)?;
+        let parent_edit_id = edit.get("id").and_then(DslValue::as_str).filter(|identity| !identity.is_empty() && identity.len() <= DURABLE_OWNED_GROUP_ID_MAX_BYTES).ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?.to_string();
+        if decision.parent.post_revision == [0; 32] {
+            return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
+        }
+        Ok(Self {
+            canonical_pack,
+            decision_sha256: decision.decision_sha256,
+            anchor_sha256: decision.anchor_sha256,
+            document: decision.anchor.parent,
+            parent_edit_id,
+            parent_post_revision: decision.parent.post_revision,
+        })
     }
 
     pub fn admit(canonical_pack: Vec<u8>, claimed_decision_sha256: &str) -> Result<Self, DurableOwnedGroupDecisionError> {
@@ -320,6 +336,16 @@ impl DurableOwnedGroupJournalRecordV1 {
 
     pub fn document(&self) -> &crate::os_io::ArtifactRef {
         &self.document
+    }
+
+    /// 📍️ Projects the parent edit identity only from the fully admitted bound outcome.
+    pub fn parent_edit_id(&self) -> &str {
+        &self.parent_edit_id
+    }
+
+    /// 🧬️ Projects the exact parent Store revision after the fixed-three visibility flip.
+    pub fn parent_post_revision(&self) -> [u8; 32] {
+        self.parent_post_revision
     }
 
     pub fn into_parts(self) -> (Vec<u8>, String, String, crate::os_io::ArtifactRef) {
@@ -514,7 +540,7 @@ where
         },
         checkpoint_id: (&*store.current_checkpoint_id).clone(),
     };
-    let mut revision_accumulator = super::CursorRevisionAccumulator {
+    let mut revision_accumulator = CursorRevisionAccumulator {
         identity_digest: store.revision_accumulator.identity_digest,
         applied: match retained_revision_stack(&store.revision_accumulator.applied) {
             Ok(values) => values,
@@ -527,9 +553,9 @@ where
     };
     let previous = revision_accumulator.applied.last().map_or(revision_accumulator.identity_digest, |record| record.prefix_digest);
     revision_accumulator.applied.push(super::CursorRevisionRecord {
-        id_digest: super::CursorRevisionAccumulator::hash_record(b"edit-id", &[outcome.prepared.edit.id.as_bytes()]),
+        id_digest: CursorRevisionAccumulator::hash_record(b"edit-id", &[outcome.prepared.edit.id.as_bytes()]),
         edit_digest: outcome.prepared.edit_digest,
-        prefix_digest: super::CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &outcome.prepared.edit_digest]),
+        prefix_digest: CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &outcome.prepared.edit_digest]),
     });
     if revision_accumulator.revision(store.current_checkpoint_id.as_deref()) != outcome.post_revision {
         return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome);
@@ -548,7 +574,7 @@ where
     store.envelope.cursor.as_mut().expect("durable group stage preflight retained its cursor").stage_group_owned(cursor_owners, visibility).expect("durable group cursor stage remains exact after exclusive preflight");
     let post_revision = outcome.post_revision;
     let DurableStoreBoundOutcomeV1 { prepared, .. } = outcome;
-    let super::ArtifactStoreOneItemPrepared { edit, post_snapshot, next_clock, edit_digest: _, local_actor, applied_edit_id: _, tail_edit_id, seal } = prepared;
+    let ArtifactStoreOneItemPrepared { edit, post_snapshot, next_clock, edit_digest: _, local_actor, applied_edit_id: _, tail_edit_id, seal } = prepared;
     store.envelope.vcs.edits.stage_group_reserved(history_reservation, *edit, visibility).unwrap_or_else(|_| panic!("durable group history stage remains exact after its exclusive reservation"));
     *store.durable_group_root = Some(ArtifactStoreDurableGroupRootV1 {
         visibility: Arc::clone(visibility),
@@ -721,7 +747,7 @@ where
     let snapshot_factory = (&*store.snapshot_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
     let mut reservation = store.displaced_retirements.reserve_owner_slots(6).map_err(|_| DurableOwnedGroupDecisionError::InvalidFrontier)?;
     let DurableStoreBoundOutcomeV1 { prepared, .. } = outcome;
-    let super::ArtifactStoreOneItemPrepared { edit, post_snapshot, next_clock: _, edit_digest: _, local_actor, applied_edit_id, tail_edit_id, seal } = prepared;
+    let ArtifactStoreOneItemPrepared { edit, post_snapshot, next_clock: _, edit_digest: _, local_actor, applied_edit_id, tail_edit_id, seal } = prepared;
     retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreDecodedEditRetirement::new(*edit, mutation_factory)));
     retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, snapshot_factory.retire(post_snapshot));
     if let Some(actor) = local_actor {
@@ -3936,6 +3962,8 @@ mod tests {
         assert_eq!(verified.decision_sha256(), decision.decision_sha256);
         assert_eq!(verified.anchor_sha256(), decision.anchor_sha256);
         assert_eq!(verified.document(), &decision.anchor.parent);
+        assert_eq!(record.parent_edit_id(), verified.parent().id);
+        assert_eq!(record.parent_post_revision(), decision.parent.post_revision);
         assert_eq!(verified.parent().forwards, ["parent:forward"]);
         assert_eq!(verified.drawing().forwards, ["drawing:forward"]);
         assert_eq!(verified.value().forwards, ["value:forward"]);

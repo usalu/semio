@@ -51,9 +51,27 @@
     "capacity": 64,
     "roles": ["map", "drawing", "value"],
     "children": ["gismap-drawing", "gismap-value"],
-    "phases": ["ready", "assembly", "journal", "verification", "committed", "closing"],
+    "phases": ["ready", "assembly", "journal", "verification", "publishing", "published", "closing"],
     "witnessSource": "sole-committed-wal-event",
-    "retryOwner": "same-document-three-store-host"
+    "retryOwner": "same-document-three-store-host",
+    "publicationOrder": ["committed-wal-event", "actor-frontier", "public-checkpoint", "ledger-applied"],
+    "beforePublicAck": { "ledgerApplied": false, "documentWrite": "retained", "state": "publishing" },
+    "publicationFailure": { "ledgerApplied": false, "documentWrite": "retained", "retry": "same-event-same-owner" },
+    "ingressAuthority": {
+      "owner": "hub-private-sorted-binding-guards",
+      "bindings": ["user", "session", "space-authority", "membership"],
+      "documentWrite": "runtime-acquired",
+      "cutover": "durable-wal-receipt",
+      "delivery": "fresh-revalidation-under-same-guards",
+      "recovery": "committed-wal-provenance"
+    },
+    "abandonedRequest": {
+      "owner": "runtime-document-maintenance",
+      "abortPhases": ["ready", "preflight", "assembly", "journal-no-receipt"],
+      "commitCutover": "awaiting-ack",
+      "postCutover": ["verification", "public-checkpoint", "ledger-applied"]
+    },
+    "documentFence": "mounted-actor-generation"
   },
   "visibility": [
     { "role": "author-owner", "readEvents": true, "readProposal": true, "approve": true, "expectedCode": null },

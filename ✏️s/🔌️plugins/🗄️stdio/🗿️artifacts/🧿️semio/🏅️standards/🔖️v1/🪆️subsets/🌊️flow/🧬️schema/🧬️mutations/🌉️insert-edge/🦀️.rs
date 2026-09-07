@@ -21,7 +21,7 @@ impl InsertEdge {
 impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for InsertEdge {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "edge", kind: "insert-edge", record: "InsertEdge" };
 
-    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as Mutation<SemioFlowSnapshot>>::Diff> {
         agg_diff(&SemioFlowMutation::InsertEdge(self.clone()), base)
     }
     fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {

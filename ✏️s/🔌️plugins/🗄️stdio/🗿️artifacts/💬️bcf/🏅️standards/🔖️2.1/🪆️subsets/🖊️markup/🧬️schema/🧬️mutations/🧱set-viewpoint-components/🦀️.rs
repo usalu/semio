@@ -17,7 +17,7 @@ pub struct SetViewpointComponents {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetViewpointComponents {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "viewpoint-components", kind: "set-viewpoint-components", record: "SetViewpointComponents" };
 
-    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as protocol::Mutation<BcfSnapshot>>::Diff> {
+    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
         agg_diff(&BcfMutation::SetViewpointComponents(self.clone()), base)
     }
     fn inverse(&self, base: &BcfSnapshot) -> Vec<BcfMutation> {

@@ -167,7 +167,8 @@ impl<'a> OperationContext<'a> {
         self.control.report(progress);
     }
 
-    pub(crate) fn now_ms(&self) -> u64 {
+    /// ⏱️ Returns the exact operation clock observation shared with reservation and publication.
+    pub fn now_ms(&self) -> u64 {
         self.control.now_ms()
     }
 
@@ -726,7 +727,7 @@ mod tests {
         Box::pin(async { Ok(String::new()) })
     }
 
-    fn fixture_apply<'a>(pack: &'a [u8], spr: &'a [u8], operations: &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(Vec<u8>, Vec<u8>, String), VcsError>> + 'a>> {
+    fn fixture_apply<'a>(pack: &'a [u8], spr: &'a [u8], operations: &'a [u8]) -> directory::os_store::ArtifactCodecApplyFuture<'a> {
         Box::pin(async move {
             let operations = directory::os_spr::decode_ops_vec(operations).map_err(|error| VcsError::Deserialize(error.to_string()))?;
             if operations.len() != 1 {

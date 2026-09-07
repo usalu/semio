@@ -16,7 +16,7 @@ pub struct SetRunStyle {
 impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for SetRunStyle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "run-style", kind: "set-run-style", record: "SetRunStyle" };
 
-    fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<<SemioDocumentMutation as protocol::Mutation<SemioDocumentSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<<SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::Diff> {
         agg_diff(&SemioDocumentMutation::SetRunStyle(self.clone()), base)
     }
     fn inverse(&self, base: &SemioDocumentSnapshot) -> Vec<SemioDocumentMutation> {

@@ -19,7 +19,9 @@ use crate::db_durability::Frontier;
 use crate::db_ids::{check_len, ActorId, ArtifactId, DbError};
 use crate::*;
 use db_storage::IndexStorage;
-use pack::{crc32c, ByteReader, ByteWriter};
+use pack::ByteWriter;
+#[cfg(test)]
+use pack::crc32c;
 
 //#region 🔖️Limits
 /// @emoji 🛡️ Ceiling on one entry's key, validated via `check_len` before the key's bytes
@@ -2117,7 +2119,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_run_sorts_and_last_write_wins_on_duplicate_keys() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let handle = IndexHandle::new(&storage, ArtifactId::from("sort"), IndexKind::Command).await;
         let entries = run([entry(b"b", b"1").await, entry(b"a", b"2").await, entry(b"b", b"3").await]).await;
         let mut control = control();
@@ -2168,7 +2170,7 @@ mod tests {
     //#region 🔖️IndexHandle
     #[semio_framework_async_macros::async_test]
     async fn index_handle_put_get_delete_round_trips() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command).await;
         put_bytes(&handle, b"k1", b"v1").await;
         put_bytes(&handle, b"k2", b"v2").await;
@@ -2182,7 +2184,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn index_handle_put_overwrites_earlier_value_for_same_key() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command).await;
         put_bytes(&handle, b"k", b"first").await;
         put_bytes(&handle, b"k", b"second").await;
@@ -2191,7 +2193,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn index_handle_scan_prefix_returns_sorted_live_entries_only() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command).await;
         put_bytes(&handle, b"a/1", b"1").await;
         put_bytes(&handle, b"a/2", b"2").await;
@@ -2208,7 +2210,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn index_handle_auto_merges_to_stay_within_policy() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let policy = MergePolicy { max_runs_before_merge: 2 };
         let handle = IndexHandle::with_policy(&storage, ArtifactId::from("doc-1"), IndexKind::Command, policy).await;
         for i in 0..6u64 {
@@ -2224,7 +2226,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn index_handle_compact_collapses_to_one_run_and_drops_tombstones() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command).await;
         put_bytes(&handle, b"a", b"1").await;
         put_bytes(&handle, b"b", b"2").await;
@@ -2240,7 +2242,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn index_handle_compact_of_one_run_is_a_no_op() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command).await;
         put_bytes(&handle, b"a", b"1").await;
         let before = stats(&handle).await;
@@ -2251,7 +2253,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn different_kinds_do_not_collide_for_the_same_document() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = ArtifactId::from("doc-1");
         let commands = IndexHandle::new(&storage, document.clone(), IndexKind::Command).await;
         let regions = IndexHandle::new(&storage, document, IndexKind::TouchedRegion).await;
@@ -2268,7 +2270,7 @@ mod tests {
     //#region 🔖️TypedIndexes
     #[semio_framework_async_macros::async_test]
     async fn command_index_records_and_looks_up_locations() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let index = CommandIndex::new(&storage, ArtifactId::from("doc-1")).await;
         let location = RecordLocation { segment: 3, offset: 128, len: 64 };
         db_actor::block_on(index.record(42, location)).expect("record");
@@ -2280,7 +2282,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn inverse_index_records_and_looks_up_locations() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let index = InverseIndex::new(&storage, ArtifactId::from("doc-1")).await;
         let location = RecordLocation { segment: 1, offset: 0, len: 16 };
         db_actor::block_on(index.record(7, location)).expect("record");
@@ -2289,7 +2291,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn actor_seq_index_resolves_and_tracks_latest_per_actor() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let index = ActorSeqIndex::new(&storage, ArtifactId::from("doc-1")).await;
         let alice = ActorId::from("alice");
         let bob = ActorId::from("bob");
@@ -2306,7 +2308,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn actor_seq_index_rejects_actor_id_with_embedded_nul() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let index = ActorSeqIndex::new(&storage, ArtifactId::from("doc-1")).await;
         let unsafe_actor = ActorId::from("bad\u{0}actor");
         assert!(matches!(db_actor::block_on(index.record(&unsafe_actor, 1, 1)), Err(DbError::InvalidArgument(_))));
@@ -2314,7 +2316,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn frontier_index_round_trips_and_tracks_latest() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let index = FrontierIndex::new(&storage, ArtifactId::from("doc-1")).await;
         let first = Frontier { document: ArtifactId::from("doc-1"), head_seq: 1, commit_seq: 1, chain_hash: [1u8; 32], epoch: 0 };
         let second = Frontier { document: ArtifactId::from("doc-1"), head_seq: 5, commit_seq: 2, chain_hash: [2u8; 32], epoch: 1 };
@@ -2327,7 +2329,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn touched_region_index_accumulates_sorted_unique_seqs() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let index = TouchedRegionIndex::new(&storage, ArtifactId::from("doc-1")).await;
         db_actor::block_on(index.record_touch(b"region-a", 5)).expect("record_touch");
         db_actor::block_on(index.record_touch(b"region-a", 2)).expect("record_touch");
@@ -2338,7 +2340,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn commit_index_round_trips() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let index = CommitIndex::new(&storage, ArtifactId::from("doc-1")).await;
         db_actor::block_on(index.record("ck-abc123", 9)).expect("record");
         assert_eq!(db_actor::block_on(index.lookup("ck-abc123")).expect("lookup"), Some(9));
@@ -2347,7 +2349,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn full_text_index_search_finds_indexed_documents() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let index = FullTextIndex::new(&storage, ArtifactId::from("doc-1")).await;
         db_actor::block_on(index.index_document(1, "The Quick Brown Fox")).expect("index");
         db_actor::block_on(index.index_document(2, "quick jumps")).expect("index");
@@ -2360,7 +2362,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn conflict_index_accumulates_multiple_records_per_command() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let index = ConflictIndex::new(&storage, ArtifactId::from("doc-1")).await;
         index.record_conflict(5, retained(b"region-collision").await).await.unwrap();
         index.record_conflict(5, retained(b"constraint-violation").await).await.unwrap();
@@ -2379,7 +2381,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn projection_index_resolves_exact_and_floor_lookups_scoped_to_projection_id() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let index = ProjectionIndex::new(&storage, ArtifactId::from("doc-1")).await;
         index.record("by-author", 10, retained(b"state-10").await).await.unwrap();
         index.record("by-author", 20, retained(b"state-20").await).await.unwrap();
@@ -2403,14 +2405,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn projection_index_rejects_projection_id_with_embedded_nul() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let index = ProjectionIndex::new(&storage, ArtifactId::from("doc-1")).await;
         assert!(matches!(index.record("bad\u{0}id", 1, retained(&[1]).await).await, Err(DbError::InvalidArgument(_))));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn preview_index_coalesces_latest_publish_or_withdraw_per_actor_and_key() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let index = PreviewIndex::new(&storage, ArtifactId::from("doc-1")).await;
         let alice = ActorId::from("alice");
 
@@ -2433,7 +2435,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn preview_index_rejects_actor_id_with_embedded_nul() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let index = PreviewIndex::new(&storage, ArtifactId::from("doc-1")).await;
         let unsafe_actor = ActorId::from("bad\u{0}actor");
         assert!(matches!(index.publish(&unsafe_actor, "k", retained(&[1]).await).await, Err(DbError::InvalidArgument(_))));
@@ -2448,7 +2450,7 @@ mod retained_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn exact_backing_handback_cancel_close_and_fragment_order_are_deterministic() {
-        let _pool = crate::db_storage::db_io_test_pool();
+        let _pool = db_storage::db_io_test_pool();
         let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let mut control = IndexCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 128).unwrap();
         let mut one = Vec::with_capacity(db_storage::DB_IO_PAGE_BYTES + 1);

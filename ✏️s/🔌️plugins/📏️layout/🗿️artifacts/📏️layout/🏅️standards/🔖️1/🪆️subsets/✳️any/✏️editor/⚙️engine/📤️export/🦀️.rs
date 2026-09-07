@@ -1,10 +1,10 @@
 //! 📤️ Deterministic, resumable Layout export jobs.
 
 use crate::artifacts::layout::{Frame, GridSettings, LayoutBounds, LayoutSnapshot, Page, PageOverride};
-use crate::editor::layout::config::LayoutConfigMutation;
 use crate::editor::layout::LayoutPlayApp;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework::{InteractiveJobClassification, RetainedToolWireInput, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework::action_bus::RetainedToolWireInput;
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::{
     BatchDriveConfig, BatchJobParams, Checkpoint, CommitCandidate, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, JobFault, JobPayloadCloseStep, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter,
     RevisionId, StepContext, StepOutcome,
@@ -448,6 +448,7 @@ impl JsonValidationCursor {
             JsonToken::None => Ok(false),
             JsonToken::String { key, decoded_bytes, escape } => {
                 let byte = *bytes.get(self.byte_cursor).ok_or("layout-export-json-string")?;
+                let low = matches!(escape, JsonStringEscape::LowUnicode { .. });
                 match escape {
                     JsonStringEscape::None => match byte {
                         b'"' => {
@@ -478,7 +479,6 @@ impl JsonValidationCursor {
                         }
                     }
                     JsonStringEscape::Unicode { digits, value } | JsonStringEscape::LowUnicode { digits, value } => {
-                        let low = matches!(escape, JsonStringEscape::LowUnicode { .. });
                         let digit = Self::hex(byte).ok_or("layout-export-json-unicode")?;
                         self.byte_cursor += 1;
                         *value = (*value << 4) | digit;
@@ -870,7 +870,7 @@ struct TypedJsonCursor {
 
 fn typed_string_source_owned_bytes(source: &StringSource) -> usize {
     match source {
-        StringSource::DrawNodeValue { path, .. } | StringSource::DrawNodeStyle { path, .. } | StringSource::DrawNodeMime { path, .. } => path.len().saturating_mul(std::mem::size_of::<usize>()),
+        StringSource::DrawNodeValue { path, .. } | StringSource::DrawNodeStyle { path, .. } | StringSource::DrawNodeMime { path, .. } => path.len().saturating_mul(size_of::<usize>()),
         _ => 0,
     }
 }
@@ -881,7 +881,7 @@ fn typed_json_node_owned_bytes(node: &TypedJsonNode) -> usize {
         TypedJsonNode::String { source, .. } => typed_string_source_owned_bytes(source),
         TypedJsonNode::OwnedString { value, .. } => value.len(),
         TypedJsonNode::DrawNode { path, .. } | TypedJsonNode::DrawChildren { path, .. } | TypedJsonNode::DrawSegments { path, .. } | TypedJsonNode::DrawSegment { path, .. } | TypedJsonNode::DrawBytes { path, .. } => {
-            path.len().saturating_mul(std::mem::size_of::<usize>())
+            path.len().saturating_mul(size_of::<usize>())
         }
         _ => 0,
     }
@@ -2048,19 +2048,19 @@ impl TypedJsonCursor {
 }
 
 enum OwnerPage<'a> {
-    Page(&'a crate::artifacts::layout::Page),
+    Page(&'a Page),
     Parent(&'a crate::artifacts::layout::ParentPage),
 }
 
-impl OwnerPage<'_> {
-    fn layers(&self) -> &[crate::artifacts::layout::Layer] {
+impl<'a> OwnerPage<'a> {
+    fn layers(&self) -> &'a [crate::artifacts::layout::Layer] {
         match self {
             Self::Page(value) => &value.layers,
             Self::Parent(value) => &value.layers,
         }
     }
 
-    fn frames(&self) -> &[Frame] {
+    fn frames(&self) -> &'a [Frame] {
         match self {
             Self::Page(value) => &value.frames,
             Self::Parent(value) => &value.frames,
@@ -2564,6 +2564,7 @@ impl InteractiveJob for LayoutMediaExportJob {
         match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
             Ok(PluginCloseStep::Pending { released_items, released_bytes }) => InteractiveJobCloseStep::Pending { released_items, released_bytes },
             Ok(PluginCloseStep::Complete) => InteractiveJobCloseStep::Complete,
+            Ok(PluginCloseStep::AwaitingInput { .. } | PluginCloseStep::Blocked { .. }) => InteractiveJobCloseStep::Blocked,
             Err(_) => InteractiveJobCloseStep::Blocked,
         }
     }
@@ -2609,7 +2610,7 @@ impl LayoutMediaExportJobFactory {
     }
 }
 
-impl semio_framework::ToolJobFactory for LayoutMediaExportJobFactory {
+impl ToolJobFactory for LayoutMediaExportJobFactory {
     type Payload = ArtifactReservedToolJob;
     type Job = ArtifactReservedToolJob;
 
@@ -2635,7 +2636,7 @@ impl semio_framework::ToolJobFactory for LayoutMediaExportJobFactory {
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutMediaExportJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<LayoutPlayApp>;
+    type Owner = EditorApp<LayoutPlayApp>;
     const TOOL_IDS: &'static [&'static str] = &[LAYOUT_MEDIA_EXPORT_TOOL_ID];
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: LAYOUT_MEDIA_EXPORT_TOOL_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] }];
@@ -2647,7 +2648,7 @@ impl LayoutExportJobFactory {
     }
 }
 
-impl semio_framework::ToolJobFactory for LayoutExportJobFactory {
+impl ToolJobFactory for LayoutExportJobFactory {
     type Payload = LayoutExportToolPayload;
     type Job = LayoutExportToolJob;
 
@@ -2737,7 +2738,7 @@ impl semio_framework::ToolJobFactory for LayoutExportJobFactory {
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutExportJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<LayoutPlayApp>;
+    type Owner = EditorApp<LayoutPlayApp>;
     const TOOL_IDS: &'static [&'static str] = LAYOUT_EXPORT_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
@@ -2849,9 +2850,9 @@ impl LayoutExportJob {
     }
 
     fn close_usize_buffer(value: &mut Vec<usize>, maximum_bytes: usize) -> usize {
-        let released_items = (maximum_bytes / std::mem::size_of::<usize>()).min(value.len());
+        let released_items = (maximum_bytes / size_of::<usize>()).min(value.len());
         value.truncate(value.len() - released_items);
-        released_items.saturating_mul(std::mem::size_of::<usize>())
+        released_items.saturating_mul(size_of::<usize>())
     }
 
     fn close_string_source(source: &mut StringSource, maximum_bytes: usize) -> usize {
@@ -3950,6 +3951,7 @@ impl InteractiveJob for LayoutExportJob {
         match self.close_export_step(maximum_items, maximum_bytes) {
             Ok(PluginCloseStep::Pending { released_items, released_bytes }) => InteractiveJobCloseStep::Pending { released_items, released_bytes },
             Ok(PluginCloseStep::Complete) => InteractiveJobCloseStep::Complete,
+            Ok(PluginCloseStep::AwaitingInput { .. } | PluginCloseStep::Blocked { .. }) => InteractiveJobCloseStep::Blocked,
             Err(_) => InteractiveJobCloseStep::Blocked,
         }
     }

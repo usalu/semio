@@ -15,7 +15,7 @@
 //! 🌳 The committed equation is `2·x² + 7` with `EquationNodeLabel`s 0..6 and `nextLabel` 7; the
 //! payload retargets the label-2 leading coefficient from the integer `2` to the rational `3/2`.
 
-use crate::artifacts::equation::standards::v1::subsets::equation::schema::mutations::change_coefficient::mutation::ChangeCoefficient;
+use crate::artifacts::equation::standards::v1::subsets::equation::schema::mutations::change_coefficient::ChangeCoefficient;
 use crate::artifacts::equation::snapshot::schema::{EquationNodeKind, EquationNodeLabel};
 use crate::artifacts::equation::{EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::{FromValue, ToValue};

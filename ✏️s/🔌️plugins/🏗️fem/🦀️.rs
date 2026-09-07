@@ -9,10 +9,10 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the FEM 2D and 3D surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum FemApps: PluginApp {
-        Fem2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::fem2d::Fem2dPlayApp>>),
-        Fem2dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::fem2d::Fem2dViewer>>),
-        Fem3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::fem3d::Fem3dPlayApp>>),
-        Fem3dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::fem3d::Fem3dViewer>>),
+        Fem2dEditor(VcsArtifactApp<EditorApp<crate::editor::fem2d::Fem2dPlayApp>>),
+        Fem2dViewer(VcsArtifactApp<ViewerApp<crate::viewer::fem2d::Fem2dViewer>>),
+        Fem3dEditor(VcsArtifactApp<EditorApp<crate::editor::fem3d::Fem3dPlayApp>>),
+        Fem3dViewer(VcsArtifactApp<ViewerApp<crate::viewer::fem3d::Fem3dViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -31,7 +31,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `🗄️stdio`'s own shape: one `OnArtifactKind` event per owned kind, read live from each subset's own
 /// `computation_artifact_kind().id` (never hardcoded), `Isolated` execution (nothing here justifies a
 /// publisher-trusted mode), and one `documents.write` ask covering both editors' persisted mutations.
-pub fn plugin() -> Result<Plugin<FemApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<FemApps>, PluginAssemblyError> {
     crate::editor::fem2d::session::initialize();
     crate::artifacts::fem3d::live_visual::initialize();
     Plugin::<FemApps>::builder("fem")

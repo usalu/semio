@@ -1,0 +1,8 @@
+{
+  "defaults": { "build": 0, "command": 0, "orchestrator": 0, "daemon": 0 },
+  "processes": [
+    { "name": "unlimited", "durationMs": 120, "budgetMs": 0, "output": "build-complete", "timeout": false },
+    { "name": "unlimited-capture-past-wrapper-grace", "durationMs": 5200, "budgetMs": 0, "output": "build-complete", "timeout": false },
+    { "name": "explicit-deadline", "durationMs": 2000, "budgetMs": 100, "output": "", "timeout": true }
+  ]
+}

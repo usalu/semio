@@ -1063,14 +1063,14 @@ pub mod builder_kit {
                 plugin_id: "playbook-module-procedural".into(),
                 topic_contribution: Some(semio_framework::TopicContribution::new(
                     "playbook.blockKind",
-                    dsl::DslValue::object([
-                        ("appId".to_string(), dsl::DslValue::String("playbook-module-procedural".to_string())),
-                        ("blockKind".to_string(), dsl::DslValue::String("buildingComponent".to_string())),
-                        ("label".to_string(), dsl::DslValue::String("Building Component".to_string())),
-                        ("iconId".to_string(), dsl::DslValue::String("building".to_string())),
-                        ("defaultValueJson".to_string(), dsl::DslValue::String("{}".to_string())),
-                        ("paramsBodyKey".to_string(), dsl::DslValue::String("params".to_string())),
-                        ("previewBodyKey".to_string(), dsl::DslValue::String("preview".to_string())),
+                    DslValue::object([
+                        ("appId".to_string(), DslValue::String("playbook-module-procedural".to_string())),
+                        ("blockKind".to_string(), DslValue::String("buildingComponent".to_string())),
+                        ("label".to_string(), DslValue::String("Building Component".to_string())),
+                        ("iconId".to_string(), DslValue::String("building".to_string())),
+                        ("defaultValueJson".to_string(), DslValue::String("{}".to_string())),
+                        ("paramsBodyKey".to_string(), DslValue::String("params".to_string())),
+                        ("previewBodyKey".to_string(), DslValue::String("preview".to_string())),
                     ]),
                 )),
             }
@@ -1085,7 +1085,7 @@ pub mod builder_kit {
         #[test]
         fn resolve_block_kind_extensions_ignores_unrelated_topics() {
             let mut entry = open_topic_entry();
-            entry.topic_contribution = Some(semio_framework::TopicContribution::new("cad.computer", dsl::DslValue::object([("unrelated".to_string(), dsl::DslValue::Bool(true))])));
+            entry.topic_contribution = Some(semio_framework::TopicContribution::new("cad.computer", DslValue::object([("unrelated".to_string(), DslValue::Bool(true))])));
             let extensions = resolve_block_kind_extensions(&[entry]);
             assert!(extensions.is_empty());
         }

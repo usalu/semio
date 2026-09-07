@@ -15,7 +15,7 @@ pub struct RemoveSample {
 
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for RemoveSample {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "sample", kind: "remove-sample", record: "RemoveSample" };
-    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::Diff> {
+    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
         agg_diff(&Mp4Mutation::RemoveSample(self.clone()), base)
     }
     fn inverse(&self, base: &Mp4Snapshot) -> Vec<Mp4Mutation> {

@@ -30,7 +30,7 @@ fn instance_lifetime_ui_document_terminal_includes_typed_value_descendants() {
     let fixture = fixture();
     let row = &fixture["document"];
     let value: UiValue = serde_json::from_value(row["value"].clone()).unwrap();
-    let handles = super::tests::descendants(&value);
+    let handles = tests::descendants(&value);
     let record = crate::UiNodeRecord {
         id: crate::UiNodeId(row["nodeId"].as_u64().unwrap()), key: UiText::try_from_str("extension").unwrap(),
         component: crate::Component::Extension(crate::ExtensionProps { extension: UiText::try_from_str("owned.test").unwrap(), props: value }),

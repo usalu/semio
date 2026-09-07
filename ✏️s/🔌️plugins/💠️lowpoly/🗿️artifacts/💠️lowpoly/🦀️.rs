@@ -498,7 +498,7 @@ async fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot
         })
         .collect();
     json_states.sort_by(|a, b| a.0.cmp(&b.0));
-    let mut derived: Vec<(String, _)> = crate::artifacts::lowpoly::snapshot::schema::LowpolySnapshot::field_states().await.iter().map(|(n, c)| ((*n).to_string(), *c)).collect();
+    let mut derived: Vec<(String, _)> = LowpolySnapshot::field_states().await.iter().map(|(n, c)| ((*n).to_string(), *c)).collect();
     derived.sort_by(|a, b| a.0.cmp(&b.0));
     assert_eq!(derived, json_states);
     assert_eq!(crate::artifacts::lowpoly::schema::LowpolyArtifact::artifact_schema_id().await, "s.lowpoly.lowpoly");

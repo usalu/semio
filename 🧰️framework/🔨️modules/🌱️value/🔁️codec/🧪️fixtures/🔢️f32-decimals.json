@@ -1,0 +1,8 @@
+{
+  "cases": [
+    { "bits": "3ed70a3d", "decimal": "0.42" },
+    { "bits": "4a61a631", "decimal": "3697036.2" },
+    { "bits": "d9f321be", "decimal": "-8.55444e+15" },
+    { "bits": "80000000", "decimal": "-0.0" }
+  ]
+}

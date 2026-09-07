@@ -13,7 +13,7 @@
 //! UNRESOLVED handle and `equation_scene` fails soft to a node-less graph — the state this
 //! case pins, and the state in which `move-node`'s own `mutation.target-missing` fires.
 
-use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::move_node::mutation::MoveNode;
+use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::move_node::MoveNode;
 use crate::artifacts::equation::{equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::{FromValue, ToValue};
 

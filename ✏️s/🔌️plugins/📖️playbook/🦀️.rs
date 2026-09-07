@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the playbook editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum PlaybookApps: PluginApp {
-        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::playbook::PlaybookPlayApp>>),
-        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::playbook::PlaybookViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::playbook::PlaybookPlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::playbook::PlaybookViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -27,7 +27,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// artifact (`crate::artifacts::playbook::artifact_kind().id`) is opened, this plugin's own actor
 /// runs `Isolated` (its one `🧩️extensions/🌀️procedural` runs `Declarative` instead — see that
 /// extension's own `bundle()`), and it asks the broker for document write access to persist edits.
-pub fn plugin() -> Result<Plugin<PlaybookApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<PlaybookApps>, PluginAssemblyError> {
     Plugin::<PlaybookApps>::builder("playbook")
         .label("Playbook")
         .version("0.1.0")

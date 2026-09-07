@@ -14,7 +14,7 @@ pub struct RemoveAlternateContent {
 impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for RemoveAlternateContent {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "alternate-content", kind: "remove-alternate-content", record: "RemoveAlternateContent" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxStrictMutation as protocol::Mutation<DocxSnapshot>>::Diff> {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxStrictMutation as Mutation<DocxSnapshot>>::Diff> {
         agg_diff(&DocxStrictMutation::RemoveAlternateContent(self.clone()), base)
     }
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxStrictMutation> {

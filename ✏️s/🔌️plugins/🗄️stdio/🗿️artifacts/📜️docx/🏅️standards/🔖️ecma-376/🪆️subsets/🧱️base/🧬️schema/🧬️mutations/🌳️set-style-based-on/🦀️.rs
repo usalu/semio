@@ -15,7 +15,7 @@ pub struct SetStyleBasedOn {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetStyleBasedOn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "style-based-on", kind: "set-style-based-on", record: "SetStyleBasedOn" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as protocol::Mutation<DocxSnapshot>>::Diff> {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
         agg_diff(&DocxMutation::SetStyleBasedOn(self.clone()), base)
     }
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {

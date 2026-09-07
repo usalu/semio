@@ -13,7 +13,7 @@ pub struct ConnectPorts { pub edge: WorkflowEdge }
 impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for ConnectPorts {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "workflow", kind: "connect-ports", record: "ConnectedWorkflowPorts" };
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> { protocol::MutationOutcome::new(WorkflowDiff::ConnectPorts { edge: self.edge.clone() }) }
-    fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> { vec![WorkflowMutation::DisconnectEdge(DisconnectEdge { edge_id: self.edge.id.clone() })] }
+    fn inverse(&self, _base: &WorkflowSnapshot) -> Vec<WorkflowMutation> { vec![WorkflowMutation::DisconnectEdge(DisconnectEdge { edge_id: self.edge.id.clone() })] }
     fn label(&self) -> String { format!("Connect workflow ports {}", self.edge.id) }
     fn target(&self) -> Vec<String> { vec!["edges".into(), self.edge.id.clone()] }
 }

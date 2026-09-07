@@ -17,7 +17,7 @@ pub struct SetSoftwareInfo {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetSoftwareInfo {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "software-info", kind: "set-software-info", record: "SetSoftwareInfo" };
 
-    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as protocol::Mutation<LasSnapshot>>::Diff> {
+    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
         agg_diff(&LasMutation::SetSoftwareInfo(self.clone()), base)
     }
     fn inverse(&self, base: &LasSnapshot) -> Vec<LasMutation> {

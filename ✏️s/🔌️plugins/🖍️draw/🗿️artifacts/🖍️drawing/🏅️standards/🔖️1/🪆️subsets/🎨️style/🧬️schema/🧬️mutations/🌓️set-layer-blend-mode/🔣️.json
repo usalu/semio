@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode",
+  "semanticKind": "set-layer-blend-mode",
+  "displayName": "Set Layer Blend Mode",
+  "emoji": "🌓️",
+  "aggregateVariant": "SetLayerBlendMode",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "set-layer-blend-mode",
+  "binaryTag": 3,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "error",
+    "warning",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

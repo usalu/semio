@@ -34,7 +34,7 @@ fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssem
 /// 🕹️ No per-row selection `action`: the tree is bound to the `tiles` interaction domain via
 /// `.interaction_domain(...)?` below, so the framework auto-injects `interactionSelect` for row
 /// clicks — never declare that yourself (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub fn render(deck: &PresentationSnapshot, labels: &AnimatePresentationLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(deck: &PresentationSnapshot, labels: &AnimatePresentationLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let (_, tiles) = crate::artifacts::presentation::presentation_working_scene(deck);
     let items = ui_node_list(tiles.iter().map(|tile| tree_item_desc(tile.id.clone(), Label::from(tile.name.clone()), Some(format!("x={:.3} y={:.3} w={:.3} h={:.3}", tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height)))))?;
     PanelTreeBuilder::new("animate-presentation-play")?

@@ -23,7 +23,7 @@ fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<O
     if owner.pop().is_some() {
         return Ok(Some((1, 0)));
     }
-    let bytes = owner.capacity().checked_mul(std::mem::size_of::<T>()).ok_or(())?;
+    let bytes = owner.capacity().checked_mul(size_of::<T>()).ok_or(())?;
     if bytes == 0 {
         return Ok(None);
     }
@@ -651,9 +651,9 @@ impl LdltJob {
     pub fn new(operation: Operation, a: CscSym, columns_per_step: usize) -> Self {
         assert!(columns_per_step > 0, "ldlt batch must contain work");
         let n = a.n;
-        let input_pages_valid = a.colptr.capacity().saturating_mul(std::mem::size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
-            && a.rowind.capacity().saturating_mul(std::mem::size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
-            && a.vals.capacity().saturating_mul(std::mem::size_of::<f64>()) <= NUMERICAL_OWNER_PAGE_BYTES;
+        let input_pages_valid = a.colptr.capacity().saturating_mul(size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
+            && a.rowind.capacity().saturating_mul(size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
+            && a.vals.capacity().saturating_mul(size_of::<f64>()) <= NUMERICAL_OWNER_PAGE_BYTES;
         let admission_fault = n > LDLT_MAXIMUM_ORDER || a.colptr.len() != n.saturating_add(1) || a.rowind.len() != a.vals.len() || !input_pages_valid;
         let workspace = LdltColumnWorkspace { values: Vec::new(), marks: Vec::new(), generation: 0, candidate: Vec::new() };
         let cursor = LdltColumnCursor {
@@ -728,7 +728,7 @@ impl LdltJob {
 
     fn reserve_fixed_owner<T>(owner: &mut Vec<T>, items: usize) -> Result<(), SparseError> {
         owner.try_reserve_exact(items).map_err(|_| SparseError::DimensionMismatch)?;
-        let bytes = owner.capacity().checked_mul(std::mem::size_of::<T>()).ok_or(SparseError::DimensionMismatch)?;
+        let bytes = owner.capacity().checked_mul(size_of::<T>()).ok_or(SparseError::DimensionMismatch)?;
         if bytes > NUMERICAL_OWNER_PAGE_BYTES {
             return Err(SparseError::DimensionMismatch);
         }
@@ -1160,7 +1160,7 @@ fn declared_owner_length(page: &NumericalPageView<'_>, maximum: usize) -> Result
 }
 
 fn validate_restored_owner<T>(owner: &Vec<T>) -> Result<(), NumericalCheckpointFault> {
-    let bytes = owner.capacity().checked_mul(std::mem::size_of::<T>()).ok_or(NumericalCheckpointFault::Envelope)?;
+    let bytes = owner.capacity().checked_mul(size_of::<T>()).ok_or(NumericalCheckpointFault::Envelope)?;
     (bytes <= NUMERICAL_OWNER_PAGE_BYTES).then_some(()).ok_or(NumericalCheckpointFault::Envelope)
 }
 
@@ -2162,7 +2162,7 @@ impl ModalInputConstruction {
 
     fn reserve<T>(owner: &mut Vec<T>, count: usize) -> Result<(), &'static [u8]> {
         owner.try_reserve_exact(count).map_err(|_| b"modal-input-owner-allocation" as &'static [u8])?;
-        if owner.capacity().checked_mul(std::mem::size_of::<T>()).is_none_or(|bytes| bytes > NUMERICAL_OWNER_PAGE_BYTES) {
+        if owner.capacity().checked_mul(size_of::<T>()).is_none_or(|bytes| bytes > NUMERICAL_OWNER_PAGE_BYTES) {
             return Err(b"modal-input-owner-page");
         }
         Ok(())
@@ -2409,7 +2409,7 @@ impl PcgJobConstruction {
 
     /// 🌬️ Retains a generation-local assembled RHS instead of fabricating the compatibility unit vector.
     pub fn new_with_rhs(operation: Operation, matrix: Csr, rhs: VecD) -> Result<Self, (Csr, VecD)> {
-        if matrix.n != rhs.len() || rhs.0.capacity().saturating_mul(std::mem::size_of::<f64>()) > NUMERICAL_OWNER_PAGE_BYTES {
+        if matrix.n != rhs.len() || rhs.0.capacity().saturating_mul(size_of::<f64>()) > NUMERICAL_OWNER_PAGE_BYTES {
             return Err((matrix, rhs));
         }
         Ok(Self {
@@ -2935,10 +2935,10 @@ pub struct SubspaceIterationJob {
 
 impl SubspaceIterationJob {
     pub fn new(operation: Operation, k_factor: LdltFactor, b: Csr, n: usize, p: usize, max_iter: usize) -> Self {
-        let factor_pages_valid = k_factor.l_cols.capacity().saturating_mul(std::mem::size_of::<Vec<(u32, f64)>>()) <= NUMERICAL_OWNER_PAGE_BYTES;
-        let sparse_pages_valid = b.indptr.capacity().saturating_mul(std::mem::size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
-            && b.indices.capacity().saturating_mul(std::mem::size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
-            && b.vals.capacity().saturating_mul(std::mem::size_of::<f64>()) <= NUMERICAL_OWNER_PAGE_BYTES;
+        let factor_pages_valid = k_factor.l_cols.capacity().saturating_mul(size_of::<Vec<(u32, f64)>>()) <= NUMERICAL_OWNER_PAGE_BYTES;
+        let sparse_pages_valid = b.indptr.capacity().saturating_mul(size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
+            && b.indices.capacity().saturating_mul(size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
+            && b.vals.capacity().saturating_mul(size_of::<f64>()) <= NUMERICAL_OWNER_PAGE_BYTES;
         let admission_fault = n == 0 || p == 0 || p > n || b.n != n || k_factor.n != n || n > SUBSPACE_MAXIMUM_ORDER || !factor_pages_valid || !sparse_pages_valid;
         let m = if admission_fault { 0 } else { (p + 8).max(2 * p).min(n).max(1) };
         Self {
@@ -3159,7 +3159,7 @@ impl SubspaceIterationJob {
         if matrix.data.capacity() == 0 {
             matrix.data.try_reserve_exact(cells).map_err(|_| ())?;
         }
-        if matrix.data.capacity().checked_mul(std::mem::size_of::<f64>()).ok_or(())? > NUMERICAL_OWNER_PAGE_BYTES {
+        if matrix.data.capacity().checked_mul(size_of::<f64>()).ok_or(())? > NUMERICAL_OWNER_PAGE_BYTES {
             return Err(());
         }
         matrix.rows = rows;
@@ -3179,7 +3179,7 @@ impl SubspaceIterationJob {
 
     fn reserve_scalar_owner<T>(owner: &mut Vec<T>, items: usize) -> Result<(), ()> {
         owner.try_reserve_exact(items).map_err(|_| ())?;
-        if owner.capacity().checked_mul(std::mem::size_of::<T>()).ok_or(())? > NUMERICAL_OWNER_PAGE_BYTES {
+        if owner.capacity().checked_mul(size_of::<T>()).ok_or(())? > NUMERICAL_OWNER_PAGE_BYTES {
             return Err(());
         }
         Ok(())
@@ -4429,7 +4429,7 @@ impl InteractiveJob for SubspaceIterationJob {
             }
             context.consume_fuel(1);
             if let Some(column) = self.state.k_factor.l_cols.get(self.state.factor_validation_cursor) {
-                if column.capacity().saturating_mul(std::mem::size_of::<(u32, f64)>()) > NUMERICAL_OWNER_PAGE_BYTES {
+                if column.capacity().saturating_mul(size_of::<(u32, f64)>()) > NUMERICAL_OWNER_PAGE_BYTES {
                     self.state.admission_fault = true;
                     self.state.factor_validation_complete = true;
                     return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });

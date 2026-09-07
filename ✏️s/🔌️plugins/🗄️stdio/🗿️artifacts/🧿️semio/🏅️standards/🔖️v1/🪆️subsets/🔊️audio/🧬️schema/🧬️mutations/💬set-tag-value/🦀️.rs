@@ -17,7 +17,7 @@ pub struct SetTagValue {
 impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for SetTagValue {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "tag-value", kind: "set-tag-value", record: "SetTagValue" };
 
-    fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<<SemioAudioMutation as protocol::Mutation<SemioAudioSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<<SemioAudioMutation as Mutation<SemioAudioSnapshot>>::Diff> {
         agg_diff(&SemioAudioMutation::SetTagValue(self.clone()), base)
     }
     fn inverse(&self, base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {

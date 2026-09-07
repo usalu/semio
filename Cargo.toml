@@ -158,6 +158,7 @@ semio-framework-value-resident = { path = "🧰️framework/🔨️modules/🌱�
 semio-framework-pack = { path = "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-server = { path = "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust" }
 semio-framework-async = { path = "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-async-macros = { path = "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-job = { path = "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-os-services = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust" }
@@ -265,6 +266,12 @@ codegen-units = 1
 # instead of geometry. Scoped to this package rather than raised on the whole profile because the
 # io layer (`semio-s-plugin-stdio`) is not on the render path and is far more expensive to compile.
 [profile.wasm-dev.package.semio-s-plugin-lowpoly]
+opt-level = 2
+
+# 🎚️ Same interactive-step contract as lowpoly above, measured on puzzle3d: at `opt-level = 0` a
+# puzzle3d turn overran the ceiling at 9100us against the 8000us budget and the runtime trapped it
+# with `plugin.internal.interactive-ceiling`, so both windows rendered a fault instead of the scene.
+[profile.wasm-dev.package.semio-s-plugin-puzzle]
 opt-level = 2
 
 # 🚀️ Ship profile for native binaries (`cargo build --release`, os-run in CI).

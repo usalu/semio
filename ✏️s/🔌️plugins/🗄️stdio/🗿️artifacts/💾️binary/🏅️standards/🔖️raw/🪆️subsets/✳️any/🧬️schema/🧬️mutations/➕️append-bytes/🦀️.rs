@@ -22,7 +22,7 @@ pub struct AppendBytes {
 impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for AppendBytes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "append", entity: "bytes", kind: "append-bytes", record: "AppendBytes" };
 
-    fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<<BinaryMutation as protocol::Mutation<BinarySnapshot>>::Diff> {
+    fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<<BinaryMutation as Mutation<BinarySnapshot>>::Diff> {
         agg_diff(&BinaryMutation::AppendBytes(self.clone()), base)
     }
     fn inverse(&self, base: &BinarySnapshot) -> Vec<BinaryMutation> {

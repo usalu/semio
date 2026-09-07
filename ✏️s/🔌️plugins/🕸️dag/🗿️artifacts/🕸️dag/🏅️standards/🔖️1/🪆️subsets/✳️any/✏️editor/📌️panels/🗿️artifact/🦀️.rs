@@ -4,7 +4,7 @@ use crate::artifacts::dag::DagSnapshot;
 use crate::editor::dag::terminology::DagPlayLabels;
 use crate::editor::dag::DAG_PLAY_INTERACTION_DOMAIN;
 use infinite_board_port_directed_dag::dag_node_kind_tag;
-use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const DAG_PLAY_BODY_DOCUMENT: &str = "dag.play.document";
@@ -31,12 +31,12 @@ pub fn definition() -> PanelTabDefinition {
 pub fn render(document: &DagSnapshot, labels: &DagPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let scene = crate::artifacts::dag::dag_working_scene(document);
     let node_items = crate::editor::dag::ui_node_list(
-        scene.nodes.iter().map(|node| tree_item_desc(node.id.clone(), semio_framework_plugin::Label::data(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }), Some(dag_node_kind_tag(&node.kind).into()))),
+        scene.nodes.iter().map(|node| tree_item_desc(node.id.clone(), if node.name.is_empty() { node.id.clone() } else { node.name.clone() }, Some(dag_node_kind_tag(&node.kind).into()))),
     )?;
-    let edge_items = crate::editor::dag::ui_node_list(scene.edges.iter().map(|edge| tree_item_desc(edge.id.clone(), semio_framework_plugin::Label::data(format!("{} → {}", edge.source, edge.target)), Some(edge.id.clone()))))?;
+    let edge_items = crate::editor::dag::ui_node_list(scene.edges.iter().map(|edge| tree_item_desc(edge.id.clone(), format!("{} → {}", edge.source, edge.target), Some(edge.id.clone()))))?;
     PanelTreeBuilder::new("dag-play-document")?
-        .section_or_placeholder("dag-play-document.nodes", Some(labels.nodes.into()), true, node_items, labels.empty)?
-        .section_or_placeholder("dag-play-document.edges", Some(labels.edges.into()), false, edge_items, labels.empty)?
+        .section_or_placeholder("dag-play-document.nodes", Some(semio_framework_plugin::plugin_app_close_prelude::Label::try_from(labels.nodes.as_str()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "outline heading admission failed"))?), true, node_items, labels.empty.as_str())?
+        .section_or_placeholder("dag-play-document.edges", Some(semio_framework_plugin::plugin_app_close_prelude::Label::try_from(labels.edges.as_str()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "outline heading admission failed"))?), false, edge_items, labels.empty.as_str())?
         .interaction_domain(DAG_PLAY_INTERACTION_DOMAIN)?
         .build()
 }
@@ -50,8 +50,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dag_play_labels_resolve_native_by_default() {
-        let mut app = new_app();
-        let json = render_body(&mut app, DAG_PLAY_BODY_DOCUMENT);
+        let mut app = new_app().await;
+        let json = render_body(&mut app, DAG_PLAY_BODY_DOCUMENT).await;
         assert!(json.contains("Nodes"));
         assert!(json.contains("Edges"));
     }

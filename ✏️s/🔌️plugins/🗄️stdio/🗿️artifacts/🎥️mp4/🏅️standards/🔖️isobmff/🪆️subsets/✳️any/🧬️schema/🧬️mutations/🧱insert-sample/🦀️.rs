@@ -17,7 +17,7 @@ pub struct InsertSample {
 
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for InsertSample {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "sample", kind: "insert-sample", record: "InsertSample" };
-    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::Diff> {
+    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
         agg_diff(&Mp4Mutation::InsertSample(self.clone()), base)
     }
     fn inverse(&self, base: &Mp4Snapshot) -> Vec<Mp4Mutation> {

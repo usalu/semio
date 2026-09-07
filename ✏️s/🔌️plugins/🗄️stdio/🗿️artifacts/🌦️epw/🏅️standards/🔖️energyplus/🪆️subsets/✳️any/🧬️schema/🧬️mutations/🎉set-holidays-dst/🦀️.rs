@@ -16,7 +16,7 @@ pub struct SetHolidaysDst {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetHolidaysDst {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "holidays-dst", kind: "set-holidays-dst", record: "SetHolidaysDst" };
 
-    fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as protocol::Mutation<EpwSnapshot>>::Diff> {
+    fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
         agg_diff(&EpwMutation::SetHolidaysDst(self.clone()), base)
     }
     fn inverse(&self, base: &EpwSnapshot) -> Vec<EpwMutation> {

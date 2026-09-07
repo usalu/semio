@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative change-chromaticities mutation.
-use crate::artifacts::png::schema::diff::{self, *};
+use crate::artifacts::png::schema::diff::*;
 use crate::artifacts::png::schema::mutations::PngMutation;
 use crate::artifacts::png::schema::snapshot::*;
 
@@ -27,12 +27,11 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeChromaticitiesMu
         protocol::MutationOutcome::new(contribute(base, *chrm))
     }
     fn inverse(&self, base: &PngSnapshot) -> Vec<PngMutation> {
-        let Self { chrm } = self;
         let outcome = <Self as protocol::MutationKind<PngSnapshot, PngMutation>>::diff(self, base);
         if <PngDiff as protocol::DiffAlgebra<PngSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
-        vec![PngMutation::ChangeChromaticities(crate::artifacts::png::schema::mutations::ChangeChromaticitiesMutation { chrm: base.chrm })]
+        vec![PngMutation::ChangeChromaticities(ChangeChromaticitiesMutation { chrm: base.chrm })]
     }
     fn label(&self) -> String {
         "change chromaticities".into()

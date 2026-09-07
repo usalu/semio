@@ -37,7 +37,7 @@ fn catalog_kind_label(entry: &DslValue) -> String {
     entry.get("name").and_then(|value| value.as_str()).filter(|value| !value.is_empty()).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 
-fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<UiFixedList<semio_framework_plugin::BuiltNode>> {
     let mut items = UiFixedList::default();
     for (index, entry) in entries.iter().enumerate() {
         let kind_id = entry.get("id").and_then(|value| value.as_str()).ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "wires catalogue kind id missing"))?;

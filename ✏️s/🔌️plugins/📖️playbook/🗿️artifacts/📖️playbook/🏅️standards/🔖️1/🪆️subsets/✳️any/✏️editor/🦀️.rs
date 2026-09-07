@@ -338,13 +338,13 @@ impl ArtifactEditor for PlaybookPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<PlaybookPlayApp>,
+        owner: EditorApp<PlaybookPlayApp>,
         owner_file: "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.playbook.playbook@1/*#editor",
         document_schema: "playbook.program",
         factory: "PlaybookRetainedCommandJobFactory",
         factory_type: PlaybookRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
+        contract: ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
         tools: ["setLocale", "setContributions"]
     }
 

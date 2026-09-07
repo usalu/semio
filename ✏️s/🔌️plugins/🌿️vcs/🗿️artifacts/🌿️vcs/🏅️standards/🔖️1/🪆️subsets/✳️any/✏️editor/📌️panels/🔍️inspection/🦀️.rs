@@ -39,7 +39,7 @@ fn field_row(field: &'static str, label: LabelText, kind: ui::InputKind, value: 
     let control = control.try_id(format!("vcs-play-inspector.{field}.input")).map_err(|_| ui_error("vcs inspector input id admission failed"))?;
     let control = control.try_on_with(Trigger::Change, action, args).map_err(|_| ui_error("vcs inspector input binding admission failed"))?;
     let control = control.try_build().map_err(|_| ui_error("vcs inspector input admission failed"))?;
-    let row = ui::tree_item(ui_fixed_label(label)?).try_id(format!("vcs-play-inspector.{field}")).map_err(|_| ui_error("vcs inspector row id admission failed"))?;
+    let row = semio_framework_ui_contract::tree_item(ui_fixed_label(label)?).try_id(format!("vcs-play-inspector.{field}")).map_err(|_| ui_error("vcs inspector row id admission failed"))?;
     row.try_child(control).map_err(|_| ui_error("vcs inspector row child admission failed"))?.try_build().map_err(|_| ui_error("vcs inspector row admission failed"))
 }
 

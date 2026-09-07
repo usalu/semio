@@ -83,7 +83,7 @@ fn retained_component_copy_surface_advances_under_real_4096_work_grant() {
     }
     if complete { assert_eq!(serde_json::to_value(owner.candidate().unwrap()).unwrap(), expected); }
     close(&mut owner, 64);
-    eprintln!("[DEBUG] component-copy-real-grant inline={} work-max={maximum_work} complete={complete}", std::mem::size_of::<crate::Component>());
+    eprintln!("[DEBUG] component-copy-real-grant inline={} work-max={maximum_work} complete={complete}", size_of::<crate::Component>());
     assert!(maximum_work <= grant);
     assert!(complete, "valid Surface must progress under the actual runtime 4096-byte work grant");
 }

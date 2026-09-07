@@ -39,7 +39,7 @@ use semio_framework::{media_types_compatible, Media, MediaClass, MediaCompat, Me
 // same reason (driving a real turn through `semio_framework_actor::Kernel`); this crate uses
 // `Effect::Respond`/`RequestOutcome` (per-command reply correlation) rather than that consumer's
 // `Effect::SendMessage`/`MessageEndpoint` (UI-surface push messaging, which `run` has no use for).
-use semio_framework::kernel::{AppInstanceId, Effect, Event, PluginInstanceId, QuotaSchema, RequestOutcome};
+use semio_framework::kernel::{AppInstanceId, Effect, Event, QuotaSchema, RequestOutcome};
 use semio_framework_actor::ActorId as RuntimeActorId;
 use semio_framework_actor::{ActivationEvent, ActorKind, Backpressure, Envelope, Lane, Origin, PackageId, Payload};
 use semio_framework_async::{CancelToken, OperationContext, TraceId};
@@ -56,7 +56,9 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, Mutex};
 use store::{BlobStore, NoBlobStore};
-use workflow::{FinishRunNode, MediaContract, PortFingerprint, RunMutation, RunNodeRecord, RunNodeStatus, RunOutputArtifact, RunParameterValue, SealRun, StartRun, StartRunNode, Workflow, WorkflowEdge, WorkflowNode, WorkflowParameterBinding};
+#[cfg(test)]
+use workflow::{SealRun, StartRun};
+use workflow::{FinishRunNode, MediaContract, PortFingerprint, RunMutation, RunNodeRecord, RunNodeStatus, RunOutputArtifact, RunParameterValue, StartRunNode, Workflow, WorkflowEdge, WorkflowNode, WorkflowParameterBinding};
 
 /// 🚧️ A failure computing a studio's workflow headlessly.
 #[derive(Debug)]
@@ -228,14 +230,14 @@ impl FileBlobStore {
 }
 
 impl BlobStore for FileBlobStore {
-    fn put(&self, bytes: &[u8], media_type: &str) -> Result<store::BlobRef, store::VcsError> {
+    async fn put(&self, bytes: &[u8], media_type: &str) -> Result<store::BlobRef, store::VcsError> {
         let hash = framework_hash::hash_bytes(bytes);
         std::fs::create_dir_all(&self.root).map_err(|error| store::VcsError::Backbone(error.to_string()))?;
         std::fs::write(self.blob_path(&hash), bytes).map_err(|error| store::VcsError::Backbone(error.to_string()))?;
         Ok(store::BlobRef { hash, size: bytes.len() as u64, media_type: media_type.to_string() })
     }
 
-    fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, store::VcsError> {
+    async fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, store::VcsError> {
         match std::fs::read(self.blob_path(hash)) {
             Ok(bytes) => Ok(Some(bytes)),
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
@@ -243,11 +245,11 @@ impl BlobStore for FileBlobStore {
         }
     }
 
-    fn has(&self, hash: &str) -> Result<bool, store::VcsError> {
+    async fn has(&self, hash: &str) -> Result<bool, store::VcsError> {
         Ok(self.blob_path(hash).exists())
     }
 
-    fn delete(&self, hash: &str) -> Result<(), store::VcsError> {
+    async fn delete(&self, hash: &str) -> Result<(), store::VcsError> {
         match std::fs::remove_file(self.blob_path(hash)) {
             Ok(()) => Ok(()),
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
@@ -265,24 +267,24 @@ pub struct InMemoryBlobStore {
 }
 
 impl BlobStore for InMemoryBlobStore {
-    fn put(&self, bytes: &[u8], media_type: &str) -> Result<store::BlobRef, store::VcsError> {
+    async fn put(&self, bytes: &[u8], media_type: &str) -> Result<store::BlobRef, store::VcsError> {
         let hash = framework_hash::hash_bytes(bytes);
         let mut entries = self.entries.lock().map_err(|_| store::VcsError::Backbone("blob store lock poisoned".into()))?;
         entries.insert(hash.clone(), (bytes.to_vec(), media_type.to_string()));
         Ok(store::BlobRef { hash, size: bytes.len() as u64, media_type: media_type.to_string() })
     }
 
-    fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, store::VcsError> {
+    async fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, store::VcsError> {
         let entries = self.entries.lock().map_err(|_| store::VcsError::Backbone("blob store lock poisoned".into()))?;
         Ok(entries.get(hash).map(|(bytes, _)| bytes.clone()))
     }
 
-    fn has(&self, hash: &str) -> Result<bool, store::VcsError> {
+    async fn has(&self, hash: &str) -> Result<bool, store::VcsError> {
         let entries = self.entries.lock().map_err(|_| store::VcsError::Backbone("blob store lock poisoned".into()))?;
         Ok(entries.contains_key(hash))
     }
 
-    fn delete(&self, hash: &str) -> Result<(), store::VcsError> {
+    async fn delete(&self, hash: &str) -> Result<(), store::VcsError> {
         let mut entries = self.entries.lock().map_err(|_| store::VcsError::Backbone("blob store lock poisoned".into()))?;
         entries.remove(hash);
         Ok(())
@@ -298,11 +300,11 @@ impl BlobStore for InMemoryBlobStore {
 /// payload's bytes never live inline in `Media` (only its content-addressed `blob_hash` does) — this
 /// is the one place that boundary is crossed, resolving them through `blob_store` into the wire's
 /// inline `data`.
-pub fn media_to_artifact<B: BlobStore>(media: &Media, blob_store: &B) -> Result<(Vec<u8>, Vec<u8>), RunError> {
+pub async fn media_to_artifact<B: BlobStore>(media: &Media, blob_store: &B) -> Result<(Vec<u8>, Vec<u8>), RunError> {
     let (wire, blob_hash, data) = match &media.payload {
         MediaPayload::Structured { schema, json } => (MediaWireFormat::Document { schema: schema.clone() }, None, json.clone().into_bytes()),
         MediaPayload::Binary { format_kind, blob_hash } => {
-            let bytes = blob_store.get(blob_hash).map_err(|error| RunError::Host(error.to_string()))?.ok_or_else(|| RunError::Host(format!("blob not found: {blob_hash}")))?;
+            let bytes = blob_store.get(blob_hash).await.map_err(|error| RunError::Host(error.to_string()))?.ok_or_else(|| RunError::Host(format!("blob not found: {blob_hash}")))?;
             (MediaWireFormat::Binary { format_kind: format_kind.clone() }, Some(blob_hash.clone()), bytes)
         }
     };
@@ -315,7 +317,7 @@ pub fn media_to_artifact<B: BlobStore>(media: &Media, blob_store: &B) -> Result<
 /// `blob_store` (content-addressed, idempotent) rather than kept inline, mirroring `Media`'s own
 /// "binary payloads never carry bytes directly" invariant — the freshly computed hash supersedes
 /// whatever `blob_hash` the artifact's own descriptor claimed.
-pub fn media_from_artifact<B: BlobStore>(descriptor: &[u8], data: Vec<u8>, blob_store: &B) -> Result<Media, RunError> {
+pub async fn media_from_artifact<B: BlobStore>(descriptor: &[u8], data: Vec<u8>, blob_store: &B) -> Result<Media, RunError> {
     let value = store::pack_rt::decode_wire_value(descriptor).map_err(|error| RunError::Host(error.to_string()))?;
     let descriptor: semio_framework_plugin::app::MediaArtifactDescriptor = from_dsl_value(value).map_err(|error| RunError::Host(error))?;
     let media_type = descriptor.media_type.ok_or_else(|| RunError::Host("media artifact descriptor is missing media_type".to_string()))?;
@@ -329,7 +331,7 @@ pub fn media_from_artifact<B: BlobStore>(descriptor: &[u8], data: Vec<u8>, blob_
                 .first()
                 .cloned()
                 .ok_or_else(|| RunError::Host(format!("media format kind {format_kind:?} has no MIME claim")))?;
-            let blob_ref = blob_store.put(&data, &mime).map_err(|error| RunError::Host(error.to_string()))?;
+            let blob_ref = blob_store.put(&data, &mime).await.map_err(|error| RunError::Host(error.to_string()))?;
             MediaPayload::Binary { format_kind, blob_hash: blob_ref.hash }
         }
     };
@@ -347,6 +349,7 @@ fn frame_in_reply_to(frame: &AppFrame) -> Option<u64> {
         AppFrame::Invocation { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::Document { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::ContextMenu { in_reply_to, .. } => Some(*in_reply_to),
+        AppFrame::LocalInteractionQuery { .. } => None,
         AppFrame::Media { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::MediaFingerprint { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::UiPatch { in_reply_to, .. } => *in_reply_to,
@@ -903,7 +906,7 @@ fn topological_order(graph: &Workflow) -> Result<Vec<String>, RunError> {
 /// converter (fail-closed — an edge nobody can actually run is worse than one caught here at plan
 /// time); and every input port's `required`/`multiplicity` constraint must hold across the WHOLE
 /// node, not just one edge (so it's checked in a second pass once every edge's incoming count is known).
-fn validate_edge_kinds(graph: &Workflow) -> Result<(), RunError> {
+async fn validate_edge_kinds(graph: &Workflow) -> Result<(), RunError> {
     let node_by_id: HashMap<&str, &WorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
     let mut incoming_count: HashMap<(&str, &str), usize> = HashMap::new();
 
@@ -913,7 +916,7 @@ fn validate_edge_kinds(graph: &Workflow) -> Result<(), RunError> {
         let source_port = source_node.outputs.iter().find(|port| port.id == edge.source_port_id).ok_or_else(|| RunError::UnknownPort { edge_id: edge.id.clone(), node_id: edge.source_node_id.clone(), port_id: edge.source_port_id.clone() })?;
         let target_port = target_node.inputs.iter().find(|port| port.id == edge.target_port_id).ok_or_else(|| RunError::UnknownPort { edge_id: edge.id.clone(), node_id: edge.target_node_id.clone(), port_id: edge.target_port_id.clone() })?;
 
-        if matches!(media_types_compatible(&source_port.spec.media_type, &target_port.spec.media_type), MediaCompat::Reject) {
+        if matches!(media_types_compatible(&source_port.spec.media_type, &target_port.spec.media_type).await, MediaCompat::Reject) {
             return Err(RunError::Incompatible { edge_id: edge.id.clone(), produced: source_port.spec.media_type, accepted: target_port.spec.media_type });
         }
 
@@ -956,7 +959,7 @@ pub struct RunReport {
 /// to its current `(pack, spr)` artifact bytes — missing/absent means "never persisted".
 /// `prior_node_records` is the PRIOR SEALED `workflow::RunArtifact.node_records`, keyed by node id
 /// (empty for a first-ever run — every node then plans as recomputed).
-pub fn plan(
+pub async fn plan(
     graph: &Workflow,
     documents: &BTreeMap<String, (Vec<u8>, Vec<u8>)>,
     configs: &BTreeMap<String, (Vec<u8>, Vec<u8>)>,
@@ -964,7 +967,7 @@ pub fn plan(
     parameter_bindings: &[WorkflowParameterBinding],
     prior_node_records: &BTreeMap<String, RunNodeRecord>,
 ) -> Result<RunReport, RunError> {
-    validate_edge_kinds(graph)?;
+    validate_edge_kinds(graph).await?;
     let order = topological_order(graph)?;
     let node_by_id: HashMap<&str, &WorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
     let mut incoming: HashMap<&str, Vec<&WorkflowEdge>> = HashMap::new();
@@ -1034,7 +1037,7 @@ pub struct SpaceRunner<H: AppChannelHost, B: BlobStore + 'static = NoBlobStore> 
 
 impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
     pub fn new(host: H, blob_store: Arc<B>, merge_policy: protocol::MergePolicy) -> Self {
-        Self { host, blob_store, merge_policy, cancel: CancelToken::root(), deadline_ms: None }
+        Self { host, blob_store, merge_policy, cancel: CancelToken::root_now(), deadline_ms: None }
     }
 
     pub fn into_host(self) -> H {
@@ -1060,7 +1063,7 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
     /// run's root (see the `cancel` field's own doc — cancelling the run cancels every node's
     /// context transitively via `CancelToken::child`'s max-severity fold).
     fn node_ctx(&self, node_handle: u32) -> OperationContext {
-        OperationContext { actor: node_handle as u64, generation: 0, trace: TraceId(node_handle as u64), lane: 0, deadline_ms: self.deadline_ms, cancel: self.cancel.child(), capability: None }
+        OperationContext { actor: node_handle as u64, generation: 0, trace: TraceId(node_handle as u64), lane: 0, deadline_ms: self.deadline_ms, cancel: self.cancel.child_now(), capability: None }
     }
 
     /// 🔌️ Returns `node`'s already-open handle, opening it (`host.open(node.plugin_id, node.app_id)`)
@@ -1096,7 +1099,7 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
     ) -> Result<((Vec<u8>, Vec<u8>), (Vec<u8>, Vec<u8>), BTreeMap<String, (Media, String)>), RunError> {
         // 🛑️ Checked BEFORE `open`/`exchange` — a cancelled run stops before its NEXT node rather
         // than mid-exchange (see `RunError::Cancelled`'s own doc).
-        if self.cancel.is_cancelled() {
+        if self.cancel.is_cancelled().await {
             return Err(RunError::Cancelled);
         }
         let handle = self.open_node(live, node).await?;
@@ -1121,7 +1124,7 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
 
         let mut media_in_seqs = Vec::with_capacity(input_media.len());
         for (port, media) in input_media {
-            let (descriptor, data) = media_to_artifact(media, self.blob_store.as_ref())?;
+            let (descriptor, data) = media_to_artifact(media, self.blob_store.as_ref()).await?;
             let this_seq = next_seq();
             commands.push(AppCommand::MediaIn { seq: this_seq, port: port.clone(), descriptor, data });
             media_in_seqs.push(this_seq);
@@ -1167,7 +1170,7 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
         let mut outputs = BTreeMap::new();
         for (port_id, media_out_seq, fingerprint_seq) in &output_seqs {
             let media = match reply_to(*media_out_seq)? {
-                AppFrame::Media { descriptor, data, .. } => media_from_artifact(descriptor, data.clone(), self.blob_store.as_ref())?,
+                AppFrame::Media { descriptor, data, .. } => media_from_artifact(descriptor, data.clone(), self.blob_store.as_ref()).await?,
                 AppFrame::Error { fault, report, .. } => return Err(RunError::Host(dispatch_error_message(&node.app_id, &format!("failed to produce media on `{port_id}`"), fault, report))),
                 other => return Err(RunError::Host(format!("`{}` sent an unexpected frame for media-out `{port_id}`: {other:?}", node.app_id))),
             };
@@ -1211,7 +1214,7 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
         cache: &mut dyn MediaCache,
         sink: &mut RunSink,
     ) -> Result<RunReport, RunError> {
-        validate_edge_kinds(graph)?;
+        validate_edge_kinds(graph).await?;
         let order = topological_order(graph)?;
         let node_by_id: HashMap<&str, &WorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
         let mut incoming: HashMap<&str, Vec<&WorkflowEdge>> = HashMap::new();
@@ -1562,7 +1565,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
             for outcome in &outcomes {
                 match outcome {
                     semio_framework_plugin_host::shard::ShardOutcome::Turn { actor: reported, result } => {
-                        let _ = self.kernel.complete(RuntimeActorId(*reported), result, 0, 0, self.now_ms).await;
+                        self.kernel.kernel_mut().complete(RuntimeActorId(*reported), result, self.now_ms).await.map_err(|error| RunError::Host(format!("kernel completion failed: {error:?}")))?;
                         if *reported == actor.0 {
                             let status = match &result.status {
                                 semio_framework_actor::TurnStatus::Idle => semio_framework::kernel::TurnStatus::Idle,
@@ -1582,6 +1585,9 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
                                 status,
                                 fuel_used: result.usage.fuel,
                                 command_ingress: serde_json::from_slice(&result.command_ingress).map_err(RunError::Serde)?,
+                                cold_pair_ingress: result.cold_pair_ingress.clone(),
+                                lifecycle_receipt: result.lifecycle_receipt,
+                                ui_patch_receipt: result.ui_patch_receipt,
                             });
                         } else {
                             let _ = semio_framework::kernel::close_ui_turn_patch_transport_session_one(*reported);
@@ -1597,8 +1603,11 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
                             status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()),
                             fuel_used: 0,
                             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+                            cold_pair_ingress: semio_framework::kernel::ColdPairIngressStatus::Idle,
+                            lifecycle_receipt: None,
+                            ui_patch_receipt: None,
                         };
-                        let _ = self.kernel.complete(RuntimeActorId(*reported), &faulted, 0, 0, self.now_ms).await;
+                        self.kernel.complete(RuntimeActorId(*reported), faulted, 0, 0, self.now_ms).await.map_err(|error| RunError::Host(format!("kernel fault completion failed: {error:?}")))?;
                         if *reported == actor.0 {
                             fault = Some(message.clone());
                         }
@@ -1625,8 +1634,8 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// zero-plugin/zero-key router (the router silently doing nothing) is visible, not just "boot
     /// didn't crash." `IoRouter::stats` only errors on a poisoned lock — a diagnostic-only stat line
     /// degrades to `(0, 0)` rather than panicking a whole run over it.
-    pub fn io_router_stats(&self) -> (usize, usize) {
-        self.io_router.stats().unwrap_or((0, 0))
+    pub async fn io_router_stats(&self) -> (usize, usize) {
+        self.io_router.stats().await.unwrap_or((0, 0))
     }
 
     pub fn plugin_graph(&self) -> &semio_framework_plugin_host::PluginGraph {
@@ -1706,10 +1715,10 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         if !self.compiled_for_plugin.contains_key(plugin_id) {
             let bytes = std::fs::read(&path).map_err(|error| RunError::Io { path: path.clone(), source: error })?;
             let package = semio_framework_plugin_host::PackageRef {
-                package: semio_framework_plugin_host::PackageId(plugin_id.to_string()),
+                package: PackageId(plugin_id.to_string()),
                 hash: semio_framework_plugin_host::PackageHash(framework_hash::hash_bytes(&bytes).into_bytes().try_into().unwrap_or([0u8; 32])),
             };
-            let compiled = self.guest_runtime.compile(&package, &bytes).map_err(|error| RunError::Host(error.to_string()))?;
+            let compiled = self.guest_runtime.compile(&package, &bytes).await.map_err(|error| RunError::Host(error.to_string()))?;
             self.compiled_for_plugin.insert(plugin_id.to_string(), compiled);
         }
 
@@ -1742,8 +1751,8 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         // mirrors the sibling MCP gateway's own one-off-instantiate budget
         // (`🌉️mcp/🏠️workspace/🦀️.rs`'s `activate_plugin_instance`), the closest real
         // precedent for "compile once, instantiate once, no live turn loop yet".
-        let instance = self.guest_runtime.instantiate(&compiled, actor, &[], &NODE_TURN_BUDGET).map_err(|error| RunError::Host(format!("plugin `{plugin_id}`: instantiate: {error}")))?;
-        let handle = Arc::new(semio_framework_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&self.guest_runtime), instance));
+        let instance = self.guest_runtime.instantiate(&compiled, actor, &[], &NODE_TURN_BUDGET).await.map_err(|error| RunError::Host(format!("plugin `{plugin_id}`: instantiate: {error}")))?;
+        let handle = Arc::new(semio_framework_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&self.guest_runtime), instance).await);
 
         let artifact_dialect_entries: Vec<_> = descriptor.contributions.composer_entries.iter().map(|entry| (entry.writes.clone(), entry.reads.clone())).collect();
         // 🕳️ `ContributionSet.io_entries` (owner/counterpart/direction) carries no `fidelity`/
@@ -1754,7 +1763,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         // is invisible on today's only fully-wired smoke path. A future packet must either widen
         // `ContributionSet.io_entries` with those two fields at emission time (E1/A2) or resolve
         // them from `IoFidelityDeclaration` elsewhere before this can be more than `&[]`.
-        self.io_router.register_plugin(plugin_id, Arc::clone(&handle), &artifact_dialect_entries, &[]).map_err(|error| RunError::Host(error.to_string()))?;
+        self.io_router.register_plugin(plugin_id, Arc::clone(&handle), &artifact_dialect_entries, &[]).await.map_err(|error| RunError::Host(error.to_string()))?;
 
         let mut mutation_roster: Vec<semio_framework_plugin_host::HostMutationRosterEntry> = descriptor
             .contributions
@@ -1783,7 +1792,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
                 });
             }
         }
-        self.mutation_router.register_roster_with_runtime(plugin_id, &manifest.dependencies, Arc::clone(&handle), mutation_roster).map_err(|error| RunError::Host(error.to_string()))?;
+        self.mutation_router.register_roster_with_runtime(plugin_id, &manifest.dependencies, Arc::clone(&handle), mutation_roster).await.map_err(|error| RunError::Host(error.to_string()))?;
 
         let inference_roster: Vec<serde_json::Value> = descriptor
             .contributions
@@ -1794,12 +1803,12 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
             .collect::<Result<Vec<_>, _>>()
             .map_err(RunError::Serde)?;
         let inference_wire_bytes = serde_json::to_vec(&inference_roster).map_err(RunError::Serde)?;
-        self.inference_router.register_plugin(plugin_id, &manifest.dependencies, Arc::clone(&handle), &inference_wire_bytes).map_err(|error| RunError::Host(error.to_string()))?;
+        self.inference_router.register_plugin(plugin_id, &manifest.dependencies, Arc::clone(&handle), &inference_wire_bytes).await.map_err(|error| RunError::Host(error.to_string()))?;
 
-        self.plugin_graph.register(manifest.clone()).map_err(|error| RunError::Host(error.to_string()))?;
-        self.app_router.register_manifest(plugin_id, &manifest).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
+        self.plugin_graph.register(manifest.clone()).await.map_err(|error| RunError::Host(error.to_string()))?;
+        self.app_router.register_manifest(plugin_id, &manifest).await.map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
 
-        let gaps = self.app_router.owned_surface_gaps();
+        let gaps = self.app_router.owned_surface_gaps().await;
         if !gaps.is_empty() {
             return Err(RunError::Host(format!("plugin `{plugin_id}` loaded but left {} owned-surface gap(s): {}", gaps.len(), gaps.iter().map(|fault| format!("{}: {}", fault.code.0, fault.message)).collect::<Vec<_>>().join("; "))));
         }
@@ -1809,13 +1818,13 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     }
 
     /// ✂️ Contract §4.5: refused while any OTHER loaded plugin still depends on `plugin_id`.
-    pub fn unload_plugin(&mut self, plugin_id: &str) -> Result<(), RunError> {
-        self.plugin_graph.guard_unload(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
-        self.io_router.unregister_plugin(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
-        self.mutation_router.unregister_plugin(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
-        self.inference_router.unregister_plugin(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
-        self.app_router.unregister_plugin(plugin_id);
-        self.plugin_graph.unregister(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
+    pub async fn unload_plugin(&mut self, plugin_id: &str) -> Result<(), RunError> {
+        self.plugin_graph.guard_unload(plugin_id).await.map_err(|error| RunError::Host(error.to_string()))?;
+        self.io_router.unregister_plugin(plugin_id).await.map_err(|error| RunError::Host(error.to_string()))?;
+        self.mutation_router.unregister_plugin(plugin_id).await.map_err(|error| RunError::Host(error.to_string()))?;
+        self.inference_router.unregister_plugin(plugin_id).await.map_err(|error| RunError::Host(error.to_string()))?;
+        self.app_router.unregister_plugin(plugin_id).await;
+        self.plugin_graph.unregister(plugin_id).await.map_err(|error| RunError::Host(error.to_string()))?;
         self.manifests.remove(plugin_id);
         self.compiled_for_plugin.remove(plugin_id);
         Ok(())
@@ -1826,10 +1835,10 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// the registered manifest and every router entry for it.
     ///
     /// 🚧️ Same gap as `load_runtime_recursive` — always fails until a manifest decoder exists.
-    pub fn hot_reload_plugin(&mut self, plugin_id: &str) -> Result<(), RunError> {
+    pub async fn hot_reload_plugin(&mut self, plugin_id: &str) -> Result<(), RunError> {
         self.manifests.remove(plugin_id);
         self.compiled_for_plugin.remove(plugin_id);
-        self.manifest_for(plugin_id).map(|_| ())
+        self.manifest_for(plugin_id).await.map(|_| ())
     }
 
     /// 🎯️ Contract §5 end to end: `initiator_handle` must already have proposed (its own
@@ -1843,37 +1852,37 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// (unlike deleting the method) so `TransactionCoordinator`'s own resolution/gating logic — which
     /// IS real and IS tested (`host_transaction_coordinator_tests`) — stays reachable from here the
     /// moment the two closures below get real bodies.
-    pub fn run_transaction(&self, initiator_handle: u32, local_ops: Vec<Vec<u8>>, description: String, foreign: Vec<protocol::ForeignStep>) -> Result<semio_framework_plugin_host::TransactionOutcome, semio_framework_plugin_host::TransactionError> {
-        let (plugin_id, instance_id) = self.instances.get(&initiator_handle).cloned().ok_or_else(|| semio_framework_plugin_host::TransactionError::rejected("transaction.unknown-target", format!("unknown node handle {initiator_handle}")))?;
+    pub async fn run_transaction(&self, initiator_handle: u32, local_ops: Vec<Vec<u8>>, description: String, foreign: Vec<protocol::ForeignStep>) -> Result<semio_framework_plugin_host::TransactionOutcome, semio_framework_plugin_host::TransactionError> {
+        let (plugin_id, instance_id) = self.instances.get(&initiator_handle).cloned().ok_or_else(|| semio_framework_plugin_host::TransactionError::Rejected { code: "transaction.unknown-target".into(), message: format!("unknown node handle {initiator_handle}") })?;
         let initiator = semio_framework_plugin_host::TransactionMember { plugin_id, instance_id };
         self.transaction_coordinator.run_transaction(
             &self.instance_directory,
             &self.mutation_router,
             |plugin_id, _instance_id, _command| {
-                Err(semio_framework_plugin_host::TransactionError::rejected(
-                    "transaction.not-wired",
-                    format!("plugin `{plugin_id}`: exchange has no world-actor equivalent yet — needs a post-turn effect-dispatch loop over GuestRuntime::execute_turn, not built in this packet (see 📓️terra-B1b-host-complete-report.md)"),
-                ))
+                Err(semio_framework_plugin_host::TransactionError::Rejected {
+                    code: "transaction.not-wired".into(),
+                    message: format!("plugin `{plugin_id}`: transaction exchange requires post-turn effect dispatch"),
+                })
             },
             |contributor, _artifact_kind, _mutation_id, _member, _payload| {
-                Err(semio_framework_plugin_host::TransactionError::rejected("transaction.not-wired", format!("contributor `{contributor}`: artifact-mutation-plan has no world-actor equivalent yet — see 📓️terra-B1b-host-complete-report.md")))
+                Err(semio_framework_plugin_host::TransactionError::Rejected { code: "transaction.not-wired".into(), message: format!("contributor `{contributor}`: artifact mutation planning requires post-turn effect dispatch") })
             },
             initiator,
             local_ops,
             description,
             foreign,
-        )
+        ).await
     }
 
     /// 🚧️ Same gap as `run_transaction` — see its own doc comment.
-    pub fn undo_transaction_group(&self, members: &[semio_framework_plugin_host::TransactionMember], group_id: &str) {
+    pub async fn undo_transaction_group(&self, members: &[semio_framework_plugin_host::TransactionMember], group_id: &str) {
         self.transaction_coordinator.undo_group(
             |plugin_id, _instance_id, _command| {
-                Err(semio_framework_plugin_host::TransactionError::rejected("transaction.not-wired", format!("plugin `{plugin_id}`: exchange has no world-actor equivalent yet — see 📓️terra-B1b-host-complete-report.md")))
+                Err(semio_framework_plugin_host::TransactionError::Rejected { code: "transaction.not-wired".into(), message: format!("plugin `{plugin_id}`: transaction exchange requires post-turn effect dispatch") })
             },
             members,
             group_id,
-        )
+        ).await
     }
 
     //#region 🔖️OpeningCommands
@@ -1891,7 +1900,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// — like `run_transaction` above — it is a direct method rather than only reachable through
     /// `exchange`'s per-`node` interface; `exchange` also intercepts the wire `AppCommand::OpenArtifact`
     /// and delegates here.
-    pub fn resolve_open_artifact(&self, artifact_ref: &str, role_wire: u8, plugin_id: &str, app_id: &str) -> Result<semio_framework::AppRef, semio_framework::Fault> {
+    pub async fn resolve_open_artifact(&self, artifact_ref: &str, role_wire: u8, plugin_id: &str, app_id: &str) -> Result<semio_framework::AppRef, semio_framework::Fault> {
         let role = opening_role_from_wire(role_wire)?;
         let (dialect, artifact_role) = semio_framework::parse_surface_app_id(artifact_ref).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("opening.invalid-artifact-ref"), error))?;
         if role != artifact_role {
@@ -1904,7 +1913,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         match (plugin_id.is_empty(), app_id.is_empty()) {
             (true, true) => {
                 let user_default = self.opening_preferences.defaults.iter().find(|entry| entry.dialect == dialect && entry.role == role).map(|entry| &entry.app);
-                semio_framework_plugin_host::OpeningResolver::resolve(&self.app_router, &dialect, role, user_default)
+                semio_framework_plugin_host::OpeningResolver::resolve(&self.app_router, &dialect, role, user_default).await
             }
             (false, false) => Ok(semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: app_id.to_string() }),
             _ => Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("opening.partial-app-ref"), "plugin_id and app_id must either both be empty or both be set")),
@@ -1919,11 +1928,11 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// Applies through the SAME event-sourced `OpeningConfigMutation`/`apply_opening_config_mutation`
     /// the schema facet's own `MutationDiff` impl defines (contract §4: "never a mutable map") — never
     /// a direct field write onto `self.opening_preferences`.
-    pub fn set_default_app(&mut self, artifact_kind: &str, standard: &str, subset: &str, role_wire: u8, plugin_id: &str, app_id: &str) -> Result<(), semio_framework::Fault> {
+    pub async fn set_default_app(&mut self, artifact_kind: &str, standard: &str, subset: &str, role_wire: u8, plugin_id: &str, app_id: &str) -> Result<(), semio_framework::Fault> {
         let role = opening_role_from_wire(role_wire)?;
         let dialect = semio_framework::ArtifactDialect { artifact_kind: artifact_kind.to_string(), standard: standard.to_string(), subset: subset.to_string() };
         let app = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: app_id.to_string() };
-        if !self.app_router.surfaces_for(&dialect, role).contains(&app) {
+        if !self.app_router.surfaces_for(&dialect, role).await.contains(&app) {
             return Err(semio_framework::Fault::new(
                 semio_framework::FaultOrigin::Os,
                 semio_framework::FaultCode::new("opening.invalid-app-ref"),
@@ -1984,7 +1993,7 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
         self.instances.insert(instance_handle, (plugin_id.to_string(), instance_handle));
         self.instance_actors.insert(instance_handle, actor);
         let open_event = Event::InstanceOpen {
-            instance: PluginInstanceId(instance_handle.to_string()),
+            request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: instance_handle, request_sequence: 1 },
             app_id: AppInstanceId(app_id.to_string()),
             actor: "local".to_string(),
             config: Vec::new(),
@@ -2014,13 +2023,13 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
         for command in commands {
             match command {
                 AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id } => {
-                    frames.push(match self.resolve_open_artifact(&artifact_ref, role, &plugin_id, &app_id) {
+                    frames.push(match self.resolve_open_artifact(&artifact_ref, role, &plugin_id, &app_id).await {
                         Ok(_resolved) => AppFrame::Done { in_reply_to: seq },
                         Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: dsl::encode_fault_bytes(&fault), report: Vec::new() },
                     });
                 }
                 AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id } => {
-                    frames.push(match self.set_default_app(&artifact_kind, &standard, &subset, role, &plugin_id, &app_id) {
+                    frames.push(match self.set_default_app(&artifact_kind, &standard, &subset, role, &plugin_id, &app_id).await {
                         Ok(()) => AppFrame::Done { in_reply_to: seq },
                         Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: dsl::encode_fault_bytes(&fault), report: Vec::new() },
                     });
@@ -2063,13 +2072,13 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
             // decoding `RequestOutcome::Ok(bytes)` as the guest's own `protocol::AppFrame` reply and
             // `Err(bytes)` as `AppFrame::Error` — exactly the shape this comment always described.
             let actor = *self.instance_actors.get(&node).ok_or_else(|| RunError::Host(format!("unknown node handle {node}")))?;
-            let mut envelopes = semio_framework::kernel::CommandEnvelopeSet::try_new().map_err(|fault| RunError::Host(fault.to_string()))?;
+            let mut envelopes = semio_framework::kernel::CommandEnvelopeSet::try_new().map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
             for command in &passthrough {
                 let seq = app_command_seq(command);
-                let command = protocol::encode_app_command(command).await.map_err(|fault| RunError::Host(fault.to_string()))?;
+                let command = protocol::encode_app_command(command).await.map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
                 if let Err((fault, rejected)) = envelopes.try_push(semio_framework::kernel::CommandEnvelope { instance: node, seq, command }) {
                     self.rejected_command_builds.insert_admitted(operation, semio_framework::kernel::RejectedCommandBuild::new(envelopes, rejected));
-                    return Err(RunError::Host(fault.to_string()));
+                    return Err(RunError::Host(format!("{}: {}", fault.code.0, fault.message)));
                 }
             }
             let generation = self.take_turn_seq();
@@ -2077,32 +2086,32 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
                 Ok(batch) => batch,
                 Err((fault, owners)) => {
                     self.rejected_command_builds.insert_admitted(operation, semio_framework::kernel::RejectedCommandBuild::from_admitted(owners));
-                    return Err(RunError::Host(fault.to_string()));
+                    return Err(RunError::Host(format!("{}: {}", fault.code.0, fault.message)));
                 }
             };
             self.retained_command_closes.insert_admitted(operation, generation, semio_framework::kernel::CommandBatchDriver::new(operation, batch));
             let mut effects = Vec::new();
             loop {
-                let events = match self.retained_command_closes.with_driver_mut(operation, generation, |driver| driver.next_page()).map_err(|fault| RunError::Host(fault.to_string()))?.map_err(|fault| RunError::Host(fault.to_string()))? {
+                let events = match self.retained_command_closes.with_driver_mut(operation, generation, |driver| driver.next_page()).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?.map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))? {
                     Some((cursor, bytes)) => vec![Event::CommandIngressPage { cursor, bytes }],
                     None => vec![Event::Wake],
                 };
-                self.retained_command_closes.prepare_suspend(operation, generation).map_err(|fault| RunError::Host(fault.to_string()))?;
+                self.retained_command_closes.prepare_suspend(operation, generation).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
                 let turn = self.run_turn(actor, events).await?;
-                self.retained_command_closes.resume(operation, generation).map_err(|fault| RunError::Host(fault.to_string()))?;
+                self.retained_command_closes.resume(operation, generation).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
                 let progress = self
                     .retained_command_closes
                     .with_driver_mut(operation, generation, |driver| driver.observe(&turn.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES))
-                    .map_err(|fault| RunError::Host(fault.to_string()))?
-                    .map_err(|fault| RunError::Host(fault.to_string()))?;
+                    .map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?
+                    .map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
                 effects.extend(turn.effects);
                 match progress {
                     semio_framework::kernel::CommandBatchProgress::Complete => {
-                        self.retained_command_closes.remove_terminal(operation, generation).map_err(|fault| RunError::Host(fault.to_string()))?;
+                        self.retained_command_closes.remove_terminal(operation, generation).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
                         break;
                     }
                     semio_framework::kernel::CommandBatchProgress::Faulted => {
-                        self.retained_command_closes.begin_close(operation, generation).map_err(|fault| RunError::Host(fault.to_string()))?;
+                        self.retained_command_closes.begin_close(operation, generation).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
                         let (complete, _, _) = self.retained_command_closes.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
                         return Err(RunError::Host(if complete { "command ingress faulted after terminal exact-owner cleanup".to_string() } else { "command ingress faulted; retained owner closed one exact page and awaits retry".to_string() }));
                     }
@@ -2144,6 +2153,7 @@ fn app_command_seq(command: &AppCommand) -> u64 {
         | AppCommand::Command { seq, .. }
         | AppCommand::CommandText { seq, .. }
         | AppCommand::ContextMenu { seq, .. }
+        | AppCommand::LocalInteractionQuery { seq, .. }
         | AppCommand::ArtifactCommand { seq, .. }
         | AppCommand::ApplyEnvelopes { seq, .. }
         | AppCommand::LoadDocument { seq, .. }
@@ -2248,7 +2258,7 @@ mod tests {
                         self.documents.insert(node, (pack, spr));
                         frames.push(AppFrame::Done { in_reply_to: seq });
                     }
-                    AppCommand::MediaIn { seq, port, descriptor, data } => match media_from_artifact(&descriptor, data, &self.blob_store) {
+                    AppCommand::MediaIn { seq, port, descriptor, data } => match media_from_artifact(&descriptor, data, &self.blob_store).await {
                         Ok(media) => {
                             self.imported.push((node, port, media));
                             frames.push(AppFrame::Done { in_reply_to: seq });
@@ -2256,7 +2266,7 @@ mod tests {
                         Err(error) => frames.push(AppFrame::Error { in_reply_to: Some(seq), fault: run_fault_bytes("handler", error.to_string()), report: Vec::new() }),
                     },
                     AppCommand::MediaOut { seq, port, .. } => match self.outputs.get(&(app_id.clone(), port.clone())) {
-                        Some(media) => match media_to_artifact(media, &self.blob_store) {
+                        Some(media) => match media_to_artifact(media, &self.blob_store).await {
                             Ok((descriptor, data)) => frames.push(AppFrame::Media { in_reply_to: seq, port, descriptor, data }),
                             Err(error) => frames.push(AppFrame::Error { in_reply_to: Some(seq), fault: run_fault_bytes("handler", error.to_string()), report: Vec::new() }),
                         },
@@ -2318,11 +2328,11 @@ mod tests {
         }
     }
 
-    fn two_node_graph() -> Workflow {
+    async fn two_node_graph() -> Workflow {
         let source = workflow_node("node-a", vec![media_port("node-a", "out", MediaPortDirection::Out, "data.value", PortMultiplicity::One, true)], Vec::new());
         let target = workflow_node("node-b", Vec::new(), vec![media_port("node-b", "in", MediaPortDirection::In, "data.value", PortMultiplicity::One, true)]);
         let edge =
-            WorkflowEdge { id: "edge-1".into(), source_node_id: "node-a".into(), source_port_id: "node-a:out:out".into(), target_node_id: "node-b".into(), target_port_id: "node-b:in:in".into(), contract: placeholder_media_contract("data.value") };
+            WorkflowEdge { id: "edge-1".into(), source_node_id: "node-a".into(), source_port_id: "node-a:out:out".into(), target_node_id: "node-b".into(), target_port_id: "node-b:in:in".into(), contract: placeholder_media_contract("data.value").await };
         Workflow { schema: WORKFLOW_SCHEMA.into(), nodes: vec![source, target], edges: vec![edge] }
     }
 
@@ -2338,7 +2348,7 @@ mod tests {
     /// `NodeStarted`/`NodeFinished` through `SpaceRunner::run` on top of this, then (where memoization
     /// across two runs matters) seals it and extracts `prior_node_records_from` for the second `run()`.
     async fn fresh_sink() -> RunSink {
-        let mut sink = RunSink::new(workflow::empty_run_document());
+        let mut sink = RunSink::new(workflow::empty_run_document().await);
         sink.record(RunMutation::StartRun(StartRun {
             workflow_ref: "test.workflow".into(),
             workflow_checkpoint_id: String::new(),
@@ -2378,23 +2388,23 @@ mod tests {
         document.node_records.iter().map(|record| (record.node_id.clone(), record.clone())).collect()
     }
 
-    #[test]
-    fn topological_order_respects_edges() {
-        let graph = two_node_graph();
+    #[semio_framework_async_macros::async_test]
+    async fn topological_order_respects_edges() {
+        let graph = two_node_graph().await;
         let order = topological_order(&graph).expect("acyclic");
         assert_eq!(order, vec!["node-a".to_string(), "node-b".to_string()]);
     }
 
-    #[test]
-    fn detects_cycles() {
-        let mut graph = two_node_graph();
-        graph.edges.push(WorkflowEdge { id: "edge-2".into(), source_node_id: "node-b".into(), source_port_id: "b-out".into(), target_node_id: "node-a".into(), target_port_id: "a-in".into(), contract: placeholder_media_contract("data.value") });
+    #[semio_framework_async_macros::async_test]
+    async fn detects_cycles() {
+        let mut graph = two_node_graph().await;
+        graph.edges.push(WorkflowEdge { id: "edge-2".into(), source_node_id: "node-b".into(), source_port_id: "b-out".into(), target_node_id: "node-a".into(), target_port_id: "a-in".into(), contract: placeholder_media_contract("data.value").await });
         assert!(matches!(topological_order(&graph), Err(RunError::Cycle(_))));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn first_run_recomputes_every_node_second_run_is_a_no_operation() {
-        let graph = two_node_graph();
+        let graph = two_node_graph().await;
         let mut host = FakeHost::default();
         host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
         let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
@@ -2423,7 +2433,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn editing_upstream_document_dirties_downstream_only_through_the_wire() {
-        let graph = two_node_graph();
+        let graph = two_node_graph().await;
         let mut host = FakeHost::default();
         host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
         let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
@@ -2453,7 +2463,7 @@ mod tests {
     /// dimension instead of the document one.
     #[semio_framework_async_macros::async_test]
     async fn changing_a_nodes_config_alone_dirties_it_without_touching_document_or_inputs() {
-        let graph = two_node_graph();
+        let graph = two_node_graph().await;
         let mut host = FakeHost::default();
         host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
         let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
@@ -2465,12 +2475,12 @@ mod tests {
         sink_1.record(RunMutation::SealRun(SealRun { status: workflow::RunStatus::Succeeded })).await.expect("seal first run");
         let prior = prior_node_records_from(&sink_1.document);
 
-        let plan_unchanged = plan(&graph, &documents, &configs_1, &[], &[], &prior).expect("plan with unchanged config");
+        let plan_unchanged = plan(&graph, &documents, &configs_1, &[], &[], &prior).await.expect("plan with unchanged config");
         assert!(plan_unchanged.recomputed.is_empty(), "nothing changed, plan must report every node clean: {:?}", plan_unchanged.recomputed);
 
         let mut configs_2 = configs_1.clone();
         configs_2.insert("config/node-a".to_string(), (Vec::new(), b"threshold=2".to_vec()));
-        let plan_changed = plan(&graph, &documents, &configs_2, &[], &[], &prior).expect("plan with changed config");
+        let plan_changed = plan(&graph, &documents, &configs_2, &[], &[], &prior).await.expect("plan with changed config");
         assert_eq!(plan_changed.recomputed, vec!["node-a".to_string()], "only node-a's own config changed, so only node-a should be recomputed by the plan");
 
         let mut sink_2 = fresh_sink().await;
@@ -2485,7 +2495,7 @@ mod tests {
     /// patched into the opaque config bytes directly.
     #[semio_framework_async_macros::async_test]
     async fn parameter_overlay_alone_dirties_its_bound_node_without_changing_raw_config_bytes() {
-        let graph = two_node_graph();
+        let graph = two_node_graph().await;
         let mut host = FakeHost::default();
         host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
         let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
@@ -2499,11 +2509,11 @@ mod tests {
         sink_1.record(RunMutation::SealRun(SealRun { status: workflow::RunStatus::Succeeded })).await.expect("seal first run");
         let prior = prior_node_records_from(&sink_1.document);
 
-        let plan_unchanged = plan(&graph, &documents, &configs, &[], &bindings, &prior).expect("plan with no parameter values yet");
+        let plan_unchanged = plan(&graph, &documents, &configs, &[], &bindings, &prior).await.expect("plan with no parameter values yet");
         assert!(plan_unchanged.recomputed.is_empty(), "no bound parameter value yet — nothing should be dirty: {:?}", plan_unchanged.recomputed);
 
         let parameter_values = vec![RunParameterValue { parameter_id: "p1".into(), value: "42".into() }];
-        let plan_changed = plan(&graph, &documents, &configs, &parameter_values, &bindings, &prior).expect("plan with a parameter value bound");
+        let plan_changed = plan(&graph, &documents, &configs, &parameter_values, &bindings, &prior).await.expect("plan with a parameter value bound");
         assert_eq!(plan_changed.recomputed, vec!["node-a".to_string()], "the bound node's fingerprint must change purely from the parameter overlay: {:?}", plan_changed);
 
         let mut sink_2 = fresh_sink().await;
@@ -2580,7 +2590,7 @@ mod tests {
     }
 
     fn root_ctx() -> OperationContext {
-        OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: CancelToken::root(), capability: None }
+        OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: CancelToken::root_now(), capability: None }
     }
 
     /// 🧪️ Sanity check for `RecorderHost` itself: two callers racing the SAME node id, with nothing
@@ -2649,7 +2659,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn rejects_incompatible_edge_media_types() {
-        let mut graph = two_node_graph();
+        let mut graph = two_node_graph().await;
         graph.nodes[1].inputs[0].spec.media_type = MediaType { class: MediaClass::Text, form: MediaForm::Document };
         let host = FakeHost::default();
         let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
@@ -2661,15 +2671,15 @@ mod tests {
         assert!(matches!(result, Err(RunError::Incompatible { .. })));
     }
 
-    #[test]
-    fn validate_rejects_missing_required_input() {
+    #[semio_framework_async_macros::async_test]
+    async fn validate_rejects_missing_required_input() {
         let node = workflow_node("solo", Vec::new(), vec![media_port("solo", "in", MediaPortDirection::In, "data.value", PortMultiplicity::One, true)]);
         let graph = Workflow { schema: WORKFLOW_SCHEMA.into(), nodes: vec![node], edges: Vec::new() };
-        assert!(matches!(validate_edge_kinds(&graph), Err(RunError::MissingRequiredInput { .. })));
+        assert!(matches!(validate_edge_kinds(&graph).await, Err(RunError::MissingRequiredInput { .. })));
     }
 
-    #[test]
-    fn validate_rejects_multiplicity_one_input_with_two_incoming_edges() {
+    #[semio_framework_async_macros::async_test]
+    async fn validate_rejects_multiplicity_one_input_with_two_incoming_edges() {
         let source_a = workflow_node("src-a", vec![media_port("src-a", "out", MediaPortDirection::Out, "data.value", PortMultiplicity::One, true)], Vec::new());
         let source_b = workflow_node("src-b", vec![media_port("src-b", "out", MediaPortDirection::Out, "data.value", PortMultiplicity::One, true)], Vec::new());
         let target = workflow_node("target", Vec::new(), vec![media_port("target", "in", MediaPortDirection::In, "data.value", PortMultiplicity::One, false)]);
@@ -2677,18 +2687,18 @@ mod tests {
             schema: WORKFLOW_SCHEMA.into(),
             nodes: vec![source_a, source_b, target],
             edges: vec![
-                WorkflowEdge { id: "e1".into(), source_node_id: "src-a".into(), source_port_id: "src-a:out:out".into(), target_node_id: "target".into(), target_port_id: "target:in:in".into(), contract: placeholder_media_contract("data.value") },
-                WorkflowEdge { id: "e2".into(), source_node_id: "src-b".into(), source_port_id: "src-b:out:out".into(), target_node_id: "target".into(), target_port_id: "target:in:in".into(), contract: placeholder_media_contract("data.value") },
+                WorkflowEdge { id: "e1".into(), source_node_id: "src-a".into(), source_port_id: "src-a:out:out".into(), target_node_id: "target".into(), target_port_id: "target:in:in".into(), contract: placeholder_media_contract("data.value").await },
+                WorkflowEdge { id: "e2".into(), source_node_id: "src-b".into(), source_port_id: "src-b:out:out".into(), target_node_id: "target".into(), target_port_id: "target:in:in".into(), contract: placeholder_media_contract("data.value").await },
             ],
         };
-        assert!(matches!(validate_edge_kinds(&graph), Err(RunError::MultiplicityViolation { .. })));
+        assert!(matches!(validate_edge_kinds(&graph).await, Err(RunError::MultiplicityViolation { .. })));
     }
 
-    #[test]
-    fn validate_rejects_unregistered_conversion() {
+    #[semio_framework_async_macros::async_test]
+    async fn validate_rejects_unregistered_conversion() {
         let source = workflow_node("src", vec![media_port("src", "out", MediaPortDirection::Out, "data.value", PortMultiplicity::One, true)], Vec::new());
         let target = workflow_node("dst", Vec::new(), vec![media_port("dst", "in", MediaPortDirection::In, "data.value", PortMultiplicity::One, false)]);
-        let mut contract = placeholder_media_contract("data.value");
+        let mut contract = placeholder_media_contract("data.value").await;
         // 🧪️ A conversion form pair this test file never registers a converter for — distinct from
         // any pair the `media_converter_registry_*` tests below register, so the global
         // `MEDIA_CONVERTERS` table (shared across all tests in this process) can't race with this one.
@@ -2698,23 +2708,23 @@ mod tests {
             nodes: vec![source, target],
             edges: vec![WorkflowEdge { id: "e1".into(), source_node_id: "src".into(), source_port_id: "src:out:out".into(), target_node_id: "dst".into(), target_port_id: "dst:in:in".into(), contract }],
         };
-        assert!(matches!(validate_edge_kinds(&graph), Err(RunError::UnregisteredConversion { .. })));
+        assert!(matches!(validate_edge_kinds(&graph).await, Err(RunError::UnregisteredConversion { .. })));
     }
 
-    #[test]
-    fn convert_media_is_identity_when_contract_has_no_conversion() {
-        let contract = placeholder_media_contract("data.value");
+    #[semio_framework_async_macros::async_test]
+    async fn convert_media_is_identity_when_contract_has_no_conversion() {
+        let contract = placeholder_media_contract("data.value").await;
         let media = Media { media_type: fake_media_type(), payload: MediaPayload::Structured { schema: "test".into(), json: "\"hi\"".into() } };
         let converted = convert_media(&contract, media.clone()).expect("identity conversion never fails");
         assert_eq!(converted, media);
     }
 
-    #[test]
-    fn media_converter_registry_applies_registered_converter() {
+    #[semio_framework_async_macros::async_test]
+    async fn media_converter_registry_applies_registered_converter() {
         // 🧪️ A `(class, from, to)` triple unique to this test (see `validate_rejects_unregistered_
         // conversion`'s note on the shared global table).
         register_media_converter(MediaClass::Kit, MediaForm::Design, MediaForm::Sequence, |media| Ok(Media { media_type: media.media_type, payload: MediaPayload::Structured { schema: "converted".into(), json: "\"converted\"".into() } }));
-        let mut contract = placeholder_media_contract("kit.design");
+        let mut contract = placeholder_media_contract("kit.design").await;
         contract.media_type = MediaType { class: MediaClass::Kit, form: MediaForm::Sequence };
         contract.conversion = Some((MediaForm::Design, MediaForm::Sequence));
         let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Design }, payload: MediaPayload::Structured { schema: "design".into(), json: "\"raw\"".into() } };
@@ -2741,10 +2751,10 @@ mod tests {
         assert!(vector_to_raster(&media).is_err());
     }
 
-    #[test]
-    fn register_builtin_converters_wires_vector_to_raster_through_convert_media() {
+    #[semio_framework_async_macros::async_test]
+    async fn register_builtin_converters_wires_vector_to_raster_through_convert_media() {
         register_builtin_converters();
-        let mut contract = placeholder_media_contract("2d.drawing");
+        let mut contract = placeholder_media_contract("2d.drawing").await;
         contract.media_type = MediaType { class: MediaClass::TwoD, form: MediaForm::Raster };
         contract.conversion = Some((MediaForm::Vector, MediaForm::Raster));
         let media = Media {
@@ -2771,8 +2781,8 @@ mod tests {
 
     /// 🧪️ Loads the committed note descriptor using the canonical runtime profile order.
     /// Absence skips this optional integration probe and is never publication identity evidence.
-    #[test]
-    fn note_plugin_manifest_loads_from_its_committed_descriptor() {
+    #[semio_framework_async_macros::async_test]
+    async fn note_plugin_manifest_loads_from_its_committed_descriptor() {
         let repo_root = test_repo_root();
         let descriptor_path = repo_root.join("✏️s/🔌️plugins/🗒️note/🛂️.descriptor.semio");
         assert!(descriptor_path.is_file(), "committed note descriptor missing at {}", descriptor_path.display());
@@ -2796,17 +2806,17 @@ mod tests {
         // `semio_framework_async::block_on` convention every other test in this module already uses
         // (see this crate's own `Cargo.toml` doc comment on why: a plain single-poll executor, not
         // tokio).
-        let mut host = semio_framework_async::block_on(WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::new(InMemoryBlobStore::default())));
+        let mut host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::new(InMemoryBlobStore::default())).await;
 
-        let manifest = semio_framework_async::block_on(host.manifest_for("note")).expect("note must load natively from its committed descriptor, zero live describe() calls");
+        let manifest = host.manifest_for("note").await.expect("note must load natively from its committed descriptor, zero live describe() calls");
         assert_eq!(manifest.plugin_id, "note");
         assert!(!manifest.apps.is_empty(), "note's real manifest declares at least one app");
         assert!(manifest.dependencies.is_empty(), "note's committed descriptor declares zero PluginManifest.dependencies");
 
-        let (routed_plugins, _routes) = host.io_router_stats();
+        let (routed_plugins, _routes) = host.io_router_stats().await;
         assert_eq!(routed_plugins, 1, "note must be the one plugin registered with the io router after this load");
-        assert!(host.plugin_graph().is_registered("note").unwrap_or(false), "note must be registered in the plugin graph");
-        assert!(host.app_router().owned_surface_gaps().is_empty(), "note's own panels leave no viewer/editor surface gap");
+        assert!(host.plugin_graph().is_registered("note").await.unwrap_or(false), "note must be registered in the plugin graph");
+        assert!(host.app_router().owned_surface_gaps().await.is_empty(), "note's own panels leave no viewer/editor surface gap");
     }
     //#endregion 🔖️NativeManifestSmoke
 }

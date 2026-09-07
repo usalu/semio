@@ -8,8 +8,7 @@ use serde::{Deserialize, Serialize};
 pub const ACTOR_RETURN_DRIVE_MAXIMUM_BYTES: usize = 43;
 pub const ACTOR_RETURN_RESULT_MAXIMUM_BYTES: usize = 4138;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorReturnOrigin {
@@ -21,8 +20,7 @@ pub struct ActorReturnOrigin {
     pub request_sequence: u64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorReturnIdentity {
@@ -32,8 +30,7 @@ pub struct ActorReturnIdentity {
     pub return_sequence: u64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorReturnPageReceipt {
@@ -47,8 +44,7 @@ pub struct ActorReturnPageReceipt {
     pub final_page: bool,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields))]
 #[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum ActorReturnControl {
@@ -58,8 +54,7 @@ pub enum ActorReturnControl {
     RetiredAck { identity: ActorReturnIdentity },
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields))]
 #[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum ActorReturnDrive {
@@ -103,11 +98,15 @@ pub enum ActorReturnResult {
 }
 
 impl ActorReturnOrigin {
-    pub fn is_valid(self) -> bool { self.activation_generation != 0 && valid_request(self.request_sequence) }
+    pub fn is_valid(self) -> bool {
+        self.activation_generation != 0 && valid_request(self.request_sequence)
+    }
 }
 
 impl ActorReturnIdentity {
-    pub fn is_valid(self) -> bool { self.origin.is_valid() && self.return_sequence != 0 }
+    pub fn is_valid(self) -> bool {
+        self.origin.is_valid() && self.return_sequence != 0
+    }
 }
 
 impl ActorReturnPageReceipt {
@@ -125,29 +124,45 @@ impl ActorReturnControl {
     }
 
     pub fn is_valid(self) -> bool {
-        match self { Self::InputAck { receipt } => receipt.is_valid(), _ => self.identity().is_valid() }
+        match self {
+            Self::InputAck { receipt } => receipt.is_valid(),
+            _ => self.identity().is_valid(),
+        }
     }
 }
 
 impl ActorReturnDrive {
     pub fn is_valid(self) -> bool {
-        match self { Self::Execute { origin } => origin.is_valid(), Self::Control { control } => control.is_valid() }
+        match self {
+            Self::Execute { origin } => origin.is_valid(),
+            Self::Control { control } => control.is_valid(),
+        }
     }
 
     /// 📬️ Validates the entire authority before touching caller-owned fixed output storage.
     pub fn encode(&self, output: &mut [u8; ACTOR_RETURN_DRIVE_MAXIMUM_BYTES]) -> Result<usize, &'static str> {
-        if !self.is_valid() { return Err("actor-return.invalid-authority"); }
+        if !self.is_valid() {
+            return Err("actor-return.invalid-authority");
+        }
         let mut writer = Writer { output, offset: 0 };
         match *self {
-            Self::Execute { origin } => { writer.byte(0); writer.origin(origin); }
-            Self::Control { control } => { writer.byte(1); writer.control(control); }
+            Self::Execute { origin } => {
+                writer.byte(0);
+                writer.origin(origin);
+            }
+            Self::Control { control } => {
+                writer.byte(1);
+                writer.control(control);
+            }
         }
         Ok(writer.offset)
     }
 
     /// 📥️ Reads one exact canonical drive without constructing authority for malformed input.
     pub fn decode(bytes: &[u8]) -> Result<Self, &'static str> {
-        if bytes.len() > ACTOR_RETURN_DRIVE_MAXIMUM_BYTES { return Err("actor-return.envelope"); }
+        if bytes.len() > ACTOR_RETURN_DRIVE_MAXIMUM_BYTES {
+            return Err("actor-return.envelope");
+        }
         let mut reader = Reader { bytes, offset: 0 };
         let value = match reader.byte()? {
             0 => Self::Execute { origin: reader.origin()? },
@@ -155,7 +170,9 @@ impl ActorReturnDrive {
             _ => return Err("actor-return.drive-tag"),
         };
         reader.finish()?;
-        if !value.is_valid() { return Err("actor-return.invalid-authority"); }
+        if !value.is_valid() {
+            return Err("actor-return.invalid-authority");
+        }
         Ok(value)
     }
 }
@@ -176,22 +193,50 @@ impl ActorReturnResult {
 
     /// 📦️ Emits at most one fixed page; invalid pairing or refusal leaves all output bytes untouched.
     pub fn encode(&self, output: &mut [u8; ACTOR_RETURN_RESULT_MAXIMUM_BYTES]) -> Result<usize, &'static str> {
-        if !self.is_valid() { return Err("actor-return.invalid-result"); }
+        if !self.is_valid() {
+            return Err("actor-return.invalid-result");
+        }
         let mut writer = Writer { output, offset: 0 };
         match self {
-            Self::Refused { origin, fault } => { writer.byte(0); writer.origin(*origin); writer.byte(*fault as u8); }
-            Self::Pending { identity, reason } => { writer.byte(1); writer.identity(*identity); writer.byte(*reason as u8); }
-            Self::Page { receipt, page } => { writer.byte(2); writer.receipt(*receipt); writer.bytes(page.storage()); }
-            Self::Retired { identity, completion } => { writer.byte(3); writer.identity(*identity); writer.byte(*completion as u8); }
-            Self::Control { control, outcome, fault } => { writer.byte(4); writer.control(*control); writer.byte(*outcome as u8); writer.byte(*fault as u8); }
-            Self::ProtocolFault { fault } => { writer.byte(5); writer.byte(*fault as u8); }
+            Self::Refused { origin, fault } => {
+                writer.byte(0);
+                writer.origin(*origin);
+                writer.byte(*fault as u8);
+            }
+            Self::Pending { identity, reason } => {
+                writer.byte(1);
+                writer.identity(*identity);
+                writer.byte(*reason as u8);
+            }
+            Self::Page { receipt, page } => {
+                writer.byte(2);
+                writer.receipt(*receipt);
+                writer.bytes(page.storage());
+            }
+            Self::Retired { identity, completion } => {
+                writer.byte(3);
+                writer.identity(*identity);
+                writer.byte(*completion as u8);
+            }
+            Self::Control { control, outcome, fault } => {
+                writer.byte(4);
+                writer.control(*control);
+                writer.byte(*outcome as u8);
+                writer.byte(*fault as u8);
+            }
+            Self::ProtocolFault { fault } => {
+                writer.byte(5);
+                writer.byte(*fault as u8);
+            }
         }
         Ok(writer.offset)
     }
 
     /// 🧾️ Decodes fixed control or page storage, enforcing exact lengths and zero unused page bytes.
     pub fn decode(bytes: &[u8]) -> Result<Self, &'static str> {
-        if bytes.len() > ACTOR_RETURN_RESULT_MAXIMUM_BYTES { return Err("actor-return.envelope"); }
+        if bytes.len() > ACTOR_RETURN_RESULT_MAXIMUM_BYTES {
+            return Err("actor-return.envelope");
+        }
         let mut reader = Reader { bytes, offset: 0 };
         let value = match reader.byte()? {
             0 => Self::Refused { origin: reader.origin()?, fault: ActorReturnFault::decode(reader.byte()?)? },
@@ -207,16 +252,24 @@ impl ActorReturnResult {
             _ => return Err("actor-return.result-tag"),
         };
         reader.finish()?;
-        if !value.is_valid() { return Err("actor-return.invalid-result"); }
+        if !value.is_valid() {
+            return Err("actor-return.invalid-result");
+        }
         Ok(value)
     }
 }
 
 //#region 🔢️CanonicalFields
-struct Writer<'a> { output: &'a mut [u8], offset: usize }
+struct Writer<'a> {
+    output: &'a mut [u8],
+    offset: usize,
+}
 
 impl Writer<'_> {
-    fn byte(&mut self, value: u8) { self.output[self.offset] = value; self.offset += 1; }
+    fn byte(&mut self, value: u8) {
+        self.output[self.offset] = value;
+        self.offset += 1;
+    }
 
     fn bytes(&mut self, value: &[u8]) {
         self.output[self.offset..self.offset + value.len()].copy_from_slice(value);
@@ -228,7 +281,9 @@ impl Writer<'_> {
             let byte = (value & 127) as u8;
             value >>= 7;
             self.byte(byte | if value == 0 { 0 } else { 128 });
-            if value == 0 { break; }
+            if value == 0 {
+                break;
+            }
         }
     }
 
@@ -237,7 +292,10 @@ impl Writer<'_> {
         self.unsigned(value.request_sequence);
     }
 
-    fn identity(&mut self, value: ActorReturnIdentity) { self.origin(value.origin); self.unsigned(value.return_sequence); }
+    fn identity(&mut self, value: ActorReturnIdentity) {
+        self.origin(value.origin);
+        self.unsigned(value.return_sequence);
+    }
 
     fn receipt(&mut self, value: ActorReturnPageReceipt) {
         self.identity(value.identity);
@@ -248,15 +306,30 @@ impl Writer<'_> {
 
     fn control(&mut self, value: ActorReturnControl) {
         match value {
-            ActorReturnControl::Poll { identity } => { self.byte(0); self.identity(identity); }
-            ActorReturnControl::InputAck { receipt } => { self.byte(1); self.receipt(receipt); }
-            ActorReturnControl::Cancel { identity } => { self.byte(2); self.identity(identity); }
-            ActorReturnControl::RetiredAck { identity } => { self.byte(3); self.identity(identity); }
+            ActorReturnControl::Poll { identity } => {
+                self.byte(0);
+                self.identity(identity);
+            }
+            ActorReturnControl::InputAck { receipt } => {
+                self.byte(1);
+                self.receipt(receipt);
+            }
+            ActorReturnControl::Cancel { identity } => {
+                self.byte(2);
+                self.identity(identity);
+            }
+            ActorReturnControl::RetiredAck { identity } => {
+                self.byte(3);
+                self.identity(identity);
+            }
         }
     }
 }
 
-struct Reader<'a> { bytes: &'a [u8], offset: usize }
+struct Reader<'a> {
+    bytes: &'a [u8],
+    offset: usize,
+}
 
 impl<'a> Reader<'a> {
     fn take(&mut self, length: usize) -> Result<&'a [u8], &'static str> {
@@ -266,7 +339,9 @@ impl<'a> Reader<'a> {
         Ok(bytes)
     }
 
-    fn byte(&mut self) -> Result<u8, &'static str> { Ok(self.take(1)?[0]) }
+    fn byte(&mut self) -> Result<u8, &'static str> {
+        Ok(self.take(1)?[0])
+    }
 
     fn unsigned(&mut self, maximum: u64, nonzero: bool) -> Result<u64, &'static str> {
         read_unsigned(self.bytes, &mut self.offset, maximum, nonzero).map_err(|_| "actor-return.noncanonical-field")
@@ -284,9 +359,15 @@ impl<'a> Reader<'a> {
         let identity = self.identity()?;
         let page_sequence = self.unsigned(u64::MAX, true)?;
         let length = self.unsigned(ACTOR_BYTE_PAGE_BYTES as u64, false)? as u32;
-        let final_page = match self.byte()? { 0 => false, 1 => true, _ => return Err("actor-return.boolean") };
+        let final_page = match self.byte()? {
+            0 => false,
+            1 => true,
+            _ => return Err("actor-return.boolean"),
+        };
         let receipt = ActorReturnPageReceipt { identity, page_sequence, length, final_page };
-        if !receipt.is_valid() { return Err("actor-return.receipt"); }
+        if !receipt.is_valid() {
+            return Err("actor-return.receipt");
+        }
         Ok(receipt)
     }
 
@@ -301,7 +382,11 @@ impl<'a> Reader<'a> {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.offset == self.bytes.len() { Ok(()) } else { Err("actor-return.trailing") }
+        if self.offset == self.bytes.len() {
+            Ok(())
+        } else {
+            Err("actor-return.trailing")
+        }
     }
 }
 //#endregion 🔢️CanonicalFields

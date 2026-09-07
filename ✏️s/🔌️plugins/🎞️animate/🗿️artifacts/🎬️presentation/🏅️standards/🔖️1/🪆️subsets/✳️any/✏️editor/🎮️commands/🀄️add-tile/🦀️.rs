@@ -2,7 +2,7 @@
 
 #![allow(clippy::result_large_err)]
 
-use crate::artifacts::presentation::mutations::create_tile::mutation::CreateTile;
+use crate::artifacts::presentation::mutations::create_tile::CreateTile;
 use crate::artifacts::presentation::op::PresentationMutation;
 use crate::artifacts::presentation::{FigureTileDraft, FigureTileFrame, PresentationSnapshot};
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};

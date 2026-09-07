@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked",
+  "semanticKind": "set-layer-locked",
+  "displayName": "Set Layer Locked",
+  "emoji": "🔒️",
+  "aggregateVariant": "SetLayerLocked",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "set-layer-locked",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "error",
+    "warning",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

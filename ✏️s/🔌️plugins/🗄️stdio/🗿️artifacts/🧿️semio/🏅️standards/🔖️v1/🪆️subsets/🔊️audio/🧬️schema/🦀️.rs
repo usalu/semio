@@ -85,7 +85,9 @@ pub fn semio_audio_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::diff::SemioAudioDiff;
-    use crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::{apply_semio_audio_mutation, insert_channel, set_format, set_sample_rate, SemioAudioMutation};
+    use crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::{apply_semio_audio_mutation, SemioAudioMutation};
+    #[cfg(test)]
+    use crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::{insert_channel, set_format, set_sample_rate};
     use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
     use semio_framework_plugin::ArtifactBuilder;
 

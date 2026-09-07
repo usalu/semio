@@ -14,7 +14,7 @@ pub struct SetExternalSubset {
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetExternalSubset {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "external-subset", kind: "set-external-subset", record: "SetExternalSubset" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as protocol::Mutation<XmlSnapshot>>::Diff> {
+    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
         agg_diff(&XmlValidMutation::SetExternalSubset(self.clone()), base)
     }
     fn inverse(&self, base: &XmlSnapshot) -> Vec<XmlValidMutation> {

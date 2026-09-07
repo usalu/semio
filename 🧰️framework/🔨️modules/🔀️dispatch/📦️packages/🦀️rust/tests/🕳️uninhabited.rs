@@ -36,7 +36,7 @@ fn no_widgets_type_checks_and_has_a_well_defined_size() {
     // 🕳️ The real proof is `assert_widget_impl_compiles` above — this just confirms the type exists
     // and is usable in ordinary generic/runtime positions (e.g. inside an `Option<NoWidgets>`) even
     // though no value of it can ever be constructed.
-    let _ = std::mem::size_of::<NoWidgets>();
+    let _ = size_of::<NoWidgets>();
     let absent: Option<NoWidgets> = None;
     assert!(absent.is_none());
 }

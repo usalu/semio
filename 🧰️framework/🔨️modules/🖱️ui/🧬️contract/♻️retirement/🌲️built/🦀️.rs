@@ -5,15 +5,15 @@ use crate::builder::{BuiltChildRetirementNext, BuiltChildrenIntoIter, BuiltNode,
 use std::mem::ManuallyDrop;
 
 const _: () = {
-    assert!(<UiText as UiTypedRetire>::DEPTH <= super::typed::UI_TYPED_RETIREMENT_DEPTH);
-    assert!(<crate::Component as UiTypedRetire>::DEPTH <= super::typed::UI_TYPED_RETIREMENT_DEPTH);
-    assert!(<crate::LayoutSpec as UiTypedRetire>::DEPTH <= super::typed::UI_TYPED_RETIREMENT_DEPTH);
-    assert!(<crate::StyleSpec as UiTypedRetire>::DEPTH <= super::typed::UI_TYPED_RETIREMENT_DEPTH);
-    assert!(<crate::Activity as UiTypedRetire>::DEPTH <= super::typed::UI_TYPED_RETIREMENT_DEPTH);
-    assert!(<bool as UiTypedRetire>::DEPTH <= super::typed::UI_TYPED_RETIREMENT_DEPTH);
-    assert!(<crate::AccessibilitySpec as UiTypedRetire>::DEPTH <= super::typed::UI_TYPED_RETIREMENT_DEPTH);
-    assert!(<crate::UiNodeBindings as UiTypedRetire>::DEPTH <= super::typed::UI_TYPED_RETIREMENT_DEPTH);
-    assert!(<Option<crate::MenuRef> as UiTypedRetire>::DEPTH <= super::typed::UI_TYPED_RETIREMENT_DEPTH);
+    assert!(<UiText as UiTypedRetire>::DEPTH <= typed::UI_TYPED_RETIREMENT_DEPTH);
+    assert!(<crate::Component as UiTypedRetire>::DEPTH <= typed::UI_TYPED_RETIREMENT_DEPTH);
+    assert!(<crate::LayoutSpec as UiTypedRetire>::DEPTH <= typed::UI_TYPED_RETIREMENT_DEPTH);
+    assert!(<crate::StyleSpec as UiTypedRetire>::DEPTH <= typed::UI_TYPED_RETIREMENT_DEPTH);
+    assert!(<crate::Activity as UiTypedRetire>::DEPTH <= typed::UI_TYPED_RETIREMENT_DEPTH);
+    assert!(<bool as UiTypedRetire>::DEPTH <= typed::UI_TYPED_RETIREMENT_DEPTH);
+    assert!(<crate::AccessibilitySpec as UiTypedRetire>::DEPTH <= typed::UI_TYPED_RETIREMENT_DEPTH);
+    assert!(<crate::UiNodeBindings as UiTypedRetire>::DEPTH <= typed::UI_TYPED_RETIREMENT_DEPTH);
+    assert!(<Option<MenuRef> as UiTypedRetire>::DEPTH <= typed::UI_TYPED_RETIREMENT_DEPTH);
 };
 
 struct BuiltTreeOwned {

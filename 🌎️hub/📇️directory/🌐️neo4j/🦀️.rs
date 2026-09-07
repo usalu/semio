@@ -8,16 +8,16 @@ use crate::artifact_authority::chunk_cas::{decode_artifact_cas_ownership_v1, enc
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{
-    active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, decode_auth_digest_hex, encode_capability_bytes, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite,
-    directory_command_result_kind_from_str, directory_command_result_kind_str, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request, validate_admin_operation_audit, validate_bounded_auth_text,
-    validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim, validate_verified_checkpoint_append, verify_invite_redemption_event, visibility_to_str,
-    ArtifactCasSweepCandidatePage,
-    HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS,
-    ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, DIRECTORY_WIRE_INTEGER_MAX, UNCONTROLLED_PROJECTION_REBUILD,
+    active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, decode_auth_digest_hex, directory_command_result_kind_from_str, directory_command_result_kind_str, directory_projection_rejection_v1,
+    directory_projection_space_v1, encode_capability_bytes, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request,
+    validate_admin_operation_audit, validate_bounded_auth_text, validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim, validate_verified_checkpoint_append, verify_invite_redemption_event,
+    verify_invite_redemption_scope_hint, visibility_to_str, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1, HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1,
+    InviteRedemptionSpaceStateV1, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX,
+    AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, DIRECTORY_WIRE_INTEGER_MAX, UNCONTROLLED_PROJECTION_REBUILD,
 };
 use directory::os_directory::{
-    hex_lower, validate_directory_event_page_event, ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, Hlc,
-    PublishedArtifactCheckpoint,
+    hex_lower, validate_directory_event_page_event, ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility,
+    DocumentDescriptor, Hlc, PublishedArtifactCheckpoint,
 };
 use directory::os_identity::time_ordered_id;
 use directory::{FromValue, ToValue};
@@ -330,10 +330,21 @@ impl Neo4jDirectory {
     }
 
     //#region 🔖️Projections
-    /// @emoji 🧮️ The only place `:User`/`:Space`/`:MEMBER_OF` graph state is written — see the
-    /// sqlite backend's twin for the full rationale (unconditional: `decide` already enforced every
-    /// law before this event existed).
+    /// 🏛️ Reads projection authority after the Neo4j directory-counter writer lock.
+    async fn projection_rejection(&self, txn: &mut Txn, body: &DirectoryEventBody) -> DirectoryResult<Option<DirectoryProjectionRejectionV1>> {
+        let Some(space_id) = directory_projection_space_v1(body) else {
+            return Ok(None);
+        };
+        let mut result = txn.execute(query("MATCH (s:Space {id: $id}) RETURN s.kind AS kind").param("id", space_id)).await.map_err(backend)?;
+        let kind = result.next(txn.handle()).await.map_err(backend)?.map(|row| row.get::<String>("kind").map_err(backend)).transpose()?;
+        Ok(directory_projection_rejection_v1(body, kind.as_deref()))
+    }
+
+    /// 🧮️ Applies one event and enforces intrinsic archive authority in the same transaction.
     async fn project(&self, txn: &mut Txn, event: &DirectoryEvent) -> DirectoryResult<()> {
+        if let Some(reason) = self.projection_rejection(txn, &event.body).await? {
+            return Err(reason.into_error());
+        }
         match &event.body {
             DirectoryEventBody::UserCreated { user_id, email, display_name } => {
                 txn.run(
@@ -367,6 +378,7 @@ impl Neo4jDirectory {
             }
             DirectoryEventBody::SpaceArchived { space_id } => {
                 txn.run(query("MATCH (s:Space {id: $id}) SET s.kind = 'archive'").param("id", space_id.clone())).await.map_err(backend)?;
+                txn.run(query("MATCH (:User)-[m:MEMBER_OF]->(:Space {id: $id}) WHERE m.role = 'author' SET m.role = 'spectator'").param("id", space_id.clone())).await.map_err(backend)?;
             }
             DirectoryEventBody::SpaceDeleted { space_id } => {
                 txn.run(query("MATCH (g:ShareGrant {spaceId: $id}) DETACH DELETE g").param("id", space_id.clone())).await.map_err(backend)?;
@@ -1090,11 +1102,23 @@ impl HubDirectory for Neo4jDirectory {
         Ok(record)
     }
 
-    async fn release_directory_command_receipt(&self, actor_user_id: &str, request_id: &str) -> DirectoryResult<()> {
-        self.graph
-            .run(query("MATCH (r:DirectoryCommandReceipt {key: $key, disposition: 'pending'}) DELETE r").param("key", directory_command_receipt_key(actor_user_id, request_id)))
+    async fn release_directory_command_receipt(&self, actor_user_id: &str, request_id: &str, command_sha256: &str) -> DirectoryResult<()> {
+        let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        let mut result = txn
+            .execute(
+                query("MATCH (r:DirectoryCommandReceipt {key: $key, commandSha256: $command_sha256, disposition: 'pending'}) DELETE r RETURN count(*) AS changed")
+                    .param("key", directory_command_receipt_key(actor_user_id, request_id))
+                    .param("command_sha256", command_sha256),
+            )
             .await
             .map_err(backend)?;
+        let changed: i64 = result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("receipt release returned no count".into()))?.get("changed").map_err(backend)?;
+        drop(result);
+        if changed != 1 {
+            txn.rollback().await.map_err(backend)?;
+            return Err(DirectoryError::Conflict("exact pending directory command receipt is not owned".into()));
+        }
+        txn.commit().await.map_err(backend)?;
         Ok(())
     }
 
@@ -1273,40 +1297,42 @@ impl HubDirectory for Neo4jDirectory {
         Ok(issued)
     }
 
+    async fn invite_redemption_scope_hint(&self, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str) -> DirectoryResult<InviteRedemptionScopeHintV1> {
+        let mut result = self
+            .graph
+            .execute(query("MATCH (i:SpaceInvite {selector: $selector}) MATCH (s:Space {id: i.spaceId}) MATCH (u:User {id: $user_id}) RETURN i AS i").param("selector", capability.selector()).param("user_id", user_id))
+            .await
+            .map_err(backend)?;
+        let record = result.next().await.map_err(backend)?.map(|row| invite_from_node(&row)).transpose()?;
+        verify_invite_redemption_scope_hint(record.as_ref(), capability, actor, user_id)
+    }
+
     async fn redeem_invite_atomic(&self, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str, hlc: Hlc) -> DirectoryResult<InviteRedemptionCommit> {
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
         let accepted_at_ms = now_ms();
-        let mut counter_lock = txn
-            .execute(query("MERGE (c:DirectoryCounter {id: 'singleton'}) ON CREATE SET c.seq = 0 SET c.claimNonce = coalesce(c.claimNonce, 0) + 1 RETURN c.seq AS seq"))
-            .await
-            .map_err(backend)?;
+        let mut counter_lock = txn.execute(query("MERGE (c:DirectoryCounter {id: 'singleton'}) ON CREATE SET c.seq = 0 SET c.claimNonce = coalesce(c.claimNonce, 0) + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
         counter_lock.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter lock returned no row".into()))?;
         drop(counter_lock);
-        let mut invite_lock = txn
-            .execute(query("MATCH (i:SpaceInvite {selector: $selector}) SET i.claimNonce = coalesce(i.claimNonce, 0) + 1 RETURN i AS i").param("selector", capability.selector()))
-            .await
-            .map_err(backend)?;
+        let mut invite_lock = txn.execute(query("MATCH (i:SpaceInvite {selector: $selector}) SET i.claimNonce = coalesce(i.claimNonce, 0) + 1 RETURN i AS i").param("selector", capability.selector())).await.map_err(backend)?;
         let record = invite_lock.next(txn.handle()).await.map_err(backend)?.map(|row| invite_from_node(&row)).transpose()?;
         drop(invite_lock);
         let mut user_query = txn.execute(query("MATCH (u:User {id: $user_id}) RETURN count(u) AS count").param("user_id", user_id)).await.map_err(backend)?;
         let user_exists = user_query.next(txn.handle()).await.map_err(backend)?.and_then(|row| row.get::<i64>("count").ok()).unwrap_or(0) == 1;
         drop(user_query);
-        let space_exists = match record.as_ref() {
+        let space_kind: Option<String> = match record.as_ref() {
             Some(invite) => {
-                let mut result = txn.execute(query("MATCH (s:Space {id: $space_id}) RETURN count(s) AS count").param("space_id", invite.space_id.clone())).await.map_err(backend)?;
-                let exists = result.next(txn.handle()).await.map_err(backend)?.and_then(|row| row.get::<i64>("count").ok()).unwrap_or(0) == 1;
+                let mut result = txn.execute(query("MATCH (s:Space {id: $space_id}) RETURN s.kind AS kind").param("space_id", invite.space_id.clone())).await.map_err(backend)?;
+                let kind = result.next(txn.handle()).await.map_err(backend)?.map(|row| row.get::<String>("kind").map_err(backend)).transpose()?;
                 drop(result);
-                exists
+                kind
             }
-            None => false,
+            None => None,
         };
-        match invite_redemption_preflight(record.as_ref(), capability, actor, user_id, user_exists, space_exists, accepted_at_ms) {
+        let space_state = InviteRedemptionSpaceStateV1::from_kind(space_kind.as_deref())?;
+        match invite_redemption_preflight(record.as_ref(), capability, actor, user_id, user_exists, space_state, accepted_at_ms) {
             InviteRedemptionPreflight::AlreadyCommitted => {
                 let invite = record.as_ref().expect("committed preflight requires a record");
-                let mut result = txn
-                    .execute(query("MATCH (e:DirectoryEvent {id: $event_id}) RETURN e AS e").param("event_id", invite.accepted_event_id.clone().unwrap_or_default()))
-                    .await
-                    .map_err(backend)?;
+                let mut result = txn.execute(query("MATCH (e:DirectoryEvent {id: $event_id}) RETURN e AS e").param("event_id", invite.accepted_event_id.clone().unwrap_or_default())).await.map_err(backend)?;
                 let event = result.next(txn.handle()).await.map_err(backend)?.map(|row| event_from_node(&row)).transpose()?;
                 drop(result);
                 let event = verify_invite_redemption_event(invite, event, user_id)?;
@@ -1374,19 +1400,25 @@ impl HubDirectory for Neo4jDirectory {
         Ok(InviteRedemptionCommit::NewlyCommitted { event: persisted })
     }
 
-    async fn revoke_invite_as(&self, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
+    async fn revoke_invite_as(&self, space_id: &str, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
         validate_bounded_auth_text(reason, "invite revoke reason", AUTH_TEXT_MAX_BYTES)?;
         let revoked_at = now_ms();
         let audit = auth_audit(revoked_at, "invite-revoked", Some(invite_id), None, actor_user_id, None, "success", Some(reason), correlation_id, "server")?;
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
         let mut result = txn
-            .execute(query("MATCH (i:SpaceInvite {id: $id}) WHERE i.revokedAt IS NULL AND i.acceptedAt IS NULL SET i.revokedAt = $revoked_at, i.revokedReason = $reason RETURN count(i) AS c").param("id", invite_id).param("revoked_at", revoked_at).param("reason", reason))
+            .execute(
+                query("MATCH (i:SpaceInvite {spaceId: $space_id, id: $id}) WHERE i.revokedAt IS NULL AND i.acceptedAt IS NULL SET i.revokedAt = $revoked_at, i.revokedReason = $reason RETURN count(i) AS c")
+                    .param("id", invite_id)
+                    .param("space_id", space_id)
+                    .param("revoked_at", revoked_at)
+                    .param("reason", reason),
+            )
             .await
             .map_err(backend)?;
         let changed: i64 = result.next(txn.handle()).await.map_err(backend)?.and_then(|row| row.get("c").ok()).unwrap_or(0);
         if changed == 0 {
             drop(result);
-            let mut accepted = txn.execute(query("MATCH (i:SpaceInvite {id: $id}) RETURN i.acceptedAt AS acceptedAt").param("id", invite_id)).await.map_err(backend)?;
+            let mut accepted = txn.execute(query("MATCH (i:SpaceInvite {spaceId: $space_id, id: $id}) RETURN i.acceptedAt AS acceptedAt").param("id", invite_id).param("space_id", space_id)).await.map_err(backend)?;
             let accepted = accepted.next(txn.handle()).await.map_err(backend)?.and_then(|row| row.get::<i64>("acceptedAt").ok()).is_some();
             return if accepted { Err(DirectoryError::Conflict("invite already accepted".into())) } else { Err(DirectoryError::NotFound(format!("invite {invite_id}"))) };
         }
@@ -1943,7 +1975,7 @@ impl HubDirectory for Neo4jDirectory {
     /// incremented in the same transaction as the `(:DirectoryEvent)` node and the projection —
     /// the write's atomicity comes from `Txn`, not from any Neo4j auto-increment primitive (Neo4j
     /// has none).
-    async fn append_events(&self, events: &[NewDirectoryEvent]) -> DirectoryResult<Vec<DirectoryEvent>> {
+    async fn append_decided_events(&self, events: &[NewDirectoryEvent]) -> DirectoryResult<DirectoryAppendOutcomeV1> {
         if events.iter().any(|event| matches!(&event.body, DirectoryEventBody::ArtifactCheckpointPublished { .. } | DirectoryEventBody::InviteRedeemed { .. })) {
             return Err(DirectoryError::Conflict("event requires its verified authority append seam".into()));
         }
@@ -1958,6 +1990,10 @@ impl HubDirectory for Neo4jDirectory {
             let seq: i64 = counter.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter query returned no row".into()))?.get("seq").map_err(backend)?;
             drop(counter);
             let seq = u64::try_from(seq).map_err(backend)?;
+            if let Some(reason) = self.projection_rejection(&mut txn, &event.body).await? {
+                txn.rollback().await.map_err(backend)?;
+                return Ok(DirectoryAppendOutcomeV1::RejectedBeforeCommit(reason));
+            }
             if seq > DIRECTORY_WIRE_INTEGER_MAX {
                 return Err(DirectoryError::Conflict("directory event sequence exceeds the public integer boundary".into()));
             }
@@ -2015,7 +2051,7 @@ impl HubDirectory for Neo4jDirectory {
             persisted.push(full);
         }
         txn.commit().await.map_err(backend)?;
-        Ok(persisted)
+        Ok(DirectoryAppendOutcomeV1::Appended(persisted))
     }
 
     async fn events_since(&self, since_seq: u64, limit: usize) -> DirectoryResult<Vec<DirectoryEvent>> {
@@ -2241,12 +2277,7 @@ fn checkpoint_publication_receipt_from_node(row: &neo4rs::Row) -> DirectoryResul
         "completed" => CheckpointPublicationDispositionV1::Completed,
         other => return Err(DirectoryError::Backend(format!("unknown checkpoint publication disposition '{other}'"))),
     };
-    let checkpoint_id = node
-        .get::<String>("checkpointId")
-        .ok()
-        .filter(|value| !value.is_empty())
-        .map(|value| crate::directory::decode_auth_digest_hex(&value).map(ArtifactHash))
-        .transpose()?;
+    let checkpoint_id = node.get::<String>("checkpointId").ok().filter(|value| !value.is_empty()).map(|value| crate::directory::decode_auth_digest_hex(&value).map(ArtifactHash)).transpose()?;
     Ok(CheckpointPublicationReceiptRecordV1 {
         actor_user_id: node.get("actorUserId").map_err(backend)?,
         correlation_id: node.get("correlationId").map_err(backend)?,
@@ -2383,10 +2414,7 @@ mod tests {
         let sequence = NEXT_CONTAINER.fetch_add(1, Ordering::Relaxed);
         let name = format!("semio-hub-neo4j-{}-{sequence}", std::process::id());
         let mapping = format!("127.0.0.1:{port}:7687");
-        let output = Command::new("docker")
-            .args(["run", "--detach", "--rm", "--name", &name, "--env", "NEO4J_AUTH=neo4j/semio-test", "--publish", &mapping, "neo4j:5-community"])
-            .output()
-            .expect("start docker for neo4j fixture");
+        let output = Command::new("docker").args(["run", "--detach", "--rm", "--name", &name, "--env", "NEO4J_AUTH=neo4j/semio-test", "--publish", &mapping, "neo4j:5-community"]).output().expect("start docker for neo4j fixture");
         assert!(output.status.success(), "start neo4j fixture: {}", String::from_utf8_lossy(&output.stderr));
         let uri = format!("127.0.0.1:{port}");
         let container = Neo4jContainer { name, uri: uri.clone() };
@@ -2462,19 +2490,11 @@ mod tests {
 
         let rollback_invite = directory.issue_invite("default", SpaceRole::Spectator, 3600, "neo4j-invite-rollback").await.expect("issue rollback invite");
         let mut txn = directory.graph.start_txn().await.expect("begin neo4j rollback fixture");
-        txn.run(
-            query("MATCH (i:SpaceInvite {id: $id}) SET i.acceptedAt = $accepted_at, i.acceptedEventId = $event_id")
-                .param("id", rollback_invite.record.id.clone())
-                .param("accepted_at", 101i64)
-                .param("event_id", "rolled-back-event"),
-        )
-        .await
-        .expect("write uncommitted neo4j marker");
+        txn.run(query("MATCH (i:SpaceInvite {id: $id}) SET i.acceptedAt = $accepted_at, i.acceptedEventId = $event_id").param("id", rollback_invite.record.id.clone()).param("accepted_at", 101i64).param("event_id", "rolled-back-event"))
+            .await
+            .expect("write uncommitted neo4j marker");
         txn.rollback().await.expect("rollback neo4j marker");
-        assert_eq!(
-            directory.list_invites("default").await.expect("neo4j invites after rollback").into_iter().find(|record| record.id == rollback_invite.record.id).expect("rollback invite row").accepted_at,
-            None
-        );
+        assert_eq!(directory.list_invites("default").await.expect("neo4j invites after rollback").into_iter().find(|record| record.id == rollback_invite.record.id).expect("rollback invite row").accepted_at, None);
         let before = directory.list_invites("default").await.expect("neo4j invites before rebuild");
         directory.rebuild_projections().await.expect("neo4j rebuild");
         let after = directory.list_invites("default").await.expect("neo4j invites after rebuild");

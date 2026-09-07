@@ -57,7 +57,7 @@ pub mod set_active_paint_layer {
 mod tests {
     use crate::editor::lowpoly::testkit::{app, dispatch};
     use crate::editor::lowpoly::LowpolyCommand;
-    use semio_framework_plugin::PluginApp;
+    
 
     #[semio_framework_async_macros::async_test]
     async fn set_active_object_is_view_state_and_emits_no_operations() {

@@ -14,7 +14,7 @@ pub struct SetArithmetic {
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetArithmetic {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "arithmetic", kind: "set-arithmetic", record: "SetArithmetic" };
 
-    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<<JpgBaselineMutation as protocol::Mutation<JpgSnapshot>>::Diff> {
+    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<<JpgBaselineMutation as Mutation<JpgSnapshot>>::Diff> {
         agg_diff(&JpgBaselineMutation::SetArithmetic(self.clone()), base)
     }
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {

@@ -15,7 +15,7 @@ pub struct SetFileDescription {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for SetFileDescription {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "file-description", kind: "set-file-description", record: "SetFileDescription" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepMutation as protocol::Mutation<StepSnapshot>>::Diff> {
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepMutation as Mutation<StepSnapshot>>::Diff> {
         agg_diff(&StepMutation::SetFileDescription(self.clone()), base)
     }
     fn inverse(&self, base: &StepSnapshot) -> Vec<StepMutation> {

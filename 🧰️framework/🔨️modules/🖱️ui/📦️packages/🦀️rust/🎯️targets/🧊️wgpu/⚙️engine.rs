@@ -16,8 +16,12 @@ use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::events::{EventRouter, UiCommand, UiEvent};
 use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
 use crate::wgpu::mounted_layout::{MountedLayoutJob, MountedLayoutResult, RetainedGlyphPreview};
-use crate::wgpu::paint::{paint_node_step, paint_tree, sync_interactive_state_node_step, RetainedInteractiveSyncCursor, RetainedInteractiveSyncStep, RetainedNodePaintCursor, RetainedNodePaintStep};
-use crate::wgpu::scene_slots::{collect_scene_slots, scene_slot_for_node, SceneHost, ScenePaintCursor, ScenePaintStep};
+#[cfg(test)]
+use crate::wgpu::paint::paint_tree;
+use crate::wgpu::paint::{paint_node_step, sync_interactive_state_node_step, RetainedInteractiveSyncCursor, RetainedInteractiveSyncStep, RetainedNodePaintCursor, RetainedNodePaintStep};
+#[cfg(test)]
+use crate::wgpu::scene_slots::collect_scene_slots;
+use crate::wgpu::scene_slots::{scene_slot_for_node, SceneHost, ScenePaintCursor, ScenePaintStep};
 use crate::wgpu::shell::{Shell, ShellEvent};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::Theme;
@@ -184,6 +188,7 @@ pub struct UiSurfaceToken {
 }
 
 impl UiSurfaceToken {
+    #[cfg(test)]
     pub(crate) const fn new(slot: u8, generation: u64) -> Self {
         Self { slot, generation }
     }
@@ -259,10 +264,6 @@ impl UiSurfaceRegistry {
 
     fn values(&self) -> impl Iterator<Item = &UiWindow> {
         self.slots.iter().filter_map(|slot| slot.as_ref().map(|slot| &slot.window))
-    }
-
-    fn values_mut(&mut self) -> impl Iterator<Item = &mut UiWindow> {
-        self.slots.iter_mut().filter_map(|slot| slot.as_mut().map(|slot| &mut slot.window))
     }
 
     fn ids(&self) -> impl Iterator<Item = &SurfaceId> {
@@ -409,11 +410,15 @@ fn stage_label(stage: LayoutJobStage) -> &'static str {
     match stage {
         LayoutJobStage::CollectNodes => "Layout.CollectNodes",
         LayoutJobStage::ShapeText => "Layout.ShapeText",
+        #[cfg(test)]
         LayoutJobStage::PruneRemoved => "Layout.PruneRemoved",
+        #[cfg(test)]
         LayoutJobStage::SyncNodes => "Layout.SyncNodes",
+        #[cfg(test)]
         LayoutJobStage::SolveLayout => "Layout.SolveLayout",
         LayoutJobStage::MeasureFallback => "Layout.MeasureFallback",
         LayoutJobStage::ArrangeFallback => "Layout.ArrangeFallback",
+        #[cfg(test)]
         LayoutJobStage::CollectResults => "Layout.CollectResults",
         LayoutJobStage::PublishResults => "Layout.PublishResults",
     }
@@ -692,7 +697,7 @@ impl Ui {
 
     /// 🧵️Advances one surface layout by one cursor unit under the caller's fuel/deadline and
     /// cancellation context. Completed geometry publishes only after the whole job is consistent.
-    pub fn step_layouts(&mut self, pool: &semio_framework_async::WorkerPool, atlas: &mut FontAtlas, cx: &mut semio_framework_job::StepContext<'_>) -> UiLayoutStep {
+    pub fn step_layouts(&mut self, pool: &semio_framework_async::WorkerPool, atlas: &mut FontAtlas, cx: &mut StepContext<'_>) -> UiLayoutStep {
         let _ = atlas;
         if cx.should_yield() {
             return UiLayoutStep::Idle;
@@ -1462,10 +1467,12 @@ impl Ui {
         self.windows.get(window_id).map(|window| window.revision)
     }
 
+    #[cfg(test)]
     pub(crate) fn progressive_layout_preview(&self, window_id: &str) -> Option<MountedLayoutResult> {
         self.windows.get(window_id).and_then(|window| window.layout_preview)
     }
 
+    #[cfg(test)]
     pub(crate) fn progressive_glyph_preview(&self, window_id: &str) -> Option<RetainedGlyphPreview> {
         self.windows.get(window_id).and_then(|window| window.glyph_preview)
     }
@@ -1541,7 +1548,7 @@ mod tests {
         let pool = test_layout_pool();
         let mut preview_sequence = 0;
         loop {
-            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+            let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
             if matches!(ui.step_layouts(&pool, atlas, &mut cx), UiLayoutStep::Idle) {
                 break;
             }
@@ -1692,7 +1699,7 @@ mod tests {
         let mut background_progress_at = None;
         for slice in 0..12 {
             ui.set_viewport("interactive", 401.0 + slice as f32, 400.0);
-            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+            let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
             let step = ui.step_layouts(&pool, &mut atlas, &mut cx);
             if matches!(step, UiLayoutStep::Yielded { ref window_id, .. } | UiLayoutStep::Ready { ref window_id, .. } if window_id.as_ref() == "background") {
                 background_progress_at = Some(slice);
@@ -1717,7 +1724,7 @@ mod tests {
         let mut slices = 0;
         let mut max_slice = std::time::Duration::ZERO;
         loop {
-            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+            let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
             let started = std::time::Instant::now();
             let step = ui.step_layouts(&pool, &mut atlas, &mut cx);
             max_slice = max_slice.max(started.elapsed());
@@ -1801,7 +1808,7 @@ mod tests {
         let mut swaps = 0;
         for _ in 0..100_000 {
             let before = ui.tree("atomic").map(UiTree::accepted_layout_generation).unwrap_or_default();
-            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+            let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
             let step = ui.step_layouts(&pool, &mut atlas, &mut cx);
             let tree = ui.tree("atomic").unwrap_or_else(|| panic!("atomic retained tree"));
             let after = tree.accepted_layout_generation();

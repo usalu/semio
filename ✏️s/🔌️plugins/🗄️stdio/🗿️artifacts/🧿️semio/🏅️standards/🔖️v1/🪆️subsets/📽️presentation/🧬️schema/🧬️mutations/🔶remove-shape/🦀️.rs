@@ -15,7 +15,7 @@ pub struct RemoveShape {
 impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation> for RemoveShape {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "shape", kind: "remove-shape", record: "RemoveShape" };
 
-    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<SemioPresentationMutation as protocol::Mutation<SemioPresentationSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::Diff> {
         agg_diff(&SemioPresentationMutation::RemoveShape(self.clone()), base)
     }
     fn inverse(&self, base: &SemioPresentationSnapshot) -> Vec<SemioPresentationMutation> {

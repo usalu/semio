@@ -10,6 +10,8 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// FINAL-state `index` (`None` appends). An unknown `step_id` is Fatal `mutation.invariant`; a
 /// duplicate `block.id` within that step is Fatal `mutation.duplicate-id`.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
 pub struct CreateBlock {
     pub step_id: String,
     pub block: FormQuestion,

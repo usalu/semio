@@ -66,7 +66,7 @@ fn retained_binding_copy_separates_allocation_clone_and_placement() {
         placed += step.placed_bytes;
         if step.complete { break; }
     }
-    assert_eq!(copied, 32 * std::mem::size_of::<ActionBinding>());
+    assert_eq!(copied, 32 * size_of::<ActionBinding>());
     assert_eq!(placed, copied);
     assert_eq!(serde_json::to_value(owner.candidate().unwrap()).unwrap(), expected);
     let (source, candidate) = owner.take_completed().unwrap();

@@ -14,7 +14,7 @@ pub struct RemoveRelation {
 impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for RemoveRelation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "relation", kind: "remove-relation", record: "RemoveRelation" };
 
-    fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<<SemioModelMutation as protocol::Mutation<SemioModelSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<<SemioModelMutation as Mutation<SemioModelSnapshot>>::Diff> {
         agg_diff(&SemioModelMutation::RemoveRelation(self.clone()), base)
     }
     fn inverse(&self, base: &SemioModelSnapshot) -> Vec<SemioModelMutation> {

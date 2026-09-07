@@ -16,7 +16,7 @@ pub struct InsertShape {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for InsertShape {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "shape", kind: "insert-shape", record: "InsertShape" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as protocol::Mutation<PptxSnapshot>>::Diff> {
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as Mutation<PptxSnapshot>>::Diff> {
         agg_diff(&PptxMutation::InsertShape(self.clone()), base)
     }
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {

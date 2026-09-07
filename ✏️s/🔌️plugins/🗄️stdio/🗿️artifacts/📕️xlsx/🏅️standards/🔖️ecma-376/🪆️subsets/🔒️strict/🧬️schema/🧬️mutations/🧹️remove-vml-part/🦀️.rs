@@ -14,7 +14,7 @@ pub struct RemoveVmlPart {
 impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for RemoveVmlPart {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "vml-part", kind: "remove-vml-part", record: "RemoveVmlPart" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxStrictMutation as protocol::Mutation<XlsxSnapshot>>::Diff> {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxStrictMutation as Mutation<XlsxSnapshot>>::Diff> {
         agg_diff(&XlsxStrictMutation::RemoveVmlPart(self.clone()), base)
     }
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxStrictMutation> {

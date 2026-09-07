@@ -1,8 +1,8 @@
 //! 📐️ Equation play app — the geometry window: the convex-hull/centroid canvas.
 
 use crate::artifacts::equation::EquationGeometry;
-use crate::editor::equation::{empty_component_scene, geometry_layers_json};
-use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use crate::editor::equation::geometry_layers_json;
+use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const MATH_PLAY_WINDOW_GEOMETRY: &str = "math-geometry";
@@ -32,10 +32,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(geometry: &EquationGeometry) -> UiNode {
-    let mut scene = empty_component_scene(MATH_PLAY_BODY_GEOMETRY, SurfaceKind::Canvas2d);
-    scene.canvas_2d = Some(Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: geometry_layers_json(geometry), snapshot: None });
-    UiNode::ComponentScene(scene)
+pub fn render(geometry: &EquationGeometry) -> UiAssemblyResult<BuiltNode> {
+    semio_framework_plugin::scene_surface(MATH_PLAY_BODY_GEOMETRY, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: geometry_layers_json(geometry), snapshot: None })
 }
 //#endregion 🔖️Render
 
@@ -46,11 +44,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_canvas_2d_scene() {
-        // 🌱️ `UiNode` (`semio-framework-plugin`, framework-owned) has not itself gained `ToValue` —
-        // `Debug` gives the same "the scene populated its canvas_2d slot" check the old JSON
-        // substring check made, without needing `serde_json` for a framework type.
-        let debug = format!("{:?}", render(&EquationGeometry::default()));
-        assert!(debug.contains("canvas_2d: Some"), "expected a populated canvas_2d slot: {debug}");
+        let geometry = EquationGeometry::default();
+        let node = render(&geometry).expect("geometry surface");
+        let semio_framework_plugin::plugin_app_close_prelude::Component::Surface(props) = node.component else { panic!("geometry must render a surface") };
+        let scene: Canvas2dScene = semio_framework_ui_scene::decode(&props).expect("geometry payload");
+        assert_eq!(scene.layers_json, geometry_layers_json(&geometry));
     }
 
     #[semio_framework_async_macros::async_test]

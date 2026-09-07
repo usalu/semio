@@ -9,7 +9,6 @@
 //! `backwards` per `DagConfigMutation` instead of never being VCS'd at all.
 
 use infinite_board_port_directed_dag::DagCamera;
-use protocol::Mutation;
 
 //#region 🔖️Config
 /// 🧮️ `DagPlayApp::Config` — the pure-trait `ArtifactEditor::Config` for the dag app.
@@ -22,6 +21,8 @@ use protocol::Mutation;
 /// to the real `DagCamera` type.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[dsl(extension = "dagcfg")]
 #[dsl(id = "dag.config")]
 #[dsl(layout = "lines")]
@@ -98,108 +99,16 @@ pub fn dag_config_camera(config: &DagConfig) -> DagCamera {
 }
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigMutations
-/// 🧮️ `DagConfig`'s operation enum — one variant per settled interaction (mirrors the pre-migration
-/// `DagPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()` returns: since
-/// a config-only "View" dispatch is a plain `Apply` (not an `AmendLast`), each tick is its own distinct,
-/// real config edit, and "undo this tick" is exactly "restore the whole-config snapshot from just before
-/// it" — the simplest correct inverse, needing no per-field reverse-patch bookkeeping. Mirrors
-/// `shooting_op::ShootingConfigMutation` exactly.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
-pub enum DagConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: DagConfig,
-    },
-    #[dsl(key = "camera")]
-    SetCamera { x: f64, y: f64, zoom: f64 },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
-}
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+pub mod mutations;
+pub use mutations::*;
 
-//#region 🔖️OpCodec
-impl protocol::OpText for DagConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for DagConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
-    }
-}
-
-//#endregion 🔖️OpCodec
-
-impl Mutation<DagConfig> for DagConfigMutation {
-    type Diff = DagConfig;
-
-    fn diff(&self, base: &DagConfig) -> protocol::MutationOutcome<DagConfig> {
-        let mut next = base.clone();
-        match self {
-            DagConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            DagConfigMutation::SetCamera { x, y, zoom } => {
-                next.camera_x = *x;
-                next.camera_y = *y;
-                next.camera_zoom = *zoom;
-            }
-            DagConfigMutation::SetLocale { value } => next.locale = value.clone(),
-        }
-        protocol::MutationOutcome::new(next)
-    }
-
-    fn inverse(&self, base: &DagConfig) -> Vec<Self> {
-        vec![DagConfigMutation::Snapshot { config: base.clone() }]
-    }
-}
-//#endregion 🔖️ConfigMutations
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::Mutation;
 
     #[semio_framework_async_macros::async_test]
     async fn dag_config_default_matches_dag_camera_implicit_default() {
@@ -218,21 +127,49 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dag_config_operation_text_binary_round_trips_every_variant() {
-        store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::Snapshot { config: DagConfig { camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, locale: "de-DE".into() } });
-        store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetCamera { x: 12.5, y: -3.0, zoom: 2.25 });
-        store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::ReplaceConfig(ReplaceConfig { config: DagConfig { camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, locale: "de-DE".into() } }));
+        store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::ChangeCamera(ChangeCamera { x: 12.5, y: -3.0, zoom: 2.25 }));
+        store::os_store::test_support::assert_op_line_round_trip(&DagConfigMutation::ChangeLocale(ChangeLocale { value: "de-DE".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn dag_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = DagConfig { camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, locale: "en-US".into() };
-        let operation = DagConfigMutation::SetCamera { x: 9.0, y: 8.0, zoom: 7.0 };
+        let operation = DagConfigMutation::ChangeCamera(ChangeCamera { x: 9.0, y: 8.0, zoom: 7.0 });
         let forward = operation.diff(&base).diff().clone();
         assert_eq!((forward.camera_x, forward.camera_y, forward.camera_zoom), (9.0, 8.0, 7.0));
         let backwards = operation.inverse(&base);
-        assert_eq!(backwards, vec![DagConfigMutation::Snapshot { config: base.clone() }]);
+        assert_eq!(backwards, vec![DagConfigMutation::ChangeCamera(ChangeCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom })]);
         let restored = backwards[0].diff(&forward).diff().clone();
         assert_eq!(restored, base);
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod mutation_vectors {
+    use super::*;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+
+    #[test]
+    fn language_neutral_mutations_match_json_oracle_and_restore_base() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutations.json")).unwrap();
+        for vector in vectors.as_array().unwrap() {
+            let base: DagConfig = dsl::json::from_json_str(&vector["base"].to_string()).unwrap();
+            let mutation: DagConfigMutation = dsl::json::from_json_str(&vector["mutation"].to_string()).unwrap();
+            let oracle: DagConfigMutation = serde_json::from_value(vector["mutation"].clone()).unwrap();
+            assert_eq!(mutation, oracle);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());
+            let next = mutation.diff(&base).diff().apply(&base).unwrap();
+            assert_eq!(serde_json::to_value(&next).unwrap(), vector["after"]);
+            let encoded = mutation.encode_op().unwrap();
+            assert_eq!(DagConfigMutation::decode_op(&encoded).unwrap(), mutation);
+            assert_eq!(DagConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
+            let mut restored = next;
+            for inverse in mutation.inverse(&base) {
+                restored = inverse.diff(&restored).diff().apply(&restored).unwrap();
+            }
+            assert_eq!(restored, base);
+        }
+    }
+}

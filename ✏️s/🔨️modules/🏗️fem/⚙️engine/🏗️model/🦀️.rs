@@ -325,8 +325,8 @@ pub enum FemError {
     Singular,
 }
 
-impl std::fmt::Display for FemError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for FemError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::EmptyModel => formatter.write_str("model has no nodes"),
             Self::DuplicateNodeId(id) => write!(formatter, "duplicate node id: {id}"),

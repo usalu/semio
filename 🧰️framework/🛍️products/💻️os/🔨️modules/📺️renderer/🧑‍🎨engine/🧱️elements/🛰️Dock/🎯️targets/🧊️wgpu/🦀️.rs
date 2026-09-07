@@ -1597,7 +1597,7 @@ mod tests {
             named_layouts: vec![],
             default_layout: layout,
             terminologies: vec![],
-            terminology_breadcrumbs: std::collections::HashMap::new(),
+            terminology_breadcrumbs: HashMap::new(),
             introduction: None,
             tutorials: Vec::new(),
             dialogs: Vec::new(),

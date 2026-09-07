@@ -24,7 +24,7 @@ use wgpu::util::DeviceExt;
 pub(crate) fn build_pipeline(device: &wgpu::Device, module: &wgpu::ShaderModule, spec: &PipelineSpec, layout: &wgpu::PipelineLayout, surface_format: wgpu::TextureFormat) -> wgpu::RenderPipeline {
     let buffers: Vec<Vec<wgpu::VertexAttribute>> =
         spec.vertex_buffers.iter().map(|buffer| buffer.attributes.iter().map(|attribute| wgpu::VertexAttribute { offset: attribute.offset, shader_location: attribute.shader_location, format: vertex_format(attribute.format) }).collect()).collect();
-    let vertex_buffers: Vec<wgpu::VertexBufferLayout> = spec.vertex_buffers.iter().zip(buffers.iter()).map(|(buffer, attributes)| wgpu::VertexBufferLayout { array_stride: buffer.stride, step_mode: step_mode(buffer.step_mode), attributes }).collect();
+    let vertex_buffers: Vec<wgpu::VertexBufferLayout<'_>> = spec.vertex_buffers.iter().zip(buffers.iter()).map(|(buffer, attributes)| wgpu::VertexBufferLayout { array_stride: buffer.stride, step_mode: step_mode(buffer.step_mode), attributes }).collect();
     device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: Some(spec.label),
         layout: Some(layout),

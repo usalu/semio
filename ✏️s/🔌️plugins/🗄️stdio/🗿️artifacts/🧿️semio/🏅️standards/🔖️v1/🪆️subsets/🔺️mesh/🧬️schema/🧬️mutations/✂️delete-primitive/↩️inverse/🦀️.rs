@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeletePrimitive`.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::{SemioMeshDiff, mesh_at};
+use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::mesh_at;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::{SemioMeshMutation, create_primitive};
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 

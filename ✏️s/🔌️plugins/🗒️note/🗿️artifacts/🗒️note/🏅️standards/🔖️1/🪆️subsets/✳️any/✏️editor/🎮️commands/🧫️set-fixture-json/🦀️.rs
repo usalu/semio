@@ -1,7 +1,6 @@
 //! 🗃️ 🗃️ Note play app commands command — `set-fixture-json`.
 
 use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::schema::{empty_note_snapshot, semio_example_snapshot};
 use crate::artifacts::note::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

@@ -177,8 +177,8 @@ const HOST_APP_ID: &str = "process3d-play";
 fn bundle() -> ExtensionBundle {
     let catalog = WoodCatalog;
     let bundle = ExtensionBundle::new(EXTENSION_ID, "Process Wood Machines", "0.1.0").extends("process");
-    let bundle = semio_framework::io::resolve_ready(bundle.mode(semio_framework_plugin::ExecutionMode::Declarative));
-    semio_framework::io::resolve_ready(bundle.contributes_topic(
+    let bundle = bundle.mode(semio_framework_plugin::ExecutionMode::Declarative);
+    bundle.contributes_topic(
         "process.machines",
         semio_framework_os_kernel::DslValue::object([
             ("appId".to_string(), semio_framework_os_kernel::DslValue::String(HOST_APP_ID.to_string())),
@@ -187,7 +187,7 @@ fn bundle() -> ExtensionBundle {
             ("iconId".to_string(), semio_framework_os_kernel::DslValue::String(catalog.icon_id().to_string())),
             ("machinesJson".to_string(), semio_framework_os_kernel::DslValue::String(semio_framework_os_kernel::json::to_json_string(&catalog.machines()))),
         ]),
-    ))
+    )
 }
 
 semio_framework_plugin::extension_exports!(bundle);

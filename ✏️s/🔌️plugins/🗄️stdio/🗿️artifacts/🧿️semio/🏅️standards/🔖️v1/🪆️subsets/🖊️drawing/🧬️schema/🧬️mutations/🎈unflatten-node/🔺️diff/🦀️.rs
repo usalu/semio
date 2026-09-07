@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `UnflattenNode`.
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{DrawNodeDiff, NodePath, SemioDrawingDiff, diff_at_path, node_at};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{DrawNodeDiff, SemioDrawingDiff, diff_at_path, node_at};
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

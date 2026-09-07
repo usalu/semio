@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the draw editor and viewer.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum DrawApps: PluginApp {
-        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::drawing::DrawingPlayApp>>),
-        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::drawing::DrawingViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::drawing::DrawingPlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::drawing::DrawingViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -33,7 +33,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// back to the open document. No quota declared: draw's ~14 `Effect` call sites
 /// (`LoadDocument`/`SetActiveUtility`/`ReplayShellCommand`) are per-turn UI/document effects with
 /// no evidence of long-running computation, large held buffers, or high-frequency timers.
-pub fn plugin() -> Result<Plugin<DrawApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<DrawApps>, PluginAssemblyError> {
     Plugin::<DrawApps>::builder("draw")
         .label("Draw")
         .version("0.1.0")

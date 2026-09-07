@@ -23,7 +23,7 @@ pub struct SetVertex {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetVertex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "vertex", kind: "set-vertex", record: "SetVertex" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as protocol::Mutation<ObjSnapshot>>::Diff> {
+    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         agg_diff(&ObjMutation::SetVertex(self.clone()), base)
     }
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {

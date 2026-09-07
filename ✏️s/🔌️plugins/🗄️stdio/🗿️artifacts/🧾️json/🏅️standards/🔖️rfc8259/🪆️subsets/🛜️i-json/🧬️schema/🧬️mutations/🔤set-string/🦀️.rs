@@ -15,7 +15,7 @@ pub struct SetString {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for SetString {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "string", kind: "set-string", record: "SetString" };
 
-    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as protocol::Mutation<JsonSnapshot>>::Diff> {
+    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as Mutation<JsonSnapshot>>::Diff> {
         agg_diff(&JsonIJsonMutation::SetString(self.clone()), base)
     }
     fn inverse(&self, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {

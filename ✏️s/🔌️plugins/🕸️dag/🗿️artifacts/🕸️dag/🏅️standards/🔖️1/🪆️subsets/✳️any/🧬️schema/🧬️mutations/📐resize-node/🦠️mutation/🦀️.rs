@@ -6,9 +6,9 @@ use crate::artifacts::dag::DagSnapshot;
 //#region 🔖️Mutation
 /// 📐 `resize-node` payload — FINAL-state absolute `(width, height)`.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[derive(dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
 pub struct ResizeNode {
     pub id: String,
     pub width: f64,

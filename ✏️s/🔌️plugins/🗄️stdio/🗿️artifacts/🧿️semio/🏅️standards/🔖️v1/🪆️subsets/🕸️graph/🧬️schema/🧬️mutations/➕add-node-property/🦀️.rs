@@ -3,7 +3,7 @@
 //! inside `nodes` — exactly mirrors `add-node-port` but operating on `properties` instead of
 //! `ports`; REUSES `🔢️value`'s `SemioValueEntry`).
 
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::{SemioGraphMutation, remove_node_property};
+use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
 

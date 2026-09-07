@@ -14,7 +14,7 @@ pub struct InsertAlternateContent {
 impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for InsertAlternateContent {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "alternate-content", kind: "insert-alternate-content", record: "InsertAlternateContent" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxStrictMutation as protocol::Mutation<PptxSnapshot>>::Diff> {
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxStrictMutation as Mutation<PptxSnapshot>>::Diff> {
         agg_diff(&PptxStrictMutation::InsertAlternateContent(self.clone()), base)
     }
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxStrictMutation> {

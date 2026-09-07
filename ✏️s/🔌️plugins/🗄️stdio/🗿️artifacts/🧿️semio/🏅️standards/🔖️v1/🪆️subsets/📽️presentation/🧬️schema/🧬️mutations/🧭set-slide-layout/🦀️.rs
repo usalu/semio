@@ -15,7 +15,7 @@ pub struct SetSlideLayout {
 impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation> for SetSlideLayout {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "slide-layout", kind: "set-slide-layout", record: "SetSlideLayout" };
 
-    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<SemioPresentationMutation as protocol::Mutation<SemioPresentationSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::Diff> {
         agg_diff(&SemioPresentationMutation::SetSlideLayout(self.clone()), base)
     }
     fn inverse(&self, base: &SemioPresentationSnapshot) -> Vec<SemioPresentationMutation> {

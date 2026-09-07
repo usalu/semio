@@ -8,7 +8,7 @@ use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::{empty_trinity_graph_fixture, JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use crate::viewer::jack::modes::view;
 use crate::viewer::jack::modes::view::windows::graph;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

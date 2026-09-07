@@ -2,6 +2,7 @@
 
 use crate::artifacts::layout::{CharacterStyle, Frame, GridSettings, ImageLink, Layer, LayoutDrawingChild, Page, PageColumns, PageMargins, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -143,16 +144,16 @@ pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>
 
 //#region 🔖️JsonFieldPrimitives
 /// 🧾️ Every collection/nested-record field on `LayoutSnapshot` (`grid`, the style/story/link/page
-/// tables, `parent_pages`, `spreads`, `pages` — each already `Serialize`/`Deserialize`) is
+/// tables, `parent_pages`, `spreads`, `pages` — each implements `ToValue`/`FromValue`) is
 /// JSON-serialized then hex-encoded, one line per field, matching every scalar field's own
 /// `enc_str`/`dec_str` convention (see cad's identically-named region for precedent). `referenced_model`
 /// (an `Option<store::ArtifactLink>`) uses the same helper — `ArtifactLink`/`LinkPin`/`BlobRef` are
-/// themselves plain `Serialize`/`Deserialize`, so no bespoke hex/bracket encoder was needed for it.
-fn enc_json<T: Serialize>(value: &T) -> String {
-    enc_str(&serde_json::to_string(value).expect("LayoutSnapshot structured fields are always JSON-serializable"))
+/// themselves plain `ToValue`/`FromValue`, so no bespoke hex/bracket encoder was needed for it.
+fn enc_json<T: protocol::ToValue>(value: &T) -> String {
+    enc_str(&protocol::json::to_json_string(value))
 }
-fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
-    serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
+fn dec_json<T: protocol::FromValue>(s: &str) -> Result<T, String> {
+    protocol::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️JsonFieldPrimitives
 
@@ -269,11 +270,11 @@ fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store:
         _ => Ok(Some(read_child(reader)?)),
     }
 }
-fn write_json<T: Serialize>(out: &mut Vec<u8>, value: &T) {
-    write_str_lp(out, &serde_json::to_string(value).expect("LayoutSnapshot structured fields are always JSON-serializable"));
+fn write_json<T: protocol::ToValue>(out: &mut Vec<u8>, value: &T) {
+    write_str_lp(out, &protocol::json::to_json_string(value));
 }
-fn read_json<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
-    serde_json::from_str(&read_str_lp(reader)?).map_err(|e| e.to_string())
+fn read_json<T: protocol::FromValue>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
+    protocol::json::from_json_str(&read_str_lp(reader)?).map_err(|e| e.to_string())
 }
 
 fn encode_layout_snapshot_binary(s: &LayoutSnapshot) -> Vec<u8> {
@@ -291,7 +292,7 @@ fn encode_layout_snapshot_binary(s: &LayoutSnapshot) -> Vec<u8> {
     write_json(&mut out, &s.pages);
     write_json(&mut out, &s.print_target);
     write_json(&mut out, &s.data_fields_json);
-    write_str_lp(&mut out, &serde_json::to_string(&s.background_drawing).expect("layout drawing child is serializable"));
+    write_str_lp(&mut out, &protocol::json::to_json_string(&s.background_drawing));
     write_json(&mut out, &s.referenced_model);
     out
 }
@@ -315,7 +316,7 @@ fn decode_layout_snapshot_binary(bytes: &[u8]) -> Result<LayoutSnapshot, String>
     snapshot.pages = read_json(&mut reader)?;
     snapshot.print_target = read_json(&mut reader)?;
     snapshot.data_fields_json = read_json(&mut reader)?;
-    snapshot.background_drawing = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
+    snapshot.background_drawing = protocol::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
     snapshot.referenced_model = read_json(&mut reader)?;
     Ok(snapshot)
 }

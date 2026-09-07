@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ChangeHandleHandleKind`.
 
-use crate::artifacts::block2d::{Block2dHandleTemplate, Block2dSnapshot};
+use crate::artifacts::block2d::Block2dSnapshot;
 use crate::artifacts::block2d::mutations::Block2dMutation;
 
 //#region 🔖️Inverse

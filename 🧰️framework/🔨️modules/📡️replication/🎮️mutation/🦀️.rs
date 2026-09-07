@@ -429,16 +429,27 @@ pub const fn validate_mutation_leaf_descriptor_roster(mutation_root: &'static st
             return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "owner", first_index: 0, index: 0 });
         }
     }
+    let layout_valid = mutation_owner_layout_valid(mutation_root, owner_layout);
     let mut index = 0;
     while index < descriptors.len() {
         let descriptor = &descriptors[index];
         if let Err(error) = validate_mutation_leaf_descriptor(descriptor) {
             return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: error.field, first_index: index, index });
         }
-        if !mutation_owner_layout_matches(mutation_root, owner_layout, descriptor.owner, descriptor.semantic_kind) {
+        if !layout_valid || !mutation_owner_layout_identity_matches(mutation_root, owner_layout, descriptor.owner, descriptor.semantic_kind) {
             return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "owner", first_index: index, index });
         }
         index += 1;
+    }
+    validate_mutation_leaf_descriptor_roster_uniqueness(mutation_root, descriptors, owner_layout)
+}
+
+/// 🧮️ Checks cross-leaf uniqueness and roster completeness after individual leaf source validation.
+pub const fn validate_mutation_leaf_descriptor_roster_uniqueness(mutation_root: &'static str, descriptors: &'static [MutationLeafDescriptor], owner_layout: MutationOwnerLayout) -> Result<(), MutationLeafDescriptorRosterValidationError> {
+    if let MutationOwnerLayout::DomainOperations(owners) = owner_layout {
+        if owners.is_empty() || owners.len() != descriptors.len() {
+            return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "owner", first_index: 0, index: 0 });
+        }
     }
     let mut index = 0;
     while index < descriptors.len() {
@@ -518,7 +529,19 @@ const fn mutation_owner_domain_child(root: &str, owner: &str) -> bool {
     separators == 1
 }
 
-const fn mutation_owner_layout_matches(root: &str, layout: MutationOwnerLayout, owner: &str, semantic_kind: &str) -> bool {
+const fn mutation_owner_layout_valid(root: &str, layout: MutationOwnerLayout) -> bool {
+    if let MutationOwnerLayout::DomainOperations(owners) = layout {
+        let mut index = 0;
+        while index < owners.len() {
+            let entry = &owners[index];
+            if !mutation_owner_domain_child(root, entry.owner) || !mutation_leaf_descriptor_kebab(entry.semantic_kind) { return false; }
+            index += 1;
+        }
+    }
+    true
+}
+
+const fn mutation_owner_layout_identity_matches(root: &str, layout: MutationOwnerLayout, owner: &str, semantic_kind: &str) -> bool {
     match layout {
         MutationOwnerLayout::Flat => mutation_leaf_descriptor_direct_child(root, owner),
         MutationOwnerLayout::DomainOperations(owners) => {
@@ -527,7 +550,6 @@ const fn mutation_owner_layout_matches(root: &str, layout: MutationOwnerLayout, 
             let mut matches = 0;
             while index < owners.len() {
                 let entry = &owners[index];
-                if !mutation_owner_domain_child(root, entry.owner) || !mutation_leaf_descriptor_kebab(entry.semantic_kind) { return false; }
                 let same_owner = mutation_leaf_descriptor_str_eq(owner, entry.owner);
                 let same_identity = mutation_leaf_descriptor_str_eq(semantic_kind, entry.semantic_kind);
                 if same_owner != same_identity { return false; }
@@ -641,7 +663,12 @@ const fn mutation_leaf_descriptor_str_eq(left: &str, right: &str) -> bool {
     let left = left.as_bytes();
     let right = right.as_bytes();
     if left.len() != right.len() { return false; }
-    mutation_leaf_descriptor_bytes_at(left, 0, right)
+    let mut index = left.len();
+    while index > 0 {
+        index -= 1;
+        if left[index] != right[index] { return false; }
+    }
+    true
 }
 
 const fn mutation_leaf_descriptor_ascii_lower(byte: u8) -> bool { byte >= b'a' && byte <= b'z' }
@@ -703,46 +730,77 @@ pub const fn validate_mutation_leaf_source(
     if let Err(error) = validate_mutation_leaf_descriptor(descriptor) {
         return Err(MutationLeafSourceValidationError { field: error.field, requirement: error.requirement });
     }
-    if !mutation_leaf_descriptor_root(scope.mutation_root) || !mutation_leaf_source_path(scope.mutation_root) {
-        return Err(MutationLeafSourceValidationError { field: "mutationRoot", requirement: "must be a safe normalized mutation root" });
+    match scope.validate() {
+        Ok(checked) => checked.validate_leaf(descriptor, provenance),
+        Err(error) => Err(error),
     }
-    if !mutation_leaf_source_path(scope.taxonomy_path) {
-        return Err(MutationLeafSourceValidationError { field: "taxonomyPath", requirement: "must be a safe normalized portable path" });
+}
+
+/// 🪪️ Aggregate authority whose root, filenames and physical layout were validated once.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ValidatedMutationLeafSourceScope {
+    scope: MutationLeafSourceScope,
+}
+
+impl MutationLeafSourceScope {
+    /// 🧭️ Checks shared aggregate facts before validating each leaf against the same immutable authority.
+    pub const fn validate(&self) -> Result<ValidatedMutationLeafSourceScope, MutationLeafSourceValidationError> {
+        let scope = self;
+        if !mutation_leaf_descriptor_root(scope.mutation_root) || !mutation_leaf_source_path(scope.mutation_root) {
+            return Err(MutationLeafSourceValidationError { field: "mutationRoot", requirement: "must be a safe normalized mutation root" });
+        }
+        if !mutation_leaf_source_path(scope.taxonomy_path) {
+            return Err(MutationLeafSourceValidationError { field: "taxonomyPath", requirement: "must be a safe normalized portable path" });
+        }
+        if !mutation_leaf_source_filename(scope.mutation_payload_facet) {
+            return Err(MutationLeafSourceValidationError { field: "mutationPayloadFacet", requirement: "must be one safe normalized portable segment" });
+        }
+        if !mutation_leaf_source_filename(scope.source_filename) {
+            return Err(MutationLeafSourceValidationError { field: "sourceFilename", requirement: "must be a safe normalized portable filename" });
+        }
+        if !mutation_leaf_source_filename(scope.descriptor_filename) {
+            return Err(MutationLeafSourceValidationError { field: "descriptorFilename", requirement: "must be a safe normalized portable filename" });
+        }
+        if !mutation_owner_layout_valid(scope.mutation_root, scope.owner_layout) {
+            return Err(MutationLeafSourceValidationError { field: "owner", requirement: "must match the aggregate's exact physical owner and semantic identity layout" });
+        }
+        Ok(ValidatedMutationLeafSourceScope { scope: *scope })
     }
-    if !mutation_leaf_source_filename(scope.mutation_payload_facet) {
-        return Err(MutationLeafSourceValidationError { field: "mutationPayloadFacet", requirement: "must be one safe normalized portable segment" });
+}
+
+impl ValidatedMutationLeafSourceScope {
+    /// 🔎️ Checks each descriptor and its exact source provenance against the validated aggregate.
+    pub const fn validate_leaf(&self, descriptor: &MutationLeafDescriptor, provenance: &MutationSourceProvenance) -> Result<(), MutationLeafSourceValidationError> {
+        let scope = &self.scope;
+        if let Err(error) = validate_mutation_leaf_descriptor(descriptor) {
+            return Err(MutationLeafSourceValidationError { field: error.field, requirement: error.requirement });
+        }
+        if !mutation_leaf_source_path(descriptor.owner) {
+            return Err(MutationLeafSourceValidationError { field: "owner", requirement: "must be a safe normalized portable path" });
+        }
+        if !mutation_owner_layout_identity_matches(scope.mutation_root, scope.owner_layout, descriptor.owner, descriptor.semantic_kind) {
+            return Err(MutationLeafSourceValidationError { field: "owner", requirement: "must match the aggregate's exact physical owner and semantic identity layout" });
+        }
+        if !mutation_leaf_source_tokens_match(&scope.workspace_token, &provenance.workspace_token) {
+            return Err(MutationLeafSourceValidationError { field: "workspaceToken", requirement: "must equal the aggregate workspace token" });
+        }
+        if !mutation_leaf_descriptor_str_eq(provenance.mutation_root, scope.mutation_root) {
+            return Err(MutationLeafSourceValidationError { field: "mutationRoot", requirement: "must equal the aggregate mutation root" });
+        }
+        if !mutation_leaf_descriptor_str_eq(provenance.owner, descriptor.owner) {
+            return Err(MutationLeafSourceValidationError { field: "owner", requirement: "must equal the descriptor owner" });
+        }
+        if !mutation_leaf_descriptor_str_eq(provenance.taxonomy_path, scope.taxonomy_path) {
+            return Err(MutationLeafSourceValidationError { field: "taxonomyPath", requirement: "must equal the aggregate taxonomy path" });
+        }
+        if !mutation_leaf_source_path_matches_direct_or_payload(descriptor.owner, scope.mutation_payload_facet, scope.source_filename, provenance.source_path) {
+            return Err(MutationLeafSourceValidationError { field: "sourcePath", requirement: "must equal owner plus the canonical source filename, directly or under the canonical payload facet" });
+        }
+        if !mutation_leaf_source_path_matches(descriptor.owner, scope.descriptor_filename, provenance.descriptor_path) {
+            return Err(MutationLeafSourceValidationError { field: "descriptorPath", requirement: "must equal owner plus the canonical descriptor filename" });
+        }
+        Ok(())
     }
-    if !mutation_leaf_source_filename(scope.source_filename) {
-        return Err(MutationLeafSourceValidationError { field: "sourceFilename", requirement: "must be a safe normalized portable filename" });
-    }
-    if !mutation_leaf_source_filename(scope.descriptor_filename) {
-        return Err(MutationLeafSourceValidationError { field: "descriptorFilename", requirement: "must be a safe normalized portable filename" });
-    }
-    if !mutation_leaf_source_path(descriptor.owner) {
-        return Err(MutationLeafSourceValidationError { field: "owner", requirement: "must be a safe normalized portable path" });
-    }
-    if !mutation_owner_layout_matches(scope.mutation_root, scope.owner_layout, descriptor.owner, descriptor.semantic_kind) {
-        return Err(MutationLeafSourceValidationError { field: "owner", requirement: "must match the aggregate's exact physical owner and semantic identity layout" });
-    }
-    if !mutation_leaf_source_tokens_match(&scope.workspace_token, &provenance.workspace_token) {
-        return Err(MutationLeafSourceValidationError { field: "workspaceToken", requirement: "must equal the aggregate workspace token" });
-    }
-    if !mutation_leaf_descriptor_str_eq(provenance.mutation_root, scope.mutation_root) {
-        return Err(MutationLeafSourceValidationError { field: "mutationRoot", requirement: "must equal the aggregate mutation root" });
-    }
-    if !mutation_leaf_descriptor_str_eq(provenance.owner, descriptor.owner) {
-        return Err(MutationLeafSourceValidationError { field: "owner", requirement: "must equal the descriptor owner" });
-    }
-    if !mutation_leaf_descriptor_str_eq(provenance.taxonomy_path, scope.taxonomy_path) {
-        return Err(MutationLeafSourceValidationError { field: "taxonomyPath", requirement: "must equal the aggregate taxonomy path" });
-    }
-    if !mutation_leaf_source_path_matches_direct_or_payload(descriptor.owner, scope.mutation_payload_facet, scope.source_filename, provenance.source_path) {
-        return Err(MutationLeafSourceValidationError { field: "sourcePath", requirement: "must equal owner plus the canonical source filename, directly or under the canonical payload facet" });
-    }
-    if !mutation_leaf_source_path_matches(descriptor.owner, scope.descriptor_filename, provenance.descriptor_path) {
-        return Err(MutationLeafSourceValidationError { field: "descriptorPath", requirement: "must equal owner plus the canonical descriptor filename" });
-    }
-    Ok(())
 }
 
 const fn mutation_leaf_source_path(value: &str) -> bool {
@@ -968,6 +1026,7 @@ mod mutation_leaf_metadata_tests {
             };
             let scope = MutationLeafSourceScope { mutation_root: root, owner_layout: layout, ..LEAF_SOURCE_SCOPE };
             assert_eq!(validate_mutation_leaf_source(&descriptor, &provenance, &scope).is_ok(), vector["accepted"].as_bool().unwrap(), "{}", vector["name"]);
+            assert_eq!(scope.validate().and_then(|checked| checked.validate_leaf(&descriptor, &provenance)).is_ok(), vector["accepted"].as_bool().unwrap(), "{}", vector["name"]);
         }
         let duplicate = MutationOwnerLayout::DomainOperations(&[
             MutationDomainOperation { owner: DOMAIN_OWNER, semantic_kind: "reorder-cameras" },

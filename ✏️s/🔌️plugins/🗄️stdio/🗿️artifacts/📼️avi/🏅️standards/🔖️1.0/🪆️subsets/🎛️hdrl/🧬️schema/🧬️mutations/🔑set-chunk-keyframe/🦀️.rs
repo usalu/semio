@@ -16,7 +16,7 @@ pub struct SetChunkKeyframe {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for SetChunkKeyframe {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "chunk-keyframe", kind: "set-chunk-keyframe", record: "SetChunkKeyframe" };
 
-    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as protocol::Mutation<AviSnapshot>>::Diff> {
+    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
         agg_diff(&AviMutation::SetChunkKeyframe(self.clone()), base)
     }
     fn inverse(&self, base: &AviSnapshot) -> Vec<AviMutation> {

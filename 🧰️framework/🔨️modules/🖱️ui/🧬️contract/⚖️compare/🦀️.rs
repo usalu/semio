@@ -54,6 +54,12 @@ fn field<T: TypedCompare>(left: &T, right: &T, index: &mut usize, path: &mut [us
 }
 
 macro_rules! typed_fields {
+    ($type:ty {}) => {
+        impl TypedCompare for $type {
+            const DEPTH: usize = 1;
+            fn compare_one(&self, _: &Self, path: &mut [usize], _: &mut ValueComparison, _: usize) -> Result<UiComponentCompareProgress, &'static str> { split(path)?; Ok(result(true)) }
+        }
+    };
     ($type:ty { $($index:literal => $field:tt : $field_type:ty),* $(,)? }) => {
         impl TypedCompare for $type {
             const DEPTH: usize = 1 + maximum(&[$(<$field_type as TypedCompare>::DEPTH),*]);

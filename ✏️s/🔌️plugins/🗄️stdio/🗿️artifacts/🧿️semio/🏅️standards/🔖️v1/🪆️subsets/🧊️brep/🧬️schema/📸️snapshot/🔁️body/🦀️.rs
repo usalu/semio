@@ -260,7 +260,7 @@ impl LabelResolver {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn scan_numeric_high_water(snapshot: &SemioBrepSnapshot) -> u64 {
     let mut high = snapshot.next_label;
-    let mut bump = |id: &str, high: &mut u64| {
+    let bump = |id: &str, high: &mut u64| {
         if let Ok(n) = id.parse::<u64>() {
             *high = (*high).max(n + 1);
         }

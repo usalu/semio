@@ -14,7 +14,7 @@ pub struct RemoveStyle {
 impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for RemoveStyle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "style", kind: "remove-style", record: "RemoveStyle" };
 
-    fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<<SemioDocumentMutation as protocol::Mutation<SemioDocumentSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<<SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::Diff> {
         agg_diff(&SemioDocumentMutation::RemoveStyle(self.clone()), base)
     }
     fn inverse(&self, base: &SemioDocumentSnapshot) -> Vec<SemioDocumentMutation> {

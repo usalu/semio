@@ -2,7 +2,7 @@
 
 use crate::artifacts::note::schema::NoteIdOwner;
 use crate::artifacts::note::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
-use crate::editor::note::commands::{delete_block, duplicate_block, ink_apply_events, patch_blocks};
+use crate::editor::note::commands::{ink_apply_events, patch_blocks};
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::editor::note::{NoteCommand, NoteDispatchCtx, NotePlayApp, NOTE_INTERACTION_BLOCKS};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};

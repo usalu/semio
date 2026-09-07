@@ -911,8 +911,8 @@ pub mod host {
             resolve_kernel_future(self.inner.attach_backbone(backbone))
         }
 
-        pub fn detach_backbone(&mut self) {
-            self.inner.detach_backbone();
+        pub fn detach_backbone(&mut self) -> Result<Option<store::Backbones>, VcsError> {
+            self.inner.detach_backbone()
         }
 
         pub fn backbone_ref(&self) -> Option<&ArtifactBackboneRef> {
@@ -1370,7 +1370,7 @@ pub mod host {
                     named_layouts: Vec::new(),
                     default_layout: None,
                     terminologies: Vec::new(),
-                    terminology_breadcrumbs: std::collections::HashMap::new(),
+                    terminology_breadcrumbs: HashMap::new(),
                     introduction: None,
                     dialogs: Vec::new(),
                     media_inputs: Vec::new(),
@@ -1431,7 +1431,7 @@ pub mod host {
                 named_layouts: Vec::new(),
                 default_layout: None,
                 terminologies: Vec::new(),
-                terminology_breadcrumbs: std::collections::HashMap::new(),
+                terminology_breadcrumbs: HashMap::new(),
                 introduction: None,
                 dialogs: Vec::new(),
                 media_inputs: Vec::new(),
@@ -1477,7 +1477,7 @@ pub mod host {
                 named_layouts: Vec::new(),
                 default_layout: None,
                 terminologies: Vec::new(),
-                terminology_breadcrumbs: std::collections::HashMap::new(),
+                terminology_breadcrumbs: HashMap::new(),
                 introduction: None,
                 dialogs: Vec::new(),
                 media_inputs: Vec::new(),
@@ -1570,7 +1570,7 @@ pub mod host {
                 named_layouts: Vec::new(),
                 default_layout: None,
                 terminologies: Vec::new(),
-                terminology_breadcrumbs: std::collections::HashMap::new(),
+                terminology_breadcrumbs: HashMap::new(),
                 introduction: None,
                 dialogs: Vec::new(),
                 media_inputs: Vec::new(),
@@ -1630,14 +1630,14 @@ pub mod host {
             let mut host = PluginHost::new();
             let topic_contribution = TopicContribution::new(
                 "playbook.blockKind",
-                semio_framework::DslValue::object([
-                    ("appId".to_string(), semio_framework::DslValue::String("playbook-module-procedural".to_string())),
-                    ("blockKind".to_string(), semio_framework::DslValue::String("buildingComponent".to_string())),
-                    ("label".to_string(), semio_framework::DslValue::String("Building Component".to_string())),
-                    ("iconId".to_string(), semio_framework::DslValue::String("building".to_string())),
-                    ("defaultValueJson".to_string(), semio_framework::DslValue::String("{}".to_string())),
-                    ("paramsBodyKey".to_string(), semio_framework::DslValue::String("params".to_string())),
-                    ("previewBodyKey".to_string(), semio_framework::DslValue::String("preview".to_string())),
+                DslValue::object([
+                    ("appId".to_string(), DslValue::String("playbook-module-procedural".to_string())),
+                    ("blockKind".to_string(), DslValue::String("buildingComponent".to_string())),
+                    ("label".to_string(), DslValue::String("Building Component".to_string())),
+                    ("iconId".to_string(), DslValue::String("building".to_string())),
+                    ("defaultValueJson".to_string(), DslValue::String("{}".to_string())),
+                    ("paramsBodyKey".to_string(), DslValue::String("params".to_string())),
+                    ("previewBodyKey".to_string(), DslValue::String("preview".to_string())),
                 ]),
             );
             host.load_plugin(LoadedProgram {
@@ -1728,7 +1728,7 @@ pub mod host {
                 named_layouts: Vec::new(),
                 default_layout: None,
                 terminologies: Vec::new(),
-                terminology_breadcrumbs: std::collections::HashMap::new(),
+                terminology_breadcrumbs: HashMap::new(),
                 introduction: None,
                 dialogs: Vec::new(),
                 media_inputs: Vec::new(),
@@ -1827,7 +1827,7 @@ pub mod host {
         fn backbone_binary_text_and_workflow_store_preserve_the_complete_cursor() {
             let mut store = test_workflow_store();
             store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Committed").expect("first edit");
-            resolve_kernel_future(store.inner.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some("cursor checkpoint".into()), authors: Vec::new() })).expect("checkpoint");
+            resolve_kernel_future(store.inner.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("cursor checkpoint".into()), authors: Vec::new() })).expect("checkpoint");
             store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Undone").expect("second edit");
             store.dispatch_text("undo").expect("undo second edit");
             let document = store.document();
@@ -2001,7 +2001,7 @@ pub mod host {
                 }],
                 outputs: Vec::new(),
             };
-            let edge = workflow::WorkflowEdge {
+            let edge = WorkflowEdge {
                 id: "edge-1".into(),
                 source_node_id: "app-1".into(),
                 source_port_id: "app-1:puzzle.out:out".into(),
@@ -2067,7 +2067,7 @@ pub mod host {
         #[test]
         fn op_text_round_trips_connect_media_ports() {
             store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::ConnectPorts(workflow::ConnectPorts {
-                edge: workflow::WorkflowEdge {
+                edge: WorkflowEdge {
                     id: "edge-1".into(),
                     source_node_id: "node-1".into(),
                     source_port_id: "app-1:out:out".into(),
@@ -4212,7 +4212,7 @@ pub mod workflow {
                 let NewIoPayload::Text(json) = payload else {
                     return Err(semio_framework::io_schema::IoError { message: "expected a text native payload".to_string(), diagnostics: Vec::new() });
                 };
-                let value: serde_json::Value = serde_json::from_str(json).map_err(|error| semio_framework::io_schema::IoError { message: error.to_string(), diagnostics: Vec::new() })?;
+                let value: Value = serde_json::from_str(json).map_err(|error| semio_framework::io_schema::IoError { message: error.to_string(), diagnostics: Vec::new() })?;
                 let raw = value["value"].as_str().unwrap_or_default().to_string();
                 Ok(IoOutcome::clean(NewIoPayload::Binary(raw.into_bytes())))
             }
@@ -4232,7 +4232,7 @@ pub mod workflow {
                 source_format: TEST_KIND.to_string(),
                 component_kind: "__w1b_export_bug_proof".to_string(),
                 dimension: "data".to_string(),
-                media_capability: semio_framework::OsMediaCapability::MeshOnly,
+                media_capability: OsMediaCapability::MeshOnly,
                 media_type: semio_framework::MediaType { class: semio_framework::MediaClass::Data, form: semio_framework::MediaForm::Value },
                 schema: TEST_KIND.to_string(),
                 export_formats: Vec::new(),

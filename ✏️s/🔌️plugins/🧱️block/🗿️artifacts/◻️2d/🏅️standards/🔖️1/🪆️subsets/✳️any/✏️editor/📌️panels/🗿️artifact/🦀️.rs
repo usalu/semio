@@ -36,7 +36,7 @@ fn icon_item(id: String, label: Label, description: Option<String>, icon: &str) 
 /// `handleKind:{id}`/`handle:{id}` targets `Block2dPlayApp::interaction_topology` declares for the
 /// `handle` domain — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology.
-pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let builder = PanelTreeBuilder::new("block2d-play-document")?;
     let handle_kind_items = ui_node_list(definition.handle_kinds.iter().map(|kind| icon_item(format!("handleKind:{}", kind.id), ui_label(&kind.label)?, Some(kind.color.clone()), "circle")))?;
     let handle_items = ui_node_list(definition.handles.iter().map(|handle| icon_item(format!("handle:{}", handle.id), ui_label(&handle.handle_kind)?, Some(format!("{:.2}", handle.angle)), "circle-dot")))?;

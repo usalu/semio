@@ -1,7 +1,6 @@
 //! 🧬️ Direct set-doctype mutation owner.
-use crate::artifacts::xml::schema::diff::{diff_at_path, XmlAttrAdded, XmlAttrModified, XmlAttributesDiff, XmlChildAdded, XmlChildrenDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
-use crate::artifacts::xml::schema::mutation_support::XmlNodePath;
-use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlNode};
+use crate::artifacts::xml::schema::diff::XmlDiff;
+use crate::artifacts::xml::schema::snapshot::XmlDoctype;
 use crate::artifacts::xml::XmlSnapshot;
 
 #[path = "📝️text/🦀️.rs"]
@@ -24,7 +23,7 @@ pub enum SetDoctypeMutation { Apply(SetDoctypePayload), Restore(XmlDiff) }
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDoctypeMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "doctype", kind: "set-doctype", record: "SetDoctype" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
+    fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
         match self {
             Self::Apply(payload) => protocol::MutationOutcome::new(XmlDiff { prolog: None, declaration: None, doctype: Some(payload.doctype.clone()), root: None }),
             Self::Restore(diff) => protocol::MutationOutcome::new(diff.clone()),

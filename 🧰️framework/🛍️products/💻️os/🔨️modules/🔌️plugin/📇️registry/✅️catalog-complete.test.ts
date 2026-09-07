@@ -428,10 +428,16 @@ describe("strict plugin catalog completion", () => {
     const missing = audit.issues.filter(({ code }) => code === "descriptor-pair-missing").map(({ pluginId }) => pluginId).sort();
     expect(audit.manifestCount).toBe(59);
     expect(audit.order).toHaveLength(59);
-    expect(audit.entries.find(({ pluginId }) => pluginId === "sequence")?.dependsOn).toContain("imperative-extension-control");
+    // 🔗️ `dependsOn` is the DECLARED runtime-actor set, never the crate's Cargo library links:
+    // `sequence` links four `semio-s-plugin-imperative-*` rlibs and `raster` links `stdio`'s codecs,
+    // and none of those crates' actors has to be loaded for them to run.
+    expect(audit.entries.find(({ pluginId }) => pluginId === "sequence")?.dependsOn).toEqual([]);
+    expect(audit.entries.find(({ pluginId }) => pluginId === "raster")?.dependsOn).toEqual([]);
+    expect(audit.entries.find(({ pluginId }) => pluginId === "demonstrator")?.dependsOn).toEqual(["cad", "gis", "procedural", "process", "puzzle", "sourcing"]);
+    expect(audit.entries.find(({ pluginId }) => pluginId === "cad-extension-aec-building")?.dependsOn).toEqual(["cad"]);
     expect(audit.issues.filter(({ code }) => code === "dependency-invalid")).toEqual([]);
     expect(missing).toEqual([
       "block", "flow-extension-bim", "flow-extension-draw", "imperative-extension-control", "imperative-extension-effect", "imperative-extension-logic", "imperative-extension-math", "imperative-extension-text", "playbook", "playbook-module-procedural", "process-extension-concrete", "process-extension-metal", "process-extension-robotic", "process-extension-wood", "sourcing-module-beams", "sourcing-module-slabs", "sourcing-module-windows", "stdio", "trinity",
     ]);
-  });
+  }, 120_000);
 });

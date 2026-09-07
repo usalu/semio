@@ -53,7 +53,7 @@ fn selection_args(id: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue>
     Ok(UiValue::Map(args.finish()))
 }
 
-pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let fixture = &envelope.fixture;
     let actions = ActionFactory::new(crate::editor::puzzle2d::PUZZLE2D_PLAY_CONTROLLER_ID);
     let mut node_items = UiFixedList::<BuiltNode>::default();

@@ -246,7 +246,7 @@ mod tests {
 //#region 🔖️Apply
 /// 📦️ Applies `mutation` onto `snapshot`, returning the resulting snapshot.
 pub fn apply_presentation_mutation(snapshot: &PresentationSnapshot, mutation: &PresentationMutation) -> protocol::MutationApplyResult<PresentationSnapshot> {
-    semio_framework_plugin::resolve_ready(vcs::apply_mutation(snapshot, mutation)).map(|(next, _messages)| next)
+    vcs::apply_mutation(snapshot, mutation).map(|(next, _messages)| next)
 }
 
 /// ↩️ Computes `mutation`'s inverse mutations against `snapshot` (pre-state).

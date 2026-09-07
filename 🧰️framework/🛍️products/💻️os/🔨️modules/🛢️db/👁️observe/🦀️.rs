@@ -707,8 +707,8 @@ impl OtelSpanExporter for UnwiredOtelExporter {
 mod tests {
     use super::*;
 
-    async fn hash(byte: u8) -> pack::ContentHash {
-        pack::ContentHash([byte; 32])
+    async fn hash(byte: u8) -> ContentHash {
+        ContentHash([byte; 32])
     }
 
     //#region 🔖️Json

@@ -1,9 +1,13 @@
 //#region 🧪️ReturnControlWire
-use crate::return_page::*;
 use crate::byte_page::{ActorBytePage, ACTOR_BYTE_PAGE_BYTES};
+use crate::return_page::*;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
-fn unhex(value: &str) -> Vec<u8> { (0..value.len()).step_by(2).map(|offset| u8::from_str_radix(&value[offset..offset + 2], 16).unwrap()).collect() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap()
+}
+fn unhex(value: &str) -> Vec<u8> {
+    (0..value.len()).step_by(2).map(|offset| u8::from_str_radix(&value[offset..offset + 2], 16).unwrap()).collect()
+}
 
 #[test]
 fn actor_return_wire_drives_match_shared_vectors_and_reject_all_prefixes() {
@@ -16,7 +20,9 @@ fn actor_return_wire_drives_match_shared_vectors_and_reject_all_prefixes() {
         assert_eq!(&bytes[..length], unhex(row["hex"].as_str().unwrap()));
         assert_eq!(ActorReturnDrive::decode(&bytes[..length]).unwrap(), value);
         assert_eq!(serde_json::to_value(value).unwrap(), row["value"]);
-        for prefix in 0..length { assert!(ActorReturnDrive::decode(&bytes[..prefix]).is_err()); }
+        for prefix in 0..length {
+            assert!(ActorReturnDrive::decode(&bytes[..prefix]).is_err());
+        }
         assert!(bytes[length..].iter().all(|byte| *byte == 91));
     }
 }
@@ -24,7 +30,9 @@ fn actor_return_wire_drives_match_shared_vectors_and_reject_all_prefixes() {
 #[test]
 fn actor_return_wire_invalid_drives_leave_the_destination_untouched() {
     let fixture = fixture();
-    for row in fixture["malformedWire"].as_array().unwrap() { assert!(ActorReturnDrive::decode(&unhex(row.as_str().unwrap())).is_err()); }
+    for row in fixture["malformedWire"].as_array().unwrap() {
+        assert!(ActorReturnDrive::decode(&unhex(row.as_str().unwrap())).is_err());
+    }
     let origin: ActorReturnOrigin = serde_json::from_value(fixture["origin"].clone()).unwrap();
     let receipt: ActorReturnPageReceipt = serde_json::from_value(fixture["receipt"].clone()).unwrap();
     for value in [
@@ -44,7 +52,9 @@ fn result(value: &serde_json::Value) -> ActorReturnResult {
         "refused" => ActorReturnResult::Refused { origin: serde_json::from_value(value["origin"].clone()).unwrap(), fault: serde_json::from_value(value["fault"].clone()).unwrap() },
         "pending" => ActorReturnResult::Pending { identity: serde_json::from_value(value["identity"].clone()).unwrap(), reason: serde_json::from_value(value["reason"].clone()).unwrap() },
         "retired" => ActorReturnResult::Retired { identity: serde_json::from_value(value["identity"].clone()).unwrap(), completion: serde_json::from_value(value["completion"].clone()).unwrap() },
-        "control" => ActorReturnResult::Control { control: serde_json::from_value(value["control"].clone()).unwrap(), outcome: serde_json::from_value(value["outcome"].clone()).unwrap(), fault: serde_json::from_value(value["fault"].clone()).unwrap() },
+        "control" => {
+            ActorReturnResult::Control { control: serde_json::from_value(value["control"].clone()).unwrap(), outcome: serde_json::from_value(value["outcome"].clone()).unwrap(), fault: serde_json::from_value(value["fault"].clone()).unwrap() }
+        }
         "protocolFault" => ActorReturnResult::ProtocolFault { fault: serde_json::from_value(value["fault"].clone()).unwrap() },
         _ => unreachable!(),
     }
@@ -60,7 +70,9 @@ fn actor_return_wire_fixed_results_and_maximum_page_match_independent_oracles() 
         let length = value.encode(&mut bytes).unwrap();
         assert_eq!(&bytes[..length], unhex(row["hex"].as_str().unwrap()));
         assert_eq!(ActorReturnResult::decode(&bytes[..length]).unwrap(), value);
-        for prefix in 0..length { assert!(ActorReturnResult::decode(&bytes[..prefix]).is_err()); }
+        for prefix in 0..length {
+            assert!(ActorReturnResult::decode(&bytes[..prefix]).is_err());
+        }
         assert!(bytes[length..].iter().all(|byte| *byte == 91));
     }
     for row in fixture["pageResultVectors"].as_array().unwrap() {
@@ -96,7 +108,9 @@ fn actor_return_wire_result_faults_and_pairing_fail_before_write() {
     let mut bytes = [73; ACTOR_RETURN_RESULT_MAXIMUM_BYTES];
     assert!(value.encode(&mut bytes).is_err());
     assert_eq!(bytes, [73; ACTOR_RETURN_RESULT_MAXIMUM_BYTES]);
-    for hex in ["05", "0501", "0107090b04", "0307090b03", "040007090b0000", "040307090b000a", "00070900"] { assert!(ActorReturnResult::decode(&unhex(hex)).is_err()); }
+    for hex in ["05", "0501", "0107090b04", "0307090b03", "040007090b0000", "040307090b000a", "00070900"] {
+        assert!(ActorReturnResult::decode(&unhex(hex)).is_err());
+    }
     for row in fixture["preAdmissionFaults"].as_array().unwrap() {
         assert!(ActorReturnDrive::decode(&unhex(row["invalidDriveHex"].as_str().unwrap())).is_err());
         let value = ActorReturnResult::ProtocolFault { fault: ActorReturnFault::MalformedControl };
@@ -115,8 +129,13 @@ fn actor_return_wire_all_control_outcome_fault_combinations_match_schema_rules()
         let control_bytes = unhex(row["hex"].as_str().unwrap());
         for (outcome_index, outcome) in fixture["resultEnums"]["outcome"].as_array().unwrap().iter().enumerate() {
             for (fault_index, fault) in fixture["resultEnums"]["fault"].as_array().unwrap().iter().enumerate() {
-                let expected = if control_index == 0 { outcome_index >= 2 && fault_index != 0 }
-                    else if outcome_index < 2 { fault_index == 0 } else { fault_index != 0 };
+                let expected = if control_index == 0 {
+                    outcome_index >= 2 && fault_index != 0
+                } else if outcome_index < 2 {
+                    fault_index == 0
+                } else {
+                    fault_index != 0
+                };
                 let value = ActorReturnResult::Control { control, outcome: serde_json::from_value(outcome.clone()).unwrap(), fault: serde_json::from_value(fault.clone()).unwrap() };
                 let mut output = [73; ACTOR_RETURN_RESULT_MAXIMUM_BYTES];
                 let encoded = value.encode(&mut output);
@@ -129,7 +148,9 @@ fn actor_return_wire_all_control_outcome_fault_combinations_match_schema_rules()
                 if expected {
                     assert_eq!(&output[..encoded.unwrap()], wire);
                     assert_eq!(decoded.unwrap(), value);
-                } else { assert_eq!(output, [73; ACTOR_RETURN_RESULT_MAXIMUM_BYTES]); }
+                } else {
+                    assert_eq!(output, [73; ACTOR_RETURN_RESULT_MAXIMUM_BYTES]);
+                }
                 cases += 1;
             }
         }

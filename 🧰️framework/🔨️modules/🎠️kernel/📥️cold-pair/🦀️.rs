@@ -1,18 +1,9 @@
 //#region 🧊️ColdDocumentPairIngress
 pub const COLD_PAIR_PAGE_MAXIMUM_BYTES: usize = 64 * 1024;
 pub const COLD_PAIR_MAXIMUM_BYTES: usize = 4 * 1024 * 1024;
-pub const COLD_PAIR_MAXIMUM_PAGES: u32 = 64;
 const COLD_PAIR_ID_MAXIMUM_BYTES: usize = 512;
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ColdDocumentPairFrontier {
-    pub document_id: String,
-    pub head_edit_ordinal: u64,
-    pub head_edit_id: String,
-    pub last_commit_seq: u64,
-    pub chain_sha256: [u8; 32],
-}
+pub use semio_framework_actor::cold_pair::{ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairFrontier, ColdPairIngressStatus, COLD_PAIR_MAXIMUM_PAGES};
 
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -75,15 +66,6 @@ impl ColdDocumentPairHeader {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ColdDocumentPairCursor {
-    pub lifetime: super::ActorInstanceLifetime,
-    pub transfer_generation: u64,
-    pub page_index: u32,
-    pub page_count: u32,
-}
-
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ColdDocumentPairPage {
@@ -92,27 +74,4 @@ pub struct ColdDocumentPairPage {
     pub bytes: Vec<u8>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ColdDocumentPairApplied {
-    pub lifetime: super::ActorInstanceLifetime,
-    pub transfer_generation: u64,
-    pub baseline_frontier: ColdDocumentPairFrontier,
-    pub aggregate_sha256: [u8; 32],
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
-pub enum ColdPairIngressStatus {
-    #[default]
-    Idle,
-    PageAccepted(ColdDocumentPairCursor),
-    Backpressure(ColdDocumentPairCursor),
-    Loading(ColdDocumentPairCursor),
-    Applied(ColdDocumentPairApplied),
-    Fault {
-        cursor: ColdDocumentPairCursor,
-        fault: Vec<u8>,
-    },
-}
 //#endregion 🧊️ColdDocumentPairIngress

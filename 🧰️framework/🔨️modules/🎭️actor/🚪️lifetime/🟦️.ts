@@ -526,6 +526,8 @@ if (import.meta.vitest) {
       expect(await send({ kind: "activate", requestId: "a2", actorId: "same", activationGeneration: current, moduleUrl, assets: [] }, "a2")).toMatchObject({ ok: true });
       worker.postMessage({ kind: "dispose", actorId: "same", activationGeneration: prior });
       expect((await send({ kind: "turn", requestId: "t2", actorId: "same", activationGeneration: current, events: [], budget: {} }, "t2")).value).toEqual({ actorId: "same", activationGeneration: current });
+      expect((await send({ kind: "frame", requestId: "f-old", actorId: "same", activationGeneration: prior, frame: { kind: "Register", actor: "same" } }, "f-old")).error).toMatch(/actor-lifecycle\.activation-mismatch/);
+      expect(await send({ kind: "frame", requestId: "f-current", actorId: "same", activationGeneration: current, frame: { kind: "Register", actor: "same" } }, "f-current")).toMatchObject({ ok: true });
       expect((await send({ kind: "activate", requestId: "old", actorId: "old", activationGeneration: prior, moduleUrl, assets: [] }, "old")).ok).toBe(false);
       worker.postMessage({ kind: "dispose", actorId: "same", activationGeneration: current });
     } finally {

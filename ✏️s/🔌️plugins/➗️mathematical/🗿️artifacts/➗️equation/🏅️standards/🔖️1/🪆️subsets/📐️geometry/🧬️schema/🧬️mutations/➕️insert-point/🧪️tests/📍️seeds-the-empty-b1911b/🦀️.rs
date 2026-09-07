@@ -17,8 +17,8 @@
 //! else — the handle targets, the dialects, the inline `equation`, which diff slots are filled, and
 //! both geometry states — remains hand-authored and asserted verbatim.
 
-use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::insert_point::mutation::InsertPoint;
-use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::remove_point::mutation::RemovePoint;
+use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::insert_point::InsertPoint;
+use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::remove_point::RemovePoint;
 use crate::artifacts::equation::{equation_children_from_state, equation_geometry, EquationDiff, EquationGeometry, EquationGraph, EquationMutation, EquationPoint, EquationSnapshot};
 use semio_framework_os_kernel::{FromValue, ToValue};
 

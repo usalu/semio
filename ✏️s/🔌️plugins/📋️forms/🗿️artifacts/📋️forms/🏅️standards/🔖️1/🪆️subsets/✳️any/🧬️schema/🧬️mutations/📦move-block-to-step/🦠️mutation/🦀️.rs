@@ -12,6 +12,8 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// FINAL-state `index` within the destination. `step_id == to_step_id` is a plain reorder within one
 /// step.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
 pub struct MoveBlockToStep {
     pub step_id: String,
     pub block_id: String,

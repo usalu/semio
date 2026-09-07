@@ -4,10 +4,8 @@ use crate::artifacts::dag::DagSnapshot;
 use crate::editor::dag::{dag_action, ui_value_list, ui_value_map, ui_value_text};
 use crate::editor::dag::terminology::DagPlayLabels;
 use infinite_board_port_directed_dag::{dag_node_kind_tag, DagNodeKind, DagNodeSpec};
-use semio_framework_plugin::{
-    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode,
-    UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
-};
+use semio_framework_plugin::{ui_inspector_mixed_number, ui_inspector_mixed_text, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER};
+use semio_framework_plugin::plugin_app_close_prelude::{column, field, input, section, text, Buildable, BuiltNode, HasBase, HasChildren, InputKind, Label, Trigger, UiText};
 
 //#region 🔖️Constants
 pub const DAG_PLAY_BODY_INSPECTOR: &str = "dag.play.inspection";
@@ -26,188 +24,86 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Fields
-fn inspector_number_field(node_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[f64], field: &str) -> UiNode {
-    let mixed = ui_inspector_mixed_number(values);
-    UiNode::Field(UiFieldNode {
-        presence: UiPresence::default(),
-        id: field_id.into(),
-        label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode {
-            presence: UiPresence::default(),
-            id: format!("{field_id}.input"),
-            input_kind: "number".into(),
-            value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
-            placeholder: if mixed.uniform { None } else { Some(Label::data(UI_INSPECTOR_MIXED_PLACEHOLDER)) },
-            commit: None,
-            on_change: dag_action("patchDagNodes", Some(
-                ui_value_map([
-                    ("nodeIds", ui_value_list(node_ids.iter().map(|id| ui_value_text(id).expect("node id fits ui text capacity"))).expect("node id list fits ui list capacity")),
-                    ("field", ui_value_text(field).expect("field name fits ui text capacity")),
-                ])
-                .expect("two-entry field map fits ui map capacity"),
-            )),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-            menu: None,
-        })),
-        description: None,
-        required: None,
-        error: None,
-        menu: None,
-    })
+fn admission_error() -> PluginAssemblyError {
+    PluginAssemblyError::new("ui.fixed-capacity", "DAG inspector admission failed")
 }
 
-fn inspector_text_field(node_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[String], field: &str) -> UiNode {
-    let mixed = ui_inspector_mixed_text(values);
-    UiNode::Field(UiFieldNode {
-        presence: UiPresence::default(),
-        id: field_id.into(),
-        label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode {
-            presence: UiPresence::default(),
-            id: format!("{field_id}.input"),
-            input_kind: "text".into(),
-            value: mixed.value,
-            placeholder: mixed.placeholder.map(Label::data),
-            commit: Some("blur".into()),
-            on_change: dag_action("patchDagNodes", Some(
-                ui_value_map([
-                    ("nodeIds", ui_value_list(node_ids.iter().map(|id| ui_value_text(id).expect("node id fits ui text capacity"))).expect("node id list fits ui list capacity")),
-                    ("field", ui_value_text(field).expect("field name fits ui text capacity")),
-                ])
-                .expect("two-entry field map fits ui map capacity"),
-            )),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-            menu: None,
-        })),
-        description: None,
-        required: None,
-        error: None,
-        menu: None,
-    })
+fn label(value: &str) -> UiAssemblyResult<Label> {
+    Label::try_from(value).map_err(|_| admission_error())
+}
+
+fn field_node(id: &str, title: &str, control: BuiltNode) -> UiAssemblyResult<BuiltNode> {
+    field(label(title)?).try_id(id).map_err(|_| admission_error())?.try_child(control).map_err(|_| admission_error())?.try_build().map_err(|_| admission_error())
+}
+
+fn readonly_field(id: &str, title: &str, value: &str) -> UiAssemblyResult<BuiltNode> {
+    let control = text(label(value)?).try_build().map_err(|_| admission_error())?;
+    field_node(id, title, control)
+}
+
+fn input_field(id: &str, title: &str, kind: InputKind, value: &str, placeholder: Option<&str>, action: &str, args: semio_framework_plugin::UiValue) -> UiAssemblyResult<BuiltNode> {
+    let (action, args) = dag_action(action, Some(args))?;
+    let mut control = input(kind).value(UiText::try_from_str(value).ok_or_else(admission_error)?).try_id(format!("{id}.input")).map_err(|_| admission_error())?;
+    if let Some(placeholder) = placeholder {
+        control = control.placeholder(label(placeholder)?);
+    }
+    if kind == InputKind::Text {
+        control = control.commit(UiText::try_from_str("blur").ok_or_else(admission_error)?);
+    }
+    control = match args {
+        Some(args) => control.try_on_with(Trigger::Change, action, args).map_err(|_| admission_error())?,
+        None => control.try_on(Trigger::Change, action).map_err(|_| admission_error())?,
+    };
+    field_node(id, title, control.try_build().map_err(|_| admission_error())?)
+}
+
+fn patch_args(node_ids: &[String], field: &str) -> UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let ids = node_ids.iter().map(ui_value_text).collect::<UiAssemblyResult<Vec<_>>>()?;
+    ui_value_map([("nodeIds", ui_value_list(ids)?), ("field", ui_value_text(field)?)])
+}
+
+fn group_node(id: &str, title: &str, fields: Vec<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
+    section(label(title)?).try_id(id).map_err(|_| admission_error())?.try_children(fields).map_err(|_| admission_error())?.try_build().map_err(|_| admission_error())
 }
 //#endregion 🔖️Fields
 
 //#region 🔖️Render
-pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabels) -> UiNode {
-    if selected.is_empty() {
-        return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
-            id: "dag-play-inspector.empty".into(),
-            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
-            default_open: Some(true),
-            presence: UiPresence::default(),
-            children: vec![ui_text(labels.select_a_node)],
-            menu: None,
-        }]);
-    }
+pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let owned_nodes = document.nodes();
     let nodes: Vec<&DagNodeSpec> = selected.iter().filter_map(|id| owned_nodes.iter().find(|node| &node.id == id)).collect();
     if nodes.is_empty() {
-        return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
-            id: "dag-play-inspector.missing".into(),
-            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
-            default_open: Some(true),
-            presence: UiPresence::default(),
-            children: vec![ui_text(labels.node_not_found)],
-            menu: None,
-        }]);
+        let (id, title) = if selected.is_empty() { ("dag-play-inspector.empty", labels.select_a_node) } else { ("dag-play-inspector.missing", labels.node_not_found) };
+        let content = text(label(title.as_str())?).try_build().map_err(|_| admission_error())?;
+        return group_node(id, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, vec![content]);
     }
     let node_ids: Vec<String> = nodes.iter().map(|node| node.id.clone()).collect();
-    let mut groups: Vec<UiInspectorFieldGroup> = Vec::new();
+    let mut groups = Vec::new();
     if nodes.iter().all(|node| matches!(node.kind, DagNodeKind::Slider { .. })) {
-        groups.push(UiInspectorFieldGroup {
-            presence: UiPresence::default(),
-            id: "dag-play-inspector.kind.slider".into(),
-            label: labels.slider_group.into(),
-            default_open: None,
-            fields: vec![
-                inspector_number_field(
-                    &node_ids,
-                    "dag-play-inspector.slider-value",
-                    labels.field_value,
-                    &nodes
-                        .iter()
-                        .map(|node| match &node.kind {
-                            DagNodeKind::Slider { value, .. } => *value,
-                            _ => 0.0,
-                        })
-                        .collect::<Vec<_>>(),
-                    "value",
-                ),
-                inspector_number_field(
-                    &node_ids,
-                    "dag-play-inspector.slider-min",
-                    labels.field_min,
-                    &nodes
-                        .iter()
-                        .map(|node| match &node.kind {
-                            DagNodeKind::Slider { min, .. } => *min,
-                            _ => 0.0,
-                        })
-                        .collect::<Vec<_>>(),
-                    "min",
-                ),
-                inspector_number_field(
-                    &node_ids,
-                    "dag-play-inspector.slider-max",
-                    labels.field_max,
-                    &nodes
-                        .iter()
-                        .map(|node| match &node.kind {
-                            DagNodeKind::Slider { max, .. } => *max,
-                            _ => 0.0,
-                        })
-                        .collect::<Vec<_>>(),
-                    "max",
-                ),
-            ],
-        });
+        let mut fields = Vec::new();
+        for (name, title) in [("value", labels.field_value), ("min", labels.field_min), ("max", labels.field_max)] {
+            let values = nodes.iter().filter_map(|node| match node.kind {
+                DagNodeKind::Slider { value, min, max, .. } => Some(match name { "min" => min, "max" => max, _ => value }),
+                _ => None,
+            }).collect::<Vec<_>>();
+            let mixed = ui_inspector_mixed_number(&values);
+            fields.push(input_field(&format!("dag-play-inspector.slider-{name}"), title.as_str(), InputKind::Number,
+                &if mixed.uniform { mixed.value.to_string() } else { String::new() },
+                (!mixed.uniform).then_some(UI_INSPECTOR_MIXED_PLACEHOLDER), "patchDagNodes", patch_args(&node_ids, name)?)?);
+        }
+        groups.push(group_node("dag-play-inspector.kind.slider", labels.slider_group.as_str(), fields)?);
     }
-    let mut base_fields = vec![
-        inspector_text_field(&node_ids, "dag-play-inspector.name", labels.field_name, &nodes.iter().map(|node| node.name.clone()).collect::<Vec<_>>(), "name"),
-        ui_inspector_readonly_field(
-            "dag-play-inspector.kind",
-            labels.field_kind,
-            if nodes.iter().map(|node| dag_node_kind_tag(&node.kind)).collect::<std::collections::HashSet<_>>().len() == 1 { dag_node_kind_tag(&nodes[0].kind).to_string() } else { "—".into() },
-        ),
-    ];
-    if node_ids.len() == 1 {
-        base_fields.insert(
-            0,
-            UiNode::Field(UiFieldNode {
-                presence: UiPresence::default(),
-                id: "dag-play-inspector.id".into(),
-                label: labels.field_id.into(),
-                child: Box::new(UiNode::Input(UiInputNode {
-                    presence: UiPresence::default(),
-                    id: "dag-play-inspector.id.input".into(),
-                    input_kind: "text".into(),
-                    value: node_ids[0].clone(),
-                    placeholder: None,
-                    commit: Some("blur".into()),
-                    on_change: dag_action("renameDagNode", Some(ui_value_map([("oldId", ui_value_text(&node_ids[0]).expect("node id fits ui text capacity"))]).expect("single-entry field map fits ui map capacity"))),
-                    min: None,
-                    max: None,
-                    step: None,
-                    accept: None,
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
-                menu: None,
-            }),
-        );
+    let id_field = if node_ids.len() == 1 {
+        input_field("dag-play-inspector.id", labels.field_id.as_str(), InputKind::Text, &node_ids[0], None, "renameDagNode", ui_value_map([("oldId", ui_value_text(&node_ids[0])?)])?)?
     } else {
-        base_fields.insert(0, ui_inspector_readonly_field("dag-play-inspector.id", labels.field_id, format!("{} {}", node_ids.len(), labels.selected_suffix.as_str())));
-    }
-    groups.push(UiInspectorFieldGroup { presence: UiPresence::default(), id: "dag-play-inspector.base".into(), label: labels.node_group.into(), default_open: None, fields: base_fields });
-    ui_inspector_groups_to_tree(&groups)
+        readonly_field("dag-play-inspector.id", labels.field_id.as_str(), &format!("{} {}", node_ids.len(), labels.selected_suffix.as_str()))?
+    };
+    let names = nodes.iter().map(|node| node.name.clone()).collect::<Vec<_>>();
+    let mixed = ui_inspector_mixed_text(&names);
+    let name_field = input_field("dag-play-inspector.name", labels.field_name.as_str(), InputKind::Text, &mixed.value, mixed.placeholder.as_deref(), "patchDagNodes", patch_args(&node_ids, "name")?)?;
+    let kind = dag_node_kind_tag(&nodes[0].kind);
+    let kind_field = readonly_field("dag-play-inspector.kind", labels.field_kind.as_str(), if nodes.iter().all(|node| dag_node_kind_tag(&node.kind) == kind) { kind } else { "—" })?;
+    groups.push(group_node("dag-play-inspector.base", labels.node_group.as_str(), vec![id_field, name_field, kind_field])?);
+    column().try_id("dag-play-inspector").map_err(|_| admission_error())?.try_children(groups).map_err(|_| admission_error())?.try_build().map_err(|_| admission_error())
 }
 //#endregion 🔖️Render
 
@@ -226,8 +122,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_the_select_a_node_placeholder_when_nothing_is_selected() {
-        let mut app = new_app();
-        assert!(render_body(&mut app, DAG_PLAY_BODY_INSPECTOR).contains("Select a node"));
+        let mut app = new_app().await;
+        assert!(render_body(&mut app, DAG_PLAY_BODY_INSPECTOR).await.contains("Select a node"));
     }
 
     /// 🕹️ `render` carries no `InteractionView` (`DagPlayApp::render` always calls this panel's own
@@ -240,7 +136,7 @@ mod tests {
         let document = crate::artifacts::dag::default_snapshot();
         let node_id = document.nodes().first().map(|node| node.id.clone()).expect("node");
         let labels = crate::editor::dag::terminology::dag_play_labels(&crate::editor::dag::config::DagConfig::default());
-        let node = render(&document, &[node_id.clone()], labels);
+        let node = render(&document, &[node_id.clone()], labels).expect("inspector component tree");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(&node_id));
         assert!(json.contains("Name") || json.contains("Kind"));

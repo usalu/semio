@@ -18,7 +18,7 @@ pub(crate) fn run_jack_query(fixture: &JackSnapshot, query: &str) -> (String, Ve
         Err(error) => return (error_result_json(&error), Vec::new()),
     };
     match crate::executor::execute(&graph, &parsed) {
-        Ok((result, operations)) => (pack::to_json_string(&result).unwrap_or_default(), operations),
+        Ok((result, operations)) => (pack::to_json_string(&result), operations),
         Err(error) => (error_result_json(&error), Vec::new()),
     }
 }

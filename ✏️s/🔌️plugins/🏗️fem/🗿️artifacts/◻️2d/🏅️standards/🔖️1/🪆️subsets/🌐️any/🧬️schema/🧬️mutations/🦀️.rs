@@ -28,38 +28,38 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Fem2dSnapshot, diff = Fem2dDiff, schema = "fem.fem2d")]
 pub enum Fem2dMutation {
-    CreateNode(create_node::mutation::CreateNode),
-    DeleteNode(delete_node::mutation::DeleteNode),
-    CreateElement(create_element::mutation::CreateElement),
-    DeleteElement(delete_element::mutation::DeleteElement),
-    ReplaceElement(replace_element::mutation::ReplaceElement),
-    CreateMaterial(create_material::mutation::CreateMaterial),
-    DeleteMaterial(delete_material::mutation::DeleteMaterial),
-    ReplaceMaterial(replace_material::mutation::ReplaceMaterial),
-    CreateSection(create_section::mutation::CreateSection),
-    DeleteSection(delete_section::mutation::DeleteSection),
-    ReplaceSection(replace_section::mutation::ReplaceSection),
-    CreateSupport(create_support::mutation::CreateSupport),
-    DeleteSupport(delete_support::mutation::DeleteSupport),
-    ReplaceSupport(replace_support::mutation::ReplaceSupport),
-    CreateRegion(create_region::mutation::CreateRegion),
-    DeleteRegion(delete_region::mutation::DeleteRegion),
-    ReplaceRegion(replace_region::mutation::ReplaceRegion),
-    CreateLoadCase(create_load_case::mutation::CreateLoadCase),
-    DeleteLoadCase(delete_load_case::mutation::DeleteLoadCase),
-    AddLoad(add_load::mutation::AddLoad),
-    RemoveLoad(remove_load::mutation::RemoveLoad),
-    ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight),
-    CreateCombination(create_combination::mutation::CreateCombination),
-    DeleteCombination(delete_combination::mutation::DeleteCombination),
-    UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings),
+    CreateNode(create_node::CreateNode),
+    DeleteNode(delete_node::DeleteNode),
+    CreateElement(create_element::CreateElement),
+    DeleteElement(delete_element::DeleteElement),
+    ReplaceElement(replace_element::ReplaceElement),
+    CreateMaterial(create_material::CreateMaterial),
+    DeleteMaterial(delete_material::DeleteMaterial),
+    ReplaceMaterial(replace_material::ReplaceMaterial),
+    CreateSection(create_section::CreateSection),
+    DeleteSection(delete_section::DeleteSection),
+    ReplaceSection(replace_section::ReplaceSection),
+    CreateSupport(create_support::CreateSupport),
+    DeleteSupport(delete_support::DeleteSupport),
+    ReplaceSupport(replace_support::ReplaceSupport),
+    CreateRegion(create_region::CreateRegion),
+    DeleteRegion(delete_region::DeleteRegion),
+    ReplaceRegion(replace_region::ReplaceRegion),
+    CreateLoadCase(create_load_case::CreateLoadCase),
+    DeleteLoadCase(delete_load_case::DeleteLoadCase),
+    AddLoad(add_load::AddLoad),
+    RemoveLoad(remove_load::RemoveLoad),
+    ChangeLoadCaseSelfWeight(change_load_case_self_weight::ChangeLoadCaseSelfWeight),
+    CreateCombination(create_combination::CreateCombination),
+    DeleteCombination(delete_combination::DeleteCombination),
+    UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings),
 }
 //#endregion 🔖️Mutations
 
 //#region 🔖️LeafImports
 /// 🌉️ Brings every triad leaf's `mutation` submodule into this file's own scope (declared as
 /// siblings back in `🦀️.rs`, not inside this file) — required for the dispatch enum's bare
-/// `create_node::mutation::CreateNode`-style variant field paths above to resolve.
+/// `create_node::CreateNode`-style variant field paths above to resolve.
 use super::add_load;
 use super::change_load_case_self_weight;
 use super::create_combination;
@@ -419,87 +419,87 @@ mod tests {
     async fn node_create_and_delete_round_trip() {
         let base = Fem2dSnapshot::default();
         let node = FemNode { id: "n1".into(), x: 1.0, y: 2.0 };
-        let after_create = round_trip(&base, &Fem2dMutation::CreateNode(create_node::mutation::CreateNode { node: node.clone() }));
+        let after_create = round_trip(&base, &Fem2dMutation::CreateNode(create_node::CreateNode { node: node.clone() }));
         assert_eq!(after_create.nodes, vec![node.clone()]);
-        round_trip(&after_create, &Fem2dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: node.id }));
+        round_trip(&after_create, &Fem2dMutation::DeleteNode(delete_node::DeleteNode { id: node.id }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn element_create_replace_and_delete_round_trip() {
         let base = simply_supported_beam_doc();
         let updated = FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() };
-        let after_replace = round_trip(&base, &Fem2dMutation::ReplaceElement(replace_element::mutation::ReplaceElement { id: "e1".into(), new_element: Box::new(updated) }));
+        let after_replace = round_trip(&base, &Fem2dMutation::ReplaceElement(replace_element::ReplaceElement { id: "e1".into(), new_element: Box::new(updated) }));
         assert_eq!(element_id(&after_replace.elements[0]), "e1");
         let new_element = FemElement::Bar { id: "e2".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() };
-        let after_create = round_trip(&after_replace, &Fem2dMutation::CreateElement(create_element::mutation::CreateElement { element: Box::new(new_element) }));
-        round_trip(&after_create, &Fem2dMutation::DeleteElement(delete_element::mutation::DeleteElement { id: "e2".into() }));
+        let after_create = round_trip(&after_replace, &Fem2dMutation::CreateElement(create_element::CreateElement { element: Box::new(new_element) }));
+        round_trip(&after_create, &Fem2dMutation::DeleteElement(delete_element::DeleteElement { id: "e2".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn material_create_replace_and_delete_round_trip() {
         let base = simply_supported_beam_doc();
         let replaced = FemMaterial { id: "steel".into(), name: "Steel Updated".into(), e: 200e9, nu: 0.3, rho: 7900.0 };
-        let after_replace = round_trip(&base, &Fem2dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "steel".into(), new_material: replaced }));
+        let after_replace = round_trip(&base, &Fem2dMutation::ReplaceMaterial(replace_material::ReplaceMaterial { id: "steel".into(), new_material: replaced }));
         // 🔗️ Deletes the TRAILING SPARE, not `steel`: since this ticket's referential-integrity wave a
         // `delete-material` naming a grade seven members still point at is refused with
         // `mutation.target-referenced` (see `guards::material_referrers`), and a trailing record is
         // also the only one whose `create-`-shaped inverse round-trips to a byte-identical vec order.
-        round_trip(&after_replace, &Fem2dMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: "timber_spare".into() }));
+        round_trip(&after_replace, &Fem2dMutation::DeleteMaterial(delete_material::DeleteMaterial { id: "timber_spare".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn section_create_replace_and_delete_round_trip() {
         let base = simply_supported_beam_doc();
         let replaced = FemSection { id: "ipe300".into(), name: "IPE300 Updated".into(), area: 0.01, iy: 1e-4 };
-        let after_replace = round_trip(&base, &Fem2dMutation::ReplaceSection(replace_section::mutation::ReplaceSection { id: "ipe300".into(), new_section: replaced }));
+        let after_replace = round_trip(&base, &Fem2dMutation::ReplaceSection(replace_section::ReplaceSection { id: "ipe300".into(), new_section: replaced }));
         // 🔗️ Same reason as the material twin above: `ipe300` is still carried by beam `e1`, so its
         // deletion is now `mutation.target-referenced`; the trailing spare is the deletable one.
-        round_trip(&after_replace, &Fem2dMutation::DeleteSection(delete_section::mutation::DeleteSection { id: "shs_spare".into() }));
+        round_trip(&after_replace, &Fem2dMutation::DeleteSection(delete_section::DeleteSection { id: "shs_spare".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn support_create_replace_and_delete_round_trip() {
         let base = simply_supported_beam_doc();
         let replaced = FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![FemDof::Ty] };
-        round_trip(&base, &Fem2dMutation::ReplaceSupport(replace_support::mutation::ReplaceSupport { id: "s1".into(), new_support: replaced }));
+        round_trip(&base, &Fem2dMutation::ReplaceSupport(replace_support::ReplaceSupport { id: "s1".into(), new_support: replaced }));
         // 🧮️ Deletes the LAST support: `apply_delta`'s `added` handling (`↩️inverse` recreates via
         // `create-support`, which has no `index` field) re-appends at the end of the collection, so
         // only a last-position delete round-trips to a byte-identical vec order — id-keyed collections
         // with no display order (📓️derivation-rules.md rule 2) don't guarantee position preservation
         // for a non-last delete+recreate, matching `create_support`'s fem3d sibling precedent.
-        round_trip(&base, &Fem2dMutation::DeleteSupport(delete_support::mutation::DeleteSupport { id: "s2".into() }));
+        round_trip(&base, &Fem2dMutation::DeleteSupport(delete_support::DeleteSupport { id: "s2".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn region_create_replace_and_delete_round_trip() {
         let base = rectangle_region_doc();
         let updated = FemRegion { id: "r1".into(), name: "slab v2".into(), outline: vec![[0.0, 0.0], [5.0, 0.0], [5.0, 2.0], [0.0, 2.0]], holes: vec![], thickness: 0.03, material_id: "steel".into(), mesh_size: 0.5 };
-        let after_replace = round_trip(&base, &Fem2dMutation::ReplaceRegion(replace_region::mutation::ReplaceRegion { id: "r1".into(), new_region: updated }));
+        let after_replace = round_trip(&base, &Fem2dMutation::ReplaceRegion(replace_region::ReplaceRegion { id: "r1".into(), new_region: updated }));
         assert_eq!(after_replace.regions[0].thickness, 0.03);
-        round_trip(&after_replace, &Fem2dMutation::DeleteRegion(delete_region::mutation::DeleteRegion { id: "r1".into() }));
+        round_trip(&after_replace, &Fem2dMutation::DeleteRegion(delete_region::DeleteRegion { id: "r1".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn load_case_create_and_delete_round_trip() {
         let base = simply_supported_beam_doc();
         let load_case = FemLoadCase { id: "wind".into(), name: "Wind Load".into(), loads: vec![], self_weight: false };
-        let after_create = round_trip(&base, &Fem2dMutation::CreateLoadCase(create_load_case::mutation::CreateLoadCase { load_case }));
-        round_trip(&after_create, &Fem2dMutation::DeleteLoadCase(delete_load_case::mutation::DeleteLoadCase { id: "wind".into() }));
+        let after_create = round_trip(&base, &Fem2dMutation::CreateLoadCase(create_load_case::CreateLoadCase { load_case }));
+        round_trip(&after_create, &Fem2dMutation::DeleteLoadCase(delete_load_case::DeleteLoadCase { id: "wind".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn add_load_and_remove_load_round_trip() {
         let base = simply_supported_beam_doc();
         let load = FemLoad::MemberUdl { id: "l2".into(), element_id: "e1".into(), wx: 0.0, wy: -900.0 };
-        let after_add = round_trip(&base, &Fem2dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "dead".into(), load: Box::new(load.clone()) }));
+        let after_add = round_trip(&base, &Fem2dMutation::AddLoad(add_load::AddLoad { case_id: "dead".into(), load: Box::new(load.clone()) }));
         assert_eq!(after_add.load_cases[0].loads.len(), 2);
-        round_trip(&after_add, &Fem2dMutation::RemoveLoad(remove_load::mutation::RemoveLoad { case_id: "dead".into(), load_id: load_id(&load).to_string() }));
+        round_trip(&after_add, &Fem2dMutation::RemoveLoad(remove_load::RemoveLoad { case_id: "dead".into(), load_id: load_id(&load).to_string() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_load_case_self_weight_round_trips() {
         let base = simply_supported_beam_doc();
-        round_trip(&base, &Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: "dead".into(), new_self_weight: true }));
+        round_trip(&base, &Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: "dead".into(), new_self_weight: true }));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -507,61 +507,61 @@ mod tests {
         let mut base = simply_supported_beam_doc();
         base.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }] });
         let combination = FemCombination { id: "sls".into(), name: "SLS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.0 }] };
-        let after_create = round_trip(&base, &Fem2dMutation::CreateCombination(create_combination::mutation::CreateCombination { combination }));
-        round_trip(&after_create, &Fem2dMutation::DeleteCombination(delete_combination::mutation::DeleteCombination { id: "sls".into() }));
+        let after_create = round_trip(&base, &Fem2dMutation::CreateCombination(create_combination::CreateCombination { combination }));
+        round_trip(&after_create, &Fem2dMutation::DeleteCombination(delete_combination::DeleteCombination { id: "sls".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn analysis_settings_update_round_trips() {
         let base = simply_supported_beam_doc();
         let settings = FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 25.0 };
-        round_trip(&base, &Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings }));
+        round_trip(&base, &Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings { settings }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn missing_target_inverse_and_diff_are_no_ops() {
         let base = Fem2dSnapshot::default();
-        assert!(Fem2dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "ghost".into() }).inverse(&base).is_empty());
-        assert!(Fem2dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, nu: 0.3, rho: 1.0 } }).inverse(&base).is_empty());
-        assert!(Fem2dMutation::RemoveLoad(remove_load::mutation::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() }).inverse(&base).is_empty());
-        assert_eq!(*Fem2dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Ty, value: 1.0 }) }).diff(&base).diff(), Fem2dDiff::default());
+        assert!(Fem2dMutation::DeleteNode(delete_node::DeleteNode { id: "ghost".into() }).inverse(&base).is_empty());
+        assert!(Fem2dMutation::ReplaceMaterial(replace_material::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, nu: 0.3, rho: 1.0 } }).inverse(&base).is_empty());
+        assert!(Fem2dMutation::RemoveLoad(remove_load::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() }).inverse(&base).is_empty());
+        assert_eq!(*Fem2dMutation::AddLoad(add_load::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Ty, value: 1.0 }) }).diff(&base).diff(), Fem2dDiff::default());
     }
     // #endregion 🔖️OpRoundTrip
 
     // #region 🔖️OpText
     #[semio_framework_async_macros::async_test]
     async fn fem2d_op_text_round_trips_every_variant() {
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateNode(create_node::mutation::CreateNode { node: FemNode { id: "n1".into(), x: 1.0, y: 2.0 } }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "n1".into() }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateElement(create_element::mutation::CreateElement {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateNode(create_node::CreateNode { node: FemNode { id: "n1".into(), x: 1.0, y: 2.0 } }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteNode(delete_node::DeleteNode { id: "n1".into() }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateElement(create_element::CreateElement {
             element: Box::new(FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }),
         }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::ReplaceElement(replace_element::mutation::ReplaceElement {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::ReplaceElement(replace_element::ReplaceElement {
             id: "e1".into(),
             new_element: Box::new(FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() }),
         }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteElement(delete_element::mutation::DeleteElement { id: "e1".into() }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateMaterial(create_material::mutation::CreateMaterial {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteElement(delete_element::DeleteElement { id: "e1".into() }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateMaterial(create_material::CreateMaterial {
             material: FemMaterial { id: "steel".into(), name: "Steel S235".into(), e: 210e9, nu: 0.3, rho: 7850.0 },
         }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::ReplaceMaterial(replace_material::ReplaceMaterial {
             id: "steel".into(),
             new_material: FemMaterial { id: "steel".into(), name: "Steel S235".into(), e: 210e9, nu: 0.3, rho: 7850.0 },
         }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: "steel".into() }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateSection(create_section::mutation::CreateSection {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteMaterial(delete_material::DeleteMaterial { id: "steel".into() }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateSection(create_section::CreateSection {
             section: FemSection { id: "ipe300".into(), name: "IPE 300".into(), area: 0.005381, iy: 8.356e-5 },
         }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::ReplaceSection(replace_section::mutation::ReplaceSection {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::ReplaceSection(replace_section::ReplaceSection {
             id: "ipe300".into(),
             new_section: FemSection { id: "ipe300".into(), name: "IPE 300".into(), area: 0.005381, iy: 8.356e-5 },
         }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteSection(delete_section::mutation::DeleteSection { id: "ipe300".into() }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateSupport(create_support::mutation::CreateSupport {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteSection(delete_section::DeleteSection { id: "ipe300".into() }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateSupport(create_support::CreateSupport {
             support: FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![FemDof::Tx, FemDof::Ty] },
         }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteSupport(delete_support::mutation::DeleteSupport { id: "s1".into() }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateRegion(create_region::mutation::CreateRegion {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteSupport(delete_support::DeleteSupport { id: "s1".into() }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateRegion(create_region::CreateRegion {
             region: FemRegion {
                 id: "r1".into(),
                 name: "Slab".into(),
@@ -572,8 +572,8 @@ mod tests {
                 mesh_size: 0.5,
             },
         }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteRegion(delete_region::mutation::DeleteRegion { id: "r1".into() }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateLoadCase(create_load_case::mutation::CreateLoadCase {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteRegion(delete_region::DeleteRegion { id: "r1".into() }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateLoadCase(create_load_case::CreateLoadCase {
             load_case: FemLoadCase {
                 id: "dead".into(),
                 name: "Dead Load".into(),
@@ -585,18 +585,18 @@ mod tests {
                 self_weight: true,
             },
         }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteLoadCase(delete_load_case::mutation::DeleteLoadCase { id: "dead".into() }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::AddLoad(add_load::mutation::AddLoad {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteLoadCase(delete_load_case::DeleteLoadCase { id: "dead".into() }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::AddLoad(add_load::AddLoad {
             case_id: "dead".into(),
             load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Ty, value: -1000.0 }),
         }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveLoad(remove_load::mutation::RemoveLoad { case_id: "dead".into(), load_id: "l1".into() }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: "dead".into(), new_self_weight: true }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateCombination(create_combination::mutation::CreateCombination {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::RemoveLoad(remove_load::RemoveLoad { case_id: "dead".into(), load_id: "l1".into() }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: "dead".into(), new_self_weight: true }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateCombination(create_combination::CreateCombination {
             combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] },
         }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteCombination(delete_combination::mutation::DeleteCombination { id: "uls".into() }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings {
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteCombination(delete_combination::DeleteCombination { id: "uls".into() }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings {
             settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 },
         }));
     }
@@ -606,18 +606,18 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn mutation_law_create_node_inverse_and_diff_absorb() {
         let base = Fem2dSnapshot::default();
-        let mutation = Fem2dMutation::CreateNode(create_node::mutation::CreateNode { node: FemNode { id: "n1".into(), x: 1.0, y: 2.0 } });
+        let mutation = Fem2dMutation::CreateNode(create_node::CreateNode { node: FemNode { id: "n1".into(), x: 1.0, y: 2.0 } });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
         let after = d1.apply(&base).expect("valid mutation diff");
-        let d2 = Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: "none".into(), new_self_weight: true }).diff(&after).diff().clone();
+        let d2 = Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: "none".into(), new_self_weight: true }).diff(&after).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn mutation_law_replace_material_inverse() {
         let base = simply_supported_beam_doc();
-        let mutation = Fem2dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "steel".into(), new_material: FemMaterial { id: "steel".into(), name: "Steel 2".into(), e: 200e9, nu: 0.3, rho: 7900.0 } });
+        let mutation = Fem2dMutation::ReplaceMaterial(replace_material::ReplaceMaterial { id: "steel".into(), new_material: FemMaterial { id: "steel".into(), name: "Steel 2".into(), e: 200e9, nu: 0.3, rho: 7900.0 } });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
     }
 
@@ -627,11 +627,11 @@ mod tests {
         // 🔗️ A member UDL on the beam this document actually carries: since this ticket's wave
         // `add-load` resolves the load's own target exactly as `create-load-case` does, so the
         // area pressure over the region `r1` this fixture never had would now be refused.
-        let mutation = Fem2dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "dead".into(), load: Box::new(FemLoad::MemberUdl { id: "l9".into(), element_id: "e1".into(), wx: 0.0, wy: -400.0 }) });
+        let mutation = Fem2dMutation::AddLoad(add_load::AddLoad { case_id: "dead".into(), load: Box::new(FemLoad::MemberUdl { id: "l9".into(), element_id: "e1".into(), wx: 0.0, wy: -400.0 }) });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
         let after = d1.apply(&base).expect("valid mutation diff");
-        let d2 = Fem2dMutation::DeleteCombination(delete_combination::mutation::DeleteCombination { id: "none".into() }).diff(&after).diff().clone();
+        let d2 = Fem2dMutation::DeleteCombination(delete_combination::DeleteCombination { id: "none".into() }).diff(&after).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
@@ -654,7 +654,7 @@ mod tests {
     async fn create_node_duplicate_id_is_fatal() {
         let base = simply_supported_beam_doc();
         let existing_id = base.nodes.first().unwrap().id.clone();
-        let outcome = Fem2dMutation::CreateNode(create_node::mutation::CreateNode { node: FemNode { id: existing_id, x: 0.0, y: 0.0 } }).diff(&base);
+        let outcome = Fem2dMutation::CreateNode(create_node::CreateNode { node: FemNode { id: existing_id, x: 0.0, y: 0.0 } }).diff(&base);
         protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
@@ -662,13 +662,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn create_support_missing_node_is_error() {
         let base = Fem2dSnapshot::default();
-        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::CreateSupport(create_support::mutation::CreateSupport { support: FemSupport { id: "s1".into(), node_id: "ghost".into(), fixed: vec![] } })).await;
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::CreateSupport(create_support::CreateSupport { support: FemSupport { id: "s1".into(), node_id: "ghost".into(), fixed: vec![] } })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_node_missing_target_is_error() {
         let base = Fem2dSnapshot::default();
-        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "ghost".into() })).await;
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::DeleteNode(delete_node::DeleteNode { id: "ghost".into() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -676,7 +676,7 @@ mod tests {
         let base = simply_supported_beam_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(
             &base,
-            &Fem2dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, nu: 0.3, rho: 1.0 } }),
+            &Fem2dMutation::ReplaceMaterial(replace_material::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, nu: 0.3, rho: 1.0 } }),
         )
         .await;
     }
@@ -686,7 +686,7 @@ mod tests {
         let base = simply_supported_beam_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(
             &base,
-            &Fem2dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Ty, value: 1.0 }) }),
+            &Fem2dMutation::AddLoad(add_load::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Ty, value: 1.0 }) }),
         )
         .await;
     }
@@ -694,13 +694,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn remove_load_missing_target_is_error() {
         let base = simply_supported_beam_doc();
-        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::RemoveLoad(remove_load::mutation::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() })).await;
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::RemoveLoad(remove_load::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_load_case_self_weight_missing_target_is_error() {
         let base = simply_supported_beam_doc();
-        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: "ghost".into(), new_self_weight: true })).await;
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: "ghost".into(), new_self_weight: true })).await;
     }
     //#endregion 🔖️OutcomeLaws
 
@@ -719,7 +719,7 @@ mod tests {
     async fn replace_material_rename_is_id_mismatch() {
         let base = simply_supported_beam_doc();
         let renamed = FemMaterial { id: "steel_v2".into(), name: "Steel S355".into(), e: 210e9, nu: 0.3, rho: 7850.0 };
-        let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "steel".into(), new_material: renamed }));
+        let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceMaterial(replace_material::ReplaceMaterial { id: "steel".into(), new_material: renamed }));
         assert_eq!(code, "mutation.id-mismatch");
         assert_eq!(level, protocol::Severity::Fatal, "a rename through a replace is an identity breach no merge policy may absorb");
         assert_eq!(target, vec!["steel".to_string(), "steel_v2".to_string()], "the diagnostic addresses the selected id first and the impostor second");
@@ -729,7 +729,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn delete_material_still_referenced_is_error() {
         let base = simply_supported_beam_doc();
-        let (code, level, target) = refusal(&base, &Fem2dMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: "steel".into() }));
+        let (code, level, target) = refusal(&base, &Fem2dMutation::DeleteMaterial(delete_material::DeleteMaterial { id: "steel".into() }));
         assert_eq!(code, "mutation.target-referenced");
         assert_eq!(level, protocol::Severity::Error, "another base may well have no referrers, so this is an Error, not a Fatal");
         assert_eq!(target, vec!["steel".to_string(), "e1".to_string()], "the target comes first, then every referrer");
@@ -740,7 +740,7 @@ mod tests {
     async fn delete_load_case_still_combined_is_error() {
         let mut base = simply_supported_beam_doc();
         base.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }] });
-        let (code, _, target) = refusal(&base, &Fem2dMutation::DeleteLoadCase(delete_load_case::mutation::DeleteLoadCase { id: "dead".into() }));
+        let (code, _, target) = refusal(&base, &Fem2dMutation::DeleteLoadCase(delete_load_case::DeleteLoadCase { id: "dead".into() }));
         assert_eq!(code, "mutation.target-referenced");
         assert_eq!(target, vec!["dead".to_string(), "uls".to_string()]);
     }
@@ -750,7 +750,7 @@ mod tests {
     async fn create_material_implausible_poisson_is_fatal() {
         let base = simply_supported_beam_doc();
         let implausible = FemMaterial { id: "rubber".into(), name: "Rubber".into(), e: 1e7, nu: 0.5, rho: 1100.0 };
-        let (code, level, target) = refusal(&base, &Fem2dMutation::CreateMaterial(create_material::mutation::CreateMaterial { material: implausible }));
+        let (code, level, target) = refusal(&base, &Fem2dMutation::CreateMaterial(create_material::CreateMaterial { material: implausible }));
         assert_eq!(code, "mutation.invariant");
         assert_eq!(level, protocol::Severity::Fatal, "an inadmissible property is wrong on every base, so no merge policy may absorb it");
         assert_eq!(target, vec!["rubber".to_string()]);
@@ -761,7 +761,7 @@ mod tests {
     async fn create_section_zero_area_is_fatal() {
         let base = simply_supported_beam_doc();
         let implausible = FemSection { id: "void".into(), name: "Void".into(), area: 0.0, iy: 1e-5 };
-        let (code, level, _) = refusal(&base, &Fem2dMutation::CreateSection(create_section::mutation::CreateSection { section: implausible }));
+        let (code, level, _) = refusal(&base, &Fem2dMutation::CreateSection(create_section::CreateSection { section: implausible }));
         assert_eq!(code, "mutation.invariant");
         assert_eq!(level, protocol::Severity::Fatal);
     }
@@ -779,7 +779,7 @@ mod tests {
             material_id: "steel".into(),
             mesh_size: 0.5,
         };
-        let (code, level, target) = refusal(&base, &Fem2dMutation::CreateRegion(create_region::mutation::CreateRegion { region: loose }));
+        let (code, level, target) = refusal(&base, &Fem2dMutation::CreateRegion(create_region::CreateRegion { region: loose }));
         assert_eq!(code, "mutation.invariant");
         assert_eq!(level, protocol::Severity::Fatal);
         assert_eq!(target, vec!["r2".to_string()]);
@@ -790,7 +790,7 @@ mod tests {
     async fn create_region_degenerate_outline_is_fatal() {
         let base = rectangle_region_doc();
         let degenerate = FemRegion { id: "r3".into(), name: "Line".into(), outline: vec![[0.0, 0.0], [4.0, 0.0]], holes: vec![], thickness: 0.02, material_id: "steel".into(), mesh_size: 0.5 };
-        let (code, _, _) = refusal(&base, &Fem2dMutation::CreateRegion(create_region::mutation::CreateRegion { region: degenerate }));
+        let (code, _, _) = refusal(&base, &Fem2dMutation::CreateRegion(create_region::CreateRegion { region: degenerate }));
         assert_eq!(code, "mutation.invariant");
     }
 
@@ -799,7 +799,7 @@ mod tests {
     async fn update_analysis_settings_zero_modes_is_fatal() {
         let base = simply_supported_beam_doc();
         let settings = FemAnalysisSettings { modal_count: 0, buckling_count: 3, deformation_scale: 50.0 };
-        let (code, level, target) = refusal(&base, &Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings }));
+        let (code, level, target) = refusal(&base, &Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings { settings }));
         assert_eq!(code, "mutation.invariant");
         assert_eq!(level, protocol::Severity::Fatal);
         assert!(target.is_empty(), "the analysis facet has no id to address, got {target:?}");
@@ -810,9 +810,9 @@ mod tests {
     async fn add_load_dangling_node_is_error() {
         let base = simply_supported_beam_doc();
         let load = FemLoad::Nodal { id: "l9".into(), node_id: "ghost".into(), dof: FemDof::Ty, value: -1000.0 };
-        let through_add = refusal(&base, &Fem2dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "dead".into(), load: Box::new(load.clone()) }));
+        let through_add = refusal(&base, &Fem2dMutation::AddLoad(add_load::AddLoad { case_id: "dead".into(), load: Box::new(load.clone()) }));
         let case = FemLoadCase { id: "seismic".into(), name: "Seismic".into(), loads: vec![load], self_weight: false };
-        let through_create = refusal(&base, &Fem2dMutation::CreateLoadCase(create_load_case::mutation::CreateLoadCase { load_case: case }));
+        let through_create = refusal(&base, &Fem2dMutation::CreateLoadCase(create_load_case::CreateLoadCase { load_case: case }));
         assert_eq!(through_add, through_create, "the same load on the same missing node must be refused identically through both verbs");
         assert_eq!(through_add.0, "mutation.target-missing");
         assert_eq!(through_add.2, vec!["ghost".to_string()]);
@@ -823,7 +823,7 @@ mod tests {
     async fn replace_element_dangling_section_is_error() {
         let base = simply_supported_beam_doc();
         let dangling = FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ghost".into() };
-        let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceElement(replace_element::mutation::ReplaceElement { id: "e1".into(), new_element: Box::new(dangling) }));
+        let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceElement(replace_element::ReplaceElement { id: "e1".into(), new_element: Box::new(dangling) }));
         assert_eq!(code, "mutation.target-missing");
         assert_eq!(level, protocol::Severity::Error);
         assert_eq!(target, vec!["ghost".to_string()]);

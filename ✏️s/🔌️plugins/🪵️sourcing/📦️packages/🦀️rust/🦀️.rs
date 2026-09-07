@@ -106,7 +106,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/💾️binary/🦀️.rs"]
                                     pub mod binary;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/🧪️tests/🧲️appends-a-steel-plate-to-the-curation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/🧪️tests/🧲️appends-a-steel-7c3f47/🦀️.rs"]
                                     mod tests_appends_a_steel_plate_to_the_curation;
                                     #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -123,7 +123,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-curated-item/💾️binary/🦀️.rs"]
                                     pub mod binary;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-curated-item/🧪️tests/🚫️removes-the-clt-panel-from-the-curation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-curated-item/🧪️tests/🚫️removes-the-clt-0ea9e1/🦀️.rs"]
                                     mod tests_removes_the_clt_panel_from_the_curation;
                                     #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-curated-item/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -140,7 +140,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item-count/💾️binary/🦀️.rs"]
                                     pub mod binary;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item-count/🧪️tests/🔢️raises-the-glulam-beam-count-to-20/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item-count/🧪️tests/🔢️raises-the-8c2922/🦀️.rs"]
                                     mod tests_raises_the_glulam_beam_count_to_20;
                                     #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item-count/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -546,7 +546,7 @@ pub mod viewer {
 mod plugin;
 pub use plugin::SourcingApps;
 #[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::SourcingApps);
+semio_framework_plugin::plugin_exports!(plugin::plugin, SourcingApps);
 
 //#region 📚️Examples
 #[path = "."]

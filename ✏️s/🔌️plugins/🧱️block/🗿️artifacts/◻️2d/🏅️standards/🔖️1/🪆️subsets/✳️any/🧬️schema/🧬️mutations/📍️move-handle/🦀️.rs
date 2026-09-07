@@ -1,7 +1,7 @@
 //! 📍️ Block2d mutation — `MoveHandle`: a rim-handle's polar position (`angle`+`radius` together).
 
-use crate::artifacts::block2d::{Block2dHandleTemplate, Block2dSnapshot};
-use crate::artifacts::block2d::diff::{Block2dDiff, Block2dHandlesDelta, Block2dHandlesPatch, Block2dHandlesPatchEntry};
+use crate::artifacts::block2d::Block2dSnapshot;
+use crate::artifacts::block2d::diff::Block2dDiff;
 use crate::artifacts::block2d::mutations::Block2dMutation;
 
 //#region 🔖️Mutation

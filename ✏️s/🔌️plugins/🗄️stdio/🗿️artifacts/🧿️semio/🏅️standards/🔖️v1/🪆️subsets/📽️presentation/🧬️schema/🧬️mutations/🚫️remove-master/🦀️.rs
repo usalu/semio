@@ -14,7 +14,7 @@ pub struct RemoveMaster {
 impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation> for RemoveMaster {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "master", kind: "remove-master", record: "RemoveMaster" };
 
-    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<SemioPresentationMutation as protocol::Mutation<SemioPresentationSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::Diff> {
         agg_diff(&SemioPresentationMutation::RemoveMaster(self.clone()), base)
     }
     fn inverse(&self, base: &SemioPresentationSnapshot) -> Vec<SemioPresentationMutation> {

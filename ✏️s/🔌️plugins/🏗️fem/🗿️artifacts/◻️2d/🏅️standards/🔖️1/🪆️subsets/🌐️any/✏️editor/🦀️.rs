@@ -158,7 +158,7 @@ impl Fem2dRetainedCommandJobFactory {
     }
 }
 
-impl semio_framework::ToolJobFactory for Fem2dRetainedCommandJobFactory {
+impl ToolJobFactory for Fem2dRetainedCommandJobFactory {
     type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<Fem2dPlayApp>>;
     type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Fem2dPlayApp>>;
 
@@ -196,8 +196,8 @@ impl semio_framework::ToolJobFactory for Fem2dRetainedCommandJobFactory {
     }
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Fem2dRetainedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<Fem2dPlayApp>;
+impl ArtifactOwnedToolJobFactory for Fem2dRetainedCommandJobFactory {
+    type Owner = EditorApp<Fem2dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = FEM2D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem2d::FEM_2D_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = FEM2D_PUBLICATION_CONTRACTS;
@@ -470,7 +470,7 @@ mod fem2d_artifact_preparation_laws {
     #[test]
     fn admitted_document_mutations_make_bounded_progress_and_retire() {
         let factory = Fem2dArtifactPreparationFactory;
-        let mutation = Fem2dMutation::CreateNode(crate::artifacts::fem2d::mutations::create_node::mutation::CreateNode { node: crate::artifacts::fem2d::FemNode { id: "n1".into(), x: 0.0, y: 0.0 } });
+        let mutation = Fem2dMutation::CreateNode(crate::artifacts::fem2d::mutations::create_node::CreateNode { node: crate::artifacts::fem2d::FemNode { id: "n1".into(), x: 0.0, y: 0.0 } });
         assert_eq!(factory.preflight(&mutation, None, store::HistoryLane::Document).expect("document admission").work_items, 1);
         assert!(factory.preflight(&mutation, Some(&"x".repeat(store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES + 1)), store::HistoryLane::Document).is_err());
         let mut work = Fem2dArtifactPreparation {
@@ -662,13 +662,13 @@ impl ArtifactEditor for Fem2dPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Fem2dPlayApp>,
+        owner: EditorApp<Fem2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
         controller: "s.fem.fem2d@1/*#editor",
         document_schema: "fem.2d",
         factory: "Fem2dRetainedCommandJobFactory",
         factory_type: Fem2dRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
         tools: [
             "addNode",
             "addBar",
@@ -818,7 +818,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                 let material_id = doc.snapshot.materials.first().map(|material| material.id.clone()).unwrap_or_else(|| "unassigned".into());
                 let id = crate::app_surface::next_id(doc.snapshot.regions.iter().map(|r| r.id.clone()), "r");
                 let region = crate::artifacts::fem2d::FemRegion { id, name: "Imported Geometry".into(), outline, holes, thickness: 0.02, material_id, mesh_size: 0.25 };
-                Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(crate::artifacts::fem2d::mutations::create_region::mutation::CreateRegion { region })]))
+                Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(crate::artifacts::fem2d::mutations::create_region::CreateRegion { region })]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -1552,7 +1552,7 @@ mod tests {
         let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
         assert_eq!(emit.artifact_mutations.len(), 1);
         match &emit.artifact_mutations[0] {
-            Fem2dMutation::CreateRegion(crate::artifacts::fem2d::mutations::create_region::mutation::CreateRegion { region }) => {
+            Fem2dMutation::CreateRegion(crate::artifacts::fem2d::mutations::create_region::CreateRegion { region }) => {
                 assert_eq!(region.outline, vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]]);
                 assert!(region.holes.is_empty());
                 assert_eq!(region.material_id, "steel");
@@ -1571,7 +1571,7 @@ mod tests {
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
         let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
         match &emit.artifact_mutations[0] {
-            Fem2dMutation::CreateRegion(crate::artifacts::fem2d::mutations::create_region::mutation::CreateRegion { region }) => assert_eq!(region.material_id, "unassigned"),
+            Fem2dMutation::CreateRegion(crate::artifacts::fem2d::mutations::create_region::CreateRegion { region }) => assert_eq!(region.material_id, "unassigned"),
             _ => panic!("expected CreateRegion"),
         }
     }

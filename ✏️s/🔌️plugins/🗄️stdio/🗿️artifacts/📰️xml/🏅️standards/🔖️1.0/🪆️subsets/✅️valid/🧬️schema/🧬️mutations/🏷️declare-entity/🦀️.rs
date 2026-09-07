@@ -17,7 +17,7 @@ pub struct DeclareEntity {
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for DeclareEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "entity", kind: "declare-entity", record: "DeclareEntity" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as protocol::Mutation<XmlSnapshot>>::Diff> {
+    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
         agg_diff(&XmlValidMutation::DeclareEntity(self.clone()), base)
     }
     fn inverse(&self, base: &XmlSnapshot) -> Vec<XmlValidMutation> {

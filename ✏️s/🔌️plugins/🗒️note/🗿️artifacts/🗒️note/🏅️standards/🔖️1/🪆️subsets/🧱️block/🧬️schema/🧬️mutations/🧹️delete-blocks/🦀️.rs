@@ -1,8 +1,7 @@
 //! 🧺 Note mutation — `DeleteBlocks`: removes several blocks at once (multi-select delete).
 
 use crate::artifacts::note::{NoteDiff, NoteSnapshot};
-use crate::artifacts::note::schema::diff::note_block_removed_diff;
-use crate::artifacts::note::schema::mutations::{CreateBlock, NoteMutation};
+use crate::artifacts::note::schema::mutations::NoteMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};

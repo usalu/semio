@@ -9158,7 +9158,7 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
     let focused = ctx.input.focused_id.as_deref() == Some(editor_id.as_str());
     let renaming = ui_state.rename_active && ctx.input.focused_id.as_deref() == Some(rename_id.as_str());
     if renaming {
-        for key in ctx.input.take_key_step() {
+        for key in ctx.input.take_key_step().into_iter() {
             match key {
                 KeyAction::Escape => {
                     ui_state.rename_active = false;
@@ -9186,7 +9186,7 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
     } else if focused {
         let modifiers = ctx.input.modifiers.clone();
         let completions = text_editor_completions(editor);
-        for key in ctx.input.take_key_step() {
+        for key in ctx.input.take_key_step().into_iter() {
             if ui_state.completions_open && !completions.is_empty() {
                 match key {
                     KeyAction::ArrowDown => {

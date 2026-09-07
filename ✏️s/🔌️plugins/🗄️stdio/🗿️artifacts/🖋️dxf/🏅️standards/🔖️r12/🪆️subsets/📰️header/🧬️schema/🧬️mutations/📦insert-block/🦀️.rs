@@ -15,7 +15,7 @@ pub struct InsertBlock {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for InsertBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "block", kind: "insert-block", record: "InsertBlock" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as protocol::Mutation<DxfSnapshot>>::Diff> {
+    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
         agg_diff(&DxfMutation::InsertBlock(self.clone()), base)
     }
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {

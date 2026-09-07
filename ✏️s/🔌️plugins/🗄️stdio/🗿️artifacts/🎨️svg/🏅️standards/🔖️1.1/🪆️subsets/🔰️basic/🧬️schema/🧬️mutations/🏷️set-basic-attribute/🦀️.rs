@@ -17,7 +17,7 @@ pub struct SetBasicAttribute {
 impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for SetBasicAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "basic-attribute", kind: "set-basic-attribute", record: "SetBasicAttribute" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgBasicMutation as protocol::Mutation<SvgSnapshot>>::Diff> {
+    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgBasicMutation as Mutation<SvgSnapshot>>::Diff> {
         agg_diff(&SvgBasicMutation::SetBasicAttribute(self.clone()), base)
     }
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {

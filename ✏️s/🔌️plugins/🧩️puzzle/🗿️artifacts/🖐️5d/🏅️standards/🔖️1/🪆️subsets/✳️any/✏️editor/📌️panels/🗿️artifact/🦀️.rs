@@ -81,7 +81,7 @@ fn selectable_item(
     .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.tree-item.action", "tree item action admission failed"))
 }
 
-pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mut part_items = semio_framework_plugin::UiFixedList::default();
     for part in &envelope.document.parts {
         let mut grip_items = semio_framework_plugin::UiFixedList::<BuiltNode>::default();

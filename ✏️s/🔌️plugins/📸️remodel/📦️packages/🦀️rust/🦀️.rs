@@ -1432,7 +1432,7 @@ pub mod viewer {
 #[path = "../../🦀️.rs"]
 mod plugin;
 pub use plugin::RemodelApps;
-semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::RemodelApps);
+semio_framework_plugin::plugin_exports!(plugin::plugin, RemodelApps);
 
 //#region 📚️Examples
 #[path = "."]

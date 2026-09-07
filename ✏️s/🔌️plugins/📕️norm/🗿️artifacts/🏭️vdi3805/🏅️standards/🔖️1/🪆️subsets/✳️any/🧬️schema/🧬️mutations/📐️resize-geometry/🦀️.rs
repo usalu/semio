@@ -1,7 +1,7 @@
 //! 📐️ `resize-geometry` — changes a geometry's bounding-box extent, addressed by id.
 
 
-use crate::artifacts::vdi3805::{BoundingBox, Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
+use crate::artifacts::vdi3805::{BoundingBox, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

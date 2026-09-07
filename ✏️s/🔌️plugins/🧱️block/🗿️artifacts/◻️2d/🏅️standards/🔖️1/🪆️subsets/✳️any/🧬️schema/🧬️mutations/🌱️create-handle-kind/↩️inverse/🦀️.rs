@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `CreateHandleKind`.
 
-use crate::artifacts::block2d::{Block2dHandleKind, Block2dSnapshot};
+use crate::artifacts::block2d::Block2dSnapshot;
 use crate::artifacts::block2d::mutations::Block2dMutation;
 
 //#region 🔖️Inverse

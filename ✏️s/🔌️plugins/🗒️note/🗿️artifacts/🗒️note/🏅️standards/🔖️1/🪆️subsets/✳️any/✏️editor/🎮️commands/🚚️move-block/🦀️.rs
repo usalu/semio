@@ -7,7 +7,7 @@ use crate::artifacts::note::schema::mutations::{
     resize_block,
 };
 use crate::artifacts::note::schema::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, offset_block_tree};
-use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

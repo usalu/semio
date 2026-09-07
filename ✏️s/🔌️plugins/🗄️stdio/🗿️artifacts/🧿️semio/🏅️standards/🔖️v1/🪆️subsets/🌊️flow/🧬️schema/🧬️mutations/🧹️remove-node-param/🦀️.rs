@@ -15,7 +15,7 @@ pub struct RemoveNodeParam {
 impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for RemoveNodeParam {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "node-param", kind: "remove-node-param", record: "RemoveNodeParam" };
 
-    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as Mutation<SemioFlowSnapshot>>::Diff> {
         agg_diff(&SemioFlowMutation::RemoveNodeParam(self.clone()), base)
     }
     fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {

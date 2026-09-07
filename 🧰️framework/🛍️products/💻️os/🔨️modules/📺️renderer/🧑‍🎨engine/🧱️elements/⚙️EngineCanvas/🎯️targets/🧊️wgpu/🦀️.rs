@@ -1994,7 +1994,7 @@ fn render_vello_scene(resources: &mut EngineCanvasBuildContext, reservation: Eng
 //#endregion Registry
 
 //#region NodeGraph
-pub fn paint_node_graph(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
+pub(crate) fn paint_node_graph(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
     let Some(graph) = &scene.node_graph else {
         return;
     };
@@ -3056,7 +3056,7 @@ pub fn apply_map_tile_bytes(kind: WorldAssetRequestKind, bytes: &[u8]) {
     });
 }
 
-pub fn paint_tiled_map(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
+pub(crate) fn paint_tiled_map(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
     let Some(map_scene) = &scene.tiled_map else {
         return;
     };
@@ -3539,7 +3539,7 @@ fn sync_board_host(host: &mut puzzle::editor::puzzle2d::engine::BoardHost, scene
     }
 }
 
-pub fn paint_puzzle_board(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
+pub(crate) fn paint_puzzle_board(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
     let Some(board_scene) = &scene.board2d else {
         return;
     };
@@ -4262,7 +4262,7 @@ pub fn text_editor_apply_key(scene: &UiComponentSceneNode, key: KeyAction, modif
     })
 }
 
-pub fn paint_text_editor(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
+pub(crate) fn paint_text_editor(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
     let Some(editor) = &scene.text_editor else {
         return;
     };

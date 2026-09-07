@@ -2,6 +2,10 @@
   "version": 1,
   "items": 256,
   "bytes": 16777216,
+  "registrationStages": ["closed", "pending", "receiver-lost", "wrong-actor"],
+  "unknownActorGrants": 256,
+  "terminalWakeOutsideLock": true,
+  "admittedWakeOutsideLock": true,
   "traces": [
     { "id": "one-peer", "queued": ["A2", "B1", "A1"], "retry": "A1", "expected": ["B1", "A1", "A2"] },
     { "id": "peer-at-front", "queued": ["B1", "A2", "A1"], "retry": "A1", "expected": ["B1", "A1", "A2"] },

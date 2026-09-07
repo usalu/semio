@@ -18,7 +18,7 @@ pub struct SetBounds {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetBounds {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "bounds", kind: "set-bounds", record: "SetBounds" };
 
-    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as protocol::Mutation<LasSnapshot>>::Diff> {
+    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
         agg_diff(&LasMutation::SetBounds(self.clone()), base)
     }
     fn inverse(&self, base: &LasSnapshot) -> Vec<LasMutation> {

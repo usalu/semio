@@ -82,7 +82,9 @@ pub fn semio_presentation_artifact_schema_descriptor() -> schema::ArtifactSchema
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::SemioPresentationDiff;
-    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::{apply_semio_presentation_mutation, insert_master, SemioPresentationMutation};
+    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::{apply_semio_presentation_mutation, SemioPresentationMutation};
+    #[cfg(test)]
+    use crate::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::{insert_master};
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 

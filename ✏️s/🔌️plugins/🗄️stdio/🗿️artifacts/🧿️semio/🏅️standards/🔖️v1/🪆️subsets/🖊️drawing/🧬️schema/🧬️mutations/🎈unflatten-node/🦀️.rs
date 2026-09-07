@@ -1,8 +1,8 @@
 //! 🎈️️ `unflatten` — restores the node addressed by `at` wholesale to `original` (a captured
 //! hierarchy, per `📓️taxonomy.md`'s `flatten`/`unflatten` row: "addr + captured hierarchy").
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{DrawNodeDiff, NodePath, SemioDrawingDiff, diff_at_path, node_at};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::{SemioDrawingMutation, flatten_node};
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Payload

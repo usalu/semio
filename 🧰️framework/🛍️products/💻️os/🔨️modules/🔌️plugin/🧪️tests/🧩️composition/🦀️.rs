@@ -20,9 +20,9 @@ impl Clone for ComposedParentSnapshot {
 
 impl store::ArtifactDsl for ComposedParentSnapshot {
     const EXTENSION: &'static str = "composed-parent-test";
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let value = serde_json::from_str::<serde_json::Value>(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))?;
-        <Self as protocol::FromValue>::from_value(value.into()).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+        let value = serde_json::from_str::<Value>(text).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
+        <Self as protocol::FromValue>::from_value(value.into()).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
         store::os_pack::json::to_json_string(self)
@@ -34,7 +34,7 @@ impl ArtifactPack for ComposedParentSnapshot {
         Ok(store::os_pack::json::to_json_string(self).into_bytes())
     }
     fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let value = serde_json::from_slice::<serde_json::Value>(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let value = serde_json::from_slice::<Value>(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
         <Self as protocol::FromValue>::from_value(value.into()).map_err(|error| store::PackError::Schema(error.to_string()))
     }
 }
@@ -44,7 +44,7 @@ impl protocol::MutationDiff<ComposedParentSnapshot> for NoConfig {
     fn absorb(&mut self, _other: Self) {}
 }
 
-impl protocol::Mutation<ComposedParentSnapshot> for NoConfigMutation {
+impl Mutation<ComposedParentSnapshot> for NoConfigMutation {
     type Diff = NoConfig;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { match *self {} }
@@ -77,13 +77,13 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
     async fn initial_snapshot() -> Self::Snapshot {
         Self::Snapshot { slot: HAS_CHILD.then(|| ParentFixtureChild::new("child-1".into(), ArtifactRef {
             artifact_id: "child-1".into(),
-            dialect: store::os_io::ArtifactDialect { artifact_kind: "s.test.child".into(), standard: "native".into(), subset: "*".into() },
+            dialect: ArtifactDialect { artifact_kind: "s.test.child".into(), standard: "native".into(), subset: "*".into() },
         })) }
     }
     async fn handle(command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match *command {}
     }
-    async fn render(_body_key: &str, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
+    async fn render(_body_key: &str, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
         built_text_to_component_tree(ui_wgpu::wgpu::Label::data("Composed parent fixture"))
     }
     fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> { Some(bounded_document_store_owners()) }
@@ -98,7 +98,7 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
     fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> { TestApp::<false>::build_transient_store_disposer() }
 }
 
-async fn assert_parent_restore_case<const HAS_CHILD: bool>(row: &serde_json::Value) {
+async fn assert_parent_restore_case<const HAS_CHILD: bool>(row: &Value) {
     let mut app = VcsArtifactApp::<ComposedParentApp<HAS_CHILD>, TestMembers>::new(ComposedParentApp::default()).await;
     let dialect = test_child_dialect().await;
     let child_id = row["childId"].as_str().unwrap();
@@ -123,7 +123,7 @@ async fn assert_parent_restore_case<const HAS_CHILD: bool>(row: &serde_json::Val
 
 #[semio_framework_async_macros::async_test]
 async fn member_factory_parent_snapshot_restore_matches_neutral_corpus() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏪️store/🧩️composition/🪪️member-dialect/🧪️tests/🔣️.json"))).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🏪️store/🧩️composition/🪪️member-dialect/🧪️tests/🔣️.json"))).unwrap();
     for row in fixture["publicRestoreCases"].as_array().unwrap() {
         if row["parentHasChild"].as_bool().unwrap() { assert_parent_restore_case::<true>(row).await; }
         else { assert_parent_restore_case::<false>(row).await; }

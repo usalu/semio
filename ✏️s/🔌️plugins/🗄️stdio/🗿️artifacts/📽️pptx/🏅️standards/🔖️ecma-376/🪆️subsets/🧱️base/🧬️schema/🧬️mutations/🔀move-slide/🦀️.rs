@@ -15,7 +15,7 @@ pub struct MoveSlide {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for MoveSlide {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "slide", kind: "move-slide", record: "MoveSlide" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as protocol::Mutation<PptxSnapshot>>::Diff> {
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as Mutation<PptxSnapshot>>::Diff> {
         agg_diff(&PptxMutation::MoveSlide(self.clone()), base)
     }
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {

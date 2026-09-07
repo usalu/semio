@@ -102,7 +102,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹clear-widget-layout/🧪️tests/🧹️drops-the-note-a-layout-entry/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹clear-widget-layout/🧪️tests/🧹️drops-the-note-a-9e0bcf/🦀️.rs"]
                                     mod tests_drops_the_note_a_layout_entry;
                                 }
                                 #[path = "."]
@@ -115,7 +115,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🧪️tests/✂️severs-link-ab-leaving-both-notes/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🧪️tests/✂️severs-link-ab-8e6d3c/🦀️.rs"]
                                     mod tests_severs_link_ab_leaving_both_notes;
                                 }
                                 #[path = "."]
@@ -128,7 +128,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🧪️tests/🚫️removes-note-a-and-flags-the-dangling-synapse/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🧪️tests/🚫️removes-note-a-3ed628/🦀️.rs"]
                                     mod tests_removes_note_a_and_flags_the_dangling_synapse;
                                 }
                                 #[path = "."]
@@ -141,7 +141,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️set-camera/🧪️tests/📷️pans-and-zooms-the-graph-camera/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️set-camera/🧪️tests/📷️pans-and-zooms-05c06d/🦀️.rs"]
                                     mod tests_pans_and_zooms_the_graph_camera;
                                 }
                                 #[path = "."]
@@ -154,7 +154,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widget/🧪️tests/📍️repositions-note-a-on-the-canvas/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widget/🧪️tests/📍️repositions-note-eb06ce/🦀️.rs"]
                                     mod tests_repositions_note_a_on_the_canvas;
                                 }
                                 #[path = "."]
@@ -167,7 +167,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️change-schema/🧪️tests/🏷️restamps-the-fixture-schema/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️change-schema/🧪️tests/🏷️restamps-the-1e34dd/🦀️.rs"]
                                     mod tests_restamps_the_fixture_schema;
                                 }
                                 #[path = "."]
@@ -180,7 +180,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-synapse/🧪️tests/🔗️joins-note-b-to-note-c-at-index-1/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-synapse/🧪️tests/🔗️joins-note-b-to-03a80d/🦀️.rs"]
                                     mod tests_joins_note_b_to_note_c_at_index_1;
                                 }
                                 #[path = "."]
@@ -193,7 +193,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-widget/🧪️tests/✍️rewrites-the-note-b-body-in-place/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-widget/🧪️tests/✍️rewrites-the-note-a5d31d/🦀️.rs"]
                                     mod tests_rewrites_the_note_b_body_in_place;
                                 }
                                 #[path = "."]
@@ -206,7 +206,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️replace-synapse/🧪️tests/🔗️repoints-link-ab-onto-the-alt-port/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️replace-synapse/🧪️tests/🔗️repoints-link-ab-c09fc0/🦀️.rs"]
                                     mod tests_repoints_link_ab_onto_the_alt_port;
                                 }
                                 #[path = "."]
@@ -219,7 +219,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-generation/🧪️tests/🌱️appends-generation-2-and-selects-it/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-generation/🧪️tests/🌱️appends-generatio-47ad4d/🦀️.rs"]
                                     mod tests_appends_generation_2_and_selects_it;
                                 }
                                 #[path = "."]
@@ -232,7 +232,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/🧪️tests/🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/🧪️tests/🚫️fallback/🦀️.rs"]
                                     mod tests_removes_the_selected_generation_2_and_falls_back_to_generation_1;
                                 }
                                 #[path = "."]
@@ -245,7 +245,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-generation/🧪️tests/🏷️retitles-generation-1/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-generation/🧪️tests/🏷️retitles-a4e713/🦀️.rs"]
                                     mod tests_retitles_generation_1;
                                 }
                                 #[path = "."]
@@ -258,7 +258,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-generation-value/🧪️tests/📏️raises-the-height-answer-in-generation-1/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-generation-value/🧪️tests/t005/🦀️.rs"]
                                     mod tests_raises_the_height_answer_in_generation_1;
                                 }
                                 #[path = "."]
@@ -271,7 +271,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-widget/🧪️tests/📝️inserts-note-c-at-index-2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-widget/🧪️tests/📝️inserts-note-c-dc36bc/🦀️.rs"]
                                     mod tests_inserts_note_c_at_index_2;
                                 }
                             }
@@ -623,7 +623,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-widget-position/🧪️tests/🧹️unpins-the-node-a-position/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-widget-position/🧪️tests/🧹️unpins-the-node-76ac74/🦀️.rs"]
                                     mod tests_unpins_the_node_a_position;
                                 }
                                 #[path = "."]
@@ -636,7 +636,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🧪️tests/✂️cuts-wire-ab-leaving-both-nodes/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🧪️tests/✂️cuts-wire-ab-e28360/🦀️.rs"]
                                     mod tests_cuts_wire_ab_leaving_both_nodes;
                                 }
                                 #[path = "."]
@@ -649,7 +649,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-widget/🧪️tests/🚫️removes-node-a-and-leaves-wire-ab-dangling/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-widget/🧪️tests/🚫️removes-node-a-4524b6/🦀️.rs"]
                                     mod tests_removes_node_a_and_leaves_wire_ab_dangling;
                                 }
                                 #[path = "."]
@@ -662,7 +662,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷️update-camera/🧪️tests/🔍️frames-the-graph-at-double-zoom/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷️update-camera/🧪️tests/🔍️frames-the-graph-56967e/🦀️.rs"]
                                     mod tests_frames_the_graph_at_double_zoom;
                                 }
                                 #[path = "."]
@@ -675,7 +675,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widget/🧪️tests/📍️repositions-node-a-in-the-graph/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widget/🧪️tests/📍️repositions-node-366d41/🦀️.rs"]
                                     mod tests_repositions_node_a_in_the_graph;
                                 }
                                 #[path = "."]
@@ -688,7 +688,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️change-schema/🧪️tests/🏷️restamps-the-fixture-schema-id/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️change-schema/🧪️tests/🏷️restamps-the-677666/🦀️.rs"]
                                     mod tests_restamps_the_fixture_schema_id;
                                 }
                                 #[path = "."]
@@ -701,7 +701,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update-synapse/🧪️tests/📡️repoints-wire-ab-onto-the-cap-port/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update-synapse/🧪️tests/📡️repoints-wire-ab-ed8ed9/🦀️.rs"]
                                     mod tests_repoints_wire_ab_onto_the_cap_port;
                                 }
                                 #[path = "."]
@@ -714,7 +714,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-widget/🧪️tests/🎚️retunes-the-knob-slider-value/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-widget/🧪️tests/🎚️retunes-the-knob-d14c8f/🦀️.rs"]
                                     mod tests_retunes_the_knob_slider_value;
                                 }
                             }
@@ -1065,7 +1065,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🧪️tests/🧩️appends-slot-c-at-index-2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🧪️tests/🧩️appends-slot-c-b3fd5a/🦀️.rs"]
                                     mod tests_appends_slot_c_at_index_2;
                                 }
                                 #[path = "."]
@@ -1078,7 +1078,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🧪️tests/🚫️removes-slot-a-and-cascades-edge-ab/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🧪️tests/🚫️removes-slot-a-06e92b/🦀️.rs"]
                                     mod tests_removes_slot_a_and_cascades_edge_ab;
                                 }
                                 #[path = "."]
@@ -1091,7 +1091,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🧪️tests/⛔️appends-a-rule-forbidding-roof-over-wall/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🧪️tests/⛔️appends-a-rule-059003/🦀️.rs"]
                                     mod tests_appends_a_rule_forbidding_roof_over_wall;
                                 }
                                 #[path = "."]
@@ -1104,7 +1104,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-rule/🧪️tests/🚫️removes-the-wall-roof-rule/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-rule/🧪️tests/🚫️removes-the-wall-3d5715/🦀️.rs"]
                                     mod tests_removes_the_wall_roof_rule;
                                 }
                                 #[path = "."]
@@ -1117,7 +1117,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-weight/🧪️tests/⚖️raises-the-wall-module-selection-bias/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-weight/🧪️tests/⚖️raises-the-wall-4578a3/🦀️.rs"]
                                     mod tests_raises_the_wall_module_selection_bias;
                                 }
                                 #[path = "."]
@@ -1130,7 +1130,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪶️remove-weight/🧪️tests/🪶️drops-the-wall-module-weight-override/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪶️remove-weight/🧪️tests/🪶️drops-the-wall-36f28b/🦀️.rs"]
                                     mod tests_drops_the_wall_module_weight_override;
                                 }
                                 #[path = "."]
@@ -1143,7 +1143,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🧪️tests/🔗️joins-slot-b-to-slot-c-at-index-1/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🧪️tests/🔗️joins-slot-b-to-c622ac/🦀️.rs"]
                                     mod tests_joins_slot_b_to_slot_c_at_index_1;
                                 }
                                 #[path = "."]
@@ -1156,7 +1156,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🧪️tests/✂️severs-edge-ab-leaving-both-slots/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🧪️tests/✂️severs-edge-ab-c14030/🦀️.rs"]
                                     mod tests_severs_edge_ab_leaving_both_slots;
                                 }
                                 #[path = "."]
@@ -1169,7 +1169,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧪️tests/🎲️reseeds-the-solve-from-7-to-99/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧪️tests/🎲️reseeds-the-93c15b/🦀️.rs"]
                                     mod tests_reseeds_the_solve_from_7_to_99;
                                 }
                             }

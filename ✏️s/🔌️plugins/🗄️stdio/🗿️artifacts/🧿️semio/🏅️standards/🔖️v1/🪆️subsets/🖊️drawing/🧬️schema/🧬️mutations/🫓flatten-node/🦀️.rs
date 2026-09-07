@@ -8,8 +8,8 @@
 //! than silently corrupting geometry.
 
 use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{DrawNodeDiff, NodePath, SemioDrawingDiff, diff_at_path, node_at};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::{SemioDrawingMutation, unflatten_node};
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Payload

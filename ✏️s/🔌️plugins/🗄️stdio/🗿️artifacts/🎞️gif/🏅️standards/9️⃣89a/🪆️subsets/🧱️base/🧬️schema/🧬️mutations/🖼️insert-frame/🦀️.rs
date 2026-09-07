@@ -16,7 +16,7 @@ pub struct InsertFrame {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for InsertFrame {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "frame", kind: "insert-frame", record: "InsertFrame" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as protocol::Mutation<GifSnapshot>>::Diff> {
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
         agg_diff(&GifMutation::InsertFrame(self.clone()), base)
     }
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {

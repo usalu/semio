@@ -15,7 +15,7 @@
 //! is `None` — exactly the pair this committed payload restates, taking the verb's own
 //! `mutation.no-op` guard.
 
-use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::mutation::UpdateGraphAlgorithm;
+use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::UpdateGraphAlgorithm;
 use crate::artifacts::equation::{equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::{FromValue, ToValue};
 

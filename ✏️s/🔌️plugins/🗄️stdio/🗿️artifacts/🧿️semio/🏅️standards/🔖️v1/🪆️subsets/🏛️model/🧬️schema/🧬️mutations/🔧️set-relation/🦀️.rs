@@ -20,7 +20,7 @@ pub struct SetRelation {
 impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for SetRelation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "relation", kind: "set-relation", record: "SetRelation" };
 
-    fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<<SemioModelMutation as protocol::Mutation<SemioModelSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<<SemioModelMutation as Mutation<SemioModelSnapshot>>::Diff> {
         agg_diff(&SemioModelMutation::SetRelation(self.clone()), base)
     }
     fn inverse(&self, base: &SemioModelSnapshot) -> Vec<SemioModelMutation> {

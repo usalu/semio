@@ -16,7 +16,7 @@ pub struct SetShapeText {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for SetShapeText {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "shape-text", kind: "set-shape-text", record: "SetShapeText" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as protocol::Mutation<PptxSnapshot>>::Diff> {
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as Mutation<PptxSnapshot>>::Diff> {
         agg_diff(&PptxMutation::SetShapeText(self.clone()), base)
     }
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {

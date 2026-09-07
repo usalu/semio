@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ChangeMaterialBaseColor`.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::{SemioMeshDiff, material_at};
+use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::material_at;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 

@@ -326,28 +326,28 @@ impl MountedModelBuild {
         match self.stage {
             ModelBuildStage::ReserveNodes => {
                 self.model.nodes.try_reserve_exact(snapshot.nodes.len() + mesh_points).map_err(|_| b"fem2d.model-node-allocation".to_vec())?;
-                if self.model.nodes.capacity() * std::mem::size_of::<crate::model::Node>() > SESSION_OWNER_PAGE_BYTES {
+                if self.model.nodes.capacity() * size_of::<crate::model::Node>() > SESSION_OWNER_PAGE_BYTES {
                     return Err(b"fem2d.model-node-page-capacity".to_vec());
                 }
                 self.stage = ModelBuildStage::ReserveElements;
             }
             ModelBuildStage::ReserveElements => {
                 self.model.elements.try_reserve_exact(snapshot.elements.len() + mesh_triangles).map_err(|_| b"fem2d.model-element-allocation".to_vec())?;
-                if self.model.elements.capacity() * std::mem::size_of::<crate::model::Elements>() > SESSION_OWNER_PAGE_BYTES {
+                if self.model.elements.capacity() * size_of::<crate::model::Elements>() > SESSION_OWNER_PAGE_BYTES {
                     return Err(b"fem2d.model-element-page-capacity".to_vec());
                 }
                 self.stage = ModelBuildStage::ReserveSupports;
             }
             ModelBuildStage::ReserveSupports => {
                 self.model.supports.try_reserve_exact(snapshot.supports.len()).map_err(|_| b"fem2d.model-support-allocation".to_vec())?;
-                if self.model.supports.capacity() * std::mem::size_of::<crate::model::Support>() > SESSION_OWNER_PAGE_BYTES {
+                if self.model.supports.capacity() * size_of::<crate::model::Support>() > SESSION_OWNER_PAGE_BYTES {
                     return Err(b"fem2d.model-support-page-capacity".to_vec());
                 }
                 self.stage = ModelBuildStage::ReserveRegionNodeIds;
             }
             ModelBuildStage::ReserveRegionNodeIds => {
                 self.region_node_ids.try_reserve_exact(mesh_points).map_err(|_| b"fem2d.model-region-node-allocation".to_vec())?;
-                if self.region_node_ids.capacity() * std::mem::size_of::<String>() > SESSION_OWNER_PAGE_BYTES {
+                if self.region_node_ids.capacity() * size_of::<String>() > SESSION_OWNER_PAGE_BYTES {
                     return Err(b"fem2d.model-region-node-page-capacity".to_vec());
                 }
                 self.stage = ModelBuildStage::Nodes;
@@ -501,7 +501,7 @@ impl MountedModelBuild {
                 let owner = self.pending_support.as_mut().ok_or_else(|| b"fem2d.model-support-candidate-missing".to_vec())?;
                 bounded_derived_string(&owner.node_id)?;
                 owner.fixed.try_reserve_exact(source.fixed.len()).map_err(|_| b"fem2d.model-support-dof-allocation".to_vec())?;
-                if owner.fixed.capacity() * std::mem::size_of::<crate::model::Dof>() > SESSION_OWNER_PAGE_BYTES {
+                if owner.fixed.capacity() * size_of::<crate::model::Dof>() > SESSION_OWNER_PAGE_BYTES {
                     return Err(b"fem2d.model-support-dof-page-capacity".to_vec());
                 }
                 self.lookup_cursor = 0;
@@ -720,7 +720,7 @@ impl MountedModelBuild {
             if support.fixed.pop().is_some() {
                 return (false, 1, 0);
             }
-            let bytes = support.fixed.capacity() * std::mem::size_of::<crate::model::Dof>();
+            let bytes = support.fixed.capacity() * size_of::<crate::model::Dof>();
             if bytes != 0 {
                 if bytes > maximum_bytes {
                     return (false, 0, 0);
@@ -750,7 +750,7 @@ impl MountedModelBuild {
                     return (false, 1, 0);
                 }
                 1 => {
-                    let bytes = self.model.nodes.capacity() * std::mem::size_of::<crate::model::Node>();
+                    let bytes = self.model.nodes.capacity() * size_of::<crate::model::Node>();
                     if bytes > maximum_bytes {
                         return (false, 0, 0);
                     }
@@ -777,7 +777,7 @@ impl MountedModelBuild {
                     return (false, 1, 0);
                 }
                 3 => {
-                    let bytes = self.model.elements.capacity() * std::mem::size_of::<crate::model::Elements>();
+                    let bytes = self.model.elements.capacity() * size_of::<crate::model::Elements>();
                     if bytes > maximum_bytes {
                         return (false, 0, 0);
                     }
@@ -801,7 +801,7 @@ impl MountedModelBuild {
                     if support.fixed.pop().is_some() {
                         return (false, 1, 0);
                     }
-                    let bytes = support.fixed.capacity() * std::mem::size_of::<crate::model::Dof>();
+                    let bytes = support.fixed.capacity() * size_of::<crate::model::Dof>();
                     if bytes != 0 {
                         if bytes > maximum_bytes {
                             return (false, 0, 0);
@@ -813,7 +813,7 @@ impl MountedModelBuild {
                     return (false, 1, 0);
                 }
                 5 => {
-                    let bytes = self.model.supports.capacity() * std::mem::size_of::<crate::model::Support>();
+                    let bytes = self.model.supports.capacity() * size_of::<crate::model::Support>();
                     if bytes > maximum_bytes {
                         return (false, 0, 0);
                     }
@@ -842,7 +842,7 @@ impl MountedModelBuild {
                     return (false, 1, 0);
                 }
                 8 => {
-                    let bytes = self.region_node_ids.capacity() * std::mem::size_of::<String>();
+                    let bytes = self.region_node_ids.capacity() * size_of::<String>();
                     if bytes > maximum_bytes {
                         return (false, 0, 0);
                     }
@@ -858,7 +858,7 @@ impl MountedModelBuild {
                     if mesh.points.pop().is_some() {
                         return (false, 1, 0);
                     }
-                    let bytes = mesh.points.capacity() * std::mem::size_of::<[f64; 2]>();
+                    let bytes = mesh.points.capacity() * size_of::<[f64; 2]>();
                     if bytes != 0 {
                         if bytes > maximum_bytes {
                             return (false, 0, 0);
@@ -877,7 +877,7 @@ impl MountedModelBuild {
                     if mesh.tris.pop().is_some() {
                         return (false, 1, 0);
                     }
-                    let bytes = mesh.tris.capacity() * std::mem::size_of::<[u32; 3]>();
+                    let bytes = mesh.tris.capacity() * size_of::<[u32; 3]>();
                     if bytes != 0 {
                         if bytes > maximum_bytes {
                             return (false, 0, 0);
@@ -1027,7 +1027,7 @@ impl MountedState {
             outer.try_reserve_exact(region.outline.len()).map_err(|_| b"fem2d.session-domain-outer-allocation" as &'static [u8])?;
             let mut holes = Vec::new();
             holes.try_reserve_exact(region.holes.len()).map_err(|_| b"fem2d.session-domain-holes-allocation" as &'static [u8])?;
-            if outer.capacity() * std::mem::size_of::<[f64; 2]>() > SESSION_OWNER_PAGE_BYTES || holes.capacity() * std::mem::size_of::<Vec<[f64; 2]>>() > SESSION_OWNER_PAGE_BYTES {
+            if outer.capacity() * size_of::<[f64; 2]>() > SESSION_OWNER_PAGE_BYTES || holes.capacity() * size_of::<Vec<[f64; 2]>>() > SESSION_OWNER_PAGE_BYTES {
                 return Err(b"fem2d.session-domain-page-capacity");
             }
             self.domain = Some(PlanarDomain { outer, holes });
@@ -1043,7 +1043,7 @@ impl MountedState {
             if self.domain_hole_cursor == domain.holes.len() {
                 let mut hole = Vec::new();
                 hole.try_reserve_exact(region.holes[self.domain_hole_cursor].len()).map_err(|_| b"fem2d.session-domain-hole-allocation" as &'static [u8])?;
-                if hole.capacity() * std::mem::size_of::<[f64; 2]>() > SESSION_OWNER_PAGE_BYTES {
+                if hole.capacity() * size_of::<[f64; 2]>() > SESSION_OWNER_PAGE_BYTES {
                     return Err(b"fem2d.session-domain-hole-page-capacity");
                 }
                 domain.holes.push(hole);
@@ -1175,7 +1175,7 @@ impl MountedState {
                         FemStagePlan { stage: FemJobStage::Finalize, units: 1 },
                     ];
                     if self.graph_plans.capacity() == 0 {
-                        if self.graph_plans.try_reserve_exact(PLANS.len()).is_err() || self.graph_plans.capacity() * std::mem::size_of::<FemStagePlan>() > SESSION_OWNER_PAGE_BYTES {
+                        if self.graph_plans.try_reserve_exact(PLANS.len()).is_err() || self.graph_plans.capacity() * size_of::<FemStagePlan>() > SESSION_OWNER_PAGE_BYTES {
                             return self.fail(b"fem2d.graph-plan-allocation".to_vec());
                         }
                     } else if let Some(plan) = PLANS.get(self.graph_plans.len()).cloned() {
@@ -1493,7 +1493,7 @@ impl MountedState {
                     if self.graph_plans.pop().is_some() {
                         return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                     }
-                    let plan_bytes = self.graph_plans.capacity() * std::mem::size_of::<FemStagePlan>();
+                    let plan_bytes = self.graph_plans.capacity() * size_of::<FemStagePlan>();
                     if plan_bytes != 0 {
                         if plan_bytes > maximum_bytes {
                             return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
@@ -1507,7 +1507,7 @@ impl MountedState {
                             return PluginCloseStep::Pending { released_items, released_bytes };
                         }
                         self.graph = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<FemJobGraph>() };
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<FemJobGraph>() };
                     }
                     self.close_cursor += 1;
                 }
@@ -1518,7 +1518,7 @@ impl MountedState {
                             return PluginCloseStep::Pending { released_items, released_bytes };
                         }
                         self.mesh = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<MeshJob>() };
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<MeshJob>() };
                     }
                     self.close_cursor += 1;
                 }
@@ -1529,7 +1529,7 @@ impl MountedState {
                             return PluginCloseStep::Pending { released_items, released_bytes };
                         }
                         self.model_build = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<MountedModelBuild>() };
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<MountedModelBuild>() };
                     }
                     self.close_cursor += 1;
                 }
@@ -1540,7 +1540,7 @@ impl MountedState {
                             return PluginCloseStep::Pending { released_items, released_bytes };
                         }
                         self.assembly_build = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<AssemblyJobConstruction>() };
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<AssemblyJobConstruction>() };
                     }
                     self.close_cursor += 1;
                 }
@@ -1551,7 +1551,7 @@ impl MountedState {
                             return PluginCloseStep::Pending { released_items, released_bytes };
                         }
                         self.assembly = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<AssemblyJob<'static>>() };
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<AssemblyJob<'static>>() };
                     }
                     self.close_cursor += 1;
                 }
@@ -1562,7 +1562,7 @@ impl MountedState {
                             return PluginCloseStep::Pending { released_items, released_bytes };
                         }
                         self.csr_build = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<AssemblyCsrBuild>() };
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<AssemblyCsrBuild>() };
                     }
                     self.close_cursor += 1;
                 }
@@ -1573,7 +1573,7 @@ impl MountedState {
                             return PluginCloseStep::Pending { released_items, released_bytes };
                         }
                         self.pcg_build = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<PcgJobConstruction>() };
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<PcgJobConstruction>() };
                     }
                     self.close_cursor += 1;
                 }
@@ -1584,7 +1584,7 @@ impl MountedState {
                             return PluginCloseStep::Pending { released_items, released_bytes };
                         }
                         self.pcg = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<PcgJob>() };
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<PcgJob>() };
                     }
                     self.close_cursor += 1;
                 }
@@ -1593,7 +1593,7 @@ impl MountedState {
                         match self.domain_close_lane {
                             0 if domain.outer.pop().is_some() => return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
                             0 => {
-                                let bytes = domain.outer.capacity() * std::mem::size_of::<[f64; 2]>();
+                                let bytes = domain.outer.capacity() * size_of::<[f64; 2]>();
                                 if bytes > maximum_bytes {
                                     return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
                                 }
@@ -1606,7 +1606,7 @@ impl MountedState {
                                     if hole.pop().is_some() {
                                         return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                                     }
-                                    let bytes = hole.capacity() * std::mem::size_of::<[f64; 2]>();
+                                    let bytes = hole.capacity() * size_of::<[f64; 2]>();
                                     if bytes > maximum_bytes {
                                         return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
                                     }
@@ -1618,7 +1618,7 @@ impl MountedState {
                                 continue;
                             }
                             2 => {
-                                let bytes = domain.holes.capacity() * std::mem::size_of::<Vec<[f64; 2]>>();
+                                let bytes = domain.holes.capacity() * size_of::<Vec<[f64; 2]>>();
                                 if bytes > maximum_bytes {
                                     return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
                                 }
@@ -1647,7 +1647,7 @@ impl MountedState {
                         self.visual.fields.pop();
                         return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                     }
-                    let bytes = self.visual.fields.capacity() * std::mem::size_of::<crate::editor::fem2d::modes::edit::windows::model::NodeLiveField>();
+                    let bytes = self.visual.fields.capacity() * size_of::<crate::editor::fem2d::modes::edit::windows::model::NodeLiveField>();
                     if bytes != 0 {
                         if bytes > maximum_bytes {
                             return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
@@ -1670,7 +1670,7 @@ impl MountedState {
                         self.visual.assembling_element_ids.pop();
                         return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                     }
-                    let bytes = self.visual.assembling_element_ids.capacity() * std::mem::size_of::<String>();
+                    let bytes = self.visual.assembling_element_ids.capacity() * size_of::<String>();
                     if bytes != 0 {
                         if bytes > maximum_bytes {
                             return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
@@ -1760,13 +1760,13 @@ impl MountedState {
                             return PluginCloseStep::Blocked { reason: "mounted FEM snapshot lease was already returned" };
                         };
                         self.snapshot_return = Some(witness);
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<store::SnapshotRead<Fem2dSnapshot>>() };
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<store::SnapshotRead<Fem2dSnapshot>>() };
                     }
                     if self.snapshot_return.as_ref().is_some_and(|witness| !witness.terminal_is_empty()) {
                         return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
                     }
                     if self.snapshot_return.take().is_some() {
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<store::SnapshotReadReturn>() };
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<store::SnapshotReadReturn>() };
                     }
                     self.close_cursor += 1;
                 }
@@ -1849,7 +1849,7 @@ struct SnapshotAdmissionCursor {
 
 impl SnapshotAdmissionCursor {
     fn new() -> Self {
-        Self { lane: 0, outer: 0, inner: 0, deep: 0, owner_opened: false, items: 1, bytes: std::mem::size_of::<Fem2dSnapshot>(), visual_loads: 0 }
+        Self { lane: 0, outer: 0, inner: 0, deep: 0, owner_opened: false, items: 1, bytes: size_of::<Fem2dSnapshot>(), visual_loads: 0 }
     }
 
     fn charge(&mut self, items: usize, bytes: usize) -> Result<(), &'static [u8]> {
@@ -1874,15 +1874,15 @@ impl SnapshotAdmissionCursor {
     fn step_one(&mut self, snapshot: &Fem2dSnapshot) -> Result<bool, &'static [u8]> {
         if !self.owner_opened && !matches!(self.lane, 4 | 9 | 11) {
             let bytes = match self.lane {
-                0 => snapshot.nodes.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemNode>(),
-                1 => snapshot.elements.capacity() * std::mem::size_of::<FemElement>(),
-                2 => snapshot.regions.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemRegion>(),
+                0 => snapshot.nodes.capacity() * size_of::<crate::artifacts::fem2d::FemNode>(),
+                1 => snapshot.elements.capacity() * size_of::<FemElement>(),
+                2 => snapshot.regions.capacity() * size_of::<crate::artifacts::fem2d::FemRegion>(),
                 3 => 0,
-                5 => snapshot.materials.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemMaterial>(),
-                6 => snapshot.sections.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemSection>(),
-                7 => snapshot.supports.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemSupport>(),
-                8 => snapshot.load_cases.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemLoadCase>(),
-                10 => snapshot.combinations.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemCombination>(),
+                5 => snapshot.materials.capacity() * size_of::<crate::artifacts::fem2d::FemMaterial>(),
+                6 => snapshot.sections.capacity() * size_of::<crate::artifacts::fem2d::FemSection>(),
+                7 => snapshot.supports.capacity() * size_of::<crate::artifacts::fem2d::FemSupport>(),
+                8 => snapshot.load_cases.capacity() * size_of::<crate::artifacts::fem2d::FemLoadCase>(),
+                10 => snapshot.combinations.capacity() * size_of::<crate::artifacts::fem2d::FemCombination>(),
                 _ => 0,
             };
             self.owner_opened = true;
@@ -1916,7 +1916,7 @@ impl SnapshotAdmissionCursor {
                     Some(region) => Some(if region.outline.len() > SESSION_MAXIMUM_BOUNDARY_POINTS || region.holes.len() > SESSION_MAXIMUM_REGION_HOLES {
                         SESSION_MAXIMUM_INPUT_BYTES + 1
                     } else {
-                        bounded_string_capacities(&[&region.id, &region.name, &region.material_id])? + region.outline.capacity() * 16 + region.holes.capacity() * std::mem::size_of::<Vec<[f64; 2]>>()
+                        bounded_string_capacities(&[&region.id, &region.name, &region.material_id])? + region.outline.capacity() * 16 + region.holes.capacity() * size_of::<Vec<[f64; 2]>>()
                     }),
                     None => None,
                 }
@@ -1978,7 +1978,7 @@ impl SnapshotAdmissionCursor {
                     return Err(b"fem2d.session-support-capacity");
                 }
                 match snapshot.supports.get(self.outer) {
-                    Some(support) => Some(bounded_string_capacities(&[&support.id, &support.node_id])? + support.fixed.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemDof>()),
+                    Some(support) => Some(bounded_string_capacities(&[&support.id, &support.node_id])? + support.fixed.capacity() * size_of::<crate::artifacts::fem2d::FemDof>()),
                     None => None,
                 }
             }
@@ -1993,7 +1993,7 @@ impl SnapshotAdmissionCursor {
                 };
                 if !self.owner_opened {
                     self.owner_opened = true;
-                    self.charge(1, case.loads.capacity() * std::mem::size_of::<FemLoad>())?;
+                    self.charge(1, case.loads.capacity() * size_of::<FemLoad>())?;
                     return Ok(false);
                 }
                 if let Some(load) = case.loads.get(self.inner) {
@@ -2025,7 +2025,7 @@ impl SnapshotAdmissionCursor {
                 };
                 if !self.owner_opened {
                     self.owner_opened = true;
-                    self.charge(1, combination.terms.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemCombinationTerm>())?;
+                    self.charge(1, combination.terms.capacity() * size_of::<crate::artifacts::fem2d::FemCombinationTerm>())?;
                     return Ok(false);
                 }
                 if let Some(term) = combination.terms.get(self.inner) {
@@ -2469,11 +2469,11 @@ pub fn close_step(app_instance_id: u32, maximum_items: usize, maximum_bytes: usi
         let slot = app_instance_id as usize % SESSION_ACTIVE_CAPACITY;
         if registry.preflight_fault[slot].is_some_and(|fault| fault.app_instance_id == app_instance_id) {
             registry.preflight_fault[slot] = None;
-            return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<PendingSnapshotFault>() };
+            return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<PendingSnapshotFault>() };
         }
         if registry.preflight[slot].is_some_and(|preflight| preflight.app_instance_id == app_instance_id) {
             registry.preflight[slot] = None;
-            return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<PendingSnapshotAdmission>() };
+            return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<PendingSnapshotAdmission>() };
         }
         if let Some(pending) = registry.pending[slot].filter(|pending| pending.app_instance_id == app_instance_id) {
             registry.pending[slot] = None;

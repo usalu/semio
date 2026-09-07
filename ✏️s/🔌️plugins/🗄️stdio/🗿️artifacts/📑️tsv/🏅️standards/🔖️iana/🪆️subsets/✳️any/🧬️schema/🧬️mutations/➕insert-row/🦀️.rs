@@ -16,7 +16,7 @@ pub struct InsertRow {
 impl protocol::MutationKind<TsvSnapshot, TsvMutation> for InsertRow {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "row", kind: "insert-row", record: "InsertRow" };
 
-    fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as protocol::Mutation<TsvSnapshot>>::Diff> {
+    fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as Mutation<TsvSnapshot>>::Diff> {
         agg_diff(&TsvMutation::InsertRow(self.clone()), base)
     }
     fn inverse(&self, base: &TsvSnapshot) -> Vec<TsvMutation> {

@@ -25,11 +25,19 @@
 //! (spatial-index material, see `dispatch.rs::DispatchTree::hitboxes`), never the tree's structural
 //! source.
 
-use crate::element::{Bounds, Element, ElementId, FrameArena, PaintCx, PrepaintCx, ReconciliationKey, RetainedStore, SharedFrameCx};
+use crate::element::{Bounds, ElementId};
+#[cfg(test)]
+use crate::element::{Element, FrameArena, PaintCx, PrepaintCx, ReconciliationKey, RetainedStore, SharedFrameCx};
+#[cfg(test)]
 use crate::layout::LayoutCx;
-use crate::scene::{FinishParams, RenderPacket, Scene, SceneBuilder, SceneError};
-use crate::schedule::{Deadline, FrameScheduler, InvalidationReason};
+use crate::scene::RenderPacket;
+#[cfg(test)]
+use crate::scene::{FinishParams, Scene, SceneBuilder, SceneError};
+use crate::schedule::{Deadline, FrameScheduler};
+#[cfg(test)]
+use crate::schedule::InvalidationReason;
 use std::rc::Rc;
+#[cfg(test)]
 use ui_contract::UiRevision;
 
 //#region 🔖️Frame
@@ -45,6 +53,7 @@ impl FrameGeneration {
     pub const ZERO: Self = Self(0);
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[cfg(test)]
     fn next(self) -> Self {
         Self(self.0 + 1)
     }
@@ -134,6 +143,7 @@ pub struct FrameInputs<'a> {
 /// at roughly the next frame interval, so an in-flight loading/waiting/introducing border animation
 /// keeps waking the window (master.md: "a packet reporting `has_animated_primitives` registers an
 /// ANIMATION deadline").
+#[cfg(test)]
 const ANIMATION_FRAME_INTERVAL_SECONDS: f64 = 1.0 / 60.0;
 
 /// ⚙️ Drives one window's frame lifecycle: the frame arena and retained-state store (both cleared/
@@ -142,8 +152,11 @@ const ANIMATION_FRAME_INTERVAL_SECONDS: f64 = 1.0 / 60.0;
 #[derive(Default)]
 pub struct FrameEngine {
     presented: Option<Rc<FrameSnapshot>>,
+    #[cfg(test)]
     arena: FrameArena,
+    #[cfg(test)]
     retained: RetainedStore,
+    #[cfg(test)]
     generation: FrameGeneration,
 }
 

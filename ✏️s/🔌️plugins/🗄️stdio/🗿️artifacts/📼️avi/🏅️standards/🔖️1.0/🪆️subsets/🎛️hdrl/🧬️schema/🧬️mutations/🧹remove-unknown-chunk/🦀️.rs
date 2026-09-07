@@ -14,7 +14,7 @@ pub struct RemoveUnknownChunk {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for RemoveUnknownChunk {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "unknown-chunk", kind: "remove-unknown-chunk", record: "RemoveUnknownChunk" };
 
-    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as protocol::Mutation<AviSnapshot>>::Diff> {
+    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
         agg_diff(&AviMutation::RemoveUnknownChunk(self.clone()), base)
     }
     fn inverse(&self, base: &AviSnapshot) -> Vec<AviMutation> {

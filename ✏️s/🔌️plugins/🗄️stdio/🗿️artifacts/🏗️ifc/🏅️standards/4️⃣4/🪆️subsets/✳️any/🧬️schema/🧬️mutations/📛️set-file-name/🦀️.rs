@@ -15,7 +15,7 @@ pub struct SetFileName {
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetFileName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "file-name", kind: "set-file-name", record: "SetFileName" };
 
-    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<<IfcMutation as protocol::Mutation<IfcSnapshot>>::Diff> {
+    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<<IfcMutation as Mutation<IfcSnapshot>>::Diff> {
         agg_diff(&IfcMutation::SetFileName(self.clone()), base)
     }
     fn inverse(&self, base: &IfcSnapshot) -> Vec<IfcMutation> {

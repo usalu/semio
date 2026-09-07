@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative insert-other-segment mutation.
-use crate::artifacts::jpg::schema::diff::{self, *};
+use crate::artifacts::jpg::schema::diff::*;
 use crate::artifacts::jpg::schema::mutations::JpgMutation;
 use crate::artifacts::jpg::schema::snapshot::*;
 
@@ -28,7 +28,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for InsertOtherSegmentMuta
         protocol::MutationOutcome::new(contribute(base, *index, segment.clone()))
     }
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgMutation> {
-        let Self { index, segment } = self;
+        let Self { index, .. } = self;
         let outcome = <Self as protocol::MutationKind<JpgSnapshot, JpgMutation>>::diff(self, base);
         if <JpgDiff as protocol::DiffAlgebra<JpgSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();

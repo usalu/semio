@@ -2,7 +2,7 @@
 
 use crate::artifacts::fem2d::{Fem2dSnapshot, load_id};
 use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dLoadCasesDelta, Fem2dLoadCasesPatchEntry};
-use crate::artifacts::fem2d::mutations::{Fem2dMutation, add_load};
+use crate::artifacts::fem2d::mutations::Fem2dMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

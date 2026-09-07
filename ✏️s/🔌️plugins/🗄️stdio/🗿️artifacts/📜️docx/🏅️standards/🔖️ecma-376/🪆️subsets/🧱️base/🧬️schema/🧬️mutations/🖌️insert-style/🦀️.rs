@@ -14,7 +14,7 @@ pub struct InsertStyle {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for InsertStyle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "style", kind: "insert-style", record: "InsertStyle" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as protocol::Mutation<DocxSnapshot>>::Diff> {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
         agg_diff(&DocxMutation::InsertStyle(self.clone()), base)
     }
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {

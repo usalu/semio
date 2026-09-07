@@ -14,7 +14,7 @@
 //! `equation_scene` fails soft to the empty graph this committed payload replays verbatim,
 //! taking `replace-graph`'s own whole-value `mutation.no-op` guard.
 
-use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::replace_graph::mutation::ReplaceGraph;
+use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
 use crate::artifacts::equation::{equation_graph, EquationDiff, EquationGraph, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::{FromValue, ToValue};
 

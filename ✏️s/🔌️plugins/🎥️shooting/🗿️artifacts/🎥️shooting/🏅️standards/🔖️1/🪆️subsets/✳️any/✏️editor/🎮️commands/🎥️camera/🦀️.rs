@@ -4,8 +4,8 @@
 //! session-only runtime state, never a document field (see `ShootingConfig::camera`). `SetShotCamera` and
 //! `SaveCamera` ARE real document mutations.
 
-use crate::artifacts::shooting::mutations::create_saved_camera::mutation::CreateSavedCamera;
-use crate::artifacts::shooting::mutations::replace_shot_camera::mutation::ReplaceShotCamera;
+use crate::artifacts::shooting::mutations::create_saved_camera::CreateSavedCamera;
+use crate::artifacts::shooting::mutations::replace_shot_camera::ReplaceShotCamera;
 use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::{ShootingCamera, ShootingSavedCamera, ShootingSnapshot};
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};

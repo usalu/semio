@@ -113,7 +113,7 @@ mod tests {
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", crate::artifacts::raster::schema::empty_raster_document(), None);
-        let mut store = ArtifactStore::new(envelope).expect("valid artifact store fixture");
+        let mut store = ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
         store
             .dispatch(ArtifactCommand::Apply {
                 mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {
@@ -134,9 +134,10 @@ mod tests {
                 })],
                 description: None,
             })
+            .await
             .expect("apply");
         let edit: &Edit<RasterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<RasterSnapshot, RasterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<RasterSnapshot, RasterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

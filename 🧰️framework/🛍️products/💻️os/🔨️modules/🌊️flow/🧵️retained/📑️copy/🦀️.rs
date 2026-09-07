@@ -327,7 +327,7 @@ impl FlowCopyAllocationBudget {
     pub fn reservation_count(&self) -> usize { self.reservation_count }
     fn reserve<T>(&mut self, target: &mut Vec<T>, count: usize) -> Result<(), String> {
         if !target.is_empty() || target.capacity() != 0 { return Err("Flow allocation reservation requires an empty unallocated target".into()); }
-        let bytes = count.checked_mul(std::mem::size_of::<T>()).ok_or("Flow allocation size overflow")?;
+        let bytes = count.checked_mul(size_of::<T>()).ok_or("Flow allocation size overflow")?;
         let total = self.reserved_bytes.checked_add(bytes).ok_or("Flow allocation cumulative overflow")?;
         if bytes > self.maximum_single_bytes || total > self.maximum_total_bytes { return Err("Flow allocation exceeds owner admission".into()); }
         target.try_reserve_exact(count).map_err(|_| "Flow allocation reservation failed")?;

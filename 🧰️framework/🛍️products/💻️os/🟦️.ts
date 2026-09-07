@@ -27,6 +27,8 @@ import { decodeClientFrame, decodeLocalInteractionQueryCommand, decodeLocalInter
 /** 🔢️ Shared byte-codec floor — the same primitives the wire frames are built from; os reuses them
  * for its backbone-envelope and app-channel codecs rather than keeping a second copy. */
 import { decodeCausalEnvelopeBatch, encodeCausalEnvelopeBatch, readBool, readBytes, readF64, readHash32, readStr, readU8, readVarintU64, readVecBytes, readVecEnvelope, readVecStr, writeBool, writeBytes, writeF64, writeHash32, writeStr, writeVarintU64, writeVecBytes, writeVecEnvelope, writeVecStr } from "@semio-tech/framework-replication";
+import { parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
+export type { BrowserActorUiPatchOfferV1, BrowserActorUiPatchResultV1 };
 
 const replicationPackCodec = { encode: encodePackValue, decode: decodePackValue };
 
@@ -716,6 +718,7 @@ export function encodeBackboneWorkerRequest(request: BackboneWorkerRequest): Uin
 /** @emoji 🧵️ Decodes a {@link BackboneWorkerRequest} from the wasm actor or structured-clone twin. */
 export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerRequest {
   const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
+  if (parsed.kind === "browser-actor-ui-patch-result") return parseBrowserActorUiPatchResultV1(parsed);
   if (parsed.kind === "send" && typeof parsed.message === "object" && parsed.message !== null) {
     return {
       kind: "send",
@@ -738,6 +741,7 @@ export function encodeBackboneWorkerResponse(response: BackboneWorkerResponse): 
 /** @emoji 🧵️ Decodes a worker response/event wire payload from the wasm actor. */
 export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerResponse {
   const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
+  if (parsed.kind === "browser-actor-ui-patch") return parseBrowserActorUiPatchOfferV1(parsed);
   if (parsed.kind === "event" && typeof parsed.event === "object" && parsed.event !== null) {
     const documentId = workerWireIdV1(parsed.documentId);
     if (documentId === null) throw new Error("backbone worker response: invalid document id");
@@ -842,7 +846,8 @@ export type BackboneWorkerRequest =
   | { readonly kind: "inference-poll"; readonly operationEpoch: number }
   | { readonly kind: "inference-cancel"; readonly operationEpoch: number }
   | { readonly kind: "inference-approve"; readonly operationEpoch: number }
-  | { readonly kind: "inference-close"; readonly operationEpoch: number };
+  | { readonly kind: "inference-close"; readonly operationEpoch: number }
+  | BrowserActorUiPatchResultV1;
 
 /** 🛰️ Worker-local P2-C recovery lifecycle. These are not persisted artifact events: they describe
  * one bounded public bootstrap transfer and therefore remain explicit top-level worker responses. */
@@ -915,6 +920,7 @@ export type BackboneWorkerResponse =
    * phase, the server's own job id, the bounded progress cursor and the hash the server published —
    * never a receipt, bearer, origin, path, base pack, proposal body or user identity. */
   | { readonly kind: "inference-port-status"; readonly operationEpoch: number; readonly scope: DocumentScope; readonly status: GisMapInferencePortStatusV1 }
+  | BrowserActorUiPatchOfferV1
   | { readonly kind: "directory-status"; readonly pendingCommands: number };
 
 function wireArtifactActorMsg(message: ArtifactActorMsg): unknown {

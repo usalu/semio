@@ -2,7 +2,6 @@
 //! appended when absent. A duplicate `step.id` is Warning `mutation.no-op`.
 
 use crate::artifacts::playbook::mutations::PlaybookMutation;
-use crate::artifacts::playbook::schema::diff::text::diff_replace_content;
 use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot, PlaybookStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 // 🔬️ `Serialize`/`Deserialize` survive ONLY as a `#[cfg(test)]` differential oracle — committed

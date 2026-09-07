@@ -2,7 +2,6 @@
 //! ordered step list.
 
 use crate::artifacts::playbook::mutations::PlaybookMutation;
-use crate::artifacts::playbook::schema::diff::text::diff_replace_content;
 use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 // 🔬️ `Serialize`/`Deserialize` survive ONLY as a `#[cfg(test)]` differential oracle — committed

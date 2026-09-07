@@ -14,7 +14,7 @@ pub struct SetLoopCount {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetLoopCount {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "loop-count", kind: "set-loop-count", record: "SetLoopCount" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as protocol::Mutation<GifSnapshot>>::Diff> {
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
         agg_diff(&GifMutation::SetLoopCount(self.clone()), base)
     }
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {

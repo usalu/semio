@@ -77,6 +77,7 @@ mod tests {
     use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
     use protocol::Mutation;
     use protocol::SemanticMutation;
+    use semio_framework_os_kernel as vcs;
     use store::{create_document_envelope, ArtifactCommand};
 
     fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
@@ -199,8 +200,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn store_applies_layer_create() {
-        let mut store = RasterStore::new(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_snapshot(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], description: None }).expect("apply");
+        let mut store = RasterStore::new(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_snapshot(), None)).await.expect("valid artifact store fixture");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], description: None }).await.expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").layers.len(), 1);
     }
 

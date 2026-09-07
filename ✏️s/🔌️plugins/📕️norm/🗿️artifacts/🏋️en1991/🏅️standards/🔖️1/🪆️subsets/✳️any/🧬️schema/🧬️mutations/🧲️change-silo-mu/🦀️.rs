@@ -1,7 +1,7 @@
 //! 📉 `change-silo-mu` — sets the En1991 silo friction coefficient scalar.
 
 
-use crate::artifacts::en1991::{En1991Diff, En1991Mutation, En1991Snapshot};
+use crate::artifacts::en1991::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

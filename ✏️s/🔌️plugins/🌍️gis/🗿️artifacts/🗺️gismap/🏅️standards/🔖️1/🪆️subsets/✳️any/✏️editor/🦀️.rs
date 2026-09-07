@@ -25,7 +25,6 @@ use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
     ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, INTERACTION_SELECT_ACTION_ID, InteractionDefinition, InteractionRef, Label,
     LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, WindowMeasure, tree_item, tree_item_with_action,
-    ui_text,
 };
 use serde_json::{Value, json};
 use std::collections::HashMap;
@@ -445,8 +444,14 @@ struct Gis2dOneItemPreparation<P, M> {
 }
 
 fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority, stamp: Option<GisMapOneItemStampV1>) -> protocol::Edit<M> {
-    let id = format!("gis2d-retained-{}", authority.next_sequence_number());
-    let (mutation_id, timestamp) = stamp.map_or_else(|| (protocol::MutationId(format!("{id}#0")), authority.next_clock()), |stamp| (stamp.mutation_id, stamp.timestamp));
+    let retained_id = format!("gis2d-retained-{}", authority.next_sequence_number());
+    let (id, mutation_id, timestamp) = stamp.map_or_else(
+        || {
+            let mutation_id = protocol::MutationId(format!("{retained_id}#0"));
+            (retained_id, mutation_id, authority.next_clock())
+        },
+        |stamp| (stamp.mutation_id.0.clone(), stamp.mutation_id, stamp.timestamp),
+    );
     protocol::Edit {
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
@@ -612,17 +617,17 @@ async fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRe
     if let Some(feature) = feature {
         let kind = if feature.domain == "route" { "route" } else { "position" };
         let mut menu = Menu::of(registry)
-            .await
+            
             .action_args(INTERACTION_SELECT_ACTION_ID, select_feature_action_args(&feature.id))
-            .await
+            
             .action_args("focusFeature", dsl::DslValue::object([("featureId".to_string(), dsl::DslValue::String(feature.id.clone())), ("featureKind".to_string(), dsl::DslValue::String(kind.to_string()))]))
-            .await;
+            ;
         if kind == "position" {
-            menu = menu.action_args("openSource", dsl::DslValue::object([("featureId".to_string(), dsl::DslValue::String(feature.id.clone()))])).await;
+            menu = menu.action_args("openSource", dsl::DslValue::object([("featureId".to_string(), dsl::DslValue::String(feature.id.clone()))]));
         }
-        return menu.build().await;
+        return menu.build();
     }
-    let mut items = Menu::of(registry).await.action("selectAll").await.action("fitWorld").await.destructive("clearSelection").await.build().await;
+    let mut items = Menu::of(registry).action("selectAll").action("fitWorld").destructive("clearSelection").build();
     if let Some(clear) = items.iter_mut().find(|entry| entry.id == "clearSelection") {
         clear.disabled = selected_ids.is_empty().then_some(true);
     }
@@ -655,13 +660,13 @@ impl ArtifactEditor for Gis2dPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Gis2dPlayApp>,
+        owner: EditorApp<Gis2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.gis.gismap@1/*#editor",
         document_schema: "gis.map",
         factory: "Gis2dRetainedCommandJobFactory",
         factory_type: Gis2dRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
+        contract: ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
         tools: [
             "setActiveExample", "patchPositions", "patchRoutes", "patchRoute", "toggleLayerVisibility", "fitWorld", "setCamera", "setRenderMode", "setVectorStyle", "setLodMode", "focusFeature", "setLayerStrokeScale", "openSource", "setLocale",
             "proposeBoundsRegion",
@@ -1013,7 +1018,7 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             // `.workflow(...)` — the old `"reuse-map"` app-level example registration and the no-op
             // `.workflow("gis2d", …)` call are dropped here (not silently: reported in the migration
             // notes). The subset's own `📚️examples/🎬️demo` facet is the modern replacement surface.
-            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
+            .interactive_jobs(InteractiveJobClassification::Migrated)
             .build_definition()
 }
 //#endregion 🔖️Manifest

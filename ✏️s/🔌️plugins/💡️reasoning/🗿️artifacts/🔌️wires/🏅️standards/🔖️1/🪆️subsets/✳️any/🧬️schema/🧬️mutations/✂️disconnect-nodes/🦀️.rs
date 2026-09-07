@@ -1,11 +1,9 @@
 //! ✂️ Wires mutation — `DisconnectNodes`: removes a board edge (and its wires-level relationship,
 //! if any) by the edge's id.
 
-use crate::artifacts::wires::diff::{diff_wires_and_board, fixtures_after_remove_edge, WiresDiff};
+use crate::artifacts::wires::diff::WiresDiff;
 use crate::artifacts::wires::mutations::WiresMutation;
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::{find_board_edge, find_relationship};
 use crate::artifacts::wires::WiresSnapshot;
-use dsl::DslValue;
 
 //#region 🔖️Mutation
 /// ✂️ `disconnect-nodes` payload — the edge's id.

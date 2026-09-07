@@ -11,7 +11,6 @@ use crate::artifacts::gisterrain::schema::{build_terrain_scene_json, TerrainDesc
 use crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::parse_descriptor;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use crate::editor::gis3d::config::Gis3dConfig;
-use crate::editor::gis3d::GIS3D_PLAY_APP_ID;
 use framework_surface::terrain::projection;
 use semio_framework_plugin::{scene_surface, world3d_scene_extended, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;

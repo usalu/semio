@@ -17,7 +17,7 @@ pub struct SetTimelineName {
 impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for SetTimelineName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "timeline-name", kind: "set-timeline-name", record: "SetTimelineName" };
 
-    fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<<SemioAnimationMutation as protocol::Mutation<SemioAnimationSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<<SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::Diff> {
         agg_diff(&SemioAnimationMutation::SetTimelineName(self.clone()), base)
     }
     fn inverse(&self, base: &SemioAnimationSnapshot) -> Vec<SemioAnimationMutation> {

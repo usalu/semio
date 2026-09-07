@@ -69,7 +69,7 @@ fn selection_args(id: &str, granularity: &str) -> semio_framework_plugin::UiAsse
 /// ids against a row's own `id` verbatim, and canvas hit-testing resolves those exact bare ids too;
 /// a prefixed row id would desync tree/canvas cross-highlighting (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub fn render(document: &WiresSnapshot, labels: &WiresLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &WiresSnapshot, labels: &WiresLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let wires = &document.wires_fixture;
     let board = &crate::artifacts::wires::wires_working_board(document);
     let mut identity_items = UiFixedList::<BuiltNode>::default();

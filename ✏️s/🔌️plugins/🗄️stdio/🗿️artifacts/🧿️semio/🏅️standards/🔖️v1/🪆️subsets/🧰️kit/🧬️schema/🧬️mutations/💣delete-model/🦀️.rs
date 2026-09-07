@@ -1,7 +1,7 @@
 //! 💣️ `delete-model` — removes the entry matching `child_id` from `models`. Idempotent no-op if
 //! absent; the inverse escrows the removed handle from BASE.
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{SemioKitMutation, create_model};
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload

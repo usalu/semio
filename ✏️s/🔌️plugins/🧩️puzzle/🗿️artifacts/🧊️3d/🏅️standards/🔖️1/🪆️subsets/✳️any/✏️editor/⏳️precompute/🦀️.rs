@@ -28,7 +28,7 @@ use crate::editor::puzzle3d::precompute::brush::{
     brush_candidate_suggestion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, resolve_object_kind_mesh_url, vortex_world_from_object, AttractionVortexContext, TargetVortexWorld,
 };
 use crate::editor::puzzle3d::precompute::fill::{FillBuilder, FillBuilderOwnerCensusCursor, FillBuilderOwnerCensusStep, FillBuilderRetirementCursor, FillJobStage, FillPreparationRoots, FillPreviewJsonStep, PlacedCollisionEntry};
-use crate::editor::puzzle3d::precompute::geometry::{pose_isometry, world_bounds, CollisionBody, CollisionOverlapState, CollisionStepContext, CollisionStepResult, FIXED_OWNER_SLOTS};
+use crate::editor::puzzle3d::precompute::geometry::{pose_isometry, world_bounds, CollisionBody, CollisionOverlapState, CollisionStepContext, CollisionStepResult};
 use semio_framework_job::{default_now_us, root_cancel_token, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, Operation, RevisionId, StepOutcome};
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
@@ -853,7 +853,7 @@ impl Drop for FillEnvelopeTerminalHandle {
 //#region 🔖️Clock
 /// ⏱️ Uses the same checked real clock authority as retained jobs on every target.
 fn puzzle3d_deadline(duration_us: u64) -> Option<u64> {
-    semio_framework_job::default_now_us()?.checked_add(duration_us)
+    default_now_us()?.checked_add(duration_us)
 }
 
 /// 🪫️ Admission deadline for one precompute turn, including its first task.
@@ -1157,7 +1157,7 @@ impl Puzzle3dCollision {
                 false
             }
             fn should_yield(&self) -> bool {
-                semio_framework_job::default_now_us().is_none_or(|now| now >= self.deadline_us)
+                default_now_us().is_none_or(|now| now >= self.deadline_us)
             }
             fn consume_fuel(&mut self, _units: u64) {}
         }
@@ -1224,7 +1224,7 @@ impl Puzzle3dCollision {
             .collect();
         let mut unknown_pending = false;
         for (index, candidate) in candidates.iter().enumerate().skip(resume_from) {
-            if semio_framework_job::default_now_us().is_none_or(|now| now >= deadline_us) {
+            if default_now_us().is_none_or(|now| now >= deadline_us) {
                 return BrushCollisionFreeResult { free, unknown_pending: true, resume_candidate_index: index };
             }
             let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
@@ -1308,7 +1308,7 @@ impl Puzzle3dCollision {
         let Some(deadline) = puzzle3d_deadline(PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US) else { return match lane { PrecomputeLane::Brush => self.brush_lane_active(), PrecomputeLane::Fill => self.fill_lane_active() }; };
         let mut remaining = budget as usize;
         while remaining > 0 {
-            if semio_framework_job::default_now_us().is_none_or(|now| now >= deadline) {
+            if default_now_us().is_none_or(|now| now >= deadline) {
                 break;
             }
             match lane {
@@ -2199,13 +2199,13 @@ mod tests {
         engine.set_scene(&serde_json::to_string(&base_scene).unwrap()).expect("seed");
         engine.fill = Some(Arc::new(Mutex::new(fill)));
 
-        let count_start = std::time::Instant::now();
+        let count_start = Instant::now();
         let _ = engine.apply_fill_count(5).expect("apply fill count");
         let count_ms = count_start.elapsed().as_secs_f64() * 1000.0;
         assert!(count_ms < 5.0, "fill count apply took {count_ms}ms");
         assert_eq!(engine.fill.as_ref().expect("fill").lock().expect("fill lock").applied_count, 5);
 
-        let weight_start = std::time::Instant::now();
+        let weight_start = Instant::now();
         let mut object_weights = std::collections::BTreeMap::new();
         object_weights.insert("Placed".to_string(), 1.0);
         let mut vortex_weights = std::collections::BTreeMap::new();

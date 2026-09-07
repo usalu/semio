@@ -50,8 +50,8 @@ fn add_rule_clause(state: &mut RewritingSnapshot, clause_kind: &str) -> bool {
         _ => false,
     };
     if changed {
-        state.lhs_json = pack::to_json_string(&lhs).unwrap_or_default();
-        state.rhs_json = pack::to_json_string(&rhs).unwrap_or_default();
+        state.lhs_json = pack::to_json_string(&lhs);
+        state.rhs_json = pack::to_json_string(&rhs);
     }
     changed
 }

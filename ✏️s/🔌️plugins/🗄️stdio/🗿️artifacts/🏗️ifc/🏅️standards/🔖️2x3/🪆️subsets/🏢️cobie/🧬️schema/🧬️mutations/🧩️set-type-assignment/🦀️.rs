@@ -15,7 +15,7 @@ pub struct SetTypeAssignment {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetTypeAssignment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "type-assignment", kind: "set-type-assignment", record: "SetTypeAssignment" };
 
-    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3CobieMutation as protocol::Mutation<Ifc2x3Snapshot>>::Diff> {
+    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3CobieMutation as Mutation<Ifc2x3Snapshot>>::Diff> {
         agg_diff(&Ifc2x3CobieMutation::SetTypeAssignment(self.clone()), base)
     }
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3CobieMutation> {

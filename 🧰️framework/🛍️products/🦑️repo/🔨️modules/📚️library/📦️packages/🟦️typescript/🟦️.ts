@@ -1286,7 +1286,8 @@ function killBudgetTree(pid: number): void {
 const PLAYWRIGHT_MODULE_SPECIFIER = "playwright";
 
 /**
- * ⏱️Runs a command under a hard wall-clock budget; SIGKILLs the whole process tree and fails loudly past it.
+ * ⏱️Runs a command under the test-level budget; an explicit zero permits unlimited build preparation.
+ * SIGKILLs the whole process tree and fails loudly when a positive budget expires.
  * Deliberately async: Bun's `spawnSync`/`execFileSync` `detached` option does not put the child in its own
  * process group (verified — only the async `spawn` does), so tree-killing on timeout requires the async form.
  * Callers may fire-and-forget this from a synchronous `void`-returning context — the process stays alive on
@@ -1296,10 +1297,10 @@ export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?:
   const budgetMs = opts.budgetMs ?? testLevelBudgetMs();
   const child = spawn(cmd, args, { stdio: "inherit", cwd: opts.cwd, env: opts.env ?? process.env, detached: process.platform !== "win32" });
   let timedOut = false;
-  const timer = setTimeout(() => {
+  const timer = budgetMs > 0 ? setTimeout(() => {
     timedOut = true;
     if (child.pid) killBudgetTree(child.pid);
-  }, budgetMs);
+  }, budgetMs) : undefined;
   const { code, signal } = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolveExit, rejectExit) => {
     child.on("error", rejectExit);
     child.on("exit", (exitCode, exitSignal) => resolveExit({ code: exitCode, signal: exitSignal }));
@@ -1343,10 +1344,10 @@ async function runTestCapturedBudgeted(cmd: string, args: string[], opts: { cwd?
     stderr += chunk;
   });
   let timedOut = false;
-  const timer = setTimeout(() => {
+  const timer = opts.budgetMs > 0 ? setTimeout(() => {
     timedOut = true;
     if (child.pid) killBudgetTree(child.pid);
-  }, opts.budgetMs);
+  }, opts.budgetMs) : undefined;
   const { code, signal } = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolveExit, rejectExit) => {
     child.on("error", rejectExit);
     child.on("exit", (exitCode, exitSignal) => resolveExit({ code: exitCode, signal: exitSignal }));
@@ -1652,8 +1653,8 @@ export function nextestArtifactLocation(cwd: string, env: NodeJS.ProcessEnv = pr
 //#endregion 🦀️NextestExecutionFilters
 
 /**
- * 🦀️Warm-builds the exact test runner invocation — bounded by [[buildBudgetMs]], NOT the test-level budget,
- * but never unbounded — then runs assertions under the active level's budget and [[nextest.toml]] profile (per-test
+ * 🦀️Warm-builds the exact test runner invocation with the opt-in [[buildBudgetMs]], then runs
+ * assertions under the active level's budget and [[nextest.toml]] profile (per-test
  * `slow-timeout`), appending cumulative `--skip <level>::` filters for every level above it (tests live in
  * `mod quick`/`mod long`/`mod exhaustive` submodules inside `mod tests`; unscoped tests are `fundamental`).
  * Splits `extraArgs` on an existing `--` so callers passing their own libtest args (e.g. `--nocapture`) still
@@ -1673,18 +1674,21 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
 
   if (coverageEnabled()) {
     const testBudgetMs = testLevelBudgetMs(level);
-    const covArgs = cargoNextestAvailable()
+    const nextest = cargoNextestAvailable();
+    const covArgs = nextest
       ? (["llvm-cov", "nextest", "--release", "--no-report", "--no-tests", "warn", ...profileArgs, ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs] as const)
       : (["llvm-cov", "test", "--release", "--no-report", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs] as const);
-    if (!cargoNextestAvailable()) {
+    if (!nextest) {
       console.error("[budget] cargo-nextest not installed — coverage uses cargo llvm-cov test fallback");
     }
-    await runTestBudgeted("cargo", [...covArgs], {
+    const buildArgs = nextest ? ["llvm-cov", "nextest", "--no-run", ...covArgs.slice(2)] : [...covArgs, "--list"];
+    await runTestBudgeted("cargo", buildArgs, {
       cwd,
       env,
-      budgetMs: buildBudgetMs() + testBudgetMs,
+      budgetMs: buildBudgetMs(),
       onTimeoutHint: budgetTimeoutHint("cargo"),
     });
+    await runTestBudgeted("cargo", ["llvm-cov", covArgs[1], "--no-clean", ...covArgs.slice(2)], { cwd, env, budgetMs: testBudgetMs });
     const lcovPath = join(coverageDir(findRepoRoot(cwd), "rust"), `${coverageSlug(resolvedPackages.join("_"))}.lcov`);
     await runTestBudgeted("cargo", ["llvm-cov", "report", "--release", "--lcov", ...packageArgs, "--output-path", lcovPath], {
       cwd,
@@ -1803,7 +1807,7 @@ function spawnCapturedSync(cmd: string, args: readonly string[], opts: CapturedS
   try {
     const launcher = spawnSync(process.execPath, ["-e", CAPTURE_WRAPPER_SOURCE], {
       env: { ...process.env, SEMIO_PROCESS_CAPTURE_SPEC: specPath },
-      timeout: opts.timeout === undefined ? undefined : opts.timeout + 5_000,
+      timeout: opts.timeout ? opts.timeout + 5_000 : undefined,
       killSignal: opts.killSignal,
       stdio: "ignore",
     });
@@ -2008,7 +2012,7 @@ export function exactExecutableFingerprint(path: string, control: Readonly<{ can
   }
 }
 
-/** 📥️ Captures a bounded process into caller-owned evidence files and terminates its tree on timeout or cancellation. */
+/** 📥️ Captures a process into caller-owned evidence files; zero disables its deadline while retaining cancellation and output limits. */
 export async function runExactCargoLawProcess(command: string, args: string[], options: ExactCargoLawProcessOptions): Promise<ExactCargoLawProcessResult> {
   const stdout = openSync(options.stdoutPath, "wx", 0o600);
   const stderr = openSync(options.stderrPath, "wx", 0o600);
@@ -2030,7 +2034,7 @@ export async function runExactCargoLawProcess(command: string, args: string[], o
     };
     child.stdout?.on("data", (bytes) => append(stdout, bytes));
     child.stderr?.on("data", (bytes) => append(stderr, bytes));
-    const timer = setTimeout(() => terminate("timeout"), options.budgetMs);
+    const timer = options.budgetMs > 0 ? setTimeout(() => terminate("timeout"), options.budgetMs) : undefined;
     const cancel = setInterval(() => {
       if (options.cancelled()) terminate("cancelled");
     }, 100);
@@ -2073,8 +2077,8 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
     const runRoot = mkdtempSync(join(artifactRoot, "exact-cargo-laws-"));
     const cancelled = options.cancelled ?? (() => false);
     const receipts: ExactCargoLawReceipt[] = [];
-    const checkedBudget = (value: number): number => {
-      if (!Number.isSafeInteger(value) || value < 1 || value > 24 * 60 * 60 * 1000) throw new Error("Exact Cargo budget must be finite and positive");
+    const checkedBudget = (value: number, build: boolean): number => {
+      if (!Number.isSafeInteger(value) || value < (build ? 0 : 1) || value > 24 * 60 * 60 * 1000) throw new Error("Exact Cargo budget must be finite and positive, or zero for builds");
       return value;
     };
     for (const [index, group] of options.groups.entries()) {
@@ -2094,7 +2098,7 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
         options.progress?.({ stage, package: group.package, ...(next === "native" ? { law: args[0] } : {}), artifactDir: groupRoot });
         const stdoutPath = join(groupRoot, `${name}.stdout`);
         const stderrPath = join(groupRoot, `${name}.stderr`);
-        last = await port.probe(command, args, { cwd: options.cwd, env: next === "build" ? env : nativeEnv, budgetMs: checkedBudget(budget), maxOutputBytes: next === "build" ? 256 * 1024 * 1024 : 8 * 1024 * 1024, stdoutPath, stderrPath, cancelled });
+        last = await port.probe(command, args, { cwd: options.cwd, env: next === "build" ? env : nativeEnv, budgetMs: checkedBudget(budget, next === "build"), maxOutputBytes: next === "build" ? 256 * 1024 * 1024 : 8 * 1024 * 1024, stdoutPath, stderrPath, cancelled });
         if (!existsSync(stdoutPath)) writeFileSync(stdoutPath, last.stdout, { flag: "wx", mode: 0o600 });
         if (!existsSync(stderrPath)) writeFileSync(stderrPath, last.stderr, { flag: "wx", mode: 0o600 });
         writeFileSync(join(groupRoot, `${name}.json`), JSON.stringify({ command, args, cargoTargetDir, status: last.status, signal: last.signal, reason: last.reason ?? "exit" }), { flag: "wx", mode: 0o600 });

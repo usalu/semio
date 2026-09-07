@@ -18,7 +18,7 @@ pub struct InsertVlr {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for InsertVlr {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "vlr", kind: "insert-vlr", record: "InsertVlr" };
 
-    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as protocol::Mutation<LasSnapshot>>::Diff> {
+    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
         agg_diff(&LasMutation::InsertVlr(self.clone()), base)
     }
     fn inverse(&self, base: &LasSnapshot) -> Vec<LasMutation> {

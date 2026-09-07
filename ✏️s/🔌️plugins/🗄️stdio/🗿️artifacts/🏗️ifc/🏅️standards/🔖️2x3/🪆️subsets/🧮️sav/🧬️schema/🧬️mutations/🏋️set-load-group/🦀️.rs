@@ -15,7 +15,7 @@ pub struct SetLoadGroup {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetLoadGroup {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "load-group", kind: "set-load-group", record: "SetLoadGroup" };
 
-    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3SavMutation as protocol::Mutation<Ifc2x3Snapshot>>::Diff> {
+    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3SavMutation as Mutation<Ifc2x3Snapshot>>::Diff> {
         agg_diff(&Ifc2x3SavMutation::SetLoadGroup(self.clone()), base)
     }
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3SavMutation> {

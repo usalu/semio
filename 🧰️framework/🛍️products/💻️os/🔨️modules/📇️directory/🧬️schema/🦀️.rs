@@ -64,7 +64,7 @@ pub enum DirectorySpaceRole {
 }
 
 /// 🎯️ Structural tenant-qualified document identity shared by directory and artifact authority.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DocumentScope {
     pub space_id: String,
@@ -181,6 +181,7 @@ pub enum DirectoryEventBody {
     SpaceRenamed { space_id: String, name: String },
     #[value(rename = "space.visibility-changed")]
     SpaceVisibilityChanged { space_id: String, visibility: DirectorySpaceVisibility },
+    /// 🧊️ Atomically freezes the space and demotes every current Author membership to Spectator.
     #[value(rename = "space.archived")]
     SpaceArchived { space_id: String },
     #[value(rename = "space.deleted")]

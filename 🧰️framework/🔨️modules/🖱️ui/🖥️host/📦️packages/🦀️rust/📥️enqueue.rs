@@ -29,9 +29,11 @@
 use ui_render::DispatchEvent;
 
 #[path = "../../📥️input/🎟️admission/🪪️root/🦀️.rs"]
+#[cfg(test)]
 mod input_root;
 
 #[path = "../../📥️input/🎟️admission/✍️writer/🦀️.rs"]
+#[cfg(test)]
 mod input_writer;
 
 //#region 🔖️Capabilities
@@ -238,6 +240,7 @@ pub enum EnqueueOutcome {
 /// Preallocated once at construction (`with_capacity`), never reallocated on the hot path short of
 /// genuine overflow.
 pub struct EventQueue {
+    #[cfg(test)]
     root: Option<std::num::NonZeroU64>,
     coalesced: CoalesceSlot,
     discrete: std::collections::VecDeque<DiscreteEvent>,
@@ -249,12 +252,13 @@ pub struct EventQueue {
 impl EventQueue {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
-        Self { root: None, coalesced: CoalesceSlot::new(), discrete: std::collections::VecDeque::with_capacity(DISCRETE_QUEUE_CAPACITY), generation: InputGeneration::default(), overflow_count: 0, discrete_bytes: 0 }
+        Self { #[cfg(test)] root: None, coalesced: CoalesceSlot::new(), discrete: std::collections::VecDeque::with_capacity(DISCRETE_QUEUE_CAPACITY), generation: InputGeneration::default(), overflow_count: 0, discrete_bytes: 0 }
     }
 
+    #[cfg(test)]
     fn try_admit_root_with(&mut self, sequence: &input_root::InputRootSequence, granted_work_bytes: usize) -> Result<bool, input_root::InputRootFault> {
         if self.root.is_some() { return Ok(true); }
-        if granted_work_bytes < std::mem::size_of::<Self>() { return Ok(false); }
+        if granted_work_bytes < size_of::<Self>() { return Ok(false); }
         self.root = Some(sequence.try_next()?);
         Ok(true)
     }

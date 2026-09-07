@@ -46,6 +46,7 @@ pub struct EquationEdge {
 }
 
 #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 pub struct EquationCamera {
     pub x: f64,
@@ -365,7 +366,7 @@ pub fn equation_geometry(snapshot: &EquationSnapshot) -> EquationGeometry {
 /// `results`/`computed` are composed child handles, not plain fields.
 pub fn equation_snapshot_with_state(graph: EquationGraph, geometry: EquationGeometry) -> EquationSnapshot {
     let (notation, results, computed) = equation_children_from_state(&graph, &geometry);
-    EquationSnapshot { notation, results, computed, equation: crate::artifacts::equation::standards::v1::subsets::any::schema::snapshot::EquationExprSnapshot::default() }
+    EquationSnapshot { notation, results, computed, equation: EquationExprSnapshot::default() }
 }
 
 /// 📥️ Rebuilds composed child handles and their exact local owner from a complete carrier fixture.
@@ -527,7 +528,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// deleted repo-wide only in W6); wiring them into this field too is real follow-up work, not
 /// required for the tree to register or for any law to hold (mirrors `🎬️sequence`'s and the stdio
 /// pilot's own documented deviation).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::MathematicalApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.mathematical.equation").expect("canonical mathematical.equation kind"), localization: &[], standards: vec![crate::artifacts::equation::standards::v1::standard()] }

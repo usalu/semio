@@ -22,10 +22,10 @@ const CHECKPOINT_HEADER_RNG_U64_FIELDS: usize = 4;
 const CHECKPOINT_HEADER_PROGRESS_U64_FIELDS: usize = 3;
 const CHECKPOINT_HEADER_COUNT_U64_FIELDS: usize = 5;
 const CHECKPOINT_HEADER_U64_FIELDS: usize = CHECKPOINT_HEADER_IDENTITY_U64_FIELDS + CHECKPOINT_HEADER_RNG_U64_FIELDS + CHECKPOINT_HEADER_PROGRESS_U64_FIELDS + CHECKPOINT_HEADER_COUNT_U64_FIELDS;
-const CHECKPOINT_FIXED_HEADER_BYTES: usize = CHECKPOINT_MAGIC.len() + CHECKPOINT_HEADER_U64_FIELDS * std::mem::size_of::<u64>();
-const CHECKPOINT_TRAIL_ENTRY_BYTES: usize = 2 * std::mem::size_of::<u32>();
-const CHECKPOINT_DECISION_ENTRY_BYTES: usize = 2 * std::mem::size_of::<u32>() + 5 * std::mem::size_of::<u64>();
-const CHECKPOINT_OBSERVED_ENTRY_BYTES: usize = 2 * std::mem::size_of::<u32>();
+const CHECKPOINT_FIXED_HEADER_BYTES: usize = CHECKPOINT_MAGIC.len() + CHECKPOINT_HEADER_U64_FIELDS * size_of::<u64>();
+const CHECKPOINT_TRAIL_ENTRY_BYTES: usize = 2 * size_of::<u32>();
+const CHECKPOINT_DECISION_ENTRY_BYTES: usize = 2 * size_of::<u32>() + 5 * size_of::<u64>();
+const CHECKPOINT_OBSERVED_ENTRY_BYTES: usize = 2 * size_of::<u32>();
 const MAX_COMMIT_BYTES: usize = 1 << 20;
 const COMMIT_FIXED_MAX_BYTES: usize = 160;
 const COMMIT_ITEM_MAX_BYTES: usize = 11;
@@ -339,7 +339,7 @@ impl CheckpointCounts {
     }
 
     fn checked_bytes(self) -> Option<usize> {
-        let domain_bytes = self.domain_count.checked_mul(self.pattern_count.div_ceil(u64::BITS as usize))?.checked_mul(std::mem::size_of::<u64>())?;
+        let domain_bytes = self.domain_count.checked_mul(self.pattern_count.div_ceil(u64::BITS as usize))?.checked_mul(size_of::<u64>())?;
         CHECKPOINT_FIXED_HEADER_BYTES
             .checked_add(domain_bytes)?
             .checked_add(self.trail_count.checked_mul(CHECKPOINT_TRAIL_ENTRY_BYTES)?)?
@@ -1067,7 +1067,7 @@ impl<T: Topology + Clone> WfcJob<T> {
                 if build.outer < self.state.domains.len() {
                     let domain = &self.state.domains[build.outer];
                     if build.inner < domain.word_count() {
-                        ensure_materialization_space(&build.bytes, build.byte_limit, std::mem::size_of::<u64>(), b"wfc-checkpoint-byte-limit-exceeded")?;
+                        ensure_materialization_space(&build.bytes, build.byte_limit, size_of::<u64>(), b"wfc-checkpoint-byte-limit-exceeded")?;
                         put_u64(&mut build.bytes, domain.word(build.inner));
                         build.inner += 1;
                     } else {
@@ -1312,11 +1312,11 @@ impl<T: Topology + Clone> WfcRestore<T> {
     }
 
     fn u32(&mut self) -> Result<u32, String> {
-        Ok(u32::from_le_bytes(self.take(std::mem::size_of::<u32>())?.try_into().expect("u32 bytes")))
+        Ok(u32::from_le_bytes(self.take(size_of::<u32>())?.try_into().expect("u32 bytes")))
     }
 
     fn u64(&mut self) -> Result<u64, String> {
-        Ok(u64::from_le_bytes(self.take(std::mem::size_of::<u64>())?.try_into().expect("u64 bytes")))
+        Ok(u64::from_le_bytes(self.take(size_of::<u64>())?.try_into().expect("u64 bytes")))
     }
 
     fn decode_header(&mut self) -> Result<(), String> {

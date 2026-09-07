@@ -10,7 +10,7 @@
 
 use crate::artifacts::equation::{equation_geometry, EquationSnapshot};
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::UiNode;
+use semio_framework_plugin::{BuiltNode, UiAssemblyResult};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = <TableWindowKit as WindowKit>::KIND_ID;
@@ -30,7 +30,7 @@ pub fn definition() -> semio_framework_plugin::WindowKindDefinition {
 /// 👁️ Pure `EquationSnapshot -> UiNode` read: one row per point, in document order — the same
 /// artifact-level `equation_geometry` helper the editor's own Geometry window reads, since that
 /// function lives at the ARTIFACT level (outside both surfaces), not behind the editor module.
-pub fn render(document: &EquationSnapshot) -> UiNode {
+pub fn render(document: &EquationSnapshot) -> UiAssemblyResult<BuiltNode> {
     let geometry = equation_geometry(document);
     let view = TableView { columns: vec!["#".into(), "x".into(), "y".into()], rows: geometry.points.iter().enumerate().map(|(index, point)| vec![index.to_string(), format!("{}", point.x), format!("{}", point.y)]).collect() };
     TableWindowKit::render(&view)

@@ -23,7 +23,7 @@ pub struct InsertTexcoord {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for InsertTexcoord {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "texcoord", kind: "insert-texcoord", record: "InsertTexcoord" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as protocol::Mutation<ObjSnapshot>>::Diff> {
+    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         agg_diff(&ObjMutation::InsertTexcoord(self.clone()), base)
     }
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {

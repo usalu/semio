@@ -3,7 +3,7 @@
 //! always APPENDS, so `remove-stream-frame` only round-trips exactly when `frame_index` addresses the
 //! LAST frame — the only way this mutation is ever emitted (see this facet's report for the reasoning).
 
-use crate::artifacts::remodeling::diff::{RemodelingDiff, RemodelingMediaStreamList};
+use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
 use crate::artifacts::remodeling::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};

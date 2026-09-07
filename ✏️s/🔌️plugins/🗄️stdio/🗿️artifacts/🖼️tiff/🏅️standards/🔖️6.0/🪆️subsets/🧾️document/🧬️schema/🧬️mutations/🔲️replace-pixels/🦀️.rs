@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative replace-pixels mutation.
-use crate::artifacts::tiff::schema::diff::{self, *};
+use crate::artifacts::tiff::schema::diff::*;
 use crate::artifacts::tiff::schema::mutations::TiffMutation;
 use crate::artifacts::tiff::schema::snapshot::*;
 
@@ -27,12 +27,11 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for ReplacePixelsMutatio
         protocol::MutationOutcome::new(contribute(base, pixels.clone()))
     }
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffMutation> {
-        let Self { pixels } = self;
         let outcome = <Self as protocol::MutationKind<TiffSnapshot, TiffMutation>>::diff(self, base);
         if <TiffDiff as protocol::DiffAlgebra<TiffSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
-        vec![TiffMutation::ReplacePixels(crate::artifacts::tiff::schema::mutations::ReplacePixelsMutation { pixels: base.pixels.clone() })]
+        vec![TiffMutation::ReplacePixels(ReplacePixelsMutation { pixels: base.pixels.clone() })]
     }
     fn label(&self) -> String {
         "replace pixels".into()

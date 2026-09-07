@@ -37,7 +37,7 @@ pub mod translate_selection {
         if ids.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit::amend(vec![ShootingMutation::DragAssets(crate::artifacts::shooting::mutations::drag_assets::mutation::DragAssets { asset_ids: ids, dx: payload.dx, dy: payload.dy, dz: payload.dz })], "gumball-translate"))
+            Ok(Emit::amend(vec![ShootingMutation::DragAssets(crate::artifacts::shooting::mutations::drag_assets::DragAssets { asset_ids: ids, dx: payload.dx, dy: payload.dy, dz: payload.dz })], "gumball-translate"))
         }
     }
 }
@@ -62,7 +62,7 @@ pub mod rotate_selection {
         if ids.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit::amend(vec![ShootingMutation::RotateAssets(crate::artifacts::shooting::mutations::rotate_assets::mutation::RotateAssets { asset_ids: ids, ax: payload.ax, ay: payload.ay, az: payload.az, angle: payload.angle })], "gumball-rotate"))
+            Ok(Emit::amend(vec![ShootingMutation::RotateAssets(crate::artifacts::shooting::mutations::rotate_assets::RotateAssets { asset_ids: ids, ax: payload.ax, ay: payload.ay, az: payload.az, angle: payload.angle })], "gumball-rotate"))
         }
     }
 }
@@ -86,7 +86,7 @@ pub mod scale_selection {
         if ids.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit::amend(vec![ShootingMutation::ScaleAssets(crate::artifacts::shooting::mutations::scale_assets::mutation::ScaleAssets { asset_ids: ids, sx: payload.sx, sy: payload.sy, sz: payload.sz })], "gumball-scale"))
+            Ok(Emit::amend(vec![ShootingMutation::ScaleAssets(crate::artifacts::shooting::mutations::scale_assets::ScaleAssets { asset_ids: ids, sx: payload.sx, sy: payload.sy, sz: payload.sz })], "gumball-scale"))
         }
     }
 }

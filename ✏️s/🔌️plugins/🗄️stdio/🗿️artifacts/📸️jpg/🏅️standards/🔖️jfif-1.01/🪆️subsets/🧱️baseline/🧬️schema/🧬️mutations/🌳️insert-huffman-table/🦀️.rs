@@ -15,7 +15,7 @@ pub struct InsertHuffmanTable {
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for InsertHuffmanTable {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "huffman-table", kind: "insert-huffman-table", record: "InsertHuffmanTable" };
 
-    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<<JpgBaselineMutation as protocol::Mutation<JpgSnapshot>>::Diff> {
+    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<<JpgBaselineMutation as Mutation<JpgSnapshot>>::Diff> {
         agg_diff(&JpgBaselineMutation::InsertHuffmanTable(self.clone()), base)
     }
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {

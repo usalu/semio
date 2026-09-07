@@ -30,8 +30,8 @@ pub mod executor;
 
 #[path = "🔁️lifecycle/🦀️.rs"]
 mod lifecycle;
-pub use lifecycle::{ShardActorAllocation, ShardRegistrationReason, ShardRegistrationRejected};
 use lifecycle::AdmittedAuthority;
+pub use lifecycle::{ShardActorAllocation, ShardRegistrationReason, ShardRegistrationRejected};
 
 use super::{GuestInstance, GuestRuntime, GuestRuntimes, JobBudget, JobStep, PluginHostError, TurnFault};
 #[cfg(test)]
@@ -209,7 +209,17 @@ async fn to_actor_turn_result_in_place(result: &mut TurnResult, session: u64, wa
             }
         }
     };
-    Ok(semio_framework_actor::TurnResult { ui_patches, effects, command_ingress, lifecycle_receipt: result.lifecycle_receipt, ui_patch_receipt: result.ui_patch_receipt, next_wake: result.next_wake, status, usage: semio_framework_actor::Usage { fuel: result.fuel_used, wall_us, memory_bytes } })
+    Ok(semio_framework_actor::TurnResult {
+        ui_patches,
+        effects,
+        command_ingress,
+        cold_pair_ingress: result.cold_pair_ingress.clone(),
+        lifecycle_receipt: result.lifecycle_receipt,
+        ui_patch_receipt: result.ui_patch_receipt,
+        next_wake: result.next_wake,
+        status,
+        usage: semio_framework_actor::Usage { fuel: result.fuel_used, wall_us, memory_bytes },
+    })
 }
 //#endregion 🔀️BudgetBridge
 
@@ -253,7 +263,9 @@ pub enum ShardOutcome {
 impl ShardOutcome {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) -> Result<(), semio_framework_actor::pack::PackError> {
         if let Self::Turn { result, .. } = self {
-            if result.lifecycle_receipt.is_some_and(|receipt| !receipt.is_valid()) { return Err(semio_framework_actor::pack::PackError::InvalidLifecycle("invalid turn receipt authority")); }
+            if result.lifecycle_receipt.is_some_and(|receipt| !receipt.is_valid()) {
+                return Err(semio_framework_actor::pack::PackError::InvalidLifecycle("invalid turn receipt authority"));
+            }
         }
         match self {
             Self::Turn { actor, result } => {
@@ -442,7 +454,7 @@ impl FixedReplaySeedPage {
         if bytes.len() > JOB_REPLAY_SEED_PAGE_BYTES {
             return Err(());
         }
-        JOB_REPLAY_SEED_PAGES.fetch_update(Ordering::AcqRel, Ordering::Acquire, |pages| pages.checked_add(1).filter(|pages| *pages <= JOB_REPLAY_SEED_PROCESS_PAGES)).map_err(|_| ())?;
+        JOB_REPLAY_SEED_PAGES.try_update(Ordering::AcqRel, Ordering::Acquire, |pages| pages.checked_add(1).filter(|pages| *pages <= JOB_REPLAY_SEED_PROCESS_PAGES)).map_err(|_| ())?;
         let mut storage = Box::new([MaybeUninit::uninit(); JOB_REPLAY_SEED_PAGE_BYTES]);
         unsafe { std::ptr::copy_nonoverlapping(bytes.as_ptr(), storage.as_mut_ptr().cast::<u8>(), bytes.len()) };
         Ok(Self { storage: Some(storage), length: bytes.len() })
@@ -452,7 +464,6 @@ impl FixedReplaySeedPage {
         let storage = self.storage.as_ref().expect("fixed replay seed page owns backing");
         unsafe { std::slice::from_raw_parts(storage.as_ptr().cast::<u8>(), self.length) }
     }
-
 }
 
 impl Drop for FixedReplaySeedPage {
@@ -704,9 +715,7 @@ impl MountedReplaySeed {
 
     fn release_abi(&mut self, bytes: usize) -> Result<(), PluginHostError> {
         let remaining = self.abi_reserved.checked_sub(bytes).ok_or_else(|| PluginHostError::Plugin("ShardLoop::replay: local ABI accounting underflow".into()))?;
-        JOB_REPLAY_ABI_BYTES
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |owned| owned.checked_sub(bytes))
-            .map_err(|_| PluginHostError::Plugin("ShardLoop::replay: process ABI accounting underflow".into()))?;
+        JOB_REPLAY_ABI_BYTES.try_update(Ordering::AcqRel, Ordering::Acquire, |owned| owned.checked_sub(bytes)).map_err(|_| PluginHostError::Plugin("ShardLoop::replay: process ABI accounting underflow".into()))?;
         self.abi_reserved = remaining;
         Ok(())
     }
@@ -722,7 +731,7 @@ impl Drop for MountedReplaySeed {
 }
 
 fn try_replay_abi_buffer(bytes: usize) -> Result<Vec<u8>, ()> {
-    JOB_REPLAY_ABI_BYTES.fetch_update(Ordering::AcqRel, Ordering::Acquire, |owned| owned.checked_add(bytes).filter(|owned| *owned <= SHARD_DEFERRED_BYTES)).map_err(|_| ())?;
+    JOB_REPLAY_ABI_BYTES.try_update(Ordering::AcqRel, Ordering::Acquire, |owned| owned.checked_add(bytes).filter(|owned| *owned <= SHARD_DEFERRED_BYTES)).map_err(|_| ())?;
     let mut buffer = Vec::new();
     if buffer.try_reserve_exact(bytes).is_err() {
         JOB_REPLAY_ABI_BYTES.fetch_sub(bytes, Ordering::AcqRel);
@@ -986,10 +995,7 @@ impl ShardLoop {
         self.actor_lanes.get(&actor).copied().unwrap_or(semio_framework_actor::Lane::Maintenance)
     }
 
-    fn pop_next_authority(
-        ring: &mut FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>,
-        placements: &HashMap<(u64, u64), JobPlacement>,
-    ) -> Option<(OwnerKey, DeferredAuthority)> {
+    fn pop_next_authority(ring: &mut FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>, placements: &HashMap<(u64, u64), JobPlacement>) -> Option<(OwnerKey, DeferredAuthority)> {
         let actor = match ring.get(0) {
             Some(DeferredAuthority::JobStep { actor, .. }) => *actor,
             _ => return ring.pop_front(),
@@ -1104,15 +1110,7 @@ impl ShardLoop {
     }
 
     fn begin_replay_seed_close(&mut self, index: usize, reason: ReplaySeedCloseReason) {
-        Self::begin_replay_seed_close_owned(
-            &mut self.replay_seeds,
-            &mut self.running_jobs,
-            &mut self.job_turns,
-            &mut self.job_authorities,
-            &mut self.job_placement,
-            index,
-            reason,
-        );
+        Self::begin_replay_seed_close_owned(&mut self.replay_seeds, &mut self.running_jobs, &mut self.job_turns, &mut self.job_authorities, &mut self.job_placement, index, reason);
     }
 
     fn begin_replay_seed_close_owned(
@@ -1632,6 +1630,9 @@ impl ShardLoop {
                 return Ok(1);
             }
             if !self.allocation_is_current(owner.allocation) {
+                if owner.allocation.is_none() && !matches!(owner.authority, DeferredAuthority::Unregister { .. }) {
+                    self.send_outcome(&ShardOutcome::Fault { actor: owner.authority.actor(), message: "deferred authority has no registered actor allocation".into() }).await?;
+                }
                 return Ok(1);
             }
             let lane = owner.lane;
@@ -1647,7 +1648,10 @@ impl ShardLoop {
                     self.unregister(actor).await;
                     return Ok(1);
                 }
-                DeferredAuthority::JobStep { actor, turn } => selected_step = Some((actor, turn)),
+                DeferredAuthority::JobStep { actor, turn } => {
+                    self.accept_job_turn(actor, turn)?;
+                    selected_step = Some((actor, turn));
+                }
                 DeferredAuthority::JobReplay { actor, turn, request, worker_count, worker_slot } => {
                     self.begin_replay_seed(actor, turn, request, worker_count, worker_slot)?;
                     return Ok(1);
@@ -1725,19 +1729,43 @@ impl ShardLoop {
                         JobStep::Done { output } => match self.runtime.checkpoint(instance).await {
                             Ok(state) => {
                                 self.close_replay_job(actor_id, job, ReplaySeedCloseReason::Completed);
-                                defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, self.allocations.get(&actor_id).copied(), actor_id, Event::JobCompleted { job, result: RequestOutcome::Ok(output.clone()) })?;
+                                defer_completion(
+                                    &mut self.pending_interactive,
+                                    &mut self.pending_background,
+                                    &mut self.terminal_authorities,
+                                    actor_lane,
+                                    self.allocations.get(&actor_id).copied(),
+                                    actor_id,
+                                    Event::JobCompleted { job, result: RequestOutcome::Ok(output.clone()) },
+                                )?;
                                 JobStepOutcome::Complete { candidate: JobCommitCandidate { state, output } }
                             }
                             Err(fault) => {
                                 self.close_replay_job(actor_id, job, ReplaySeedCloseReason::Fault { stage: "terminal-checkpoint", detail: fault.to_string() });
                                 let detail = start_job_fault_bytes(&TurnFault::from(fault));
-                                defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, self.allocations.get(&actor_id).copied(), actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(detail.clone()) })?;
+                                defer_completion(
+                                    &mut self.pending_interactive,
+                                    &mut self.pending_background,
+                                    &mut self.terminal_authorities,
+                                    actor_lane,
+                                    self.allocations.get(&actor_id).copied(),
+                                    actor_id,
+                                    Event::JobCompleted { job, result: RequestOutcome::Err(detail.clone()) },
+                                )?;
                                 JobStepOutcome::Fault { detail }
                             }
                         },
                         JobStep::Failed { error } => {
                             self.close_replay_job(actor_id, job, ReplaySeedCloseReason::Fault { stage: "guest-failed", detail: String::from_utf8_lossy(&error).into_owned() });
-                            defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, self.allocations.get(&actor_id).copied(), actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(error.clone()) })?;
+                            defer_completion(
+                                &mut self.pending_interactive,
+                                &mut self.pending_background,
+                                &mut self.terminal_authorities,
+                                actor_lane,
+                                self.allocations.get(&actor_id).copied(),
+                                actor_id,
+                                Event::JobCompleted { job, result: RequestOutcome::Err(error.clone()) },
+                            )?;
                             JobStepOutcome::Fault { detail: error }
                         }
                     };
@@ -1752,7 +1780,15 @@ impl ShardLoop {
                 }
                 Err(fault) => {
                     self.close_replay_job(actor_id, job, ReplaySeedCloseReason::Fault { stage: "step-job", detail: turn_fault_message(&fault) });
-                    defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, self.allocations.get(&actor_id).copied(), actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(start_job_fault_bytes(&fault)) })?;
+                    defer_completion(
+                        &mut self.pending_interactive,
+                        &mut self.pending_background,
+                        &mut self.terminal_authorities,
+                        actor_lane,
+                        self.allocations.get(&actor_id).copied(),
+                        actor_id,
+                        Event::JobCompleted { job, result: RequestOutcome::Err(start_job_fault_bytes(&fault)) },
+                    )?;
                     ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault) }
                 }
             };
@@ -1844,28 +1880,12 @@ impl ShardLoop {
                         }
                         Effect::CancelJob { job } => {
                             if let Some(index) = self.replay_seeds.iter().position(|seed| seed.as_ref().is_some_and(|seed| seed.actor == actor_id && seed.job == job && !matches!(seed.phase, ReplaySeedPhase::Retained))) {
-                                Self::begin_replay_seed_close_owned(
-                                    &mut self.replay_seeds,
-                                    &mut self.running_jobs,
-                                    &mut self.job_turns,
-                                    &mut self.job_authorities,
-                                    &mut self.job_placement,
-                                    index,
-                                    ReplaySeedCloseReason::Cancelled,
-                                );
+                                Self::begin_replay_seed_close_owned(&mut self.replay_seeds, &mut self.running_jobs, &mut self.job_turns, &mut self.job_authorities, &mut self.job_placement, index, ReplaySeedCloseReason::Cancelled);
                             } else if self.running_jobs.contains(&(actor_id, job)) {
                                 match self.runtime.cancel_job(instance, job).await {
                                     Ok(()) => {
                                         if let Some(index) = self.replay_seeds.iter().position(|seed| seed.as_ref().is_some_and(|seed| seed.actor == actor_id && seed.job == job)) {
-                                            Self::begin_replay_seed_close_owned(
-                                                &mut self.replay_seeds,
-                                                &mut self.running_jobs,
-                                                &mut self.job_turns,
-                                                &mut self.job_authorities,
-                                                &mut self.job_placement,
-                                                index,
-                                                ReplaySeedCloseReason::Cancelled,
-                                            );
+                                            Self::begin_replay_seed_close_owned(&mut self.replay_seeds, &mut self.running_jobs, &mut self.job_turns, &mut self.job_authorities, &mut self.job_placement, index, ReplaySeedCloseReason::Cancelled);
                                         } else {
                                             self.running_jobs.remove(&(actor_id, job));
                                             self.job_turns.remove(&(actor_id, job));
@@ -1915,6 +1935,7 @@ impl ShardLoop {
                     status: semio_framework::kernel::TurnStatus::MoreWork,
                     fuel_used: 0,
                     command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+                    cold_pair_ingress: semio_framework::kernel::ColdPairIngressStatus::Idle,
                     lifecycle_receipt: None,
                     ui_patch_receipt: None,
                 };
@@ -1948,6 +1969,15 @@ impl ShardLoop {
                 return Err(self.retain_terminal_frame(bytes, PluginHostError::Plugin(format!("ShardLoop::pump: malformed frame: {error:?}; exact bytes retained for terminal close"))));
             }
         };
+        let target = match &frame {
+            ShardFrame::Grant { actor, .. } | ShardFrame::Unregister { actor } => Some(*actor),
+            ShardFrame::Envelope(envelope) => Some(envelope.to),
+            ShardFrame::Register { .. } => None,
+        };
+        if let Some(actor) = target.filter(|actor| !self.actor_generation_is_current(*actor)) {
+            self.send_outcome(&ShardOutcome::Fault { actor: actor.0, message: "actor is not registered on this shard".into() }).await.map_err(FrameAdmissionError::Fault)?;
+            return Ok(());
+        }
         if let Err(error) = self.validate_frame(&frame) {
             return Err(self.retain_terminal_frame(bytes, error));
         }
@@ -2047,11 +2077,7 @@ impl ShardLoop {
     }
 
     fn actor_generation_is_current(&self, actor: ActorId) -> bool {
-        let current = self.instances.keys().copied().find(|raw| {
-            let candidate = ActorId(*raw);
-            candidate.plugin_ordinal() == actor.plugin_ordinal() && candidate.kind_tag() == actor.kind_tag() && candidate.ordinal() == actor.ordinal()
-        });
-        current.is_none_or(|raw| raw == actor.0)
+        self.instances.contains_key(&actor.0) && self.allocations.contains_key(&actor.0)
     }
 
     /// ✉️ One [`Envelope`]'s payload, dispatched — the exact per-envelope body `pump()` used to run
@@ -2079,10 +2105,7 @@ impl ShardLoop {
         self.actor_lanes.insert(actor, lane);
         let authority = match envelope.payload {
             Payload::Event { bytes: event_bytes } => DeferredAuthority::Event { actor, event: serde_json::from_slice(&event_bytes).map_err(|error| PluginHostError::Json(error.to_string()))? },
-            Payload::JobStep { turn } => {
-                self.accept_job_turn(actor, turn)?;
-                DeferredAuthority::JobStep { actor, turn }
-            }
+            Payload::JobStep { turn } => DeferredAuthority::JobStep { actor, turn },
             Payload::JobReplay { turn, request, worker_count, worker_slot } => DeferredAuthority::JobReplay { actor, turn, request, worker_count, worker_slot },
             Payload::Suspend { operation, applied_progress } => DeferredAuthority::Suspend { actor, operation, applied_progress },
             Payload::Resume { operation, checkpoint } => DeferredAuthority::Resume { actor, operation, checkpoint },
@@ -2237,25 +2260,9 @@ pub(crate) fn exercise_replay_lifecycle_trace(events: &[String]) -> Result<Repla
                 "restart" => "restart",
                 other => return Err(format!("unknown replay lifecycle fault stage {other:?}")),
             };
-            ShardLoop::begin_replay_seed_close_owned(
-                &mut replay_seeds,
-                &mut running_jobs,
-                &mut job_turns,
-                &mut job_authorities,
-                &mut job_placement,
-                0,
-                ReplaySeedCloseReason::Fault { stage, detail: event.clone() },
-            );
+            ShardLoop::begin_replay_seed_close_owned(&mut replay_seeds, &mut running_jobs, &mut job_turns, &mut job_authorities, &mut job_placement, 0, ReplaySeedCloseReason::Fault { stage, detail: event.clone() });
         } else if event == "cancel" {
-            ShardLoop::begin_replay_seed_close_owned(
-                &mut replay_seeds,
-                &mut running_jobs,
-                &mut job_turns,
-                &mut job_authorities,
-                &mut job_placement,
-                0,
-                ReplaySeedCloseReason::Cancelled,
-            );
+            ShardLoop::begin_replay_seed_close_owned(&mut replay_seeds, &mut running_jobs, &mut job_turns, &mut job_authorities, &mut job_placement, 0, ReplaySeedCloseReason::Cancelled);
         } else if event == "release" && replay_seeds[0].is_some() {
             ShardLoop::close_replay_seed_one(&mut replay_seeds, 0).map_err(|error| error.to_string())?;
             release_opportunities += 1;
@@ -2469,6 +2476,7 @@ impl GuestRuntime for RecordingRuntime {
             status: semio_framework::kernel::TurnStatus::Idle,
             fuel_used: 0,
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            cold_pair_ingress: semio_framework::kernel::ColdPairIngressStatus::Idle,
             lifecycle_receipt: None,
             ui_patch_receipt: None,
         })
@@ -2494,10 +2502,7 @@ impl GuestRuntime for RecordingRuntime {
 
 #[cfg(test)]
 fn fixture_instance_close_request() -> semio_framework::kernel::ActorInstanceCloseRequest {
-    semio_framework::kernel::ActorInstanceCloseRequest {
-        lifetime: semio_framework::kernel::ActorInstanceLifetime { activation_generation: 1, instance_id: 7, guest_lifetime: 13 },
-        request_sequence: 9,
-    }
+    semio_framework::kernel::ActorInstanceCloseRequest { lifetime: semio_framework::kernel::ActorInstanceLifetime { activation_generation: 1, instance_id: 7, guest_lifetime: 13 }, request_sequence: 9 }
 }
 
 #[cfg(test)]
@@ -3075,26 +3080,8 @@ mod tests {
         let inline_authority = retain_replay_seed(&mut shard, actor, inline_job).await;
         let exclusive_authority = retain_replay_seed(&mut shard, actor, exclusive_job).await;
         let envelopes = vec![
-            Envelope {
-                to: actor,
-                from: semio_framework_actor::Origin::Kernel,
-                lane: semio_framework_actor::Lane::Maintenance,
-                seq: 2,
-                deadline_ms: None,
-                coalesce: None,
-                cancel_of: None,
-                payload: Payload::JobStep { turn: inline_authority },
-            },
-            Envelope {
-                to: actor,
-                from: semio_framework_actor::Origin::Kernel,
-                lane: semio_framework_actor::Lane::Maintenance,
-                seq: 3,
-                deadline_ms: None,
-                coalesce: None,
-                cancel_of: None,
-                payload: Payload::JobStep { turn: exclusive_authority },
-            },
+            Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Maintenance, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn: inline_authority } },
+            Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Maintenance, seq: 3, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn: exclusive_authority } },
         ];
         let mut grant = Vec::new();
         ShardFrame::Grant { actor, budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance), envelopes }.pack_encode(&mut grant).await;
@@ -3192,6 +3179,7 @@ mod tests {
                     ui_patches: vec![1],
                     effects: vec![2],
                     command_ingress: vec![3],
+                    cold_pair_ingress: semio_framework_actor::cold_pair::ColdPairIngressStatus::Idle,
                     lifecycle_receipt: None,
                     ui_patch_receipt: Some(semio_framework_actor::instance_lifetime::ActorUiPatchReceipt {
                         lifetime: semio_framework_actor::instance_lifetime::ActorInstanceLifetime { activation_generation: 1, instance_id: 7, guest_lifetime: 13 },
@@ -3335,16 +3323,7 @@ mod tests {
         shard.job_authorities.insert((actor.0, turn.job), JobAuthority { turn, request });
         shard.job_placement.insert((actor.0, turn.job), JobPlacement::Inline);
         let job_bytes = {
-            let envelope = Envelope {
-                to: actor,
-                from: semio_framework_actor::Origin::Kernel,
-                lane: semio_framework_actor::Lane::Maintenance,
-                seq: 2,
-                deadline_ms: None,
-                coalesce: None,
-                cancel_of: None,
-                payload: Payload::JobStep { turn },
-            };
+            let envelope = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Maintenance, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
             let mut out = Vec::new();
             ShardFrame::Envelope(envelope).pack_encode(&mut out).await;
             out
@@ -3419,6 +3398,7 @@ mod tests {
             status: semio_framework::kernel::TurnStatus::Faulted(b"trap".to_vec()),
             fuel_used: 999,
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            cold_pair_ingress: semio_framework::kernel::ColdPairIngressStatus::Idle,
             lifecycle_receipt: None,
             ui_patch_receipt: None,
         };
@@ -3448,6 +3428,7 @@ mod tests {
                 status: kernel_status,
                 fuel_used: 0,
                 command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+                cold_pair_ingress: semio_framework::kernel::ColdPairIngressStatus::Idle,
                 lifecycle_receipt: None,
                 ui_patch_receipt: None,
             };
@@ -3471,6 +3452,7 @@ mod tests {
                 status: semio_framework::kernel::TurnStatus::Idle,
                 fuel_used: 0,
                 command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+                cold_pair_ingress: semio_framework::kernel::ColdPairIngressStatus::Idle,
                 lifecycle_receipt: None,
                 ui_patch_receipt: None,
             };
@@ -3482,10 +3464,7 @@ mod tests {
         let mut patches = semio_framework::kernel::UiTurnPatches::default();
         let patch = serde_json::from_value(serde_json::json!({ "surface": "stack-authority", "baseRevision": 0, "revision": 1, "ops": [] })).expect("one patch fixture");
         patches.try_push_ui_patch(patch).expect("one patch owner");
-        let receipt = semio_framework::kernel::ActorUiPatchReceipt {
-            lifetime: semio_framework::kernel::ActorInstanceLifetime { activation_generation: 1, instance_id: 7, guest_lifetime: 13 },
-            patch_sequence: 1,
-        };
+        let receipt = semio_framework::kernel::ActorUiPatchReceipt { lifetime: semio_framework::kernel::ActorInstanceLifetime { activation_generation: 1, instance_id: 7, guest_lifetime: 13 }, patch_sequence: 1 };
         let result = TurnResult {
             ui_patches: patches,
             effects: vec![],
@@ -3494,6 +3473,7 @@ mod tests {
             status: semio_framework::kernel::TurnStatus::Idle,
             fuel_used: 0,
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            cold_pair_ingress: semio_framework::kernel::ColdPairIngressStatus::Idle,
             lifecycle_receipt: None,
             ui_patch_receipt: Some(receipt),
         };
@@ -3984,7 +3964,9 @@ mod tests {
         cancel.effects.push(Effect::CancelJob { job });
         mock.script_turn(actor, cancel).await;
 
-        shard.execute_turn_for(actor.0, Event::Wake).await.expect("mounted cancel turn");
+        let budget = shard.granted_budget(actor.0);
+        let lane = shard.actor_lane(actor.0);
+        assert!(!shard.execute_turn_for(actor.0, &Event::Wake, budget, lane).await.expect("mounted cancel turn"));
         assert_eq!(mock.cancel_admissions(), 1);
         assert_eq!(mock.step_admissions(), 0, "cancel closes before another guest job step");
         assert_eq!(shard.replay_seeds[0].as_ref().expect("cancelled seed remains discoverable").phase, ReplaySeedPhase::Closing);

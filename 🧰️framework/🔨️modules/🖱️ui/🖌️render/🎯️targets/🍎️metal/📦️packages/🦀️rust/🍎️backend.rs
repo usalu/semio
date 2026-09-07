@@ -88,6 +88,7 @@ pub struct MetalBackend {
     layer: Owned<MetalLayer>,
     size: PhysicalSize,
     dpr: f32,
+    #[cfg(feature = "backend-testing")]
     surface_format: MTLPixelFormat,
     pipelines: Pipelines,
     resources: GpuResources,
@@ -169,6 +170,7 @@ impl MetalBackend {
             layer,
             size,
             dpr,
+            #[cfg(feature = "backend-testing")]
             surface_format: SURFACE_FORMAT,
             pipelines,
             resources,
@@ -246,10 +248,8 @@ fn set_drawable_size(layer: &MetalLayer, width: u32, height: u32) {
 fn allocate_depth_texture(device: &Device, width: u32, height: u32) -> Owned<MetalTexture> {
     let descriptor = MTLTextureDescriptor::new();
     descriptor.setPixelFormat(DEPTH_STENCIL_FORMAT);
-    unsafe {
-        descriptor.setWidth(width.max(1) as _);
-        descriptor.setHeight(height.max(1) as _);
-    }
+    descriptor.setWidth(width.max(1) as _);
+    descriptor.setHeight(height.max(1) as _);
     descriptor.setUsage(objc2_metal::MTLTextureUsage::RenderTarget);
     descriptor.setResourceOptions(objc2_metal::MTLResourceOptions::StorageModePrivate);
     device.newTextureWithDescriptor(&descriptor).expect("metal backend: failed to allocate depth/stencil texture")
@@ -474,8 +474,8 @@ fn encode_2d_batches<'a>(
     width: f32,
     height: f32,
 ) {
-    let quad_stride = std::mem::size_of::<ui_render::QuadInstance>();
-    let vector_stride = std::mem::size_of::<ui_render::VectorVertex>();
+    let quad_stride = size_of::<ui_render::QuadInstance>();
+    let vector_stride = size_of::<ui_render::VectorVertex>();
     for batch in batches {
         match batch.mask_range {
             Some((start, count)) => draw_silhouette_mask(encoder, pipelines, quad_vertex_buffer, ui_globals_buffer, quad_buffer, start, count, quad_stride, width, height),

@@ -37,6 +37,7 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-job.workspace = true
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false, features = ["full-artifact-catalog"] }
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }

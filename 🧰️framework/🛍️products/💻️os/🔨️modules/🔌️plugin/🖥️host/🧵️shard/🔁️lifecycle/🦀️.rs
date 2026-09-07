@@ -7,10 +7,18 @@ pub struct ShardActorAllocation {
     registration: NonZeroU64,
 }
 
+impl ShardActorAllocation {
+    pub fn key(self, shard: semio_framework_actor::ShardId) -> semio_framework_actor::activation::ActorShardKey {
+        semio_framework_actor::activation::ActorShardKey { actor: self.actor, shard, registration: self.registration }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ShardRegistrationReason {
+    WrongActor,
     Occupied,
     Exhausted,
+    Stopped,
 }
 
 pub struct ShardRegistrationRejected {
@@ -70,6 +78,9 @@ impl ShardLoop {
     }
 
     pub fn register(&mut self, actor: ActorId, instance: GuestInstance) -> Result<ShardActorAllocation, ShardRegistrationRejected> {
+        if instance.actor != actor {
+            return Err(ShardRegistrationRejected { actor, instance, reason: ShardRegistrationReason::WrongActor });
+        }
         if self.instances.contains_key(&actor.0) {
             return Err(ShardRegistrationRejected { actor, instance, reason: ShardRegistrationReason::Occupied });
         }
@@ -91,9 +102,7 @@ impl ShardLoop {
         !candidate.retries()
             && !candidate.authority.revokes()
             && candidate.allocation.is_some()
-            && [&self.pending_interactive, &self.pending_background].into_iter().any(|ring| {
-                (0..ring.len).any(|index| ring.get(index).is_some_and(|owner| owner.retries() && owner.allocation == candidate.allocation))
-            })
+            && [&self.pending_interactive, &self.pending_background].into_iter().any(|ring| (0..ring.len).any(|index| ring.get(index).is_some_and(|owner| owner.retries() && owner.allocation == candidate.allocation)))
     }
 
     pub(super) fn select_lane(&self, ring: &FixedOwnerRing<AdmittedAuthority, SHARD_DEFERRED_ITEMS>) -> Option<usize> {
@@ -103,9 +112,7 @@ impl ShardLoop {
             if owner.retry == LifecycleRetry::Ready {
                 return Some(index);
             }
-            return (0..ring.len)
-                .find(|candidate| ring.get(*candidate).is_some_and(|peer| peer.allocation != owner.allocation && !self.retry_blocks(peer)))
-                .or(Some(index));
+            return (0..ring.len).find(|candidate| ring.get(*candidate).is_some_and(|peer| peer.allocation != owner.allocation && !self.retry_blocks(peer))).or(Some(index));
         }
         let first = (0..ring.len).find(|index| ring.get(*index).is_some_and(|owner| !self.retry_blocks(owner)))?;
         let DeferredAuthority::JobStep { actor, .. } = &ring.get(first)?.authority else { return Some(first) };
@@ -124,9 +131,15 @@ impl ShardLoop {
 
     pub(super) fn select_pending_authority(&mut self) -> Option<AdmittedAuthority> {
         let revocation = [&self.pending_interactive, &self.pending_background].into_iter().enumerate().find_map(|(lane, ring)| {
-            (0..ring.len).find(|index| {
-                ring.get(*index).is_some_and(|owner| owner.authority.revokes() && self.allocation_is_current(owner.allocation))
-            }).map(|index| (lane, index))
+            (0..ring.len)
+                .find(|index| {
+                    ring.get(*index).is_some_and(|owner| {
+                        owner.authority.revokes()
+                            && self.allocation_is_current(owner.allocation)
+                            && [&self.pending_interactive, &self.pending_background].into_iter().any(|pending| (0..pending.len).any(|index| pending.get(index).is_some_and(|retry| retry.retries() && retry.allocation == owner.allocation)))
+                    })
+                })
+                .map(|index| (lane, index))
         });
         let (lane, index) = revocation.or_else(|| self.select_lane(&self.pending_interactive).map(|index| (0, index))).or_else(|| self.select_lane(&self.pending_background).map(|index| (1, index)))?;
         let ring = if lane == 0 { &mut self.pending_interactive } else { &mut self.pending_background };

@@ -288,7 +288,7 @@ struct Generation2dPublicationLease {
 
 impl semio_framework_job::FixedOperationOwner for Generation2dPublicationLease {
     fn retained_bytes(&self) -> usize {
-        std::mem::size_of::<Self>()
+        size_of::<Self>()
     }
 
     fn cancel(&mut self) {
@@ -300,12 +300,12 @@ impl semio_framework_job::FixedOperationOwner for Generation2dPublicationLease {
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 || maximum_bytes < std::mem::size_of::<Self>() {
+        if !self.closing || maximum_items == 0 || maximum_bytes < size_of::<Self>() {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
         if !self.terminal {
             self.terminal = true;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<Self>() };
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: size_of::<Self>() };
         }
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
@@ -319,7 +319,7 @@ type Generation2dPublicationRegistry = semio_framework_job::FixedOperationRegist
 
 fn generation2d_publication_leases() -> &'static std::sync::Mutex<Generation2dPublicationRegistry> {
     static LEASES: std::sync::OnceLock<std::sync::Mutex<semio_framework_job::FixedOperationRegistry<Generation2dPublicationLease, GENERATION2D_PUBLICATION_SLOTS>>> = std::sync::OnceLock::new();
-    LEASES.get_or_init(|| std::sync::Mutex::new(Generation2dPublicationRegistry::new(GENERATION2D_PUBLICATION_SLOTS * std::mem::size_of::<Generation2dPublicationLease>())))
+    LEASES.get_or_init(|| std::sync::Mutex::new(Generation2dPublicationRegistry::new(GENERATION2D_PUBLICATION_SLOTS * size_of::<Generation2dPublicationLease>())))
 }
 
 fn generation2d_publication_key(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::FixedOperationKey {

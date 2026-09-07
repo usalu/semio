@@ -13,8 +13,8 @@ pub(crate) struct UiTypedRetirementCursor {
     complete: bool,
 }
 
-impl std::fmt::Debug for UiTypedRetirementCursor {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Debug for UiTypedRetirementCursor {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.debug_struct("UiTypedRetirementCursor").field("path", &self.path).field("value_owned", &self.value.is_some()).field("complete", &self.complete).finish()
     }
 }
@@ -56,6 +56,12 @@ fn field_step<T: UiTypedRetire>(field: &mut T, index: &mut u8, path: &mut [u8], 
 }
 
 macro_rules! typed_fields {
+    ($type:ty {}) => {
+        impl UiTypedRetire for $type {
+            const DEPTH: usize = 1;
+            fn retire_typed(&mut self, path: &mut [u8], _: &mut Option<UiValueRetirement>, _: usize) -> Result<UiValueRetirementStep, &'static str> { split(path)?; Ok(done()) }
+        }
+    };
     ($type:ty { $($index:literal => $field:tt : $field_type:ty),* $(,)? }) => {
         impl UiTypedRetire for $type {
             const DEPTH: usize = 1 + maximum_depth(&[$(<$field_type as UiTypedRetire>::DEPTH),*]);

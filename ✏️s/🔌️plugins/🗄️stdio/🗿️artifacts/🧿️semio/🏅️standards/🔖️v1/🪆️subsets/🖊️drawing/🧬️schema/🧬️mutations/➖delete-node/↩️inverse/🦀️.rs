@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeleteNode`.
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{DrawGroupDiff, DrawNodeDiff, NodePath, SemioDrawingDiff, diff_at_path, node_at};
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::node_at;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::{SemioDrawingMutation, create_node};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 

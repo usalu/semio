@@ -455,7 +455,6 @@ impl<S: pack::PackSource> SnapshotDescriptorReader<'_, '_, S> {
 }
 
 async fn decode_snapshot_descriptor(source: &impl pack::PackSource, control: &mut SnapshotCursorControl) -> Result<SnapshotDescriptor, DbError> {
-    use pack::PackSource as _;
     let offset = pack::HEADER_SIZE as u64;
     let mut prefix = [0u8; 12];
     control.grant()?;
@@ -1080,7 +1079,7 @@ impl<'manager, 'storage, S: SnapshotStorage> SnapshotChainCursor<'manager, 'stor
 
     async fn descriptor_at(&mut self, generation: u64) -> Result<(SnapshotDescriptor, usize), DbError> {
         self.control.grant()?;
-        let mut pages = self.manager.storage.read_generation(self.document, generation).await?;
+        let pages = self.manager.storage.read_generation(self.document, generation).await?;
         self.operation = Some(pages.operation());
         let len = pages.len();
         self.control.grant()?;
@@ -1101,7 +1100,7 @@ impl<'manager, 'storage, S: SnapshotStorage> SnapshotChainCursor<'manager, 'stor
         let mut generation = Some(self.through_generation);
         while let Some(current) = generation {
             self.control.grant()?;
-            let mut source = self.manager.storage.read_generation(self.document, current).await?;
+            let source = self.manager.storage.read_generation(self.document, current).await?;
             self.operation = Some(source.operation());
             self.control.grant()?;
             let handle = open_latest_pages(&source, &mut self.control).await?;
@@ -1152,7 +1151,7 @@ impl<'manager, 'storage, S: SnapshotStorage> SnapshotChainCursor<'manager, 'stor
         let mut expected_parent = None;
         for generation in root..=self.through_generation {
             self.control.grant()?;
-            let mut source = self.manager.storage.read_generation(self.document, generation).await?;
+            let source = self.manager.storage.read_generation(self.document, generation).await?;
             self.control.grant()?;
             let descriptor = open_latest_pages(&source, &mut self.control).await?.descriptor;
             if descriptor.parent_generation != expected_parent {
@@ -1237,7 +1236,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
             let _claim = SnapshotPublicationClaim::try_claim(document)?;
             let observed = self.storage.latest_generation(document).await?;
             if observed != Some(expected_generation) {
-                return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(expected_generation), actual: crate::db_ids::GenerationId(observed.unwrap_or(0)) });
+                return Err(DbError::StaleGeneration { expected: GenerationId(expected_generation), actual: GenerationId(observed.unwrap_or(0)) });
             }
             let generation = expected_generation.checked_add(1).ok_or(DbError::LimitExceeded("snapshot publication generation"))?;
             let pages = build_generation_retained_expected(document, generation, &body, &OptionalSnapshotPages { slots: new_pages, len: retained_len }, control).await?;
@@ -1367,7 +1366,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
     /// against the chunk table `pack::PackWriter::write_chunk` built from these same page bytes;
     /// no separate hash recomputation needed here.
     pub async fn verify(&self, document: &ArtifactId, generation: u64, level: pack::os_pack::VerificationLevel) -> Result<(), DbError> {
-        let mut bytes = self.storage.read_generation(document, generation).await?;
+        let bytes = self.storage.read_generation(document, generation).await?;
         let mut control = SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
         let handle = open_latest_pages(&bytes, &mut control).await?;
         let sub = PageSubSource { inner: &bytes, base: 0, len: bytes.len() as u64 };
@@ -1454,8 +1453,8 @@ mod tests {
             chain_hash: [generation as u8; 32],
             protocol_version: 1,
             vcs_head: Some("ck-abcdef".to_string()),
-            base_pack_hash: Some(pack::ContentHash([9u8; 32])),
-            roots: vec![pack::ContentHash([1u8; 32]), pack::ContentHash([2u8; 32])],
+            base_pack_hash: Some(ContentHash([9u8; 32])),
+            roots: vec![ContentHash([1u8; 32]), ContentHash([2u8; 32])],
             new_pages: vec![],
             created_at_ms: 1_700_000_000_000 + generation,
         }
@@ -1594,7 +1593,7 @@ mod tests {
         assert_eq!(inherited, b"stable-page");
 
         // ❌️ A hash present in neither generation reports NotFound, not a panic.
-        assert!(matches!(read_page(&combined, &latest, pack::ContentHash([0xEE; 32])).await, Err(DbError::NotFound(_))));
+        assert!(matches!(read_page(&combined, &latest, ContentHash([0xEE; 32])).await, Err(DbError::NotFound(_))));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1617,7 +1616,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manager_publishes_full_baseline_then_loads_it_back() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-a".into();
         let pages = vec![page(b"p0").await];
@@ -1633,7 +1632,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manager_incremental_publish_without_prior_generation_errors() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-b".into();
         let result = db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(0).await));
@@ -1642,7 +1641,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manager_incremental_chain_materializes_and_resolves_inherited_pages() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-c".into();
 
@@ -1671,7 +1670,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manager_retain_from_requires_full_baseline_floor() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-d".into();
         db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0).await)).unwrap();
@@ -1682,7 +1681,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manager_retain_from_deletes_generations_below_a_valid_baseline_floor() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-e".into();
         db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0).await)).unwrap();
@@ -1695,7 +1694,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manager_select_generation_picks_highest_head_seq_at_most_target() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-f".into();
         db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0).await)).unwrap();
@@ -1712,7 +1711,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manager_verify_accepts_intact_and_rejects_corrupted_generation() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-g".into();
         let source_pages = vec![page(b"verify-me").await];
@@ -1746,7 +1745,7 @@ mod tests {
     //#region 🔖️Lease
     #[semio_framework_async_macros::async_test]
     async fn snapshot_lease_round_trips_acquire_renew_release_via_memory_storage() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
 
         let fence = db_actor::block_on(SnapshotLease::acquire(&storage, &document, "actor-a", 1_000, 0)).unwrap();
@@ -1789,7 +1788,7 @@ mod retained_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn snapshot_cursor_cancel_fuel_interrupted_close_and_terminal_empty_are_exact() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document = ArtifactId::from("retained-snapshot");
         let body = SnapshotBody { head_seq: 0, commit_seq: 0, epoch: 0, chain_hash: [0; 32], protocol_version: 1, vcs_head: None, base_pack_hash: None, roots: Vec::new(), created_at_ms: 0 };

@@ -14,7 +14,7 @@ pub struct SetConformanceAttribute {
 impl protocol::MutationKind<XlsxSnapshot, XlsxTransitionalMutation> for SetConformanceAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "conformance-attribute", kind: "set-conformance-attribute", record: "SetConformanceAttribute" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxTransitionalMutation as protocol::Mutation<XlsxSnapshot>>::Diff> {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxTransitionalMutation as Mutation<XlsxSnapshot>>::Diff> {
         agg_diff(&XlsxTransitionalMutation::SetConformanceAttribute(self.clone()), base)
     }
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxTransitionalMutation> {

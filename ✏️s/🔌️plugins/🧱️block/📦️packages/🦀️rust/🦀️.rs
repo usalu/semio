@@ -134,7 +134,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-node-kind-variant/🧪️tests/🔀️switches-variant-to-b/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-node-kind-variant/🧪️tests/🔀️switches-variant-68838a/🦀️.rs"]
                                     mod tests_switches_variant_to_b;
                                 }
                                 #[path = "."]
@@ -147,7 +147,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️change-node-kind-description/🧪️tests/💬️rewrites-node-kind-description/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️change-node-kind-description/🧪️tests/💬️rewrites-node-363d2f/🦀️.rs"]
                                     mod tests_rewrites_node_kind_description;
                                 }
                                 #[path = "."]
@@ -238,7 +238,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️change-handle-kind-label/🧪️tests/🔤️relabels-power-handle-kind/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️change-handle-kind-label/🧪️tests/🔤️relabels-power-10090d/🦀️.rs"]
                                     mod tests_relabels_power_handle_kind;
                                 }
                                 #[path = "."]
@@ -251,7 +251,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️change-handle-kind-color/🧪️tests/⚫️recolors-power-handle-kind/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️change-handle-kind-color/🧪️tests/⚫️recolors-power-52a9ef/🦀️.rs"]
                                     mod tests_recolors_power_handle_kind;
                                 }
                                 #[path = "."]
@@ -264,7 +264,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-handle-kind-default-wire-kind/🧪️tests/📡️swaps-power-default-wire-kind/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-handle-kind-default-wire-kind/🧪️tests/📡️swaps-power-f9bee0/🦀️.rs"]
                                     mod tests_swaps_power_default_wire_kind;
                                 }
                                 #[path = "."]
@@ -316,7 +316,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-handle-handle-kind/🧪️tests/⚡️rekinds-in-handle-as-power/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-handle-handle-kind/🧪️tests/⚡️rekinds-in-handle-af7fbe/🦀️.rs"]
                                     mod tests_rekinds_in_handle_as_power;
                                 }
                                 #[path = "."]
@@ -342,7 +342,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-compatibility-rule/🧪️tests/📡️revokes-signal-to-signal/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-compatibility-rule/🧪️tests/📡️revokes-signal-601006/🦀️.rs"]
                                     mod tests_revokes_signal_to_signal;
                                 }
                                 #[path = "."]
@@ -433,7 +433,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💬️change-meta-description/🧪️tests/📝️rewrites-session-notes/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💬️change-meta-description/🧪️tests/📝️rewrites-session-7ccabc/🦀️.rs"]
                                     mod tests_rewrites_session_notes;
                                 }
                             }
@@ -783,7 +783,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-part-kind-variant/🧪️tests/🔀️switches-variant-to-b/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-part-kind-variant/🧪️tests/🔀️switches-variant-5ee9e2/🦀️.rs"]
                                     mod tests_switches_variant_to_b;
                                 }
                                 #[path = "."]
@@ -796,7 +796,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️change-part-kind-description/🧪️tests/💬️rewrites-part-kind-description/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️change-part-kind-description/🧪️tests/💬️rewrites-part-6e6ea5/🦀️.rs"]
                                     mod tests_rewrites_part_kind_description;
                                 }
                                 #[path = "."]
@@ -809,7 +809,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-part-kind-icon/🧪️tests/🖼️repoints-part-kind-icon/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-part-kind-icon/🧪️tests/🖼️repoints-part-af75f9/🦀️.rs"]
                                     mod tests_repoints_part_kind_icon;
                                 }
                                 #[path = "."]
@@ -822,7 +822,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-part-kind-unit/🧪️tests/📏️switches-unit-to-centimeter/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-part-kind-unit/🧪️tests/📏️switches-unit-to-304655/🦀️.rs"]
                                     mod tests_switches_unit_to_centimeter;
                                 }
                                 #[path = "."]
@@ -861,7 +861,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-representation/🧪️tests/🏗️appends-frame-representation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-representation/🧪️tests/🏗️appends-frame-bed190/🦀️.rs"]
                                     mod tests_appends_frame_representation;
                                 }
                                 #[path = "."]
@@ -874,7 +874,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-representation/🧪️tests/🚫️removes-shell-representation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-representation/🧪️tests/🚫️removes-shell-41c706/🦀️.rs"]
                                     mod tests_removes_shell_representation;
                                 }
                                 #[path = "."]
@@ -900,7 +900,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-representation-mesh-url/🧪️tests/🐚️repoints-shell-mesh-url/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-representation-mesh-url/🧪️tests/🐚️repoints-shell-440baf/🦀️.rs"]
                                     mod tests_repoints_shell_mesh_url;
                                 }
                                 #[path = "."]
@@ -913,7 +913,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔️change-representation-lod/🧪️tests/🐚️promotes-shell-to-lod2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔️change-representation-lod/🧪️tests/🐚️promotes-shell-58db01/🦀️.rs"]
                                     mod tests_promotes_shell_to_lod2;
                                 }
                                 #[path = "."]
@@ -926,7 +926,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation-description/🧪️tests/🐚️rewrites-shell-description/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation-description/🧪️tests/🐚️rewrites-shell-3f18a4/🦀️.rs"]
                                     mod tests_rewrites_shell_description;
                                 }
                                 #[path = "."]
@@ -939,7 +939,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖add-representation-tag/🧪️tests/🔖️tags-shell-as-structural/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖add-representation-tag/🧪️tests/🔖️tags-shell-as-61592d/🦀️.rs"]
                                     mod tests_tags_shell_as_structural;
                                 }
                                 #[path = "."]
@@ -952,7 +952,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫remove-representation-tag/🧪️tests/🚫️untags-shell-printable/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫remove-representation-tag/🧪️tests/🚫️untags-shell-64e878/🦀️.rs"]
                                     mod tests_untags_shell_printable;
                                 }
                                 #[path = "."]
@@ -965,7 +965,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩add-representation-attribute/🧪️tests/🐚️adds-color-attribute-to-shell/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩add-representation-attribute/🧪️tests/🐚️adds-color-a27488/🦀️.rs"]
                                     mod tests_adds_color_attribute_to_shell;
                                 }
                                 #[path = "."]
@@ -978,7 +978,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-representation-attribute/🧪️tests/🐚️drops-finish-attribute-from-shell/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-representation-attribute/🧪️tests/🐚️drops-finish-c71d4b/🦀️.rs"]
                                     mod tests_drops_finish_attribute_from_shell;
                                 }
                                 #[path = "."]
@@ -1030,7 +1030,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎫change-grip-kind-label/🧪️tests/🔤️relabels-plug-grip-kind/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎫change-grip-kind-label/🧪️tests/🔤️relabels-plug-099ba2/🦀️.rs"]
                                     mod tests_relabels_plug_grip_kind;
                                 }
                                 #[path = "."]
@@ -1056,7 +1056,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢change-grip-kind-default-rope-kind/🧪️tests/🪢️swaps-plug-default-rope-kind/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢change-grip-kind-default-rope-kind/🧪️tests/🪢️swaps-plug-f0094f/🦀️.rs"]
                                     mod tests_swaps_plug_default_rope_kind;
                                 }
                                 #[path = "."]
@@ -1134,7 +1134,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-grip-grip-kind/🧪️tests/🔌️rekinds-north-grip-as-socket/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-grip-grip-kind/🧪️tests/🔌️rekinds-north-899e05/🦀️.rs"]
                                     mod tests_rekinds_north_grip_as_socket;
                                 }
                                 #[path = "."]
@@ -1277,7 +1277,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💬change-meta-description/🧪️tests/📝️rewrites-session-notes/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💬change-meta-description/🧪️tests/📝️rewrites-session-f75990/🦀️.rs"]
                                     mod tests_rewrites_session_notes;
                                 }
                             }
@@ -1614,7 +1614,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-object-kind-label/🧪️tests/🔤️relabels-object-kind/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-object-kind-label/🧪️tests/🔤️relabels-object-723f1a/🦀️.rs"]
                                     mod tests_relabels_object_kind;
                                 }
                                 #[path = "."]
@@ -1627,7 +1627,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-object-kind-variant/🧪️tests/🔀️switches-variant-to-b/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-object-kind-variant/🧪️tests/🔀️switches-variant-e58314/🦀️.rs"]
                                     mod tests_switches_variant_to_b;
                                 }
                                 #[path = "."]
@@ -1640,7 +1640,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️change-object-kind-description/🧪️tests/💬️rewrites-object-kind-description/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️change-object-kind-description/🧪️tests/💬️rewrites-object-97b568/🦀️.rs"]
                                     mod tests_rewrites_object_kind_description;
                                 }
                                 #[path = "."]
@@ -1653,7 +1653,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-object-kind-icon/🧪️tests/🖼️repoints-object-kind-icon/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-object-kind-icon/🧪️tests/🖼️repoints-object-79fb4f/🦀️.rs"]
                                     mod tests_repoints_object_kind_icon;
                                 }
                                 #[path = "."]
@@ -1666,7 +1666,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-object-kind-unit/🧪️tests/📏️switches-unit-to-centimeter/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-object-kind-unit/🧪️tests/📏️switches-unit-to-3c2111/🦀️.rs"]
                                     mod tests_switches_unit_to_centimeter;
                                 }
                                 #[path = "."]
@@ -1679,7 +1679,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-representation/🧪️tests/🏗️appends-frame-representation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-representation/🧪️tests/🏗️appends-frame-578da0/🦀️.rs"]
                                     mod tests_appends_frame_representation;
                                 }
                                 #[path = "."]
@@ -1692,7 +1692,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-representation/🧪️tests/🚫️removes-shell-representation/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-representation/🧪️tests/🚫️removes-shell-d8d5a7/🦀️.rs"]
                                     mod tests_removes_shell_representation;
                                 }
                                 #[path = "."]
@@ -1718,7 +1718,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-representation-mesh-url/🧪️tests/🐚️repoints-shell-mesh-url/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-representation-mesh-url/🧪️tests/🐚️repoints-shell-470c50/🦀️.rs"]
                                     mod tests_repoints_shell_mesh_url;
                                 }
                                 #[path = "."]
@@ -1731,7 +1731,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔️change-representation-lod/🧪️tests/🐚️promotes-shell-to-lod2/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔️change-representation-lod/🧪️tests/🐚️promotes-shell-3a732b/🦀️.rs"]
                                     mod tests_promotes_shell_to_lod2;
                                 }
                                 #[path = "."]
@@ -1744,7 +1744,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation-description/🧪️tests/🐚️rewrites-shell-description/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation-description/🧪️tests/🐚️rewrites-shell-df5e69/🦀️.rs"]
                                     mod tests_rewrites_shell_description;
                                 }
                                 #[path = "."]
@@ -1757,7 +1757,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖add-representation-tag/🧪️tests/🔖️tags-shell-as-structural/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖add-representation-tag/🧪️tests/🔖️tags-shell-as-536413/🦀️.rs"]
                                     mod tests_tags_shell_as_structural;
                                 }
                                 #[path = "."]
@@ -1770,7 +1770,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫remove-representation-tag/🧪️tests/🚫️untags-shell-printable/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫remove-representation-tag/🧪️tests/🚫️untags-shell-c72af1/🦀️.rs"]
                                     mod tests_untags_shell_printable;
                                 }
                                 #[path = "."]
@@ -1783,7 +1783,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩add-representation-attribute/🧪️tests/🐚️adds-color-attribute-to-shell/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩add-representation-attribute/🧪️tests/🐚️adds-color-195f43/🦀️.rs"]
                                     mod tests_adds_color_attribute_to_shell;
                                 }
                                 #[path = "."]
@@ -1796,7 +1796,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-representation-attribute/🧪️tests/🐚️drops-finish-attribute-from-shell/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-representation-attribute/🧪️tests/🐚️drops-finish-adea18/🦀️.rs"]
                                     mod tests_drops_finish_attribute_from_shell;
                                 }
                                 #[path = "."]
@@ -1848,7 +1848,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎫change-vortex-kind-label/🧪️tests/🔤️relabels-door-vortex-kind/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎫change-vortex-kind-label/🧪️tests/🔤️relabels-door-a33773/🦀️.rs"]
                                     mod tests_relabels_door_vortex_kind;
                                 }
                                 #[path = "."]
@@ -1861,7 +1861,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-vortex-kind-color/🧪️tests/⚫️recolors-door-vortex-kind/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-vortex-kind-color/🧪️tests/⚫️recolors-door-36ed5e/🦀️.rs"]
                                     mod tests_recolors_door_vortex_kind;
                                 }
                                 #[path = "."]
@@ -1874,7 +1874,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌change-vortex-kind-default-cable-kind/🧪️tests/🔌️swaps-door-default-cable-kind/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌change-vortex-kind-default-cable-kind/🧪️tests/🔌️swaps-door-6be621/🦀️.rs"]
                                     mod tests_swaps_door_default_cable_kind;
                                 }
                                 #[path = "."]
@@ -1939,7 +1939,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-vortex-vortex-kind/🧪️tests/🕳️rekinds-front-vortex-as-hatch/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-vortex-vortex-kind/🧪️tests/🕳️rekinds-front-076752/🦀️.rs"]
                                     mod tests_rekinds_front_vortex_as_hatch;
                                 }
                                 #[path = "."]
@@ -2069,7 +2069,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💬change-meta-description/🧪️tests/📝️rewrites-session-notes/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💬change-meta-description/🧪️tests/📝️rewrites-session-d06b2c/🦀️.rs"]
                                     mod tests_rewrites_session_notes;
                                 }
                             }
@@ -2669,7 +2669,7 @@ pub mod viewer {
 //#endregion 👁️Viewer
 
 //#region 🔖️Plugin
-semio_framework_plugin::plugin_exports!(block_shared::plugin, block_shared::BlockApps);
+semio_framework_plugin::plugin_exports!(plugin, BlockApps);
 
 //#region 📚️Examples
 #[path = "."]

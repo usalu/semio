@@ -17,7 +17,7 @@ pub struct DrawingIntoPdf;
 impl Serializer<DrawingSnapshot> for DrawingIntoPdf {
     const INTO: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(_from: &DrawingSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(_from: &DrawingSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "DrawingIntoPdf: PDF export is not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

@@ -15,7 +15,7 @@ pub struct SetStyle {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetStyle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "style", kind: "set-style", record: "SetStyle" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as protocol::Mutation<DxfSnapshot>>::Diff> {
+    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
         agg_diff(&DxfMutation::SetStyle(self.clone()), base)
     }
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {

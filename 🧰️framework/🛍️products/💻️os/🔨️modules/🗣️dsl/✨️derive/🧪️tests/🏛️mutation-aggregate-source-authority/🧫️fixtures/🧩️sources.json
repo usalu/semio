@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "aggregate": "domain/🧬️mutations",
+  "sources": ["graph/🧬️mutations", "geometry/🧬️mutations"],
+  "cases": [
+    {"name": "explicit-sources", "accepted": true},
+    {"name": "empty-sources", "accepted": false},
+    {"name": "duplicate-source", "accepted": false},
+    {"name": "unsafe-source", "accepted": false},
+    {"name": "non-mutation-source", "accepted": false},
+    {"name": "missing-source", "accepted": false},
+    {"name": "symlink-source", "accepted": false},
+    {"name": "non-array-sources", "accepted": false},
+    {"name": "non-string-source", "accepted": false},
+    {"name": "unsafe-aggregate", "accepted": false}
+  ]
+}

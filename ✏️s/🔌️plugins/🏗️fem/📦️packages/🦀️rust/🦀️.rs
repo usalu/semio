@@ -2024,7 +2024,7 @@ pub mod viewer {
 mod plugin;
 pub use plugin::FemApps;
 #[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::FemApps);
+semio_framework_plugin::plugin_exports!(plugin::plugin, FemApps);
 
 //#region 📚️Examples
 #[path = "."]

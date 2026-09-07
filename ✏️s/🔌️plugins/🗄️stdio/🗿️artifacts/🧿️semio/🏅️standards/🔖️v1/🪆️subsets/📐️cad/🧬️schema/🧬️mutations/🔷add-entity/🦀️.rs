@@ -14,7 +14,7 @@ pub struct AddEntity {
 impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for AddEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "entity", kind: "add-entity", record: "AddEntity" };
 
-    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<SemioCadMutation as protocol::Mutation<SemioCadSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<SemioCadMutation as Mutation<SemioCadSnapshot>>::Diff> {
         agg_diff(&SemioCadMutation::AddEntity(self.clone()), base)
     }
     fn inverse(&self, base: &SemioCadSnapshot) -> Vec<SemioCadMutation> {

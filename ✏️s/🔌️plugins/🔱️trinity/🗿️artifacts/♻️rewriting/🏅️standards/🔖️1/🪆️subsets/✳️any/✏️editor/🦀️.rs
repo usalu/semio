@@ -184,7 +184,7 @@ fn build_rule_from_state(state: &RewritingSnapshot) -> Result<crate::artifacts::
 
 pub(crate) fn compiled_jack_query(state: &RewritingSnapshot) -> String {
     let rule_json = match build_rule_from_state(state) {
-        Ok(rule) => pack::to_json_string(&rule).unwrap_or_default(),
+        Ok(rule) => pack::to_json_string(&rule),
         Err(_) => return String::new(),
     };
     let bindings_json = pack::to_json_string(&state.parameter_bindings);

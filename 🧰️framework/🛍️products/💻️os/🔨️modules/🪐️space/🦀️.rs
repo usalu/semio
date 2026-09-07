@@ -2302,7 +2302,7 @@ mod tests {
 
     #[test]
     fn collection_envelope_id_is_two_dot_segments() {
-        let id = <CollectionSnapshot as store::ArtifactDsl>::envelope_id();
+        let id = <CollectionSnapshot as ArtifactDsl>::envelope_id();
         assert_eq!(id, "os.collection");
         assert_eq!(id.split('.').count(), 2, "SemioEnvelope::from_envelope_id requires plugin.artifact");
         let pack = store::ArtifactPack::encode_pack(&empty_collection_snapshot("test"));
@@ -2312,7 +2312,7 @@ mod tests {
 
     #[test]
     fn space_envelope_id_is_two_dot_segments() {
-        let id = <SpaceSnapshot as store::ArtifactDsl>::envelope_id();
+        let id = <SpaceSnapshot as ArtifactDsl>::envelope_id();
         assert_eq!(id, "os.space");
         assert_eq!(id.split('.').count(), 2, "SemioEnvelope::from_envelope_id requires plugin.artifact");
         let pack = store::ArtifactPack::encode_pack(&empty_space_snapshot("test", SpaceKind::Atelier, SpaceVisibility::Private));

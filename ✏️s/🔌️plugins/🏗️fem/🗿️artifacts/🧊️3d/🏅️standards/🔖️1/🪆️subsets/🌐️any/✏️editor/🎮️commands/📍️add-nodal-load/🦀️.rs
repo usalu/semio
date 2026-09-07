@@ -20,8 +20,8 @@ fn resolve_load_case(doc: &Fem3dSnapshot, case_id: Option<&str>) -> Option<FemLo
 /// fresh `"case-1"`/`"Load Case 1"` case pre-seeded with `load` via `create-load-case`.
 fn add_load_mutation(doc: &Fem3dSnapshot, case_id: Option<&str>, load: FemLoad) -> Fem3dMutation {
     match resolve_load_case(doc, case_id) {
-        Some(existing) => Fem3dMutation::AddLoad(add_load::mutation::AddLoad { case_id: existing.id, load: Box::new(load) }),
-        None => Fem3dMutation::CreateLoadCase(create_load_case::mutation::CreateLoadCase { load_case: FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: vec![load], self_weight: false } }),
+        Some(existing) => Fem3dMutation::AddLoad(add_load::AddLoad { case_id: existing.id, load: Box::new(load) }),
+        None => Fem3dMutation::CreateLoadCase(create_load_case::CreateLoadCase { load_case: FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: vec![load], self_weight: false } }),
     }
 }
 

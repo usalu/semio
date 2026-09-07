@@ -1,7 +1,7 @@
 //! ↩️ `delete-node` — undo re-creates the node and re-`connect`s every edge it severed, both
 //! captured from BASE state (pre-deletion); missing id ⇒ `Vec::new()`.
 
-use crate::artifacts::equation::mutations::{connect_nodes, create_node};
+use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::{connect_nodes, create_node};
 use crate::artifacts::equation::{equation_graph, EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse

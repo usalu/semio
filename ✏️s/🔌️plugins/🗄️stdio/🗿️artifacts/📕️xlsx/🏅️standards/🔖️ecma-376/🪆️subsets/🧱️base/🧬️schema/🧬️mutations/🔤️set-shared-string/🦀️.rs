@@ -15,7 +15,7 @@ pub struct SetSharedString {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for SetSharedString {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "shared-string", kind: "set-shared-string", record: "SetSharedString" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxMutation as protocol::Mutation<XlsxSnapshot>>::Diff> {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxMutation as Mutation<XlsxSnapshot>>::Diff> {
         agg_diff(&XlsxMutation::SetSharedString(self.clone()), base)
     }
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxMutation> {

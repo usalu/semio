@@ -260,7 +260,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
         }
 
         fn owner_backing_bytes(&self) -> u64 {
-            (std::mem::size_of::<Self>() + std::mem::size_of::<WalWriterTable<SqliteWalWriterGuard>>()) as u64
+            (size_of::<Self>() + size_of::<WalWriterTable<SqliteWalWriterGuard>>()) as u64
         }
 
         fn drive_async(self: Box<Self>, _operation: u64, task: DbIoTask) -> DbIoAsyncDriverFuture {

@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ReplaceTextureBytes`.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::{SemioMeshDiff, texture_at};
+use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::texture_at;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 

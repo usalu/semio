@@ -6,7 +6,6 @@
 //! already carries. Simple whole-snapshot scalar: no `InferredField` caching.
 
 use crate::artifacts::lowpoly::{LowpolyObject, LowpolySnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 📦Bounds
 /// 📦 Axis-aligned 3d bounding box.

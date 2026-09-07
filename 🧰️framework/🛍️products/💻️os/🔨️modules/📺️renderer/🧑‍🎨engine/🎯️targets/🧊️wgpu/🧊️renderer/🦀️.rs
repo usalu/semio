@@ -13,9 +13,12 @@ extern crate semio_framework_async as wasm_bindgen_futures;
 extern crate framework_surface_node_graph as framework_surface_tiled_map;
 extern crate infinite_canvas as infinite_world;
 extern crate semio_framework_os_kernel as dsl;
+#[cfg(not(target_arch = "wasm32"))]
 extern crate semio_framework_os_kernel as dsl_core;
+#[cfg(not(target_arch = "wasm32"))]
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+#[cfg(not(target_arch = "wasm32"))]
 extern crate semio_framework_os_kernel as store_sync;
 #[cfg(not(target_arch = "wasm32"))]
 #[path = "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🦀️.rs"]
@@ -1233,7 +1236,7 @@ impl GlbSchemaOutput {
                 return Err("GLB POSITION accessor was not FLOAT VEC3");
             }
             self.validate_accessor_span(position)?;
-            let position_bytes = usize::try_from(position.count).ok().and_then(|count| count.checked_mul(3)).and_then(|count| count.checked_mul(std::mem::size_of::<f32>())).ok_or("GLB vertex output bytes overflowed")?;
+            let position_bytes = usize::try_from(position.count).ok().and_then(|count| count.checked_mul(3)).and_then(|count| count.checked_mul(size_of::<f32>())).ok_or("GLB vertex output bytes overflowed")?;
             output_bytes = output_bytes.checked_add(position_bytes).ok_or("GLB vertex output bytes overflowed")?;
             if let Some(normal) = primitive.normal {
                 let normal = self.accessor(normal)?;
@@ -1241,7 +1244,7 @@ impl GlbSchemaOutput {
                     return Err("GLB NORMAL accessor did not match POSITION");
                 }
                 self.validate_accessor_span(normal)?;
-                let normal_bytes = usize::try_from(normal.count).ok().and_then(|count| count.checked_mul(3)).and_then(|count| count.checked_mul(std::mem::size_of::<f32>())).ok_or("GLB normal output bytes overflowed")?;
+                let normal_bytes = usize::try_from(normal.count).ok().and_then(|count| count.checked_mul(3)).and_then(|count| count.checked_mul(size_of::<f32>())).ok_or("GLB normal output bytes overflowed")?;
                 output_bytes = output_bytes.checked_add(normal_bytes).ok_or("GLB normal output bytes overflowed")?;
             } else {
                 output_bytes = output_bytes.checked_add(position_bytes).ok_or("GLB generated normal bytes overflowed")?;
@@ -1252,7 +1255,7 @@ impl GlbSchemaOutput {
                     return Err("GLB TEXCOORD_0 accessor did not match POSITION");
                 }
                 self.validate_accessor_span(uv)?;
-                let uv_bytes = usize::try_from(uv.count).ok().and_then(|count| count.checked_mul(2)).and_then(|count| count.checked_mul(std::mem::size_of::<f32>())).ok_or("GLB UV output bytes overflowed")?;
+                let uv_bytes = usize::try_from(uv.count).ok().and_then(|count| count.checked_mul(2)).and_then(|count| count.checked_mul(size_of::<f32>())).ok_or("GLB UV output bytes overflowed")?;
                 output_bytes = output_bytes.checked_add(uv_bytes).ok_or("GLB UV output bytes overflowed")?;
             }
             let source_indices = match primitive.indices {
@@ -1274,7 +1277,7 @@ impl GlbSchemaOutput {
             if triangle_indices == 0 || !triangle_indices.is_multiple_of(3) {
                 return Err("GLB triangle primitive had no complete triangles");
             }
-            let index_bytes = usize::try_from(triangle_indices).ok().and_then(|count| count.checked_mul(std::mem::size_of::<u32>())).ok_or("GLB index output bytes overflowed")?;
+            let index_bytes = usize::try_from(triangle_indices).ok().and_then(|count| count.checked_mul(size_of::<u32>())).ok_or("GLB index output bytes overflowed")?;
             output_bytes = output_bytes.checked_add(index_bytes).ok_or("GLB index output bytes overflowed")?;
             if output_bytes > GLB_SCHEMA_OUTPUT_BYTES {
                 return Err("GLB semantic output exceeded fixed byte credits");
@@ -2750,7 +2753,7 @@ impl RendererIoHandle {
         let result = renderer_io_with_node(self.slot, self.generation, |node| {
             let result = node.result.take()?;
             node.result_taken = true;
-            RENDERER_IO_WAKE.store(true, std::sync::atomic::Ordering::Release);
+            RENDERER_IO_WAKE.store(true, Ordering::Release);
             Some(result)
         })
         .flatten();
@@ -2760,7 +2763,7 @@ impl RendererIoHandle {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl std::future::Future for RendererIoHandle {
+impl Future for RendererIoHandle {
     type Output = Result<semio_framework_os_services::NativeIoValue, String>;
 
     fn poll(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
@@ -2775,7 +2778,7 @@ impl std::future::Future for RendererIoHandle {
         })
         .is_some();
         if registered || renderer_io_generation_live(self.slot, self.generation) {
-            RENDERER_IO_WAKE.store(true, std::sync::atomic::Ordering::Release);
+            RENDERER_IO_WAKE.store(true, Ordering::Release);
             std::task::Poll::Pending
         } else {
             self.completed = true;
@@ -2791,11 +2794,11 @@ impl Drop for RendererIoHandle {
             return;
         }
         if let Some(slot) = RENDERER_IO_SLOTS.get(self.slot) {
-            if slot.generation.load(std::sync::atomic::Ordering::Acquire) == self.generation {
-                slot.cancel_requested.store(true, std::sync::atomic::Ordering::Release);
+            if slot.generation.load(Ordering::Acquire) == self.generation {
+                slot.cancel_requested.store(true, Ordering::Release);
             }
         }
-        RENDERER_IO_WAKE.store(true, std::sync::atomic::Ordering::Release);
+        RENDERER_IO_WAKE.store(true, Ordering::Release);
     }
 }
 
@@ -2812,16 +2815,16 @@ const RENDERER_IO_EXHAUSTED: u8 = 3;
 
 #[cfg(not(target_arch = "wasm32"))]
 struct RendererIoSlot {
-    generation: std::sync::atomic::AtomicU64,
+    generation: AtomicU64,
     state: std::sync::atomic::AtomicU8,
     node: std::sync::atomic::AtomicPtr<RendererIoNode>,
-    cancel_requested: std::sync::atomic::AtomicBool,
+    cancel_requested: AtomicBool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl RendererIoSlot {
     const fn vacant() -> Self {
-        Self { generation: std::sync::atomic::AtomicU64::new(0), state: std::sync::atomic::AtomicU8::new(RENDERER_IO_VACANT), node: std::sync::atomic::AtomicPtr::new(std::ptr::null_mut()), cancel_requested: std::sync::atomic::AtomicBool::new(false) }
+        Self { generation: AtomicU64::new(0), state: std::sync::atomic::AtomicU8::new(RENDERER_IO_VACANT), node: std::sync::atomic::AtomicPtr::new(std::ptr::null_mut()), cancel_requested: AtomicBool::new(false) }
     }
 }
 
@@ -2970,32 +2973,32 @@ impl RendererIoNode {
 #[cfg(not(target_arch = "wasm32"))]
 static RENDERER_IO_SLOTS: [RendererIoSlot; RENDERER_IO_SESSION_SLOTS] = [const { RendererIoSlot::vacant() }; RENDERER_IO_SESSION_SLOTS];
 #[cfg(not(target_arch = "wasm32"))]
-static RENDERER_IO_WAKE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static RENDERER_IO_WAKE: AtomicBool = AtomicBool::new(false);
 #[cfg(not(target_arch = "wasm32"))]
 static RENDERER_IO_PUMP_CURSOR: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
 #[cfg(not(target_arch = "wasm32"))]
 fn renderer_io_with_node<R>(index: usize, generation: u64, use_node: impl FnOnce(&mut RendererIoNode) -> R) -> Option<R> {
     let slot = RENDERER_IO_SLOTS.get(index)?;
-    if slot.generation.load(std::sync::atomic::Ordering::Acquire) != generation || slot.state.compare_exchange(RENDERER_IO_LIVE, RENDERER_IO_CHECKED_OUT, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+    if slot.generation.load(Ordering::Acquire) != generation || slot.state.compare_exchange(RENDERER_IO_LIVE, RENDERER_IO_CHECKED_OUT, Ordering::AcqRel, Ordering::Acquire).is_err() {
         return None;
     }
-    if slot.generation.load(std::sync::atomic::Ordering::Acquire) != generation {
-        slot.state.store(RENDERER_IO_LIVE, std::sync::atomic::Ordering::Release);
+    if slot.generation.load(Ordering::Acquire) != generation {
+        slot.state.store(RENDERER_IO_LIVE, Ordering::Release);
         return None;
     }
-    let pointer = slot.node.load(std::sync::atomic::Ordering::Acquire);
+    let pointer = slot.node.load(Ordering::Acquire);
     let result = (!pointer.is_null()).then(|| use_node(unsafe { &mut *pointer }));
-    slot.state.store(RENDERER_IO_LIVE, std::sync::atomic::Ordering::Release);
+    slot.state.store(RENDERER_IO_LIVE, Ordering::Release);
     result
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn renderer_io_generation_live(index: usize, generation: u64) -> bool {
     RENDERER_IO_SLOTS.get(index).is_some_and(|slot| {
-        slot.generation.load(std::sync::atomic::Ordering::Acquire) == generation
-            && matches!(slot.state.load(std::sync::atomic::Ordering::Acquire), RENDERER_IO_LIVE | RENDERER_IO_CHECKED_OUT)
-            && !slot.node.load(std::sync::atomic::Ordering::Acquire).is_null()
+        slot.generation.load(Ordering::Acquire) == generation
+            && matches!(slot.state.load(Ordering::Acquire), RENDERER_IO_LIVE | RENDERER_IO_CHECKED_OUT)
+            && !slot.node.load(Ordering::Acquire).is_null()
     })
 }
 
@@ -3004,7 +3007,7 @@ fn pump_renderer_io_sessions(maximum_sessions: usize) -> usize {
     if maximum_sessions == 0 {
         return 0;
     }
-    let start = RENDERER_IO_PUMP_CURSOR.fetch_add(maximum_sessions, std::sync::atomic::Ordering::AcqRel);
+    let start = RENDERER_IO_PUMP_CURSOR.fetch_add(maximum_sessions, Ordering::AcqRel);
     let mut advanced = 0;
     for offset in 0..RENDERER_IO_SESSION_SLOTS {
         if advanced == maximum_sessions {
@@ -3012,16 +3015,16 @@ fn pump_renderer_io_sessions(maximum_sessions: usize) -> usize {
         }
         let index = start.wrapping_add(offset) % RENDERER_IO_SESSION_SLOTS;
         let slot = &RENDERER_IO_SLOTS[index];
-        if slot.state.compare_exchange(RENDERER_IO_LIVE, RENDERER_IO_CHECKED_OUT, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+        if slot.state.compare_exchange(RENDERER_IO_LIVE, RENDERER_IO_CHECKED_OUT, Ordering::AcqRel, Ordering::Acquire).is_err() {
             continue;
         }
-        let pointer = slot.node.load(std::sync::atomic::Ordering::Acquire);
+        let pointer = slot.node.load(Ordering::Acquire);
         if pointer.is_null() {
-            slot.state.store(RENDERER_IO_VACANT, std::sync::atomic::Ordering::Release);
+            slot.state.store(RENDERER_IO_VACANT, Ordering::Release);
             continue;
         }
         let node = unsafe { &mut *pointer };
-        let cancel_advanced = slot.cancel_requested.swap(false, std::sync::atomic::Ordering::AcqRel);
+        let cancel_advanced = slot.cancel_requested.swap(false, Ordering::AcqRel);
         if cancel_advanced {
             node.detached = true;
             node.cancel.cancel_now();
@@ -3037,17 +3040,17 @@ fn pump_renderer_io_sessions(maximum_sessions: usize) -> usize {
             node.pump_one();
         }
         if node.terminal_is_empty() {
-            slot.node.store(std::ptr::null_mut(), std::sync::atomic::Ordering::Release);
-            slot.cancel_requested.store(false, std::sync::atomic::Ordering::Release);
+            slot.node.store(std::ptr::null_mut(), Ordering::Release);
+            slot.cancel_requested.store(false, Ordering::Release);
             drop(unsafe { Box::from_raw(pointer) });
-            slot.state.store(if slot.generation.load(std::sync::atomic::Ordering::Acquire) == u64::MAX { RENDERER_IO_EXHAUSTED } else { RENDERER_IO_VACANT }, std::sync::atomic::Ordering::Release);
+            slot.state.store(if slot.generation.load(Ordering::Acquire) == u64::MAX { RENDERER_IO_EXHAUSTED } else { RENDERER_IO_VACANT }, Ordering::Release);
         } else {
-            slot.state.store(RENDERER_IO_LIVE, std::sync::atomic::Ordering::Release);
+            slot.state.store(RENDERER_IO_LIVE, Ordering::Release);
         }
         advanced += 1;
     }
-    if RENDERER_IO_SLOTS.iter().any(|slot| slot.state.load(std::sync::atomic::Ordering::Acquire) == RENDERER_IO_LIVE) {
-        RENDERER_IO_WAKE.store(true, std::sync::atomic::Ordering::Release);
+    if RENDERER_IO_SLOTS.iter().any(|slot| slot.state.load(Ordering::Acquire) == RENDERER_IO_LIVE) {
+        RENDERER_IO_WAKE.store(true, Ordering::Release);
     }
     advanced
 }
@@ -3056,15 +3059,15 @@ fn pump_renderer_io_sessions(maximum_sessions: usize) -> usize {
 fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> Result<RendererIoHandle, String> {
     use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US};
     let Some((slot_index, generation)) = RENDERER_IO_SLOTS.iter().enumerate().find_map(|(index, slot)| {
-        if slot.state.compare_exchange(RENDERER_IO_VACANT, RENDERER_IO_CHECKED_OUT, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+        if slot.state.compare_exchange(RENDERER_IO_VACANT, RENDERER_IO_CHECKED_OUT, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return None;
         }
-        let Some(generation) = slot.generation.load(std::sync::atomic::Ordering::Acquire).checked_add(1) else {
-            slot.state.store(RENDERER_IO_EXHAUSTED, std::sync::atomic::Ordering::Release);
+        let Some(generation) = slot.generation.load(Ordering::Acquire).checked_add(1) else {
+            slot.state.store(RENDERER_IO_EXHAUSTED, Ordering::Release);
             return None;
         };
-        slot.generation.store(generation, std::sync::atomic::Ordering::Release);
-        slot.cancel_requested.store(false, std::sync::atomic::Ordering::Release);
+        slot.generation.store(generation, Ordering::Release);
+        slot.cancel_requested.store(false, Ordering::Release);
         Some((index, generation))
     }) else {
         return Err("native I/O mounted session registry is exhausted".into());
@@ -3086,9 +3089,9 @@ fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> 
         }
     };
     let node = Box::new(RendererIoNode { session, rejected, ticket: None, result, result_taken: false, detached: false, cancel, waker: None });
-    RENDERER_IO_SLOTS[slot_index].node.store(Box::into_raw(node), std::sync::atomic::Ordering::Release);
-    RENDERER_IO_SLOTS[slot_index].state.store(RENDERER_IO_LIVE, std::sync::atomic::Ordering::Release);
-    RENDERER_IO_WAKE.store(true, std::sync::atomic::Ordering::Release);
+    RENDERER_IO_SLOTS[slot_index].node.store(Box::into_raw(node), Ordering::Release);
+    RENDERER_IO_SLOTS[slot_index].state.store(RENDERER_IO_LIVE, Ordering::Release);
+    RENDERER_IO_WAKE.store(true, Ordering::Release);
     Ok(RendererIoHandle { slot: slot_index, generation, completed: false })
 }
 
@@ -3123,12 +3126,12 @@ mod renderer_io_retained_tests {
         drop(handles);
         assert_eq!(pump_renderer_io_sessions(1), 1, "one host turn advances one mounted control opportunity");
         for _ in 0..RENDERER_IO_SESSION_SLOTS * 16 {
-            if RENDERER_IO_SLOTS.iter().all(|slot| slot.state.load(std::sync::atomic::Ordering::Acquire) != RENDERER_IO_LIVE) {
+            if RENDERER_IO_SLOTS.iter().all(|slot| slot.state.load(Ordering::Acquire) != RENDERER_IO_LIVE) {
                 break;
             }
             assert!(pump_renderer_io_sessions(1) <= 1);
         }
-        assert!(RENDERER_IO_SLOTS.iter().all(|slot| slot.state.load(std::sync::atomic::Ordering::Acquire) != RENDERER_IO_LIVE));
+        assert!(RENDERER_IO_SLOTS.iter().all(|slot| slot.state.load(Ordering::Acquire) != RENDERER_IO_LIVE));
         assert!(!renderer_io_generation_live(first_slot, first_generation));
         let replacement = submit_renderer_io(semio_framework_os_services::NativeIoRequest::ProcessResidentBytes).expect("closed registry slot is reusable with a new generation");
         assert_eq!(replacement.slot, first_slot);
@@ -3444,6 +3447,7 @@ pub(crate) mod kernel_runtime {
             status,
             fuel_used: result.usage.fuel,
             command_ingress: serde_json::from_slice(&result.command_ingress).map_err(|error| format!("kernel: decode command ingress: {error}"))?,
+            cold_pair_ingress: result.cold_pair_ingress.clone(),
             lifecycle_receipt: result.lifecycle_receipt,
             ui_patch_receipt: result.ui_patch_receipt,
         })
@@ -3660,7 +3664,7 @@ pub(crate) mod kernel_runtime {
         }
     }
 
-    pub(crate) enum KernelRequest {
+    enum KernelRequest {
         CreateApp {
             owner: CreateAppRequestOwner,
         },
@@ -7594,6 +7598,7 @@ pub(crate) mod kernel_runtime {
                         ShardOutcome::Fault { actor: reported, message } => {
                             self.begin_fault_close(ActorId(reported));
                             let faulted = semio_framework_actor::TurnResult {
+                                cold_pair_ingress: Default::default(),
                                 ui_patches: Vec::new(),
                                 effects: Vec::new(),
                                 command_ingress: Vec::new(),
@@ -8415,7 +8420,7 @@ pub(crate) mod kernel_runtime {
         fn rejected_production_replay_submit_retries_exact_restore_start_identity_before_job_step() {
             let recovery = mounted_replay_recovery_registry().lock().expect("replay recovery lock").reserve().expect("pre-reserved submit recovery");
             let route = JobReplayRoute { plugin: [1; 32], package: [2; 32], controller: [3; 32], tool: [4; 32], window: 5, document: [6; 32], request_schema: [7; 32], request_version: 1, request_digest: [8; 32] };
-            let authority = JobTurn { job: 19, operation: semio_framework_actor::JobOperation { operation: 23, base_revision: 29, generation: 31, preview_sequence: 0, seed: 37 }, step_sequence: 0 };
+            let authority = JobTurn { job: 19, operation: JobOperation { operation: 23, base_revision: 29, generation: 31, preview_sequence: 0, seed: 37 }, step_sequence: 0 };
             let request = JobReplayRequest::from_spawn("fixture.production-retry", b"retained-input");
             let mut mounted = MountedJobReplay {
                 actor: ActorId(41),
@@ -8943,7 +8948,7 @@ pub(crate) mod kernel_runtime {
         fn populated_mounted_replay_drop_publishes_exact_generation_and_drains_incrementally() {
             let recovery = mounted_replay_recovery_registry().lock().expect("replay recovery lock").reserve().expect("pre-reserved recovery");
             let route = JobReplayRoute { plugin: [1; 32], package: [2; 32], controller: [3; 32], tool: [4; 32], window: 5, document: [6; 32], request_schema: [7; 32], request_version: 1, request_digest: [8; 32] };
-            let authority = JobTurn { job: 19, operation: semio_framework_actor::JobOperation { operation: 23, base_revision: 29, generation: 31, preview_sequence: 0, seed: 37 }, step_sequence: 0 };
+            let authority = JobTurn { job: 19, operation: JobOperation { operation: 23, base_revision: 29, generation: 31, preview_sequence: 0, seed: 37 }, step_sequence: 0 };
             drop(MountedJobReplay {
                 actor: ActorId(41),
                 authority,
@@ -8979,7 +8984,7 @@ pub(crate) mod kernel_runtime {
         fn panic_after_mounted_capture_transfers_the_exact_generation_to_incremental_recovery() {
             let recovery = mounted_replay_recovery_registry().lock().expect("replay recovery lock").reserve().expect("pre-reserved panic recovery");
             let route = JobReplayRoute { plugin: [9; 32], package: [8; 32], controller: [7; 32], tool: [6; 32], window: 5, document: [4; 32], request_schema: [3; 32], request_version: 1, request_digest: [2; 32] };
-            let authority = JobTurn { job: 43, operation: semio_framework_actor::JobOperation { operation: 47, base_revision: 53, generation: 59, preview_sequence: 0, seed: 61 }, step_sequence: 0 };
+            let authority = JobTurn { job: 43, operation: JobOperation { operation: 47, base_revision: 53, generation: 59, preview_sequence: 0, seed: 61 }, step_sequence: 0 };
             let caught = std::panic::catch_unwind(|| {
                 let _mounted = MountedJobReplay {
                     actor: ActorId(67),
@@ -9466,6 +9471,7 @@ pub mod scale_bench {
                         // deliberately exercise.
                         ShardOutcome::Fault { actor, message } => {
                             let faulted = semio_framework_actor::TurnResult {
+                                cold_pair_ingress: Default::default(),
                                 ui_patches: Vec::new(),
                                 effects: Vec::new(),
                                 command_ingress: Vec::new(),
@@ -9524,6 +9530,7 @@ pub mod scale_bench {
                             }
                             ShardOutcome::Fault { actor, message } => {
                                 let faulted = semio_framework_actor::TurnResult {
+                                    cold_pair_ingress: Default::default(),
                                     ui_patches: Vec::new(),
                                     effects: Vec::new(),
                                     command_ingress: Vec::new(),
@@ -10079,7 +10086,7 @@ pub mod scale_bench {
 #[cfg(not(target_arch = "wasm32"))]
 fn spawn_app_task<F>(future: F)
 where
-    F: std::future::Future<Output = ()> + Send + 'static,
+    F: Future<Output = ()> + Send + 'static,
 {
     let _ = kernel_runtime::KernelPoolFuture::spawn(renderer_worker_pool(), semio_framework_async::Lane::Interactive, future);
 }
@@ -10087,7 +10094,7 @@ where
 #[cfg(target_arch = "wasm32")]
 fn spawn_app_task<F>(future: F)
 where
-    F: std::future::Future<Output = ()> + 'static,
+    F: Future<Output = ()> + 'static,
 {
     spawn_local(future);
 }
@@ -11341,12 +11348,12 @@ impl<T> FrameMaintenanceOwnerCell<T> {
     }
 
     fn try_take(&self) -> Option<T> {
-        self.state.compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).ok()?;
+        self.state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).ok()?;
         unsafe { (&mut *self.owner.get()).take() }
     }
 
     fn try_restore(&self, owner: T) -> Result<(), T> {
-        if self.state.load(std::sync::atomic::Ordering::Acquire) != 1 {
+        if self.state.load(Ordering::Acquire) != 1 {
             return Err(owner);
         }
         let slot = unsafe { &mut *self.owner.get() };
@@ -11354,7 +11361,7 @@ impl<T> FrameMaintenanceOwnerCell<T> {
             return Err(owner);
         }
         *slot = Some(owner);
-        self.state.store(0, std::sync::atomic::Ordering::Release);
+        self.state.store(0, Ordering::Release);
         Ok(())
     }
 
@@ -11362,7 +11369,7 @@ impl<T> FrameMaintenanceOwnerCell<T> {
         unsafe {
             *self.owner.get() = Some(owner);
         }
-        self.state.store(0, std::sync::atomic::Ordering::Release);
+        self.state.store(0, Ordering::Release);
     }
 }
 
@@ -11382,7 +11389,7 @@ impl FrameMaintenanceRefusal {
 #[cfg(not(target_arch = "wasm32"))]
 struct FrameMaintenanceExecutionRegistry {
     state: std::sync::atomic::AtomicU8,
-    generation: std::sync::atomic::AtomicU64,
+    generation: AtomicU64,
     owner: std::cell::UnsafeCell<Option<Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>>>,
 }
 
@@ -11401,61 +11408,61 @@ impl FrameMaintenanceExecutionRegistry {
     const RECOVERING: u8 = 5;
 
     fn new() -> Self {
-        Self { state: std::sync::atomic::AtomicU8::new(0), generation: std::sync::atomic::AtomicU64::new(0), owner: std::cell::UnsafeCell::new(None) }
+        Self { state: std::sync::atomic::AtomicU8::new(0), generation: AtomicU64::new(0), owner: std::cell::UnsafeCell::new(None) }
     }
 
     fn try_publish(&self, generation: u64, owner: Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>) -> Result<(), Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>> {
-        if self.state.compare_exchange(0, Self::WRITING, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+        if self.state.compare_exchange(0, Self::WRITING, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return Err(owner);
         }
         unsafe {
             *self.owner.get() = Some(owner);
         }
-        self.generation.store(generation, std::sync::atomic::Ordering::Release);
-        self.state.store(Self::QUEUED, std::sync::atomic::Ordering::Release);
+        self.generation.store(generation, Ordering::Release);
+        self.state.store(Self::QUEUED, Ordering::Release);
         Ok(())
     }
 
     fn try_begin(&self, generation: u64) -> Option<Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>> {
-        if self.generation.load(std::sync::atomic::Ordering::Acquire) != generation {
+        if self.generation.load(Ordering::Acquire) != generation {
             return None;
         }
-        self.state.compare_exchange(Self::QUEUED, Self::RUNNING, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).ok()?;
+        self.state.compare_exchange(Self::QUEUED, Self::RUNNING, Ordering::AcqRel, Ordering::Acquire).ok()?;
         unsafe { (&*self.owner.get()).as_ref().cloned() }
     }
 
     fn abandon(&self, generation: u64) -> bool {
-        if self.generation.load(std::sync::atomic::Ordering::Acquire) != generation {
+        if self.generation.load(Ordering::Acquire) != generation {
             return false;
         }
-        let state = self.state.load(std::sync::atomic::Ordering::Acquire);
+        let state = self.state.load(Ordering::Acquire);
         if !matches!(state, Self::QUEUED | Self::RUNNING) {
             return false;
         }
-        self.state.compare_exchange(state, Self::ABANDONED, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok()
+        self.state.compare_exchange(state, Self::ABANDONED, Ordering::AcqRel, Ordering::Acquire).is_ok()
     }
 
     fn complete(&self, generation: u64) -> bool {
-        if self.generation.load(std::sync::atomic::Ordering::Acquire) != generation || self.state.compare_exchange(Self::RUNNING, Self::WRITING, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+        if self.generation.load(Ordering::Acquire) != generation || self.state.compare_exchange(Self::RUNNING, Self::WRITING, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return false;
         }
         let owner = unsafe { (&mut *self.owner.get()).take() };
         drop(owner);
-        self.generation.store(0, std::sync::atomic::Ordering::Release);
-        self.state.store(0, std::sync::atomic::Ordering::Release);
+        self.generation.store(0, Ordering::Release);
+        self.state.store(0, Ordering::Release);
         true
     }
 
     fn reclaim_rejected(&self, generation: u64, fallback: Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>) -> Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>> {
-        if self.generation.load(std::sync::atomic::Ordering::Acquire) != generation {
+        if self.generation.load(Ordering::Acquire) != generation {
             return fallback;
         }
-        if self.state.compare_exchange(Self::QUEUED, Self::RECOVERING, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+        if self.state.compare_exchange(Self::QUEUED, Self::RECOVERING, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return fallback;
         }
         let owner = unsafe { (&mut *self.owner.get()).take() };
-        self.generation.store(0, std::sync::atomic::Ordering::Release);
-        self.state.store(0, std::sync::atomic::Ordering::Release);
+        self.generation.store(0, Ordering::Release);
+        self.state.store(0, Ordering::Release);
         match owner {
             Some(owner) => owner,
             None => fallback,
@@ -11463,11 +11470,11 @@ impl FrameMaintenanceExecutionRegistry {
     }
 
     fn try_take_abandoned(&self) -> Option<(u64, Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>)> {
-        self.state.compare_exchange(Self::ABANDONED, Self::RECOVERING, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).ok()?;
-        let generation = self.generation.load(std::sync::atomic::Ordering::Acquire);
+        self.state.compare_exchange(Self::ABANDONED, Self::RECOVERING, Ordering::AcqRel, Ordering::Acquire).ok()?;
+        let generation = self.generation.load(Ordering::Acquire);
         let owner = unsafe { (&mut *self.owner.get()).take() }?;
-        self.generation.store(0, std::sync::atomic::Ordering::Release);
-        self.state.store(0, std::sync::atomic::Ordering::Release);
+        self.generation.store(0, Ordering::Release);
+        self.state.store(0, Ordering::Release);
         Some((generation, owner))
     }
 }
@@ -11475,33 +11482,33 @@ impl FrameMaintenanceExecutionRegistry {
 #[cfg(not(target_arch = "wasm32"))]
 struct FrameMaintenanceAuthority {
     state: std::sync::atomic::AtomicU8,
-    generation: std::sync::atomic::AtomicU64,
+    generation: AtomicU64,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl FrameMaintenanceAuthority {
     fn new() -> Self {
-        Self { state: std::sync::atomic::AtomicU8::new(0), generation: std::sync::atomic::AtomicU64::new(0) }
+        Self { state: std::sync::atomic::AtomicU8::new(0), generation: AtomicU64::new(0) }
     }
 
     fn try_reserve(&self, generation: u64) -> bool {
-        if self.state.compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+        if self.state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return false;
         }
-        self.generation.store(generation, std::sync::atomic::Ordering::Release);
+        self.generation.store(generation, Ordering::Release);
         true
     }
 
     fn is_live(&self, generation: u64) -> bool {
-        self.state.load(std::sync::atomic::Ordering::Acquire) == 1 && self.generation.load(std::sync::atomic::Ordering::Acquire) == generation
+        self.state.load(Ordering::Acquire) == 1 && self.generation.load(Ordering::Acquire) == generation
     }
 
     fn release(&self, generation: u64) -> bool {
         if !self.is_live(generation) {
             return false;
         }
-        self.generation.store(0, std::sync::atomic::Ordering::Release);
-        self.state.compare_exchange(1, 0, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok()
+        self.generation.store(0, Ordering::Release);
+        self.state.compare_exchange(1, 0, Ordering::AcqRel, Ordering::Acquire).is_ok()
     }
 }
 
@@ -11560,7 +11567,7 @@ impl RuntimeApply {
         let mut cursor_value = cursor.take().expect("dispatch cursor admitted above");
         let event = cursor_value.take_next().expect("non-empty dispatch cursor");
         mailbox.spawn_dispatch_reserved(async move {
-            crate::winit_app::dispatch_normalized_event(&mut interaction, event).await;
+            winit_app::dispatch_normalized_event(&mut interaction, event).await;
             (interaction, cursor_value)
         });
         true
@@ -11849,9 +11856,9 @@ struct RuntimeMailboxInner {
     world_cursor_wake: infinite_world::world::WorldCursorWakeAuthority,
     completions: Mutex<RuntimeCompletionQueue>,
     waker: Mutex<Option<RuntimeHostWaker>>,
-    next_revision: std::sync::atomic::AtomicU64,
+    next_revision: AtomicU64,
     applied_revisions: Mutex<std::collections::HashMap<&'static str, u64>>,
-    frame_inputs: Mutex<crate::frame_job::FrameBuildInputs>,
+    frame_inputs: Mutex<frame_job::FrameBuildInputs>,
     frame_fault: Mutex<Option<String>>,
     #[cfg(not(target_arch = "wasm32"))]
     frame_maintenance: FrameMaintenanceAuthority,
@@ -11882,7 +11889,7 @@ impl RuntimeMailboxInner {
     }
 
     fn completion(&self, key: Option<&'static str>, requires_interaction: bool, apply: RuntimeApply) -> RuntimeCompletion {
-        RuntimeCompletion { key, revision: self.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed), requires_interaction, apply }
+        RuntimeCompletion { key, revision: self.next_revision.fetch_add(1, Ordering::Relaxed), requires_interaction, apply }
     }
 
     fn enqueue(&self, key: Option<&'static str>, requires_interaction: bool, apply: RuntimeApply) -> bool {
@@ -12006,9 +12013,9 @@ impl RuntimeMailbox {
             world_cursor_wake: infinite_world::world::WorldCursorWakeAuthority::new(),
             completions: Mutex::new(RuntimeCompletionQueue::new()),
             waker: Mutex::new(None),
-            next_revision: std::sync::atomic::AtomicU64::new(1),
+            next_revision: AtomicU64::new(1),
             applied_revisions: Mutex::new(std::collections::HashMap::new()),
-            frame_inputs: Mutex::new(crate::frame_job::FrameBuildInputs::default()),
+            frame_inputs: Mutex::new(frame_job::FrameBuildInputs::default()),
             frame_fault: Mutex::new(None),
             #[cfg(not(target_arch = "wasm32"))]
             frame_maintenance: FrameMaintenanceAuthority::new(),
@@ -12451,7 +12458,7 @@ impl RuntimeMailbox {
         }
     }
 
-    fn frame_inputs(&self, now_ms: f64) -> crate::frame_job::FrameBuildInputs {
+    fn frame_inputs(&self, now_ms: f64) -> frame_job::FrameBuildInputs {
         let mut inputs = self.0.frame_inputs.try_lock().map(|inputs| inputs.clone()).unwrap_or_default();
         inputs.now_ms = now_ms;
         inputs
@@ -12461,7 +12468,7 @@ impl RuntimeMailbox {
         if !runtime.interaction_available() {
             return;
         }
-        *self.0.frame_inputs.lock().expect("runtime frame inputs lock") = crate::frame_job::FrameBuildInputs { wheel_zoom_deadline_ms: runtime.wheel_zoom_deadline_ms, now_ms: app_now_ms() };
+        *self.0.frame_inputs.lock().expect("runtime frame inputs lock") = frame_job::FrameBuildInputs { wheel_zoom_deadline_ms: runtime.wheel_zoom_deadline_ms, now_ms: app_now_ms() };
     }
 
     fn reserve_future(&self, key: Option<&'static str>) -> bool {
@@ -12493,7 +12500,7 @@ impl RuntimeMailbox {
         F: Future<Output = AppInteractionState> + Send + 'static,
     {
         let mailbox = self.clone();
-        let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
         spawn_app_task(async move {
             let interaction = future.await;
             mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::RestoreInteraction(Some(interaction)) });
@@ -12506,7 +12513,7 @@ impl RuntimeMailbox {
         F: Future<Output = AppInteractionState> + 'static,
     {
         let mailbox = self.clone();
-        let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
         spawn_app_task(async move {
             let interaction = future.await;
             mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::RestoreInteraction(Some(interaction)) });
@@ -12519,7 +12526,7 @@ impl RuntimeMailbox {
         F: Future<Output = (AppInteractionState, RuntimeDispatchCursor)> + Send + 'static,
     {
         let mailbox = self.clone();
-        let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
         spawn_app_task(async move {
             let (interaction, cursor) = future.await;
             mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::ResumeDispatch { interaction: Some(interaction), cursor: Some(cursor) } });
@@ -12532,7 +12539,7 @@ impl RuntimeMailbox {
         F: Future<Output = (AppInteractionState, FrameDeferredCursor)> + Send + 'static,
     {
         let mailbox = self.clone();
-        let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
         spawn_app_task(async move {
             let (interaction, cursor) = future.await;
             mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) } });
@@ -12554,7 +12561,7 @@ impl RuntimeMailbox {
             return Err(FrameMaintenanceRefusal { owner: cell, reservation_live: true });
         }
         let mailbox = self.clone();
-        let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
         let worker_pool = renderer_worker_pool();
         let execution = FrameMaintenanceExecutionEnvelope::new(mailbox.clone(), registry.clone(), generation, revision);
         let job: semio_framework_async::Job = Box::new(move || {
@@ -12623,7 +12630,7 @@ impl RuntimeMailbox {
         F: Future<Output = (AppInteractionState, FrameDeferredCursor)> + 'static,
     {
         let mailbox = self.clone();
-        let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
         spawn_app_task(async move {
             let (interaction, cursor) = future.await;
             mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) } });
@@ -12636,7 +12643,7 @@ impl RuntimeMailbox {
         F: Future<Output = (AppInteractionState, RuntimeDispatchCursor)> + 'static,
     {
         let mailbox = self.clone();
-        let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
         spawn_app_task(async move {
             let (interaction, cursor) = future.await;
             mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::ResumeDispatch { interaction: Some(interaction), cursor: Some(cursor) } });
@@ -13016,7 +13023,7 @@ impl FrameBuildCursor {
             return false;
         }
         if self.resource_input.is_none() && (self.world_resources.is_some() || self.icon_upload.is_some()) {
-            match ui_wgpu::wgpu::PreparedRenderInput::try_new(self.presentation_witness.scene_revision, self.presentation_witness.input_generation, ui_wgpu::wgpu::DrawList::empty(), None, 0.0) {
+            match ui_wgpu::wgpu::PreparedRenderInput::try_new(self.presentation_witness.scene_revision, self.presentation_witness.input_generation, DrawList::empty(), None, 0.0) {
                 Ok(input) => self.resource_input = Some(input),
                 Err(rejected) => self.input_rejected = Some(rejected),
             }
@@ -13204,7 +13211,7 @@ impl AppFrameAfterChrome {
 }
 
 pub(crate) struct FrameTransaction {
-    directives: Option<crate::frame_job::FrameDirectives>,
+    directives: Option<frame_job::FrameDirectives>,
     operation: semio_framework_trace::OperationId,
     generation: semio_framework_trace::Generation,
     base_witness: Option<RuntimePresentationWitness>,
@@ -13261,7 +13268,7 @@ enum AppFrameTransactionPhase {
 }
 
 impl FrameTransaction {
-    pub(crate) fn new(directives: crate::frame_job::FrameDirectives, operation: semio_framework_trace::OperationId, generation: semio_framework_trace::Generation, dpr: f32) -> Self {
+    pub(crate) fn new(directives: frame_job::FrameDirectives, operation: semio_framework_trace::OperationId, generation: semio_framework_trace::Generation, dpr: f32) -> Self {
         Self {
             directives: Some(directives),
             operation,
@@ -13415,7 +13422,7 @@ impl FrameTransaction {
                     }
                     return AppFrameTransactionStep::Pending;
                 }
-                if crate::interpreter::drive_scene_interaction_step(&mut app.input) {
+                if interpreter::drive_scene_interaction_step(&mut app.input) {
                     return AppFrameTransactionStep::Pending;
                 }
                 self.stage = FrameTransactionStage::FlushEffects;
@@ -14188,7 +14195,7 @@ enum AppSurfaceResizePhase {
 }
 
 struct AppSurfaceResizeCursor {
-    candidate: Option<crate::surface_lane::PreparedSurfaceResize>,
+    candidate: Option<surface_lane::PreparedSurfaceResize>,
     phase: AppSurfaceResizePhase,
 }
 
@@ -14394,7 +14401,7 @@ impl AppPresenter {
         self.surface_resize.is_none()
     }
 
-    pub(crate) fn begin_surface_resize(&mut self, candidate: crate::surface_lane::PreparedSurfaceResize) -> Result<(), crate::surface_lane::PreparedSurfaceResize> {
+    pub(crate) fn begin_surface_resize(&mut self, candidate: surface_lane::PreparedSurfaceResize) -> Result<(), surface_lane::PreparedSurfaceResize> {
         if self.surface_resize.is_some() {
             return Err(candidate);
         }
@@ -14579,7 +14586,7 @@ impl AppPresenter {
     pub(crate) fn present_step(&mut self) -> Result<AppPresentStep, String> {
         #[cfg(not(target_arch = "wasm32"))]
         {
-            let _ = RENDERER_IO_WAKE.swap(false, std::sync::atomic::Ordering::AcqRel);
+            let _ = RENDERER_IO_WAKE.swap(false, Ordering::AcqRel);
             let _ = pump_renderer_io_sessions(1);
         }
         let _ = semio_framework_job::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
@@ -15075,7 +15082,7 @@ impl AppRuntime {
         let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else { return };
         let accepted = mailbox.reserve_future(Some("plugin-reload"));
         if accepted {
-            let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            let revision = mailbox.0.next_revision.fetch_add(1, Ordering::Relaxed);
             spawn_app_task(async move {
                 let result = load_wasm_plugins(&plugin_filter, &modules_root).await.map(|entries| filter_plugins(entries, &plugin_filter));
                 mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: true, apply: RuntimeApply::PluginReload(Some(result)) });
@@ -15087,7 +15094,7 @@ impl AppRuntime {
     }
 
     /// 🧵️ Advances exactly one retained pre-input frame owner or chrome child.
-    fn frame_before_input_step(&mut self, handle: &AppHandle, build_directives: &crate::frame_job::FrameDirectives, dpr: f32, cursor: &mut FrameBuildCursor) -> FrameBuildBoundaryStep {
+    fn frame_before_input_step(&mut self, handle: &AppHandle, build_directives: &frame_job::FrameDirectives, dpr: f32, cursor: &mut FrameBuildCursor) -> FrameBuildBoundaryStep {
         match cursor.phase {
             FrameBuildPhase::Deferred => {
                 if !ui_wgpu::wgpu::PreparedAtlasPages::close_abandoned_step() {
@@ -15282,7 +15289,7 @@ impl AppRuntime {
                 #[cfg(not(target_arch = "wasm32"))]
                 if let Some(progress) = cursor.job_progress.as_ref() {
                     let (kind, applied) = progress.visual();
-                    let theme = self.interaction.as_ref().map_or_else(ui_wgpu::wgpu::Theme::default, |state| state.theme);
+                    let theme = self.interaction.as_ref().map_or_else(Theme::default, |state| state.theme);
                     let color = match kind {
                         semio_framework_actor::JobProgressKind::CommitValidated => theme.success,
                         semio_framework_actor::JobProgressKind::Cancelled | semio_framework_actor::JobProgressKind::Fault => theme.error,
@@ -15293,7 +15300,7 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::ResourceInput;
             }
             FrameBuildPhase::ResourceInput => {
-                match ui_wgpu::wgpu::PreparedRenderInput::try_new(cursor.presentation_witness.scene_revision, cursor.presentation_witness.input_generation, ui_wgpu::wgpu::DrawList::empty(), None, 0.0) {
+                match ui_wgpu::wgpu::PreparedRenderInput::try_new(cursor.presentation_witness.scene_revision, cursor.presentation_witness.input_generation, DrawList::empty(), None, 0.0) {
                     Ok(input) => cursor.resource_input = Some(input),
                     Err(rejected) => {
                         cursor.input_rejected = Some(rejected);
@@ -15788,7 +15795,7 @@ impl AppInteractionState {
 async fn boot_runtime(
     window: Arc<Window>,
     plugin_filter: String,
-    #[cfg(target_arch = "wasm32")] plugins: Option<wasm_bindgen::JsValue>,
+    #[cfg(target_arch = "wasm32")] plugins: Option<JsValue>,
     #[cfg(not(target_arch = "wasm32"))] plugin_modules_root: std::path::PathBuf,
 ) -> Result<(RuntimeMailbox, AppPresenter), String> {
     let dpr = window.scale_factor() as f32;

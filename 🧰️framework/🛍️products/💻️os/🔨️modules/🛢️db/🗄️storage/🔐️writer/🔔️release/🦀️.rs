@@ -86,7 +86,7 @@ impl WalWriterSignalCell {
 }
 
 static WAL_WRITER_SIGNALS: [[Mutex<WalWriterSignalCell>; WAL_WRITER_CAPACITY]; DB_IO_BACKEND_CONTROLS] = [const { [const { Mutex::new(WalWriterSignalCell::new()) }; WAL_WRITER_CAPACITY] }; DB_IO_BACKEND_CONTROLS];
-pub(crate) const WAL_WRITER_SIGNAL_BACKING_BYTES: usize = std::mem::size_of_val(&WAL_WRITER_SIGNALS);
+pub(crate) const WAL_WRITER_SIGNAL_BACKING_BYTES: usize = size_of_val(&WAL_WRITER_SIGNALS);
 
 fn cell(key: WalWriterKey) -> &'static Mutex<WalWriterSignalCell> {
     let (slot, _) = db_io_backend_parts(key.backend);
@@ -234,7 +234,7 @@ pub(crate) fn finish(key: WalWriterKey) {
     cell.notification = cell.finish(key);
 }
 
-pub(crate) fn notify_terminal(backend: super::super::DbIoBackendControl) {
+pub(crate) fn notify_terminal(backend: DbIoBackendControl) {
     let (slot, _) = db_io_backend_parts(backend);
     for cell in &WAL_WRITER_SIGNALS[usize::from(slot)] {
         let waiter = cell.lock().unwrap_or_else(std::sync::PoisonError::into_inner).notification.take();
@@ -301,10 +301,10 @@ impl std::task::Wake for WalWriterControllerWake {
 }
 
 static WAL_WRITER_CONTROLLERS: [Mutex<Option<WalWriterController>>; DB_IO_BACKEND_CONTROLS] = [const { Mutex::new(None) }; DB_IO_BACKEND_CONTROLS];
-pub(crate) const WAL_WRITER_CONTROLLER_BACKING_BYTES: usize = std::mem::size_of_val(&WAL_WRITER_CONTROLLERS);
+pub(crate) const WAL_WRITER_CONTROLLER_BACKING_BYTES: usize = size_of_val(&WAL_WRITER_CONTROLLERS);
 
-pub(crate) const fn controller_credit() -> DbIoCredit {
-    DbIoCredit { pages: 0, bytes: (std::mem::size_of::<WalWriterControllerWake>() + 2 * std::mem::size_of::<usize>()) as u64, items: 1, controls: 1 }
+pub(in crate::db_storage) const fn controller_credit() -> DbIoCredit {
+    DbIoCredit { pages: 0, bytes: (size_of::<WalWriterControllerWake>() + 2 * size_of::<usize>()) as u64, items: 1, controls: 1 }
 }
 
 pub(crate) fn install_controller(backend: DbIoBackendControl, pool: Arc<WorkerPool>) -> Result<(), DbError> {
@@ -530,7 +530,7 @@ mod tests {
         assert!(matches!(cell.prepare(key), Err(DbError::LimitExceeded("WAL writer terminal epoch"))));
         assert!(cell.active.is_none());
         assert!(cell.waiter.is_none());
-        assert_eq!(WAL_WRITER_SIGNAL_BACKING_BYTES, DB_IO_BACKEND_CONTROLS * WAL_WRITER_CAPACITY * std::mem::size_of::<Mutex<WalWriterSignalCell>>());
+        assert_eq!(WAL_WRITER_SIGNAL_BACKING_BYTES, DB_IO_BACKEND_CONTROLS * WAL_WRITER_CAPACITY * size_of::<Mutex<WalWriterSignalCell>>());
         eprintln!("[DEBUG] WAL release cells retained requests, woke once at terminal, rejected stale keys and overflow, and preserved all completion epochs through backend reuse");
     }
 }

@@ -16,7 +16,7 @@ pub struct SetNodeParam {
 impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for SetNodeParam {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "node-param", kind: "set-node-param", record: "SetNodeParam" };
 
-    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as Mutation<SemioFlowSnapshot>>::Diff> {
         agg_diff(&SemioFlowMutation::SetNodeParam(self.clone()), base)
     }
     fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {

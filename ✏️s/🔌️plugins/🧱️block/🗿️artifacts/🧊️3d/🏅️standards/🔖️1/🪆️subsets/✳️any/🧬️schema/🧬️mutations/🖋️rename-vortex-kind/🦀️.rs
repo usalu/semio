@@ -1,7 +1,7 @@
 //! 🖋 Block3d mutation — `RenameVortexKind`: a vortex-kind catalog row's `name`.
 
-use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexKind};
-use crate::artifacts::block3d::diff::{Block3dDiff, Block3dVortexKindsDelta, Block3dVortexKindsPatch, Block3dVortexKindsPatchEntry};
+use crate::artifacts::block3d::Block3dSnapshot;
+use crate::artifacts::block3d::diff::Block3dDiff;
 use crate::artifacts::block3d::mutations::Block3dMutation;
 
 //#region 🔖️Mutation

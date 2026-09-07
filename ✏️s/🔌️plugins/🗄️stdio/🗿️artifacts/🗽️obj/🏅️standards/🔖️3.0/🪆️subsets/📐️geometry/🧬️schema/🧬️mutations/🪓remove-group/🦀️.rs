@@ -21,7 +21,7 @@ pub struct RemoveGroup {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveGroup {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "group", kind: "remove-group", record: "RemoveGroup" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as protocol::Mutation<ObjSnapshot>>::Diff> {
+    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         agg_diff(&ObjMutation::RemoveGroup(self.clone()), base)
     }
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {

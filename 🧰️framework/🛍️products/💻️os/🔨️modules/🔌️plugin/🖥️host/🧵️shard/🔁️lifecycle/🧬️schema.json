@@ -2,15 +2,21 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "items", "bytes", "traces", "ownership"],
+  "required": ["version", "items", "bytes", "traces", "ownership", "registrationStages", "unknownActorGrants", "terminalWakeOutsideLock", "admittedWakeOutsideLock"],
   "properties": {
     "version": { "const": 1 },
     "items": { "const": 256 },
     "bytes": { "const": 16777216 },
+    "registrationStages": { "const": ["closed", "pending", "receiver-lost", "wrong-actor"] },
+    "unknownActorGrants": { "const": 256 },
+    "terminalWakeOutsideLock": { "const": true },
+    "admittedWakeOutsideLock": { "const": true },
     "traces": {
-      "type": "array", "minItems": 4,
+      "type": "array",
+      "minItems": 4,
       "items": {
-        "type": "object", "additionalProperties": false,
+        "type": "object",
+        "additionalProperties": false,
         "required": ["id", "queued", "retry", "expected"],
         "properties": {
           "id": { "type": "string", "minLength": 1 },
@@ -21,10 +27,15 @@
       }
     },
     "ownership": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["sameRegistration", "sameBudget", "sameBytes", "cancelRevokes", "replacementRefused"],
       "properties": {
-        "sameRegistration": { "const": true }, "sameBudget": { "const": true }, "sameBytes": { "const": true }, "cancelRevokes": { "const": true }, "replacementRefused": { "const": true }
+        "sameRegistration": { "const": true },
+        "sameBudget": { "const": true },
+        "sameBytes": { "const": true },
+        "cancelRevokes": { "const": true },
+        "replacementRefused": { "const": true }
       }
     }
   }

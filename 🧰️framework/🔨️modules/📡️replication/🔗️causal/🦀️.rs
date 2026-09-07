@@ -244,6 +244,7 @@ impl<T> MutationDagFixedSlots<T> {
         MutationDagFixedSlotsIter { owner: self, next: self.head }
     }
 
+    #[cfg(test)]
     fn push(&mut self, value: T) -> Result<(), T> {
         if self.len == MUTATION_DAG_CAPACITY {
             return Err(value);

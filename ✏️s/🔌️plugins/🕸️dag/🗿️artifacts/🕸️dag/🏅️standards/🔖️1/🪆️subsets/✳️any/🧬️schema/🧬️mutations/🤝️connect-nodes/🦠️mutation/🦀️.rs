@@ -9,9 +9,9 @@ use infinite_board_port_directed_dag::EdgeRouteStyle;
 /// 🔗 `connect-nodes` payload — edge `id` plus both endpoint strings (`"<nodeId>@<portId>"`) and
 /// the edge's own route/property payload.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[derive(dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
 pub struct ConnectNodes {
     pub id: String,
     pub source: String,

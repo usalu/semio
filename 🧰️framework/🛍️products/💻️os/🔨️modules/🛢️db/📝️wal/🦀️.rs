@@ -80,6 +80,7 @@ pub const fn is_wal_record_kind(kind: u8) -> bool {
 const MAX_FIELD_BYTES: u64 = 1024 * 1024;
 /// @emoji 🛡️ Ceiling on a `WAL_INDEX_CKPT` record's run-id count, validated before the `Vec` is
 /// sized.
+#[cfg(test)]
 const MAX_RUN_IDS: u64 = 1_000_000;
 
 /// @emoji ✍️ Writes a varint-length-prefixed byte field — this crate's one field encoding used by
@@ -1134,6 +1135,7 @@ impl<'pages> WalPageReader<'pages> {
     }
 }
 
+#[cfg(test)]
 fn wal_crc_range(pages: &db_storage::DbIoPages, start: usize, len: usize, control: &mut WalCursorControl) -> Result<u32, DbError> {
     let end = start.checked_add(len).ok_or(DbError::LimitExceeded("wal frame crc range"))?;
     if end > pages.len() {
@@ -1804,6 +1806,17 @@ impl<'storage, S: db_storage::WalStorage> WalReplayCursor<'storage, S> {
         })
     }
 
+    /// 📍 Starts raw replay at one exact retained segment boundary.
+    pub async fn open_at_segment(storage: &'storage S, document: &ArtifactId, segment_index: u64, control: WalCursorControl) -> Result<Self, DbError> {
+        let mut cursor = Self::open(storage, document, control).await?;
+        let Some(segment) = cursor.segments.as_slice().iter().position(|index| *index == segment_index) else {
+            while cursor.close_owner_step()? {}
+            return Err(DbError::NotFound(format!("WAL segment {segment_index}")));
+        };
+        cursor.segment = segment;
+        Ok(cursor)
+    }
+
     /// 🌱️ Requires the retained chain to start at genesis rather than trusting a compacted boundary.
     pub async fn open_genesis(storage: &'storage S, document: &ArtifactId, control: WalCursorControl) -> Result<Self, DbError> {
         let mut cursor = Self::open(storage, document, control).await?;
@@ -1984,6 +1997,18 @@ impl<'storage, S: db_storage::WalStorage> WalCommittedCursor<'storage, S> {
         Ok(Self { raw: WalReplayCursor::open(storage, document, control).await?, gate: WalTransactionGate::new(), record: None, record_index: 0 })
     }
 
+    /// 📍 Opens at one exact retained segment boundary. The selected segment is authenticated as
+    /// a retained boundary before any committed transaction is released.
+    pub async fn open_at_segment(storage: &'storage S, document: &ArtifactId, segment_index: u64, control: WalCursorControl) -> Result<Self, DbError> {
+        let mut raw = WalReplayCursor::open(storage, document, control).await?;
+        let Some(segment) = raw.segments.as_slice().iter().position(|index| *index == segment_index) else {
+            while raw.close_owner_step()? {}
+            return Err(DbError::NotFound(format!("WAL segment {segment_index}")));
+        };
+        raw.segment = segment;
+        Ok(Self { raw, gate: WalTransactionGate::new(), record: None, record_index: 0 })
+    }
+
     pub fn replenish(&mut self, deadline: std::time::Instant, fuel: usize) -> Result<(), DbError> {
         self.raw.replenish(deadline, fuel)
     }
@@ -2151,6 +2176,15 @@ impl<S: db_storage::WalStorage> Drop for WalCommittedTransaction<'_, '_, S> {
 
 pub async fn replay_committed_document<'storage, S: db_storage::WalStorage>(storage: &'storage S, document: &ArtifactId, control: WalCursorControl) -> Result<WalCommittedCursor<'storage, S>, DbError> {
     WalCommittedCursor::open(storage, document, control).await
+}
+
+pub async fn replay_committed_segment<'storage, S: db_storage::WalStorage>(
+    storage: &'storage S,
+    document: &ArtifactId,
+    segment_index: u64,
+    control: WalCursorControl,
+) -> Result<WalCommittedCursor<'storage, S>, DbError> {
+    WalCommittedCursor::open_at_segment(storage, document, segment_index, control).await
 }
 
 async fn scan_retained_pages(pages: &db_storage::DbIoPages, control: &mut WalCursorControl) -> Result<protocol::format::retained::VerifiedSprSpan, DbError> {

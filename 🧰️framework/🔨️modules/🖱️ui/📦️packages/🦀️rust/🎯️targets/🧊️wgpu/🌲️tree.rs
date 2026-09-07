@@ -373,6 +373,7 @@ impl UiTree {
         self.mounted_layout_generation = generation;
     }
 
+    #[cfg(test)]
     pub(crate) fn accepted_layout_generation(&self) -> u64 {
         self.mounted_layout_generation
     }

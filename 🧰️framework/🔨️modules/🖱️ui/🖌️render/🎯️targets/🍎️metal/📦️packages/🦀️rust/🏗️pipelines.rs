@@ -48,7 +48,7 @@ fn ui_vertex_descriptor() -> Owned<MTLVertexDescriptor> {
         corner_layout.setStride(8);
         corner_layout.setStepFunction(MTLVertexStepFunction::PerVertex);
         let instance_layout = layouts.objectAtIndexedSubscript(1);
-        instance_layout.setStride(std::mem::size_of::<QuadInstance>() as _);
+        instance_layout.setStride(size_of::<QuadInstance>() as _);
         instance_layout.setStepFunction(MTLVertexStepFunction::PerInstance);
 
         let corner_attr = attributes.objectAtIndexedSubscript(0);
@@ -83,7 +83,7 @@ fn vector_vertex_descriptor() -> Owned<MTLVertexDescriptor> {
     let attributes = descriptor.attributes();
     unsafe {
         let layout = layouts.objectAtIndexedSubscript(0);
-        layout.setStride(std::mem::size_of::<VectorVertex>() as _);
+        layout.setStride(size_of::<VectorVertex>() as _);
         layout.setStepFunction(MTLVertexStepFunction::PerVertex);
         let position_attr = attributes.objectAtIndexedSubscript(0);
         position_attr.setFormat(MTLVertexFormat::Float2);
@@ -107,7 +107,7 @@ fn glass_vertex_descriptor() -> Owned<MTLVertexDescriptor> {
         corner_layout.setStride(8);
         corner_layout.setStepFunction(MTLVertexStepFunction::PerVertex);
         let instance_layout = layouts.objectAtIndexedSubscript(1);
-        instance_layout.setStride(std::mem::size_of::<GlassInstance>() as _);
+        instance_layout.setStride(size_of::<GlassInstance>() as _);
         instance_layout.setStepFunction(MTLVertexStepFunction::PerInstance);
 
         let corner_attr = attributes.objectAtIndexedSubscript(0);
@@ -137,10 +137,10 @@ fn world3d_mesh_vertex_descriptor() -> Owned<MTLVertexDescriptor> {
     let attributes = descriptor.attributes();
     unsafe {
         let vertex_layout = layouts.objectAtIndexedSubscript(0);
-        vertex_layout.setStride(std::mem::size_of::<World3dGpuVertex>() as _);
+        vertex_layout.setStride(size_of::<World3dGpuVertex>() as _);
         vertex_layout.setStepFunction(MTLVertexStepFunction::PerVertex);
         let instance_layout = layouts.objectAtIndexedSubscript(1);
-        instance_layout.setStride(std::mem::size_of::<World3dGpuInstance>() as _);
+        instance_layout.setStride(size_of::<World3dGpuInstance>() as _);
         instance_layout.setStepFunction(MTLVertexStepFunction::PerInstance);
 
         let position_attr = attributes.objectAtIndexedSubscript(0);
@@ -170,7 +170,7 @@ fn world3d_line_vertex_descriptor() -> Owned<MTLVertexDescriptor> {
     let attributes = descriptor.attributes();
     unsafe {
         let layout = layouts.objectAtIndexedSubscript(0);
-        layout.setStride(std::mem::size_of::<WorldLineGpuVertex>() as _);
+        layout.setStride(size_of::<WorldLineGpuVertex>() as _);
         layout.setStepFunction(MTLVertexStepFunction::PerVertex);
         let position_attr = attributes.objectAtIndexedSubscript(0);
         position_attr.setFormat(MTLVertexFormat::Float3);

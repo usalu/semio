@@ -16,7 +16,7 @@ pub struct SetBlockBasePoint {
 impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for SetBlockBasePoint {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "block-base-point", kind: "set-block-base-point", record: "SetBlockBasePoint" };
 
-    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<SemioCadMutation as protocol::Mutation<SemioCadSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<SemioCadMutation as Mutation<SemioCadSnapshot>>::Diff> {
         agg_diff(&SemioCadMutation::SetBlockBasePoint(self.clone()), base)
     }
     fn inverse(&self, base: &SemioCadSnapshot) -> Vec<SemioCadMutation> {

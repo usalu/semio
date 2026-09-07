@@ -1,7 +1,7 @@
 //! ➖️ `remove-mark` — detaches one inline mark from a run, addressed by BASE-state
 //! `{run_index, index}`.
 
-use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::{SemioTextMutation, add_mark};
+use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Payload

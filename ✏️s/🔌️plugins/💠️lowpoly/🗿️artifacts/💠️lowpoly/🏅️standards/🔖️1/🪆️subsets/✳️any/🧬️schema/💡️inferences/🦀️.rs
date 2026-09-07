@@ -6,7 +6,6 @@
 
 use crate::artifacts::lowpoly::LowpolySnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 use super::bounds::{scene_bounds, LowpolyBounds};
 

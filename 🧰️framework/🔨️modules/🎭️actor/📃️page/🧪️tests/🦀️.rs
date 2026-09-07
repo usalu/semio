@@ -1,7 +1,9 @@
 //#region 🧪️NeutralPageLaws
 use crate::byte_page::{ActorBytePage, ACTOR_BYTE_PAGE_BYTES};
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap()
+}
 
 #[test]
 fn actor_byte_page_matches_shared_boundaries_and_little_endian_words() {
@@ -46,7 +48,7 @@ fn actor_byte_page_rejects_noncanonical_tail_and_oversize_before_use() {
 #[test]
 fn actor_byte_page_has_fixed_backing_and_copies_only_the_selected_input() {
     assert!(!std::mem::needs_drop::<ActorBytePage>());
-    assert_eq!(std::mem::size_of::<ActorBytePage>(), ACTOR_BYTE_PAGE_BYTES + 2);
+    assert_eq!(size_of::<ActorBytePage>(), ACTOR_BYTE_PAGE_BYTES + 2);
     let mut bytes = [91; ACTOR_BYTE_PAGE_BYTES + 16];
     let page = ActorBytePage::try_copy_from(&bytes[8..12]).unwrap();
     bytes.fill(0);

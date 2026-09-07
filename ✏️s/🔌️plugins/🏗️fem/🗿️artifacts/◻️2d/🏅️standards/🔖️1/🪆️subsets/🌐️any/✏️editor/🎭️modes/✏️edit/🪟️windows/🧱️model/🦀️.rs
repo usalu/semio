@@ -322,7 +322,7 @@ impl Fem2dMountedVisualLease {
 
     pub(crate) fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         if self.region_order.pop().is_some() || self.assembly_order.pop().is_some() || self.field_order.pop().is_some() {
-            return (false, 1, std::mem::size_of::<usize>());
+            return (false, 1, size_of::<usize>());
         }
         if maximum_bytes < CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY {
             return (false, 0, 0);
@@ -879,7 +879,7 @@ impl Fem2dVisualJob {
             return result;
         }
         if self.region_order.pop().is_some() || self.element_order.pop().is_some() || self.field_order.pop().is_some() {
-            return (false, 1, std::mem::size_of::<usize>());
+            return (false, 1, size_of::<usize>());
         }
         if let Some(token) = self.token {
             if !self.abort_started {

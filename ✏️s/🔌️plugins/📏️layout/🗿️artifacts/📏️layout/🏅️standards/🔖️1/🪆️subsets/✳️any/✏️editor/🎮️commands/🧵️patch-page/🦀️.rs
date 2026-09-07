@@ -1,23 +1,12 @@
 //! ✏️ ✏️ Layout play app commands command — `patch-page`.
 
-use crate::artifacts::layout::mutations::change_frame_columns::mutation::ChangeFrameColumns;
-use crate::artifacts::layout::mutations::change_frame_fill::mutation::ChangeFrameFill;
-use crate::artifacts::layout::mutations::change_frame_stroke::mutation::ChangeFrameStroke;
-use crate::artifacts::layout::mutations::change_frame_wrap_mode::mutation::ChangeFrameWrapMode;
-use crate::artifacts::layout::mutations::change_link_path::mutation::ChangeLinkPath;
-use crate::artifacts::layout::mutations::change_page_height::mutation::ChangePageHeight;
-use crate::artifacts::layout::mutations::change_page_width::mutation::ChangePageWidth;
-use crate::artifacts::layout::mutations::create_frame::mutation::CreateFrame;
-use crate::artifacts::layout::mutations::create_page::mutation::CreatePage;
-use crate::artifacts::layout::mutations::edit_story::mutation::EditStory;
-use crate::artifacts::layout::mutations::move_frame::mutation::MoveFrame;
-use crate::artifacts::layout::mutations::rename_page::mutation::RenamePage;
-use crate::artifacts::layout::mutations::resize_frame::mutation::ResizeFrame;
-use crate::artifacts::layout::mutations::update_page_columns::mutation::UpdatePageColumns;
-use crate::artifacts::layout::mutations::update_page_margins::mutation::UpdatePageMargins;
+use crate::artifacts::layout::mutations::change_page_height::ChangePageHeight;
+use crate::artifacts::layout::mutations::change_page_width::ChangePageWidth;
+use crate::artifacts::layout::mutations::rename_page::RenamePage;
+use crate::artifacts::layout::mutations::update_page_columns::UpdatePageColumns;
+use crate::artifacts::layout::mutations::update_page_margins::UpdatePageMargins;
 use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::schema::text_to_rgba;
-use crate::artifacts::layout::{Frame, LayoutSnapshot, Page, PageColumns, PageMargins};
+use crate::artifacts::layout::{LayoutSnapshot, Page};
 use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer",
+  "semanticKind": "reorder-layer",
+  "displayName": "Reorder Layer",
+  "emoji": "🔃",
+  "aggregateVariant": "ReorderLayer",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "reorder-layer",
+  "binaryTag": 13,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "error",
+    "warning",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

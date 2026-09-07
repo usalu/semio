@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `UpdatePart2d`.
 
-use crate::artifacts::block5d::{Block5dPart2d, Block5dSnapshot};
+use crate::artifacts::block5d::Block5dSnapshot;
 use crate::artifacts::block5d::mutations::Block5dMutation;
 
 //#region 🔖️Inverse

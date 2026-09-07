@@ -22,7 +22,7 @@ pub struct SetPayload {
 impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetPayload {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "payload", kind: "set-payload", record: "SetPayload" };
 
-    fn diff(&self, base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as protocol::Mutation<DeflateSnapshot>>::Diff> {
+    fn diff(&self, base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as Mutation<DeflateSnapshot>>::Diff> {
         agg_diff(&DeflateMutation::SetPayload(self.clone()), base)
     }
     fn inverse(&self, base: &DeflateSnapshot) -> Vec<DeflateMutation> {

@@ -14,7 +14,7 @@ pub struct RemoveRecord {
 impl protocol::MutationKind<CsvSnapshot, CsvMutation> for RemoveRecord {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "record", kind: "remove-record", record: "RemoveRecord" };
 
-    fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as protocol::Mutation<CsvSnapshot>>::Diff> {
+    fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
         agg_diff(&CsvMutation::RemoveRecord(self.clone()), base)
     }
     fn inverse(&self, base: &CsvSnapshot) -> Vec<CsvMutation> {

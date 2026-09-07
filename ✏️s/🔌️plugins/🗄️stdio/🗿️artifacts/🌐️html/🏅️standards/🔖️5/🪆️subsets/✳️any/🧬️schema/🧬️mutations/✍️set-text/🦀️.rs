@@ -15,7 +15,7 @@ pub struct SetText {
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetText {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text", kind: "set-text", record: "SetText" };
 
-    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as protocol::Mutation<HtmlSnapshot>>::Diff> {
+    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
         agg_diff(&HtmlMutation::SetText(self.clone()), base)
     }
     fn inverse(&self, base: &HtmlSnapshot) -> Vec<HtmlMutation> {

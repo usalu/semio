@@ -1396,12 +1396,12 @@ impl SequenceRetainedArtifactWork {
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>> for SequenceRetainedArtifactWork {
     fn tool_id(&self) -> &'static str { self.tool_id }
     fn workspace_identity(&self) -> u64 { self.workspace_identity }
-    fn extent(&self, _command: &SequenceCommand, snapshot: &SequenceSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>) -> Option<usize> {
+    fn extent(&self, _command: &SequenceCommand, snapshot: &SequenceSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>) -> Option<usize> {
         let scene = snapshot.content.local_owner::<SequenceWorkingScene>()?;
         (scene.steps.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && scene.edges.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && interaction.selection(SEQUENCE_INTERACTION_STEPS).ids.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS).then_some(SEQUENCE_RETAINED_MAXIMUM_UNITS)
     }
 
-    fn step(&mut self, command: &SequenceCommand, snapshot: &SequenceSnapshot, _config: &SequenceConfig, _history: &semio_framework_plugin::HistoryView, interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>, _operation: &semio_framework_plugin::AppOperationContext) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
+    fn step(&mut self, command: &SequenceCommand, snapshot: &SequenceSnapshot, _config: &SequenceConfig, _history: &semio_framework_plugin::HistoryView, interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>, _operation: &semio_framework_plugin::AppOperationContext) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || self.cursor >= SEQUENCE_RETAINED_MAXIMUM_UNITS || !sequence_retained_artifact_command_admitted(command) { return Err(Fault::from("sequence-retained-artifact-envelope")); }
         self.cursor += 1;
@@ -1605,10 +1605,10 @@ impl SequenceNodeGraphState {
                 if self.delete_current.is_none() {
                     if let Some(id) = self.delete_frontier.pop_front() {
                         if !self.selection_deleted.contains(&id) { self.selection_deleted.push(id.clone()); self.delete_current = Some(id); self.delete_scan = 0; }
-                        return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-root", b"{\"en\":\"Traversing one selected graph root\",\"de\":\"Eine ausgewählte Graphwurzel wird durchlaufen\"}"));
+                        return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-root", "{\"en\":\"Traversing one selected graph root\",\"de\":\"Eine ausgewählte Graphwurzel wird durchlaufen\"}".as_bytes()));
                     }
                     self.stage = SequenceNodeGraphStage::DeleteSelectionApply; self.delete_scan = 0;
-                    return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-apply", b"{\"en\":\"Preparing selected graph removal\",\"de\":\"Ausgewählte Graphentfernung wird vorbereitet\"}"));
+                    return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-apply", "{\"en\":\"Preparing selected graph removal\",\"de\":\"Ausgewählte Graphentfernung wird vorbereitet\"}".as_bytes()));
                 }
                 let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
                 if self.delete_scan < target.steps.len() {
@@ -1618,16 +1618,16 @@ impl SequenceNodeGraphState {
                     return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-child", b"{\"en\":\"Traversing one nested graph step\",\"de\":\"Ein verschachtelter Graphschritt wird durchlaufen\"}"));
                 }
                 self.delete_current = None; self.delete_scan = 0;
-                Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-next", b"{\"en\":\"Advancing selected graph traversal\",\"de\":\"Ausgewählter Graphdurchlauf wird fortgesetzt\"}"))
+                Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-next", "{\"en\":\"Advancing selected graph traversal\",\"de\":\"Ausgewählter Graphdurchlauf wird fortgesetzt\"}".as_bytes()))
             }
             SequenceNodeGraphStage::DeleteSelectionApply => {
                 if let Some(id) = self.selection_deleted.pop() {
                     let target = self.target.as_mut().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
                     target.steps.retain(|step| step.id != id); target.edges.retain(|edge| edge.from != id && edge.to != id);
-                    return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-delete", b"{\"en\":\"Removing one selected graph step\",\"de\":\"Ein ausgewählter Graphschritt wird entfernt\"}"));
+                    return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-delete", "{\"en\":\"Removing one selected graph step\",\"de\":\"Ein ausgewählter Graphschritt wird entfernt\"}".as_bytes()));
                 }
                 self.operation += 1; self.stage = SequenceNodeGraphStage::Apply;
-                Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-complete", b"{\"en\":\"Completed selected graph removal\",\"de\":\"Ausgewählte Graphentfernung wurde abgeschlossen\"}"))
+                Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-complete", "{\"en\":\"Completed selected graph removal\",\"de\":\"Ausgewählte Graphentfernung wurde abgeschlossen\"}".as_bytes()))
             }
             SequenceNodeGraphStage::Apply => { self.stage = SequenceNodeGraphStage::DeleteSteps; self.cursor = 0; self.advance(command, snapshot, interaction) }
             SequenceNodeGraphStage::DeleteSteps => {
@@ -1637,7 +1637,7 @@ impl SequenceNodeGraphState {
             }
             SequenceNodeGraphStage::UpsertSteps => {
                 let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?; let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
-                if self.cursor < target.steps.len() { let step = &target.steps[self.cursor]; match base.steps.iter().find(|entry| entry.id == step.id) { None => self.mutations.push(SequenceMutation::CreateStep(crate::artifacts::sequence::mutations::CreateStep { step: step.clone() })), Some(old) if old.kind != step.kind || old.slot != step.slot => { self.recreated.push(step.id.clone()); self.mutations.push(SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id: step.id.clone() })); self.mutations.push(SequenceMutation::CreateStep(crate::artifacts::sequence::mutations::CreateStep { step: step.clone() })); }, Some(old) => { if old.x != step.x || old.y != step.y { self.mutations.push(SequenceMutation::MoveStep(crate::artifacts::sequence::mutations::MoveStep { id: step.id.clone(), x: step.x, y: step.y })); } if old.params != step.params { self.mutations.push(SequenceMutation::EditStepParams(crate::artifacts::sequence::mutations::EditStepParams { id: step.id.clone(), params: step.params.clone() })); } if old.collapsed != step.collapsed { self.mutations.push(SequenceMutation::ChangeStepCollapsed(crate::artifacts::sequence::mutations::ChangeStepCollapsed { id: step.id.clone(), collapsed: step.collapsed })); } } } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-upsert-step", b"{\"en\":\"Diffing changed step\",\"de\":\"Geänderter Schritt wird verglichen\"}")); }
+                if self.cursor < target.steps.len() { let step = &target.steps[self.cursor]; match base.steps.iter().find(|entry| entry.id == step.id) { None => self.mutations.push(SequenceMutation::CreateStep(crate::artifacts::sequence::mutations::CreateStep { step: step.clone() })), Some(old) if old.kind != step.kind || old.slot != step.slot => { self.recreated.push(step.id.clone()); self.mutations.push(SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id: step.id.clone() })); self.mutations.push(SequenceMutation::CreateStep(crate::artifacts::sequence::mutations::CreateStep { step: step.clone() })); }, Some(old) => { if old.x != step.x || old.y != step.y { self.mutations.push(SequenceMutation::MoveStep(crate::artifacts::sequence::mutations::MoveStep { id: step.id.clone(), x: step.x, y: step.y })); } if old.params != step.params { self.mutations.push(SequenceMutation::EditStepParams(crate::artifacts::sequence::mutations::EditStepParams { id: step.id.clone(), params: step.params.clone() })); } if old.collapsed != step.collapsed { self.mutations.push(SequenceMutation::ChangeStepCollapsed(crate::artifacts::sequence::mutations::ChangeStepCollapsed { id: step.id.clone(), collapsed: step.collapsed })); } } } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-upsert-step", "{\"en\":\"Diffing changed step\",\"de\":\"Geänderter Schritt wird verglichen\"}".as_bytes())); }
                 self.stage = SequenceNodeGraphStage::DeleteEdges; self.cursor = 0; self.advance(command, snapshot, interaction)
             }
             SequenceNodeGraphStage::DeleteEdges => {
@@ -1647,7 +1647,7 @@ impl SequenceNodeGraphState {
             }
             SequenceNodeGraphStage::UpsertEdges => {
                 let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?; let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
-                if self.cursor < target.edges.len() { let edge = &target.edges[self.cursor]; let endpoint_recreated = self.recreated.iter().any(|id| id == &edge.from || id == &edge.to); match base.edges.iter().find(|entry| entry.id == edge.id) { None => self.mutations.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })), Some(_) if endpoint_recreated => self.mutations.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })), Some(old) if old.from != edge.from || old.to != edge.to => { self.mutations.push(SequenceMutation::DisconnectSteps(crate::artifacts::sequence::mutations::DisconnectSteps { id: old.id.clone() })); self.mutations.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })); }, Some(_) => {} } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-upsert-edge", b"{\"en\":\"Diffing changed edge\",\"de\":\"Geänderte Kante wird verglichen\"}")); }
+                if self.cursor < target.edges.len() { let edge = &target.edges[self.cursor]; let endpoint_recreated = self.recreated.iter().any(|id| id == &edge.from || id == &edge.to); match base.edges.iter().find(|entry| entry.id == edge.id) { None => self.mutations.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })), Some(_) if endpoint_recreated => self.mutations.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })), Some(old) if old.from != edge.from || old.to != edge.to => { self.mutations.push(SequenceMutation::DisconnectSteps(crate::artifacts::sequence::mutations::DisconnectSteps { id: old.id.clone() })); self.mutations.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })); }, Some(_) => {} } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-upsert-edge", "{\"en\":\"Diffing changed edge\",\"de\":\"Geänderte Kante wird verglichen\"}".as_bytes())); }
                 self.stage = SequenceNodeGraphStage::Complete; self.advance(command, snapshot, interaction)
             }
             SequenceNodeGraphStage::Complete => {
@@ -1777,7 +1777,7 @@ impl SequenceRunState {
             self.scope = Dictionary::new();
             self.frames.push(SequenceRunFrame { order: SequenceRunOrder::new(None), cursor: 0, repeat_remaining: 1, repeat_total: 1, while_key: None, while_iterations: 0 });
             self.initialized = true;
-            return Ok(SequencePersistentAdvance::Progress("sequence-run-initialize", b"{\"en\":\"Preparing execution\",\"de\":\"Ausführung wird vorbereitet\"}"));
+            return Ok(SequencePersistentAdvance::Progress("sequence-run-initialize", "{\"en\":\"Preparing execution\",\"de\":\"Ausführung wird vorbereitet\"}".as_bytes()));
         }
         let Some(frame) = self.frames.last_mut() else {
             let result = RunResult { scope: self.scope.clone(), effects: std::mem::take(&mut self.effects) };
@@ -1805,7 +1805,7 @@ impl SequenceRunState {
                 return Ok(SequencePersistentAdvance::Progress("sequence-run-repeat-cursor", b"{\"en\":\"Continuing bounded repeat body\",\"de\":\"Begrenzter Wiederholungsblock wird fortgesetzt\"}"));
             }
             self.frames.pop();
-            return Ok(SequencePersistentAdvance::Progress("sequence-run-retire-frame", b"{\"en\":\"Completed nested execution frame\",\"de\":\"Verschachtelter Ausführungsrahmen wurde abgeschlossen\"}"));
+            return Ok(SequencePersistentAdvance::Progress("sequence-run-retire-frame", "{\"en\":\"Completed nested execution frame\",\"de\":\"Verschachtelter Ausführungsrahmen wurde abgeschlossen\"}".as_bytes()));
         }
         let index = frame.order.ordered[frame.cursor];
         frame.cursor += 1;
@@ -1857,7 +1857,7 @@ impl SequenceRunState {
                 if halt_frame { if let Some(frame) = self.frames.last_mut() { frame.cursor = frame.order.ordered.len(); } }
             }
         }
-        Ok(SequencePersistentAdvance::Progress("sequence-run-step", b"{\"en\":\"Executed Sequence step\",\"de\":\"Sequenzschritt wurde ausgeführt\"}"))
+        Ok(SequencePersistentAdvance::Progress("sequence-run-step", "{\"en\":\"Executed Sequence step\",\"de\":\"Sequenzschritt wurde ausgeführt\"}".as_bytes()))
     }
 
     fn release_one(&mut self) -> bool {
@@ -1884,8 +1884,8 @@ impl SequencePersistentWork {
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>> for SequencePersistentWork {
     fn tool_id(&self) -> &'static str { self.tool_id }
     fn workspace_identity(&self) -> u64 { self.workspace_identity }
-    fn extent(&self, _command: &SequenceCommand, snapshot: &SequenceSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>) -> Option<usize> { let scene = snapshot.content.local_owner::<SequenceWorkingScene>()?; (scene.steps.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && scene.edges.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS).then_some(SEQUENCE_PERSISTENT_MAXIMUM_UNITS) }
-    fn step(&mut self, command: &SequenceCommand, snapshot: &SequenceSnapshot, config: &SequenceConfig, _history: &semio_framework_plugin::HistoryView, interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>, _operation: &semio_framework_plugin::AppOperationContext) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
+    fn extent(&self, _command: &SequenceCommand, snapshot: &SequenceSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>) -> Option<usize> { let scene = snapshot.content.local_owner::<SequenceWorkingScene>()?; (scene.steps.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && scene.edges.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS).then_some(SEQUENCE_PERSISTENT_MAXIMUM_UNITS) }
+    fn step(&mut self, command: &SequenceCommand, snapshot: &SequenceSnapshot, config: &SequenceConfig, _history: &semio_framework_plugin::HistoryView, interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>, _operation: &semio_framework_plugin::AppOperationContext) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || self.progress >= SEQUENCE_PERSISTENT_MAXIMUM_UNITS || command.command_id() != self.tool_id { return Err(Fault::from("sequence-persistent-progress-capacity")); }
         match self.workspace.advance(command, snapshot, config, interaction)? {
@@ -1975,7 +1975,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         _command: &SequenceCommand,
         _snapshot: &SequenceSnapshot,
         _interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>,
     ) -> Option<usize> {
         Some(SEQUENCE_RETAINED_MAXIMUM_UNITS)
     }
@@ -1988,7 +1988,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         history: &semio_framework_plugin::HistoryView,
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
-        _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>,
         operation: &semio_framework_plugin::AppOperationContext,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;

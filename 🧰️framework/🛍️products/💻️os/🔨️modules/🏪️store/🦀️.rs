@@ -1790,12 +1790,12 @@ pub struct ArtifactStoreCursorDisposer<P, Mutation> {
     phase: ArtifactStoreCursorDisposerPhase,
     started: bool,
     active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
-    marker: std::marker::PhantomData<fn() -> (P, Mutation)>,
+    marker: PhantomData<fn() -> (P, Mutation)>,
 }
 
 impl<P, Mutation> ArtifactStoreCursorDisposer<P, Mutation> {
     pub fn new() -> Self {
-        Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, started: false, active: std::mem::ManuallyDrop::new(None), marker: std::marker::PhantomData }
+        Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, started: false, active: std::mem::ManuallyDrop::new(None), marker: PhantomData }
     }
 
     fn retain(active: &mut std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>, owner: Option<Box<dyn ErasedSnapshotRetirement>>) -> SnapshotRetirementStep {
@@ -2262,15 +2262,15 @@ impl FromValue for ArtifactCursor {
 /// are `ManuallyDrop` (the staged group root must be adopted or retired before `Drop`), which no
 /// derive can see through.
 #[cfg(test)]
-impl serde::Serialize for ArtifactCursor {
+impl Serialize for ArtifactCursor {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serde::Serialize::serialize(&**self, serializer)
+        Serialize::serialize(&**self, serializer)
     }
 }
 
 /// 🌉️ Mirror of the `Serialize` twin directly above — also test-only.
 #[cfg(test)]
-impl<'de> serde::Deserialize<'de> for ArtifactCursor {
+impl<'de> Deserialize<'de> for ArtifactCursor {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         ArtifactCursorOwners::deserialize(deserializer).map(Self::from_owners)
     }
@@ -2347,7 +2347,7 @@ pub struct ArtifactEnvelopeOwners<P, Mutation> {
     /// matching prior undo/redo behavior exactly. Lives on the envelope (not on `Edit<Mutation>`
     /// itself, which this crate's per-technology `Mutation` types don't own) so it survives a plain
     /// JSON round trip (`ArtifactStore::envelope_json`) alongside `cursor`/`owner`/`dialect`.
-    pub lanes: std::collections::BTreeMap<String, HistoryLane>,
+    pub lanes: BTreeMap<String, HistoryLane>,
     pub edit_messages: ArtifactEditMessageLedger,
     pub conflicts: Vec<crate::os_spr::Conflict>,
 }
@@ -2363,7 +2363,7 @@ pub struct ArtifactEnvelopeRead<'a, P, Mutation> {
     dialect: Option<&'a crate::os_io::ArtifactDialect>,
     migrated_from: Option<&'a MigrationProvenance>,
     owner: Option<&'a OwnerRef>,
-    lanes: &'a std::collections::BTreeMap<String, HistoryLane>,
+    lanes: &'a BTreeMap<String, HistoryLane>,
     edit_messages: &'a ArtifactEditMessageLedger,
     conflicts: &'a Vec<crate::os_spr::Conflict>,
 }
@@ -6254,11 +6254,11 @@ pub trait ArtifactOwnedHistoryEntryAuthority<T>: Send {
     fn terminal_is_empty(&self) -> bool;
 }
 
-struct ArtifactRepositoryHistoryEntryDecoder<T>(std::marker::PhantomData<T>);
+struct ArtifactRepositoryHistoryEntryDecoder<T>(PhantomData<T>);
 
 impl<T> ArtifactRepositoryHistoryEntryDecoder<T> {
     fn new() -> Self {
-        Self(std::marker::PhantomData)
+        Self(PhantomData)
     }
 }
 
@@ -6343,8 +6343,8 @@ struct ArtifactOwnedSprMutationArrayAuthority<P, Mutation: Send> {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     path: OwnedSchemaPath,
-    catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
-    mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+    catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+    mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
     target: ArtifactOwnedSprMutationTarget<Mutation>,
     reservation: Option<ArtifactEnvelopeFieldReservation>,
     active: std::mem::ManuallyDrop<Option<Box<dyn ArtifactEnvelopeMutationFieldAuthority<Mutation>>>>,
@@ -6362,8 +6362,8 @@ impl<P, Mutation: Send> ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         path: OwnedSchemaPath,
-        catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
-        mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+        catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+        mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
     ) -> Result<Self, OwnedSchemaDecodeDiagnostic> {
         let mut values = Vec::new();
         values.try_reserve_exact(ARTIFACT_ENVELOPE_HISTORY_ITEMS).map_err(|_| OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-admission", offset: 0, line: 0, column: 0, path })?;
@@ -6557,9 +6557,9 @@ where
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     path: OwnedSchemaPath,
-    catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
-    mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
-    retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+    catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+    mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+    retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
     cursor: OwnedSchemaNestedRecordCursor,
     active: std::mem::ManuallyDrop<Option<ArtifactOwnedSprEditActive<P, Mutation>>>,
     strings: [std::mem::ManuallyDrop<Option<String>>; 6],
@@ -6577,9 +6577,9 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAuthority<
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         path: OwnedSchemaPath,
-        catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
-        mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
-        retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+        catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+        mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+        retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
     ) -> Self {
         Self {
             operation,
@@ -6797,8 +6797,8 @@ impl<P: Send + 'static, Mutation: Send + 'static> Drop for ArtifactOwnedSprEditA
 }
 
 struct ArtifactOwnedSprEditDecoder<P, Mutation> {
-    catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
-    mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+    catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+    mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
 }
 
 impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactOwnedHistoryEntryDecoder<Edit<Mutation>> for ArtifactOwnedSprEditDecoder<P, Mutation> {
@@ -6807,7 +6807,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactOwnedHis
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         path: OwnedSchemaPath,
-        retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+        retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
     ) -> Box<dyn ArtifactOwnedHistoryEntryAuthority<Edit<Mutation>>> {
         Box::new(ArtifactOwnedSprEditAuthority::new(operation, generation, path, self.catalog.clone(), self.mutation_factory.clone(), retirement_factory))
     }
@@ -7024,7 +7024,7 @@ impl<P, Mutation> Drop for ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation
 
 /// @emoji 🗄️ Fixed app-owned registry that keeps nested field decoders out of stack/job destructors.
 pub struct ArtifactEnvelopeFieldDecoderRegistry<P, Mutation> {
-    state: std::sync::Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+    state: Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
     returned: Box<[std::sync::atomic::AtomicU64]>,
     returned_mask: std::sync::atomic::AtomicU64,
     live: std::sync::atomic::AtomicUsize,
@@ -7042,7 +7042,7 @@ impl<P, Mutation> ArtifactEnvelopeFieldDecoderRegistry<P, Mutation> {
             *value = index as u16;
         }
         Arc::new(Self {
-            state: std::sync::Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
+            state: Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
             returned,
             returned_mask: std::sync::atomic::AtomicU64::new(0),
             live: std::sync::atomic::AtomicUsize::new(0),
@@ -8414,7 +8414,7 @@ impl<P, Mutation> Drop for ArtifactEnvelopeCompletedRecordRegistryState<P, Mutat
 
 /// @emoji 🗄️ Fixed app-owned completed-record registry; result publication never puts a deep envelope on a job stack.
 pub struct ArtifactEnvelopeCompletedRecordRegistry<P, Mutation> {
-    state: std::sync::Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+    state: Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
 }
 
 impl<P, Mutation> ArtifactEnvelopeCompletedRecordRegistry<P, Mutation> {
@@ -8424,7 +8424,7 @@ impl<P, Mutation> ArtifactEnvelopeCompletedRecordRegistry<P, Mutation> {
         for (index, slot) in free.iter_mut().enumerate() {
             *slot = index as u16;
         }
-        Arc::new(Self { state: std::sync::Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
+        Arc::new(Self { state: Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
     }
 
     pub fn try_admit(&self, owner: Box<dyn ArtifactEnvelopeCompletedRecord<P, Mutation>>) -> Result<ArtifactEnvelopeCompletedRecordTicket, (ArtifactEnvelopeCompletedRecordFault, Box<dyn ArtifactEnvelopeCompletedRecord<P, Mutation>>)> {
@@ -9208,7 +9208,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDecoder<P
                 dialect: None,
                 migrated_from: None,
                 owner: None,
-                lanes: std::collections::BTreeMap::new(),
+                lanes: BTreeMap::new(),
                 edit_messages: ArtifactEditMessageLedger::new(),
                 conflicts: Vec::new(),
             });
@@ -9434,6 +9434,12 @@ pub fn text_error_to_pack_error(error: TextError) -> PackError {
 /// `P`/`Mutation` types at that layer. Built once per document kind via `ArtifactCodec::of`
 /// (wrapped one line per app by `register_document_codec_for_app` in `framework/plugin/rs/lib.rs`,
 /// wave 2) and looked up by `schema` string through `register_document_codec`/`document_codec`.
+#[cfg(not(target_arch = "wasm32"))]
+pub type ArtifactCodecApplyFuture<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<(Vec<u8>, Vec<u8>, String), VcsError>> + Send + 'a>>;
+
+#[cfg(target_arch = "wasm32")]
+pub type ArtifactCodecApplyFuture<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<(Vec<u8>, Vec<u8>, String), VcsError>> + 'a>>;
+
 #[derive(Clone)]
 pub struct ArtifactCodec {
     pub schema: String,
@@ -9467,7 +9473,7 @@ pub struct ArtifactCodec {
     pub edit_text_from_envelope: for<'a> fn(&'a crate::os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, VcsError>> + 'a>>,
     /// Host-authoritative Emit apply: (pack, spr, encode_ops_vec) -> (pack, spr, ops text).
     // 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
-    pub apply_ops_binary: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(Vec<u8>, Vec<u8>, String), VcsError>> + 'a>>,
+    pub apply_ops_binary: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> ArtifactCodecApplyFuture<'a>,
 }
 
 impl ArtifactCodec {
@@ -9517,10 +9523,10 @@ impl ArtifactCodec {
         }
 
         // 🚫️async: E4 fn-pointer erasure-table thunk — see `compile_dsl_impl`'s tag above.
-        fn apply_ops_binary_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(Vec<u8>, Vec<u8>, String), VcsError>> + 'a>>
+        fn apply_ops_binary_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8]) -> ArtifactCodecApplyFuture<'a>
         where
             P: Clone + ToValue + FromValue + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
-            Mutation: ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + Send + 'static,
+            Mutation: ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + Send + Sync + 'static,
         {
             Box::pin(async move {
                 if ops_vec.is_empty() {
@@ -9549,12 +9555,7 @@ impl ArtifactCodec {
                     let store = ArtifactStore::new(envelope).await?;
                     store
                 };
-                store.dispatch(ArtifactCommand::Apply { mutations, description: None }).await?;
-                // 🧵️ Reads the envelope through the private field rather than `ArtifactStore::envelope`.
-                // That accessor is a non-suspending `&self` getter declared `async` (AGENTS.md:44's
-                // convention debt), so awaiting it holds `&ArtifactStore` across this `await` and makes
-                // the whole thunk non-`Send` — which is the only thing that kept os-kernel's `sync`
-                // feature from compiling. `&ArtifactEnvelope` is plain data and is `Sync`.
+                store.dispatch_apply_exact(mutations, None).await?;
                 let files = print_document_pack(&store.envelope).await?;
                 Ok((files.pack, files.spr, files.ops))
             })
@@ -9588,10 +9589,10 @@ impl ArtifactCodec {
     }
 }
 
-static DOCUMENT_CODEC_REGISTRY: std::sync::OnceLock<std::sync::RwLock<std::collections::BTreeMap<String, ArtifactCodec>>> = std::sync::OnceLock::new();
+static DOCUMENT_CODEC_REGISTRY: std::sync::OnceLock<std::sync::RwLock<BTreeMap<String, ArtifactCodec>>> = std::sync::OnceLock::new();
 
-fn document_codec_registry() -> &'static std::sync::RwLock<std::collections::BTreeMap<String, ArtifactCodec>> {
-    DOCUMENT_CODEC_REGISTRY.get_or_init(|| std::sync::RwLock::new(std::collections::BTreeMap::new()))
+fn document_codec_registry() -> &'static std::sync::RwLock<BTreeMap<String, ArtifactCodec>> {
+    DOCUMENT_CODEC_REGISTRY.get_or_init(|| std::sync::RwLock::new(BTreeMap::new()))
 }
 
 /// ⚠️ A document schema already has a codec owner. The established codec is never replaced.
@@ -9628,8 +9629,8 @@ fn same_document_codec(left: &ArtifactCodec, right: &ArtifactCodec) -> bool {
         && std::ptr::fn_addr_eq(left.apply_ops_binary, right.apply_ops_binary)
 }
 
-fn validate_document_codecs(registry: &std::collections::BTreeMap<String, ArtifactCodec>, codecs: &[ArtifactCodec]) -> Result<(), DocumentCodecRegistryError> {
-    let mut proposed: std::collections::BTreeMap<&str, &ArtifactCodec> = std::collections::BTreeMap::new();
+fn validate_document_codecs(registry: &BTreeMap<String, ArtifactCodec>, codecs: &[ArtifactCodec]) -> Result<(), DocumentCodecRegistryError> {
+    let mut proposed: BTreeMap<&str, &ArtifactCodec> = BTreeMap::new();
     for codec in codecs {
         match proposed.get(codec.schema.as_str()) {
             Some(existing) if same_document_codec(existing, codec) => {}
@@ -9734,10 +9735,10 @@ pub struct DialectMigration {
     pub migrate_pack: fn(&[u8]) -> Result<Vec<u8>, String>,
 }
 
-static DIALECT_MIGRATION_REGISTRY: std::sync::OnceLock<std::sync::RwLock<std::collections::BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>>> = std::sync::OnceLock::new();
+static DIALECT_MIGRATION_REGISTRY: std::sync::OnceLock<std::sync::RwLock<BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>>> = std::sync::OnceLock::new();
 
-fn dialect_migration_registry() -> &'static std::sync::RwLock<std::collections::BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>> {
-    DIALECT_MIGRATION_REGISTRY.get_or_init(|| std::sync::RwLock::new(std::collections::BTreeMap::new()))
+fn dialect_migration_registry() -> &'static std::sync::RwLock<BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>> {
+    DIALECT_MIGRATION_REGISTRY.get_or_init(|| std::sync::RwLock::new(BTreeMap::new()))
 }
 
 /// ⚠️ Dialect-migration registration cannot overwrite an owner or cross artifact kinds.
@@ -9771,8 +9772,8 @@ fn same_dialect_migration(left: &DialectMigration, right: &DialectMigration) -> 
     left.from == right.from && left.to == right.to && left.lossless == right.lossless && std::ptr::fn_addr_eq(left.migrate_pack, right.migrate_pack)
 }
 
-fn validate_dialect_migrations(registry: &std::collections::BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>, migrations: &[DialectMigration]) -> Result<(), DialectMigrationRegistryError> {
-    let mut proposed: std::collections::BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), &DialectMigration> = std::collections::BTreeMap::new();
+fn validate_dialect_migrations(registry: &BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>, migrations: &[DialectMigration]) -> Result<(), DialectMigrationRegistryError> {
+    let mut proposed: BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), &DialectMigration> = BTreeMap::new();
     for migration in migrations {
         if migration.from.artifact_kind != migration.to.artifact_kind {
             return Err(DialectMigrationRegistryError::CrossArtifactKind { from: migration.from.clone(), to: migration.to.clone() });
@@ -9846,8 +9847,8 @@ pub async fn migrate_document(from: &crate::os_io::ArtifactDialect, to: &crate::
 
 /// 🧷️ All writable store registries held before an artifact assembly can publish anything.
 pub struct ArtifactAssemblyStoreRegistryGuards {
-    document_codecs: std::sync::RwLockWriteGuard<'static, std::collections::BTreeMap<String, ArtifactCodec>>,
-    dialect_migrations: std::sync::RwLockWriteGuard<'static, std::collections::BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>>,
+    document_codecs: std::sync::RwLockWriteGuard<'static, BTreeMap<String, ArtifactCodec>>,
+    dialect_migrations: std::sync::RwLockWriteGuard<'static, BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>>,
 }
 
 /// 🚫️ A staged store registry assembly cannot be preflighted or committed.
@@ -10015,7 +10016,7 @@ where
         dialect: None,
         migrated_from: None,
         owner: None,
-        lanes: std::collections::BTreeMap::new(),
+        lanes: BTreeMap::new(),
         edit_messages: ArtifactEditMessageLedger::new(),
         conflicts: Vec::new(),
     })
@@ -10973,7 +10974,7 @@ where
     Mutation: OpBinary,
 {
     validate_persisted_conflicts(envelope).await?;
-    let mut message_ledger = std::collections::BTreeMap::new();
+    let mut message_ledger = BTreeMap::new();
     for entry in &envelope.edit_messages {
         if message_ledger.insert(entry.edit_id.as_str(), entry.messages.as_slice()).is_some() {
             return Err(VcsError::ValidationFailed(format!("duplicate message ledger for edit {}", entry.edit_id)));
@@ -11148,7 +11149,7 @@ where
         // `.pack`+`.spr` reload therefore loses non-`Document` lane tags today; only the plain
         // `ArtifactStore::envelope_json` path round-trips them. Follow-up for whichever wave wires
         // real persisted-local interaction state through this reload path.
-        lanes: std::collections::BTreeMap::new(),
+        lanes: BTreeMap::new(),
         edit_messages: ArtifactEditMessageLedger::from_preflighted_entries(edit_messages),
         conflicts,
     });
@@ -11368,7 +11369,7 @@ where
         dialect: None,
         migrated_from: None,
         owner: None,
-        lanes: std::collections::BTreeMap::new(),
+        lanes: BTreeMap::new(),
         edit_messages: ArtifactEditMessageLedger::from_preflighted_entries(edit_messages),
         conflicts,
     });
@@ -12367,12 +12368,12 @@ impl ArtifactStoreInitializationOwnerCatalog {
     pub fn admitted_bytes(&self) -> Option<usize> {
         self.applied_edit_ids
             .capacity()
-            .checked_mul(std::mem::size_of::<String>())?
-            .checked_add(self.redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
-            .checked_add(self.cursor_applied_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
-            .checked_add(self.cursor_redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
-            .checked_add(self.applied_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)?
-            .checked_add(self.redo_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)
+            .checked_mul(size_of::<String>())?
+            .checked_add(self.redo_edit_ids.capacity().checked_mul(size_of::<String>())?)?
+            .checked_add(self.cursor_applied_edit_ids.capacity().checked_mul(size_of::<String>())?)?
+            .checked_add(self.cursor_redo_edit_ids.capacity().checked_mul(size_of::<String>())?)?
+            .checked_add(self.applied_revision.capacity().checked_mul(size_of::<CursorRevisionRecord>())?)?
+            .checked_add(self.redo_revision.capacity().checked_mul(size_of::<CursorRevisionRecord>())?)
     }
 }
 
@@ -13967,10 +13968,10 @@ where
         let initial_digest = *semio_framework_hash::hash(&envelope.vcs.initial_snapshot.encode_pack()).as_bytes();
         let catalog = ArtifactStoreInitializationOwnerCatalog::try_new().map_err(|reason| VcsError::ValidationFailed(reason.into()))?;
         let ArtifactStoreInitializationOwnerCatalog {
-            applied_edit_ids: mut applied_edit_ids,
-            redo_edit_ids: mut redo_edit_ids,
-            cursor_applied_edit_ids: mut cursor_applied_edit_ids,
-            cursor_redo_edit_ids: mut cursor_redo_edit_ids,
+            mut applied_edit_ids,
+            mut redo_edit_ids,
+            mut cursor_applied_edit_ids,
+            mut cursor_redo_edit_ids,
             applied_revision,
             redo_revision,
         } = catalog;
@@ -15252,6 +15253,21 @@ where
         // Undo/redo shrink `applied_edit_ids`; Apply/AmendLast append past `before`; a merge that
         // rebased mid-history overrides this tail-diff guess via `pending_report.edit_ids`.
         let edit_ids = self.pending_report.edit_ids.take().unwrap_or_else(|| if self.applied_edit_ids.len() >= before { self.applied_edit_ids[before..].to_vec() } else { Vec::new() });
+        Ok(CommandReceipt { edit_ids, generation: self.generation(), messages: std::mem::take(&mut self.pending_report.messages), worst: self.pending_report.worst.take() })
+    }
+
+    async fn dispatch_apply_exact(&mut self, mutations: Vec<Mutation>, description: Option<String>) -> Result<CommandReceipt, VcsError>
+    where
+        P: Sync,
+    {
+        self.ensure_durable_group_idle()?;
+        self.pump().await?;
+        let before = self.applied_edit_ids.len();
+        self.replace_pending_report_retained(PendingCommandReport::default())?;
+        self.apply_command(mutations, description, HistoryLane::Document).await?;
+        self.last_projection_cause = Some(ArtifactProjectionCause::Apply);
+        self.flush_apply_outbound().await?;
+        let edit_ids = self.pending_report.edit_ids.take().unwrap_or_else(|| self.applied_edit_ids[before..].to_vec());
         Ok(CommandReceipt { edit_ids, generation: self.generation(), messages: std::mem::take(&mut self.pending_report.messages), worst: self.pending_report.worst.take() })
     }
 
@@ -16706,40 +16722,39 @@ where
     /// forward op for `Apply` (`crate::os_spr::mutation_envelope_from_edit`'s per-op fan-out — W5/W6),
     /// or a full snapshot for every structural command (undo/redo/checkpoint/alternative/amend).
     async fn flush_outbound(&mut self, is_apply: bool) -> Result<(), VcsError> {
+        if is_apply {
+            return self.flush_apply_outbound().await;
+        }
         let Some(mut backbone) = self.backbone.take() else {
             return Ok(());
         };
-        let result = if is_apply {
-            match self.envelope.vcs.edits.last() {
-                Some(edit) => {
-                    let document_id = ArtifactId(self.envelope.id.clone());
-                    let schema = SchemaId(self.envelope.schema.clone());
-                    match crate::os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema) {
-                        Ok(op_envelopes) => {
-                            // Registers these locally-authored ops as already-applied in our own
-                            // DAG, so a later remote envelope depending on one doesn't stall as
-                            // pending. `seed_applied` (out-of-band knowledge, mark-only) — NOT
-                            // `insert` (which stores the envelope for later `drain_applied_
-                            // envelopes()` too), or the next real remote `ingest_remote` call on
-                            // this same store would drain and re-materialize this already-local
-                            // edit as a SECOND, duplicate edit under its wire mutation_id (which
-                            // differs from the edit's own local id, so `ingest_envelope`'s by-id
-                            // dedup check never catches it).
-                            for op_envelope in &op_envelopes {
-                                self.dag.seed_applied(op_envelope.mutation_id.clone()).map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
-                            }
-                            backbone.send(BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&op_envelopes) }).await
+        let result = match self.snapshot_pack().await {
+            Ok(files) => backbone.send(BackboneMessage::Snapshot { pack: files.pack, spr: files.spr }).await,
+            Err(error) => Err(error),
+        };
+        self.replace_backbone_retained(Some(backbone))?;
+        result
+    }
+
+    async fn flush_apply_outbound(&mut self) -> Result<(), VcsError> {
+        let Some(mut backbone) = self.backbone.take() else {
+            return Ok(());
+        };
+        let result = match self.envelope.vcs.edits.last() {
+            Some(edit) => {
+                let document_id = ArtifactId(self.envelope.id.clone());
+                let schema = SchemaId(self.envelope.schema.clone());
+                match crate::os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema) {
+                    Ok(op_envelopes) => {
+                        for op_envelope in &op_envelopes {
+                            self.dag.seed_applied(op_envelope.mutation_id.clone()).map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
                         }
-                        Err(error) => Err(VcsError::Serialize(error.to_string())),
+                        backbone.send(BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&op_envelopes) }).await
                     }
+                    Err(error) => Err(VcsError::Serialize(error.to_string())),
                 }
-                None => Ok(()),
             }
-        } else {
-            match self.snapshot_pack().await {
-                Ok(files) => backbone.send(BackboneMessage::Snapshot { pack: files.pack, spr: files.spr }).await,
-                Err(error) => Err(error),
-            }
+            None => Ok(()),
         };
         self.replace_backbone_retained(Some(backbone))?;
         result
@@ -20259,12 +20274,12 @@ pub mod test_support {
 /// through its `store`/`protocol` aliases.
 impl ArtifactPack for protocol::InteractionState {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let value = <Self as crate::os_dsl::ToValue>::to_value(self);
+        let value = <Self as ToValue>::to_value(self);
         <DslValue as ArtifactPack>::encode_pack_with(&value, options)
     }
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         let value = <DslValue as ArtifactPack>::decode_pack_with(bytes, options)?;
-        <Self as crate::os_dsl::FromValue>::from_value(value).map_err(|error: ValueError| PackError::Schema(error.to_string()))
+        <Self as FromValue>::from_value(value).map_err(|error: ValueError| PackError::Schema(error.to_string()))
     }
 }
 //#endregion 🔖️TestSupport
@@ -20786,7 +20801,7 @@ mod tests {
 
     #[test]
     fn fixed_edit_message_ledger_resolves_probe_collisions_without_a_parallel_runtime_index() {
-        let mut first_by_slot = std::collections::BTreeMap::new();
+        let mut first_by_slot = BTreeMap::new();
         let mut collision = None;
         for index in 0..ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY * 2 {
             let id = format!("edit-collision-{index}");
@@ -22809,13 +22824,13 @@ mod tests {
 
     pub(super) struct DemoOneItemPreparationFactory {
         footprint: ArtifactStoreOneItemFootprint,
-        published_root: Arc<std::sync::Mutex<Option<std::sync::Weak<DemoSnapshot>>>>,
+        published_root: Arc<Mutex<Option<std::sync::Weak<DemoSnapshot>>>>,
         forge_digest: bool,
     }
 
     impl DemoOneItemPreparationFactory {
         pub(super) fn admissible() -> Self {
-            Self { footprint: ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 512 }, published_root: Arc::new(std::sync::Mutex::new(None)), forge_digest: false }
+            Self { footprint: ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 512 }, published_root: Arc::new(Mutex::new(None)), forge_digest: false }
         }
 
         fn forged_digest() -> Self {
@@ -22830,7 +22845,7 @@ mod tests {
         authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
         prepared: Option<ArtifactStoreOneItemPrepared<DemoSnapshot, DemoMutation>>,
         checkpoint: ArtifactStoreOneItemCheckpoint,
-        published_root: Arc<std::sync::Mutex<Option<std::sync::Weak<DemoSnapshot>>>>,
+        published_root: Arc<Mutex<Option<std::sync::Weak<DemoSnapshot>>>>,
         forge_digest: bool,
         active_id_retirement: Option<ArtifactStoreStringRetirement>,
         cancelled: bool,
@@ -22979,12 +22994,12 @@ mod tests {
 
     struct DemoEphemeralPreparationFactory {
         footprint: ArtifactStoreOneItemFootprint,
-        published_root: Arc<std::sync::Mutex<Option<std::sync::Weak<DemoSnapshot>>>>,
+        published_root: Arc<Mutex<Option<std::sync::Weak<DemoSnapshot>>>>,
     }
 
     impl DemoEphemeralPreparationFactory {
         fn admissible() -> Self {
-            Self { footprint: ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 64 }, published_root: Arc::new(std::sync::Mutex::new(None)) }
+            Self { footprint: ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 64 }, published_root: Arc::new(Mutex::new(None)) }
         }
     }
 
@@ -22992,7 +23007,7 @@ mod tests {
         request: Option<ArtifactEphemeralOneItemPreparationRequest<DemoSnapshot, DemoMutation>>,
         prepared: Option<ArtifactEphemeralOneItemPrepared<DemoSnapshot>>,
         checkpoint: ArtifactStoreOneItemCheckpoint,
-        published_root: Arc<std::sync::Mutex<Option<std::sync::Weak<DemoSnapshot>>>>,
+        published_root: Arc<Mutex<Option<std::sync::Weak<DemoSnapshot>>>>,
         cancelled: bool,
         closing: bool,
     }
@@ -23298,7 +23313,7 @@ mod tests {
         assert!(old_transient_root.upgrade().is_none(), "bounded retirement releases the displaced transient root");
         let oversized = DemoEphemeralPreparationFactory {
             footprint: ArtifactStoreOneItemFootprint { work_items: ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS + 1, retained_bytes: ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES },
-            published_root: Arc::new(std::sync::Mutex::new(None)),
+            published_root: Arc::new(Mutex::new(None)),
         };
         assert!(transient.begin_publish_one(semio_framework_job::OperationId(9), 1, DemoMutation::SetN(SetN { n: 7 }), Some(&oversized), Some(Arc::new(DemoSnapshotRetirementFactory))).is_err());
         assert!(transient.begin_publish_one(semio_framework_job::OperationId(10), 1, DemoMutation::SetN(SetN { n: 7 }), None, Some(Arc::new(DemoSnapshotRetirementFactory))).is_err());
@@ -23356,7 +23371,7 @@ mod tests {
     //#region 📸️CompoundEnvelopeReadLaws
     struct GroupReadTriggerSnapshot {
         value: i32,
-        commit: Option<Arc<std::sync::Mutex<crate::os_vcs::ArtifactGroupVisibilityOwner>>>,
+        commit: Option<Arc<Mutex<crate::os_vcs::ArtifactGroupVisibilityOwner>>>,
         reads: Arc<std::sync::atomic::AtomicUsize>,
     }
 
@@ -23387,7 +23402,7 @@ mod tests {
             dialect: None,
             migrated_from: None,
             owner: None,
-            lanes: std::collections::BTreeMap::new(),
+            lanes: BTreeMap::new(),
             edit_messages: ArtifactEditMessageLedger::new(),
             conflicts: Vec::new(),
         })
@@ -23413,7 +23428,7 @@ mod tests {
     fn retained_group_envelope_read_captures_history_and_cursor_before_serializer_commit() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("📖️group-read.json")).unwrap();
         for case in fixture["cases"].as_array().unwrap() {
-            let owner = Arc::new(std::sync::Mutex::new(crate::os_vcs::ArtifactGroupVisibilityOwner::new()));
+            let owner = Arc::new(Mutex::new(crate::os_vcs::ArtifactGroupVisibilityOwner::new()));
             let view = owner.lock().unwrap().view();
             let inject_commit = case["capture"] == "pending" && case["decision"] == "committed";
             let reads = Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -25787,7 +25802,7 @@ mod tests {
     /// type's `skip_serializing_if` surface.
     #[test]
     fn ops_log_records_to_json_string_match_serde_json_byte_for_byte() {
-        let sparse_meta = crate::os_spr::MutationMeta {
+        let sparse_meta = MutationMeta {
             mutation_id: None,
             dependencies: Vec::new(),
             base_version: 1,
@@ -25800,7 +25815,7 @@ mod tests {
             group_id: None,
             origin: crate::os_spr::MutationOrigin::Owner,
         };
-        let dense_meta = crate::os_spr::MutationMeta {
+        let dense_meta = MutationMeta {
             mutation_id: Some(MutationId("mutation-1".into())),
             dependencies: vec![MutationId("mutation-0".into())],
             base_version: 7,
@@ -25813,7 +25828,7 @@ mod tests {
             group_id: Some("group-1".into()),
             origin: crate::os_spr::MutationOrigin::Contributed { plugin_id: "plugin-a".into(), mutation_id: SchemaId("mutation-src".into()), payload_hash: crate::os_spr::PayloadHash([3u8; 32]) },
         };
-        let transaction_meta = crate::os_spr::MutationMeta {
+        let transaction_meta = MutationMeta {
             origin: crate::os_spr::MutationOrigin::Transaction { initiator: crate::os_spr::ForeignTarget { artifact_id: "artifact-1".into(), artifact_kind: "demo".into(), dialect: Some("v1".into()) } },
             ..dense_meta.clone()
         };
@@ -26634,13 +26649,13 @@ mod tests {
     async fn interaction_state_pack_matches_first_party_value_and_json_oracle() {
         let oracle: serde_json::Value = serde_json::from_str(include_str!("🎒️interaction-state-pack.json")).unwrap();
         let value = DslValue::from(&oracle);
-        let state = <protocol::InteractionState as crate::os_dsl::FromValue>::from_value(value.clone()).unwrap();
+        let state = <protocol::InteractionState as FromValue>::from_value(value.clone()).unwrap();
         let encoded = <protocol::InteractionState as ArtifactPack>::encode_pack(&state);
         assert_eq!(encoded, <DslValue as ArtifactPack>::encode_pack(&value));
         assert_eq!(encoded, <serde_json::Value as ArtifactPack>::encode_pack(&oracle));
         let decoded = <protocol::InteractionState as ArtifactPack>::decode_pack(&encoded).unwrap();
         assert_eq!(decoded, state);
-        assert_eq!(serde_json::Value::from(&<protocol::InteractionState as crate::os_dsl::ToValue>::to_value(&decoded)), oracle);
+        assert_eq!(serde_json::Value::from(&<protocol::InteractionState as ToValue>::to_value(&decoded)), oracle);
     }
 
     /// @emoji 🪶️ Hex-dumps `pack_rt::encode_wire_value` over the SAME fixture corpus — ground

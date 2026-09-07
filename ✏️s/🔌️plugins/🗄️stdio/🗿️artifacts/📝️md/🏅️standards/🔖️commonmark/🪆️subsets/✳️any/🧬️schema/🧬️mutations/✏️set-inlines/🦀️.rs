@@ -16,7 +16,7 @@ pub struct SetInlines {
 impl protocol::MutationKind<MdSnapshot, MdMutation> for SetInlines {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "inlines", kind: "set-inlines", record: "SetInlines" };
 
-    fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as protocol::Mutation<MdSnapshot>>::Diff> {
+    fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
         agg_diff(&MdMutation::SetInlines(self.clone()), base)
     }
     fn inverse(&self, base: &MdSnapshot) -> Vec<MdMutation> {

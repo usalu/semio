@@ -15,7 +15,7 @@ pub struct SetOtherChunks {
 impl protocol::MutationKind<WavSnapshot, WavMutation> for SetOtherChunks {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "other-chunks", kind: "set-other-chunks", record: "SetOtherChunks" };
 
-    fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<<WavMutation as protocol::Mutation<WavSnapshot>>::Diff> {
+    fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<<WavMutation as Mutation<WavSnapshot>>::Diff> {
         agg_diff(&WavMutation::SetOtherChunks(self.clone()), base)
     }
     fn inverse(&self, base: &WavSnapshot) -> Vec<WavMutation> {

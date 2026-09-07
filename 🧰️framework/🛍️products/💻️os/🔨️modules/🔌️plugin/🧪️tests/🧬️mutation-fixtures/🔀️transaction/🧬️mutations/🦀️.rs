@@ -18,7 +18,7 @@ pub(crate) enum TxnMutation {
     SetTransactionCountAndNotify(SetTransactionCountAndNotify),
 }
 impl protocol::OpText for TxnMutation {
-    fn parse_op(line: &str) -> Result<Self, crate::store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         if line.starts_with("set-transaction-count-and-notify ") {
             Ok(SetTransactionCountAndNotify::parse_op(line)?.into())
         } else if line.starts_with("set-transaction-count-without-preflight ") {

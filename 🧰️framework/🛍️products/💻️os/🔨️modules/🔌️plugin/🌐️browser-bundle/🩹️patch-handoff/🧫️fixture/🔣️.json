@@ -1,0 +1,10 @@
+{
+  "offer": { "kind": "browser-actor-ui-patch", "scope": { "spaceId": "space-a", "documentId": "map-a" }, "verifiedSurfaceId": "s.gis.gismap@1/viewer", "activationGeneration": "41", "instanceId": 0, "patch": { "surface": "map", "baseRevision": 0, "revision": 1, "ops": [] }, "receipt": [41, 0, 13, 51] },
+  "acknowledged": { "kind": "browser-actor-ui-patch-result", "scope": { "spaceId": "space-a", "documentId": "map-a" }, "verifiedSurfaceId": "s.gis.gismap@1/viewer", "activationGeneration": "41", "instanceId": 0, "receipt": [41, 0, 13, 51], "outcome": "acknowledged", "revision": 1 },
+  "rejected": { "kind": "browser-actor-ui-patch-result", "scope": { "spaceId": "space-a", "documentId": "map-a" }, "verifiedSurfaceId": "s.gis.gismap@1/viewer", "activationGeneration": "41", "instanceId": 0, "receipt": [41, 0, 13, 51], "outcome": "rejected", "revision": 0, "reason": "revision-mismatch" },
+  "hostileResults": [
+    { "kind": "browser-actor-ui-patch-result", "scope": { "spaceId": "space-b", "documentId": "map-a" }, "verifiedSurfaceId": "s.gis.gismap@1/viewer", "activationGeneration": "41", "instanceId": 0, "receipt": [41, 0, 13, 51], "outcome": "acknowledged", "revision": 1 },
+    { "kind": "browser-actor-ui-patch-result", "scope": { "spaceId": "space-a", "documentId": "map-a" }, "verifiedSurfaceId": "s.gis.gismap@1/editor", "activationGeneration": "41", "instanceId": 0, "receipt": [41, 0, 13, 51], "outcome": "acknowledged", "revision": 1 },
+    { "kind": "browser-actor-ui-patch-result", "scope": { "spaceId": "space-a", "documentId": "map-a" }, "verifiedSurfaceId": "s.gis.gismap@1/viewer", "activationGeneration": "42", "instanceId": 0, "receipt": [42, 0, 13, 51], "outcome": "acknowledged", "revision": 1 }
+  ]
+}

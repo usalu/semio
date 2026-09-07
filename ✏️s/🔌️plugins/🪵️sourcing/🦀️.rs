@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the sourcing editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum SourcingApps: PluginApp {
-        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::sourcing::SourcingCurationApp>>),
-        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::sourcing::SourcingViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::sourcing::SourcingCurationApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::sourcing::SourcingViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -30,7 +30,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// beyond the sandbox default — nothing in this crate's own effects, all UI-chrome/RPC `Effect`
 /// variants with no documented `CapabilityId`, justifies otherwise), and it asks the broker for
 /// document write access to persist edits.
-pub fn plugin() -> Result<Plugin<SourcingApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<SourcingApps>, PluginAssemblyError> {
     Plugin::<SourcingApps>::builder("sourcing")
         .label("Sourcing")
         .version("0.1.0")

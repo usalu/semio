@@ -1,7 +1,7 @@
 //! 📥️ EN 1995 play app — the inputs window: the raw compliance document, rendered as JSON.
 
 use crate::artifacts::en1995::En1995Snapshot;
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_INPUTS: &str = "norm-en1995-inputs";

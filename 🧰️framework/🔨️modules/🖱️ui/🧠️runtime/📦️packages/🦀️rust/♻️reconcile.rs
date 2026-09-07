@@ -36,6 +36,7 @@ use tree_retirement::SurfaceTreeRetireCursor;
 type NodeIdentity = (Option<ui_contract::UiNodeId>, ui_contract::UiText);
 
 const SURFACE_RECONCILE_FIXED_NODES: usize = ui_contract::UI_DOCUMENT_NODES;
+#[cfg(test)]
 const SURFACE_RECONCILE_FIXED_OPS: usize = SURFACE_RECONCILE_FIXED_NODES * 9 + 1;
 
 #[derive(Debug)]
@@ -172,10 +173,7 @@ impl<K: Eq, V, const N: usize> SurfaceLinearMap<K, V, N> {
         self.entries.iter().map(|(key, _)| key)
     }
 
-    fn values(&self) -> impl Iterator<Item = &V> {
-        self.entries.iter().map(|(_, value)| value)
-    }
-
+    #[cfg(test)]
     fn clear(&mut self) {
         while self.entries.pop().is_some() {}
     }
@@ -208,19 +206,7 @@ impl<T: Eq, const N: usize> SurfaceLinearSet<T, N> {
         self.entries.try_push(value).map(|()| true)
     }
 
-    fn iter(&self) -> impl Iterator<Item = &T> {
-        self.entries.iter()
-    }
-
-    fn remove(&mut self, value: &T) -> bool {
-        let Some(index) = self.entries.iter().position(|candidate| candidate == value) else { return false };
-        let Some(last) = self.entries.pop() else { return false };
-        if index < self.entries.len() {
-            self.entries[index] = last;
-        }
-        true
-    }
-
+    #[cfg(test)]
     fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
@@ -385,7 +371,7 @@ impl SurfaceReconciler {
         if self.document.is_some() { return Ok(true); }
         let progress = match self.seal_phase {
             0 => {
-                let fixed = size_of::<Self>() + std::mem::size_of_val(self.ordinals.entries.entries.as_ref()) + std::mem::size_of_val(self.key_index.entries.entries.as_ref()) + ui_contract::UiDocumentAssembly::required_open_bytes();
+                let fixed = size_of::<Self>() + size_of_val(self.ordinals.entries.entries.as_ref()) + size_of_val(self.key_index.entries.entries.as_ref()) + ui_contract::UiDocumentAssembly::required_open_bytes();
                 let allocated = self.assembly.allocated_bytes()?;
                 let bytes = usage.bytes.checked_add(fixed).and_then(|bytes| bytes.checked_add(allocated)).unwrap_or(usize::MAX);
                 self.assembly.shrink_resident(ui_contract::UiResidentLimits { items: usage.items.max(self.ordinals.len()).max(1), bytes }, 1, SURFACE_RECONCILE_PAGE_BYTES)?
@@ -540,6 +526,7 @@ impl std::ops::Deref for SurfaceRecordRead<'_> {
 }
 
 impl<K, V, const N: usize> SurfaceLinearMap<K, V, N> {
+    #[cfg(test)]
     fn get_index(&self, index: usize) -> Option<(&K, &V)> {
         self.entries.get(index).map(|(key, value)| (key, value))
     }
@@ -678,7 +665,6 @@ impl ExistingComponentComparison {
 }
 
 impl RecordOwnedCopy {
-    fn bindings(&self) -> Option<&ui_contract::UiBindingsCopy> { if let Self::Bindings(value) = self { Some(value) } else { None } }
     fn bindings_mut(&mut self) -> Option<&mut ui_contract::UiBindingsCopy> { if let Self::Bindings(value) = self { Some(value) } else { None } }
     fn component(&self) -> Option<&ui_contract::UiComponentCopy> { if let Self::Component(value) = self { Some(value) } else { None } }
     fn component_mut(&mut self) -> Option<&mut ui_contract::UiComponentCopy> { if let Self::Component(value) = self { Some(value) } else { None } }
@@ -1308,10 +1294,12 @@ pub(crate) struct SurfaceReconcileCursor {
 }
 
 impl SurfaceReconcileCursor {
+    #[cfg(test)]
     pub(crate) fn new(tree: crate::ComponentTree, current: &SurfaceReconciler) -> Self {
         Self::new_with_limits(tree, current, SurfaceReconcileLimits::default())
     }
 
+    #[cfg(test)]
     pub(crate) fn new_with_limits(tree: crate::ComponentTree, current: &SurfaceReconciler, limits: SurfaceReconcileLimits) -> Self {
         let credit = reserve_surface_reconcile(limits);
         Self::new_admitted(tree, current, limits, current.revision.0.checked_add(1).unwrap_or(0), credit)
@@ -2052,7 +2040,7 @@ impl SurfaceReconcileCursor {
     fn advance_fresh_bindings(diff: &mut RecordDiffCursor, usage: &mut SurfaceReconcileUsage, limits: SurfaceReconcileLimits, fault_owner: &mut Option<SurfaceReconcileFault>) -> SurfaceReconcileStep {
         let fresh = diff.fresh.as_mut().expect("fresh binding copy owns the field");
         if diff.owned_copy.is_none() {
-            diff.owned_copy = Some(RecordOwnedCopy::Bindings(ui_contract::UiBindingsCopy::new(std::mem::take(&mut diff.record.bindings))));
+            diff.owned_copy = Some(RecordOwnedCopy::Bindings(ui_contract::UiBindingsCopy::new(take(&mut diff.record.bindings))));
             return SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<ui_contract::UiBindingsCopy>() };
         }
         let copy = diff.owned_copy.as_mut().and_then(RecordOwnedCopy::bindings_mut).expect("binding copy retained above");
@@ -2237,20 +2225,6 @@ fn reserve_surface_reconcile(limits: SurfaceReconcileLimits) -> Option<ui_contra
 
 fn register_surface_reconcile_backing(admitted_bytes: usize) -> Result<bool, ui_contract::UiResidentFault> {
     ui_contract::UiResidentPermit::try_register_runtime_backing(size_of::<LazyLock<Mutex<SurfaceReconcileHandbackRegistry>>>() + SurfaceReconcileOutputs::static_backing_bytes(), admitted_bytes)
-}
-
-fn split_surface_reconcile(mut credit: ui_contract::UiResidentPermit) -> Result<(ui_contract::UiResidentPermit, ui_contract::UiResidentPermit), ui_contract::UiResidentPermit> {
-    let mut output = None;
-    if !matches!(credit.split_output_into(&mut output, SURFACE_RECONCILE_PAGE_BYTES), Ok(true)) { return Err(credit); }
-    Ok((credit, output.expect("successful resident split installs the exact output owner")))
-}
-
-/// 📉️ Returns unused aggregate admission capacity once reconciliation has measured its retained owners.
-fn shrink_surface_reconcile(mut credit: ui_contract::UiResidentPermit, usage: SurfaceReconcileUsage) -> Result<ui_contract::UiResidentPermit, ui_contract::UiResidentPermit> {
-    match credit.try_shrink(ui_contract::UiResidentLimits { items: usage.items, bytes: usage.bytes }) {
-        Ok(true) => Ok(credit),
-        _ => Err(credit),
-    }
 }
 
 fn release_surface_reconcile(mut credit: ui_contract::UiResidentPermit) {
@@ -3413,10 +3387,6 @@ mod handback_entry_tests;
 
 //#endregion 🎟️RetainedAuthority
 
-fn estimate_record_bytes(record: &ui_contract::UiNodeRecord) -> usize {
-    record.children.len().checked_mul(size_of::<ui_contract::UiNodeId>()).and_then(|bytes| bytes.checked_add(record.key.len())).and_then(|bytes| bytes.checked_add(size_of::<ui_contract::UiNodeRecord>())).unwrap_or(usize::MAX)
-}
-
 fn diff_record_field(old: &ui_contract::UiNodeRecord, new: &ui_contract::UiNodeRecord, field: u8) -> Result<Option<ui_contract::UiPatchOp>, SurfaceReconcileFault> {
     let id = new.id;
     Ok(match field {
@@ -3467,7 +3437,7 @@ fn retire_record_one(record: &mut ui_contract::UiNodeRecord, field: &mut u8, own
                 *owned_copy = None;
             }
             if !record.bindings.terminal_is_empty() {
-                *owned_copy = Some(RecordOwnedCopy::Bindings(ui_contract::UiBindingsCopy::new(std::mem::take(&mut record.bindings))));
+                *owned_copy = Some(RecordOwnedCopy::Bindings(ui_contract::UiBindingsCopy::new(take(&mut record.bindings))));
                 return false;
             }
         }
@@ -3815,10 +3785,6 @@ mod tests {
 
     fn id_of(snapshot: &ui_contract::UiSnapshot, key: &str) -> ui_contract::UiNodeId {
         snapshot.nodes.iter().find(|record| record.key.as_str() == key).unwrap_or_else(|| panic!("no node keyed {key:?} in snapshot")).id
-    }
-
-    fn first_op(patch: &ui_contract::UiPatch) -> &ui_contract::UiPatchOp {
-        patch.ops.get(0).expect("fixture patch operation")
     }
 
     fn assert_snapshot_matches_state(snapshot: &ui_contract::UiSnapshot, state: &ui_contract::UiSnapshotState) {

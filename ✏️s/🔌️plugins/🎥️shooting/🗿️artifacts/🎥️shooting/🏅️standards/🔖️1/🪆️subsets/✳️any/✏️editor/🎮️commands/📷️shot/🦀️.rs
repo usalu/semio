@@ -1,12 +1,12 @@
 //! 📷️ Shooting play app commands — shot selection, labeling, sticky defaults and bulk field patches.
 
-use crate::artifacts::shooting::mutations::change_shot_format::mutation::ChangeShotFormat;
-use crate::artifacts::shooting::mutations::change_shot_height::mutation::ChangeShotHeight;
-use crate::artifacts::shooting::mutations::change_shot_shape::mutation::ChangeShotShape;
-use crate::artifacts::shooting::mutations::change_shot_width::mutation::ChangeShotWidth;
-use crate::artifacts::shooting::mutations::create_shot::mutation::CreateShot;
-use crate::artifacts::shooting::mutations::rename_shot::mutation::RenameShot;
-use crate::artifacts::shooting::mutations::set_active_shot::mutation::SetActiveShot as SetActiveShotMutation;
+use crate::artifacts::shooting::mutations::change_shot_format::ChangeShotFormat;
+use crate::artifacts::shooting::mutations::change_shot_height::ChangeShotHeight;
+use crate::artifacts::shooting::mutations::change_shot_shape::ChangeShotShape;
+use crate::artifacts::shooting::mutations::change_shot_width::ChangeShotWidth;
+use crate::artifacts::shooting::mutations::create_shot::CreateShot;
+use crate::artifacts::shooting::mutations::rename_shot::RenameShot;
+use crate::artifacts::shooting::mutations::set_active_shot::SetActiveShot as SetActiveShotMutation;
 use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::ShootingShot;
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};

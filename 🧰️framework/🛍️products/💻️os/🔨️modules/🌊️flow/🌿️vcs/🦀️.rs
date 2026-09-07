@@ -1976,7 +1976,7 @@ impl FlowRetainedVcs {
     }
 
     fn publish_page_cursor(&mut self, slot: usize, grant: FlowVcsGrant) -> Result<FlowVcsPoll, FlowVcsFault> {
-        if grant.outputs == 0 || grant.events == 0 || grant.bytes < std::mem::size_of::<FlowVcsPage>() {
+        if grant.outputs == 0 || grant.events == 0 || grant.bytes < size_of::<FlowVcsPage>() {
             return Err(FlowVcsFault::InsufficientGrant);
         }
         let document = self.document.as_ref().ok_or(FlowVcsFault::Closed)?;
@@ -2532,11 +2532,11 @@ fn flow_vcs_retire_action(action: FlowVcsAction, retirement: &mut FlowRetirement
 
 fn flow_vcs_fixture_census(fixture: &FlowFixture) -> FlowVcsCensus {
     let items = 1usize.saturating_add(fixture.widgets.len()).saturating_add(fixture.synapses.len()).saturating_add(fixture.layout.len());
-    let bytes = std::mem::size_of::<FlowFixture>()
+    let bytes = size_of::<FlowFixture>()
         .saturating_add(fixture.schema.len())
-        .saturating_add(fixture.widgets.len().saturating_mul(std::mem::size_of::<Widget>()))
-        .saturating_add(fixture.synapses.len().saturating_mul(std::mem::size_of::<SynapseSpec>()))
-        .saturating_add(fixture.layout.len().saturating_mul(std::mem::size_of::<(String, WidgetLayout)>()));
+        .saturating_add(fixture.widgets.len().saturating_mul(size_of::<Widget>()))
+        .saturating_add(fixture.synapses.len().saturating_mul(size_of::<SynapseSpec>()))
+        .saturating_add(fixture.layout.len().saturating_mul(size_of::<(String, WidgetLayout)>()));
     FlowVcsCensus { items, bytes, depth: FLOW_VCS_MAX_DEPTH }
 }
 
@@ -2544,23 +2544,23 @@ fn flow_vcs_widget_census(widget: &Widget) -> FlowVcsCensus {
     let depth = if matches!(widget, Widget::Cluster { .. }) { FLOW_VCS_MAX_DEPTH } else { 1 };
     let payload_bytes = match widget {
         Widget::Neuron { neuron_kind, input_ports, output_ports, .. } => {
-            neuron_kind.len().saturating_add(input_ports.len().saturating_mul(std::mem::size_of::<String>())).saturating_add(output_ports.len().saturating_mul(std::mem::size_of::<String>()))
+            neuron_kind.len().saturating_add(input_ports.len().saturating_mul(size_of::<String>())).saturating_add(output_ports.len().saturating_mul(size_of::<String>()))
         }
         Widget::InputNote { text, .. } => text.len(),
         Widget::InputImage { src, .. } => src.len(),
         Widget::Variable { name, schema, .. } => name.len().saturating_add(schema.len()),
-        Widget::OutputPreview { expanded, .. } => expanded.len().saturating_mul(std::mem::size_of::<String>()),
+        Widget::OutputPreview { expanded, .. } => expanded.len().saturating_mul(size_of::<String>()),
         Widget::OutputAction { action, .. } => action.len(),
         Widget::OutputExport { format, .. } => format.len(),
         Widget::Cluster { name, tree, flow, .. } => name
             .len()
-            .saturating_add(tree.neurons.len().saturating_mul(std::mem::size_of::<Neuron>()))
-            .saturating_add(tree.synapses.len().saturating_mul(std::mem::size_of::<Synapse>()))
-            .saturating_add(flow.nodes.len().saturating_mul(std::mem::size_of::<(String, FlowNodeGui)>()))
-            .saturating_add(flow.previews.len().saturating_mul(std::mem::size_of::<FlowPreviewGui>())),
+            .saturating_add(tree.neurons.len().saturating_mul(size_of::<Neuron>()))
+            .saturating_add(tree.synapses.len().saturating_mul(size_of::<Synapse>()))
+            .saturating_add(flow.nodes.len().saturating_mul(size_of::<(String, FlowNodeGui)>()))
+            .saturating_add(flow.previews.len().saturating_mul(size_of::<FlowPreviewGui>())),
         Widget::InputSlider { label, .. } => label.len(),
     };
-    FlowVcsCensus { items: 1, bytes: std::mem::size_of::<Widget>().saturating_add(widget_id_for(widget).len()).saturating_add(payload_bytes), depth }
+    FlowVcsCensus { items: 1, bytes: size_of::<Widget>().saturating_add(widget_id_for(widget).len()).saturating_add(payload_bytes), depth }
 }
 
 fn flow_vcs_synapse_census(synapse: &SynapseSpec) -> FlowVcsCensus {

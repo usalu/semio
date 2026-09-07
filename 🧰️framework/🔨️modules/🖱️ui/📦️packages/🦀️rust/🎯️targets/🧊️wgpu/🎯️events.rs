@@ -225,7 +225,7 @@ fn node_abs_origin(tree: &UiTree, id: NodeId) -> (f32, f32) {
 
 /// 📐️ `node_abs_origin` plus the node's own size, as a `Rect` — `None` if `id` isn't in `tree`.
 pub(crate) fn node_abs_rect(tree: &UiTree, id: NodeId) -> Option<Rect> {
-    let node = tree.node(id)?;
+    tree.node(id)?;
     let layout = tree.accepted_layout(id)?;
     let (x, y) = node_abs_origin(tree, id);
     Some(Rect::new(x, y, layout.width, layout.height))

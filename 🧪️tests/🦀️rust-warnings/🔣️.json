@@ -1,0 +1,26 @@
+{
+  "cases": [
+    {
+      "target": "native",
+      "requiredPackages": ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", "semio-framework-os-renderer-wgpu", "semio-s-plugin-dag", "semio-s-plugin-flow-extension-math"],
+      "scopeArgs": ["--all-targets"],
+      "targetArgs": [],
+      "rendererFeatures": ["--features", "native-bin"]
+    },
+    {
+      "target": "wasm32-wasip2",
+      "requiredPackages": ["semio-s-plugin-dag", "semio-s-plugin-flow-extension-math"],
+      "scopeArgs": ["--lib"],
+      "targetArgs": ["--target", "wasm32-wasip2"],
+      "rendererFeatures": []
+    },
+    {
+      "target": "wasm32-unknown-unknown",
+      "requiredPackages": ["semio-framework-actor", "semio-framework-os-renderer-wgpu"],
+      "scopeArgs": ["--lib"],
+      "targetArgs": ["--target", "wasm32-unknown-unknown"],
+      "rendererFeatures": []
+    }
+  ],
+  "rejectedTargets": ["wasm32-wasip1", "unknown"]
+}

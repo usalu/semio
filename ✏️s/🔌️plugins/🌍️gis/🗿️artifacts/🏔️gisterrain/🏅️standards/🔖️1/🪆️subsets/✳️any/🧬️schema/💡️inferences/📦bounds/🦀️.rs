@@ -6,7 +6,6 @@
 //! overlay is small and re-decoding is O(positions).
 
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 📦Bounds

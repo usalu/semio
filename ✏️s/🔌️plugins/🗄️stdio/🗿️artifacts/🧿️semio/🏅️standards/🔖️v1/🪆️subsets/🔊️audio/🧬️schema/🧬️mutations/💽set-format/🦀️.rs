@@ -16,7 +16,7 @@ pub struct SetFormat {
 impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for SetFormat {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "format", kind: "set-format", record: "SetFormat" };
 
-    fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<<SemioAudioMutation as protocol::Mutation<SemioAudioSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<<SemioAudioMutation as Mutation<SemioAudioSnapshot>>::Diff> {
         agg_diff(&SemioAudioMutation::SetFormat(self.clone()), base)
     }
     fn inverse(&self, base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {

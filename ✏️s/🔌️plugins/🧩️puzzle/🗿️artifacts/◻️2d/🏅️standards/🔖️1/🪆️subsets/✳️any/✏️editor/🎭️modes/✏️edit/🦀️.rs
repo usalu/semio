@@ -9,7 +9,7 @@ use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection}
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, puzzle2d_action, runtime_camera, Puzzle2dScene, PUZZLE2D_LOD_MODE_AUTOMATIC, PUZZLE2D_PLAY_SURFACE_ID};
 use semio_framework_plugin::{create_default_layout, Board2dScene, LocalizedLabel, ModeDefinition, ToolRef, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowLayout};
-use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase};
+use semio_framework_ui_contract::{Buildable, HasBase};
 use serde_json::{json, Value};
 
 pub const PUZZLE2D_PLAY_MODE_EDIT: &str = "edit";

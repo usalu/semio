@@ -1533,7 +1533,7 @@ impl FlowHost {
             .widgets
             .iter()
             .filter_map(|widget| widget_id_for(widget).strip_prefix(&id_prefix)?.parse::<u64>().ok())
-            .collect::<std::collections::HashSet<_>>();
+            .collect::<HashSet<_>>();
         let mut serial = 2_u64;
         while used.contains(&serial) {
             serial = serial.checked_add(1).expect("the finite Flow widget set must leave a generated identifier");
@@ -1547,7 +1547,7 @@ impl FlowHost {
         for widget in &mut self.fixture.widgets {
             if let Widget::InputSlider { id, .. } = widget {
                 if id == widget_id {
-                    crate::set_widget_slider_value(widget, value);
+                    set_widget_slider_value(widget, value);
                 }
             }
         }
@@ -2778,7 +2778,7 @@ mod tests {
 
     fn fixture_kind_infos_json() -> String {
         install_first_party_light_flow_extensions_for_tests();
-        crate::catalogue::flow_neuron_kind_infos_json()
+        flow_neuron_kind_infos_json()
     }
 
     /// 🌿️ All 9 first-party flow extensions install into the shared registry and each contributes

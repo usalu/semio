@@ -358,10 +358,10 @@ impl Mutation<Value> for Puzzle5dMutation {
     /// variant, regardless of which snapshot type it is diffed against), so this forwards straight
     /// through to the derive's own table exactly like `may_emit_foreign_steps` already does below,
     /// rather than hand-authoring a duplicate 28-entry table here.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as protocol::Mutation<Puzzle5dSnapshot>>::DESCRIPTORS;
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle5dSnapshot>>::DESCRIPTORS;
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
-        <Self as protocol::Mutation<Puzzle5dSnapshot>>::descriptor(self)
+        <Self as Mutation<Puzzle5dSnapshot>>::descriptor(self)
     }
 
     fn diff(&self, projection: &Value) -> protocol::MutationOutcome<Puzzle5dDiff> {
@@ -470,10 +470,10 @@ impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
     /// 🧷️ Not hand-written — see the identical note on `impl Mutation<Value>` above. The metadata
     /// is projection-independent, so this forwards to the derive's own table too, same as
     /// `may_emit_foreign_steps` already does immediately below.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as protocol::Mutation<Puzzle5dSnapshot>>::DESCRIPTORS;
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle5dSnapshot>>::DESCRIPTORS;
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
-        <Self as protocol::Mutation<Puzzle5dSnapshot>>::descriptor(self)
+        <Self as Mutation<Puzzle5dSnapshot>>::descriptor(self)
     }
 
     fn diff(&self, projection: &Puzzle5dPlaySnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {

@@ -7,9 +7,9 @@ use crate::artifacts::dag::{DagNodeSpec, DagSnapshot};
 /// 🌱 `create-node` payload — full initial payload (position/size/kind/properties all fixed at
 /// creation).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[derive(dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
 pub struct CreateNode {
     pub node: DagNodeSpec,
 }

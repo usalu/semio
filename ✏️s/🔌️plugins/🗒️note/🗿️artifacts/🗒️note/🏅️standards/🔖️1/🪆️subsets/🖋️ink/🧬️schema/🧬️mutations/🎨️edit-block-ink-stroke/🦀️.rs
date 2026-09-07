@@ -1,7 +1,6 @@
 //! 🎨 Note mutation — `EditBlockInkStroke`: replaces an ink block's authored stroke geometry (points + bounding box, drawn atomically).
 
 use crate::artifacts::note::{NoteDiff, NoteSnapshot};
-use crate::artifacts::note::schema::diff::note_block_patch_diff;
 use crate::artifacts::note::schema::mutations::NoteMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};

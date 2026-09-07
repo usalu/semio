@@ -18,7 +18,7 @@ pub struct InsertChannel {
 impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for InsertChannel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "channel", kind: "insert-channel", record: "InsertChannel" };
 
-    fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<<SemioAnimationMutation as protocol::Mutation<SemioAnimationSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<<SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::Diff> {
         agg_diff(&SemioAnimationMutation::InsertChannel(self.clone()), base)
     }
     fn inverse(&self, base: &SemioAnimationSnapshot) -> Vec<SemioAnimationMutation> {

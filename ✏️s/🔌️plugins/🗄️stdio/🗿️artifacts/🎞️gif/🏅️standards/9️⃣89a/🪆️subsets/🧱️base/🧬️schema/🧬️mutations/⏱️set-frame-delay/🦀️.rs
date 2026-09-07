@@ -15,7 +15,7 @@ pub struct SetFrameDelay {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameDelay {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-delay", kind: "set-frame-delay", record: "SetFrameDelay" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as protocol::Mutation<GifSnapshot>>::Diff> {
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
         agg_diff(&GifMutation::SetFrameDelay(self.clone()), base)
     }
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {

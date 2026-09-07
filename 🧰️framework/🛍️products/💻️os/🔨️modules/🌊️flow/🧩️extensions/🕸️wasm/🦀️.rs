@@ -163,12 +163,12 @@ pub fn evaluate_invoke_json(registry: &Registry, request: &[u8]) -> Result<Vec<u
 pub fn flow_extension_topic_contribution(app_id: &str, extension_id: &str, label: &str, icon_id: &str, manifest_json: &str) -> semio_framework::TopicContribution {
     semio_framework::TopicContribution::new(
         "flow.extension",
-        semio_framework_os_kernel::DslValue::object([
-            ("appId".to_string(), semio_framework_os_kernel::DslValue::String(app_id.to_string())),
-            ("extensionId".to_string(), semio_framework_os_kernel::DslValue::String(extension_id.to_string())),
-            ("label".to_string(), semio_framework_os_kernel::DslValue::String(label.to_string())),
-            ("iconId".to_string(), semio_framework_os_kernel::DslValue::String(icon_id.to_string())),
-            ("manifestJson".to_string(), semio_framework_os_kernel::DslValue::String(manifest_json.to_string())),
+        DslValue::object([
+            ("appId".to_string(), DslValue::String(app_id.to_string())),
+            ("extensionId".to_string(), DslValue::String(extension_id.to_string())),
+            ("label".to_string(), DslValue::String(label.to_string())),
+            ("iconId".to_string(), DslValue::String(icon_id.to_string())),
+            ("manifestJson".to_string(), DslValue::String(manifest_json.to_string())),
         ]),
     )
 }

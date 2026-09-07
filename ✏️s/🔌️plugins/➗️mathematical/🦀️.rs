@@ -6,9 +6,12 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the declaration-owned mathematical surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
-    pub enum MathematicalApps: PluginApp {}
+    /// 🗃️ Closed runtime app fleet for the declaration-owned mathematical surfaces.
+    pub enum MathematicalApps: PluginApp {
+        EquationEditor(VcsArtifactApp<EditorApp<crate::editor::equation::EquationPlayApp>>),
+        EquationViewer(VcsArtifactApp<ViewerApp<crate::viewer::equation::EquationViewer>>),
+    }
 }
 //#endregion 🗃️Apps
 
@@ -33,7 +36,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `Isolated` (no cross-plugin extension attachment, the SDK default holds), and it asks the
 /// broker for document write access because `EquationPlayApp` persists graph edits back to
 /// the open document.
-pub fn plugin() -> Result<Plugin<MathematicalApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<MathematicalApps>, PluginAssemblyError> {
     Plugin::<MathematicalApps>::builder("mathematical")
         .label("Mathematical")
         .version("0.1.0")

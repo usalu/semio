@@ -1,8 +1,7 @@
 //! 🏷️ `change-node-label` — sets a node's display label (`id` stays the stable identity field, so
 //! this is `change`, not `rename`).
 
-use crate::artifacts::equation::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
-use semio_framework_os_kernel::{FromValue, ToValue};
+use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload

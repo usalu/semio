@@ -8,7 +8,7 @@ use crate::artifacts::dag::{default_snapshot, DagSnapshot, DAG_DIALECT, DAG_DOCU
 use crate::viewer::dag::modes::view;
 use crate::viewer::dag::modes::view::windows::main;
 use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ComponentTree, UiAssemblyResult, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -61,10 +61,10 @@ impl ArtifactViewer for DagViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

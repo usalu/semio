@@ -259,7 +259,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `.declare_artifact(artifact())` call is the ONLY registration channel for this artifact.
 /// `definition()` (old `ArtifactDefinition`/capability rows) is KEPT per debt D1 — not deleted
 /// repo-wide until W6 — but has zero callers left from this file.
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::DagApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.dag.dag").expect("canonical dag kind"), localization: &[], standards: vec![crate::artifacts::dag::standards::v1::standard()] }
@@ -307,8 +307,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn dag_working_scene_is_owned_by_the_exact_snapshot_child() {
         let owned = dag_content_child_with_owner(Vec::new(), Vec::new());
-        let wire = serde_json::to_vec(&owned).expect("DAG child wire identity");
-        let reconstructed: DagContentChild = serde_json::from_slice(&wire).expect("DAG child wire roundtrip");
+        let wire = dsl::json::to_json_string(&owned);
+        let reconstructed: DagContentChild = dsl::json::from_json_str(&wire).expect("DAG child wire roundtrip");
         let observed = serde_json::json!({
             "ownedHasScene": owned.local_owner::<DagWorkingScene>().is_some(),
             "wireIdentityMatches": owned == reconstructed,

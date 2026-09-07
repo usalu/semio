@@ -807,7 +807,7 @@ impl ResidentLedgerRoot {
         let header = unsafe { pointer.as_ref() };
         if header.type_id != TypeId::of::<C>() { return Err(ResidentFault::Identity); }
         if (state.closing || unsafe { *header.closing.get() }) != closing { return Err(ResidentFault::Closed); }
-        header.aliases.fetch_update(Ordering::AcqRel, Ordering::Acquire, |count| count.checked_add(1)).map_err(|_| ResidentFault::Count)?;
+        header.aliases.try_update(Ordering::AcqRel, Ordering::Acquire, |count| count.checked_add(1)).map_err(|_| ResidentFault::Count)?;
         Ok(Some(ResidentConsumer { root: self, pointer: pointer.cast() }))
     }
 }
@@ -816,7 +816,7 @@ struct ErasedConsumer { pointer: NonNull<ConsumerHeader>, empty: unsafe fn(NonNu
 
 impl ErasedConsumer {
     fn new<C: Send + 'static>(source: &ResidentConsumer<'_, C>) -> Result<Self, ResidentFault> {
-        unsafe { source.pointer.as_ref().header.admissions.fetch_update(Ordering::AcqRel, Ordering::Acquire, |count| count.checked_add(1)).map_err(|_| ResidentFault::Count)?; }
+        unsafe { source.pointer.as_ref().header.admissions.try_update(Ordering::AcqRel, Ordering::Acquire, |count| count.checked_add(1)).map_err(|_| ResidentFault::Count)?; }
         Ok(Self { pointer: source.pointer.cast(), empty: empty_consumer::<C> })
     }
     fn matches<C>(&self, source: &ResidentConsumer<'_, C>) -> bool { self.pointer == source.pointer.cast() }
@@ -900,7 +900,7 @@ impl<'root> ResidentLedger<'root> {
         let node = unsafe { pointer.as_ref() };
         let fields = unsafe { &*node.fields.get() };
         if fields.claimed || !fields.consumer.as_ref().is_some_and(|held| held.matches(consumer)) { return Ok(None); }
-        node.aliases.fetch_update(Ordering::AcqRel, Ordering::Acquire, |count| count.checked_add(1)).map_err(|_| ResidentFault::Count)?;
+        node.aliases.try_update(Ordering::AcqRel, Ordering::Acquire, |count| count.checked_add(1)).map_err(|_| ResidentFault::Count)?;
         Ok(Some(ResidentAdmission { root: self.root, node: pointer, marker: PhantomData }))
     }
 
@@ -980,7 +980,7 @@ impl<'root, C: Send + 'static> ResidentAdmission<'root, C> {
         if record.type_id != TypeId::of::<S>() { return Err(ResidentFault::Identity); }
         if !record.initialized { return Ok(None); }
         let pointer = record.pointer.cast::<RecordNode<S>>();
-        unsafe { pointer.as_ref().aliases.fetch_update(Ordering::AcqRel, Ordering::Acquire, |count| count.checked_add(1)).map_err(|_| ResidentFault::Count)?; }
+        unsafe { pointer.as_ref().aliases.try_update(Ordering::AcqRel, Ordering::Acquire, |count| count.checked_add(1)).map_err(|_| ResidentFault::Count)?; }
         Ok(Some(ResidentRecord { root: self.root, pointer, consumer: consumer.pointer }))
     }
 }

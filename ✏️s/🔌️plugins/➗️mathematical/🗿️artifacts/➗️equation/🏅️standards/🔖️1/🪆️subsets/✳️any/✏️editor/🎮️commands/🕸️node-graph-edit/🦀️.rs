@@ -1,7 +1,7 @@
 //! 🕸️ 🕸️ Equation play app commands command — `node-graph-edit`.
 
 use crate::artifacts::equation::op::EquationMutation;
-use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::replace_graph::mutation::ReplaceGraph;
+use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
 use crate::artifacts::equation::{EquationEdge, EquationNode, EquationSnapshot};
 use crate::editor::equation::config::{EquationConfig, EquationConfigMutation};
 use pack::json::Value as JsonValue;
@@ -21,7 +21,7 @@ pub struct NodeGraphEdit {
 }
 
 pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
-    let edit_operations: Vec<JsonValue> = pack::json::parse(&payload.operations_json).ok().and_then(|value| value.as_array().map(<[JsonValue]>::to_vec)).unwrap_or_default();
+    let edit_operations: Vec<JsonValue> = pack::json::parse(&payload.operations_json).ok().and_then(|value| value.as_array().map(|values| values.to_vec())).unwrap_or_default();
     let mut graph = crate::artifacts::equation::equation_graph(doc.snapshot);
     let mut changed = false;
     for operation in edit_operations {

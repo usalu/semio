@@ -1678,6 +1678,8 @@ function FrameworkOsShellInner({
   /** 🗂️ Which session/plugin owns each exact document runtime, so equal document ids in different
    * spaces cannot share socket, bootstrap, presence or plugin-routing state. */
   const openDocumentSessionsRef = useRef<Map<string, { session: ActiveSession; plugin: PluginWasmHandle; documentId: string; scope?: DocumentScope }>>(new Map());
+  const browserActorUiByRuntimeKeyRef = useRef(new Map<string, { readonly activationGeneration: string; readonly verifiedSurfaceId: string; readonly sessionInstanceId: number; readonly windowKindId: string; readonly store: UiDocumentStore }>());
+  const [browserActorUiVersion, setBrowserActorUiVersion] = useState(0);
   const directoryScopedOwnersRef = useRef<Map<string, DocumentScope>>(new Map());
   const socketActorReadyRef = useRef<Map<string, { resolve(actorId: string): void; reject(error: Error): void }>>(new Map());
   const [bootstrapUiByDocument, setBootstrapUiByDocument] = useState<BootstrapUiState>({});
@@ -1722,6 +1724,30 @@ function FrameworkOsShellInner({
     }
     worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse | { readonly wire: Uint8Array }>) => {
       const message = "wire" in messageEvent.data ? decodeBackboneWorkerResponse(messageEvent.data.wire) : messageEvent.data;
+      if (message.kind === "browser-actor-ui-patch") {
+        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", spaceId: message.scope.spaceId, documentId: message.scope.documentId });
+        const entry = openDocumentSessionsRef.current.get(runtimeKey);
+        const expectedSurfaceId = entry?.scope !== undefined && entry.session.app.dialect ? canonicalSurfaceId(entry.session.app.dialect, entry.session.app.role) : null;
+        const windowKind = entry?.session.app.windowKinds.find((candidate) => candidate.id === message.patch.surface);
+        if (entry === undefined || entry.scope?.spaceId !== message.scope.spaceId || entry.scope.documentId !== message.scope.documentId || expectedSurfaceId !== message.verifiedSurfaceId || windowKind === undefined) return;
+        const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
+        if (retained !== undefined && (retained.activationGeneration !== message.activationGeneration || retained.verifiedSurfaceId !== message.verifiedSurfaceId || retained.sessionInstanceId !== entry.session.instanceId || retained.windowKindId !== windowKind.id)) return;
+        if (retained === undefined && message.patch.baseRevision !== 0) return;
+        const store = retained?.store ?? new UiDocumentStore(windowKind.id);
+        const applied = store.applyPatch(message.patch);
+        const revision = store.getRevisionSnapshot();
+        if (applied.ok) {
+          if (retained === undefined) {
+            browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { activationGeneration: message.activationGeneration, verifiedSurfaceId: message.verifiedSurfaceId, sessionInstanceId: entry.session.instanceId, windowKindId: windowKind.id, store });
+            setBrowserActorUiVersion((current) => current + 1);
+          }
+          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "acknowledged", revision }) });
+        } else {
+          const reason = applied.rejection.type;
+          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "rejected", revision, reason }) });
+        }
+        return;
+      }
       if (message.kind === "socket-actor") {
         const runtimeKey = scopeRuntimeKey(message);
         if (runtimeKey === null) return;
@@ -1768,6 +1794,7 @@ function FrameworkOsShellInner({
         const entry = openDocumentSessionsRef.current.get(key);
         if (entry?.plugin.detachBackbone) void entry.plugin.detachBackbone(entry.session.instanceId);
         openDocumentSessionsRef.current.delete(key);
+        if (browserActorUiByRuntimeKeyRef.current.delete(key)) setBrowserActorUiVersion((current) => current + 1);
         rebootstrapDiscardedSessionsRef.current.delete(key);
         setPresencePeersByRuntimeKey((current) => {
           if (!(key in current)) return current;
@@ -4059,6 +4086,7 @@ function FrameworkOsShellInner({
       const hubBinding = resolvedBindings.find((binding): binding is Extract<PersistenceBinding, { kind: "hub" }> => binding.kind === "hub");
       const scope: DocumentScope | undefined = hubBinding === undefined ? undefined : { spaceId: hubBinding.spaceId, documentId: ref.documentId };
       const runtimeKey = scope === undefined ? ref.documentId : documentRuntimeKeyV1({ kind: "hub", ...scope });
+      if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);
       openDocumentSessionsRef.current.set(runtimeKey, { session: targetSession, plugin, documentId: ref.documentId, ...(scope === undefined ? {} : { scope }) });
       // 🐚️ Registers THIS shell as the route for this document's outbound backbone bytes before the
       // plugin can possibly emit any (attachBackbone below) — see `relayPluginBackboneMessage`'s doc.
@@ -4115,6 +4143,7 @@ function FrameworkOsShellInner({
     }
     if (entry?.plugin.detachBackbone) void entry.plugin.detachBackbone(entry.session.instanceId);
     openDocumentSessionsRef.current.delete(runtimeKey);
+    if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);
     rebootstrapDiscardedSessionsRef.current.delete(runtimeKey);
     setPresencePeersByRuntimeKey((current) => {
       if (!(runtimeKey in current)) return current;
@@ -6085,6 +6114,10 @@ function FrameworkOsShellInner({
     return null;
   })();
   const currentDocumentId = currentDocumentRuntimeKey === null ? null : (openDocumentSessionsRef.current.get(currentDocumentRuntimeKey)?.documentId ?? null);
+  const currentBrowserActorUi = useMemo(
+    () => currentDocumentRuntimeKey === null ? undefined : browserActorUiByRuntimeKeyRef.current.get(currentDocumentRuntimeKey),
+    [browserActorUiVersion, currentDocumentRuntimeKey],
+  );
 
   // 👥️ Host-only normalized roster, keyed by the exact verified document runtime. It never enters a
   // plugin view-state payload, so an app cannot forge or persist Shell presence chrome.
@@ -7282,8 +7315,9 @@ function FrameworkOsShellInner({
         ];
       }
     }
-    if (Object.keys(windowUiByWindowId).length === 0) return [];
+    if (Object.keys(windowUiByWindowId).length === 0 && currentBrowserActorUi === undefined) return [];
     const baseWindows = session.app.windowKinds.map((kind) => {
+      const browserActorStore = currentBrowserActorUi?.sessionInstanceId === session.instanceId && currentBrowserActorUi.windowKindId === kind.id ? currentBrowserActorUi.store : undefined;
       const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay, uiTerminology, uiLocale);
       const chrome = windowMeasuresChrome(windowMeasuresByWindowId[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id] ?? undefined, kind.id, onActionStable);
       const resolvedEngagement = resolveWindowEngagement(kind, kind.id, windowEngagementsByWindowId);
@@ -7302,14 +7336,14 @@ function FrameworkOsShellInner({
         actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale),
         actionsFolded: actionsFoldedFor(kind.id, kind.id),
         onActionsFoldedChange: onActionsFoldedFor(kind.id),
-        status: windowUiByWindowId[kind.id]?.activity,
+        status: browserActorStore?.getState().root === null ? windowUiByWindowId[kind.id]?.activity : browserActorStore?.getState().nodes.get(browserActorStore.getState().root!)?.activity ?? windowUiByWindowId[kind.id]?.activity,
         skeleton: <WindowBodySkeleton />,
         children: (
           <ChromeAwareWindowScrollSurface id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(session.app, kind.id)}>
             <WindowInstanceIdContext.Provider value={kind.id}>
               <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                 {instanceFault ? <WindowFaultStatus fault={instanceFault} /> : null}
-                <InterpretedUiNode store={builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? pendingWindowUiNode())} onAction={onActionStable} onIntent={onIntentStable} />
+                <InterpretedUiNode store={browserActorStore ?? builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? pendingWindowUiNode())} onAction={onActionStable} onIntent={onIntentStable} />
               </ShellFaultBoundary>
             </WindowInstanceIdContext.Provider>
           </ChromeAwareWindowScrollSurface>
@@ -7370,6 +7404,7 @@ function FrameworkOsShellInner({
     actionPaneStagedArgsByKey,
     activeUtilityByWindowId,
     appLabelsOverlay,
+    currentBrowserActorUi,
     extraWindowInstances,
     introductionActionWindowSegment,
     introductionUtilityId,

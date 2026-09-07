@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative remove-palette-entry mutation.
-use crate::artifacts::bmp::schema::diff::{self, *};
+use crate::artifacts::bmp::schema::diff::*;
 use crate::artifacts::bmp::schema::mutations::BmpMutation;
 use crate::artifacts::bmp::schema::snapshot::*;
 
@@ -22,7 +22,7 @@ pub mod text;
 //#region Semantics
 impl protocol::MutationKind<BmpSnapshot, BmpMutation> for RemovePaletteEntryMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "palette-entry", kind: "remove-palette-entry", record: "RemovePaletteEntry" };
-    fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<BmpDiff> {
+    fn diff(&self, _base: &BmpSnapshot) -> protocol::MutationOutcome<BmpDiff> {
         let Self { index } = self;
         protocol::MutationOutcome::new(BmpDiff { palette: Some(BmpPaletteDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }), ..Default::default() })
     }

@@ -14,7 +14,7 @@ pub struct SetMainNamespace {
 impl protocol::MutationKind<PptxSnapshot, PptxTransitionalMutation> for SetMainNamespace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "main-namespace", kind: "set-main-namespace", record: "SetMainNamespace" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxTransitionalMutation as protocol::Mutation<PptxSnapshot>>::Diff> {
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxTransitionalMutation as Mutation<PptxSnapshot>>::Diff> {
         agg_diff(&PptxTransitionalMutation::SetMainNamespace(self.clone()), base)
     }
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxTransitionalMutation> {

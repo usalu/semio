@@ -1,8 +1,8 @@
 //! 🌱 `create-layer` — brings a new `RasterLayerNode` into existence at a tree address.
 
 pub mod mutation {
-use crate::artifacts::raster::diff::{diff_add_layer, RasterDiff};
-use crate::artifacts::raster::mutations::{delete_layer, RasterMutation};
+use crate::artifacts::raster::diff::RasterDiff;
+use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::schema::{find_layer, layer_node_id};
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
 

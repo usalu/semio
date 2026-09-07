@@ -524,9 +524,6 @@ impl Mesh3dOwner {
         true
     }
 
-    fn terminal_is_empty(&self) -> bool {
-        self.layout.total_bytes == 0 && self.pages.iter().all(Option::is_none)
-    }
 }
 
 enum Mesh3dSlotState {

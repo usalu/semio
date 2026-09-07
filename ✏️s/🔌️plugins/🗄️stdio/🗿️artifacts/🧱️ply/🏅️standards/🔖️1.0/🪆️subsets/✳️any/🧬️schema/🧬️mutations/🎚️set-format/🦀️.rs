@@ -14,7 +14,7 @@ pub struct SetFormat {
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for SetFormat {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "format", kind: "set-format", record: "SetFormat" };
 
-    fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as protocol::Mutation<PlySnapshot>>::Diff> {
+    fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
         agg_diff(&PlyMutation::SetFormat(self.clone()), base)
     }
     fn inverse(&self, base: &PlySnapshot) -> Vec<PlyMutation> {

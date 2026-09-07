@@ -15,7 +15,7 @@ pub struct InsertTileTags {
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for InsertTileTags {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "tile-tags", kind: "insert-tile-tags", record: "InsertTileTags" };
 
-    fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffBaselineMutation as protocol::Mutation<TiffSnapshot>>::Diff> {
+    fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffBaselineMutation as Mutation<TiffSnapshot>>::Diff> {
         agg_diff(&TiffBaselineMutation::InsertTileTags(self.clone()), base)
     }
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {

@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `DeletePrimitive`.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::{SemioMeshDiff, mesh_at};
+use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Diff

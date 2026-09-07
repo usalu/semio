@@ -27,7 +27,7 @@ fn fixture() -> serde_json::Value {
 
 fn open() -> ActorInstanceOpenRequest {
     let fixture = fixture();
-    <ActorInstanceOpenRequest as crate::dsl::FromValue>::from_value(crate::dsl::DslValue::from(&fixture["open"])).unwrap()
+    <ActorInstanceOpenRequest as dsl::FromValue>::from_value(dsl::DslValue::from(&fixture["open"])).unwrap()
 }
 
 fn captured() -> GuestLifecycleCell<Owner> {

@@ -25,7 +25,7 @@ use std::collections::BTreeMap;
 #[artifact_schema(id = "s.note.note")]
 pub struct NoteDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::note::schema::NoteArtifact>>,
+    pub artifact: Option<Box<NoteArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]
@@ -297,7 +297,7 @@ pub fn apply_blocks_delta(blocks: &[NoteBlockNode], delta: &NoteBlocksDelta) -> 
         if order.len() != next.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !next.iter().any(|block| block_id(block) == id)) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-order", "root block reorder must be a complete unique permutation").at(["reordered"]));
         }
-        let mut by_id: std::collections::BTreeMap<_, _> = next.into_iter().map(|block| (block_id(&block).to_string(), block)).collect();
+        let mut by_id: BTreeMap<_, _> = next.into_iter().map(|block| (block_id(&block).to_string(), block)).collect();
         let mut ordered = Vec::with_capacity(order.len());
         for id in order {
             ordered.push(by_id.remove(id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "reordered root block does not exist").at(["reordered".to_string(), id.clone()]))?);
@@ -311,7 +311,7 @@ pub fn apply_blocks_delta(blocks: &[NoteBlockNode], delta: &NoteBlocksDelta) -> 
     Ok(next)
 }
 
-fn apply_assets_delta(assets: &mut std::collections::BTreeMap<String, crate::artifacts::note::NoteImageAsset>, delta: &NoteAssetsDelta) -> protocol::MutationApplyResult<()> {
+fn apply_assets_delta(assets: &mut BTreeMap<String, NoteImageAsset>, delta: &NoteAssetsDelta) -> protocol::MutationApplyResult<()> {
     for (key, value) in &delta.entries {
         if value.is_none() && !assets.contains_key(key) {
             return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed asset does not exist").at([key.as_str()]));
@@ -463,15 +463,15 @@ pub fn note_block_removed_diff(ids: Vec<String>) -> NoteDiff {
 }
 
 /// 🖼️ Sparse single-key asset upsert — shared by `create-asset`/`replace-asset-payload`.
-pub fn note_asset_upsert_diff(key: &str, asset: &crate::artifacts::note::NoteImageAsset) -> NoteDiff {
-    let mut entries = std::collections::BTreeMap::new();
+pub fn note_asset_upsert_diff(key: &str, asset: &NoteImageAsset) -> NoteDiff {
+    let mut entries = BTreeMap::new();
     entries.insert(key.to_string(), Some(asset.clone()));
     NoteDiff { assets: Some(NoteAssetsDelta { entries }), ..Default::default() }
 }
 
 /// 🗑️ Sparse single-key asset removal — shared by `delete-asset`.
 pub fn note_asset_removed_diff(key: &str) -> NoteDiff {
-    let mut entries = std::collections::BTreeMap::new();
+    let mut entries = BTreeMap::new();
     entries.insert(key.to_string(), None);
     NoteDiff { assets: Some(NoteAssetsDelta { entries }), ..Default::default() }
 }

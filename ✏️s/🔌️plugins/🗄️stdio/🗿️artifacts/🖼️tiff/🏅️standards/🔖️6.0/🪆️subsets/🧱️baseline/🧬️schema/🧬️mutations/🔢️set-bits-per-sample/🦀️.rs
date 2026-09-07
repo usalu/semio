@@ -14,7 +14,7 @@ pub struct SetBitsPerSample {
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetBitsPerSample {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "bits-per-sample", kind: "set-bits-per-sample", record: "SetBitsPerSample" };
 
-    fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffBaselineMutation as protocol::Mutation<TiffSnapshot>>::Diff> {
+    fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffBaselineMutation as Mutation<TiffSnapshot>>::Diff> {
         agg_diff(&TiffBaselineMutation::SetBitsPerSample(self.clone()), base)
     }
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {

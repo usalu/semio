@@ -16,7 +16,7 @@ pub struct InsertArrayElement {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for InsertArrayElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "array-element", kind: "insert-array-element", record: "InsertArrayElement" };
 
-    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as protocol::Mutation<JsonSnapshot>>::Diff> {
+    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as Mutation<JsonSnapshot>>::Diff> {
         agg_diff(&JsonIJsonMutation::InsertArrayElement(self.clone()), base)
     }
     fn inverse(&self, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {

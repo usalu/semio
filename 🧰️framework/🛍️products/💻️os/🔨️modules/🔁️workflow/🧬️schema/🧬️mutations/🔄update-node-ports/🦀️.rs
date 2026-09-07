@@ -13,7 +13,7 @@ pub struct UpdateNodePorts {}
 impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for UpdateNodePorts {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "workflow", kind: "update-node-ports", record: "UpdatedWorkflowNodePorts" };
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> { protocol::MutationOutcome::new(WorkflowDiff::SyncNodePorts) }
-    fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> { Vec::new() }
+    fn inverse(&self, _base: &WorkflowSnapshot) -> Vec<WorkflowMutation> { Vec::new() }
     fn label(&self) -> String { "Update workflow node ports".into() }
     fn target(&self) -> Vec<String> { vec!["nodes".into()] }
 }

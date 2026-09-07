@@ -109,7 +109,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn engagement_submit_resolves_a_typed_token_into_a_real_command() {
-        use semio_framework_plugin::PluginApp;
+        
         let mut a = app_with_registry().await;
         let object_id = a.snapshot().expect("projection").objects[0].id.clone();
         select_face(&mut a, &object_id, 0).await;

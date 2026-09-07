@@ -3070,7 +3070,7 @@ pub mod viewer {
 mod plugin;
 pub use plugin::PuzzleApps;
 #[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::PuzzleApps);
+semio_framework_plugin::plugin_exports!(plugin::plugin, PuzzleApps);
 
 //#region 📚️Examples
 #[path = "."]

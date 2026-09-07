@@ -14,7 +14,7 @@ pub struct SetTopLevel {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for SetTopLevel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "top-level", kind: "set-top-level", record: "SetTopLevel" };
 
-    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as protocol::Mutation<JsonSnapshot>>::Diff> {
+    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as Mutation<JsonSnapshot>>::Diff> {
         agg_diff(&JsonIJsonMutation::SetTopLevel(self.clone()), base)
     }
     fn inverse(&self, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {

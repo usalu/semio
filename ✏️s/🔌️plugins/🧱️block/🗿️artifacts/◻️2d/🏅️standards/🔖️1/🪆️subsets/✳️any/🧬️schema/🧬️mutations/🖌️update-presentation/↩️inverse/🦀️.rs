@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `UpdatePresentation`.
 
-use crate::artifacts::block2d::{Block2dPresentation, Block2dSnapshot};
+use crate::artifacts::block2d::Block2dSnapshot;
 use crate::artifacts::block2d::mutations::Block2dMutation;
 
 //#region 🔖️Inverse

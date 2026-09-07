@@ -6,10 +6,10 @@ use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{Ca
 use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{collect_mesh_urls, object_mesh_data, object_scale_json, resolve_object_mesh_url};
 use crate::artifacts::cad::{CadPaneId, CadSnapshot, CadWorkingScene};
 use crate::editor::cad::config::CadDislocateOptions;
-use crate::editor::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition, preview_display_items};
+use crate::editor::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition};
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::terminology::CadLabels;
-use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayRuntime, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_INTERACTION_DOMAIN, CAD_PLAY_APP_ID};
+use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayRuntime, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_PLAY_APP_ID};
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::{
     mesh_from_kind, world3d_mesh_id_from_url, world3d_selection_json, ActionDescriptor, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, ModeDefinition, UiAssemblyResult, WindowEngagement, WindowEngagementInput,

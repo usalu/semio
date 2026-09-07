@@ -21,7 +21,7 @@ fn structured_guest_fault_survives_wit_owned_and_async_channels() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new(row["code"].as_str().unwrap()), "retained lifecycle fixture").with_retryable(row["retryable"].as_bool().unwrap());
-        let encoded = crate::dsl::encode_fault_bytes(&fault);
+        let encoded = dsl::encode_fault_bytes(&fault);
         let events: Vec<_> = row["events"].as_array().unwrap().iter().map(|kind| event(kind.as_str().unwrap())).collect();
         let expected = row["eligible"].as_bool().unwrap();
         let wit = decode_guest_plugin_error(wit_types::PluginError::Fault(encoded.clone()));

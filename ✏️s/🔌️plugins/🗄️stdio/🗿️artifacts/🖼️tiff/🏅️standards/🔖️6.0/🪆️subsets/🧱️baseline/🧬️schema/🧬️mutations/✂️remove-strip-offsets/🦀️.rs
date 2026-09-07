@@ -12,7 +12,7 @@ pub struct RemoveStripOffsets {}
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for RemoveStripOffsets {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "strip-offsets", kind: "remove-strip-offsets", record: "RemoveStripOffsets" };
 
-    fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffBaselineMutation as protocol::Mutation<TiffSnapshot>>::Diff> {
+    fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffBaselineMutation as Mutation<TiffSnapshot>>::Diff> {
         agg_diff(&TiffBaselineMutation::RemoveStripOffsets(self.clone()), base)
     }
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {

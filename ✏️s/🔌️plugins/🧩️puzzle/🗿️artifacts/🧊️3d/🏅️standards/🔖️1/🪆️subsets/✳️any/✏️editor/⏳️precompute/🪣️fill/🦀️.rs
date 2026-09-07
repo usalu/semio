@@ -1257,8 +1257,8 @@ impl FillDslOwnerCensusCursor {
             self.phase[self.depth] = 1;
             let bytes = match value {
                 dsl::DslValue::String(value) => value.capacity(),
-                dsl::DslValue::Array(values) => values.capacity().checked_mul(std::mem::size_of::<dsl::DslValue>()).ok_or(())?,
-                dsl::DslValue::Object(values) => values.capacity().checked_mul(std::mem::size_of::<(String, dsl::DslValue)>()).ok_or(())?,
+                dsl::DslValue::Array(values) => values.capacity().checked_mul(size_of::<dsl::DslValue>()).ok_or(())?,
+                dsl::DslValue::Object(values) => values.capacity().checked_mul(size_of::<(String, dsl::DslValue)>()).ok_or(())?,
                 _ => 0,
             };
             if bytes > FILL_BUILDER_OWNER_PAGE_BYTES {
@@ -1334,7 +1334,7 @@ fn fill_owner_strings<const N: usize>(values: [Option<&String>; N]) -> Option<Fi
 }
 
 fn fill_owner_vec<T>(capacity: usize) -> Option<FillBuilderOwnerCredit> {
-    let bytes = capacity.checked_mul(std::mem::size_of::<T>())?;
+    let bytes = capacity.checked_mul(size_of::<T>())?;
     (capacity <= FILL_BUILDER_NESTED_ITEMS && bytes <= FILL_BUILDER_OWNER_PAGE_BYTES).then_some(FillBuilderOwnerCredit { items: usize::from(bytes != 0), bytes })
 }
 
@@ -1416,7 +1416,7 @@ impl FillBuilderOwnerCensusCursor {
             0 => {
                 if self.section == 0 {
                     self.section = 1;
-                    return FillOwnerCensusUnit::Credit(FillBuilderOwnerCredit { items: 1, bytes: std::mem::size_of::<FillBuilder>() });
+                    return FillOwnerCensusUnit::Credit(FillBuilderOwnerCredit { items: 1, bytes: size_of::<FillBuilder>() });
                 }
                 if self.index < FILL_BUILDER_STD_COLLECTIONS {
                     let Some(credit) = fill_collection_backing_credit(fill, self.index) else { return FillOwnerCensusUnit::Rejected };
@@ -1481,7 +1481,7 @@ impl FillBuilderOwnerCensusCursor {
         Some(unit)
     }
 
-    fn world_volume_unit(&mut self, value: &crate::artifacts::puzzle3d::schema::WorldVolumeProps, root: FillDslOwnerRoot) -> Option<FillOwnerCensusUnit> {
+    fn world_volume_unit(&mut self, value: &WorldVolumeProps, root: FillDslOwnerRoot) -> Option<FillOwnerCensusUnit> {
         match self.phase {
             0 => {
                 self.phase = 1;
@@ -2226,15 +2226,15 @@ enum FillRetiredOwner {
     String(String),
     FixtureObject(FixtureObject),
     Attraction(AttractionProps),
-    WorldVolume(crate::artifacts::puzzle3d::schema::WorldVolumeProps),
+    WorldVolume(WorldVolumeProps),
     Payload(BrushPlacePayload),
     Placed(PlacedCollisionEntry),
     Candidate(BrushCompatibleCandidate),
     Target(BrushFillVortexTarget),
     PreviewState(BrushPreviewState),
-    ObjectKind(crate::artifacts::puzzle3d::schema::ObjectKind),
-    VortexKind(crate::artifacts::puzzle3d::schema::VortexKindCatalog),
-    CableKind(crate::artifacts::puzzle3d::schema::CableKindCatalog),
+    ObjectKind(ObjectKind),
+    VortexKind(VortexKindCatalog),
+    CableKind(CableKindCatalog),
     Compat(KindCompatEntry),
     CandidateCache(String, Vec<BrushCompatibleCandidate>),
     CandidateMap(String, BrushCompatibleCandidate),
@@ -2336,7 +2336,7 @@ fn retire_attraction(value: &mut AttractionProps) -> bool {
     retire_string(&mut value.id) && retire_string(&mut value.attracting) && retire_string(&mut value.attracted)
 }
 
-fn retire_world_volume(value: &mut crate::artifacts::puzzle3d::schema::WorldVolumeProps) -> bool {
+fn retire_world_volume(value: &mut WorldVolumeProps) -> bool {
     retire_string(&mut value.id) && retire_option_dsl(&mut value.scale)
 }
 
@@ -2379,7 +2379,7 @@ fn retire_fill_preview(value: &mut FillBuildPreview) -> bool {
     true
 }
 
-fn retire_object_kind(value: &mut crate::artifacts::puzzle3d::schema::ObjectKind) -> bool {
+fn retire_object_kind(value: &mut ObjectKind) -> bool {
     if !retire_string(&mut value.id) || !retire_option_dsl(&mut value.scale) {
         return false;
     }

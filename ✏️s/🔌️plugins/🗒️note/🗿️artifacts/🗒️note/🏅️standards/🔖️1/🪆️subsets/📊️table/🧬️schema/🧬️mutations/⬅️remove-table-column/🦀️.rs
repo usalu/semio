@@ -1,8 +1,7 @@
 //! ⬅️ Note mutation — `RemoveTableColumn`: removes a table block's last column (a table always keeps at least one column).
 
 use crate::artifacts::note::{NoteDiff, NoteSnapshot};
-use crate::artifacts::note::schema::diff::note_block_patch_diff;
-use crate::artifacts::note::schema::mutations::{InsertTableColumn, NoteMutation};
+use crate::artifacts::note::schema::mutations::NoteMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};

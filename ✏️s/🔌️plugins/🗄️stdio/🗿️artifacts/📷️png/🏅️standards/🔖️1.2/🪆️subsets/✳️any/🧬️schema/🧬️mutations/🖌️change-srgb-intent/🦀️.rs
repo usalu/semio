@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative change-srgb-intent mutation.
-use crate::artifacts::png::schema::diff::{self, *};
+use crate::artifacts::png::schema::diff::*;
 use crate::artifacts::png::schema::mutations::PngMutation;
 use crate::artifacts::png::schema::snapshot::*;
 
@@ -27,12 +27,11 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeSrgbIntentMutati
         protocol::MutationOutcome::new(contribute(base, *srgb))
     }
     fn inverse(&self, base: &PngSnapshot) -> Vec<PngMutation> {
-        let Self { srgb } = self;
         let outcome = <Self as protocol::MutationKind<PngSnapshot, PngMutation>>::diff(self, base);
         if <PngDiff as protocol::DiffAlgebra<PngSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
-        vec![PngMutation::ChangeSrgbIntent(crate::artifacts::png::schema::mutations::ChangeSrgbIntentMutation { srgb: base.srgb })]
+        vec![PngMutation::ChangeSrgbIntent(ChangeSrgbIntentMutation { srgb: base.srgb })]
     }
     fn label(&self) -> String {
         "change srgb intent".into()

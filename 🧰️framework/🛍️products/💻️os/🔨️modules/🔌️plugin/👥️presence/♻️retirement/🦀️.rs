@@ -4,20 +4,20 @@ use crate::store::{Mutation, PresenceStore, PresenceStoreRetirement, SnapshotRet
 use crate::{ArtifactOwnedDisposer, Fault, PluginCloseStep};
 use std::sync::{Arc, Weak};
 
-const _: () = assert!(std::mem::size_of::<crate::NoPresence>() == 0 && !std::mem::needs_drop::<crate::NoPresence>());
+const _: () = assert!(size_of::<crate::NoPresence>() == 0 && !std::mem::needs_drop::<crate::NoPresence>());
 
 /// 🫧️ Explicit ownership for the framework's zero-payload presence type only.
 pub struct NoPresenceRetirementFactory;
 
-impl crate::store::SnapshotRetirementFactory<crate::NoPresence> for NoPresenceRetirementFactory {
-    fn retire(&self, root: Arc<crate::NoPresence>) -> Box<dyn crate::store::ErasedSnapshotRetirement> {
+impl store::SnapshotRetirementFactory<crate::NoPresence> for NoPresenceRetirementFactory {
+    fn retire(&self, root: Arc<crate::NoPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(NoPresenceRetirement(std::mem::ManuallyDrop::new(Some(root))))
     }
 }
 
 struct NoPresenceRetirement(std::mem::ManuallyDrop<Option<Arc<crate::NoPresence>>>);
 
-impl crate::store::ErasedSnapshotRetirement for NoPresenceRetirement {
+impl store::ErasedSnapshotRetirement for NoPresenceRetirement {
     fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
         if self.0.is_none() {
             return Ok(SnapshotRetirementStep::Complete);

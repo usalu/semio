@@ -21,7 +21,7 @@ pub struct TruncateAt {
 impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for TruncateAt {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "trailing-bytes", kind: "truncate-at", record: "TruncateAt" };
 
-    fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<<BinaryMutation as protocol::Mutation<BinarySnapshot>>::Diff> {
+    fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<<BinaryMutation as Mutation<BinarySnapshot>>::Diff> {
         agg_diff(&BinaryMutation::TruncateAt(self.clone()), base)
     }
     fn inverse(&self, base: &BinarySnapshot) -> Vec<BinaryMutation> {

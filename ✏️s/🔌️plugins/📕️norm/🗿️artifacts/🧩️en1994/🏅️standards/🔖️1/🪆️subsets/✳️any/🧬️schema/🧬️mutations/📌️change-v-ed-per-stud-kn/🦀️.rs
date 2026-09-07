@@ -1,7 +1,7 @@
 //! 🔨 `change-v-ed-per-stud-kn` — sets the En 1994 design shear force per stud V_Ed [kN] scalar.
 
 
-use crate::artifacts::en1994::{En1994Diff, En1994Mutation, En1994Snapshot};
+use crate::artifacts::en1994::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

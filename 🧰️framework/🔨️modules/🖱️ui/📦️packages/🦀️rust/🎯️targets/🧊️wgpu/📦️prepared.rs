@@ -951,7 +951,7 @@ impl PreparedRasterReservation {
         Ok(Self { key, credit: Some(credit), claim: None, source_bytes, source_peak_bytes })
     }
 
-    pub fn reject(mut self, fault: &'static str, source: Vec<u8>) -> PreparedRasterRejected {
+    pub fn reject(self, fault: &'static str, source: Vec<u8>) -> PreparedRasterRejected {
         self.reject_with_retained(fault, source, Vec::new())
     }
 
@@ -959,7 +959,7 @@ impl PreparedRasterReservation {
         PreparedRasterRejected { fault, key: std::mem::take(&mut self.key), source, retained_source, credit: self.credit.take(), source_released: false, retained_source_released: false, key_released: false }
     }
 
-    pub fn claim(mut self, width: u32, height: u32) -> Result<Self, PreparedRasterRejected> {
+    pub fn claim(self, width: u32, height: u32) -> Result<Self, PreparedRasterRejected> {
         self.claim_with_retained(width, height, Vec::new()).map(|(reservation, _)| reservation)
     }
 
@@ -1491,6 +1491,7 @@ pub struct PreparedRenderPacket {
 }
 
 impl PreparedRenderPacket {
+    #[cfg(test)]
     const RETIRE_PAGE_BYTES: usize = 16 * 1024;
 
     pub fn scene_revision(&self) -> u64 {

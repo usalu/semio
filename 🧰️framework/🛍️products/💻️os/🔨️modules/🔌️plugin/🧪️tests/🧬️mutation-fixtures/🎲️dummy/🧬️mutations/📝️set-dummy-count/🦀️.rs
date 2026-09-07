@@ -14,12 +14,12 @@ impl SetDummyCount {
     const TAG: u8 = 0x61;
 }
 impl OpText for SetDummyCount {
-    fn parse_op(line: &str) -> Result<Self, crate::store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let value = line
             .strip_prefix("set-dummy-count ")
-            .ok_or_else(|| crate::store::TextError::new("expected set-dummy-count", crate::store::TextSpan::at(1, 1)))?
+            .ok_or_else(|| store::TextError::new("expected set-dummy-count", store::TextSpan::at(1, 1)))?
             .parse()
-            .map_err(|_| crate::store::TextError::new("dummy count must be i32", crate::store::TextSpan::at(1, 1)))?;
+            .map_err(|_| store::TextError::new("dummy count must be i32", store::TextSpan::at(1, 1)))?;
         Ok(Self { value })
     }
     fn print_op(&self) -> String {

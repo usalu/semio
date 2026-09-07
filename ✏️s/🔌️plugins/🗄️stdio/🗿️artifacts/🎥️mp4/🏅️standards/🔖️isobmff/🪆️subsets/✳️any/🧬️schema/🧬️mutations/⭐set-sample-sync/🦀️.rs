@@ -16,7 +16,7 @@ pub struct SetSampleSync {
 
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetSampleSync {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sample-sync", kind: "set-sample-sync", record: "SetSampleSync" };
-    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::Diff> {
+    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
         agg_diff(&Mp4Mutation::SetSampleSync(self.clone()), base)
     }
     fn inverse(&self, base: &Mp4Snapshot) -> Vec<Mp4Mutation> {

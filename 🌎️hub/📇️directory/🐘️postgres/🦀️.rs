@@ -14,15 +14,16 @@ use crate::artifact_authority::chunk_cas::{decode_artifact_cas_ownership_v1, enc
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{
-    active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire,
-    directory_command_result_kind_from_str, directory_command_result_kind_str, same_admin_operation_request, validate_admin_operation_audit, validate_bounded_auth_text, validate_checkpoint_publication_claim, validate_checkpoint_publication_completion,
-    validate_directory_command_claim, validate_verified_checkpoint_append, verify_invite_redemption_event, visibility_to_str, ArtifactCasSweepCandidatePage, HubClock, HubDirectory,
-    InviteCapability,
-    InviteRedemptionPreflight, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability,
-    ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, UNCONTROLLED_PROJECTION_REBUILD,
+    active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, directory_command_result_kind_from_str, directory_command_result_kind_str, directory_projection_rejection_v1, directory_projection_space_v1,
+    invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request, validate_admin_operation_audit, validate_bounded_auth_text,
+    validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim, validate_verified_checkpoint_append, verify_invite_redemption_event, verify_invite_redemption_scope_hint, visibility_to_str,
+    ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1, HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent,
+    ProjectionRebuildControl, SessionCapability, ShareCapability, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES,
+    UNCONTROLLED_PROJECTION_REBUILD,
 };
 use directory::os_directory::{
-    validate_directory_event_page_event, ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, Hlc, PublishedArtifactCheckpoint,
+    validate_directory_event_page_event, ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility,
+    DocumentDescriptor, Hlc, PublishedArtifactCheckpoint,
 };
 use directory::os_identity::time_ordered_id;
 use directory::{DslValue, FromValue, ToValue};
@@ -619,10 +620,20 @@ impl PostgresDirectory {
     }
 
     //#region 🔖️Projections
-    /// @emoji 🧮️ The only place `hub_user`/`hub_space`/`hub_space_membership` rows are written —
-    /// see the sqlite backend's twin for the full rationale (unconditional: `decide` already
-    /// enforced every law before this event existed).
+    /// 🏛️ Reads projection authority after the PostgreSQL directory-head writer lock.
+    async fn projection_rejection(&self, tx: &mut sqlx_core::transaction::Transaction<'_, sqlx_postgres::Postgres>, body: &DirectoryEventBody) -> DirectoryResult<Option<DirectoryProjectionRejectionV1>> {
+        let Some(space_id) = directory_projection_space_v1(body) else {
+            return Ok(None);
+        };
+        let kind: Option<(String,)> = sqlx_core::query_as::query_as("SELECT kind FROM hub_space WHERE id = $1").bind(space_id).fetch_optional(&mut **tx).await.map_err(backend)?;
+        Ok(directory_projection_rejection_v1(body, kind.as_ref().map(|row| row.0.as_str())))
+    }
+
+    /// 🧮️ Applies one event and enforces intrinsic archive authority in the same transaction.
     async fn project(&self, tx: &mut sqlx_core::transaction::Transaction<'_, sqlx_postgres::Postgres>, event: &DirectoryEvent) -> DirectoryResult<()> {
+        if let Some(reason) = self.projection_rejection(tx, &event.body).await? {
+            return Err(reason.into_error());
+        }
         match &event.body {
             DirectoryEventBody::UserCreated { user_id, email, display_name } => {
                 sqlx_core::query::query("INSERT INTO hub_user (id, email, display_name, created_at) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO NOTHING")
@@ -654,6 +665,7 @@ impl PostgresDirectory {
             }
             DirectoryEventBody::SpaceArchived { space_id } => {
                 sqlx_core::query::query("UPDATE hub_space SET kind = 'archive' WHERE id = $1").bind(space_id).execute(&mut **tx).await.map_err(backend)?;
+                sqlx_core::query::query("UPDATE hub_space_membership SET role = 'spectator' WHERE space_id = $1 AND role = 'author'").bind(space_id).execute(&mut **tx).await.map_err(backend)?;
             }
             DirectoryEventBody::SpaceDeleted { space_id } => {
                 sqlx_core::query::query("DELETE FROM hub_share_grant WHERE space_id = $1").bind(space_id).execute(&mut **tx).await.map_err(backend)?;
@@ -1024,9 +1036,7 @@ impl HubDirectory for PostgresDirectory {
         .await
         .map_err(backend)?;
         rows.into_iter()
-            .map(|(user_id, email, display_name, role)| {
-                SpaceRole::parse(&role).map(|role| SpaceAdministrationMemberRow { user_id, email, display_name, role }).ok_or_else(|| DirectoryError::Backend("stored member role is invalid".into()))
-            })
+            .map(|(user_id, email, display_name, role)| SpaceRole::parse(&role).map(|role| SpaceAdministrationMemberRow { user_id, email, display_name, role }).ok_or_else(|| DirectoryError::Backend("stored member role is invalid".into())))
             .collect()
     }
 
@@ -1280,13 +1290,18 @@ impl HubDirectory for PostgresDirectory {
         directory_command_receipt_from_row(row.ok_or_else(|| DirectoryError::Conflict("directory command receipt claim is not pending".into()))?)
     }
 
-    async fn release_directory_command_receipt(&self, actor_user_id: &str, request_id: &str) -> DirectoryResult<()> {
-        sqlx_core::query::query("DELETE FROM hub_directory_command_receipt WHERE actor_user_id = $1 AND request_id = $2 AND disposition = 'pending'")
+    async fn release_directory_command_receipt(&self, actor_user_id: &str, request_id: &str, command_sha256: &str) -> DirectoryResult<()> {
+        let changed = sqlx_core::query::query("DELETE FROM hub_directory_command_receipt WHERE actor_user_id = $1 AND request_id = $2 AND command_sha256 = $3 AND disposition = 'pending'")
             .bind(actor_user_id)
             .bind(request_id)
+            .bind(command_sha256)
             .execute(&self.pool)
             .await
-            .map_err(backend)?;
+            .map_err(backend)?
+            .rows_affected();
+        if changed != 1 {
+            return Err(DirectoryError::Conflict("exact pending directory command receipt is not owned".into()));
+        }
         Ok(())
     }
 
@@ -1306,16 +1321,14 @@ impl HubDirectory for PostgresDirectory {
             tx.rollback().await.map_err(backend)?;
             return Ok(if record.command_sha256 == claim.command_sha256 { CheckpointPublicationClaimV1::Existing(record) } else { CheckpointPublicationClaimV1::Conflict });
         }
-        sqlx_core::query::query(
-            "INSERT INTO hub_checkpoint_publication_receipt(actor_user_id, correlation_id, command_sha256, disposition, checkpoint_id, claimed_at, completed_at) VALUES ($1,$2,$3,'pending',NULL,$4,NULL)",
-        )
-        .bind(&claim.actor_user_id)
-        .bind(&claim.correlation_id)
-        .bind(&claim.command_sha256)
-        .bind(claim.claimed_at)
-        .execute(&mut *tx)
-        .await
-        .map_err(backend)?;
+        sqlx_core::query::query("INSERT INTO hub_checkpoint_publication_receipt(actor_user_id, correlation_id, command_sha256, disposition, checkpoint_id, claimed_at, completed_at) VALUES ($1,$2,$3,'pending',NULL,$4,NULL)")
+            .bind(&claim.actor_user_id)
+            .bind(&claim.correlation_id)
+            .bind(&claim.command_sha256)
+            .bind(claim.claimed_at)
+            .execute(&mut *tx)
+            .await
+            .map_err(backend)?;
         tx.commit().await.map_err(backend)?;
         Ok(CheckpointPublicationClaimV1::Claimed(CheckpointPublicationReceiptRecordV1 {
             actor_user_id: claim.actor_user_id.clone(),
@@ -1329,15 +1342,13 @@ impl HubDirectory for PostgresDirectory {
     }
 
     async fn release_checkpoint_publication(&self, actor_user_id: &str, correlation_id: &str, command_sha256: &str) -> DirectoryResult<()> {
-        sqlx_core::query::query(
-            "DELETE FROM hub_checkpoint_publication_receipt WHERE actor_user_id = $1 AND correlation_id = $2 AND command_sha256 = $3 AND disposition = 'pending'",
-        )
-        .bind(actor_user_id)
-        .bind(correlation_id)
-        .bind(command_sha256)
-        .execute(&self.pool)
-        .await
-        .map_err(backend)?;
+        sqlx_core::query::query("DELETE FROM hub_checkpoint_publication_receipt WHERE actor_user_id = $1 AND correlation_id = $2 AND command_sha256 = $3 AND disposition = 'pending'")
+            .bind(actor_user_id)
+            .bind(correlation_id)
+            .bind(command_sha256)
+            .execute(&self.pool)
+            .await
+            .map_err(backend)?;
         Ok(())
     }
 
@@ -1460,41 +1471,50 @@ impl HubDirectory for PostgresDirectory {
         let issued = prepare_invite(space_id, role, ttl_secs, now_ms())?;
         let audit = auth_audit(issued.record.created_at, "invite-issued", Some(&issued.record.id), None, actor_user_id, None, "success", None, correlation_id, "server")?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
-        sqlx_core::query::query("INSERT INTO hub_space_invite (id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id) VALUES ($1, $2, $3, $4, $5, $6, $7, NULL, NULL, NULL, NULL)")
-            .bind(&issued.record.id)
-            .bind(&issued.record.selector)
-            .bind(issued.record.secret_digest.as_slice())
-            .bind(space_id)
-            .bind(role.as_str())
-            .bind(issued.record.created_at)
-            .bind(issued.record.expires_at)
-            .execute(&mut *tx)
-            .await
-            .map_err(backend)?;
+        sqlx_core::query::query(
+            "INSERT INTO hub_space_invite (id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id) VALUES ($1, $2, $3, $4, $5, $6, $7, NULL, NULL, NULL, NULL)",
+        )
+        .bind(&issued.record.id)
+        .bind(&issued.record.selector)
+        .bind(issued.record.secret_digest.as_slice())
+        .bind(space_id)
+        .bind(role.as_str())
+        .bind(issued.record.created_at)
+        .bind(issued.record.expires_at)
+        .execute(&mut *tx)
+        .await
+        .map_err(backend)?;
         insert_auth_audit(&mut tx, &audit).await?;
         tx.commit().await.map_err(backend)?;
         Ok(issued)
+    }
+
+    async fn invite_redemption_scope_hint(&self, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str) -> DirectoryResult<InviteRedemptionScopeHintV1> {
+        let row: Option<InviteRow> = sqlx_core::query_as::query_as(
+            "SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id FROM hub_space_invite WHERE selector = $1 AND EXISTS(SELECT 1 FROM hub_space WHERE id = hub_space_invite.space_id) AND EXISTS(SELECT 1 FROM hub_user WHERE id = $2)",
+        ).bind(capability.selector()).bind(user_id).fetch_optional(&self.pool).await.map_err(backend)?;
+        let record = row.map(invite_from_row).transpose()?;
+        verify_invite_redemption_scope_hint(record.as_ref(), capability, actor, user_id)
     }
 
     async fn redeem_invite_atomic(&self, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str, hlc: Hlc) -> DirectoryResult<InviteRedemptionCommit> {
         let mut tx = self.pool.begin().await.map_err(backend)?;
         let _: (i64,) = sqlx_core::query_as::query_as("SELECT seq FROM hub_directory_event_head WHERE singleton FOR UPDATE").fetch_one(&mut *tx).await.map_err(backend)?;
         let accepted_at_ms = now_ms();
-        let row: Option<InviteRow> = sqlx_core::query_as::query_as("SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id FROM hub_space_invite WHERE selector = $1 FOR UPDATE")
-            .bind(capability.selector())
-            .fetch_optional(&mut *tx)
-            .await
-            .map_err(backend)?;
+        let row: Option<InviteRow> =
+            sqlx_core::query_as::query_as("SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id FROM hub_space_invite WHERE selector = $1 FOR UPDATE")
+                .bind(capability.selector())
+                .fetch_optional(&mut *tx)
+                .await
+                .map_err(backend)?;
         let record = row.map(invite_from_row).transpose()?;
         let (user_exists,): (bool,) = sqlx_core::query_as::query_as("SELECT EXISTS(SELECT 1 FROM hub_user WHERE id = $1)").bind(user_id).fetch_one(&mut *tx).await.map_err(backend)?;
-        let space_exists = match record.as_ref() {
-            Some(invite) => {
-                let row: (bool,) = sqlx_core::query_as::query_as("SELECT EXISTS(SELECT 1 FROM hub_space WHERE id = $1)").bind(&invite.space_id).fetch_one(&mut *tx).await.map_err(backend)?;
-                row.0
-            }
-            None => false,
+        let space_kind: Option<(String,)> = match record.as_ref() {
+            Some(invite) => sqlx_core::query_as::query_as("SELECT kind FROM hub_space WHERE id = $1").bind(&invite.space_id).fetch_optional(&mut *tx).await.map_err(backend)?,
+            None => None,
         };
-        let preflight = invite_redemption_preflight(record.as_ref(), capability, actor, user_id, user_exists, space_exists, accepted_at_ms);
+        let space_state = InviteRedemptionSpaceStateV1::from_kind(space_kind.as_ref().map(|row| row.0.as_str()))?;
+        let preflight = invite_redemption_preflight(record.as_ref(), capability, actor, user_id, user_exists, space_state, accepted_at_ms);
         match preflight {
             InviteRedemptionPreflight::AlreadyCommitted => {
                 let invite = record.as_ref().expect("committed preflight requires a record");
@@ -1547,36 +1567,41 @@ impl HubDirectory for PostgresDirectory {
             recorded_at_ms: accepted_at_ms,
         };
         validate_directory_event_page_event(&persisted).map_err(|_| DirectoryError::Conflict("directory event violates the bounded event-page contract".into()))?;
-        sqlx_core::query::query(
-            "INSERT INTO hub_directory_event (seq, id, hlc_physical, hlc_logical, actor_kind, actor_id, space_id, user_id, kind, payload, recorded_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)",
-        )
-        .bind(sequence)
-        .bind(&id)
-        .bind(event.hlc.physical_ms)
-        .bind(i64::from(event.hlc.logical))
-        .bind(actor_kind_to_str(event.actor.kind))
-        .bind(&event.actor.id)
-        .bind(&event.space_id)
-        .bind(&event.user_id)
-        .bind(kind)
-        .bind(&payload_value)
-        .bind(accepted_at_ms)
-        .execute(&mut *tx)
-        .await
-        .map_err(backend)?;
+        sqlx_core::query::query("INSERT INTO hub_directory_event (seq, id, hlc_physical, hlc_logical, actor_kind, actor_id, space_id, user_id, kind, payload, recorded_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)")
+            .bind(sequence)
+            .bind(&id)
+            .bind(event.hlc.physical_ms)
+            .bind(i64::from(event.hlc.logical))
+            .bind(actor_kind_to_str(event.actor.kind))
+            .bind(&event.actor.id)
+            .bind(&event.space_id)
+            .bind(&event.user_id)
+            .bind(kind)
+            .bind(&payload_value)
+            .bind(accepted_at_ms)
+            .execute(&mut *tx)
+            .await
+            .map_err(backend)?;
         self.project(&mut tx, &persisted).await?;
         tx.commit().await.map_err(backend)?;
         Ok(InviteRedemptionCommit::NewlyCommitted { event: persisted })
     }
 
-    async fn revoke_invite_as(&self, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
+    async fn revoke_invite_as(&self, space_id: &str, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
         validate_bounded_auth_text(reason, "invite revoke reason", AUTH_TEXT_MAX_BYTES)?;
         let revoked_at = now_ms();
         let audit = auth_audit(revoked_at, "invite-revoked", Some(invite_id), None, actor_user_id, None, "success", Some(reason), correlation_id, "server")?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
-        let result = sqlx_core::query::query("UPDATE hub_space_invite SET revoked_at = $2, revoked_reason = $3 WHERE id = $1 AND revoked_at IS NULL AND accepted_at IS NULL").bind(invite_id).bind(revoked_at).bind(reason).execute(&mut *tx).await.map_err(backend)?;
+        let result = sqlx_core::query::query("UPDATE hub_space_invite SET revoked_at = $2, revoked_reason = $3 WHERE space_id = $4 AND id = $1 AND revoked_at IS NULL AND accepted_at IS NULL")
+            .bind(invite_id)
+            .bind(revoked_at)
+            .bind(reason)
+            .bind(space_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(backend)?;
         if result.rows_affected() == 0 {
-            let accepted: Option<(Option<i64>,)> = sqlx_core::query_as::query_as("SELECT accepted_at FROM hub_space_invite WHERE id = $1").bind(invite_id).fetch_optional(&mut *tx).await.map_err(backend)?;
+            let accepted: Option<(Option<i64>,)> = sqlx_core::query_as::query_as("SELECT accepted_at FROM hub_space_invite WHERE space_id = $2 AND id = $1").bind(invite_id).bind(space_id).fetch_optional(&mut *tx).await.map_err(backend)?;
             return if accepted.and_then(|row| row.0).is_some() { Err(DirectoryError::Conflict("invite already accepted".into())) } else { Err(DirectoryError::NotFound(format!("invite {invite_id}"))) };
         }
         insert_auth_audit(&mut tx, &audit).await?;
@@ -1864,7 +1889,8 @@ impl HubDirectory for PostgresDirectory {
         let payload_value = serde_json::Value::from(&event.body.to_value());
         let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default();
         let (event_seq,): (i64,) = sqlx_core::query_as::query_as("UPDATE hub_directory_event_head SET seq = seq + 1 WHERE singleton RETURNING seq").fetch_one(&mut *tx).await.map_err(backend)?;
-        let full = DirectoryEvent { seq: u64::try_from(event_seq).map_err(backend)?, id: id.clone(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms };
+        let full =
+            DirectoryEvent { seq: u64::try_from(event_seq).map_err(backend)?, id: id.clone(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms };
         validate_directory_event_page_event(&full).map_err(|_| DirectoryError::Conflict("directory event violates the bounded event-page contract".into()))?;
         sqlx_core::query::query("INSERT INTO hub_directory_event(seq, id, hlc_physical, hlc_logical, actor_kind, actor_id, space_id, user_id, kind, payload, recorded_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)")
             .bind(event_seq)
@@ -2087,7 +2113,7 @@ impl HubDirectory for PostgresDirectory {
     }
 
     //#region EventLog
-    async fn append_events(&self, events: &[NewDirectoryEvent]) -> DirectoryResult<Vec<DirectoryEvent>> {
+    async fn append_decided_events(&self, events: &[NewDirectoryEvent]) -> DirectoryResult<DirectoryAppendOutcomeV1> {
         if events.iter().any(|event| matches!(&event.body, DirectoryEventBody::ArtifactCheckpointPublished { .. } | DirectoryEventBody::InviteRedeemed { .. })) {
             return Err(DirectoryError::Conflict("event requires its verified authority append seam".into()));
         }
@@ -2099,7 +2125,13 @@ impl HubDirectory for PostgresDirectory {
             let payload_value = serde_json::Value::from(&event.body.to_value());
             let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
             let row: (i64,) = sqlx_core::query_as::query_as("UPDATE hub_directory_event_head SET seq = seq + 1 WHERE singleton RETURNING seq").fetch_one(&mut *tx).await.map_err(backend)?;
-            let full = DirectoryEvent { seq: u64::try_from(row.0).map_err(backend)?, id: id.clone(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms };
+            if let Some(reason) = self.projection_rejection(&mut tx, &event.body).await? {
+                tx.rollback().await.map_err(backend)?;
+                return Ok(DirectoryAppendOutcomeV1::RejectedBeforeCommit(reason));
+            }
+
+            let full =
+                DirectoryEvent { seq: u64::try_from(row.0).map_err(backend)?, id: id.clone(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms };
             validate_directory_event_page_event(&full).map_err(|_| DirectoryError::Conflict("directory event violates the bounded event-page contract".into()))?;
             sqlx_core::query::query(
                 "INSERT INTO hub_directory_event (seq, id, hlc_physical, hlc_logical, actor_kind, actor_id, space_id, user_id, kind, payload, recorded_at)
@@ -2142,7 +2174,7 @@ impl HubDirectory for PostgresDirectory {
             persisted.push(full);
         }
         tx.commit().await.map_err(backend)?;
-        Ok(persisted)
+        Ok(DirectoryAppendOutcomeV1::Appended(persisted))
     }
 
     async fn events_since(&self, since_seq: u64, limit: usize) -> DirectoryResult<Vec<DirectoryEvent>> {
@@ -2173,10 +2205,12 @@ impl HubDirectory for PostgresDirectory {
         let (event_count,): (i64,) = sqlx_core::query_as::query_as("SELECT COUNT(*) FROM hub_directory_event").fetch_one(&mut *tx).await.map_err(backend)?;
         let total = u64::try_from(event_count).map_err(backend)?;
         checkpoint_projection_rebuild(control, 0, total)?;
-        sqlx_core::query::query("CREATE TEMP TABLE hub_rebuild_space_invite ON COMMIT DROP AS SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id FROM hub_space_invite")
-            .execute(&mut *tx)
-            .await
-            .map_err(backend)?;
+        sqlx_core::query::query(
+            "CREATE TEMP TABLE hub_rebuild_space_invite ON COMMIT DROP AS SELECT id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id FROM hub_space_invite",
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(backend)?;
         sqlx_core::query::query("DELETE FROM hub_artifact_cas_reservation").execute(&mut *tx).await.map_err(backend)?;
         sqlx_core::query::query("DELETE FROM hub_artifact_cas_reference").execute(&mut *tx).await.map_err(backend)?;
         sqlx_core::query::query("DELETE FROM hub_artifact_retention").execute(&mut *tx).await.map_err(backend)?;
@@ -2275,15 +2309,7 @@ fn checkpoint_publication_receipt_from_row(row: CheckpointPublicationReceiptRowV
         other => return Err(DirectoryError::Backend(format!("unknown checkpoint publication disposition '{other}'"))),
     };
     let checkpoint_id = row.4.map(|bytes| bytes.try_into().map(ArtifactHash).map_err(|_| DirectoryError::Backend("checkpoint publication id is not 32 bytes".into()))).transpose()?;
-    Ok(CheckpointPublicationReceiptRecordV1 {
-        actor_user_id: row.0,
-        correlation_id: row.1,
-        command_sha256: row.2,
-        disposition,
-        checkpoint_id,
-        claimed_at: row.5,
-        completed_at: row.6,
-    })
+    Ok(CheckpointPublicationReceiptRecordV1 { actor_user_id: row.0, correlation_id: row.1, command_sha256: row.2, disposition, checkpoint_id, claimed_at: row.5, completed_at: row.6 })
 }
 
 fn directory_command_receipt_from_row(row: DirectoryCommandReceiptRow) -> DirectoryResult<DirectoryCommandReceiptRecord> {
@@ -2354,7 +2380,19 @@ type SyncSessionRow = (String, Option<String>, i64, String, String, String, Stri
 
 fn invite_from_row(row: InviteRow) -> DirectoryResult<InviteRecord> {
     let (id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id) = row;
-    Ok(InviteRecord { id, selector, secret_digest: array32(secret_digest, "invite digest")?, space_id, role: SpaceRole::parse(&role).unwrap_or(SpaceRole::Spectator), created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id })
+    Ok(InviteRecord {
+        id,
+        selector,
+        secret_digest: array32(secret_digest, "invite digest")?,
+        space_id,
+        role: SpaceRole::parse(&role).unwrap_or(SpaceRole::Spectator),
+        created_at,
+        expires_at,
+        revoked_at,
+        revoked_reason,
+        accepted_at,
+        accepted_event_id,
+    })
 }
 
 fn share_from_row(row: ShareRow) -> DirectoryResult<ShareTokenRecord> {
@@ -2649,19 +2687,13 @@ mod tests {
             .await
             .expect("create postgres invite failure trigger");
         let fault_head = directory.head_seq().await.expect("head before projection fault");
-        assert!(matches!(
-            directory.redeem_invite_atomic(&fault_invite.capability, &claim_actor(&fault_user.id), &fault_user.id, Hlc { physical_ms: 4, logical: 0 }).await,
-            Err(DirectoryError::Backend(_))
-        ));
+        assert!(matches!(directory.redeem_invite_atomic(&fault_invite.capability, &claim_actor(&fault_user.id), &fault_user.id, Hlc { physical_ms: 4, logical: 0 }).await, Err(DirectoryError::Backend(_))));
         assert_eq!(directory.head_seq().await.expect("head after projection fault"), fault_head);
         assert_eq!(directory.list_invites("default").await.expect("fault invite row").into_iter().find(|record| record.id == fault_invite.record.id).expect("fault invite").accepted_at, None);
         assert_eq!(directory.get_role("default", &fault_user.id).await.expect("fault membership"), None);
         sqlx_core::query::query("DROP TRIGGER hub_test_fail_invite_projection ON hub_space_membership").execute(&directory.pool).await.expect("drop postgres invite failure trigger");
         sqlx_core::query::query("DROP FUNCTION hub_test_fail_invite_projection()").execute(&directory.pool).await.expect("drop postgres invite failure function");
-        directory
-            .redeem_invite_atomic(&fault_invite.capability, &claim_actor(&fault_user.id), &fault_user.id, Hlc { physical_ms: 5, logical: 0 })
-            .await
-            .expect("retry rolled back postgres invite");
+        directory.redeem_invite_atomic(&fault_invite.capability, &claim_actor(&fault_user.id), &fault_user.id, Hlc { physical_ms: 5, logical: 0 }).await.expect("retry rolled back postgres invite");
         let before = directory.list_invites("default").await.expect("postgres invites before rebuild");
         directory.rebuild_projections().await.expect("postgres rebuild");
         let after = directory.list_invites("default").await.expect("postgres invites after rebuild");

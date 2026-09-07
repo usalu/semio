@@ -11,13 +11,13 @@ pub(crate) struct WireTestSnapshot {
     pub(crate) value: i32,
 }
 
-impl crate::store::ArtifactPack for WireTestSnapshot {
-    fn encode_pack_with(&self, _options: &crate::store::PackEncodeOptions) -> Result<Vec<u8>, crate::store::PackError> {
-        serde_json::to_vec(self).map_err(|error| crate::store::PackError::Schema(error.to_string()))
+impl store::ArtifactPack for WireTestSnapshot {
+    fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
     }
 
-    fn decode_pack_with(bytes: &[u8], _options: &crate::store::PackDecodeOptions) -> Result<Self, crate::store::PackError> {
-        serde_json::from_slice(bytes).map_err(|error| crate::store::PackError::Schema(error.to_string()))
+    fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
     }
 }
 

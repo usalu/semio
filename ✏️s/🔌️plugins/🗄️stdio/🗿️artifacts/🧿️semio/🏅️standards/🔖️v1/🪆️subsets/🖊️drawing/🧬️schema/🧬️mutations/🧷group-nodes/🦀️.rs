@@ -6,9 +6,9 @@
 //! with untouched siblings in a way `ungroup` could not reconstruct from `base` alone).
 
 use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{DrawGroupDiff, DrawNodeDiff, NodePath, SemioDrawingDiff, diff_at_path, node_at};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::{SemioDrawingMutation, ungroup_node};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::NodePath;
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

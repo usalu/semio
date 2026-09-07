@@ -11,6 +11,8 @@
 // here alone brings in everything this file's `#[derive(...)]` lines and trait calls need. A
 // separate `use semio_framework_value_derive::{FromValue, ToValue};` would collide with the
 // re-exported macro names (`E0252`, "defined multiple times ... macro namespace").
+#![deny(unreachable_code)]
+
 use semio_framework_os_kernel::{DslValue, FromValue, ToValue};
 
 //#region 🔖️UnitOnly — bare-string wire form, deny_unknown_fields not applicable (documented N/A)
@@ -19,6 +21,31 @@ use semio_framework_os_kernel::{DslValue, FromValue, ToValue};
 enum UnitOnly {
     First,
     SecondOne,
+}
+
+#[derive(Debug, FromValue)]
+enum EmptyEnum {}
+
+#[derive(Debug, serde::Deserialize)]
+enum EmptyEnumOracle {}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+enum UnitEnumOracle { First, SecondOne }
+
+#[test]
+fn empty_and_unit_enum_decoding_matches_neutral_cases_and_serde() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️fixtures/🔣️empty-enum.json")).unwrap();
+    for case in cases.as_array().unwrap() {
+        let wire = case["value"].as_str().unwrap();
+        let empty = EmptyEnum::from_value(DslValue::String(wire.into())).is_ok();
+        let unit = UnitOnly::from_value(DslValue::String(wire.into())).is_ok();
+        assert_eq!(empty, case["emptyAccepted"].as_bool().unwrap());
+        assert_eq!(unit, case["unitAccepted"].as_bool().unwrap());
+        assert_eq!(empty, serde_json::from_value::<EmptyEnumOracle>(case["value"].clone()).is_ok());
+        assert_eq!(unit, serde_json::from_value::<UnitEnumOracle>(case["value"].clone()).is_ok());
+    }
+    eprintln!("[DEBUG] Empty and unit enum decoding agrees with all neutral cases and serde");
 }
 
 #[test]

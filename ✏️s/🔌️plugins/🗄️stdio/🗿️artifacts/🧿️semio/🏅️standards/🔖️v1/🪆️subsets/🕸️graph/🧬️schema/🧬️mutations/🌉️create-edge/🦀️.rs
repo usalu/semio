@@ -3,8 +3,8 @@
 //! `create`/`delete`, never `connect`/`disconnect` (see the snapshot facet's module doc comment for
 //! the full ruling).
 
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::{SemioGraphMutation, delete_edge};
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
+use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

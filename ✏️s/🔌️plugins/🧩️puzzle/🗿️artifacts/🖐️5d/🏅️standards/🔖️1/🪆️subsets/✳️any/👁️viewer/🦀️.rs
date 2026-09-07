@@ -14,7 +14,7 @@ use crate::artifacts::puzzle5d::{Puzzle5dMutation, Puzzle5dSnapshot, PUZZLE5D_DI
 use crate::viewer::puzzle5d::modes::view;
 use crate::viewer::puzzle5d::modes::view::windows::world3d;
 use semio_framework_plugin::app::Dialect;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

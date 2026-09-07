@@ -27,6 +27,7 @@ pub mod mutations;
 pub mod derived_construction {
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::base::schema::PptxBuilder as PptxAnyBuilder;
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
+    #[cfg(test)]
     use crate::artifacts::pptx::schema::mutations::set_snapshot;
     use crate::artifacts::pptx::{PptxDiff, PptxMutation, PptxSnapshot};
     use dsl::{Diagnostic, Severity};

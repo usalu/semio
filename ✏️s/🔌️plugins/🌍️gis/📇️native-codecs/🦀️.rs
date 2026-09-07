@@ -1,6 +1,6 @@
 //! 🪢 GIS-owned native codec receipts; preview is inert and never registers a codec.
 
-use semio_framework_hash::{Hasher, Sha256};
+use semio_framework_hash::Sha256;
 use semio_framework_plugin::PluginAssemblyError;
 
 #[derive(Clone, Copy)]

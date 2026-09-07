@@ -2,7 +2,7 @@
 
 use crate::document::NormHost;
 use crate::editor::iso16757::Iso16757Family;
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_RESULTS: &str = "norm-iso16757-results";

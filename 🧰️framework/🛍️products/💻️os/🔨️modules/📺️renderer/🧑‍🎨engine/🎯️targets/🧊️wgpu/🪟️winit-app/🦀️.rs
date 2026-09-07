@@ -805,7 +805,7 @@ impl ApplicationHandler<HostUserEvent> for WinitApp {
     /// Native futures run exclusively on the process worker pool; this callback never polls them.
     // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
-        if !crate::os_host::OsHostRetirement::close_abandoned_step() {
+        if !OsHostRetirement::close_abandoned_step() {
             event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
             return;
         }

@@ -1,7 +1,7 @@
 //! 🏷️ `rename-product` — renames a catalogue product's display title, addressed by article number.
 
 
-use crate::artifacts::vdi3805::{LocalizedText, Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
+use crate::artifacts::vdi3805::{LocalizedText, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

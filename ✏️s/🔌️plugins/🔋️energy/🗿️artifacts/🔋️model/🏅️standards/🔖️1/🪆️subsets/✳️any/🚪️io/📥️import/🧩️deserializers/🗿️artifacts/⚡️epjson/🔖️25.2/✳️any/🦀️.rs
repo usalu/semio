@@ -260,7 +260,7 @@ fn decode_schedules(root: &Object, model: &mut Model, diagnostics: &mut Vec<EpJs
 fn decode_materials(root: &Object, model: &mut Model) -> Vec<String> {
     let mut names = Vec::new();
     let mut next = MATERIAL_BASE;
-    let mut push = |model: &mut Model, names: &mut Vec<String>, material: Material| {
+    let push = |model: &mut Model, names: &mut Vec<String>, material: Material| {
         names.push(material.name.clone());
         model.materials.push(material);
     };

@@ -8,7 +8,7 @@ use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::fore
 use crate::artifacts::cad::{CadSnapshot, CAD_DIALECT, CAD_DOCUMENT_SCHEMA};
 use crate::viewer::cad::modes::view;
 use crate::viewer::cad::modes::view::windows::shape;
-use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 // 🚧️ SDK GAP: see the identical note in `✏️editor/🦀️.rs` — `ArtifactViewer`/`Viewer`/
 // `ViewEmit`/`Dialect` are only reachable through `app`, not yet in the crate-root re-export list.
 use semio_framework_plugin::app::{ArtifactViewer, Dialect, ViewEmit, Viewer};

@@ -2,7 +2,7 @@
 
 
 
-use crate::artifacts::en1993::{En1993Diff, En1993Mutation, En1993Snapshot};
+use crate::artifacts::en1993::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

@@ -165,7 +165,7 @@ impl Gis3dCommandJobFactory {
     }
 }
 
-impl semio_framework::ToolJobFactory for Gis3dCommandJobFactory {
+impl ToolJobFactory for Gis3dCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<Gis3dPlayApp>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<Gis3dPlayApp>>;
 
@@ -177,8 +177,8 @@ impl semio_framework::ToolJobFactory for Gis3dCommandJobFactory {
         GIS3D_RETAINED_PAYLOAD_SCHEMA
     }
 
-    fn classification(&self) -> semio_framework::InteractiveJobClassification {
-        semio_framework::InteractiveJobClassification::Migrated
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
     }
 
     fn execution_contract(&self) -> ToolExecutionContract {
@@ -204,7 +204,7 @@ impl semio_framework::ToolJobFactory for Gis3dCommandJobFactory {
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Gis3dCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<Gis3dPlayApp>;
+    type Owner = EditorApp<Gis3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = GIS3D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
@@ -466,16 +466,16 @@ impl ArtifactEditor for Gis3dPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Gis3dPlayApp>,
+        owner: EditorApp<Gis3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.gis.gisterrain@1/*#editor",
         document_schema: "gis.terrain",
         factory: "Gis3dCommandJobFactory",
         factory_type: Gis3dCommandJobFactory,
         tools: {
-            "setExaggeration" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setCamera" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setLocale" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setExaggeration" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setCamera" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setLocale" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
         }
     }
 
@@ -676,7 +676,7 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("mod+shift+z", "redo")
             .config(Gis3dPlayApp::config_spec())
             .io(gis3d_io())
-            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
+            .interactive_jobs(InteractiveJobClassification::Migrated)
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder::build_definition` has no `.example(...)`/
             // `.workflow(...)` — the old `"reuse-terrain"` app-level example registration and the
             // no-op `.workflow("gis3d", …)` call are dropped here (not silently: reported in the

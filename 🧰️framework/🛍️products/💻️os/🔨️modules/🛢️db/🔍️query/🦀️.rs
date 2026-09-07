@@ -873,6 +873,7 @@ fn install_reserved_query_rows(owner: QueryRows) {
     }
 }
 
+#[cfg(test)]
 fn retire_query_rows(owner: QueryRows) -> Result<(), QueryRows> {
     if owner.retirement.is_some() {
         install_reserved_query_rows(owner);
@@ -1739,7 +1740,7 @@ mod tests {
             let rows = Value::List(vec![sample_row("alice", 30, vec!["admin", "eng"]).await, sample_row("bob", 25, vec!["eng"]).await]);
             let source = projection_query_source(rows).await.expect("decodes");
             let query = Query::new().filter(Predicate::Gte(Path::field("age"), Value::Int(30)));
-            let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("query succeeds");
+            let result = db_actor::block_on(execute(&query, &source, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("query succeeds");
             assert_eq!(result.rows.len(), 1);
             assert_eq!(Path::field("name").get(result.rows.get(0).unwrap().value()), Some(&Value::Text("alice".to_string())));
         }
@@ -1760,7 +1761,7 @@ mod tests {
         async fn full_scan_filters_sorts_and_paginates() {
             let source = sample_source().await;
             let query = Query::new().filter(Predicate::Gte(Path::field("age"), Value::Int(25))).sort(vec![SortKey::descending(Path::field("age"))]).limit(2);
-            let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("query succeeds");
+            let result = db_actor::block_on(execute(&query, &source, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("query succeeds");
             assert_eq!(result.diagnostics.plan, QueryPlanKind::FullScan);
             assert_eq!(result.diagnostics.rows_matched, 3);
             assert_eq!(result.diagnostics.rows_returned, 2);
@@ -1779,7 +1780,7 @@ mod tests {
         async fn offset_skips_matched_rows_before_limit_applies() {
             let source = sample_source().await;
             let query = Query::new().sort(vec![SortKey::ascending(Path::field("age"))]).offset(1).limit(1);
-            let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("query succeeds");
+            let result = db_actor::block_on(execute(&query, &source, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("query succeeds");
             assert_eq!(result.rows.len(), 1);
             assert_eq!(Path::field("name").get(result.rows.get(0).unwrap().value()), Some(&Value::Text("alice".to_string())));
         }
@@ -1788,14 +1789,14 @@ mod tests {
         async fn max_result_rows_limit_is_enforced() {
             let source = sample_source().await;
             let limits = QueryLimits { max_result_rows: 1, ..QueryLimits::default() };
-            let error = db_actor::block_on(execute(&Query::new(), &source, None::<&db_query::NoFullTextLookup>, &limits, &mut control())).unwrap_err();
+            let error = db_actor::block_on(execute(&Query::new(), &source, None::<&NoFullTextLookup>, &limits, &mut control())).unwrap_err();
             assert!(matches!(error, DbError::LimitExceeded(_)));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn into_stream_yields_the_same_rows_as_the_result() {
             let source = sample_source().await;
-            let result = db_actor::block_on(execute(&Query::new(), &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("query succeeds");
+            let result = db_actor::block_on(execute(&Query::new(), &source, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("query succeeds");
             let expected_len = result.rows.len();
             let stream = result.into_stream().await;
             assert_eq!(stream.count(), expected_len);
@@ -1818,7 +1819,7 @@ mod tests {
         async fn full_text_pushdown_without_a_lookup_is_an_error() {
             let source = sample_source().await;
             let query = Query::new().filter(Predicate::FullText(Path::empty(), "alice".to_string()));
-            let error = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).unwrap_err();
+            let error = db_actor::block_on(execute(&query, &source, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).unwrap_err();
             assert!(matches!(error, DbError::InvalidArgument(_)));
         }
     }
@@ -1849,7 +1850,7 @@ mod tests {
             let source = sample_source().await;
             let query = Query::new().filter(Predicate::FullText(Path::empty(), "admin".to_string()));
 
-            let full_scan_result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control()));
+            let full_scan_result = db_actor::block_on(execute(&query, &source, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control()));
             assert!(matches!(full_scan_result, Err(DbError::InvalidArgument(_))));
 
             let mut postings = std::collections::HashMap::new();
@@ -1962,19 +1963,19 @@ mod tests {
             let mut live = LiveQuery::new(spec).await;
 
             let first = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await]).await;
-            let diff = db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&first, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
             assert_eq!(diff.added.len(), 2);
             assert!(diff.removed.is_empty());
             assert!(diff.updated.is_empty());
 
             let second = source_with(vec![sample_row("alice", 31, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
-            let diff = db_actor::block_on(live.refresh(&second, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&second, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
             assert_eq!(diff.added.len(), 1);
             assert!(diff.removed.is_empty());
             assert_eq!(diff.updated.len(), 1);
 
             let third = source_with(vec![sample_row("alice", 31, vec!["admin"]).await]).await;
-            let diff = db_actor::block_on(live.refresh(&third, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&third, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
             assert!(diff.added.is_empty());
             assert_eq!(diff.removed.len(), 2);
             assert!(diff.updated.is_empty());
@@ -1988,11 +1989,11 @@ mod tests {
             let mut live = LiveQuery::new(spec).await;
 
             let first = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await]).await;
-            db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
+            db_actor::block_on(live.refresh(&first, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
             let mut reconstructed: BTreeMap<RowId, [u8; 32]> = live.snapshot().collect();
 
             let second = source_with(vec![sample_row("alice", 31, vec!["admin"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
-            let diff = db_actor::block_on(live.refresh(&second, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&second, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
 
             for id in diff.removed.as_slice() {
                 reconstructed.remove(&RowId(*id));
@@ -2021,17 +2022,17 @@ mod tests {
             let mut live = LiveQuery::new(spec).await;
 
             let first = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
-            db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
+            db_actor::block_on(live.refresh(&first, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
 
             // An identical re-refresh: every row's dep_hash is unchanged, so every row is a cache hit.
             let identical = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
-            let diff = db_actor::block_on(live.refresh(&identical, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&identical, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
             assert!(diff.added.is_empty() && diff.removed.is_empty() && diff.updated.is_empty(), "an unchanged source must produce an empty diff");
 
             // Only bob's row changes (same position, same length — isolates a value change from a
             // position-based added/removed churn).
             let third = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 26, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
-            let diff = db_actor::block_on(live.refresh(&third, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&third, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
             assert_eq!(diff.updated.len(), 1, "only bob's row changed");
             assert!(diff.added.is_empty() && diff.removed.is_empty());
         }
@@ -2053,7 +2054,7 @@ mod tests {
             let source = sample_source().await;
             let limits = QueryLimits { max_scan_rows: 1, ..QueryLimits::default() };
             let query = Query::new().filter(Predicate::Eq(Path::field("age"), Value::Int(999)));
-            let error = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &limits, &mut control())).unwrap_err();
+            let error = db_actor::block_on(execute(&query, &source, None::<&NoFullTextLookup>, &limits, &mut control())).unwrap_err();
             assert!(matches!(error, DbError::LimitExceeded(_)));
         }
     }

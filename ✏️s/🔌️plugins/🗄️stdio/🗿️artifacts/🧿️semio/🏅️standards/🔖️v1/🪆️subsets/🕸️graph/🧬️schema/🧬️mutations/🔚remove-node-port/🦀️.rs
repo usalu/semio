@@ -1,7 +1,7 @@
 //! 🔚 `remove-node-port` — detaches one port from a node, addressed by BASE-state
 //! `{node_id, index}`.
 
-use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::{SemioGraphMutation, add_node_port};
+use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload

@@ -28,7 +28,7 @@ pub struct SetTopicMarkup {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetTopicMarkup {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "topic-markup", kind: "set-topic-markup", record: "SetTopicMarkup" };
 
-    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as protocol::Mutation<BcfSnapshot>>::Diff> {
+    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
         agg_diff(&BcfMutation::SetTopicMarkup(self.clone()), base)
     }
     fn inverse(&self, base: &BcfSnapshot) -> Vec<BcfMutation> {

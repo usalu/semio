@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative remove-ifd mutation.
-use crate::artifacts::tiff::schema::diff::{self, *};
+use crate::artifacts::tiff::schema::diff::*;
 use crate::artifacts::tiff::schema::mutations::TiffMutation;
 use crate::artifacts::tiff::schema::snapshot::*;
 

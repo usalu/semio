@@ -14,7 +14,7 @@ pub struct SetSnapshot {
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetSnapshot {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "snapshot", kind: "set-snapshot", record: "SetSnapshot" };
 
-    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<<JpgBaselineMutation as protocol::Mutation<JpgSnapshot>>::Diff> {
+    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<<JpgBaselineMutation as Mutation<JpgSnapshot>>::Diff> {
         agg_diff(&JpgBaselineMutation::SetSnapshot(self.clone()), base)
     }
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {

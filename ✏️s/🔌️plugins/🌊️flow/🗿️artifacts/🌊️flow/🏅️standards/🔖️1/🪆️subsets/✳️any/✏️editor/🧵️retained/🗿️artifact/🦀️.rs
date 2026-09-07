@@ -60,7 +60,7 @@ impl SceneCopy {
             0 => {
                 let count = source.widgets.len();
                 if count > super::super::FLOW_STORE_MAX_SCENE_ITEMS { return Err("Flow scene widget count exceeds admitted envelope".into()); }
-                let bytes = count.checked_mul(std::mem::size_of::<Widget>()).ok_or("Flow widget allocation overflow")?;
+                let bytes = count.checked_mul(size_of::<Widget>()).ok_or("Flow widget allocation overflow")?;
                 if bytes > FLOW_SCENE_COPY_ALLOCATION_BYTES { return Err("Flow widget allocation exceeds admitted envelope".into()); }
                 result.widgets.try_reserve_exact(count).map_err(|_| "Flow widget allocation failed")?;
                 state.phase = 1;
@@ -88,7 +88,7 @@ impl SceneCopy {
             3 => {
                 let count = source.synapses.len();
                 if count > super::super::FLOW_STORE_MAX_SCENE_ITEMS { return Err("Flow scene synapse count exceeds admitted envelope".into()); }
-                let bytes = count.checked_mul(std::mem::size_of::<flow::SynapseSpec>()).ok_or("Flow synapse allocation overflow")?;
+                let bytes = count.checked_mul(size_of::<flow::SynapseSpec>()).ok_or("Flow synapse allocation overflow")?;
                 if bytes > FLOW_SCENE_COPY_ALLOCATION_BYTES { return Err("Flow synapse allocation exceeds admitted envelope".into()); }
                 result.synapses.try_reserve_exact(count).map_err(|_| "Flow synapse allocation failed")?;
                 state.phase = 4;

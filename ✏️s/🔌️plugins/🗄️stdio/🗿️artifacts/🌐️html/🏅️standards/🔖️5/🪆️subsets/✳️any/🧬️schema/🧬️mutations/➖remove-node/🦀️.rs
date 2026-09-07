@@ -15,7 +15,7 @@ pub struct RemoveNode {
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for RemoveNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "node", kind: "remove-node", record: "RemoveNode" };
 
-    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as protocol::Mutation<HtmlSnapshot>>::Diff> {
+    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
         agg_diff(&HtmlMutation::RemoveNode(self.clone()), base)
     }
     fn inverse(&self, base: &HtmlSnapshot) -> Vec<HtmlMutation> {

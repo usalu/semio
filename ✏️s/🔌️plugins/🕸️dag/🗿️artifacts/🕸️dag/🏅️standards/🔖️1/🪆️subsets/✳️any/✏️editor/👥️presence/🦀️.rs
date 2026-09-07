@@ -1,6 +1,5 @@
 //! 👥️ DAG play presence — shareable live ephemeral state + mutations.
 
-use protocol::Mutation;
 use store::ArtifactPack;
 
 //#region 🔖️Presence
@@ -9,6 +8,8 @@ use store::ArtifactPack;
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), not this app-opaque facet.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[dsl(extension = "dag.presence")]
 #[dsl(layout = "lines")]
 pub struct DagPresence {
@@ -25,7 +26,7 @@ impl Default for DagPresence {
 
 impl protocol::MutationDiff<DagPresence> for DagPresence {
     fn apply(&self, _base: &DagPresence) -> protocol::MutationApplyResult<DagPresence> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;
@@ -78,63 +79,35 @@ impl ArtifactPack for DagPresence {
 }
 //#endregion 🔖️Presence
 
-//#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
-#[value(rename_all = "camelCase")]
-pub enum DagPresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        presence: DagPresence,
-    },
-}
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+pub mod mutations;
+pub use mutations::*;
 
-impl Mutation<DagPresence> for DagPresenceMutation {
-    type Diff = DagPresence;
 
-    fn diff(&self, _base: &DagPresence) -> protocol::MutationOutcome<DagPresence> {
-        match self {
-            Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
-        }
-    }
+#[cfg(test)]
+mod mutation_vectors {
+    use super::*;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
-    fn inverse(&self, base: &DagPresence) -> Vec<Self> {
-        vec![Self::Snapshot { presence: base.clone() }]
-    }
-}
-
-impl protocol::OpText for DagPresenceMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{keyword} ");
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                let record = dsl::parse(body, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+    #[test]
+    fn language_neutral_mutations_match_json_oracle_and_restore_base() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutations.json")).unwrap();
+        for vector in vectors.as_array().unwrap() {
+            let base: DagPresence = dsl::json::from_json_str(&vector["base"].to_string()).unwrap();
+            let mutation: DagPresenceMutation = dsl::json::from_json_str(&vector["mutation"].to_string()).unwrap();
+            let oracle: DagPresenceMutation = serde_json::from_value(vector["mutation"].clone()).unwrap();
+            assert_eq!(mutation, oracle);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());
+            let next = mutation.diff(&base).diff().apply(&base).unwrap();
+            assert_eq!(serde_json::to_value(&next).unwrap(), vector["after"]);
+            let encoded = mutation.encode_op().unwrap();
+            assert_eq!(DagPresenceMutation::decode_op(&encoded).unwrap(), mutation);
+            assert_eq!(DagPresenceMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
+            let mut restored = next;
+            for inverse in mutation.inverse(&base) {
+                restored = inverse.diff(&restored).diff().apply(&restored).unwrap();
             }
-        }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        let body = dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline);
-        if body.is_empty() {
-            keyword
-        } else {
-            format!("{keyword} {body}")
+            assert_eq!(restored, base);
         }
     }
 }
-
-impl protocol::OpBinary for DagPresenceMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
-//#endregion 🔖️PresenceMutation

@@ -17,7 +17,7 @@ pub struct SetTinyAttribute {
 impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for SetTinyAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "tiny-attribute", kind: "set-tiny-attribute", record: "SetTinyAttribute" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgTinyMutation as protocol::Mutation<SvgSnapshot>>::Diff> {
+    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgTinyMutation as Mutation<SvgSnapshot>>::Diff> {
         agg_diff(&SvgTinyMutation::SetTinyAttribute(self.clone()), base)
     }
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgTinyMutation> {

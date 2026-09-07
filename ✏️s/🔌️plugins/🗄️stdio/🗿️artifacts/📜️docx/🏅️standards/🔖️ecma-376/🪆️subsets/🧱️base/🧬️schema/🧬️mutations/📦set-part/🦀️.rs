@@ -16,7 +16,7 @@ pub struct SetPart {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetPart {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "part", kind: "set-part", record: "SetPart" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as protocol::Mutation<DocxSnapshot>>::Diff> {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
         agg_diff(&DocxMutation::SetPart(self.clone()), base)
     }
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {

@@ -16,7 +16,7 @@ pub struct SetDataPeriods {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetDataPeriods {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "data-periods", kind: "set-data-periods", record: "SetDataPeriods" };
 
-    fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as protocol::Mutation<EpwSnapshot>>::Diff> {
+    fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
         agg_diff(&EpwMutation::SetDataPeriods(self.clone()), base)
     }
     fn inverse(&self, base: &EpwSnapshot) -> Vec<EpwMutation> {

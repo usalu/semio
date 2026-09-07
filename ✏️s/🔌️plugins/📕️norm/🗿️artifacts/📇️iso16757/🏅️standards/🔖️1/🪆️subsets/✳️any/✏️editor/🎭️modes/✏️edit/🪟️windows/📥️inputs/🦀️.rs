@@ -1,7 +1,7 @@
 //! 📥️ ISO 16757 play app — the inputs window: the raw compliance document, rendered as JSON.
 
 use crate::artifacts::iso16757::Iso16757Snapshot;
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_INPUTS: &str = "norm-iso16757-inputs";

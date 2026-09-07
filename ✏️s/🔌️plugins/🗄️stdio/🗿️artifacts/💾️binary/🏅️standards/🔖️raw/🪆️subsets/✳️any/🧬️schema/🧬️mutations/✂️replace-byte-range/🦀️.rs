@@ -26,7 +26,7 @@ pub struct ReplaceByteRange {
 impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for ReplaceByteRange {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "byte-range", kind: "replace-byte-range", record: "ReplaceByteRange" };
 
-    fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<<BinaryMutation as protocol::Mutation<BinarySnapshot>>::Diff> {
+    fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<<BinaryMutation as Mutation<BinarySnapshot>>::Diff> {
         agg_diff(&BinaryMutation::ReplaceByteRange(self.clone()), base)
     }
     fn inverse(&self, base: &BinarySnapshot) -> Vec<BinaryMutation> {

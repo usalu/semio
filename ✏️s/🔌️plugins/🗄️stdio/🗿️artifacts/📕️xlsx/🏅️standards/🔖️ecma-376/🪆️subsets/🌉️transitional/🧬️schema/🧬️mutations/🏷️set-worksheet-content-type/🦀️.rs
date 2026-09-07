@@ -15,7 +15,7 @@ pub struct SetWorksheetContentType {
 impl protocol::MutationKind<XlsxSnapshot, XlsxTransitionalMutation> for SetWorksheetContentType {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "worksheet-content-type", kind: "set-worksheet-content-type", record: "SetWorksheetContentType" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxTransitionalMutation as protocol::Mutation<XlsxSnapshot>>::Diff> {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxTransitionalMutation as Mutation<XlsxSnapshot>>::Diff> {
         agg_diff(&XlsxTransitionalMutation::SetWorksheetContentType(self.clone()), base)
     }
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxTransitionalMutation> {

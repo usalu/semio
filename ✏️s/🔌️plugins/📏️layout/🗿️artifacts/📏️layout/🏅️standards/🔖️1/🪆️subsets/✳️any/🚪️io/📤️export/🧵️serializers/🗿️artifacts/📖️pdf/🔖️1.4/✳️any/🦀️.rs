@@ -8,7 +8,7 @@
 //! confirmed pre-existing/unrelated to this ticket's composition work (stdio's re-export repoint
 //! landed in its own commit, this file untouched since 2026-08-10).
 use crate::artifacts::layout::LayoutSnapshot;
-use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::{PageDoc, PdfSnapshot};
+use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use semio_s_plugin_stdio::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA;
 
 pub fn register() {}

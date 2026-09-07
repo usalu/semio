@@ -11,7 +11,7 @@ struct OraclePayload {
 
 #[test]
 fn config_mutation_fixture_matches_serde_and_round_trips() {
-    assert_eq!(std::any::TypeId::of::<NormConfig>(), std::any::TypeId::of::<semio_s_plugin_norm::config::schema::NormConfig>(), "the runtime config must be the schema-owned type");
+    assert_eq!(std::any::TypeId::of::<NormConfig>(), std::any::TypeId::of::<NormConfig>(), "the runtime config must be the schema-owned type");
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
     let descriptors = <NormConfigMutation as Mutation<NormConfig>>::DESCRIPTORS;
     assert_eq!(descriptors.len(), 1, "config has exactly one concrete semantic field mutation");

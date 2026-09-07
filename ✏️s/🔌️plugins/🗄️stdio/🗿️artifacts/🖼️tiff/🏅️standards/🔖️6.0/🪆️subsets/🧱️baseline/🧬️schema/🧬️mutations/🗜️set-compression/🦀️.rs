@@ -14,7 +14,7 @@ pub struct SetCompression {
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetCompression {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "compression", kind: "set-compression", record: "SetCompression" };
 
-    fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffBaselineMutation as protocol::Mutation<TiffSnapshot>>::Diff> {
+    fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffBaselineMutation as Mutation<TiffSnapshot>>::Diff> {
         agg_diff(&TiffBaselineMutation::SetCompression(self.clone()), base)
     }
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔄️replace-config",
+  "semanticKind": "replace-config",
+  "displayName": "Replace Config",
+  "emoji": "🔄️",
+  "aggregateVariant": "ReplaceConfig",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "replace-config",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema"
+  ]
+}

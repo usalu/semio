@@ -1033,37 +1033,55 @@ export class LintScript extends Script {
 //#endregion 🔖️LintScript
 
 //#region 🔖️VerifyScript
-/** 🦀️ Every plugin crate name under `✏️s/🔌️plugins`, read from each crate's own `Cargo.toml`. */
+/** 🦀️ Shipping plugin and extension crates from the repository's package catalog. */
 function pluginCrateNames(root: string): string[] {
-  const names: string[] = [];
-  const pluginsRoot = join(root, "✏️s", "🔌️plugins");
-  if (!existsSync(pluginsRoot)) return names;
-  for (const owner of readdirSync(pluginsRoot)) {
-    const manifest = join(pluginsRoot, owner, "📦️packages", "🦀️rust", "Cargo.toml");
-    if (!existsSync(manifest)) continue;
-    const name = readFileSync(manifest, "utf8").match(/\[package\][\s\S]*?\bname\s*=\s*"([^"]+)"/)?.[1];
-    if (name) names.push(name);
-  }
-  return names.sort();
+  const names = discoverPackages(root)
+    .filter((pkg) => pkg.lang === "🦀️rust" && (pkg.role === "plugin" || pkg.role === "extension"))
+    .map((pkg) => {
+      const manifest = Bun.TOML.parse(readFileSync(join(root, pkg.manifestPath), "utf8"));
+      const name = (manifest.package as { name?: string } | undefined)?.name;
+      if (!name) throw new Error(`[verify rust-warnings] package name missing in ${pkg.manifestPath}.`);
+      return name;
+    });
+  return [...new Set(names)].sort();
 }
 
-/**
- * 🎯️ Which crates each compilation target exists to prove warning-free, and how to scope the build.
- * `--all-targets` (tests, benches, examples) is right for native but wrong for the wasm triples:
- * plugin test harnesses are native-only, so a wasm `--all-targets` clippy fails on code that target
- * never ships. `wasm32-wasip2` therefore builds the plugins' real component library surface, and
- * `wasm32-unknown-unknown` the pure actor kernel — the crate whose purity keeps mobile open.
- */
-function rustWarningTargetScope(root: string, target: string | undefined): { packages: string[]; scopeArgs: string[]; targetArgs: string[] } {
-  // 🐛️ No `--features component-guest` here: plugin crates declare NO `[features]` section of their
-  // own — `component-guest` is a DEPENDENCY feature they each enable unconditionally on
-  // `semio-framework-plugin` (`features = ["component-guest"]` on that dep line). Passing it to
-  // `cargo -p <plugin>` fails with "does not contain this feature", which blocked this target 100%
-  // of the time. Reported independently by D0 and Z1 before it was believed.
-  if (target === "wasm32-wasip2") return { packages: pluginCrateNames(root), scopeArgs: ["--lib"], targetArgs: ["--target", target] };
-  if (target === "wasm32-unknown-unknown") return { packages: ["semio-framework-actor"], scopeArgs: ["--lib"], targetArgs: ["--target", target] };
+/** 🎯️ Native test surfaces, WASI component libraries, and browser actor/renderer libraries. */
+export function rustWarningTargetScope(root: string, target: string | undefined): { packages: string[]; scopeArgs: string[]; targetArgs: string[]; packageArgs: Record<string, string[]> } {
+  const renderer = "semio-framework-os-renderer-wgpu";
+  if (target === "wasm32-wasip2") return { packages: pluginCrateNames(root), scopeArgs: ["--lib"], targetArgs: ["--target", target], packageArgs: {} };
+  if (target === "wasm32-unknown-unknown") return { packages: ["semio-framework-actor", renderer], scopeArgs: ["--lib"], targetArgs: ["--target", target], packageArgs: {} };
   if (target && target !== "native") throw new Error(`[verify rust-warnings] unknown target ${target} (expected native | wasm32-wasip2 | wasm32-unknown-unknown).`);
-  return { packages: ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", ...pluginCrateNames(root)], scopeArgs: ["--all-targets"], targetArgs: [] };
+  return { packages: ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", renderer, ...pluginCrateNames(root)], scopeArgs: ["--all-targets"], targetArgs: [], packageArgs: { [renderer]: ["--features", "native-bin"] } };
+}
+
+/** 🧪️ Validates language-neutral target vectors and independently compares shipping coverage with Cargo metadata. */
+export function rustWarningScopeChecks(root: string): number {
+  const fixture = JSON.parse(readFileSync(join(root, "🧪️tests/🦀️rust-warnings/🔣️.json"), "utf8")) as {
+    cases: { target: string; requiredPackages: string[]; scopeArgs: string[]; targetArgs: string[]; rendererFeatures: string[] }[];
+    rejectedTargets: string[];
+  };
+  for (const row of fixture.cases) {
+    const scope = rustWarningTargetScope(root, row.target);
+    for (const pkg of row.requiredPackages) if (!scope.packages.includes(pkg)) throw new Error(`[verify rust-warnings] ${row.target} misses ${pkg}.`);
+    for (const [actual, expected] of [[scope.scopeArgs, row.scopeArgs], [scope.targetArgs, row.targetArgs], [scope.packageArgs["semio-framework-os-renderer-wgpu"] ?? [], row.rendererFeatures]]) {
+      if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error(`[verify rust-warnings] target arguments differ for ${row.target}.`);
+    }
+    if (new Set(scope.packages).size !== scope.packages.length) throw new Error(`[verify rust-warnings] duplicate package in ${row.target}.`);
+  }
+  for (const target of fixture.rejectedTargets) {
+    let rejected = false;
+    try { rustWarningTargetScope(root, target); } catch { rejected = true; }
+    if (!rejected) throw new Error(`[verify rust-warnings] unsupported target ${target} was accepted.`);
+  }
+  const cargo = Bun.spawnSync(["cargo", "metadata", "--no-deps", "--format-version=1"], { cwd: root });
+  if (cargo.exitCode !== 0) throw new Error(`[verify rust-warnings] Cargo metadata failed: ${cargo.stderr.toString()}`);
+  const metadata = JSON.parse(cargo.stdout.toString()) as { packages: { name: string; metadata?: { semio?: { role?: string } } | null }[] };
+  const oracle = metadata.packages.filter((pkg) => ["plugin", "extension"].includes(pkg.metadata?.semio?.role ?? "")).map((pkg) => pkg.name).sort();
+  const components = rustWarningTargetScope(root, "wasm32-wasip2").packages;
+  if (JSON.stringify(components) !== JSON.stringify(oracle)) throw new Error(`[verify rust-warnings] repository discovery differs from Cargo's shipping package catalog.`);
+  console.log(`[verify rust-warnings] ${fixture.cases.length} target vectors, ${fixture.rejectedTargets.length} rejection vectors, ${oracle.length} Cargo-verified component crates.`);
+  return fixture.cases.length + fixture.rejectedTargets.length + 1;
 }
 
 //#region 🎯️ToolJobCoverage
@@ -10641,6 +10659,8 @@ export class VerifyScript extends Script {
    * [[runCargoLint]] documents for the identical choice.
    */
   private runRustWarnings(args: string[]): void {
+    rustWarningScopeChecks(this.root);
+    if (args.includes("--scope-only")) return;
     const targetIndex = args.indexOf("--target");
     const target = targetIndex >= 0 ? args[targetIndex + 1] : undefined;
     if (targetIndex >= 0 && !target) throw new Error("[verify rust-warnings] --target needs a triple (native | wasm32-wasip2 | wasm32-unknown-unknown).");
@@ -10651,7 +10671,7 @@ export class VerifyScript extends Script {
     if (packages.length === 0) throw new Error(`[verify rust-warnings] no crates resolved for target ${target ?? "native"}.`);
     console.log(`[verify rust-warnings] ${target ?? "native"}: ${packages.length} crate(s)…`);
     for (const pkg of packages) {
-      runCmd("cargo", ["clippy", "-p", pkg, ...scope.scopeArgs, ...scope.targetArgs, "--", "-D", "warnings"], { cwd: this.root, budgetMs: buildBudgetMs() });
+      runCmd("cargo", ["clippy", "-p", pkg, ...scope.scopeArgs, ...scope.targetArgs, ...(scope.packageArgs[pkg] ?? []), "--", "-D", "warnings"], { cwd: this.root, budgetMs: buildBudgetMs() });
     }
     console.log(`[verify rust-warnings] ${target ?? "native"} clean.`);
   }
@@ -28310,24 +28330,31 @@ function policyOwnerOwnComponentFiles(repoRoot: string, ownerRel: string): strin
   );
 }
 
-/** 🔗️Every `semio-s-plugin-<id>` entry in an owner's Cargo manifests, mapped to the plugin id it names. */
-function policyCargoPluginDependencyIds(repoRoot: string, ownerRel: string): Set<string> {
-  const ids = new Set<string>();
+/** 🔗️An owner's DECLARED runtime plugin dependencies — `[package.metadata.semio].depends-on` plus,
+ * for an extension, its `extends` host (contract freeze §4 rule 1 makes the host `dependsOn[0]`).
+ * Deliberately NOT the crate's `[dependencies]`: a `semio-s-plugin-<id>` Cargo line is a build-time
+ * rlib link (codecs, schema types) that says nothing about needing `<id>`'s own actor loaded. */
+function policySemioMetadataDependsOnIds(repoRoot: string, ownerRel: string): { readonly declared: Set<string>; readonly extendsHost?: string } {
   const manifest = policyReadFileSafe(repoRoot, `${ownerRel}/📦️packages/🦀️rust/Cargo.toml`);
-  for (const match of manifest.matchAll(/(?:^|\n)\s*(?:[\w-]+\s*=\s*\{[^}]*?)?package\s*=\s*"semio-s-plugin-([a-z0-9-]+)"/g)) {
-    ids.add(match[1]!);
-  }
-  for (const match of manifest.matchAll(/(?:^|\n)\s*semio-s-plugin-([a-z0-9-]+)\s*=/g)) {
-    ids.add(match[1]!);
-  }
-  return ids;
+  const semioBlock = manifest.split(/(?=\n\[)/).find((block) => block.trimStart().startsWith("[package.metadata.semio]")) ?? "";
+  const extendsHost = semioBlock.match(/^extends\s*=\s*"([a-z0-9-]+)"/m)?.[1];
+  const declared = new Set<string>();
+  const list = semioBlock.match(/^depends-on\s*=\s*\[([^\]]*)\]/m)?.[1] ?? "";
+  for (const match of list.matchAll(/"([a-z0-9-]+)"/g)) declared.add(match[1]!);
+  return { declared, extendsHost };
 }
 
 /**
- * 📏️A runtime plugin dependency (`.depends_on("x", …)` in the owner's `🦀️.rs` tree) must be
- * backed by a real Cargo dependency on `semio-s-plugin-x`, and vice versa — a contributor needs the
- * dependency crate's snapshot/mutation types to plan against, and the host refuses to load a plugin
- * whose declared dependency is absent. Both directions are checked so neither half can drift.
+ * 📏️The one declared runtime-dependency set of a plugin has two co-located mirrors that must agree:
+ * `.depends_on("x", …)` on the owner's builder (`🦀️.rs`, the wire `PluginManifest.dependencies` the
+ * host's load order, version checks and contribution gates read) and
+ * `[package.metadata.semio].depends-on` in its Cargo manifest (what the plugin registry generator
+ * reads, since it runs before any wasm build could emit a descriptor). Both directions are checked so
+ * neither half can drift. An extension's `extends` host counts as declared on the metadata side.
+ *
+ * 🚫️ A Cargo `[dependencies]` link on a sibling plugin crate is NOT a runtime dependency and is not
+ * examined here: deriving the runtime graph from library links pulled `stdio` (linked by ~every
+ * plugin purely for in-process codecs) into every browser session's load set.
  */
 export function policyPluginDependencyParityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -28338,32 +28365,29 @@ export function policyPluginDependencyParityBreaches(repoRoot: string): BreachRe
         declared.add(match[1]!);
       }
     }
-    const cargo = policyCargoPluginDependencyIds(repoRoot, ownerRel);
+    const metadata = policySemioMetadataDependsOnIds(repoRoot, ownerRel);
     const ownId = policyStripEmoji(ownerRel.split("/").pop() ?? "");
     for (const id of declared) {
-      if (cargo.has(id)) continue;
+      if (metadata.declared.has(id) || id === metadata.extendsHost) continue;
       breaches.push({
-        id: `plugin-dependency-missing-cargo-${ownerRel}-${id}`,
-        summary: `"${ownerRel}" declares .depends_on("${id}") with no Cargo dependency on semio-s-plugin-${id}`,
+        id: `plugin-dependency-undeclared-metadata-${ownerRel}-${id}`,
+        summary: `"${ownerRel}" declares .depends_on("${id}") with no matching [package.metadata.semio].depends-on entry`,
         kind: "plugin-dependency/parity",
         scope: ownerRel,
         priority: "high",
-        reason: "A runtime dependency must be backed by the crate dependency that supplies the target's snapshot and mutation types.",
-        solution: `Add semio-s-plugin-${id} (default-features = false) to ${ownerRel}/📦️packages/🦀️rust/Cargo.toml.`,
+        reason: "The plugin registry is generated from Cargo metadata before any wasm build exists, so a runtime dependency only the builder knows about is missing from every load order and dev session closure.",
+        solution: `Add "${id}" to depends-on in ${ownerRel}/📦️packages/🦀️rust/Cargo.toml's [package.metadata.semio].`,
       });
     }
-    for (const id of cargo) {
+    for (const id of metadata.declared) {
       if (id === ownId || declared.has(id)) continue;
       breaches.push({
         id: `plugin-dependency-undeclared-runtime-${ownerRel}-${id}`,
-        summary: `"${ownerRel}" Cargo-depends on semio-s-plugin-${id} without declaring .depends_on("${id}")`,
+        summary: `"${ownerRel}" declares depends-on = ["${id}"] without declaring .depends_on("${id}")`,
         kind: "plugin-dependency/parity",
         scope: ownerRel,
-        // 🎫️ Held at "medium" while the runtime-dependency API rolls out: every plugin that already
-        // links a sibling crate (demonstrator, procedural, …) reports here until it adopts
-        // `.depends_on`, which is the migration this ticket tracks rather than a defect to gate on.
-        priority: "medium",
-        reason: "The host builds its load order, version checks and contribution gates from the runtime manifest — a crate dependency the manifest never mentions is invisible to all three.",
+        priority: "high",
+        reason: "The host builds its load order, version checks and contribution gates from the runtime manifest — a dependency the manifest never mentions is invisible to all three.",
         solution: `Add .depends_on("${id}", …) to the plugin/extension builder in ${ownerRel}.`,
       });
     }

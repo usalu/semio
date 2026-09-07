@@ -2,7 +2,7 @@
 
 #![allow(clippy::result_large_err)]
 
-use crate::artifacts::presentation::mutations::resize_source_frame::mutation::ResizeSourceFrame;
+use crate::artifacts::presentation::mutations::resize_source_frame::ResizeSourceFrame;
 use crate::artifacts::presentation::op::PresentationMutation;
 use crate::artifacts::presentation::{FigureTileFrame, PresentationSnapshot};
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};

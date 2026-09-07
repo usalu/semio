@@ -15,9 +15,9 @@ pub struct WalWriterPermit {
     release: Option<release::WalWriterRelease>,
 }
 
-/// 🧷 Internal task stamp; an old stamp never authorizes a recycled slot.
+/// 🧷 Opaque task stamp; an old stamp never authorizes a recycled slot.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct WalWriterKey {
+pub struct WalWriterKey {
     backend: DbIoBackendControl,
     slot: u8,
     generation: u64,

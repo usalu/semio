@@ -134,7 +134,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-before-fixture/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-before-fixture/🧪️tests/🕸️swaps-in-a-two-node-before-graph/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-before-fixture/🧪️tests/🕸️swaps-in-a-two-a97cef/🦀️.rs"]
                                     mod tests_swaps_in_a_two_node_before_graph;
                                 }
                                 #[path = "."]
@@ -151,7 +151,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/🧪️tests/👈️narrows-the-lhs-pattern-to-a-shaft-neighbour/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/🧪️tests/👈️narrows-the-lhs-4a319f/🦀️.rs"]
                                     mod tests_narrows_the_lhs_pattern_to_a_shaft_neighbour;
                                 }
                                 #[path = "."]
@@ -168,7 +168,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👉️edit-rhs/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👉️edit-rhs/🧪️tests/👉️rewrites-the-rhs-to-set-a-second-property/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👉️edit-rhs/🧪️tests/👉️rewrites-the-rhs-to-6a194f/🦀️.rs"]
                                     mod tests_rewrites_the_rhs_to_set_a_second_property;
                                 }
                                 #[path = "."]
@@ -185,7 +185,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter-binding/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter-binding/🧪️tests/🏷️retitles-the-caption-binding/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter-binding/🧪️tests/🏷️retitles-the-d233c7/🦀️.rs"]
                                     mod tests_retitles_the_caption_binding;
                                 }
                                 #[path = "."]
@@ -202,7 +202,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-parameter-binding/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-parameter-binding/🧪️tests/✂️drops-the-repeat-binding/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-parameter-binding/🧪️tests/✂️drops-the-repeat-35cf7e/🦀️.rs"]
                                     mod tests_drops_the_repeat_binding;
                                 }
                                 #[path = "."]
@@ -219,7 +219,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-rule-layout-point/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-rule-layout-point/🧪️tests/📍️nudges-the-capsule-var-off-the-shaft/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-rule-layout-point/🧪️tests/📍️nudges-the-9b960f/🦀️.rs"]
                                     mod tests_nudges_the_capsule_var_off_the_shaft;
                                 }
                                 #[path = "."]
@@ -236,7 +236,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout-point/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout-point/🧪️tests/📐️clears-the-shaft-layout-point/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout-point/🧪️tests/📐️clears-the-shaft-2d856f/🦀️.rs"]
                                     mod tests_clears_the_shaft_layout_point;
                                 }
                             }
@@ -569,7 +569,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-node/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-node/🧪️tests/🚫️rejects-a-node-id-the-scene-already-holds/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-node/🧪️tests/🚫️rejects-a-node-id-the-14a6d5/🦀️.rs"]
                                     mod tests_rejects_a_node_id_the_scene_already_holds;
                                 }
                                 #[path = "."]
@@ -586,7 +586,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-a-node-the-scene-never-had/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-a-0964d8/🦀️.rs"]
                                     mod tests_rejects_deleting_a_node_the_scene_never_had;
                                 }
                                 #[path = "."]
@@ -603,7 +603,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️create-edge/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️create-edge/🧪️tests/🚫️rejects-an-edge-whose-endpoints-are-absent/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️create-edge/🧪️tests/🚫️rejects-an-edge-3b7777/🦀️.rs"]
                                     mod tests_rejects_an_edge_whose_endpoints_are_absent;
                                 }
                                 #[path = "."]
@@ -620,7 +620,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/🧪️tests/🚫️rejects-cutting-an-edge-the-scene-never-had/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/🧪️tests/🚫️rejects-cutting-an-0cb007/🦀️.rs"]
                                     mod tests_rejects_cutting_an_edge_the_scene_never_had;
                                 }
                                 #[path = "."]
@@ -637,7 +637,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/🧪️tests/✏️keeps-the-name-a-node-already-carries/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/🧪️tests/✏️keeps-the-name-a-node-d2f59b/🦀️.rs"]
                                     mod tests_keeps_the_name_a_node_already_carries;
                                 }
                                 #[path = "."]
@@ -654,7 +654,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/🧪️tests/📍️keeps-a-node-at-the-point-it-already-occupies/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/🧪️tests/📍️keeps-a-node-at-the-815499/🦀️.rs"]
                                     mod tests_keeps_a_node_at_the_point_it_already_occupies;
                                 }
                                 #[path = "."]
@@ -671,7 +671,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/🧪️tests/🏷️keeps-a-node-property-at-the-value-it-already-holds/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/🧪️tests/🏷️keeps-a-node-ea762c/🦀️.rs"]
                                     mod tests_keeps_a_node_property_at_the_value_it_already_holds;
                                 }
                                 #[path = "."]
@@ -688,7 +688,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/🧪️tests/🧹️keeps-an-edge-without-the-property-it-never-had/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/🧪️tests/🧹️keeps-an-edge-c65f2a/🦀️.rs"]
                                     mod tests_keeps_an_edge_without_the_property_it_never_had;
                                 }
                             }
@@ -1468,7 +1468,7 @@ pub mod viewer {
 mod plugin;
 pub use plugin::TrinityApps;
 #[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::TrinityApps);
+semio_framework_plugin::plugin_exports!(plugin::plugin, TrinityApps);
 
 //#region 📚️Examples
 #[path = "."]

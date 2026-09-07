@@ -1,6 +1,5 @@
 //! 🧬️ schema leaf
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]

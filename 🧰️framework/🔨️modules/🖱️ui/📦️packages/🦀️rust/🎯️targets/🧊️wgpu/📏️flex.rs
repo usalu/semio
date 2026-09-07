@@ -14,24 +14,34 @@
 //! `apply_section_metrics`), since `WidgetNode::Section` stacks them at their own intrinsic size with
 //! no `extra_per_child`-style redistribution, unlike a `Stack`'s or `Field`'s.
 
+#[cfg(test)]
 use std::collections::HashMap;
 
+#[cfg(test)]
 use taffy::prelude::*;
 
+#[cfg(test)]
 use crate::wgpu::arena::NodeId;
+#[cfg(test)]
 use crate::wgpu::component::ui::UiNode;
+#[cfg(test)]
 use crate::wgpu::layout::{gap_for_token, padding_for_token};
+#[cfg(test)]
 use crate::wgpu::text::FontAtlas;
+#[cfg(test)]
 use crate::wgpu::theme::Theme;
+#[cfg(test)]
 use crate::wgpu::tree::{NodeFlags, UiTree};
 
 /// 🖋️ Default text size (px) used for intrinsic measurement during layout, ahead of the per-node
 /// resolved style a later paint milestone introduces.
+#[cfg(test)]
 const DEFAULT_TEXT_SIZE_PX: f32 = 14.0;
 
 /// 🍃️ Per-taffy-leaf context: which retained nodes need a measure callback (only `Text`) and which
 /// don't (everything else measures as zero-size content, matching the pre-taffy immediate-mode
 /// widgets that size themselves from fixed control-height/theme metrics rather than intrinsic text).
+#[cfg(test)]
 enum LeafContext {
     None,
     Text(String),
@@ -40,10 +50,12 @@ enum LeafContext {
 /// 🖇️ Reads intrinsic content size for taffy's leaf-measurement callback. Implemented for
 /// `text::FontAtlas` so taffy can ask fontdue for wrap-aware text metrics without ui_wgpu's flex
 /// module depending on fontdue directly.
+#[cfg(test)]
 pub(crate) trait TextMeasure {
     fn measure(&mut self, text: &str, max_width: Option<f32>) -> (f32, f32);
 }
 
+#[cfg(test)]
 impl TextMeasure for FontAtlas {
     fn measure(&mut self, text: &str, max_width: Option<f32>) -> (f32, f32) {
         match max_width {
@@ -53,6 +65,7 @@ impl TextMeasure for FontAtlas {
     }
 }
 
+#[cfg(test)]
 fn quantize_width(width: Option<f32>) -> Option<u32> {
     width.map(|w| w.round().max(0.0) as u32)
 }
@@ -64,6 +77,7 @@ fn quantize_width(width: Option<f32>) -> Option<u32> {
 /// theme-dependent; every other variant is a content leaf (auto-sized, measured via `LeafContext`
 /// where applicable). `flex_grow` is layered on top by the caller for children of a `Stack`/`Field`,
 /// not set here, since it depends on the *parent's* kind.
+#[cfg(test)]
 fn style_for(node: &UiNode) -> Style {
     match node {
         UiNode::Stack(stack) => {
@@ -91,6 +105,7 @@ fn style_for(node: &UiNode) -> Style {
 
 /// 🎚️ Applies `theme`-resolved gap/padding onto a freshly built `Stack` style (kept separate from
 /// `style_for` so the latter stays theme-independent and trivially testable).
+#[cfg(test)]
 fn apply_stack_metrics(style: &mut Style, stack: &crate::wgpu::component::ui::UiStackNode, theme: &Theme) {
     let gap = gap_for_token(theme, stack.gap.as_deref());
     let padding = padding_for_token(theme, stack.padding.as_deref());
@@ -104,6 +119,7 @@ fn apply_stack_metrics(style: &mut Style, stack: &crate::wgpu::component::ui::Ui
 /// taffy container, combined with `style_with_grow` granting its sole child `flex_grow: 1.0`, resolves
 /// that child to the identical rect taffy-side (default `align_items: Stretch` already matches the
 /// full `bounds.w`, since `Field`'s container has no left/right padding).
+#[cfg(test)]
 fn apply_field_metrics(style: &mut Style, theme: &Theme) {
     let label_h = theme.font_size_small;
     let gap = gap_for_token(theme, Some("standard"));
@@ -114,6 +130,7 @@ fn apply_field_metrics(style: &mut Style, theme: &Theme) {
 /// `WidgetNode::Section`'s branch reserves for its content unconditionally (`y = bounds.y +
 /// PANEL_HEADER`, even when `label` is `None` — only the header's chevron+text *paint* is gated on
 /// `label.is_some()`, not this offset).
+#[cfg(test)]
 const SECTION_HEADER_HEIGHT: f32 = 24.0;
 
 /// 🎚️ `WidgetNode::Section`'s branch stacks its children with a plain `y += h + ctx.theme.gap_standard`
@@ -122,11 +139,13 @@ const SECTION_HEADER_HEIGHT: f32 = 24.0;
 /// header offset as top padding and `theme.gap_standard` as the inter-row gap reproduces that
 /// positioning without granting `flex_grow` — `style_with_grow`'s `flex_grow_child` gate deliberately
 /// stays `Stack`/`Field`-only.
+#[cfg(test)]
 fn apply_section_metrics(style: &mut Style, theme: &Theme) {
     style.padding.top = length(SECTION_HEADER_HEIGHT);
     style.gap = Size { width: length(0.0_f32), height: length(theme.gap_standard) };
 }
 
+#[cfg(test)]
 fn leaf_context(node: &UiNode) -> LeafContext {
     match node {
         UiNode::Text(text) => LeafContext::Text(text.value.clone().into_string()),
@@ -144,6 +163,7 @@ struct TaffyNodeMapping {
 /// 🧮️ Owns a taffy flexbox tree mirroring one retained `UiTree` and the `NodeId -> taffy::NodeId`
 /// mapping between them. Used only by the `engine` façade (a later milestone); never exposed
 /// outside the crate.
+#[cfg(test)]
 pub(crate) struct LayoutEngine {
     #[cfg(test)]
     taffy: TaffyTree<LeafContext>,
@@ -151,6 +171,7 @@ pub(crate) struct LayoutEngine {
     nodes: TaffyNodeMapping,
 }
 
+#[cfg(test)]
 impl Default for LayoutEngine {
     fn default() -> Self {
         Self {
@@ -166,11 +187,15 @@ impl Default for LayoutEngine {
 pub(crate) enum LayoutJobStage {
     CollectNodes,
     ShapeText,
+    #[cfg(test)]
     PruneRemoved,
+    #[cfg(test)]
     SyncNodes,
+    #[cfg(test)]
     SolveLayout,
     MeasureFallback,
     ArrangeFallback,
+    #[cfg(test)]
     CollectResults,
     PublishResults,
 }
@@ -609,6 +634,7 @@ mod legacy_layout_job {
     }
 }
 
+#[cfg(test)]
 impl LayoutEngine {
     pub(crate) fn new() -> Self {
         Self::default()

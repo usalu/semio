@@ -1,0 +1,106 @@
+[
+  {
+    "base": {
+      "camera": {
+        "x": 1,
+        "y": 2,
+        "zoom": 2
+      },
+      "locale": "de-DE"
+    },
+    "mutation": {
+      "SetCamera": {
+        "camera": {
+          "x": 4,
+          "y": 5,
+          "zoom": 3
+        }
+      }
+    },
+    "after": {
+      "camera": {
+        "x": 4,
+        "y": 5,
+        "zoom": 3
+      },
+      "locale": "de-DE"
+    },
+    "kind": "set-camera"
+  },
+  {
+    "base": {
+      "camera": {
+        "x": 1,
+        "y": 2,
+        "zoom": 2
+      },
+      "locale": "de-DE"
+    },
+    "mutation": {
+      "SetLocale": {
+        "value": "en-US"
+      }
+    },
+    "after": {
+      "camera": {
+        "x": 1,
+        "y": 2,
+        "zoom": 2
+      },
+      "locale": "en-US"
+    },
+    "kind": "set-locale"
+  },
+  {
+    "base": {
+      "camera": {
+        "x": 1,
+        "y": 2,
+        "zoom": 2
+      },
+      "locale": "de-DE"
+    },
+    "mutation": {
+      "SetCamera": {
+        "camera": {
+          "x": 1,
+          "y": 2,
+          "zoom": 2
+        }
+      }
+    },
+    "after": {
+      "camera": {
+        "x": 1,
+        "y": 2,
+        "zoom": 2
+      },
+      "locale": "de-DE"
+    },
+    "kind": "set-camera"
+  },
+  {
+    "base": {
+      "camera": {
+        "x": 1,
+        "y": 2,
+        "zoom": 2
+      },
+      "locale": "de-DE"
+    },
+    "mutation": {
+      "SetLocale": {
+        "value": "de-DE"
+      }
+    },
+    "after": {
+      "camera": {
+        "x": 1,
+        "y": 2,
+        "zoom": 2
+      },
+      "locale": "de-DE"
+    },
+    "kind": "set-locale"
+  }
+]

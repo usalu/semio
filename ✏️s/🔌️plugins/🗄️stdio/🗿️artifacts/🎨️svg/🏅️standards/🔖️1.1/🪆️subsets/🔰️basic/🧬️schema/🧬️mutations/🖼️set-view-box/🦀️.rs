@@ -15,7 +15,7 @@ pub struct SetViewBox {
 impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for SetViewBox {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "view-box", kind: "set-view-box", record: "SetViewBox" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgBasicMutation as protocol::Mutation<SvgSnapshot>>::Diff> {
+    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgBasicMutation as Mutation<SvgSnapshot>>::Diff> {
         agg_diff(&SvgBasicMutation::SetViewBox(self.clone()), base)
     }
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {

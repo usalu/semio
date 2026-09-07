@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer",
+  "semanticKind": "duplicate-layer",
+  "displayName": "Duplicate Layer",
+  "emoji": "📋️",
+  "aggregateVariant": "DuplicateLayer",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "duplicate-layer",
+  "binaryTag": 11,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "error",
+    "fatal",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

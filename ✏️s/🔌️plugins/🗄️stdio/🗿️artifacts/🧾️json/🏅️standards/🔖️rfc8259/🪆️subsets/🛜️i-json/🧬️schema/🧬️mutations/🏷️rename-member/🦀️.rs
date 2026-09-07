@@ -16,7 +16,7 @@ pub struct RenameMember {
 impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for RenameMember {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "member", kind: "rename-member", record: "RenameMember" };
 
-    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as protocol::Mutation<JsonSnapshot>>::Diff> {
+    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as Mutation<JsonSnapshot>>::Diff> {
         agg_diff(&JsonIJsonMutation::RenameMember(self.clone()), base)
     }
     fn inverse(&self, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {

@@ -1,7 +1,7 @@
 //! 🕸️ `create-mesh` — sets the object's `mesh` CHILD slot to a new owned handle (overwrite-aware,
 //! same convention as `create-brep`).
 
-use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::{SemioObjectMutation, delete_mesh};
+use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Payload

@@ -2437,7 +2437,7 @@ mod tests {
             WorkflowDiff::Empty,
         ];
         for diff in diffs {
-            let applied = protocol::MutationDiff::apply(&diff, &empty_workflow_snapshot().await).expect("valid workflow diff");
+            let applied = MutationDiff::apply(&diff, &empty_workflow_snapshot().await).expect("valid workflow diff");
             let _ = applied;
         }
     }
@@ -2568,7 +2568,7 @@ mod tests {
         });
         let started = apply_run_operation_checked(&empty_run_document().await, start.clone()).await.expect("first start applies");
         let outcome = protocol::Mutation::diff(&start, &started);
-        let expected = protocol::MutationDiff::apply(outcome.diff(), &started).expect_err("the direct diff rejects a second start");
+        let expected = MutationDiff::apply(outcome.diff(), &started).expect_err("the direct diff rejects a second start");
         let actual = apply_run_operation_checked(&started, start).await.expect_err("checked admission rejects the same second start");
         assert_eq!(actual, expected);
         assert_eq!(actual.code, "mutation.apply.conflicting-target");
@@ -2606,11 +2606,11 @@ mod tests {
         let document = empty_run_document().await;
         let first = RunMutation::AppendRunLog(AppendRunLog { node_id: String::new(), level: "info".into(), message: "first".into(), at: "1".into() });
         let first_diff = protocol::Mutation::diff(&first, &document).diff().clone();
-        let middle = protocol::MutationDiff::apply(&first_diff, &document).expect("first append applies");
+        let middle = MutationDiff::apply(&first_diff, &document).expect("first append applies");
         let second = RunMutation::AppendRunLog(AppendRunLog { node_id: String::new(), level: "info".into(), message: "second".into(), at: "2".into() });
         let mut combined = first_diff;
         combined.absorb(protocol::Mutation::diff(&second, &middle).diff().clone());
-        let after = protocol::MutationDiff::apply(&combined, &document).expect("combined appends apply");
+        let after = MutationDiff::apply(&combined, &document).expect("combined appends apply");
         assert_eq!(after.logs.iter().map(|line| line.message.as_str()).collect::<Vec<_>>(), vec!["first", "second"]);
     }
 
@@ -2621,11 +2621,11 @@ mod tests {
             workflow_ref: "workflow-selected".into(), workflow_checkpoint_id: "checkpoint".into(), input_collection_ref: "inputs".into(), input_snapshot_id: "snapshot".into(), parameter_values: Vec::new(), output_collection_ref: "outputs".into(), trigger: RunTrigger::Manual { actor: "operator".into() },
         });
         let start_diff = protocol::Mutation::diff(&start, &document).diff().clone();
-        let middle = protocol::MutationDiff::apply(&start_diff, &document).expect("start applies");
+        let middle = MutationDiff::apply(&start_diff, &document).expect("start applies");
         let append = RunMutation::AppendRunLog(AppendRunLog { node_id: String::new(), level: "info".into(), message: "started".into(), at: "1".into() });
         let mut combined = start_diff;
         combined.absorb(protocol::Mutation::diff(&append, &middle).diff().clone());
-        let after = protocol::MutationDiff::apply(&combined, &document).expect("combined start and append apply");
+        let after = MutationDiff::apply(&combined, &document).expect("combined start and append apply");
         assert_eq!(after.workflow_ref, "workflow-selected");
         assert_eq!(after.status, RunStatus::Running);
         assert_eq!(after.logs.iter().map(|line| line.message.as_str()).collect::<Vec<_>>(), vec!["started"]);
@@ -2652,7 +2652,7 @@ mod tests {
         assert_eq!(left, right);
         assert_eq!(leading_identity, first);
         assert_eq!(trailing_identity, first);
-        assert_eq!(protocol::MutationDiff::apply(&left, &document), protocol::MutationDiff::apply(&right, &document));
+        assert_eq!(MutationDiff::apply(&left, &document), MutationDiff::apply(&right, &document));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2660,7 +2660,7 @@ mod tests {
         let document = empty_run_document().await;
         let mut seal_then_log = RunDiff::Seal { status: RunStatus::Succeeded };
         seal_then_log.absorb(RunDiff::Log { node_id: String::new(), level: "info".into(), message: "late".into(), at: "1".into() });
-        let sealed_error = protocol::MutationDiff::apply(&seal_then_log, &document).expect_err("log after a composed seal rejects");
+        let sealed_error = MutationDiff::apply(&seal_then_log, &document).expect_err("log after a composed seal rejects");
         assert_eq!(sealed_error.code, "mutation.apply.sealed");
         assert_eq!(sealed_error.target, vec!["sealed"]);
         assert_eq!(document, empty_run_document().await);
@@ -2670,7 +2670,7 @@ mod tests {
         };
         let mut double_start = first_start.clone();
         double_start.absorb(first_start);
-        let start_error = protocol::MutationDiff::apply(&double_start, &document).expect_err("second composed start rejects");
+        let start_error = MutationDiff::apply(&double_start, &document).expect_err("second composed start rejects");
         assert_eq!(start_error.code, "mutation.apply.conflicting-target");
         assert_eq!(start_error.target, vec!["status"]);
         assert_eq!(document, empty_run_document().await);

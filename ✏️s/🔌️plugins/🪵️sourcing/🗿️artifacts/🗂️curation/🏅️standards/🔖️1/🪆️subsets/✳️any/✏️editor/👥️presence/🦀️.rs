@@ -159,8 +159,8 @@ impl protocol::OpBinary for SourcingCurationPresenceMutation {
 //#endregion 🔖️PresenceMutation
 
 //#region 🧹️Retirement
-const SOURCING_PRESENCE_BYTES: usize = 7 * std::mem::size_of::<f64>();
-const _: () = assert!(std::mem::size_of::<SourcingCurationPresence>() == SOURCING_PRESENCE_BYTES && !std::mem::needs_drop::<SourcingCurationPresence>());
+const SOURCING_PRESENCE_BYTES: usize = 7 * size_of::<f64>();
+const _: () = assert!(size_of::<SourcingCurationPresence>() == SOURCING_PRESENCE_BYTES && !std::mem::needs_drop::<SourcingCurationPresence>());
 
 pub struct SourcingPresenceRetirementFactory;
 

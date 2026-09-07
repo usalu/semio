@@ -536,35 +536,35 @@ pub fn value_eq_ignoring_object_order(a: &Value, b: &Value) -> bool {
 /// Maps `protocol::value::Number`'s `UInt`/`Int`/`Float` variants onto this crate's own
 /// identically-shaped [`Number`] one-for-one — an integer stays an integer across the bridge
 /// instead of being widened to `f64` and printed back with a spurious `.0`.
-pub fn from_dsl_value(value: &protocol::value::DslValue) -> Value {
+pub fn from_dsl_value(value: &DslValue) -> Value {
     match value {
-        protocol::value::DslValue::Null => Value::Null,
-        protocol::value::DslValue::Bool(b) => Value::Bool(*b),
-        protocol::value::DslValue::Number(n) => Value::Number(match n {
+        DslValue::Null => Value::Null,
+        DslValue::Bool(b) => Value::Bool(*b),
+        DslValue::Number(n) => Value::Number(match n {
             protocol::value::Number::UInt(value) => Number::UInt(*value),
             protocol::value::Number::Int(value) => Number::Int(*value),
             protocol::value::Number::Float(value) => Number::Float(*value),
         }),
-        protocol::value::DslValue::String(s) => Value::String(s.clone()),
-        protocol::value::DslValue::Array(items) => Value::Array(items.iter().map(from_dsl_value).collect()),
-        protocol::value::DslValue::Object(entries) => Value::Object(entries.iter().map(|(key, value)| (key.clone(), from_dsl_value(value))).collect()),
+        DslValue::String(s) => Value::String(s.clone()),
+        DslValue::Array(items) => Value::Array(items.iter().map(from_dsl_value).collect()),
+        DslValue::Object(entries) => Value::Object(entries.iter().map(|(key, value)| (key.clone(), from_dsl_value(value))).collect()),
     }
 }
 
 /// 🌉️ The reverse of [`from_dsl_value`] — maps numbers variant-for-variant, so an integer stays an
 /// integer across the bridge instead of being widened to `f64` and printed back as `1.0`.
-pub fn to_dsl_value(value: &Value) -> protocol::value::DslValue {
+pub fn to_dsl_value(value: &Value) -> DslValue {
     match value {
-        Value::Null => protocol::value::DslValue::Null,
-        Value::Bool(b) => protocol::value::DslValue::Bool(*b),
-        Value::Number(n) => protocol::value::DslValue::Number(match n {
+        Value::Null => DslValue::Null,
+        Value::Bool(b) => DslValue::Bool(*b),
+        Value::Number(n) => DslValue::Number(match n {
             Number::UInt(value) => protocol::value::Number::UInt(*value),
             Number::Int(value) => protocol::value::Number::Int(*value),
             Number::Float(value) => protocol::value::Number::Float(*value),
         }),
-        Value::String(s) => protocol::value::DslValue::String(s.clone()),
-        Value::Array(items) => protocol::value::DslValue::Array(items.iter().map(to_dsl_value).collect()),
-        Value::Object(entries) => protocol::value::DslValue::object(entries.iter().map(|(key, value)| (key.to_string(), to_dsl_value(value)))),
+        Value::String(s) => DslValue::String(s.clone()),
+        Value::Array(items) => DslValue::Array(items.iter().map(to_dsl_value).collect()),
+        Value::Object(entries) => DslValue::object(entries.iter().map(|(key, value)| (key.to_string(), to_dsl_value(value)))),
     }
 }
 //#endregion 🔖️DslValueBridge

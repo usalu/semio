@@ -772,10 +772,10 @@ mod extension_guest {
         let flow_topic = flow_extension_topic_contribution(FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "bim", &manifest_json);
         let procedural3d_topic = flow_extension_topic_contribution(PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "bim", &manifest_json);
         let bundle = ExtensionBundle::new("flow-extension-bim", "Bim", "0.1.0").extends("flow");
-        let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Linked));
-        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(flow_topic.topic, flow_topic.payload));
-        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload));
-        semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| evaluate_invoke_json(&module_registry(), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err))))
+        let bundle = bundle.mode(ExecutionMode::Linked);
+        let bundle = bundle.contributes_topic(flow_topic.topic, flow_topic.payload);
+        let bundle = bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload);
+        bundle.handler("evaluate", |req| evaluate_invoke_json(&module_registry(), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err)))
     }
 
     #[test]

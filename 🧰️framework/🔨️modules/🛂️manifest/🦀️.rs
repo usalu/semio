@@ -1047,14 +1047,14 @@ impl ActionDefinition {
     /// id) — read back by `AppActionRegistry::category_of` and fed into `organize_context_menu`'s
     /// `category_of` lookup at the context-menu funnel, so an overflowing flat menu buckets this
     /// action's row into `menu.group.<category>` instead of `menu.group.actions`.
-    pub async fn with_category(mut self, category: impl Into<String>) -> Self {
+    pub fn with_category(mut self, category: impl Into<String>) -> Self {
         self.category = Some(category.into());
         self
     }
 
     /// @emoji 🗂️ Sets this action's ribbon-parent-taxonomy category — see `with_category`.
-    pub async fn category(self, category: impl Into<String>) -> Self {
-        self.with_category(category).await
+    pub fn category(self, category: impl Into<String>) -> Self {
+        self.with_category(category)
     }
 
     /// @emoji 🎯️ Replaces this action's whole `ActionSemantics` wholesale.
@@ -3362,7 +3362,7 @@ impl std::str::FromStr for AppRole {
 /// internally-tagged representations, but `AppRole` is a plain unit-only "string enum" — serde's
 /// own default (untagged bare-string) representation. Delegates to the existing `as_str`/`FromStr`
 /// so the wire spelling never drifts from the serde/TS/JSON-schema one.
-impl dsl::ToValue for AppRole {
+impl ToValue for AppRole {
     fn to_value(&self) -> DslValue {
         DslValue::String(self.as_str().to_string())
     }
@@ -3700,9 +3700,9 @@ impl TopicContribution {
 /// 🌉️ Hand-written, not derived (avoids a new `semio-framework-value-derive` dependency edge on
 /// this file's two host crates — this shape is a two-field plain record, trivial either way):
 /// `topic`/`payload` mirror the `#[serde(rename_all = "camelCase")]` wire shape exactly.
-impl dsl::ToValue for TopicContribution {
+impl ToValue for TopicContribution {
     fn to_value(&self) -> DslValue {
-        DslValue::object([("topic".to_string(), dsl::ToValue::to_value(&self.topic)), ("payload".to_string(), self.payload.clone())])
+        DslValue::object([("topic".to_string(), ToValue::to_value(&self.topic)), ("payload".to_string(), self.payload.clone())])
     }
 }
 impl FromValue for TopicContribution {

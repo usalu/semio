@@ -23,25 +23,23 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use db::db_storage::PayloadStorage as _;
 use directory::os_directory::{
-    self, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1,
-    AdminPageV1, AdminRecordedConnectionV1, ArtifactFrontier, ArtifactHash, CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES, CHECKPOINT_PUBLICATION_DEADLINE_MS, CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES,
-    CheckpointPublicationBlobV1, CheckpointPublicationCommandV1, CheckpointPublicationCurrentV1, CheckpointPublicationFrontierV1, CheckpointPublicationReceiptV1, ConnectionView, DIRECTORY_COMMAND_REQUEST_MAX_BYTES,
-    DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS,
-    DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES,
-    DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER,
-    DOCUMENT_OPEN_PLAN_MAX_TTL_MS, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryConnectionPhase, DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1,
-    DirectoryPresenceActor, DirectoryReadModel, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1,
-    DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1,
-    DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1,
-    DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRevalidationV1,
-    DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentView, MemberSpaceViewV1, MemberView, PublicDocumentCatalogEntryV1, PublicSpaceViewV1, PublishedArtifactCheckpoint, SpaceView, descriptor_digest_v1,
-    directory_command_sha256, same_lease_fields_v1, validate_directory_event_page_event,
+    self, descriptor_digest_v1, directory_command_sha256, same_lease_fields_v1, validate_directory_event_page_event, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1,
+    AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1, ArtifactFrontier, ArtifactHash, CheckpointPublicationBlobV1, CheckpointPublicationCommandV1,
+    CheckpointPublicationCurrentV1, CheckpointPublicationFrontierV1, CheckpointPublicationReceiptV1, ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1,
+    DirectoryConnectionPhase, DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectoryReadModel, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1,
+    DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1,
+    DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentExecutionTargetComponentV1,
+    DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1,
+    DocumentOpenPlanErrorCodeV1, DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentView, MemberSpaceViewV1, MemberView, PublicDocumentCatalogEntryV1,
+    PublicSpaceViewV1, PublishedArtifactCheckpoint, SpaceView, CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES, CHECKPOINT_PUBLICATION_DEADLINE_MS, CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES,
+    DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,
+    DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS,
 };
 use directory::os_spr::channel::{PRESENCE_ROSTER_MAXIMUM_BYTES, PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES, PRESENCE_ROSTER_MAXIMUM_ITEMS};
 use directory::{DslValue, FromValue, ToValue};
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
-use protocol::{AckStage, ActorId, ApplyOutcome, ArtifactId as ProtocolArtifactId, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame, decode_client_frame, encode_server_frame};
+use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ArtifactId as ProtocolArtifactId, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
 use semio_framework_async::ShardedMap;
 use semio_framework_hash::Sha256;
 #[cfg(feature = "neo4j")]
@@ -50,9 +48,9 @@ use semio_hub::artifact_authority::chunk_cas::Neo4jArtifactChunkCasStorage;
 use semio_hub::artifact_authority::chunk_cas::PostgresArtifactChunkCasStorage;
 #[cfg(feature = "sqlite")]
 use semio_hub::artifact_authority::chunk_cas::SqliteArtifactChunkCasStorage;
-use semio_hub::artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage, ArtifactChunkCasStores, FsArtifactChunkCasStorage};
 #[cfg(test)]
-use semio_hub::artifact_authority::chunk_cas::{MemoryArtifactChunkCasStorage, artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
+use semio_hub::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1, MemoryArtifactChunkCasStorage};
+use semio_hub::artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage, ArtifactChunkCasStores, FsArtifactChunkCasStorage};
 #[cfg(feature = "native-artifact-execution")]
 use semio_hub::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
 use semio_hub::artifact_authority::trusted_catalog::{NativeCodecProviderSourceV1, TrustedCatalogLoader, VerifiedDocumentOpenSelectionV1, VerifiedExecutionTargetAssets, VerifiedTrustedCatalog};
@@ -73,24 +71,29 @@ use semio_hub::directory::model::{
 #[cfg(feature = "sqlite")]
 use semio_hub::directory::sqlite::SqliteDirectory;
 use semio_hub::directory::{
-    ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_INTENT_REQUEST_MAX_BYTES, ADMIN_PAGE_MAX, ADMIN_RESPONSE_MAX_BYTES, ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, CAPABILITY_MAX_TTL_SECS, CommandResult,
-    DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, DirectoryCommandExecutionV1, DirectoryService, HubDirectories, HubDirectory, HubVerifiedCheckpointPublisher, ProjectionRebuildControl, ProjectionRebuildProgress,
-    SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SPACE_ADMINISTRATION_PAGE_MAX, directory_command_result_kind, published_artifact_checkpoint, replay_directory_command_receipt,
+    directory_command_result_kind, published_artifact_checkpoint, replay_directory_command_receipt, ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, CommandResult, DirectoryCommandExecutionV1, DirectoryService,
+    HubDirectories, HubDirectory, HubVerifiedCheckpointPublisher, ProjectionRebuildControl, ProjectionRebuildProgress, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_INTENT_REQUEST_MAX_BYTES, ADMIN_PAGE_MAX, ADMIN_RESPONSE_MAX_BYTES, CAPABILITY_MAX_TTL_SECS,
+    DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SPACE_ADMINISTRATION_PAGE_MAX,
 };
-use semio_hub::directory::{AUTH_TEXT_MAX_BYTES, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability, identity_subject_digest};
+use semio_hub::directory::{identity_subject_digest, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability, AUTH_TEXT_MAX_BYTES};
+#[cfg(all(test, feature = "sqlite", feature = "test-support"))]
+use semio_hub::inference::runtime::UnavailableGisMapApprovalCommitterV1;
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
-use semio_hub::inference::runtime::{HubInferenceRuntimeV1, UnavailableGisMapApprovalCommitterV1};
+use semio_hub::inference::runtime::{
+    GisMapApprovalCheckpointPublisherV1, GisMapApprovalCheckpointRequestV1, GisMapApprovalCommitErrorV1, GisMapApprovalIngressAuthorityV1, GisMapDocumentWriteAuthorityV1, HubInferenceRuntimeV1, InferenceApprovalRouteContextV1, InferenceRouteErrorV1,
+    RetainedGisMapApprovalCommitterV1,
+};
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 use semio_hub::inference::sqlite::InferenceJobLedgerV1;
 #[cfg(feature = "native-artifact-execution")]
-use semio_hub::inference::{VerifiedGisMapArtifactBindingV1, verified_gis_map_binding};
+use semio_hub::inference::{verified_gis_map_binding, VerifiedGisMapArtifactBindingV1};
 #[cfg(test)]
 use semio_hub::lag_rebootstrap::decode_canonical_checkpoint_pair;
 use semio_hub::lag_rebootstrap::{
-    CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE, CanonicalPairTerminal, REBOOTSTRAP_DEADLINE_MS, RebootstrapContext, RebootstrapError, RebootstrapProgress, RebootstrapProgressStage, RebootstrapTransferControl, VerifiedRebootstrapSource,
-    append_canonical_pair_data, append_canonical_pair_header, append_canonical_pair_terminal, canonical_pair_etag,
+    append_canonical_pair_data, append_canonical_pair_header, append_canonical_pair_terminal, canonical_pair_etag, CanonicalPairTerminal, RebootstrapContext, RebootstrapError, RebootstrapProgress, RebootstrapProgressStage,
+    RebootstrapTransferControl, VerifiedRebootstrapSource, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE, REBOOTSTRAP_DEADLINE_MS,
 };
-use semio_hub::local_bootstrap::{InheritedLocalBootstrapTransport, LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS, serve_local_bootstrap};
+use semio_hub::local_bootstrap::{serve_local_bootstrap, InheritedLocalBootstrapTransport, LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::net::SocketAddr;
@@ -107,6 +110,10 @@ enum HubError {
     ArtifactAuthority(AuthorityError),
     Directory(DirectoryError),
     Db(db::DbError),
+    DatabaseOpen(db::engine::DatabaseOpenAtRejected),
+    StorageOpen(db::db_storage::DbStorageOpenRejected),
+    #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+    InferenceShutdown(GisMapApprovalCommitErrorV1),
     Io(std::io::Error),
     UnknownStorageBackend(String),
     UnknownDirectoryBackend(String),
@@ -119,6 +126,10 @@ impl std::fmt::Display for HubError {
             Self::ArtifactAuthority(error) => std::fmt::Display::fmt(error, formatter),
             Self::Directory(error) => std::fmt::Display::fmt(error, formatter),
             Self::Db(error) => std::fmt::Display::fmt(error, formatter),
+            Self::DatabaseOpen(error) => std::fmt::Display::fmt(error.error(), formatter),
+            Self::StorageOpen(error) => std::fmt::Display::fmt(error.error(), formatter),
+            #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+            Self::InferenceShutdown(error) => write!(formatter, "inference runtime shutdown failed: {error:?}"),
             Self::Io(error) => write!(formatter, "io error: {error}"),
             Self::UnknownStorageBackend(backend) => write!(formatter, "unknown OS_HUB_STORAGE_BACKEND: {backend}"),
             Self::UnknownDirectoryBackend(backend) => write!(formatter, "unknown OS_HUB_DIRECTORY_BACKEND: {backend}"),
@@ -133,6 +144,10 @@ impl std::error::Error for HubError {
             Self::ArtifactAuthority(error) => Some(error),
             Self::Directory(error) => Some(error),
             Self::Db(error) => Some(error),
+            Self::DatabaseOpen(error) => Some(error.error()),
+            Self::StorageOpen(error) => Some(error.error()),
+            #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+            Self::InferenceShutdown(_) => None,
             Self::Io(error) => Some(error),
             Self::UnknownStorageBackend(_) | Self::UnknownDirectoryBackend(_) | Self::UnsafeAuthConfiguration(_) => None,
         }
@@ -154,6 +169,18 @@ impl From<DirectoryError> for HubError {
 impl From<db::DbError> for HubError {
     fn from(error: db::DbError) -> Self {
         Self::Db(error)
+    }
+}
+
+impl From<db::engine::DatabaseOpenAtRejected> for HubError {
+    fn from(error: db::engine::DatabaseOpenAtRejected) -> Self {
+        Self::DatabaseOpen(error)
+    }
+}
+
+impl From<db::db_storage::DbStorageOpenRejected> for HubError {
+    fn from(error: db::db_storage::DbStorageOpenRejected) -> Self {
+        Self::StorageOpen(error)
     }
 }
 
@@ -551,6 +578,10 @@ struct TestLiveGate {
     socket_membership_remove_enabled: std::sync::atomic::AtomicBool,
     socket_membership_remove_admitted: tokio::sync::Semaphore,
     socket_membership_remove_release: tokio::sync::Semaphore,
+    directory_command_pause_user: Mutex<Option<(String, bool)>>,
+    directory_command_attempted: tokio::sync::Semaphore,
+    directory_command_admitted: tokio::sync::Semaphore,
+    directory_command_release: tokio::sync::Semaphore,
     directory_event_page_fence_enabled: std::sync::atomic::AtomicBool,
     directory_event_page_read_admitted: tokio::sync::Semaphore,
     directory_event_page_read_release: tokio::sync::Semaphore,
@@ -589,6 +620,10 @@ impl Default for TestLiveGate {
             socket_membership_remove_enabled: std::sync::atomic::AtomicBool::new(false),
             socket_membership_remove_admitted: tokio::sync::Semaphore::new(0),
             socket_membership_remove_release: tokio::sync::Semaphore::new(0),
+            directory_command_pause_user: Mutex::new(None),
+            directory_command_attempted: tokio::sync::Semaphore::new(0),
+            directory_command_admitted: tokio::sync::Semaphore::new(0),
+            directory_command_release: tokio::sync::Semaphore::new(0),
             directory_event_page_fence_enabled: std::sync::atomic::AtomicBool::new(false),
             directory_event_page_read_admitted: tokio::sync::Semaphore::new(0),
             directory_event_page_read_release: tokio::sync::Semaphore::new(0),
@@ -666,6 +701,7 @@ const DOCUMENT_OPEN_PLAN_EXCHANGE_REQUEST_MAX_BYTES: usize = 8 * 1024;
 enum SocketBindingKeyV1 {
     User(String),
     Session(String),
+    DirectorySpaceAuthority { space_id: String },
     Membership { user_id: String, space_id: String },
     Share(String),
     DocumentWrite(DocumentScope),
@@ -762,12 +798,9 @@ struct SocketGrantRecordV1 {
 
 fn socket_record_bindings(subject: &SocketSubjectV1, audience: &SocketAudienceV1) -> Vec<SocketBindingKeyV1> {
     let mut bindings = subject.admission_bindings();
-    if let SocketSubjectV1::Session { user_id, .. } = subject {
-        let scope = match audience {
-            SocketAudienceV1::Document(scope) | SocketAudienceV1::DirectoryScoped(scope) => Some(scope),
-            SocketAudienceV1::Directory { .. } => None,
-        };
-        if let Some(scope) = scope {
+    if let SocketAudienceV1::Document(scope) | SocketAudienceV1::DirectoryScoped(scope) = audience {
+        bindings.push(SocketBindingKeyV1::DirectorySpaceAuthority { space_id: scope.space_id.clone() });
+        if let SocketSubjectV1::Session { user_id, .. } = subject {
             bindings.push(SocketBindingKeyV1::Membership { user_id: user_id.clone(), space_id: scope.space_id.clone() });
         }
     }
@@ -816,7 +849,12 @@ impl SocketBindingGatesV1 {
     }
 
     async fn acquire_record(&self, subject: &SocketSubjectV1, audience: &SocketAudienceV1) -> Vec<tokio::sync::OwnedMutexGuard<()>> {
-        let bindings = socket_record_bindings(subject, audience);
+        self.acquire_bindings(socket_record_bindings(subject, audience)).await
+    }
+
+    async fn acquire_bindings(&self, mut bindings: Vec<SocketBindingKeyV1>) -> Vec<tokio::sync::OwnedMutexGuard<()>> {
+        bindings.sort();
+        bindings.dedup();
         let mut admissions = Vec::with_capacity(bindings.len());
         for binding in bindings {
             admissions.push(self.gate(binding).lock_owned().await);
@@ -887,7 +925,9 @@ impl SocketGrantLedgerV1 {
         let mut inner = self.inner.lock().map_err(|_| SocketGrantLedgerErrorV1::Rejected)?;
         Self::sweep_expired(&mut inner, issued_at_ms);
         let bindings = socket_record_bindings(&subject, &audience);
-        if inner.records.len() >= SOCKET_GRANT_LEDGER_CAPACITY || bindings.iter().any(|binding| inner.pending_by_binding.get(binding).map_or(0, BTreeSet::len) >= SOCKET_GRANT_BINDING_PENDING_CAPACITY) {
+        if inner.records.len() >= SOCKET_GRANT_LEDGER_CAPACITY
+            || bindings.iter().filter(|binding| !matches!(binding, SocketBindingKeyV1::DirectorySpaceAuthority { .. })).any(|binding| inner.pending_by_binding.get(binding).map_or(0, BTreeSet::len) >= SOCKET_GRANT_BINDING_PENDING_CAPACITY)
+        {
             return Err(SocketGrantLedgerErrorV1::Capacity);
         }
         let selector = capability.selector().to_string();
@@ -1429,7 +1469,11 @@ impl DocumentOpenPlanLedgerV1 {
 
     fn invalidate_binding(&self, binding: &SocketBindingKeyV1) -> usize {
         let Ok(mut inner) = self.inner.lock() else { return 0 };
-        let digests = inner.records.iter().filter_map(|(digest, record)| (&record.authority.subject.binding() == binding && record.state == DocumentOpenPlanStateV1::Issued).then_some(*digest)).collect::<Vec<_>>();
+        let digests = inner
+            .records
+            .iter()
+            .filter_map(|(digest, record)| (socket_record_bindings(&record.authority.subject, &SocketAudienceV1::Document(record.authority.scope.clone())).contains(binding) && record.state == DocumentOpenPlanStateV1::Issued).then_some(*digest))
+            .collect::<Vec<_>>();
         for digest in &digests {
             let indexed = if let Some(record) = inner.records.get_mut(digest) {
                 record.state = DocumentOpenPlanStateV1::Invalidated;
@@ -3072,13 +3116,7 @@ struct CheckpointPublicationClaimGuardV1 {
 
 impl CheckpointPublicationClaimGuardV1 {
     fn new(service: Arc<DirectoryService>, claim: &NewCheckpointPublicationClaimV1) -> Self {
-        Self {
-            service,
-            actor_user_id: claim.actor_user_id.clone(),
-            correlation_id: claim.correlation_id.clone(),
-            command_sha256: claim.command_sha256.clone(),
-            complete: false,
-        }
+        Self { service, actor_user_id: claim.actor_user_id.clone(), correlation_id: claim.correlation_id.clone(), command_sha256: claim.command_sha256.clone(), complete: false }
     }
 
     fn complete(&mut self) {
@@ -3086,13 +3124,7 @@ impl CheckpointPublicationClaimGuardV1 {
     }
 
     async fn release(&mut self) {
-        if !self.complete
-            && self
-                .service
-                .release_checkpoint_publication(&self.actor_user_id, &self.correlation_id, &self.command_sha256)
-                .await
-                .is_ok()
-        {
+        if !self.complete && self.service.release_checkpoint_publication(&self.actor_user_id, &self.correlation_id, &self.command_sha256).await.is_ok() {
             self.complete = true;
         }
     }
@@ -3134,9 +3166,7 @@ impl Drop for CheckpointPublicationHttpRequest {
 fn checkpoint_publication_current_matches(expected: &CheckpointPublicationCurrentV1, current: Option<&PublishedArtifactCheckpoint>) -> bool {
     match (expected, current) {
         (CheckpointPublicationCurrentV1::None, None) => true,
-        (CheckpointPublicationCurrentV1::Active { checkpoint_id, baseline_frontier }, Some(current)) => {
-            current.checkpoint_id.hex() == *checkpoint_id && baseline_frontier.artifact_frontier().as_ref() == Some(&current.baseline_frontier)
-        }
+        (CheckpointPublicationCurrentV1::Active { checkpoint_id, baseline_frontier }, Some(current)) => current.checkpoint_id.hex() == *checkpoint_id && baseline_frontier.artifact_frontier().as_ref() == Some(&current.baseline_frontier),
         _ => false,
     }
 }
@@ -3176,11 +3206,7 @@ fn checkpoint_publication_replay_matches(scope: &DocumentScope, command: &Checkp
 }
 
 fn checkpoint_publication_receipt(command: &CheckpointPublicationCommandV1, checkpoint: PublishedArtifactCheckpoint) -> Response {
-    let receipt = CheckpointPublicationReceiptV1 {
-        schema: "semio.hub.checkpoint-publication-receipt/v1".into(),
-        correlation_id: command.correlation_id.clone(),
-        checkpoint,
-    };
+    let receipt = CheckpointPublicationReceiptV1 { schema: "semio.hub.checkpoint-publication-receipt/v1".into(), correlation_id: command.correlation_id.clone(), checkpoint };
     let mut response = DirectoryJson(receipt).into_response();
     response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("private, no-store"));
     response
@@ -3203,8 +3229,14 @@ fn checkpoint_publication_error_status(error: &AuthorityError) -> StatusCode {
         AuthorityError::Cancelled => StatusCode::SERVICE_UNAVAILABLE,
         AuthorityError::DeadlineExceeded => StatusCode::GATEWAY_TIMEOUT,
         AuthorityError::ResourceLimit(_) | AuthorityError::PairResourceLimit(_) => StatusCode::PAYLOAD_TOO_LARGE,
-        AuthorityError::InvalidDescriptor(_) | AuthorityError::InvalidScope | AuthorityError::InvalidFrontier | AuthorityError::InvalidParentCheckpoint | AuthorityError::InvalidOperationOrder | AuthorityError::InvalidLimits
-        | AuthorityError::Codec { .. } | AuthorityError::CodecIdentityMismatch => StatusCode::BAD_REQUEST,
+        AuthorityError::InvalidDescriptor(_)
+        | AuthorityError::InvalidScope
+        | AuthorityError::InvalidFrontier
+        | AuthorityError::InvalidParentCheckpoint
+        | AuthorityError::InvalidOperationOrder
+        | AuthorityError::InvalidLimits
+        | AuthorityError::Codec { .. }
+        | AuthorityError::CodecIdentityMismatch => StatusCode::BAD_REQUEST,
         AuthorityError::Catalog(_) | AuthorityError::Store(_) => StatusCode::SERVICE_UNAVAILABLE,
         AuthorityError::BlobIntegrity(_) | AuthorityError::Publication(_) => StatusCode::CONFLICT,
     }
@@ -3243,11 +3275,7 @@ impl FencedCheckpointPublisherV1 {
 }
 
 impl VerifiedCheckpointPublisher for FencedCheckpointPublisherV1 {
-    async fn reserve(
-        &self,
-        plan: &semio_hub::artifact_authority::chunk_cas::ArtifactCasOwnershipPlanV1,
-        context: &OperationContext<'_>,
-    ) -> Result<semio_hub::artifact_authority::chunk_cas::ArtifactCasReservation, AuthorityError> {
+    async fn reserve(&self, plan: &semio_hub::artifact_authority::chunk_cas::ArtifactCasOwnershipPlanV1, context: &OperationContext<'_>) -> Result<semio_hub::artifact_authority::chunk_cas::ArtifactCasReservation, AuthorityError> {
         context.checkpoint()?;
         if !self.authority_is_current().await? {
             return Err(Self::publication_error());
@@ -3255,23 +3283,11 @@ impl VerifiedCheckpointPublisher for FencedCheckpointPublisherV1 {
         HubVerifiedCheckpointPublisher::new(self.state.directory_service.clone(), self.state.artifact_cas.clone(), "system:artifact-authority").reserve(plan, context).await
     }
 
-    async fn publish_reserved(
-        &self,
-        checkpoint: &os_directory::ArtifactCheckpoint,
-        reservation: &semio_hub::artifact_authority::chunk_cas::ArtifactCasReservation,
-        context: &OperationContext<'_>,
-    ) -> Result<(), AuthorityError> {
+    async fn publish_reserved(&self, checkpoint: &os_directory::ArtifactCheckpoint, reservation: &semio_hub::artifact_authority::chunk_cas::ArtifactCasReservation, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
-        let authorization = tokio::time::timeout(std::time::Duration::from_secs(2), self.state.socket_binding_gates.acquire_record(&self.subject, &self.audience))
-            .await
-            .map_err(|_| Self::publication_error())?;
+        let authorization = tokio::time::timeout(std::time::Duration::from_secs(2), self.state.socket_binding_gates.acquire_record(&self.subject, &self.audience)).await.map_err(|_| Self::publication_error())?;
         let SocketAudienceV1::Document(scope) = &self.audience else { return Err(Self::publication_error()) };
-        let document_write = tokio::time::timeout(
-            std::time::Duration::from_secs(2),
-            self.state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(scope.clone())).lock_owned(),
-        )
-        .await
-        .map_err(|_| Self::publication_error())?;
+        let document_write = tokio::time::timeout(std::time::Duration::from_secs(2), self.state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(scope.clone())).lock_owned()).await.map_err(|_| Self::publication_error())?;
         context.checkpoint()?;
         if !self.authority_is_current().await?
             || checkpoint.scope != *scope
@@ -3286,143 +3302,265 @@ impl VerifiedCheckpointPublisher for FencedCheckpointPublisherV1 {
         let result = self
             .state
             .directory_service
-            .publish_reserved_artifact_checkpoint_and_complete_checkpoint_publication(
-                DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() },
-                checkpoint.clone(),
-                reservation.clone(),
-                completion,
-                context.now_ms(),
-            )
+            .publish_reserved_artifact_checkpoint_and_complete_checkpoint_publication(DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() }, checkpoint.clone(), reservation.clone(), completion, context.now_ms())
             .await
-            .map_err(|error| AuthorityError::Publication(semio_hub::artifact_authority::adapters::bounded_message(error)));
+            .map(|_| ())
+            .map_err(|_| AuthorityError::Publication("checkpoint publication completion failed".into()));
         drop(document_write);
         drop(authorization);
         result
     }
 }
 
-async fn checkpoint_publication_response(
-    state: &HubState,
-    scope: &DocumentScope,
-    subject: &SocketSubjectV1,
-    audience: &SocketAudienceV1,
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+struct GisMapApprovalPublicationControlV1 {
+    deadline_ms: u64,
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+impl AuthorityOperationControl for GisMapApprovalPublicationControlV1 {
+    fn now_ms(&self) -> u64 {
+        SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |duration| u64::try_from(duration.as_millis()).unwrap_or(u64::MAX))
+    }
+
+    fn is_cancelled(&self) -> bool {
+        self.now_ms() > self.deadline_ms
+    }
+
+    fn report(&self, _progress: AuthorityProgress) {}
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+struct GisMapApprovalVerifiedPublisherV1 {
+    directory: Arc<HubDirectories>,
+    directory_service: Arc<DirectoryService>,
+    artifact_cas: Arc<ArtifactChunkCasStores>,
+    scope: DocumentScope,
+    handle: db::ArtifactHandle,
+    descriptor: DocumentDescriptor,
+    descriptor_digest: ArtifactHash,
+    expected_current: Option<PublishedArtifactCheckpoint>,
+    expected_snapshot: db::CheckpointPublicationSnapshot,
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+impl GisMapApprovalVerifiedPublisherV1 {
+    async fn authority_is_current(&self) -> Result<bool, AuthorityError> {
+        let descriptor = self.directory.get_document_descriptor(&self.scope).await.map_err(|error| AuthorityError::Publication(error.to_string()))?;
+        let current = self.directory.get_active_artifact_checkpoint(&self.scope).await.map_err(|error| AuthorityError::Publication(error.to_string()))?;
+        let snapshot = self.handle.checkpoint_publication_snapshot().await.map_err(|error| AuthorityError::Publication(error.to_string()))?;
+        Ok(descriptor.as_ref() == Some(&self.descriptor) && descriptor.as_ref().and_then(|value| descriptor_digest_v1(value).ok()) == Some(self.descriptor_digest) && current == self.expected_current && snapshot == self.expected_snapshot)
+    }
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+impl VerifiedCheckpointPublisher for GisMapApprovalVerifiedPublisherV1 {
+    async fn reserve(&self, plan: &semio_hub::artifact_authority::chunk_cas::ArtifactCasOwnershipPlanV1, context: &OperationContext<'_>) -> Result<semio_hub::artifact_authority::chunk_cas::ArtifactCasReservation, AuthorityError> {
+        context.checkpoint()?;
+        if !self.authority_is_current().await? {
+            return Err(AuthorityError::Publication("GIS Map approval checkpoint authority changed".into()));
+        }
+        HubVerifiedCheckpointPublisher::new(self.directory_service.clone(), self.artifact_cas.clone(), "system:gis-map-approval").reserve(plan, context).await
+    }
+
+    async fn publish_reserved(&self, checkpoint: &os_directory::ArtifactCheckpoint, reservation: &semio_hub::artifact_authority::chunk_cas::ArtifactCasReservation, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
+        context.checkpoint()?;
+        if !self.authority_is_current().await?
+            || checkpoint.scope != self.scope
+            || checkpoint.descriptor_digest_v1 != self.descriptor_digest
+            || checkpoint.baseline_frontier != checkpoint_publication_artifact_frontier(&checkpoint.scope, &self.expected_snapshot).ok_or_else(|| AuthorityError::Publication("GIS Map approval frontier is incomplete".into()))?
+        {
+            return Err(AuthorityError::Publication("GIS Map approval checkpoint authority changed".into()));
+        }
+        HubVerifiedCheckpointPublisher::new(self.directory_service.clone(), self.artifact_cas.clone(), "system:gis-map-approval").publish_reserved(checkpoint, reservation, context).await
+    }
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+struct GisMapApprovalCheckpointPublisherV1Impl {
+    directory: Arc<HubDirectories>,
+    directory_service: Arc<DirectoryService>,
+    artifact_cas: Arc<ArtifactChunkCasStores>,
+    authority: Arc<HubArtifactAuthority>,
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+impl GisMapApprovalCheckpointPublisherV1Impl {
+    fn matches_published(request: &GisMapApprovalCheckpointRequestV1, checkpoint: &PublishedArtifactCheckpoint) -> bool {
+        let Some(frontier) = checkpoint_publication_artifact_frontier(&request.scope, &request.actor_snapshot) else { return false };
+        checkpoint.scope == request.scope
+            && checkpoint.descriptor_digest_v1.hex() == request.descriptor_digest
+            && checkpoint.baseline_frontier == frontier
+            && checkpoint.pack.sha256 == ArtifactHash(Sha256::digest(&request.pair.pack))
+            && checkpoint.pack.byte_length == request.pair.pack.len() as u64
+            && checkpoint.spr.sha256 == ArtifactHash(Sha256::digest(&request.pair.spr))
+            && checkpoint.spr.byte_length == request.pair.spr.len() as u64
+    }
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+impl GisMapApprovalCheckpointPublisherV1 for GisMapApprovalCheckpointPublisherV1Impl {
+    fn publish<'a>(
+        &'a self,
+        request: GisMapApprovalCheckpointRequestV1,
+        document_write: Arc<GisMapDocumentWriteAuthorityV1>,
+        deadline_ms: u64,
+        _now_ms: u64,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<PublishedArtifactCheckpoint, GisMapApprovalCommitErrorV1>> + Send + 'a>> {
+        Box::pin(async move {
+            let _document_write = document_write;
+            let descriptor = self.directory.get_document_descriptor(&request.scope).await.map_err(|_| GisMapApprovalCommitErrorV1::Storage)?.ok_or(GisMapApprovalCommitErrorV1::Conflict)?;
+            let descriptor_digest = descriptor_digest_v1(&descriptor).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
+            if descriptor_digest.hex() != request.descriptor_digest {
+                return Err(GisMapApprovalCommitErrorV1::Conflict);
+            }
+            let current = self.directory.get_active_artifact_checkpoint(&request.scope).await.map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
+            if current.as_ref().is_some_and(|checkpoint| Self::matches_published(&request, checkpoint)) {
+                return Ok(current.expect("matching active checkpoint exists"));
+            }
+            if current.as_ref().map(|checkpoint| &checkpoint.baseline_frontier) != Some(&request.base_frontier) {
+                return Err(GisMapApprovalCommitErrorV1::Conflict);
+            }
+            let post_frontier = checkpoint_publication_artifact_frontier(&request.scope, &request.actor_snapshot).ok_or(GisMapApprovalCommitErrorV1::Conflict)?;
+            let control = GisMapApprovalPublicationControlV1 { deadline_ms };
+            let context = OperationContext::new(deadline_ms, AuthorityLimits { max_operations: 1, max_operation_bytes: 1, max_pair_bytes: CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES }, &control);
+            let candidate = self
+                .authority
+                .materialize_checkpoint(
+                    CheckpointRequest {
+                        descriptor: descriptor.clone(),
+                        scope: request.scope.clone(),
+                        parent_checkpoint_id: current.as_ref().map(|checkpoint| checkpoint.checkpoint_id),
+                        base_frontier: post_frontier,
+                        input_pair: request.pair,
+                        operations: Vec::new(),
+                    },
+                    &context,
+                )
+                .await
+                .map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
+            let publisher = GisMapApprovalVerifiedPublisherV1 {
+                directory: self.directory.clone(),
+                directory_service: self.directory_service.clone(),
+                artifact_cas: self.artifact_cas.clone(),
+                scope: request.scope,
+                handle: request.handle,
+                descriptor,
+                descriptor_digest,
+                expected_current: current,
+                expected_snapshot: request.actor_snapshot,
+            };
+            let publication = CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(self.artifact_cas.clone()), publisher);
+            let published = publication.publish_candidate(candidate, &context).await.map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
+            Ok(published_artifact_checkpoint(&published.checkpoint))
+        })
+    }
+}
+
+fn checkpoint_publication_response<'a>(
+    state: &'a HubState,
+    scope: &'a DocumentScope,
+    subject: &'a SocketSubjectV1,
+    audience: &'a SocketAudienceV1,
     command: CheckpointPublicationCommandV1,
     completion: CheckpointPublicationCompletionV1,
-    control: &CheckpointPublicationHttpControl,
-) -> Response {
-    let deadline_ms = control.now_ms().saturating_add(CHECKPOINT_PUBLICATION_DEADLINE_MS);
-    let limits = AuthorityLimits { max_operations: 1, max_operation_bytes: 1, max_pair_bytes: CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES };
-    let context = OperationContext::new(deadline_ms, limits, control);
-    if let Err(error) = context.checkpoint() {
-        return checkpoint_publication_error_status(&error).into_response();
-    }
-
-    let authorization = match tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_record(subject, audience)).await {
-        Ok(guards) => guards,
-        Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
-    };
-    let document_write = match tokio::time::timeout(
-        std::time::Duration::from_secs(2),
-        state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(scope.clone())).lock_owned(),
-    )
-    .await
-    {
-        Ok(guard) => guard,
-        Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
-    };
-    if subject.revalidate(state.directory.as_ref(), audience, now_ms()).await != SocketBindingValidityV1::Active {
-        return StatusCode::UNAUTHORIZED.into_response();
-    }
-    let descriptor = match state.directory.get_document_descriptor(scope).await {
-        Ok(Some(descriptor)) => descriptor,
-        Ok(None) => return StatusCode::NOT_FOUND.into_response(),
-        Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
-    };
-    let descriptor_digest = match descriptor_digest_v1(&descriptor) {
-        Ok(digest) if digest.hex() == command.descriptor_digest_v1 => digest,
-        Ok(_) => return StatusCode::CONFLICT.into_response(),
-        Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
-    };
-    let handle = match state.ensure_document(&db_artifact_id(scope)).await {
-        Ok(handle) => handle,
-        Err(error) => return db_error_status(&error).into_response(),
-    };
-    let snapshot = match handle.checkpoint_publication_snapshot().await {
-        Ok(snapshot) if checkpoint_publication_snapshot_matches(scope, &command, &snapshot) => snapshot,
-        Ok(_) => return StatusCode::CONFLICT.into_response(),
-        Err(error) => return db_error_status(&error).into_response(),
-    };
-    let current = match state.directory.get_active_artifact_checkpoint(scope).await {
-        Ok(current) if checkpoint_publication_current_matches(&command.expected_current, current.as_ref()) => current,
-        Ok(_) => return StatusCode::CONFLICT.into_response(),
-        Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
-    };
-    let base_frontier = match checkpoint_publication_artifact_frontier(scope, &snapshot) {
-        Some(frontier) => frontier,
-        None => return StatusCode::CONFLICT.into_response(),
-    };
-    drop(document_write);
-    drop(authorization);
-
-    let pack = match checkpoint_publication_blob(state, &command.pack, &context).await {
-        Ok(bytes) => bytes,
-        Err(error) => return checkpoint_publication_error_status(&error).into_response(),
-    };
-    let spr = match checkpoint_publication_blob(state, &command.spr, &context).await {
-        Ok(bytes) => bytes,
-        Err(error) => return checkpoint_publication_error_status(&error).into_response(),
-    };
-    let Some(authority) = state.artifact_authority.as_ref() else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
-    let request = CheckpointRequest {
-        descriptor: descriptor.clone(),
-        scope: scope.clone(),
-        parent_checkpoint_id: current.as_ref().map(|checkpoint| checkpoint.checkpoint_id),
-        base_frontier,
-        input_pair: ArtifactPair { pack, spr },
-        operations: Vec::new(),
-    };
-    let candidate = match authority.materialize_checkpoint(request, &context).await {
-        Ok(candidate) => candidate,
-        Err(error) => return checkpoint_publication_error_status(&error).into_response(),
-    };
-    #[cfg(test)]
-    if let Some(gate) = state.live_gate.as_ref().filter(|gate| gate.checkpoint_publication_pause_enabled.load(std::sync::atomic::Ordering::Acquire)) {
-        gate.checkpoint_publication_admitted.add_permits(1);
-        let _ = gate.checkpoint_publication_release.acquire().await;
+    control: &'a CheckpointPublicationHttpControl,
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = Response> + Send + 'a>> {
+    Box::pin(async move {
+        let deadline_ms = control.now_ms().saturating_add(CHECKPOINT_PUBLICATION_DEADLINE_MS);
+        let limits = AuthorityLimits { max_operations: 1, max_operation_bytes: 1, max_pair_bytes: CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES };
+        let context = OperationContext::new(deadline_ms, limits, control);
         if let Err(error) = context.checkpoint() {
             return checkpoint_publication_error_status(&error).into_response();
         }
-    }
-    let publisher = FencedCheckpointPublisherV1 {
-        state: state.clone(),
-        handle,
-        subject: subject.clone(),
-        audience: audience.clone(),
-        descriptor,
-        descriptor_digest,
-        expected_current: command.expected_current.clone(),
-        expected_snapshot: snapshot,
-        completion,
-    };
-    let publication = CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(state.artifact_cas.clone()), publisher);
-    let published = match publication.publish_candidate(candidate, &context).await {
-        Ok(published) => published,
-        Err(error) => return checkpoint_publication_error_status(&error).into_response(),
-    };
-    checkpoint_publication_receipt(&command, published_artifact_checkpoint(&published.checkpoint))
+
+        let authorization = match tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_record(subject, audience)).await {
+            Ok(guards) => guards,
+            Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+        };
+        let document_write = match tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(scope.clone())).lock_owned()).await {
+            Ok(guard) => guard,
+            Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+        };
+        if subject.revalidate(state.directory.as_ref(), audience, now_ms()).await != SocketBindingValidityV1::Active {
+            return StatusCode::UNAUTHORIZED.into_response();
+        }
+        let descriptor = match state.directory.get_document_descriptor(scope).await {
+            Ok(Some(descriptor)) => descriptor,
+            Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+            Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+        };
+        let descriptor_digest = match descriptor_digest_v1(&descriptor) {
+            Ok(digest) if digest.hex() == command.descriptor_digest_v1 => digest,
+            Ok(_) => return StatusCode::CONFLICT.into_response(),
+            Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+        };
+        let handle = match state.ensure_document(&db_artifact_id(scope)).await {
+            Ok(handle) => handle,
+            Err(error) => return db_error_status(&error).into_response(),
+        };
+        let snapshot = match handle.checkpoint_publication_snapshot().await {
+            Ok(snapshot) if checkpoint_publication_snapshot_matches(scope, &command, &snapshot) => snapshot,
+            Ok(_) => return StatusCode::CONFLICT.into_response(),
+            Err(error) => return db_error_status(&error).into_response(),
+        };
+        let current = match state.directory.get_active_artifact_checkpoint(scope).await {
+            Ok(current) if checkpoint_publication_current_matches(&command.expected_current, current.as_ref()) => current,
+            Ok(_) => return StatusCode::CONFLICT.into_response(),
+            Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+        };
+        let base_frontier = match checkpoint_publication_artifact_frontier(scope, &snapshot) {
+            Some(frontier) => frontier,
+            None => return StatusCode::CONFLICT.into_response(),
+        };
+        drop(document_write);
+        drop(authorization);
+
+        let pack = match checkpoint_publication_blob(state, &command.pack, &context).await {
+            Ok(bytes) => bytes,
+            Err(error) => return checkpoint_publication_error_status(&error).into_response(),
+        };
+        let spr = match checkpoint_publication_blob(state, &command.spr, &context).await {
+            Ok(bytes) => bytes,
+            Err(error) => return checkpoint_publication_error_status(&error).into_response(),
+        };
+        let Some(authority) = state.artifact_authority.as_ref() else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
+        let request =
+            CheckpointRequest { descriptor: descriptor.clone(), scope: scope.clone(), parent_checkpoint_id: current.as_ref().map(|checkpoint| checkpoint.checkpoint_id), base_frontier, input_pair: ArtifactPair { pack, spr }, operations: Vec::new() };
+        let candidate = match authority.materialize_checkpoint(request, &context).await {
+            Ok(candidate) => candidate,
+            Err(error) => return checkpoint_publication_error_status(&error).into_response(),
+        };
+        #[cfg(test)]
+        if let Some(gate) = state.live_gate.as_ref().filter(|gate| gate.checkpoint_publication_pause_enabled.load(std::sync::atomic::Ordering::Acquire)) {
+            gate.checkpoint_publication_admitted.add_permits(1);
+            let _ = gate.checkpoint_publication_release.acquire().await;
+            if let Err(error) = context.checkpoint() {
+                return checkpoint_publication_error_status(&error).into_response();
+            }
+        }
+        let publisher = FencedCheckpointPublisherV1 {
+            state: state.clone(),
+            handle,
+            subject: subject.clone(),
+            audience: audience.clone(),
+            descriptor,
+            descriptor_digest,
+            expected_current: command.expected_current.clone(),
+            expected_snapshot: snapshot,
+            completion,
+        };
+        let publication = CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(state.artifact_cas.clone()), publisher);
+        let published = match publication.publish_candidate(candidate, &context).await {
+            Ok(published) => published,
+            Err(error) => return checkpoint_publication_error_status(&error).into_response(),
+        };
+        checkpoint_publication_receipt(&command, published_artifact_checkpoint(&published.checkpoint))
+    })
 }
 
-async fn post_checkpoint_publication(
-    Path((space_id, document_id)): Path<(String, String)>,
-    OriginalUri(uri): OriginalUri,
-    headers: HeaderMap,
-    State(state): State<HubState>,
-    body: Bytes,
-) -> Response {
-    if uri.query().is_some()
-        || headers.get_all(axum::http::header::CONTENT_TYPE).iter().count() != 1
-        || headers.get(axum::http::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()) != Some("application/json")
-    {
+async fn post_checkpoint_publication(Path((space_id, document_id)): Path<(String, String)>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+    if uri.query().is_some() || headers.get_all(axum::http::header::CONTENT_TYPE).iter().count() != 1 || headers.get(axum::http::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()) != Some("application/json") {
         return StatusCode::BAD_REQUEST.into_response();
     }
     let command_source = match std::str::from_utf8(&body) {
@@ -3448,12 +3586,7 @@ async fn post_checkpoint_publication(
         SocketSubjectV1::Share { .. } => return StatusCode::UNAUTHORIZED.into_response(),
     };
     let command_sha256 = os_directory::hex_lower(&Sha256::digest(command_source.as_bytes()));
-    let claim = NewCheckpointPublicationClaimV1 {
-        actor_user_id,
-        correlation_id: command.correlation_id.clone(),
-        command_sha256: command_sha256.clone(),
-        claimed_at: now_ms(),
-    };
+    let claim = NewCheckpointPublicationClaimV1 { actor_user_id, correlation_id: command.correlation_id.clone(), command_sha256: command_sha256.clone(), claimed_at: now_ms() };
     let claimed = match state.directory_service.claim_or_read_checkpoint_publication(&claim).await {
         Ok(CheckpointPublicationClaimV1::Claimed(_)) => true,
         Ok(CheckpointPublicationClaimV1::Conflict) => return StatusCode::CONFLICT.into_response(),
@@ -3480,13 +3613,7 @@ async fn post_checkpoint_publication(
     };
     debug_assert!(claimed);
     let mut claim_guard = CheckpointPublicationClaimGuardV1::new(state.directory_service.clone(), &claim);
-    let completion = CheckpointPublicationCompletionV1 {
-        actor_user_id: claim.actor_user_id.clone(),
-        correlation_id: claim.correlation_id.clone(),
-        command_sha256,
-        checkpoint_id: ArtifactHash([0; 32]),
-        completed_at: 0,
-    };
+    let completion = CheckpointPublicationCompletionV1 { actor_user_id: claim.actor_user_id.clone(), correlation_id: claim.correlation_id.clone(), command_sha256, checkpoint_id: ArtifactHash([0; 32]), completed_at: 0 };
     let audience = SocketAudienceV1::Document(scope.clone());
     let control = Arc::new(CheckpointPublicationHttpControl::new());
     let mut request = CheckpointPublicationHttpRequest::new(control.clone());
@@ -4323,6 +4450,19 @@ async fn resolve_bearer_user(state: &HubState, token: Option<&str>) -> Option<Au
     Some(AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability })
 }
 
+/// 🪪️ An admitted command keeps the exact authenticated session, not a reusable user identity.
+async fn revalidate_directory_caller(state: &HubState, caller: &AuthedUser) -> Result<(), StatusCode> {
+    let session = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_session(&caller.capability))
+        .await
+        .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?
+        .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?
+        .ok_or(StatusCode::UNAUTHORIZED)?;
+    if session.id != caller.session_id || session.user_id != caller.user_id || session.authorization_generation != caller.authorization_generation || session.expires_at != caller.expires_at || session.expires_at <= now_ms() {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    Ok(())
+}
+
 fn directory_error_status(error: DirectoryError) -> StatusCode {
     match error {
         DirectoryError::NotFound(_) => StatusCode::NOT_FOUND,
@@ -4539,7 +4679,11 @@ async fn authorize_directory_command(state: &HubState, actor_user_id: &str, admi
         DirectoryCommand::CreateSpace { .. } => Ok(()),
         DirectoryCommand::DeleteSpace { space_id } | DirectoryCommand::ArchiveSpace { space_id } => {
             let space = state.directory.get_space(space_id).await.map_err(directory_error_status)?.ok_or(StatusCode::NOT_FOUND)?;
-            if space.owner_user_id == actor_user_id { Ok(()) } else { Err(StatusCode::FORBIDDEN) }
+            if space.owner_user_id == actor_user_id {
+                Ok(())
+            } else {
+                Err(StatusCode::FORBIDDEN)
+            }
         }
         DirectoryCommand::RenameSpace { space_id, .. }
         | DirectoryCommand::SetVisibility { space_id, .. }
@@ -4562,16 +4706,72 @@ async fn authorize_directory_command(state: &HubState, actor_user_id: &str, admi
 #[derive(Debug)]
 enum FencedDirectoryCommandErrorV1 {
     Directory(DirectoryError),
+    Denied(StatusCode),
     Unavailable,
 }
 
-/// 🔗️ The live membership binding one command invalidates, held across its whole execution.
-fn directory_command_socket_binding(command: &DirectoryCommand) -> Option<SocketBindingKeyV1> {
+/// 🛡️ Command scope is derived from the closed command, never from a second client claim.
+fn directory_command_space(command: &DirectoryCommand) -> Option<&str> {
     match command {
-        DirectoryCommand::RemoveMember { space_id, user_id } => Some(SocketBindingKeyV1::Membership { user_id: user_id.clone(), space_id: space_id.clone() }),
-        _ => None,
+        DirectoryCommand::CreateSpace { .. } => None,
+        DirectoryCommand::RenameSpace { space_id, .. }
+        | DirectoryCommand::SetVisibility { space_id, .. }
+        | DirectoryCommand::ArchiveSpace { space_id }
+        | DirectoryCommand::DeleteSpace { space_id }
+        | DirectoryCommand::UpsertMember { space_id, .. }
+        | DirectoryCommand::RemoveMember { space_id, .. }
+        | DirectoryCommand::CreateInvite { space_id, .. }
+        | DirectoryCommand::RevokeInvite { space_id, .. } => Some(space_id),
+        DirectoryCommand::AnnounceDocument { descriptor } => Some(&descriptor.space_id),
     }
 }
+
+/// 🔗️ Holds ordered principal, space, and exact member gates before the directory writer.
+async fn acquire_directory_command_fence(state: &HubState, mut bindings: Vec<SocketBindingKeyV1>, command: &DirectoryCommand) -> Result<Vec<tokio::sync::OwnedMutexGuard<()>>, FencedDirectoryCommandErrorV1> {
+    if let Some(space_id) = directory_command_space(command) {
+        bindings.push(SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.to_owned() });
+    }
+    if let DirectoryCommand::RemoveMember { space_id, user_id } = command {
+        bindings.push(SocketBindingKeyV1::Membership { user_id: user_id.clone(), space_id: space_id.clone() });
+    }
+    tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_bindings(bindings)).await.map_err(|_| FencedDirectoryCommandErrorV1::Unavailable)
+}
+
+/// 🔒️ Durable role and space transitions retire only the authority they changed.
+fn invalidate_directory_event_authority(state: &HubState, events: &[DirectoryEvent]) {
+    let mut bindings = BTreeSet::new();
+    for event in events {
+        let binding = match &event.body {
+            os_directory::DirectoryEventBody::MemberUpserted { space_id, user_id, .. } | os_directory::DirectoryEventBody::MemberRemoved { space_id, user_id } | os_directory::DirectoryEventBody::InviteRedeemed { space_id, user_id, .. } => {
+                SocketBindingKeyV1::Membership { user_id: user_id.clone(), space_id: space_id.clone() }
+            }
+            os_directory::DirectoryEventBody::SpaceArchived { space_id } | os_directory::DirectoryEventBody::SpaceDeleted { space_id } => SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.clone() },
+            _ => continue,
+        };
+        bindings.insert(binding);
+    }
+    for binding in bindings {
+        state.socket_grants.invalidate_binding(binding.clone());
+        state.document_open_plans.invalidate_binding(&binding);
+    }
+}
+
+#[cfg(test)]
+async fn pause_directory_command_authority(state: &HubState, user_id: &str, fenced: bool) {
+    if let Some(gate) = &state.live_gate {
+        if !fenced {
+            gate.directory_command_attempted.add_permits(1);
+        }
+        let pause = gate.directory_command_pause_user.lock().unwrap().as_ref().is_some_and(|(user, phase)| user == user_id && *phase == fenced);
+        if pause {
+            gate.directory_command_admitted.add_permits(1);
+            gate.directory_command_release.acquire().await.expect("directory command test release").forget();
+        }
+    }
+}
+
+#[cfg(not(test))]
+async fn pause_directory_command_authority(_state: &HubState, _user_id: &str, _fenced: bool) {}
 
 #[cfg(test)]
 async fn pause_directory_command_membership_fence(state: &HubState) {
@@ -4587,28 +4787,43 @@ async fn pause_directory_command_membership_fence(state: &HubState) {
 async fn pause_directory_command_membership_fence(_state: &HubState) {}
 
 async fn execute_directory_command_fenced(state: &HubState, actor: DirectoryActor, command: DirectoryCommand) -> Result<(Vec<DirectoryEvent>, Option<CommandResult>), FencedDirectoryCommandErrorV1> {
-    let Some(binding) = directory_command_socket_binding(&command) else {
-        return state.directory_service.execute(actor, command).await.map_err(FencedDirectoryCommandErrorV1::Directory);
-    };
-    let gate = state.socket_binding_gates.gate(binding.clone());
-    let _guard = tokio::time::timeout(std::time::Duration::from_secs(2), gate.lock_owned()).await.map_err(|_| FencedDirectoryCommandErrorV1::Unavailable)?;
-    pause_directory_command_membership_fence(state).await;
+    let _authority = acquire_directory_command_fence(state, Vec::new(), &command).await?;
+    if matches!(&command, DirectoryCommand::RemoveMember { .. }) {
+        pause_directory_command_membership_fence(state).await;
+    }
     let result = state.directory_service.execute(actor, command).await.map_err(FencedDirectoryCommandErrorV1::Directory)?;
-    state.socket_grants.invalidate_binding(binding);
+    invalidate_directory_event_authority(state, &result.0);
     Ok(result)
 }
 
-/// 🆔️ The idempotent twin of `execute_directory_command_fenced`: the same live-membership fence,
-/// around the durable claim-or-read command pipeline that owns the request receipt.
-async fn execute_directory_command_receipt_fenced(state: &HubState, actor: DirectoryActor, claim: NewDirectoryCommandReceipt, command: DirectoryCommand) -> Result<DirectoryCommandExecutionV1, FencedDirectoryCommandErrorV1> {
-    let Some(binding) = directory_command_socket_binding(&command) else {
-        return state.directory_service.execute_idempotent(actor, claim, command).await.map_err(FencedDirectoryCommandErrorV1::Directory);
-    };
-    let gate = state.socket_binding_gates.gate(binding.clone());
-    let _guard = tokio::time::timeout(std::time::Duration::from_secs(2), gate.lock_owned()).await.map_err(|_| FencedDirectoryCommandErrorV1::Unavailable)?;
-    pause_directory_command_membership_fence(state).await;
+/// 🆔️ Reauthenticates inside the mutation fence before consulting any durable receipt.
+async fn execute_directory_command_receipt_fenced(
+    state: &HubState,
+    user: &AuthedUser,
+    headers: &HeaderMap,
+    peer: SocketAddr,
+    claim: NewDirectoryCommandReceipt,
+    command: DirectoryCommand,
+) -> Result<DirectoryCommandExecutionV1, FencedDirectoryCommandErrorV1> {
+    let mut bindings = vec![SocketBindingKeyV1::User(user.user_id.clone()), SocketBindingKeyV1::Session(user.session_id.clone())];
+    if let Some(space_id) = directory_command_space(&command) {
+        bindings.push(SocketBindingKeyV1::Membership { user_id: user.user_id.clone(), space_id: space_id.to_owned() });
+    }
+    let _authority = acquire_directory_command_fence(state, bindings, &command).await?;
+    revalidate_directory_caller(state, user).await.map_err(FencedDirectoryCommandErrorV1::Denied)?;
+    let admin = is_admin(state, headers, Some(peer)).await;
+    authorize_directory_command(state, &user.user_id, admin, &command).await.map_err(FencedDirectoryCommandErrorV1::Denied)?;
+    pause_directory_command_authority(state, &user.user_id, true).await;
+    if matches!(&command, DirectoryCommand::RemoveMember { .. }) {
+        pause_directory_command_membership_fence(state).await;
+    }
+    let actor = DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#hub-rest", user.user_id) };
     let execution = state.directory_service.execute_idempotent(actor, claim, command).await.map_err(FencedDirectoryCommandErrorV1::Directory)?;
-    state.socket_grants.invalidate_binding(binding);
+    if let DirectoryCommandExecutionV1::Receipt(receipt) = &execution {
+        if receipt.outcome == os_directory::DirectoryCommandOutcomeV1::Accepted {
+            invalidate_directory_event_authority(state, &receipt.events);
+        }
+    }
     Ok(execution)
 }
 
@@ -4625,7 +4840,7 @@ async fn post_directory_commands(headers: HeaderMap, axum::extract::ConnectInfo(
     let user = resolve_bearer_user(&state, bearer(&headers).as_deref()).await.ok_or(StatusCode::UNAUTHORIZED)?;
     let admin = is_admin(&state, &headers, Some(peer)).await;
     authorize_directory_command(&state, &user.user_id, admin, &request.command).await?;
-    let actor = DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#hub-rest", user.user_id) };
+    pause_directory_command_authority(&state, &user.user_id, false).await;
     let claim = NewDirectoryCommandReceipt {
         actor_user_id: user.user_id.clone(),
         request_id: request.request_id.clone(),
@@ -4633,8 +4848,9 @@ async fn post_directory_commands(headers: HeaderMap, axum::extract::ConnectInfo(
         result_kind: directory_command_result_kind(&request.command),
         claimed_at: now_ms(),
     };
-    let execution = execute_directory_command_receipt_fenced(&state, actor, claim, request.command).await.map_err(|error| match error {
+    let execution = execute_directory_command_receipt_fenced(&state, &user, &headers, peer, claim, request.command).await.map_err(|error| match error {
         FencedDirectoryCommandErrorV1::Directory(error) => directory_error_status(error),
+        FencedDirectoryCommandErrorV1::Denied(status) => status,
         FencedDirectoryCommandErrorV1::Unavailable => StatusCode::SERVICE_UNAVAILABLE,
     })?;
     let receipt = match execution {
@@ -5041,8 +5257,27 @@ async fn post_redeem_invite(Path(token): Path<String>, headers: HeaderMap, State
     let user = resolve_bearer_user(&state, bearer(&headers).as_deref()).await.ok_or(StatusCode::UNAUTHORIZED)?;
     let capability = InviteCapability::parse(&token).map_err(directory_error_status)?;
     let actor = DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#hub-rest", user.user_id) };
-    let events = state.directory_service.redeem_invite(actor, &capability, &user.user_id).await.map_err(directory_error_status)?;
-    Ok(DirectoryJson(events))
+    let hint = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.invite_redemption_scope_hint(&capability, &actor, &user.user_id)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?.map_err(directory_error_status)?;
+    pause_directory_command_authority(&state, &user.user_id, false).await;
+    let _authority = tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        state.socket_binding_gates.acquire_bindings(vec![
+            SocketBindingKeyV1::User(user.user_id.clone()),
+            SocketBindingKeyV1::Session(user.session_id.clone()),
+            SocketBindingKeyV1::DirectorySpaceAuthority { space_id: hint.space_id().to_owned() },
+            SocketBindingKeyV1::Membership { user_id: user.user_id.clone(), space_id: hint.space_id().to_owned() },
+        ]),
+    )
+    .await
+    .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
+    revalidate_directory_caller(&state, &user).await?;
+    pause_directory_command_authority(&state, &user.user_id, true).await;
+    let committed = state.directory_service.redeem_invite(actor, &capability, &user.user_id).await.map_err(directory_error_status)?;
+    if matches!(committed, semio_hub::directory::model::InviteRedemptionCommit::NewlyCommitted { .. }) {
+        invalidate_directory_event_authority(&state, std::slice::from_ref(committed.event()));
+    }
+    revalidate_directory_caller(&state, &user).await?;
+    Ok(DirectoryJson(vec![committed.into_event()]))
 }
 
 #[derive(Deserialize)]
@@ -5094,7 +5329,11 @@ impl DirectoryEventPageHttpControl {
     }
 
     fn checkpoint(&self) -> Result<(), StatusCode> {
-        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) { Err(StatusCode::SERVICE_UNAVAILABLE) } else { Ok(()) }
+        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
+            Err(StatusCode::SERVICE_UNAVAILABLE)
+        } else {
+            Ok(())
+        }
     }
 
     fn cancel(&self) {
@@ -5343,7 +5582,11 @@ async fn socket_directory_message_visible(state: &HubState, record: &SocketGrant
         DirectoryStreamMessage::Heartbeat { .. } => false,
         DirectoryStreamMessage::RebootstrapRequired { control } => directory_space_access_for_user(state, &control.scope.space_id, Some(user_id)).await.is_member(),
     };
-    if visible { SocketBindingValidityV1::Active } else { SocketBindingValidityV1::Unauthorized }
+    if visible {
+        SocketBindingValidityV1::Active
+    } else {
+        SocketBindingValidityV1::Unauthorized
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -6799,6 +7042,63 @@ fn inference_error_response(error: semio_hub::inference::runtime::InferenceRoute
     (status, Json(InferenceErrorBodyV1 { schema: "semio.hub.inference-error/v1", code: error.code() })).into_response()
 }
 
+/// 🎟️ One private Hub approval admission retaining the exact sorted identity and space guards.
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+struct HubGisMapApprovalIngressAuthorityV1 {
+    scope: DocumentScope,
+    caller: AuthedUser,
+    _guards: Vec<tokio::sync::OwnedMutexGuard<()>>,
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+impl GisMapApprovalIngressAuthorityV1 for HubGisMapApprovalIngressAuthorityV1 {
+    fn scope(&self) -> &DocumentScope {
+        &self.scope
+    }
+
+    fn user_id(&self) -> &str {
+        &self.caller.user_id
+    }
+
+    fn session_id(&self) -> &str {
+        &self.caller.session_id
+    }
+
+    fn authorization_generation(&self) -> u64 {
+        self.caller.authorization_generation
+    }
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+async fn revalidate_gis_map_approval_delivery(state: &HubState, authority: &HubGisMapApprovalIngressAuthorityV1) -> Result<(), InferenceRouteErrorV1> {
+    revalidate_directory_caller(state, &authority.caller).await.map_err(|status| if status == StatusCode::SERVICE_UNAVAILABLE { InferenceRouteErrorV1::Unavailable } else { InferenceRouteErrorV1::Denied })?;
+    let role =
+        tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.get_role(&authority.scope.space_id, &authority.caller.user_id)).await.map_err(|_| InferenceRouteErrorV1::Unavailable)?.map_err(|_| InferenceRouteErrorV1::Unavailable)?;
+    if role != Some(SpaceRole::Author) {
+        return Err(InferenceRouteErrorV1::Denied);
+    }
+    Ok(())
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+async fn acquire_gis_map_approval_ingress(state: &HubState, scope: DocumentScope, token: Option<&str>) -> Result<Arc<HubGisMapApprovalIngressAuthorityV1>, InferenceRouteErrorV1> {
+    let caller = resolve_bearer_user(state, token).await.ok_or(InferenceRouteErrorV1::Denied)?;
+    let guards = tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        state.socket_binding_gates.acquire_bindings(vec![
+            SocketBindingKeyV1::User(caller.user_id.clone()),
+            SocketBindingKeyV1::Session(caller.session_id.clone()),
+            SocketBindingKeyV1::DirectorySpaceAuthority { space_id: scope.space_id.clone() },
+            SocketBindingKeyV1::Membership { user_id: caller.user_id.clone(), space_id: scope.space_id.clone() },
+        ]),
+    )
+    .await
+    .map_err(|_| InferenceRouteErrorV1::Unavailable)?;
+    let authority = Arc::new(HubGisMapApprovalIngressAuthorityV1 { scope, caller, _guards: guards });
+    revalidate_gis_map_approval_delivery(state, &authority).await?;
+    Ok(authority)
+}
+
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 fn inference_context<'a>(state: &'a HubState, space_id: &str, document_id: &str, token: &'a Option<String>) -> Result<semio_hub::inference::runtime::InferenceRouteContextV1<'a>, Response> {
     let runtime = state.inference_runtime.as_ref().ok_or_else(|| inference_error_response(semio_hub::inference::runtime::InferenceRouteErrorV1::Unavailable))?;
@@ -6864,12 +7164,20 @@ async fn post_inference_gis_map_job_cancel(Path((space_id, document_id, job_id))
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 async fn post_inference_gis_map_job_approval(Path((space_id, document_id, job_id)): Path<(String, String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let token = bearer(&headers);
-    let context = match inference_context(&state, &space_id, &document_id, &token) {
+    let route = match inference_context(&state, &space_id, &document_id, &token) {
         Ok(context) => context,
         Err(response) => return response,
     };
+    let ingress = match acquire_gis_map_approval_ingress(&state, route.scope.clone(), token.as_deref()).await {
+        Ok(ingress) => ingress,
+        Err(error) => return inference_error_response(error),
+    };
+    let context = InferenceApprovalRouteContextV1 { route, ingress: ingress.clone() };
     match semio_hub::inference::runtime::approve_gis_map_job(context, &job_id, &body).await {
-        Ok(receipt) => Json(receipt).into_response(),
+        Ok(receipt) => match revalidate_gis_map_approval_delivery(&state, &ingress).await {
+            Ok(()) => Json(receipt).into_response(),
+            Err(error) => inference_error_response(error),
+        },
         Err(error) => inference_error_response(error),
     }
 }
@@ -7127,13 +7435,18 @@ async fn main() -> Result<(), HubError> {
         None => None,
     };
     let openable_catalog = artifact_authority.as_ref().map(|configured| -> Arc<dyn DocumentOpenCatalogAuthorityV1> { configured.catalog.clone() });
+    let socket_binding_gates = Arc::new(SocketBindingGatesV1::default());
     #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
     let inference_runtime = match gis_map_binding.as_ref() {
         Some(binding) => {
             let root = data_dir.join("inference");
             std::fs::create_dir_all(&root)?;
-            let ledger = InferenceJobLedgerV1::open(&root.join("gis-map-jobs.sqlite3")).map_err(|error| AuthorityError::Catalog(format!("inference job ledger unavailable: {error:?}")))?;
-            Some(Arc::new(HubInferenceRuntimeV1::new(binding.clone(), Arc::new(ledger), Arc::new(UnavailableGisMapApprovalCommitterV1))))
+            let ledger = Arc::new(InferenceJobLedgerV1::open(&root.join("gis-map-jobs.sqlite3")).map_err(|error| AuthorityError::Catalog(format!("inference job ledger unavailable: {error:?}")))?);
+            let configured = artifact_authority.as_ref().ok_or_else(|| AuthorityError::Catalog("GIS Map approval requires the configured canonical artifact authority".into()))?;
+            let publisher: Arc<dyn GisMapApprovalCheckpointPublisherV1> =
+                Arc::new(GisMapApprovalCheckpointPublisherV1Impl { directory: directory.clone(), directory_service: directory_service.clone(), artifact_cas: artifact_cas.clone(), authority: configured.authority.clone() });
+            let committer = Arc::new(RetainedGisMapApprovalCommitterV1::new(db.clone(), db.storage().await, ledger.clone(), publisher));
+            Some(Arc::new(HubInferenceRuntimeV1::new(binding.clone(), ledger, committer)))
         }
         None => None,
     };
@@ -7154,7 +7467,7 @@ async fn main() -> Result<(), HubError> {
         #[cfg(feature = "native-artifact-execution")]
         gis_map_binding,
         #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
-        inference_runtime,
+        inference_runtime: inference_runtime.clone(),
         openable_catalog,
         artifact_publication,
         artifact_maintenance: artifact_maintenance.clone(),
@@ -7188,7 +7501,7 @@ async fn main() -> Result<(), HubError> {
         session_kicks: Arc::new(ShardedMap::new()),
         socket_grants: Arc::new(SocketGrantLedgerV1::default()),
         document_open_plans: Arc::new(DocumentOpenPlanLedgerV1::default()),
-        socket_binding_gates: Arc::new(SocketBindingGatesV1::default()),
+        socket_binding_gates,
         extensions_root,
         merge_policy: merge_policy_from_env(),
     };
@@ -7224,8 +7537,16 @@ async fn main() -> Result<(), HubError> {
     } else {
         server.await.map_err(HubError::Io)
     };
+    #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+    let inference_close_result = match inference_runtime {
+        Some(inference_runtime) => inference_runtime.close().await.map_err(HubError::InferenceShutdown),
+        None => Ok(()),
+    };
+    #[cfg(not(all(feature = "sqlite", feature = "native-artifact-execution")))]
+    let inference_close_result: Result<(), HubError> = Ok(());
     artifact_maintenance.shutdown().await;
-    result
+    result?;
+    inference_close_result
 }
 //#endregion 🔖️Main
 
@@ -7358,7 +7679,7 @@ mod tests {
         assert!(examined > 16);
     }
     use tokio_tungstenite::connect_async;
-    use tokio_tungstenite::tungstenite::{Message as WsMessage, client::IntoClientRequest};
+    use tokio_tungstenite::tungstenite::{client::IntoClientRequest, Message as WsMessage};
 
     /// @emoji 🏛️ The seeded space id every test routes against (see `SqliteDirectory::seed`).
     const STUDIO: &str = "default";
@@ -7497,8 +7818,10 @@ mod tests {
         let generation = bundle["profiles"][0]["generationId"].as_str().expect("generation id");
         std::fs::rename(stage, generations.join(generation)).expect("publish trusted generation");
         let bundle_sha256 = os_directory::hex_lower(&Sha256::digest(&bundle_bytes));
-        let current_bytes = format!(r#"{{"profileId":"stdio-native-openable-v1","generationId":"{generation}","bundleSha256":"{bundle_sha256}"}}
-"#)
+        let current_bytes = format!(
+            r#"{{"profileId":"stdio-native-openable-v1","generationId":"{generation}","bundleSha256":"{bundle_sha256}"}}
+"#
+        )
         .into_bytes();
         std::fs::write(trusted_root.join("current.json"), current_bytes).expect("publish current pointer");
         std::fs::canonicalize(root).expect("canonical fixture-owned data root")
@@ -7824,24 +8147,13 @@ mod tests {
     }
 
     #[cfg(feature = "native-artifact-execution")]
-    fn checkpoint_publication_command(
-        correlation_id: &str,
-        descriptor: &DocumentDescriptor,
-        snapshot: &db::CheckpointPublicationSnapshot,
-        expected_current: CheckpointPublicationCurrentV1,
-        pack: &[u8],
-        spr: &[u8],
-    ) -> CheckpointPublicationCommandV1 {
+    fn checkpoint_publication_command(correlation_id: &str, descriptor: &DocumentDescriptor, snapshot: &db::CheckpointPublicationSnapshot, expected_current: CheckpointPublicationCurrentV1, pack: &[u8], spr: &[u8]) -> CheckpointPublicationCommandV1 {
         let head_edit_id = snapshot.head_edit_id.as_ref().expect("committed checkpoint tip").0.clone();
         CheckpointPublicationCommandV1 {
             schema: "semio.hub.checkpoint-publication-command/v1".into(),
             correlation_id: correlation_id.into(),
             descriptor_digest_v1: descriptor_digest_v1(descriptor).expect("descriptor digest").hex(),
-            expected_document_frontier: os_directory::DocumentFrontier {
-                head_seq: snapshot.frontier.head_seq,
-                commit_seq: snapshot.frontier.commit_seq,
-                epoch: snapshot.frontier.epoch,
-            },
+            expected_document_frontier: os_directory::DocumentFrontier { head_seq: snapshot.frontier.head_seq, commit_seq: snapshot.frontier.commit_seq, epoch: snapshot.frontier.epoch },
             expected_current,
             baseline_frontier: CheckpointPublicationFrontierV1 {
                 document_id: descriptor.document_id.clone(),
@@ -7873,12 +8185,7 @@ mod tests {
             document_id: scope.document_id.clone(),
             artifact_kind: selection.artifact.kind,
             artifact_schema: selection.artifact.schema,
-            owner: os_directory::DocumentOwner {
-                plugin_id: selection.package.plugin_id,
-                package_id: selection.package.package_id,
-                version: selection.package.version,
-                package_hash: selection.package.component_sha256,
-            },
+            owner: os_directory::DocumentOwner { plugin_id: selection.package.plugin_id, package_id: selection.package.package_id, version: selection.package.version, package_hash: selection.package.component_sha256 },
             pack_schema_hash: selection.artifact.pack_schema_hash,
             bootstrap_version: 1,
             bootstrap_frontier: os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
@@ -7894,11 +8201,7 @@ mod tests {
         let document = db_artifact_id(&scope);
         let handle = state.ensure_document(&document).await.expect("publication document actor");
         let batch = db::document::CommandBatch::new(vec![sample_envelope(&format!("checkpoint-{label}-edit-1"), &WireArtifactId(document.0.clone())).await]).await.expect("publication command batch");
-        handle
-            .submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy: protocol::MergePolicy::default() })
-            .await
-            .expect("publication actor response")
-            .expect("publication edit accepted");
+        handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy: protocol::MergePolicy::default() }).await.expect("publication actor response").expect("publication edit accepted");
         let snapshot = handle.checkpoint_publication_snapshot().await.expect("publication actor snapshot");
         let snapshot_value = semio_s_plugin_stdio::artifacts::json::schema::snapshot::demo_json_snapshot();
         let pack = <semio_s_plugin_stdio::artifacts::json::JsonSnapshot as directory::os_store::ArtifactPack>::encode_pack(&snapshot_value);
@@ -7935,8 +8238,11 @@ mod tests {
         std::fs::create_dir_all(stage.join("data/trusted-catalog")).expect("create trusted current owner");
         std::fs::write(
             stage.join("data/trusted-catalog/current.json"),
-            format!(r#"{{"profileId":"{}","generationId":"{generation_id}","bundleSha256":"{bundle_sha256}"}}
-"#, test_support::GIS_MAP_TEST_PROFILE_ID),
+            format!(
+                r#"{{"profileId":"{}","generationId":"{generation_id}","bundleSha256":"{bundle_sha256}"}}
+"#,
+                test_support::GIS_MAP_TEST_PROFILE_ID
+            ),
         )
         .expect("write trusted current pointer");
 
@@ -8090,6 +8396,39 @@ mod tests {
     }
 
     //#region 💡️Inference
+    #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+    #[tokio::test]
+    async fn gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_document_write() {
+        let state = test_state().await;
+        let email = "approval-ingress-author@example.test";
+        let caller = issue_test_session(&state, email).await;
+        let space_id = create_space_for_test(&state, &caller.user_id, "Approval ingress", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        upsert_member_for_test(&state, &space_id, email, DirectorySpaceRole::Author).await;
+        let scope = DocumentScope::new(&space_id, "approval-ingress-document");
+        let authority = acquire_gis_map_approval_ingress(&state, scope.clone(), Some(&caller.token)).await.expect("exact Author ingress");
+        assert_eq!(authority.scope(), &scope);
+        assert_eq!(authority.user_id(), caller.user_id);
+        for binding in [
+            SocketBindingKeyV1::User(authority.caller.user_id.clone()),
+            SocketBindingKeyV1::Session(authority.caller.session_id.clone()),
+            SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.clone() },
+            SocketBindingKeyV1::Membership { user_id: authority.caller.user_id.clone(), space_id: space_id.clone() },
+        ] {
+            assert!(state.socket_binding_gates.gate(binding).try_lock_owned().is_err(), "the exact Hub ingress guard remains owned");
+        }
+        assert!(state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(scope.clone())).try_lock_owned().is_ok(), "Hub ingress must not outer-lock the runtime document writer");
+        revalidate_gis_map_approval_delivery(&state, &authority).await.expect("fresh delivery under the retained guards");
+        drop(authority);
+        execute_directory_command_fenced(
+            &state,
+            DirectoryActor { kind: DirectoryActorKind::System, id: "system:approval-ingress-law".into() },
+            DirectoryCommand::UpsertMember { space_id: space_id.clone(), email: email.into(), role: DirectorySpaceRole::Spectator },
+        )
+        .await
+        .expect("demote after exact authority release");
+        assert!(matches!(acquire_gis_map_approval_ingress(&state, scope, Some(&caller.token)).await, Err(InferenceRouteErrorV1::Denied)));
+    }
+
     #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
     #[tokio::test]
     async fn gis_map_proposal_routes_fail_closed_without_a_trusted_map_binding() {
@@ -10034,7 +10373,15 @@ mod tests {
         let capability = SocketGrantCapability::mint().expect("scoped capability");
         ledger.issue(&capability, audience.clone(), "hub.v1.scoped".into(), subject.clone(), 1, 9_000).expect("scoped issue");
         let pending = ledger.pending(&capability, &audience, 2).expect("pending scoped grant");
-        assert_eq!(pending.bindings(), vec![SocketBindingKeyV1::User("user-a".into()), SocketBindingKeyV1::Session("session-a".into()), SocketBindingKeyV1::Membership { user_id: "user-a".into(), space_id: "space-a".into() },]);
+        assert_eq!(
+            pending.bindings(),
+            vec![
+                SocketBindingKeyV1::User("user-a".into()),
+                SocketBindingKeyV1::Session("session-a".into()),
+                SocketBindingKeyV1::DirectorySpaceAuthority { space_id: "space-a".into() },
+                SocketBindingKeyV1::Membership { user_id: "user-a".into(), space_id: "space-a".into() },
+            ]
+        );
         let consumed = ledger.consume(&pending, 3).expect("consume scoped grant");
         let (live_id, notify) = ledger.register_live(&consumed).expect("register scoped live lease");
         assert!(ledger.is_live(&consumed, &live_id));
@@ -11349,6 +11696,419 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn directory_command_authority_revalidates_after_durable_revocation_before_fence() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🛡️command-authority-v1/🔣️.json")).unwrap();
+        for row in fixture["cases"].as_array().unwrap().iter().filter(|row| row["appended"] == 0) {
+            let mut state = tokio::time::timeout(std::time::Duration::from_secs(5), test_state()).await.expect("authority state open deadline");
+            let owner = issue_test_session(&state, "authority-owner@example.com").await;
+            let author = issue_test_session(&state, "authority-author@example.com").await;
+            let target = issue_test_session(&state, "authority-target@example.com").await;
+            let space = create_space_for_test(&state, &owner.user_id, "Authority Race", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+            upsert_member_for_test(&state, &space, "authority-author@example.com", DirectorySpaceRole::Author).await;
+            upsert_member_for_test(&state, &space, "authority-target@example.com", DirectorySpaceRole::Spectator).await;
+            let gate = Arc::new(TestLiveGate::default());
+            *gate.directory_command_pause_user.lock().unwrap() = Some((author.user_id.clone(), false));
+            state.live_gate = Some(gate.clone());
+            let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
+            let command = DirectoryCommand::RemoveMember { space_id: space.clone(), user_id: target.user_id.clone() };
+            let request_id = "a00102030405060708090a0b0c0d0e0f";
+            let pending = {
+                let token = author.token.clone();
+                let command = command.clone();
+                tokio::spawn(async move { post_directory_command_for_test(addr, &token, request_id, command).await })
+            };
+            tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_admitted.acquire()).await.unwrap().unwrap().forget();
+            match row["revocation"].as_str().unwrap() {
+                "demote" | "remove" => {
+                    let revocation = if row["revocation"] == "demote" {
+                        DirectoryCommand::UpsertMember { space_id: space.clone(), email: "authority-author@example.com".into(), role: DirectorySpaceRole::Spectator }
+                    } else {
+                        DirectoryCommand::RemoveMember { space_id: space.clone(), user_id: author.user_id.clone() }
+                    };
+                    assert_eq!(post_directory_command_for_test(addr, &owner.token, "b00102030405060708090a0b0c0d0e0f", revocation).await.status, 202);
+                }
+                "session" => assert_eq!(delete_session_me(bearer_headers(&author.token), State(state.clone())).await, StatusCode::NO_CONTENT),
+                _ => unreachable!(),
+            }
+            let head = state.directory.head_seq().await.unwrap();
+            gate.directory_command_release.add_permits(1);
+            let response = tokio::time::timeout(std::time::Duration::from_secs(5), pending).await.unwrap().unwrap();
+            assert_eq!(u64::from(response.status), row["status"].as_u64().unwrap(), "{}", row["id"]);
+            assert!(response.body.is_empty());
+            assert_eq!(state.directory.head_seq().await.unwrap(), head);
+            assert_eq!(state.directory.get_role(&space, &target.user_id).await.unwrap(), Some(SpaceRole::Spectator));
+            let claim =
+                NewDirectoryCommandReceipt { actor_user_id: author.user_id.clone(), request_id: request_id.into(), command_sha256: directory_command_sha256(&command), result_kind: directory_command_result_kind(&command), claimed_at: now_ms() };
+            assert!(matches!(state.directory.claim_or_read_directory_command_receipt(&claim).await.unwrap(), DirectoryCommandClaimV1::Claimed(_)), "denied command must leave no durable claim");
+            state.directory.release_directory_command_receipt(&author.user_id, request_id, &claim.command_sha256).await.unwrap();
+            stop_recovery_server(state, shutdown, server).await;
+            eprintln!("[DEBUG] directory authority case={} status={} appended=0 receipt=0 target-retained=1", row["id"], response.status);
+        }
+    }
+
+    #[tokio::test]
+    async fn directory_command_authority_holds_admitted_command_until_receipt_before_demotion() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🛡️command-authority-v1/🔣️.json")).unwrap();
+        let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["appended"] == 1).unwrap();
+        let mut state = test_state().await;
+        let owner = issue_test_session(&state, "authority-owner@example.com").await;
+        let author = issue_test_session(&state, "authority-author@example.com").await;
+        let target = issue_test_session(&state, "authority-target@example.com").await;
+        let space = create_space_for_test(&state, &owner.user_id, "Authority Order", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        upsert_member_for_test(&state, &space, "authority-author@example.com", DirectorySpaceRole::Author).await;
+        upsert_member_for_test(&state, &space, "authority-target@example.com", DirectorySpaceRole::Spectator).await;
+        let gate = Arc::new(TestLiveGate::default());
+        *gate.directory_command_pause_user.lock().unwrap() = Some((author.user_id.clone(), true));
+        state.live_gate = Some(gate.clone());
+        let head = state.directory.head_seq().await.unwrap();
+        let addr = spawn_server(state.clone()).await;
+        let command = DirectoryCommand::RemoveMember { space_id: space.clone(), user_id: target.user_id.clone() };
+        let pending = {
+            let token = author.token.clone();
+            let command = command.clone();
+            tokio::spawn(async move { post_directory_command_for_test(addr, &token, "c00102030405060708090a0b0c0d0e0f", command).await })
+        };
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_admitted.acquire()).await.unwrap().unwrap().forget();
+        gate.directory_command_attempted.acquire().await.unwrap().forget();
+        let demotion = DirectoryCommand::UpsertMember { space_id: space.clone(), email: "authority-author@example.com".into(), role: DirectorySpaceRole::Spectator };
+        let revoking = {
+            let token = owner.token.clone();
+            tokio::spawn(async move { post_directory_command_for_test(addr, &token, "d00102030405060708090a0b0c0d0e0f", demotion).await })
+        };
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_attempted.acquire()).await.unwrap().unwrap().forget();
+        assert!(!revoking.is_finished());
+        assert_eq!(state.directory.head_seq().await.unwrap(), head);
+        gate.directory_command_release.add_permits(1);
+        let response = tokio::time::timeout(std::time::Duration::from_secs(5), pending).await.unwrap().unwrap();
+        assert_eq!(u64::from(response.status), row["status"].as_u64().unwrap());
+        let receipt = parse_directory_command_receipt_for_test(&response, "c00102030405060708090a0b0c0d0e0f", &command);
+        assert_eq!(receipt.outcome, DirectoryCommandOutcomeV1::Accepted);
+        assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(5), revoking).await.unwrap().unwrap().status, 202);
+        let events = state.directory.events_since(head, 8).await.unwrap();
+        assert_eq!(events.len(), 2);
+        assert!(matches!(&events[0].body, os_directory::DirectoryEventBody::MemberRemoved { user_id, .. } if user_id == &target.user_id));
+        assert_eq!(state.directory.get_role(&space, &target.user_id).await.unwrap(), None);
+        assert_eq!(state.directory.get_role(&space, &author.user_id).await.unwrap(), Some(SpaceRole::Spectator));
+        eprintln!("[DEBUG] directory authority case={} status=202 appended=1 receipt=accepted revocation-ordered=1", row["id"]);
+    }
+
+    #[tokio::test]
+    async fn directory_command_authority_invite_revocation_requires_the_exact_owned_space() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🛡️command-authority-v1/🔣️.json")).expect("authority fixture");
+        let state = test_state().await;
+        let caller = issue_test_session(&state, "invite-scope-owner@example.test").await;
+        let other = issue_test_session(&state, "invite-scope-other@example.test").await;
+        let owned = create_space_for_test(&state, &caller.user_id, "Owned space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let foreign = create_space_for_test(&state, &other.user_id, "Foreign space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let addr = spawn_server(state.clone()).await;
+        for (index, row) in fixture["inviteScopes"].as_array().expect("invite scope rows").iter().enumerate() {
+            let issued = state.directory.issue_invite(&foreign, SpaceRole::Spectator, 600, "invite-scope-law").await.expect("foreign invite");
+            let invite = issued.record.clone();
+            if row["accepted"].as_bool().expect("accepted fixture") {
+                let recipient = issue_test_session(&state, &format!("invite-recipient-{index}@example.test")).await;
+                state.directory_service.redeem_invite(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#invite-scope", recipient.user_id) }, &issued.capability, &recipient.user_id).await.expect("accepted invite fixture");
+            }
+            let exact = row["commandSpace"] == row["inviteSpace"];
+            let (space, token) = if exact { (&foreign, &other.token) } else { (&owned, &caller.token) };
+            let head = state.directory.head_seq().await.expect("before revoke head");
+            let request_id = format!("{:032x}", 1000 + index);
+            let response = post_directory_command_for_test(addr, token, &request_id, DirectoryCommand::RevokeInvite { space_id: space.clone(), invite_id: invite.id.clone() }).await;
+            assert_eq!(u64::from(response.status), row["status"].as_u64().expect("expected status"), "{}", row["id"]);
+            let current = state.directory.list_invites(&foreign).await.expect("foreign invite after request").into_iter().find(|candidate| candidate.id == invite.id).expect("retained foreign invite");
+            assert_eq!(current.revoked_at.is_some(), row["revoked"].as_bool().expect("expected revocation"));
+            assert_eq!(state.directory.head_seq().await.expect("after revoke head"), head, "invite revocation changes capability authority, not membership events");
+            if !exact {
+                assert!(response.body.is_empty(), "cross-space response carries no foreign metadata");
+            }
+            println!("[DEBUG] directory invite authority case={} status={} revoked={}", row["id"], response.status, current.revoked_at.is_some());
+        }
+    }
+
+    /// 🎟️ Uses real space commands and HTTP redemption to preserve archive reads without restoring authorship.
+    #[tokio::test]
+    async fn directory_invite_redemption_obeys_current_space_state_and_readonly_replay() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).expect("invite state fixture");
+        let state = tokio::time::timeout(std::time::Duration::from_secs(5), test_state()).await.expect("invite state open deadline");
+        let owner = issue_test_session(&state, "invite-state-owner@example.test").await;
+        let addr = spawn_server(state.clone()).await;
+        for (index, row) in fixture["spaceStates"].as_array().expect("state rows").iter().enumerate() {
+            let caller = issue_test_session(&state, &format!("invite-state-{index}@example.test")).await;
+            let other = issue_test_session(&state, &format!("invite-state-other-{index}@example.test")).await;
+            let space = create_space_for_test(&state, &owner.user_id, "Invite state", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+            let role = if row["inviteRole"] == "author" { SpaceRole::Author } else { SpaceRole::Spectator };
+            let issued = state.directory.issue_invite(&space, role, 600, "invite-state-law").await.expect("pending invite");
+            let accepted_user = if row["accepted"] == "other" { &other } else { &caller };
+            let accepted = if row["accepted"] != "none" {
+                state
+                    .directory_service
+                    .redeem_invite(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#invite-state", accepted_user.user_id) }, &issued.capability, &accepted_user.user_id)
+                    .await
+                    .map(|commit| vec![commit.into_event()])
+                    .expect("initial acceptance")
+            } else {
+                Vec::new()
+            };
+            let transition = match row["spaceState"].as_str().unwrap() {
+                "archived" => Some(DirectoryCommand::ArchiveSpace { space_id: space.clone() }),
+                "deleted" => Some(DirectoryCommand::DeleteSpace { space_id: space.clone() }),
+                "writable" => None,
+                _ => unreachable!(),
+            };
+            if let Some(command) = transition {
+                assert_eq!(post_directory_command_for_test(addr, &owner.token, &format!("{:032x}", 2000 + index), command).await.status, 202);
+            }
+            let replay_grant = if row["accepted"] == "same" && row["spaceState"] != "deleted" {
+                let session = resolve_bearer_user(&state, Some(&caller.token)).await.unwrap();
+                let capability = SocketGrantCapability::mint().unwrap();
+                let audience = SocketAudienceV1::DirectoryScoped(DocumentScope::new(&space, "invite-replay"));
+                let subject =
+                    SocketSubjectV1::Session { session_id: session.session_id, user_id: caller.user_id.clone(), authorization_generation: session.authorization_generation, role: Some(SpaceRole::Spectator), expires_at_ms: session.expires_at };
+                state.socket_grants.issue(&capability, audience.clone(), "hub.v1.invite-replay".into(), subject, now_ms(), now_ms() + 30_000).unwrap();
+                Some((capability, audience))
+            } else {
+                None
+            };
+            let before = state.directory.head_seq().await.unwrap();
+            let mut stream = state.directory_service.subscribe();
+            let token = issued.capability.expose_once();
+            let authorization = format!("Bearer {}", caller.token);
+            let response = raw_http_request(addr, "POST", &format!("/directory/invites/{token}/redeem"), &[("Authorization", &authorization)], &[]).await;
+            assert_eq!(u64::from(response.status), row["status"].as_u64().unwrap(), "{}", row["name"]);
+            if let Some((capability, audience)) = replay_grant {
+                assert!(state.socket_grants.pending(&capability, &audience, now_ms()).is_ok(), "read-only replay preserves fresh admission");
+            }
+            let appended = state.directory.events_since(before, 16).await.unwrap();
+            assert_eq!(appended.len() as u64, row["appended"].as_u64().unwrap(), "{}", row["name"]);
+            assert!(appended.iter().all(|event| matches!(event.body, os_directory::DirectoryEventBody::InviteRedeemed { .. })));
+            let current = state.directory.get_role(&space, &caller.user_id).await.unwrap();
+            let expected_role = match row["membershipRole"].as_str().unwrap() {
+                "author" => Some(SpaceRole::Author),
+                "spectator" => Some(SpaceRole::Spectator),
+                "none" => None,
+                _ => unreachable!(),
+            };
+            assert_eq!(current, expected_role, "{}", row["name"]);
+            let invitations = state.directory.list_invites(&space).await.unwrap();
+            if row["spaceState"] == "deleted" {
+                assert!(invitations.is_empty());
+            } else {
+                let retained = invitations.iter().find(|invite| invite.id == issued.record.id).expect("retained invitation");
+                assert_eq!(retained.accepted_at.is_some(), !accepted.is_empty() || !appended.is_empty());
+                if !accepted.is_empty() {
+                    assert_eq!(retained.accepted_event_id.as_deref(), Some(accepted[0].id.as_str()));
+                }
+            }
+            if row["appended"] == 0 {
+                assert!(matches!(stream.try_recv(), Err(broadcast::error::TryRecvError::Empty)), "replay and denial publish no new event");
+            } else {
+                assert!(stream.try_recv().is_ok());
+            }
+            if response.status == 200 && !accepted.is_empty() {
+                let expected = axum::body::to_bytes(DirectoryJson(accepted).into_response().into_body(), 1 << 20).await.unwrap();
+                assert_eq!(response.body.as_slice(), expected.as_ref(), "replay returns the exact original immutable event");
+            } else if response.status != 200 {
+                assert!(response.body.is_empty());
+            }
+            eprintln!("[DEBUG] invite space state case={} status={} appended={} role={:?}", row["name"], response.status, appended.len(), current);
+        }
+    }
+
+    /// 🧭️ Scope selection accepts only the exact stored secret and existing authenticated subject.
+    #[tokio::test]
+    async fn directory_invite_redemption_scope_hint_is_capability_bound() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
+        let state = tokio::time::timeout(std::time::Duration::from_secs(5), test_state()).await.expect("invite hint state deadline");
+        let owner = issue_test_session(&state, "invite-hint-owner@example.test").await;
+        let caller = issue_test_session(&state, "invite-hint-caller@example.test").await;
+        let space = create_space_for_test(&state, &owner.user_id, "Invite hint", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let issued = state.directory.issue_invite(&space, SpaceRole::Author, 600, "invite-hint").await.unwrap();
+        let other = InviteCapability::mint().unwrap();
+        let other_encoded = other.expose_once();
+        let wrong_secret = InviteCapability::parse(&other_encoded.replacen(other.selector(), issued.capability.selector(), 1)).unwrap();
+        let head = state.directory.head_seq().await.unwrap();
+        for row in fixture["vectors"].as_array().unwrap().iter().filter(|row| ["fresh-single", "wrong-selector", "wrong-secret", "actor-mismatch", "missing-user"].contains(&row["name"].as_str().unwrap())) {
+            let user_id = if row["name"] == "missing-user" { "nonexistent-user" } else { &caller.user_id };
+            let actor_user = if row["name"] == "actor-mismatch" { &owner.user_id } else { user_id };
+            let actor = DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{actor_user}#hint") };
+            let capability = match row["name"].as_str().unwrap() {
+                "wrong-selector" => &other,
+                "wrong-secret" => &wrong_secret,
+                _ => &issued.capability,
+            };
+            let result = state.directory.invite_redemption_scope_hint(capability, &actor, user_id).await;
+            if row["expected"]["outcomes"][0] == "newly-committed" {
+                assert_eq!(result.unwrap().space_id(), space);
+            } else {
+                assert!(matches!(result, Err(DirectoryError::Unauthorized)), "{}", row["name"]);
+            }
+            assert_eq!(state.directory.head_seq().await.unwrap(), head, "a hint writes no event");
+            assert_eq!(state.directory.get_role(&space, &caller.user_id).await.unwrap(), None, "a hint grants no membership");
+            assert!(state.directory.list_invites(&space).await.unwrap().iter().all(|invite| invite.accepted_at.is_none()));
+            eprintln!("[DEBUG] invite scope hint case={} capability-bound=1 mutation=0", row["name"]);
+        }
+        let actor = DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#hint", caller.user_id) };
+        state.directory_service.execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#hint-owner", owner.user_id) }, DirectoryCommand::DeleteSpace { space_id: space }).await.unwrap();
+        assert!(matches!(state.directory.invite_redemption_scope_hint(&issued.capability, &actor, &caller.user_id).await, Err(DirectoryError::Unauthorized)));
+    }
+
+    /// 🔒️ A paused redemption cannot spend the identity captured before a durable revocation.
+    #[tokio::test]
+    async fn directory_invite_redemption_revalidates_after_hint_before_fence() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
+        let mut state = tokio::time::timeout(std::time::Duration::from_secs(5), test_state()).await.expect("invite race state deadline");
+        let owner = issue_test_session(&state, "invite-race-owner@example.test").await;
+        let gate = Arc::new(TestLiveGate::default());
+        state.live_gate = Some(gate.clone());
+        let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
+        for (index, row) in fixture["authorityRaces"].as_array().unwrap().iter().filter(|row| row["appended"] == 0).enumerate() {
+            let caller = issue_test_session(&state, &format!("invite-race-{index}@example.test")).await;
+            let space = create_space_for_test(&state, &owner.user_id, "Invite race", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+            let issued = state.directory.issue_invite(&space, SpaceRole::Author, 600, "invite-race").await.unwrap();
+            *gate.directory_command_pause_user.lock().unwrap() = Some((caller.user_id.clone(), false));
+            let pending = {
+                let token = caller.token.clone();
+                let path = format!("/directory/invites/{}/redeem", issued.capability.expose_once());
+                tokio::spawn(async move { raw_http_request(addr, "POST", &path, &[("Authorization", &format!("Bearer {token}"))], &[]).await })
+            };
+            tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_admitted.acquire()).await.unwrap().unwrap().forget();
+            if row["revocation"] == "session" {
+                assert_eq!(delete_session_me(bearer_headers(&caller.token), State(state.clone())).await, StatusCode::NO_CONTENT);
+            } else {
+                let command = if row["revocation"] == "archive" { DirectoryCommand::ArchiveSpace { space_id: space.clone() } } else { DirectoryCommand::DeleteSpace { space_id: space.clone() } };
+                assert_eq!(post_directory_command_for_test(addr, &owner.token, &format!("{:032x}", 3000 + index), command).await.status, 202);
+            }
+            let head = state.directory.head_seq().await.unwrap();
+            gate.directory_command_release.add_permits(1);
+            let response = tokio::time::timeout(std::time::Duration::from_secs(5), pending).await.unwrap().unwrap();
+            assert_eq!(u64::from(response.status), row["status"].as_u64().unwrap(), "{}", row["name"]);
+            assert!(response.body.is_empty());
+            assert_eq!(state.directory.head_seq().await.unwrap(), head);
+            assert_eq!(state.directory.get_role(&space, &caller.user_id).await.unwrap(), None);
+            assert!(state.directory.list_invites(&space).await.unwrap().iter().all(|invite| invite.accepted_at.is_none()));
+            eprintln!("[DEBUG] invite authority race={} status={} appended=0", row["name"], response.status);
+        }
+        shutdown.send(()).unwrap();
+        tokio::time::timeout(std::time::Duration::from_secs(5), server).await.unwrap().unwrap();
+    }
+
+    /// 🧱️ All session and space keys stay owned through one irreversible invitation event.
+    #[tokio::test]
+    async fn directory_invite_redemption_admitted_fence_precedes_archive() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
+        let row = fixture["authorityRaces"].as_array().unwrap().iter().find(|row| row["appended"] == 1).unwrap();
+        let mut state = tokio::time::timeout(std::time::Duration::from_secs(5), test_state()).await.expect("invite order state deadline");
+        let owner = issue_test_session(&state, "invite-order-owner@example.test").await;
+        let caller = issue_test_session(&state, "invite-order-caller@example.test").await;
+        let session = resolve_bearer_user(&state, Some(&caller.token)).await.unwrap();
+        let space = create_space_for_test(&state, &owner.user_id, "Invite order", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let issued = state.directory.issue_invite(&space, SpaceRole::Author, 600, "invite-order").await.unwrap();
+        let gate = Arc::new(TestLiveGate::default());
+        *gate.directory_command_pause_user.lock().unwrap() = Some((caller.user_id.clone(), true));
+        state.live_gate = Some(gate.clone());
+        let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
+        let head = state.directory.head_seq().await.unwrap();
+        let pending = {
+            let token = caller.token.clone();
+            let path = format!("/directory/invites/{}/redeem", issued.capability.expose_once());
+            tokio::spawn(async move { raw_http_request(addr, "POST", &path, &[("Authorization", &format!("Bearer {token}"))], &[]).await })
+        };
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_admitted.acquire()).await.unwrap().unwrap().forget();
+        for key in [
+            SocketBindingKeyV1::User(caller.user_id.clone()),
+            SocketBindingKeyV1::Session(session.session_id.clone()),
+            SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space.clone() },
+            SocketBindingKeyV1::Membership { space_id: space.clone(), user_id: caller.user_id.clone() },
+        ] {
+            assert!(state.socket_binding_gates.gate(key).try_lock_owned().is_err(), "the admitted redemption must own every exact authority key");
+        }
+        gate.directory_command_attempted.acquire().await.unwrap().forget();
+        let revoking = {
+            let token = owner.token.clone();
+            let command = DirectoryCommand::ArchiveSpace { space_id: space.clone() };
+            tokio::spawn(async move { post_directory_command_for_test(addr, &token, "f10102030405060708090a0b0c0d0e0f", command).await })
+        };
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_attempted.acquire()).await.unwrap().unwrap().forget();
+        assert!(!revoking.is_finished());
+        assert_eq!(state.directory.head_seq().await.unwrap(), head);
+        gate.directory_command_release.add_permits(1);
+        let response = tokio::time::timeout(std::time::Duration::from_secs(5), pending).await.unwrap().unwrap();
+        assert_eq!(u64::from(response.status), row["status"].as_u64().unwrap());
+        assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(5), revoking).await.unwrap().unwrap().status, 202);
+        let events = state.directory.events_since(head, 16).await.unwrap();
+        assert!(matches!(&events[0].body, os_directory::DirectoryEventBody::InviteRedeemed { user_id, role: DirectorySpaceRole::Author, .. } if user_id == &caller.user_id));
+        assert!(matches!(&events.last().unwrap().body, os_directory::DirectoryEventBody::SpaceArchived { .. }));
+        assert_eq!(events.iter().filter(|event| matches!(event.body, os_directory::DirectoryEventBody::InviteRedeemed { .. })).count(), row["appended"].as_u64().unwrap() as usize);
+        assert_eq!(state.directory.get_role(&space, &caller.user_id).await.unwrap(), Some(SpaceRole::Spectator));
+        shutdown.send(()).unwrap();
+        tokio::time::timeout(std::time::Duration::from_secs(5), server).await.unwrap().unwrap();
+        eprintln!("[DEBUG] invite admitted-before-archive event-first=1 final-role=spectator");
+    }
+
+    #[tokio::test]
+    async fn directory_command_authority_demotion_invalidates_only_affected_scope_once() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🛡️command-authority-v1/🔣️.json")).unwrap();
+        let shared = SocketGrantLedgerV1::default();
+        let capacity = &fixture["capacity"];
+        assert_eq!(capacity["subjectLimit"].as_u64().unwrap() as usize, SOCKET_GRANT_BINDING_PENDING_CAPACITY);
+        assert_eq!(capacity["ledgerLimit"].as_u64().unwrap() as usize, SOCKET_GRANT_LEDGER_CAPACITY);
+        for index in 0..capacity["subjects"].as_u64().unwrap() {
+            let subject = SocketSubjectV1::Session { session_id: format!("capacity-session-{index}"), user_id: format!("capacity-user-{index}"), authorization_generation: 1, role: Some(SpaceRole::Author), expires_at_ms: 10_000 };
+            shared.issue(&SocketGrantCapability::mint().unwrap(), SocketAudienceV1::DirectoryScoped(DocumentScope::new("shared-space", "document")), format!("hub.v1.capacity-{index}"), subject, 1, 9_000).unwrap();
+        }
+        assert_eq!(shared.inner.lock().unwrap().records.len() as u64, capacity["accepted"].as_u64().unwrap());
+        eprintln!("[DEBUG] directory authority shared-space pending-subjects=65 subject-limit=64 global-limit=4096");
+        let state = test_state().await;
+        let owner = issue_test_session(&state, "authority-owner@example.com").await;
+        let author = issue_test_session(&state, "authority-author@example.com").await;
+        let space = create_space_for_test(&state, &owner.user_id, "Authority Bindings", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let other = create_space_for_test(&state, &author.user_id, "Other Bindings", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        upsert_member_for_test(&state, &space, "authority-author@example.com", DirectorySpaceRole::Author).await;
+        let mut records = Vec::new();
+        for row in fixture["bindings"].as_array().unwrap() {
+            let user = if row["user"] == "author" { &author } else { &owner };
+            let session = state.directory.authenticate_session(&SessionCapability::parse(&user.token).unwrap()).await.unwrap().unwrap();
+            let scope = DocumentScope::new(if row["space"] == "changed" { &space } else { &other }, "authority-document");
+            let subject = SocketSubjectV1::Session { session_id: session.id.clone(), user_id: user.user_id.clone(), authorization_generation: session.authorization_generation, role: Some(SpaceRole::Author), expires_at_ms: session.expires_at };
+            let audience = match row["audience"].as_str().unwrap() {
+                "document" => SocketAudienceV1::Document(scope),
+                "scoped" => SocketAudienceV1::DirectoryScoped(scope),
+                "global" => SocketAudienceV1::Directory { auth_session_id: session.id, authorization_generation: session.authorization_generation },
+                _ => unreachable!(),
+            };
+            let pending = SocketGrantCapability::mint().unwrap();
+            let live = SocketGrantCapability::mint().unwrap();
+            for capability in [&pending, &live] {
+                state.socket_grants.issue(capability, audience.clone(), format!("hub.v1.{}", row["id"].as_str().unwrap()), subject.clone(), now_ms(), now_ms() + 30_000).unwrap();
+            }
+            let record = state.socket_grants.pending(&live, &audience, now_ms()).unwrap();
+            let record = state.socket_grants.consume(&record, now_ms()).unwrap();
+            let (live_id, notify) = state.socket_grants.register_live(&record).unwrap();
+            records.push((row, pending, record, live_id, notify));
+        }
+        let addr = spawn_server(state.clone()).await;
+        let command = DirectoryCommand::UpsertMember { space_id: space, email: "authority-author@example.com".into(), role: DirectorySpaceRole::Spectator };
+        let request_id = "e00102030405060708090a0b0c0d0e0f";
+        assert_eq!(post_directory_command_for_test(addr, &owner.token, request_id, command.clone()).await.status, 202);
+        for (row, pending, record, live_id, notify) in &records {
+            let invalidated = row["invalidated"].as_bool().unwrap();
+            assert_eq!(state.socket_grants.pending(pending, &record.audience, now_ms()).is_err(), invalidated, "pending {}", row["id"]);
+            assert_eq!(!state.socket_grants.is_live(record, live_id), invalidated, "live {}", row["id"]);
+            if invalidated {
+                tokio::time::timeout(std::time::Duration::from_secs(1), notify.notified()).await.unwrap();
+                let fresh = SocketGrantCapability::mint().unwrap();
+                let mut subject = record.subject.clone();
+                if let SocketSubjectV1::Session { role, .. } = &mut subject {
+                    *role = Some(SpaceRole::Spectator);
+                }
+                state.socket_grants.issue(&fresh, record.audience.clone(), record.actor_id.clone(), subject, now_ms(), now_ms() + 30_000).unwrap();
+                assert_eq!(post_directory_command_for_test(addr, &owner.token, request_id, command.clone()).await.status, 202);
+                assert!(state.socket_grants.pending(&fresh, &record.audience, now_ms()).is_ok(), "receipt replay must not invalidate fresh admission");
+            }
+            eprintln!("[DEBUG] directory authority binding={} invalidated={} replay-preserved=1", row["id"], invalidated);
+        }
+    }
+
+    #[tokio::test]
     async fn directory_command_receipt_v1_route_is_request_idempotent_for_concurrent_identical_ids() {
         let state = test_state().await;
         let author = issue_test_session(&state, "command-receipt-author@example.com").await;
@@ -11806,10 +12566,7 @@ mod tests {
         fixture
             .state
             .directory_service
-            .execute(
-                DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) },
-                DirectoryCommand::AnnounceDocument { descriptor: other_descriptor },
-            )
+            .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: other_descriptor })
             .await
             .expect("announce same-id other-space document");
         let addr = spawn_server(fixture.state.clone()).await;
@@ -11838,34 +12595,19 @@ mod tests {
         let write = fixture.state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(fixture.scope.clone())).lock_owned().await;
         let document = db_artifact_id(&fixture.scope);
         let batch = db::document::CommandBatch::new(vec![sample_envelope("checkpoint-fence-edit-2", &WireArtifactId(document.0)).await]).await.expect("queued write batch");
-        fixture
-            .handle
-            .submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy: protocol::MergePolicy::default() })
-            .await
-            .expect("queued write actor response")
-            .expect("queued write accepted");
+        fixture.handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy: protocol::MergePolicy::default() }).await.expect("queued write actor response").expect("queued write accepted");
         drop(write);
         gate.checkpoint_publication_release.add_permits(1);
         let queued = queued.await.expect("queued publication response");
         assert_eq!(queued.status, 409, "the final actor snapshot fence rejects a write committed during materialization");
         assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("stale publication count"), 0);
         let failed_digest = os_directory::hex_lower(&Sha256::digest(body.as_bytes()));
-        let failed_claim = NewCheckpointPublicationClaimV1 {
-            actor_user_id: fixture.author.user_id.clone(),
-            correlation_id: fixture.command.correlation_id.clone(),
-            command_sha256: failed_digest.clone(),
-            claimed_at: now_ms(),
-        };
+        let failed_claim = NewCheckpointPublicationClaimV1 { actor_user_id: fixture.author.user_id.clone(), correlation_id: fixture.command.correlation_id.clone(), command_sha256: failed_digest.clone(), claimed_at: now_ms() };
         assert!(
             matches!(fixture.state.directory.claim_or_read_checkpoint_publication(&failed_claim).await.expect("reclaim failed publication"), CheckpointPublicationClaimV1::Claimed(_)),
             "a returned failure synchronously releases its durable claim for a corrected retry"
         );
-        fixture
-            .state
-            .directory
-            .release_checkpoint_publication(&failed_claim.actor_user_id, &failed_claim.correlation_id, &failed_digest)
-            .await
-            .expect("release test reclaim");
+        fixture.state.directory.release_checkpoint_publication(&failed_claim.actor_user_id, &failed_claim.correlation_id, &failed_digest).await.expect("release test reclaim");
 
         let current = fixture.handle.checkpoint_publication_snapshot().await.expect("current publication snapshot");
         let descriptor_command = checkpoint_publication_command("cccccccccccccccccccccccccccccccc", &descriptor, &current, CheckpointPublicationCurrentV1::None, &fixture.pack, &fixture.spr);
@@ -11881,10 +12623,7 @@ mod tests {
         fixture
             .state
             .directory_service
-            .execute(
-                DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) },
-                DirectoryCommand::AnnounceDocument { descriptor: changed_descriptor },
-            )
+            .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: changed_descriptor })
             .await
             .expect("replace publication descriptor");
         gate.checkpoint_publication_release.add_permits(1);
@@ -11894,10 +12633,7 @@ mod tests {
         fixture
             .state
             .directory_service
-            .execute(
-                DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) },
-                DirectoryCommand::AnnounceDocument { descriptor: descriptor.clone() },
-            )
+            .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: descriptor.clone() })
             .await
             .expect("restore publication descriptor");
 

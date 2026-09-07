@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the remodel editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum RemodelApps: PluginApp {
-        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::remodeling::RemodelingPlayApp>>),
-        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::remodeling::RemodelingViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::remodeling::RemodelingPlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::remodeling::RemodelingViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -24,7 +24,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// took never had. `.editor_mutation_roster()`/`.viewer_mutation_roster()` stay — an orthogonal
 /// `contributor.list-artifact-mutations` opt-in the declaration tree's `SurfaceDeclaration.mutation_roster`
 /// does not yet wire live, not a second registration of the artifact/schema/io itself.
-pub fn plugin() -> Result<Plugin<RemodelApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<RemodelApps>, PluginAssemblyError> {
     Plugin::<RemodelApps>::builder("remodel")
         .label("Remodel")
         .version("0.1.0")

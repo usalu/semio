@@ -14,7 +14,7 @@ pub struct DeclareDoctype {
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for DeclareDoctype {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "doctype", kind: "declare-doctype", record: "DeclareDoctype" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as protocol::Mutation<XmlSnapshot>>::Diff> {
+    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
         agg_diff(&XmlValidMutation::DeclareDoctype(self.clone()), base)
     }
     fn inverse(&self, base: &XmlSnapshot) -> Vec<XmlValidMutation> {

@@ -1,7 +1,7 @@
 //! 🏗️ `create-shell` — brings a new id-keyed shell into existence with its full initial `faces` membership list (referencing already-existing faces) — the whole initial payload, per `create`'s canonical-args shape, since no per-membership verb exists to grow a shell's face list after creation. A duplicate `id` already present in `base` is a no-op.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation, delete_shell};
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepShell, BrepShellFace, SemioBrepSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepShellFace, SemioBrepSnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

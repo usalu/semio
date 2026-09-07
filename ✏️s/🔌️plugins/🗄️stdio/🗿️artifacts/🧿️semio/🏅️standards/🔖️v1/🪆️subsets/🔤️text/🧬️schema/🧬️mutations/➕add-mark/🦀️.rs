@@ -1,7 +1,7 @@
 //! ➕️ `add-mark` — attaches one inline mark to a run at a FINAL-state index within that run's
 //! `marks` (an intrinsically ordered, anonymous collection nested one level inside `runs`).
 
-use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::{SemioTextMutation, remove_mark};
+use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextSnapshot};
 
 //#region 🔖️Payload

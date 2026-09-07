@@ -42,6 +42,22 @@
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
+    },
+    "ui-patch-marshalling-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun 📜️script.ts ui-patch-marshalling-check",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "ui-patch-marshalling-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun 📜️script.ts ui-patch-marshalling-check --native",
+        "cwd": "{projectRoot}"
+      }
     }
   }
 }

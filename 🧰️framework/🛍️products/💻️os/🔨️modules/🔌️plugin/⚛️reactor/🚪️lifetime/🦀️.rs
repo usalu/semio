@@ -43,7 +43,7 @@ impl GuestLifecycleSerial {
 }
 
 mod terminal_owner {
-    pub(super) trait Sealed {}
+    pub(crate) trait Sealed {}
 }
 
 pub(crate) enum GuestTerminalRelease {
@@ -368,7 +368,7 @@ impl<PA: crate::app::PluginApp> GuestLifetimeOwner for NativeLifetimeOwner<PA> {
     }
 
     fn release_terminal(owner: &mut Option<Self>, maximum_items: usize, maximum_bytes: usize) -> Result<GuestTerminalRelease, &'static str> {
-        if maximum_items == 0 || maximum_bytes < std::mem::size_of::<Self>() {
+        if maximum_items == 0 || maximum_bytes < size_of::<Self>() {
             return Ok(GuestTerminalRelease::Pending);
         }
         let retained = owner.as_mut().ok_or("terminal native owner missing")?;

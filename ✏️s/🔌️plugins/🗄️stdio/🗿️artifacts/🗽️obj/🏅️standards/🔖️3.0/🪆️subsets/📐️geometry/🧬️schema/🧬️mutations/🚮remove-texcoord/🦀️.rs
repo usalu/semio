@@ -21,7 +21,7 @@ pub struct RemoveTexcoord {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveTexcoord {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "texcoord", kind: "remove-texcoord", record: "RemoveTexcoord" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as protocol::Mutation<ObjSnapshot>>::Diff> {
+    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         agg_diff(&ObjMutation::RemoveTexcoord(self.clone()), base)
     }
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {

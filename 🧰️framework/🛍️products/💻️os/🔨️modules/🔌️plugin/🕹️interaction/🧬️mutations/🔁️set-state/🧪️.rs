@@ -5,7 +5,7 @@ use protocol::{Mutation, MutationDiff, MutationLeaf, OpBinary, OpText};
 fn local_interaction_mutation_leaf_descriptor_and_exact_codecs_are_owned() {
     let source: serde_json::Value = serde_json::from_str(include_str!("🧫️fixture/🔣️.json")).unwrap();
     let descriptor: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
-    let state: protocol::InteractionState = serde_json::from_value(source.clone()).unwrap();
+    let state: InteractionState = serde_json::from_value(source.clone()).unwrap();
     let mutation = InteractionConfigMutation::set_state(state.clone());
     assert_eq!(InteractionConfigMutation::DESCRIPTORS.len(), 1);
     assert_eq!(serde_json::Value::from(protocol::ToValue::to_value(mutation.descriptor())), descriptor);
@@ -18,7 +18,7 @@ fn local_interaction_mutation_leaf_descriptor_and_exact_codecs_are_owned() {
     let binary = mutation.encode_op().unwrap();
     assert_eq!(serde_json::from_slice::<serde_json::Value>(&binary).unwrap(), source);
     assert_eq!(InteractionConfigMutation::decode_op(&binary).unwrap(), mutation);
-    assert_eq!(mutation.apply(&protocol::InteractionState::default()).unwrap(), state);
-    let inverse = mutation.inverse(&protocol::InteractionState::default());
-    assert_eq!(inverse[0].apply(&state).unwrap(), protocol::InteractionState::default());
+    assert_eq!(mutation.apply(&InteractionState::default()).unwrap(), state);
+    let inverse = mutation.inverse(&InteractionState::default());
+    assert_eq!(inverse[0].apply(&state).unwrap(), InteractionState::default());
 }

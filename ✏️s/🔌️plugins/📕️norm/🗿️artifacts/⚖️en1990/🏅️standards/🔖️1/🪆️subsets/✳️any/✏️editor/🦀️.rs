@@ -17,7 +17,7 @@ use semio_framework_plugin::{NoPresence, NoPresenceMutation};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     AppIo, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, InteractiveJobClassification, LocalizedLabel, Media, MediaError, NoDraft,
-    NoDraftMutation, UiNode,
+    NoDraftMutation,
 };
 // 🚧️ SDK GAP: `Dialect` is not in `semio_framework_plugin`'s curated crate-root re-export list
 // (only `ArtifactEditor`/`ArtifactViewer`/`Editor`/`Viewer`/`EditorApp`/`ViewerApp`/`ViewEmit` are,

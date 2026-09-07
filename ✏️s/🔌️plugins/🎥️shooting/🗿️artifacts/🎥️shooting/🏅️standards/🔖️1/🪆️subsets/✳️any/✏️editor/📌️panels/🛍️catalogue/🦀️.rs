@@ -1,7 +1,7 @@
 //! 🛍️ Shooting play app panel — the create catalogue: shot presets and the GLB asset preset.
 
 use crate::editor::shooting::terminology::ShootingLabels;
-use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const SHOOTING_PLAY_BODY_CATALOGUE: &str = "shooting.play.catalogue";

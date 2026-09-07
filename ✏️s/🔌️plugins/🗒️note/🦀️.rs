@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the note editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum NoteApps: PluginApp {
-        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::note::NotePlayApp>>),
-        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::note::NoteViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::note::NotePlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::note::NoteViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -33,7 +33,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// (`crate::artifacts::note::artifact_kind().id`) is opened, this plugin's actor runs `Isolated`
 /// (no publisher trust assumed beyond the sandbox default), and it asks the broker for document
 /// write access to persist edits.
-pub fn plugin() -> Result<Plugin<NoteApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<NoteApps>, PluginAssemblyError> {
     Plugin::<NoteApps>::builder("note")
         .label("Note")
         .version("0.1.0")

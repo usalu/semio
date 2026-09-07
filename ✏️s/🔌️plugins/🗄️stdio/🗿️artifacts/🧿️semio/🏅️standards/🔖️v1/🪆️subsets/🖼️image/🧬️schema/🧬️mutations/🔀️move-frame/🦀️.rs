@@ -15,7 +15,7 @@ pub struct MoveFrame {
 impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for MoveFrame {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "frame", kind: "move-frame", record: "MoveFrame" };
 
-    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<SemioImageMutation as protocol::Mutation<SemioImageSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<SemioImageMutation as Mutation<SemioImageSnapshot>>::Diff> {
         agg_diff(&SemioImageMutation::MoveFrame(self.clone()), base)
     }
     fn inverse(&self, base: &SemioImageSnapshot) -> Vec<SemioImageMutation> {

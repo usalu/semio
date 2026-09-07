@@ -2,7 +2,7 @@
 
 use crate::artifacts::fem2d::Fem2dSnapshot;
 use crate::artifacts::fem2d::diff::{Fem2dCombinationsDelta, Fem2dDiff};
-use crate::artifacts::fem2d::mutations::{Fem2dMutation, create_combination};
+use crate::artifacts::fem2d::mutations::Fem2dMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

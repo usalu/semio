@@ -178,14 +178,6 @@ fn transpose_grid_w(g: &[Vec<f64>]) -> Vec<Vec<f64>> {
 }
 
 /// 🧩️ [`insert_u_knot_grid`]'s v-direction twin, via transpose.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn insert_v_knot_grid(v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>], t: f64) -> (KnotVector, Vec<Vec<Pnt3>>, Vec<Vec<f64>>) {
-    let ct = transpose_grid_p(controls);
-    let wt = transpose_grid_w(weights);
-    let (nk, ct2, wt2) = insert_u_knot_grid(v_knots, &ct, &wt, t);
-    (nk, transpose_grid_p(&ct2), transpose_grid_w(&wt2))
-}
-
 type Grid = (KnotVector, Vec<Vec<Pnt3>>, Vec<Vec<f64>>);
 
 /// 🧩️ Splits a surface control grid at u-parameter `t` into two grids covering each side —

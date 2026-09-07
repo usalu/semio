@@ -38,7 +38,7 @@ use semio_framework_plugin::{
     ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Dialect, DialogDefinition, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition,
     HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
     InteractionTarget, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode,
-    NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolRef, UiNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID,
+    NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolRef, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID,
     SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use store::EngineHandles;
@@ -106,11 +106,11 @@ static EMPTY_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(empty_fi
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
     let projection = <Puzzle3dSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
-    dsl::json::to_json_string(&projection)
+    to_json_string(&projection)
 }
 
 pub fn puzzle3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PUZZLE3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| dsl::os_pack::json::to_dsl_value(&value)) }
+    ActionDescriptor { controller_id: PUZZLE3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| json::to_dsl_value(&value)) }
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: builds a framework `interactionSelect`
@@ -293,7 +293,7 @@ fn puzzle3d_projection_value<T>(value: T) -> Value
 where
     dsl::DslValue: From<T>,
 {
-    dsl::os_pack::json::from_dsl_value(&dsl::DslValue::from(value))
+    json::from_dsl_value(&dsl::DslValue::from(value))
 }
 
 /// 🌉️ `puzzle3d_document_delta_operations` (owned by `🧬️mutations/🦀️.rs`, out of this ticket's
@@ -301,15 +301,15 @@ where
 /// `DslValue` at that one boundary, inferring the foreign return type from the callee's own
 /// signature via `Into` rather than naming it here.
 fn puzzle3d_operations_from_values(before: &Value, after: &Value) -> Vec<Puzzle3dMutation> {
-    let before_dsl = dsl::os_pack::json::to_dsl_value(before);
-    let after_dsl = dsl::os_pack::json::to_dsl_value(after);
+    let before_dsl = json::to_dsl_value(before);
+    let after_dsl = json::to_dsl_value(after);
     puzzle3d_document_delta_operations(&(&before_dsl).into(), &(&after_dsl).into())
 }
 
 /// 🧾️ Materializes the transient scene from the persisted projection (bare fixture json) and the
 /// app's current view state; an unparseable projection degrades to an empty board.
 pub fn scene_from_projection(projection: &Value, runtime: Puzzle3dRuntime, active_utility: &str) -> Puzzle3dScene {
-    let fixture = dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(projection)).unwrap_or_else(|_| empty_fixture());
+    let fixture = dsl::FromValue::from_value(json::to_dsl_value(projection)).unwrap_or_else(|_| empty_fixture());
     Puzzle3dScene { fixture, runtime, active_utility: active_utility.to_string() }
 }
 
@@ -325,9 +325,9 @@ static PUZZLE3D_EXAMPLE_OPERATIONS: LazyLock<Vec<Puzzle3dExampleOperations>> = L
     for fixture in &mut resolved {
         resolve_puzzle3d_attractions(fixture);
     }
-    let mut before_values: Vec<Value> = raw.iter().chain(&resolved).map(|fixture| dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(fixture))).collect();
+    let mut before_values: Vec<Value> = raw.iter().chain(&resolved).map(|fixture| json::from_dsl_value(&dsl::ToValue::to_value(fixture))).collect();
     before_values.dedup();
-    let after_values: Vec<Value> = resolved.iter().map(|fixture| dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(fixture))).collect();
+    let after_values: Vec<Value> = resolved.iter().map(|fixture| json::from_dsl_value(&dsl::ToValue::to_value(fixture))).collect();
     let mut entries = Vec::new();
     for before in before_values {
         for (after, after_value) in resolved.iter().zip(&after_values) {
@@ -342,7 +342,7 @@ pub fn puzzle3d_operations_from_fixture_change(before: &Value, after_fixture: &P
     if let Some(entry) = PUZZLE3D_EXAMPLE_OPERATIONS.iter().find(|entry| &entry.before == before && &entry.after == after_fixture) {
         return entry.operations.clone();
     }
-    let after = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(after_fixture));
+    let after = json::from_dsl_value(&dsl::ToValue::to_value(after_fixture));
     puzzle3d_operations_from_values(before, &after)
 }
 
@@ -411,7 +411,7 @@ fn puzzle3d_upsert_catalog_rows(catalogs: &mut dsl::DslValue, section: &str, inc
         let Some(id) = row.get("id").and_then(Value::as_str) else {
             continue;
         };
-        let row_dsl = dsl::os_pack::json::to_dsl_value(&row);
+        let row_dsl = json::to_dsl_value(&row);
         match existing.iter().position(|entry| entry.get("id").and_then(dsl::DslValue::as_str) == Some(id)) {
             Some(index) => existing[index] = row_dsl,
             None => existing.push(row_dsl),
@@ -434,7 +434,7 @@ fn window_instance_ids(config: &Puzzle3dConfig, kind_id: &str) -> Vec<String> {
 
 pub fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
     args.and_then(|value| value.get("ids"))
-        .and_then(|value| dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(value)).ok())
+        .and_then(|value| dsl::FromValue::from_value(json::to_dsl_value(value)).ok())
         .filter(|ids: &Vec<String>| !ids.is_empty())
         .unwrap_or_else(|| fallback.to_vec())
 }
@@ -2000,7 +2000,7 @@ pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyRes
 }
 
 /// 🌳️ Admits fallibly assembled puzzle nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<BuiltNode>> {
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         nodes.try_push(value?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d node admission failed"))?;
@@ -2020,7 +2020,7 @@ fn puzzle3d_context_menu_row(id: &str, label: impl Into<String>, icon: &str, act
         label: Some(label.into()),
         icon: Some(icon.into()),
         action: Some(action.into()),
-        args: args.map(|value| dsl::os_pack::json::to_dsl_value(&value)),
+        args: args.map(|value| json::to_dsl_value(&value)),
         destructive: destructive.then_some(true),
         ..Default::default()
     }
@@ -2068,18 +2068,18 @@ fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dCon
         let all_locked = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.locked);
         let count = selection.object_ids.len();
         let phrase = if count == 1 { format!("1 {}", labels.object.as_str()) } else { format!("{count} {}", labels.objects.as_str()) };
-        return semio_framework::io::resolve_ready(async {
+        return {
             Menu::of(registry)
-                .await
+                
                 .item(puzzle3d_context_menu_row("duplicate", labels.duplicate, "copy", "duplicateSelection", None, false))
-                .await
+                
                 .item(puzzle3d_context_menu_row("select-same-kind", labels.select_same_kind, "layers", "selectSameKindSelection", None, false))
-                .await
+                
                 .item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false))
-                .await
-                .group("hand", |m| async {
+                
+                .group("hand", |m| {
                     m.item(puzzle3d_context_menu_row("hide-show", if all_hidden { labels.show } else { labels.hide }, if all_hidden { "eye" } else { "eye-off" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": !all_hidden })), false))
-                        .await
+                        
                         .item(puzzle3d_context_menu_row(
                             "lock-unlock",
                             if all_locked { labels.unlock } else { labels.lock },
@@ -2088,37 +2088,37 @@ fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dCon
                             Some(json!({ "flag": "locked", "value": !all_locked })),
                             false,
                         ))
-                        .await
+                        
                 })
-                .await
+                
                 .item(puzzle3d_context_menu_row("delete", format!("{} ({phrase})", labels.delete.as_str()), "trash", "deleteSelection", None, true))
-                .await
+                
                 .build()
-                .await
-        });
+                
+        };
     }
     if !selection.vortex_ids.is_empty() {
-        let mut menu = semio_framework::io::resolve_ready(Menu::of(registry));
+        let mut menu = Menu::of(registry);
         if let [only] = selection.vortex_ids.as_slice() {
-            menu = semio_framework::io::resolve_ready(menu.item(puzzle3d_context_menu_row("suggest", labels.suggest_objects, "sparkles", "openVortexSuggestions", Some(json!({ "fullId": only.as_str() })), false)));
+            menu = menu.item(puzzle3d_context_menu_row("suggest", labels.suggest_objects, "sparkles", "openVortexSuggestions", Some(json!({ "fullId": only.as_str() })), false));
         }
-        return semio_framework::io::resolve_ready(async {
-            menu.item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false)).await.item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteSelection", None, true)).await.build().await
-        });
+        return {
+            menu.item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false)).item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteSelection", None, true)).build()
+        };
     }
     if let Some(id) = selection.attraction_ids.first() {
-        return semio_framework::io::resolve_ready(async { Menu::of(registry).await.item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteAttraction", Some(json!({ "id": id.as_str() })), true)).await.build().await });
+        return { Menu::of(registry).item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteAttraction", Some(json!({ "id": id.as_str() })), true)).build() };
     }
     if let Some(id) = selection.target_volume_ids.first() {
         let target_volume = envelope.fixture.target_volumes.iter().find(|volume| &volume.id == id);
         let hidden = target_volume.is_some_and(|volume| volume.hidden);
         let locked = target_volume.is_some_and(|volume| volume.locked);
-        return semio_framework::io::resolve_ready(async {
+        return {
             Menu::of(registry)
-                .await
-                .group("targets", |m| async {
+                
+                .group("targets", |m| {
                     m.item(puzzle3d_context_menu_row("hide-show", if hidden { labels.show } else { labels.hide }, if hidden { "eye" } else { "eye-off" }, "setTargetVolumeFlag", Some(json!({ "id": id.as_str(), "flag": "hidden", "value": !hidden })), false))
-                        .await
+                        
                         .item(puzzle3d_context_menu_row(
                             "lock-unlock",
                             if locked { labels.unlock } else { labels.lock },
@@ -2127,26 +2127,26 @@ fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dCon
                             Some(json!({ "id": id.as_str(), "flag": "locked", "value": !locked })),
                             false,
                         ))
-                        .await
+                        
                 })
-                .await
+                
                 .item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteTargetVolume", Some(json!({ "id": id.as_str() })), true))
-                .await
+                
                 .build()
-                .await
-        });
+                
+        };
     }
     if selection.reference_ids.first().is_some() {
-        return semio_framework::io::resolve_ready(async {
+        return {
             Menu::of(registry)
-                .await
+                
                 .item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false))
-                .await
+                
                 .item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteSelection", None, true))
-                .await
+                
                 .build()
-                .await
-        });
+                
+        };
     }
     Vec::new()
 }
@@ -2228,7 +2228,7 @@ impl Puzzle3dPlayApp {
 
     /// 🎬️ Snapshots the live fixture as the gumball drag base and clears any prior scratch.
     fn begin_transform_session(&self, projection: &Value) {
-        let fixture = dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(projection)).unwrap_or_else(|_| empty_fixture());
+        let fixture = dsl::FromValue::from_value(json::to_dsl_value(projection)).unwrap_or_else(|_| empty_fixture());
         *self.transform_drag_active.borrow_mut() = true;
         *self.transform_base.borrow_mut() = Some(fixture);
         *self.transform_scratch.borrow_mut() = None;
@@ -2298,7 +2298,7 @@ impl Puzzle3dPlayApp {
         if let Some(scratch) = self.transform_scratch.borrow().as_ref() {
             return scratch.clone();
         }
-        dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(projection)).unwrap_or_else(|_| empty_fixture())
+        dsl::FromValue::from_value(json::to_dsl_value(projection)).unwrap_or_else(|_| empty_fixture())
     }
 
     //#region 🔖️GesturePreview
@@ -2320,9 +2320,9 @@ impl Puzzle3dPlayApp {
         let base = base_binding.as_ref()?;
         let scratch_binding = self.transform_scratch.borrow();
         let scratch = scratch_binding.as_ref()?;
-        let before = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(base));
+        let before = json::from_dsl_value(&dsl::ToValue::to_value(base));
         let operations = puzzle3d_operations_from_fixture_change(&before, scratch);
-        let operations: Vec<Value> = operations.iter().map(|operation| dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(operation))).collect();
+        let operations: Vec<Value> = operations.iter().map(|operation| json::from_dsl_value(&dsl::ToValue::to_value(operation))).collect();
         let payload = json!({ "operations": operations });
         Some(("gesture:transform", *self.preview_seq.borrow(), to_string(&payload).into_bytes()))
     }
@@ -2570,7 +2570,7 @@ fn puzzle3d_retained_reduce(
         let voxel_dims = options.map_or(config.voxel_dims, |options| options.voxel_dims);
         let snapped = [(origin[0] / grid_spacing).round() * grid_spacing, (origin[1] / grid_spacing).round() * grid_spacing, (origin[2] / grid_spacing).round() * grid_spacing];
         let scale = crate::artifacts::puzzle3d::Puzzle3dScale::Vec3([voxel_dims[0] as f64 * grid_spacing, voxel_dims[1] as f64 * grid_spacing, voxel_dims[2] as f64 * grid_spacing]);
-        let id = format!("target-volume-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed));
+        let id = format!("target-volume-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
         let volume = crate::artifacts::puzzle3d::Puzzle3dTargetVolume { id, origin: snapped, orientation: None, scale: Some(scale), hidden: false, locked: false };
         return Ok(Emit { artifact_mutations: vec![crate::artifacts::puzzle3d::mutations::create_target_volume(volume, None)], ui_scope: UiDirtyScope::Full, ..Default::default() });
     }
@@ -2631,7 +2631,7 @@ impl Puzzle3dScalarConfigWork {
         let args = command.args();
         match self.tool_id {
             "setCamera" => {
-                let camera = args.and_then(|value| value.get("camera")).cloned().and_then(|value| dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(&value)).ok())?;
+                let camera = args.and_then(|value| value.get("camera")).cloned().and_then(|value| dsl::FromValue::from_value(json::to_dsl_value(&value)).ok())?;
                 Some(Puzzle3dConfigMutation::SetWindowCamera { window_id, camera })
             }
             "setProjection" | "setProjectionParam" => {
@@ -2662,8 +2662,8 @@ impl Puzzle3dScalarConfigWork {
             "setLodManual" => Some(Puzzle3dConfigMutation::SetWindowLodManual {
                 window_id,
                 value: Self::arg_f64(command, "value")?.clamp(
-                    crate::editor::puzzle3d::modes::edit::options::lod::PUZZLE3D_LOD_SLIDER_MIN,
-                    crate::editor::puzzle3d::modes::edit::options::lod::PUZZLE3D_LOD_SLIDER_MAX,
+                    edit::options::lod::PUZZLE3D_LOD_SLIDER_MIN,
+                    edit::options::lod::PUZZLE3D_LOD_SLIDER_MAX,
                 ),
             }),
             "setGridVisible" => Some(Puzzle3dConfigMutation::SetWindowGridVisible {
@@ -4345,7 +4345,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     source.object_position,
                     source.object_orientation,
                 );
-                let id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed));
+                let id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
                 self.mutations.push(crate::artifacts::puzzle3d::mutations::connect_vortices(
                     id,
                     candidate.vortex_id.clone(),
@@ -4596,7 +4596,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     attracted.object_position,
                     attracted.object_orientation,
                 );
-                let id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed));
+                let id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
                 self.stage = Puzzle3dCreateAttractionStage::Complete;
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
                     artifact_mutations: vec![crate::artifacts::puzzle3d::mutations::connect_vortices(
@@ -6189,7 +6189,7 @@ impl Puzzle3dRetainedCommandJobFactory {
     }
 }
 
-impl semio_framework::ToolJobFactory for Puzzle3dRetainedCommandJobFactory {
+impl ToolJobFactory for Puzzle3dRetainedCommandJobFactory {
     type Payload = crate::retained_command::RetainedPuzzleCommandPayload<EditorApp<Puzzle3dPlayApp>>;
     type Job = crate::retained_command::RetainedPuzzleCommandJob<EditorApp<Puzzle3dPlayApp>>;
 
@@ -6235,8 +6235,8 @@ impl semio_framework::ToolJobFactory for Puzzle3dRetainedCommandJobFactory {
     }
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<Puzzle3dPlayApp>;
+impl ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
+    type Owner = EditorApp<Puzzle3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PUZZLE3D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE3D_FIXTURE_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
@@ -6330,7 +6330,7 @@ struct Puzzle3dConfigStorePreparationFactory;
 /// `PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES` bound instead — same bound, same error, one buffer instead
 /// of zero (`Puzzle3dConfig` is a small, fixed-shape record, never large enough for this to matter).
 fn puzzle3d_config_store_bounded_bytes(value: &Puzzle3dConfig) -> Result<usize, String> {
-    let encoded = dsl::json::to_json_string(value);
+    let encoded = to_json_string(value);
     if encoded.len() > PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES {
         return Err("Puzzle3d Config Store root exceeds its fixed envelope".to_string());
     }
@@ -6738,7 +6738,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Puzzle3dPlayApp>,
+        owner: EditorApp<Puzzle3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.puzzle.puzzle3d@1/*#editor",
         document_schema: "puzzle.3d.fixture",
@@ -6847,7 +6847,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         let config = Puzzle3dConfig::default();
         let active_utility = puzzle3d_scene_active_utility(&config, None);
         let scene = scene_from_projection(&puzzle3d_projection_value(snapshot.value()), config, &active_utility);
-        let mut app = Puzzle3dPlayApp::default();
+        let app = Puzzle3dPlayApp::default();
         sync_precompute_session(&mut app.precompute.borrow_mut(), &scene);
         snapshot
     }
@@ -6861,7 +6861,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// enum until React and wgpu send `OpBinary` command bytes directly.
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
         let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(dsl::DslValue::as_str).map(str::to_string);
-        let args = args.map(dsl::os_pack::json::from_dsl_value);
+        let args = args.map(json::from_dsl_value);
         Puzzle3dCommand::from_action(action, args, window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 3D action '{action}'")))
     }
 
@@ -6972,7 +6972,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             for row in incoming_compat {
                 let source = row.get("source").and_then(Value::as_str).unwrap_or_default();
                 let target = row.get("target").and_then(Value::as_str).unwrap_or_default();
-                let row_dsl = dsl::os_pack::json::to_dsl_value(row);
+                let row_dsl = json::to_dsl_value(row);
                 match compat.iter().position(|entry| entry.get("source").and_then(dsl::DslValue::as_str) == Some(source) && entry.get("target").and_then(dsl::DslValue::as_str) == Some(target)) {
                     Some(index) => compat[index] = row_dsl,
                     None => compat.push(row_dsl),
@@ -7190,22 +7190,22 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Rohdaten festlegen"), ActionKind::Mutation) })
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("addObjectKind", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")))
-            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).category("selection")))
-            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).category("create")))
+            .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).category("selection"))
+            .action_with(ActionDefinition::bounded_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).category("create"))
             .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
             .mutation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
             .mutation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
             .mutation("transformEnd", LocalizedLabel::native("Transform End", "Transformieren beenden"))
             .mutation("worldRelocate", puzzle3d_localized_phrase(|l| l.object, |w| format!("Relocate {w}"), |w| format!("{w} verlagern")))
-            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Mutation).category("hand")))
+            .action_with(ActionDefinition::bounded_catalog("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Mutation).category("hand"))
             .mutation("patchInspector", LocalizedLabel::native("Patch Inspector", "Inspektor aktualisieren"))
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             .mutation("engagementRepeatLast", LocalizedLabel::native("Engagement Repeat Last", "Letzte Eingabe wiederholen"))
             .mutation("createAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Create {w}"), |w| format!("{w} erstellen")))
-            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("deleteAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Delete {w}"), |w| format!("{w} löschen")), ActionKind::Mutation).category("targets")))
+            .action_with(ActionDefinition::bounded_catalog("deleteAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Delete {w}"), |w| format!("{w} löschen")), ActionKind::Mutation).category("targets"))
             .mutation("addTargetVolume", puzzle3d_localized_phrase(|l| l.target_volume, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")))
-            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("deleteTargetVolume", LocalizedLabel::native("Delete Target Volume", "Zielvolumen löschen"), ActionKind::Mutation).category("targets")))
-            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("setTargetVolumeFlag", LocalizedLabel::native("Set Target Volume Flag", "Zielvolumenmarkierung festlegen"), ActionKind::Mutation).category("targets")))
+            .action_with(ActionDefinition::bounded_catalog("deleteTargetVolume", LocalizedLabel::native("Delete Target Volume", "Zielvolumen löschen"), ActionKind::Mutation).category("targets"))
+            .action_with(ActionDefinition::bounded_catalog("setTargetVolumeFlag", LocalizedLabel::native("Set Target Volume Flag", "Zielvolumenmarkierung festlegen"), ActionKind::Mutation).category("targets"))
             .mutation("addBrushObject", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add Brush {w}"), |w| format!("Pinsel-{w} hinzufügen")))
             .mutation("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(set_fill_count::STEP_ACTION_ID, LocalizedLabel::native("Set Fill Count Step", "Füllanzahl-Schritt"), ActionKind::Mutation) })
@@ -7219,7 +7219,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"))
             .view_action("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"))
             .view_action("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"))
-            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("selectSameKindSelection", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).category("selection")))
+            .action_with(ActionDefinition::bounded_catalog("selectSameKindSelection", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).category("selection"))
             .view_action("setVortexShow", puzzle3d_localized_phrase(|l| l.vortex_show, |w| format!("Set {w}"), |w| format!("{w} festlegen")))
             .view_action("setVortexDirection", puzzle3d_localized_phrase(|l| l.vortex_direction, |w| format!("Set {w}"), |w| format!("{w} festlegen")))
             .view_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
@@ -7247,7 +7247,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setVortexKindWeight", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Set {w} Kind Weight"), |w| format!("{w}-Art-Gewicht festlegen")))
             .view_action("cycleBrushCandidate", LocalizedLabel::native("Cycle Brush Candidate", "Pinselkandidat wechseln"))
             .view_action("cycleBrushCandidateBack", LocalizedLabel::native("Cycle Brush Candidate Back", "Pinselkandidat rückwärts wechseln"))
-            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("openVortexSuggestions", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Open {w} Suggestions"), |w| format!("{w}-Vorschläge öffnen")), ActionKind::View).category("tools")))
+            .action_with(ActionDefinition::bounded_catalog("openVortexSuggestions", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Open {w} Suggestions"), |w| format!("{w}-Vorschläge öffnen")), ActionKind::View).category("tools"))
             .view_action("closeVortexSuggestions", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Close {w} Suggestions"), |w| format!("{w}-Vorschläge schließen")))
             .view_action("hoverSuggestion", LocalizedLabel::native("Hover Suggestion", "Vorschlag überfahren"))
             .view_action("suggestionsTick", LocalizedLabel::native("Suggestions Tick", "Vorschläge-Takt"))
@@ -7522,7 +7522,7 @@ pub(crate) mod testkit {
                     // (unmigrated, out of this ticket's file scope), so it cannot embed directly into
                     // `World3dScene` has a hand-written `protocol::value::ToValue` (🎬️scene/…/🦀️scenes.rs:305),
                     // so it converts straight to `DslValue` with no serde_json round-trip.
-                    let world3d = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&scene));
+                    let world3d = json::from_dsl_value(&dsl::ToValue::to_value(&scene));
                     if scene.interaction_json.is_some() {
                         return object([("schema".to_string(), Value::from(surface.doc_schema.as_str())), ("world3d".to_string(), world3d)]);
                     }
@@ -7534,7 +7534,7 @@ pub(crate) mod testkit {
         if let Some(scene) = fallback_scene {
             return scene;
         }
-        dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&tree.root))
+        json::from_dsl_value(&dsl::ToValue::to_value(&tree.root))
     }
 
     /// 🪟️ The world composite body for one window INSTANCE — the `<body>:<windowInstanceId>` form is
@@ -10280,7 +10280,7 @@ mod tests {
         let app = Puzzle3dPlayApp::default();
         let fixture = default_fixture();
         let object_id = fixture.objects[0].id.clone();
-        let projection = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&fixture));
+        let projection = json::from_dsl_value(&dsl::ToValue::to_value(&fixture));
         *app.transform_drag_active.borrow_mut() = true;
         let no_volumes: Vec<String> = Vec::new();
 
@@ -10307,7 +10307,7 @@ mod tests {
         let app = Puzzle3dPlayApp::default();
         let fixture = default_fixture();
         let object_id = fixture.objects[0].id.clone();
-        let projection = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&fixture));
+        let projection = json::from_dsl_value(&dsl::ToValue::to_value(&fixture));
         *app.transform_drag_active.borrow_mut() = true;
         app.transform_drag_tick("translateSelection", Some(&json!({ "ids": [object_id.clone()], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), &projection, &[object_id], &[]);
         let scratch_before = app.transform_scratch.borrow().clone();

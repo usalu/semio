@@ -19,7 +19,7 @@ pub struct SetKeyframeValue {
 impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for SetKeyframeValue {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "keyframe-value", kind: "set-keyframe-value", record: "SetKeyframeValue" };
 
-    fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<<SemioAnimationMutation as protocol::Mutation<SemioAnimationSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<<SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::Diff> {
         agg_diff(&SemioAnimationMutation::SetKeyframeValue(self.clone()), base)
     }
     fn inverse(&self, base: &SemioAnimationSnapshot) -> Vec<SemioAnimationMutation> {

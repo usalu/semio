@@ -1,7 +1,7 @@
 //! 🏗️ `create-object` — appends a new owned CHILD handle to the kit's `objects` collection
 //! (FINAL-state addressing per `📓️taxonomy.md`'s insert/create convention).
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{SemioKitMutation, delete_object};
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload

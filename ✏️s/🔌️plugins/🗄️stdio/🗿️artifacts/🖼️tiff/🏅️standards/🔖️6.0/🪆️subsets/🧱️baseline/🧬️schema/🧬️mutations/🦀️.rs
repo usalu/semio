@@ -329,7 +329,10 @@ pub(crate) fn agg_inverse(this: &TiffBaselineMutation, base: &TiffSnapshot) -> V
                 _ => return Vec::new(),
             },
             TiffBaselineMutation::SetStripOffsets(_) => restore_or_remove(base, TAG_STRIP_OFFSETS, |values| TiffBaselineMutation::SetStripOffsets(set_strip_offsets::SetStripOffsets { offsets: longs(values) }), TiffBaselineMutation::RemoveStripOffsets(remove_strip_offsets::RemoveStripOffsets {})),
-            TiffBaselineMutation::RemoveStripOffsets(_) => restore_or_remove(base, TAG_STRIP_OFFSETS, |values| TiffBaselineMutation::SetStripOffsets(set_strip_offsets::SetStripOffsets { offsets: longs(values) }), return Vec::new()),
+            TiffBaselineMutation::RemoveStripOffsets(_) => match ifd0_tag(base, TAG_STRIP_OFFSETS) {
+                Some(tag) => TiffBaselineMutation::SetStripOffsets(set_strip_offsets::SetStripOffsets { offsets: longs(&tag.values) }),
+                None => return Vec::new(),
+            },
         }]
     }
 //#endregion 🔖️MutationTrait
@@ -459,6 +462,25 @@ mod tests {
             }
             assert_eq!(snapshot, base, "inverse of {mutation:?} did not restore the base");
         }
+    }
+
+    #[test]
+    fn removing_strip_offsets_restores_the_neutral_fixture() {
+        let before_json = include_str!("../../🧫️fixtures/✂️remove-strip-offsets/⬅️before.json");
+        let after_json = include_str!("../../🧫️fixtures/✂️remove-strip-offsets/➡️after.json");
+        let before: TiffSnapshot = serde_json::from_str(before_json).expect("before fixture");
+        let after: TiffSnapshot = serde_json::from_str(after_json).expect("after fixture");
+        let mutation = TiffBaselineMutation::RemoveStripOffsets(remove_strip_offsets::RemoveStripOffsets {});
+        let mut actual = before.clone();
+        apply_tiff_baseline_mutation(&mut actual, &mutation);
+        assert_eq!(actual, after);
+        let inverse = inverse_tiff_baseline_mutation(&mutation, &before);
+        assert_eq!(inverse.len(), 1);
+        for undo in inverse { apply_tiff_baseline_mutation(&mut actual, &undo); }
+        assert_eq!(actual, before);
+        assert_eq!(serde_json::to_value(&actual).unwrap(), serde_json::from_str::<serde_json::Value>(before_json).unwrap());
+        assert!(inverse_tiff_baseline_mutation(&mutation, &after).is_empty());
+        eprintln!("[DEBUG] TIFF strip-offsets removal and inverse agree with the neutral fixtures");
     }
 
     /// 🧭️ An IFD 0 that never carried the tag inverts to its ABSENCE, not to a fabricated value —

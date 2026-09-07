@@ -14,7 +14,7 @@ pub struct SetFrames {
 impl protocol::MutationKind<Mp3Snapshot, Mp3Mutation> for SetFrames {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frames", kind: "set-frames", record: "SetFrames" };
 
-    fn diff(&self, base: &Mp3Snapshot) -> protocol::MutationOutcome<<Mp3Mutation as protocol::Mutation<Mp3Snapshot>>::Diff> {
+    fn diff(&self, base: &Mp3Snapshot) -> protocol::MutationOutcome<<Mp3Mutation as Mutation<Mp3Snapshot>>::Diff> {
         agg_diff(&Mp3Mutation::SetFrames(self.clone()), base)
     }
     fn inverse(&self, base: &Mp3Snapshot) -> Vec<Mp3Mutation> {

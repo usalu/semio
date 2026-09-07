@@ -16,7 +16,7 @@ pub struct SetEntityName {
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetEntityName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entity-name", kind: "set-entity-name", record: "SetEntityName" };
 
-    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<<IfcMutation as protocol::Mutation<IfcSnapshot>>::Diff> {
+    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<<IfcMutation as Mutation<IfcSnapshot>>::Diff> {
         agg_diff(&IfcMutation::SetEntityName(self.clone()), base)
     }
     fn inverse(&self, base: &IfcSnapshot) -> Vec<IfcMutation> {

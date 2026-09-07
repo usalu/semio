@@ -100,7 +100,7 @@ struct WorldCursorWakeState {
 }
 
 #[derive(Clone, Default)]
-pub struct WorldCursorWakeAuthority(std::sync::Arc<std::sync::Mutex<WorldCursorWakeState>>);
+pub struct WorldCursorWakeAuthority(std::sync::Arc<Mutex<WorldCursorWakeState>>);
 
 impl WorldCursorWakeAuthority {
     pub fn new() -> Self {
@@ -1064,7 +1064,7 @@ impl WorldDrawRegistry {
             if instance.id.len() > WORLD_DYNAMIC_ID_BYTE_CAPACITY {
                 return Err(WorldDynamicRejected { fault: WorldDynamicFault::IdCapacity, id, value });
             }
-            let Some(next) = bytes.checked_add(instance.id.len()).and_then(|bytes| bytes.checked_add(std::mem::size_of::<Instance3d>())) else {
+            let Some(next) = bytes.checked_add(instance.id.len()).and_then(|bytes| bytes.checked_add(size_of::<Instance3d>())) else {
                 return Err(WorldDynamicRejected { fault: WorldDynamicFault::ByteCapacity, id, value });
             };
             if next > WORLD_DYNAMIC_DRAW_BYTE_CAPACITY {
@@ -1238,7 +1238,7 @@ impl WorldDrawRebuildCursor {
         if mesh_key.len() > WORLD_DYNAMIC_ID_BYTE_CAPACITY || usize::from(instance_count) > WORLD_DYNAMIC_DRAW_INSTANCE_CAPACITY {
             return Err(if mesh_key.len() > WORLD_DYNAMIC_ID_BYTE_CAPACITY { WorldDynamicFault::IdCapacity } else { WorldDynamicFault::InstanceCapacity });
         }
-        let bytes = mesh_key.len().checked_add(std::mem::size_of::<SceneDraw3d>()).ok_or(WorldDynamicFault::ByteCapacity)?;
+        let bytes = mesh_key.len().checked_add(size_of::<SceneDraw3d>()).ok_or(WorldDynamicFault::ByteCapacity)?;
         let next = usize::try_from(self.admitted_bytes).unwrap_or(usize::MAX).checked_add(bytes).ok_or(WorldDynamicFault::ByteCapacity)?;
         if next > usize::try_from(self.descriptor.byte_count).unwrap_or(0) {
             return Err(WorldDynamicFault::ByteCapacity);
@@ -1257,7 +1257,7 @@ impl WorldDrawRebuildCursor {
         let Some(draft) = self.drafts.get_mut(usize::from(draw)).and_then(Option::as_mut) else {
             return Err(WorldDynamicFault::StaleToken);
         };
-        let bytes = id.len().checked_add(std::mem::size_of::<Instance3d>()).unwrap_or(usize::MAX);
+        let bytes = id.len().checked_add(size_of::<Instance3d>()).unwrap_or(usize::MAX);
         let next = usize::try_from(self.admitted_bytes).unwrap_or(usize::MAX).checked_add(bytes).unwrap_or(usize::MAX);
         if next > usize::try_from(self.descriptor.byte_count).unwrap_or(0) || self.admitted_instances == self.descriptor.instance_count {
             return Err(WorldDynamicFault::ByteCapacity);
@@ -9078,7 +9078,7 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
                 return World3dSnapshotApplyStep::Fault;
             };
             let instance_count = item.indexes[0];
-            let byte_count = item.indexes[1].checked_add(std::mem::size_of::<SceneDraw3d>() as u32).and_then(|bytes| bytes.checked_add(instance_count.checked_mul(std::mem::size_of::<Instance3d>() as u32)?));
+            let byte_count = item.indexes[1].checked_add(size_of::<SceneDraw3d>() as u32).and_then(|bytes| bytes.checked_add(instance_count.checked_mul(size_of::<Instance3d>() as u32)?));
             let Some(byte_count) = byte_count else {
                 state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
                 cursor.faulted = true;
@@ -13344,8 +13344,8 @@ mod tests {
     #[test]
     fn typed_camera_snapshot_matches_current_camera_fixture_without_production_parsing() {
         let mut scene = scene_with_selection("{}");
-        let mut page = ui_wgpu::wgpu::World3dSnapshotPage::new(ui_wgpu::wgpu::World3dSnapshotPageKind::Camera);
-        page.push_item(ui_wgpu::wgpu::World3dSnapshotItem { numbers: [4.0, 4.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 45.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], number_len: 10, ..Default::default() }).unwrap();
+        let mut page = ui_wgpu::wgpu::World3dSnapshotPage::new(World3dSnapshotPageKind::Camera);
+        page.push_item(World3dSnapshotItem { numbers: [4.0, 4.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 45.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], number_len: 10, ..Default::default() }).unwrap();
         page.seal().unwrap();
         let descriptor = ui_wgpu::wgpu::World3dSnapshotDescriptor { revision: 5, generation: 7, page_count: 1, item_count: 1, byte_count: 0, draw_count: 0, draw_instance_count: 0, draw_byte_count: 0 };
         let token = ui_wgpu::wgpu::world3d_snapshot_begin(descriptor).unwrap();
@@ -13470,7 +13470,7 @@ mod tests {
     }
 
     fn draw_fixture_bytes(draws: &[(&str, &[&str])]) -> u32 {
-        draws.iter().map(|(mesh, instances)| mesh.len() + std::mem::size_of::<SceneDraw3d>() + instances.iter().map(|id| id.len() + std::mem::size_of::<Instance3d>()).sum::<usize>()).sum::<usize>() as u32
+        draws.iter().map(|(mesh, instances)| mesh.len() + size_of::<SceneDraw3d>() + instances.iter().map(|id| id.len() + size_of::<Instance3d>()).sum::<usize>()).sum::<usize>() as u32
     }
 
     #[test]

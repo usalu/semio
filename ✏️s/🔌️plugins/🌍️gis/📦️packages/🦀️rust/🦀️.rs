@@ -102,7 +102,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-exaggeration/💾️binary/🦀️.rs"]
                                     pub mod binary;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeration-from-1-to-2-5/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeratio-8ebcb8/🦀️.rs"]
                                     mod tests_raises_the_exaggeration_from_one_to_two_and_a_half;
                                     #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-exaggeration/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -119,7 +119,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/💾️binary/🦀️.rs"]
                                     pub mod binary;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-position-descriptor/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-94979a/🦀️.rs"]
                                     mod tests_imports_a_single_harbor_position_descriptor;
                                     #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -521,7 +521,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧪️tests/💡️adds-lighthouse-position-after-harbor/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧪️tests/💡️adds-lighthouse-685c1e/🦀️.rs"]
                                     mod tests_adds_a_lighthouse_position_after_the_harbor;
                                 }
                                 #[path = "."]
@@ -534,7 +534,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-position/🧪️tests/🚫️removes-lighthouse-position/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-position/🧪️tests/🚫️removes-lighthouse-cbbd5c/🦀️.rs"]
                                     mod tests_removes_the_lighthouse_position;
                                 }
                                 #[path = "."]
@@ -547,7 +547,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧪️tests/⚓️rewrites-harbor-position-payload/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧪️tests/⚓️rewrites-harbor-0bbbf6/🦀️.rs"]
                                     mod tests_rewrites_the_harbor_position_payload;
                                 }
                                 #[path = "."]
@@ -560,7 +560,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧪️tests/⚓️moves-harbor-position-to-end/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧪️tests/⚓️moves-harbor-e3b5fa/🦀️.rs"]
                                     mod tests_moves_the_harbor_position_to_the_end;
                                 }
                                 #[path = "."]
@@ -599,7 +599,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/🧪️tests/⛴️rewrites-ferry-route-payload/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/🧪️tests/⛴️rewrites-ferry-635859/🦀️.rs"]
                                     mod tests_rewrites_the_ferry_route_payload;
                                 }
                                 #[path = "."]
@@ -625,7 +625,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/🧪️tests/🏘️adds-old-town-region-after-harbor-district/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/🧪️tests/🏘️adds-old-town-region-7b690a/🦀️.rs"]
                                     mod tests_adds_the_old_town_region_after_the_harbor_district;
                                 }
                                 #[path = "."]
@@ -651,7 +651,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/🧪️tests/🏘️rewrites-harbor-district-region-payload/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/🧪️tests/🏘️rewrites-harbor-030143/🦀️.rs"]
                                     mod tests_rewrites_the_harbor_district_region_payload;
                                 }
                                 #[path = "."]
@@ -664,7 +664,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/🧪️tests/🌳️moves-park-region-between-2-districts/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/🧪️tests/🌳️moves-park-region-0540b5/🦀️.rs"]
                                     mod tests_moves_the_park_region_between_the_two_districts;
                                 }
                             }
@@ -1154,7 +1154,7 @@ pub mod native_codecs;
 mod plugin;
 pub use plugin::{plugin, GisApps};
 #[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::GisApps);
+semio_framework_plugin::plugin_exports!(plugin, GisApps);
 
 //#region 📚️Examples
 #[path = "."]

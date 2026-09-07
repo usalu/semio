@@ -21,21 +21,21 @@ pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem2dSnapshot>, 
     let mut operations = Vec::new();
     for id in &payload.ids {
         if snapshot.nodes.iter().any(|n| &n.id == id) {
-            operations.push(Fem2dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: id.clone() }));
+            operations.push(Fem2dMutation::DeleteNode(delete_node::DeleteNode { id: id.clone() }));
         } else if snapshot.elements.iter().any(|e| element_id(e) == id) {
-            operations.push(Fem2dMutation::DeleteElement(delete_element::mutation::DeleteElement { id: id.clone() }));
+            operations.push(Fem2dMutation::DeleteElement(delete_element::DeleteElement { id: id.clone() }));
         } else if snapshot.materials.iter().any(|m| &m.id == id) {
-            operations.push(Fem2dMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: id.clone() }));
+            operations.push(Fem2dMutation::DeleteMaterial(delete_material::DeleteMaterial { id: id.clone() }));
         } else if snapshot.sections.iter().any(|s| &s.id == id) {
-            operations.push(Fem2dMutation::DeleteSection(delete_section::mutation::DeleteSection { id: id.clone() }));
+            operations.push(Fem2dMutation::DeleteSection(delete_section::DeleteSection { id: id.clone() }));
         } else if snapshot.supports.iter().any(|s| &s.id == id) {
-            operations.push(Fem2dMutation::DeleteSupport(delete_support::mutation::DeleteSupport { id: id.clone() }));
+            operations.push(Fem2dMutation::DeleteSupport(delete_support::DeleteSupport { id: id.clone() }));
         } else if snapshot.load_cases.iter().any(|l| &l.id == id) {
-            operations.push(Fem2dMutation::DeleteLoadCase(delete_load_case::mutation::DeleteLoadCase { id: id.clone() }));
+            operations.push(Fem2dMutation::DeleteLoadCase(delete_load_case::DeleteLoadCase { id: id.clone() }));
         } else if snapshot.regions.iter().any(|r| &r.id == id) {
-            operations.push(Fem2dMutation::DeleteRegion(delete_region::mutation::DeleteRegion { id: id.clone() }));
+            operations.push(Fem2dMutation::DeleteRegion(delete_region::DeleteRegion { id: id.clone() }));
         } else if snapshot.combinations.iter().any(|c| &c.id == id) {
-            operations.push(Fem2dMutation::DeleteCombination(delete_combination::mutation::DeleteCombination { id: id.clone() }));
+            operations.push(Fem2dMutation::DeleteCombination(delete_combination::DeleteCombination { id: id.clone() }));
         }
     }
     if operations.is_empty() {

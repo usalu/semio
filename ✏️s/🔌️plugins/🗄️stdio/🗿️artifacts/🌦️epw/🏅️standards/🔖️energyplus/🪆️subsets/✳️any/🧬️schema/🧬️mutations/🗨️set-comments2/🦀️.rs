@@ -16,7 +16,7 @@ pub struct SetComments2 {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetComments2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "comments2", kind: "set-comments2", record: "SetComments2" };
 
-    fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as protocol::Mutation<EpwSnapshot>>::Diff> {
+    fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
         agg_diff(&EpwMutation::SetComments2(self.clone()), base)
     }
     fn inverse(&self, base: &EpwSnapshot) -> Vec<EpwMutation> {

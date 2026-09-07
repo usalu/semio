@@ -1,9 +1,8 @@
 //! 🗑️ Wires mutation — `DeleteNode`: removes one board node by id (cascade edges are separate
 //! `disconnect-nodes` mutations, per the app's own delete-selection command).
 
-use crate::artifacts::wires::diff::{board_after_remove_node, diff_board_fixture, WiresDiff};
+use crate::artifacts::wires::diff::WiresDiff;
 use crate::artifacts::wires::mutations::WiresMutation;
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::artifacts::wires::WiresSnapshot;
 
 //#region 🔖️Mutation

@@ -10,7 +10,7 @@ pub fn inverse(payload: &super::mutation::DuplicateLayer, base: &DrawingSnapshot
     match find_drawing_layer(base, &payload.layer_id) {
         Some(layer) => {
             let duplicate = clone_drawing_layer_node(layer, " copy");
-            vec![crate::artifacts::drawing::mutations::delete_layer::mutation::delete_layer(layer_id(&duplicate).to_string())]
+            vec![crate::artifacts::drawing::mutations::delete_layer(layer_id(&duplicate).to_string())]
         }
         None => Vec::new(),
     }

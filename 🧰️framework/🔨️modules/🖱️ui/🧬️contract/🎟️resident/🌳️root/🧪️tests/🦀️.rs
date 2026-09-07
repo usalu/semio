@@ -15,7 +15,7 @@ fn assembled(generation: u64, bytes: usize) -> UiDocumentAssembly {
     assert!(permit.is_some() && surface.is_some());
     assert!(owner.open_with_permit(&mut permit, &mut surface, generation, UiRevision(1), Some(UiNodeId(41)), 0, 1, 32768).unwrap().progressed);
     assert!(permit.is_none() && surface.is_none());
-    let mut record = super::tests::leaf_record(41, "root");
+    let mut record = tests::leaf_record(41, "root");
     record.component = crate::Component::Extension(crate::ExtensionProps { extension: crate::UiText::try_from_str("typed").unwrap(), props: serde_json::from_value(serde_json::json!({"payload":"Grüße"})).unwrap() });
     let mut record = Some(record);
     for _ in 0..100 { owner.place_one(&mut record, 1, 32768).unwrap(); if record.is_none() { return owner; } }

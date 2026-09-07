@@ -1,7 +1,7 @@
 //! 🏷️ `create-properties` — sets the kit's `properties` CHILD slot to a new owned `value` tree
 //! handle (overwrite-aware — undo restores whichever handle was there before).
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{SemioKitMutation, delete_properties};
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload

@@ -5,7 +5,7 @@
 //! (`SEMIO_ENERGY_WRITE_FIXTURES=1 cargo test -p semio-s-plugin-energy`), and the eight law
 //! assertions below read the committed bytes back, never the scenario.
 
-use crate::artifacts::model::mutations::fixtures::{self, link, snapshot, zone, Case};
+use crate::artifacts::model::mutations::fixtures::{self, link, snapshot, Case};
 use crate::artifacts::model::mutations::EnergyModelMutation;
 use crate::artifacts::model::EnergyModelSnapshot;
 

@@ -42,5 +42,5 @@ pub fn handle(payload: &AddBar, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &Co
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.elements.iter().map(|e| element_id(e).to_string()), "e");
     let element = FemElement::Bar { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone() };
-    Ok(Emit::mutations(vec![Fem2dMutation::CreateElement(crate::artifacts::fem2d::mutations::create_element::mutation::CreateElement { element: Box::new(element) })]))
+    Ok(Emit::mutations(vec![Fem2dMutation::CreateElement(crate::artifacts::fem2d::mutations::create_element::CreateElement { element: Box::new(element) })]))
 }

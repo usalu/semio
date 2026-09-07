@@ -9,7 +9,7 @@ pub(crate) enum SurfaceMutation {
     SetSurfaceCount(SetSurfaceCount),
 }
 impl protocol::OpText for SurfaceMutation {
-    fn parse_op(line: &str) -> Result<Self, crate::store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(SetSurfaceCount::parse_op(line)?.into())
     }
     fn print_op(&self) -> String {

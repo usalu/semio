@@ -10,7 +10,7 @@
 
 use std::collections::HashMap;
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_loop, make_vertex};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::line_edge;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::transform::transform_face;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, Curve2Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};

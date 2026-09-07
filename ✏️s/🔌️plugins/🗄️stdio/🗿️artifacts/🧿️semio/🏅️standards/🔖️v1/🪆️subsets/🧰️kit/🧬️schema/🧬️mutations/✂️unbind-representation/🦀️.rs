@@ -1,7 +1,7 @@
 //! ✂️ `unbind-representation` — removes the link at `index` from `representations` (BASE-state
 //! addressing). Idempotent no-op if out of range; inverse escrows the removed link from BASE.
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{SemioKitMutation, bind_representation};
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload

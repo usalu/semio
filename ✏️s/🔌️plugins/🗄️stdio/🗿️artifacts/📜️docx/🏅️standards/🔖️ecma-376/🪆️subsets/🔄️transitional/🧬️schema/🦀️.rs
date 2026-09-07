@@ -23,6 +23,7 @@ pub mod mutations;
 pub mod derived_construction {
     use crate::artifacts::docx::schema::snapshot::{DocxParagraph, DocxRun, DocxStyle, DocxTable};
     use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::DocxBuilderConstruction as DocxAnyBuilder;
+    #[cfg(test)]
     use crate::artifacts::docx::schema::mutations::set_snapshot;
     use crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
     use crate::artifacts::docx::{DocxDiff, DocxMutation, DocxSnapshot};

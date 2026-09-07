@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/🔄️replace-presence",
+  "semanticKind": "replace-presence",
+  "displayName": "Replace Presence",
+  "emoji": "🔄️",
+  "aggregateVariant": "ReplacePresence",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "replace-presence",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema"
+  ]
+}

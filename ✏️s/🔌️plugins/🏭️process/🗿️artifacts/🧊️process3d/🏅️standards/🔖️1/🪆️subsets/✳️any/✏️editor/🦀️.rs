@@ -949,7 +949,7 @@ fn process3d_step_bytes(step: &ProcessStep) -> Result<usize, String> {
         .saturating_add(process3d_text_bytes(&step.label)?)
         .saturating_add(process3d_origin_bytes(step.origin.as_ref())?)
         .saturating_add(process3d_measure_bytes(&step.measure)?)
-        .saturating_add(std::mem::size_of::<ProcessStep>()))
+        .saturating_add(size_of::<ProcessStep>()))
 }
 
 fn process3d_recipe_bytes(recipe: &MeasureRecipe) -> Result<usize, String> {
@@ -976,7 +976,7 @@ fn process3d_capability_bytes(capability: &Capability) -> Result<usize, String> 
         .saturating_add(process3d_recipe_bytes(&capability.recipe)?)
         .saturating_add(parameters)
         .saturating_add(rules)
-        .saturating_add(std::mem::size_of::<Capability>()))
+        .saturating_add(size_of::<Capability>()))
 }
 
 fn process3d_capability_items(capability: &Capability) -> usize {
@@ -998,7 +998,7 @@ fn process3d_machine_bytes(machine: &WorkshopMachine) -> Result<usize, String> {
         .saturating_add(process3d_text_bytes(&machine.icon_id)?)
         .saturating_add(machine.catalog_id.as_deref().map_or(Ok(0), process3d_text_bytes)?)
         .saturating_add(process3d_capabilities_bytes(&machine.capabilities)?)
-        .saturating_add(std::mem::size_of::<WorkshopMachine>()))
+        .saturating_add(size_of::<WorkshopMachine>()))
 }
 
 fn process3d_machine_items(machine: &WorkshopMachine) -> usize {
@@ -1027,7 +1027,7 @@ fn process3d_document_bytes(document: &Process3dSnapshot) -> Result<usize, Strin
         .saturating_add(steps)
         .saturating_add(machines)
         .saturating_add(tools)
-        .saturating_add(std::mem::size_of::<Process3dSnapshot>());
+        .saturating_add(size_of::<Process3dSnapshot>());
     if bytes > PROCESS3D_DOCUMENT_MAXIMUM_BYTES {
         return Err("Process3d document base exceeds its retained byte envelope".into());
     }
@@ -1056,7 +1056,7 @@ fn process3d_mutation_footprint(mutation: &Process3dMutation) -> Result<store::A
         Process3dMutation::ReplaceStockSolid(payload) => (1, process3d_child_bytes(&payload.new_solid)?),
         Process3dMutation::ChangeCursor(_) => (1, 0),
     };
-    let retained_bytes = retained_bytes.saturating_add(std::mem::size_of::<Process3dMutation>());
+    let retained_bytes = retained_bytes.saturating_add(size_of::<Process3dMutation>());
     if work_items > PROCESS3D_DOCUMENT_MAXIMUM_ITEMS || retained_bytes > PROCESS3D_DOCUMENT_MAXIMUM_BYTES {
         return Err("Process3d document mutation exceeds its fixed one-item preparation envelope".into());
     }
@@ -1250,38 +1250,38 @@ impl store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation
 struct Process3dBoundedProofs;
 impl Process3dBoundedProofs {
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Process3dPlayApp>,
+        owner: EditorApp<Process3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.process.process3d@1/*#editor",
         document_schema: "process.3d",
         factory: "Process3dBoundedCommandJobFactory",
         factory_type: Process3dBoundedCommandJobFactory,
         tools: {
-            "engagementAbort" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setCamera" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "loadModelRequest" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setSnapshot" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setActiveExample" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "addStep" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "addWorkshopMachine" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "removeWorkshopMachine" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "updateWorkshopMachine" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "removeStep" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "removeSelectedStep" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "moveStep" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "updateStep" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setStepEnabled" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setStock" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "patchInspector" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "engagementSubmit" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "worldPointerDown" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "worldFaceDragEnd" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "importModelFile" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "exportModel" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setCursor" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "stepCursor" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "stepCursorBack" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "stepCursorForward" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "engagementAbort" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setCamera" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "loadModelRequest" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setSnapshot" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setActiveExample" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "addStep" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "addWorkshopMachine" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "removeWorkshopMachine" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "updateWorkshopMachine" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "removeStep" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "removeSelectedStep" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "moveStep" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "updateStep" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setStepEnabled" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setStock" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "patchInspector" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "engagementSubmit" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "worldPointerDown" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "worldFaceDragEnd" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "importModelFile" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "exportModel" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setCursor" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "stepCursor" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "stepCursorBack" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "stepCursorForward" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
         }
     }
 }
@@ -1289,21 +1289,21 @@ impl Process3dBoundedProofs {
 struct Process3dResumableProofs;
 impl Process3dResumableProofs {
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Process3dPlayApp>,
+        owner: EditorApp<Process3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.process.process3d@1/*#editor",
         document_schema: "process.3d",
         factory: "Process3dResumableCommandJobFactory",
         factory_type: Process3dResumableCommandJobFactory,
         tools: {
-            "setActiveUtility" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "engagementInput" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "toggleSun" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setSunAzimuth" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setSunElevation" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setSunIntensity" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setLocale" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setContributions" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "setActiveUtility" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "engagementInput" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "toggleSun" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "setSunAzimuth" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "setSunElevation" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "setSunIntensity" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "setLocale" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "setContributions" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
         }
     }
 }
@@ -1556,10 +1556,10 @@ impl ArtifactEditor for Process3dPlayApp {
                 machine: args
                     .and_then(|value| value.get("machine"))
                     .cloned()
-                    .map(|value| <crate::artifacts::process3d::WorkshopMachine as semio_framework_os_kernel::FromValue>::from_value(value))
+                    .map(|value| <WorkshopMachine as semio_framework_os_kernel::FromValue>::from_value(value))
                     .transpose()
                     .map_err(|error| process3d_action_fault(action, format!("invalid 'machine': {error}")))?
-                    .unwrap_or(crate::artifacts::process3d::WorkshopMachine { id: String::new(), label: String::new(), icon_id: String::new(), catalog_id: None, capabilities: Vec::new() }),
+                    .unwrap_or(WorkshopMachine { id: String::new(), label: String::new(), icon_id: String::new(), catalog_id: None, capabilities: Vec::new() }),
             })),
             "removeStep" => Ok(Process3dCommand::RemoveStep(remove_step::RemoveStep { id: string_field("id").unwrap_or_default() })),
             "removeSelectedStep" => Ok(Process3dCommand::RemoveSelectedStep(remove_selected_step::RemoveSelectedStep {})),
@@ -1667,7 +1667,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// `removeSelectedStep`; it is itself a no-op via `remove_selected_step::handle` when nothing in
     /// the `"geometry"` domain is selected.
     fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        semio_framework_plugin::resolve_ready(async { Menu::of(registry).await.action("addStep").await.destructive("removeSelectedStep").await.separator().await.action("undo").await.action("redo").await.build().await })
+        { Menu::of(registry).action("addStep").destructive("removeSelectedStep").separator().action("undo").action("redo").build() }
     }
 }
 //#endregion 🔖️Process3dPlayApp
@@ -1882,10 +1882,10 @@ pub struct ContributedMachineCatalog {
     catalog_id: String,
     label: String,
     icon_id: String,
-    machines: Vec<crate::artifacts::process3d::WorkshopMachine>,
+    machines: Vec<WorkshopMachine>,
 }
 
-impl crate::artifacts::process3d::MachineCatalog for ContributedMachineCatalog {
+impl MachineCatalog for ContributedMachineCatalog {
     fn catalog_id(&self) -> &str {
         &self.catalog_id
     }
@@ -1898,7 +1898,7 @@ impl crate::artifacts::process3d::MachineCatalog for ContributedMachineCatalog {
         &self.icon_id
     }
 
-    fn machines(&self) -> Vec<crate::artifacts::process3d::WorkshopMachine> {
+    fn machines(&self) -> Vec<WorkshopMachine> {
         self.machines.clone()
     }
 }
@@ -2013,7 +2013,7 @@ fn contributed_machine_catalogs(contributions_json: &str) -> Vec<ContributedMach
         if !process_json_envelope_is_bounded(&machines_json) {
             continue;
         }
-        let Ok(machines) = semio_framework_os_kernel::json::from_json_str::<Vec<crate::artifacts::process3d::WorkshopMachine>>(&machines_json) else {
+        let Ok(machines) = semio_framework_os_kernel::json::from_json_str::<Vec<WorkshopMachine>>(&machines_json) else {
             continue;
         };
         if machines.len() > PROCESS_CONTRIBUTION_MAX_ITEMS {
@@ -2046,7 +2046,7 @@ pub fn installed_catalogs(contributions_json: &str) -> Vec<MachineCatalogs> {
 
 /// 🔎️ One machine, by catalog + machine id, with `catalog_id` stamped onto the snapshot — the
 /// "install into workshop" lookup for the workshop configurator's add-machine action.
-pub fn catalog_machine(contributions_json: &str, catalog_id: &str, machine_id: &str) -> Option<crate::artifacts::process3d::WorkshopMachine> {
+pub fn catalog_machine(contributions_json: &str, catalog_id: &str, machine_id: &str) -> Option<WorkshopMachine> {
     let catalog = installed_catalogs(contributions_json).into_iter().find(|catalog| catalog.catalog_id() == catalog_id)?;
     let mut machine = catalog.machines().into_iter().find(|machine| machine.id == machine_id)?;
     machine.catalog_id = Some(catalog_id.to_string());

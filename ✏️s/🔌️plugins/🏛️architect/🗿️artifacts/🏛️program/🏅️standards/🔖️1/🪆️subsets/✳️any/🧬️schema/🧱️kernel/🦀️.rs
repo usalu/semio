@@ -347,8 +347,8 @@ pub enum PluginError {
     Csv(String),
 }
 
-impl std::fmt::Display for PluginError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for PluginError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::InvalidSchema { expected, actual } => write!(formatter, "invalid schema: expected {expected}, got {actual}"),
             Self::MissingEntity { id } => write!(formatter, "missing entity {id}"),

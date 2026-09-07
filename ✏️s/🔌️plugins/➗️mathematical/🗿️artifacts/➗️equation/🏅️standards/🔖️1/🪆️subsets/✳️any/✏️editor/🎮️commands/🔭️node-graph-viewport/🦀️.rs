@@ -16,5 +16,5 @@ pub struct NodeGraphViewport {
 }
 
 pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
-    Ok(Emit::config(vec![EquationConfigMutation::SetCamera { camera: payload.camera.clone() }]))
+    Ok(Emit::config(vec![EquationConfigMutation::SetCamera(crate::editor::equation::config::SetCamera { camera: payload.camera.clone() })]))
 }

@@ -42,6 +42,14 @@ fn field<T: TypedCopy>(source: &T, candidate: &mut T, index: &mut usize, path: &
 }
 
 macro_rules! typed_fields {
+    ($type:ty {}) => {
+        impl TypedCopy for $type {
+            const DEPTH: usize = 1;
+            fn empty_like(&self) -> Self { Self {} }
+            fn allocation(&self, _: &Self, path: &[usize]) -> Result<usize, &'static str> { read_path(path)?; Ok(0) }
+            fn copy_one(&self, _: &mut Self, path: &mut [usize], _: &mut Vec<u8>, _: usize, _: usize) -> Result<UiComponentCopyProgress, UiFixedListAllocationError> { split(path)?; Ok(done()) }
+        }
+    };
     ($type:ty { $($index:literal => $field:tt : $field_type:ty),* $(,)? }) => {
         impl TypedCopy for $type {
             const DEPTH: usize = 1 + maximum(&[$(<$field_type as TypedCopy>::DEPTH),*]);
@@ -65,7 +73,7 @@ macro_rules! scalar {
         impl TypedCopy for $type {
             fn empty_like(&self) -> Self { *self }
             fn allocation(&self, _: &Self, _: &[usize]) -> Result<usize, &'static str> { Ok(0) }
-            fn copy_one(&self, candidate: &mut Self, _: &mut [usize], byte_candidate: &mut Vec<u8>, _: usize, work: usize) -> Result<UiComponentCopyProgress, UiFixedListAllocationError> {
+            fn copy_one(&self, candidate: &mut Self, _: &mut [usize], _: &mut Vec<u8>, _: usize, work: usize) -> Result<UiComponentCopyProgress, UiFixedListAllocationError> {
                 if work < size_of::<Self>() { return Ok(Default::default()); }
                 *candidate = *self;
                 Ok(UiComponentCopyProgress { complete: true, ..progress(size_of::<Self>()) })
@@ -78,7 +86,7 @@ scalar!(bool, u16, u64, f64, UiNodeId, UiRevision, Activity, TransitionHint, Sty
 impl TypedCopy for UiText {
     fn empty_like(&self) -> Self { Self::default() }
     fn allocation(&self, _: &Self, _: &[usize]) -> Result<usize, &'static str> { Ok(0) }
-    fn copy_one(&self, candidate: &mut Self, _: &mut [usize], byte_candidate: &mut Vec<u8>, _: usize, work: usize) -> Result<UiComponentCopyProgress, UiFixedListAllocationError> {
+    fn copy_one(&self, candidate: &mut Self, _: &mut [usize], _: &mut Vec<u8>, _: usize, work: usize) -> Result<UiComponentCopyProgress, UiFixedListAllocationError> {
         let start = candidate.len();
         let bytes = self.len().saturating_sub(start).min(work);
         candidate.bytes[start..start + bytes].copy_from_slice(&self.bytes[start..start + bytes]);

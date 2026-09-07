@@ -718,7 +718,7 @@ struct BoundedCleanPreparation {
     remap: Vec<u32>,
     positions: Vec<[f64; 3]>,
     triangles: Vec<[u32; 3]>,
-    seen_triangles: std::collections::BTreeSet<[u32; 3]>,
+    seen_triangles: BTreeSet<[u32; 3]>,
 }
 
 impl BoundedCleanPreparation {
@@ -730,7 +730,7 @@ impl BoundedCleanPreparation {
             remap: Vec::with_capacity(mesh.positions.len()),
             positions: Vec::with_capacity(mesh.positions.len()),
             triangles: Vec::with_capacity(mesh.triangles.len()),
-            seen_triangles: std::collections::BTreeSet::new(),
+            seen_triangles: BTreeSet::new(),
         }
     }
 

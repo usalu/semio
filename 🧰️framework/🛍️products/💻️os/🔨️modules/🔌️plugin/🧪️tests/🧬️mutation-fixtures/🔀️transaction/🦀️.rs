@@ -154,7 +154,7 @@ impl semio_framework_job::InteractiveJob for TxnFixtureJob {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
         if let Some(command) = self.command.as_deref() {
-            let released_bytes = std::mem::size_of_val(command);
+            let released_bytes = size_of_val(command);
             if maximum_bytes < released_bytes {
                 return semio_framework_job::InteractiveJobCloseStep::Blocked;
             }

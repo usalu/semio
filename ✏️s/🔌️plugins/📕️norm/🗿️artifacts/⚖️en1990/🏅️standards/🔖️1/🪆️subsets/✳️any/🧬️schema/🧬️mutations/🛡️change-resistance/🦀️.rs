@@ -2,7 +2,7 @@
 //! against the combined design actions.
 
 
-use crate::artifacts::en1990::{En1990Diff, En1990Mutation, En1990Snapshot};
+use crate::artifacts::en1990::{En1990Mutation, En1990Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

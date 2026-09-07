@@ -14,7 +14,7 @@ pub struct SetMainHeader {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for SetMainHeader {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "main-header", kind: "set-main-header", record: "SetMainHeader" };
 
-    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as protocol::Mutation<AviSnapshot>>::Diff> {
+    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
         agg_diff(&AviMutation::SetMainHeader(self.clone()), base)
     }
     fn inverse(&self, base: &AviSnapshot) -> Vec<AviMutation> {

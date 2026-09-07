@@ -1,7 +1,7 @@
 //! ↩️ `delete-nodes` — re-creates every deleted node then re-`connect`s every severed edge, both
 //! captured from BASE state.
 
-use crate::artifacts::equation::mutations::{connect_nodes, create_node};
+use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::{connect_nodes, create_node};
 use crate::artifacts::equation::{equation_graph, EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse

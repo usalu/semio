@@ -82,7 +82,9 @@ pub fn semio_document_artifact_schema_descriptor() -> schema::ArtifactSchemaDesc
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::semio::standards::v1::subsets::document::schema::diff::SemioDocumentDiff;
-    use crate::artifacts::semio::standards::v1::subsets::document::schema::mutations::{apply_semio_document_mutation, insert_style, SemioDocumentMutation};
+    use crate::artifacts::semio::standards::v1::subsets::document::schema::mutations::{apply_semio_document_mutation, SemioDocumentMutation};
+    #[cfg(test)]
+    use crate::artifacts::semio::standards::v1::subsets::document::schema::mutations::{insert_style};
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocStyle, SemioDocumentSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 

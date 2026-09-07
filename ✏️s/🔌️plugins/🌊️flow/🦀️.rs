@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the flow editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum FlowApps: PluginApp {
-        FlowEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::flow::FlowPlayApp>, semio_s_plugin_stdio::artifacts::semio::SemioMembers>),
-        FlowViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::flow::FlowViewer>, semio_s_plugin_stdio::artifacts::semio::SemioMembers>),
+        FlowEditor(VcsArtifactApp<EditorApp<crate::editor::flow::FlowPlayApp>, semio_s_plugin_stdio::artifacts::semio::SemioMembers>),
+        FlowViewer(VcsArtifactApp<ViewerApp<crate::viewer::flow::FlowViewer>, semio_s_plugin_stdio::artifacts::semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps
@@ -21,12 +21,12 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `"computation.flow"` artifact (`crate::artifacts::flow::artifact_kind().id`) is opened, this plugin's
 /// own actor runs `Isolated` (its 9 `🧩️extensions/` run `Linked` instead — see each extension's own
 /// `bundle()`), and it asks the broker for document write access to persist edits.
-pub fn plugin() -> Result<Plugin<FlowApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<FlowApps>, PluginAssemblyError> {
     Plugin::<FlowApps>::builder("flow")
         .label("Flow")
         .version("0.1.0")
         .package_id("semio:flow")
-        .artifact(crate::artifacts::flow::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::flow::declaration().map_err(PluginAssemblyError::definition)?)
         .editor_with_members::<crate::editor::flow::FlowPlayApp, semio_s_plugin_stdio::artifacts::semio::SemioMembers>(crate::editor::flow::create_flow_app())
         .editor_mutation_roster::<crate::editor::flow::FlowPlayApp>()
         .viewer_with_members::<crate::viewer::flow::FlowViewer, semio_s_plugin_stdio::artifacts::semio::SemioMembers>(crate::viewer::flow::create_flow_viewer())

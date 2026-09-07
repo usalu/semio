@@ -281,7 +281,7 @@ impl InteractiveJob for NativeIoJob {
         cx.set_stage("NativePlatformIo");
         match std::mem::replace(&mut self.state, NativeIoState::Finished) {
             NativeIoState::Pending(request) => self.start(request, cx),
-            NativeIoState::Reading { mut file, mut writer } => {
+            NativeIoState::Reading { mut file, writer } => {
                 let mut chunk = [0u8; semio_framework_job::JOB_PAYLOAD_PAGE_BYTES];
                 match file.read(&mut chunk) {
                     Ok(0) => match writer.finish() {
@@ -316,7 +316,7 @@ impl InteractiveJob for NativeIoJob {
                 }
                 StepOutcome::Yield
             }
-            NativeIoState::ReadingPage { mut file, cursor, length, remaining, mut writer } => {
+            NativeIoState::ReadingPage { mut file, cursor, length, remaining, writer } => {
                 if remaining == 0 || cursor >= length {
                     return match writer.finish() {
                         Ok(bytes) => self.finish(Ok(NativeIoValue::Page { bytes, eof: cursor >= length }), cx),

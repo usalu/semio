@@ -2844,7 +2844,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn an_in_flight_request_is_cancelled_when_its_context_is_cancelled() {
         let transport = FakeTransport::default();
-        transport.yields_before_response.store(2, std::sync::atomic::Ordering::SeqCst);
+        transport.yields_before_response.store(2, Ordering::SeqCst);
         transport.push_response(FakeTransport::json_response(200, &serde_json::json!([])).await).await;
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
         let ctx = root_ctx();

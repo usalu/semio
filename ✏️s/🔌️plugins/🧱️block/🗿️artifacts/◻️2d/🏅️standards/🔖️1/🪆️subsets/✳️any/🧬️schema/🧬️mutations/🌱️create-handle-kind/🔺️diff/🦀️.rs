@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `CreateHandleKind`.
 
-use crate::artifacts::block2d::{Block2dHandleKind, Block2dSnapshot};
+use crate::artifacts::block2d::Block2dSnapshot;
 use crate::artifacts::block2d::diff::{Block2dDiff, Block2dHandleKindsDelta};
 
 //#region 🔖️Diff

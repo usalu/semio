@@ -146,7 +146,7 @@ impl<V> RasterOwnedMap<V> {
     }
 
     pub(crate) fn admit_one_page(&mut self) -> Result<(), &'static str> {
-        if std::mem::size_of::<RasterOwnedMapPage<V>>() > RASTER_OWNED_MAP_PAGE_BACKING_BYTES {
+        if size_of::<RasterOwnedMapPage<V>>() > RASTER_OWNED_MAP_PAGE_BACKING_BYTES {
             return Err("raster-map.page-backing-capacity");
         }
         let page = self.pages.iter_mut().find(|page| page.is_none()).ok_or("raster-map.page-capacity")?;

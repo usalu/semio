@@ -35,7 +35,7 @@ fn instance_lifetime_ui_patch_pending_placement_requires_full_inline_grant() {
     while !target.has_reserved_slot() { target.try_reserve_one(target.next_allocation_bytes().unwrap()).unwrap(); }
     assert_eq!(owner.place_into(&mut target, 4096), Ok(0));
     assert!(owner.get().is_some());
-    assert_eq!(owner.place_into(&mut target, std::mem::size_of::<UiPatchOp>()), Ok(std::mem::size_of::<UiPatchOp>()));
+    assert_eq!(owner.place_into(&mut target, size_of::<UiPatchOp>()), Ok(size_of::<UiPatchOp>()));
     assert!(owner.terminal_is_empty());
     assert!(owner.close_step(1, 1).unwrap().complete);
     for _ in 0..100 { if target.close_step(1, 1).unwrap().complete { break; } }
@@ -48,9 +48,9 @@ fn instance_lifetime_ui_patch_storage_first_payload_does_not_reserve_logical_cap
     let mut operations = UiPatchOps::default();
     operations.try_push(UiPatchOp::SetRoot { id: UiNodeId(7) }).unwrap();
     let allocated = operations.allocated_bytes();
-    let maximum = UI_DOCUMENT_PATCH_OPS * std::mem::size_of::<Vec<UiPatchOp>>() + std::mem::size_of::<UiPatchOp>();
+    let maximum = UI_DOCUMENT_PATCH_OPS * size_of::<Vec<UiPatchOp>>() + size_of::<UiPatchOp>();
     if cfg!(target_pointer_width = "64") {
-        assert_eq!(std::mem::size_of::<UiPatchOp>(), fixture["native64"]["operationBytes"].as_u64().unwrap() as usize);
+        assert_eq!(size_of::<UiPatchOp>(), fixture["native64"]["operationBytes"].as_u64().unwrap() as usize);
         assert_eq!(maximum, fixture["native64"]["firstBackingBytes"].as_u64().unwrap() as usize);
     }
     assert!(allocated <= maximum, "first initialized patch must own only directory plus one payload page: allocated={allocated}, maximum={maximum}");
@@ -76,7 +76,7 @@ fn instance_lifetime_ui_patch_storage_reservation_placement_and_cancel_preserve_
         assert!(!operations.terminal_is_empty());
         let mut source = Some(UiPatchOp::SetRoot { id: UiNodeId(7) });
         let placed = operations.try_push_reserved(&mut source, grant).unwrap();
-        assert_eq!(placed, if grant >= std::mem::size_of::<UiPatchOp>() { std::mem::size_of::<UiPatchOp>() } else { 0 });
+        assert_eq!(placed, if grant >= size_of::<UiPatchOp>() { size_of::<UiPatchOp>() } else { 0 });
         assert_eq!(source.is_some(), placed == 0);
         if placed == 0 { assert_eq!(operations.try_push_reserved(&mut source, page), Ok(page)); }
         let payload = operations.get(0).unwrap() as *const UiPatchOp;

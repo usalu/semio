@@ -14,7 +14,7 @@ pub struct SetBitDepth {
 impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetBitDepth {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "bit-depth", kind: "set-bit-depth", record: "SetBitDepth" };
 
-    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<SemioImageMutation as protocol::Mutation<SemioImageSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<SemioImageMutation as Mutation<SemioImageSnapshot>>::Diff> {
         agg_diff(&SemioImageMutation::SetBitDepth(self.clone()), base)
     }
     fn inverse(&self, base: &SemioImageSnapshot) -> Vec<SemioImageMutation> {

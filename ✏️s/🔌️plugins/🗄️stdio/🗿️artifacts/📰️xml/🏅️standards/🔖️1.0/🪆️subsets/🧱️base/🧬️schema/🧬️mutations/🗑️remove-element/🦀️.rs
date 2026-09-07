@@ -1,7 +1,6 @@
 //! 🧬️ Direct remove-element mutation owner.
-use crate::artifacts::xml::schema::diff::{diff_at_path, XmlAttrAdded, XmlAttrModified, XmlAttributesDiff, XmlChildAdded, XmlChildrenDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
+use crate::artifacts::xml::schema::diff::{diff_at_path, XmlChildrenDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
 use crate::artifacts::xml::schema::mutation_support::XmlNodePath;
-use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlNode};
 use crate::artifacts::xml::XmlSnapshot;
 
 #[path = "📝️text/🦀️.rs"]
@@ -25,7 +24,7 @@ pub enum RemoveElementMutation { Apply(RemoveElementPayload), Restore(XmlDiff) }
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for RemoveElementMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "element", kind: "remove-element", record: "RemovedElement" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
+    fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
         match self {
             Self::Apply(payload) => protocol::MutationOutcome::new(diff_at_path(&payload.path.0, XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: vec![payload.index], modified: Vec::new(), added: Vec::new() }) }))),
             Self::Restore(diff) => protocol::MutationOutcome::new(diff.clone()),

@@ -48,7 +48,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
+        let operation = Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
         semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -64,14 +64,14 @@ mod tests {
         let mut store =
             semio_framework_plugin::resolve_ready(crate::artifacts::fem2d::schema::mutations::Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", schema::empty_fem2d_snapshot(), None))).expect("valid store");
         let mutations = vec![
-            Fem2dMutation::CreateMaterial(crate::artifacts::fem2d::schema::mutations::create_material::mutation::CreateMaterial { material: fixture.materials[0].clone() }),
-            Fem2dMutation::CreateSection(crate::artifacts::fem2d::schema::mutations::create_section::mutation::CreateSection { section: fixture.sections[0].clone() }),
-            Fem2dMutation::CreateNode(crate::artifacts::fem2d::schema::mutations::create_node::mutation::CreateNode { node: fixture.nodes[0].clone() }),
-            Fem2dMutation::CreateNode(crate::artifacts::fem2d::schema::mutations::create_node::mutation::CreateNode { node: fixture.nodes[1].clone() }),
-            Fem2dMutation::CreateElement(crate::artifacts::fem2d::schema::mutations::create_element::mutation::CreateElement { element: Box::new(fixture.elements[0].clone()) }),
-            Fem2dMutation::CreateSupport(crate::artifacts::fem2d::schema::mutations::create_support::mutation::CreateSupport { support: fixture.supports[0].clone() }),
-            Fem2dMutation::CreateSupport(crate::artifacts::fem2d::schema::mutations::create_support::mutation::CreateSupport { support: fixture.supports[1].clone() }),
-            Fem2dMutation::CreateLoadCase(crate::artifacts::fem2d::schema::mutations::create_load_case::mutation::CreateLoadCase { load_case: fixture.load_cases[0].clone() }),
+            Fem2dMutation::CreateMaterial(crate::artifacts::fem2d::schema::mutations::create_material::CreateMaterial { material: fixture.materials[0].clone() }),
+            Fem2dMutation::CreateSection(crate::artifacts::fem2d::schema::mutations::create_section::CreateSection { section: fixture.sections[0].clone() }),
+            Fem2dMutation::CreateNode(crate::artifacts::fem2d::schema::mutations::create_node::CreateNode { node: fixture.nodes[0].clone() }),
+            Fem2dMutation::CreateNode(crate::artifacts::fem2d::schema::mutations::create_node::CreateNode { node: fixture.nodes[1].clone() }),
+            Fem2dMutation::CreateElement(crate::artifacts::fem2d::schema::mutations::create_element::CreateElement { element: Box::new(fixture.elements[0].clone()) }),
+            Fem2dMutation::CreateSupport(crate::artifacts::fem2d::schema::mutations::create_support::CreateSupport { support: fixture.supports[0].clone() }),
+            Fem2dMutation::CreateSupport(crate::artifacts::fem2d::schema::mutations::create_support::CreateSupport { support: fixture.supports[1].clone() }),
+            Fem2dMutation::CreateLoadCase(crate::artifacts::fem2d::schema::mutations::create_load_case::CreateLoadCase { load_case: fixture.load_cases[0].clone() }),
         ];
         store.dispatch(ArtifactCommand::Apply { mutations, description: None }).await.expect("apply");
         assert_eq!(store.snapshot().expect("snapshot"), fixture);
@@ -96,7 +96,7 @@ mod semio_protocol_conformance {
 
     #[test]
     fn verify_protocol_bytes_against_encoded_spr() {
-        let operation = Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings: crate::artifacts::fem2d::FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
+        let operation = Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings { settings: crate::artifacts::fem2d::FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
         let bytes = encode_op(&operation).expect("encode op");
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes spr bytes");

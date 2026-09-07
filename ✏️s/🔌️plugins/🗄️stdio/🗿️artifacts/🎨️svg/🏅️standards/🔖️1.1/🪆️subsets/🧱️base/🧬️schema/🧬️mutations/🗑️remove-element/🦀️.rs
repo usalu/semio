@@ -1,9 +1,7 @@
 //! 🧬️ Direct remove-element mutation owner.
-use crate::artifacts::svg::schema::diff::{diff_at_path, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
-use crate::artifacts::svg::schema::mutation_support::attribute_diff_at_path;
-use crate::artifacts::svg::schema::snapshot::{transform_list_to_string, view_box_to_string, NodePath, TransformOp, ViewBox};
+use crate::artifacts::svg::schema::diff::{diff_at_path, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
+use crate::artifacts::svg::schema::snapshot::NodePath;
 use crate::artifacts::svg::SvgSnapshot;
-use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlNode};
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
@@ -26,7 +24,7 @@ pub enum RemoveElementMutation { Apply(RemoveElementPayload), Restore(SvgDiff) }
 impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for RemoveElementMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "element", kind: "remove-element", record: "RemovedElement" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
+    fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         match self {
             Self::Apply(payload) => protocol::MutationOutcome::new(diff_at_path(&payload.parent, SvgNodeDiff::Element(SvgElementDiff { name: None, attributes: None, children: Some(SvgChildrenDiff { removed: vec![payload.index], modified: Vec::new(), added: Vec::new() }) }))),
             Self::Restore(diff) => protocol::MutationOutcome::new(diff.clone()),

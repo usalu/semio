@@ -15,7 +15,7 @@ pub struct SetEntity {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entity", kind: "set-entity", record: "SetEntity" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as protocol::Mutation<DxfSnapshot>>::Diff> {
+    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
         agg_diff(&DxfMutation::SetEntity(self.clone()), base)
     }
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {

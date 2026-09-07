@@ -50,25 +50,25 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// the function's file moved with the deleted directory).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
-    crate::artifacts::semio::standards::v1::subsets::brep::io::register();
-    crate::artifacts::semio::standards::v1::subsets::mesh::io::register();
-    crate::artifacts::semio::standards::v1::subsets::model::io::register();
-    crate::artifacts::semio::standards::v1::subsets::value::io::register();
-    crate::artifacts::semio::standards::v1::subsets::document::io::register();
-    crate::artifacts::semio::standards::v1::subsets::cad::io::register();
-    crate::artifacts::semio::standards::v1::subsets::drawing::io::register();
-    crate::artifacts::semio::standards::v1::subsets::image::io::register();
-    crate::artifacts::semio::standards::v1::subsets::video::io::register();
-    crate::artifacts::semio::standards::v1::subsets::audio::io::register();
-    crate::artifacts::semio::standards::v1::subsets::animation::io::register();
-    crate::artifacts::semio::standards::v1::subsets::presentation::io::register();
-    crate::artifacts::semio::standards::v1::subsets::flow::io::register();
-    crate::artifacts::semio::standards::v1::subsets::text::io::register();
-    crate::artifacts::semio::standards::v1::subsets::table::io::register();
-    crate::artifacts::semio::standards::v1::subsets::graph::io::register();
-    crate::artifacts::semio::standards::v1::subsets::object::io::register();
-    crate::artifacts::semio::standards::v1::subsets::kit::io::register();
-    crate::artifacts::semio::standards::v1::subsets::base::io::register();
+    subsets::brep::io::register();
+    subsets::mesh::io::register();
+    subsets::model::io::register();
+    subsets::value::io::register();
+    subsets::document::io::register();
+    subsets::cad::io::register();
+    subsets::drawing::io::register();
+    subsets::image::io::register();
+    subsets::video::io::register();
+    subsets::audio::io::register();
+    subsets::animation::io::register();
+    subsets::presentation::io::register();
+    subsets::flow::io::register();
+    subsets::text::io::register();
+    subsets::table::io::register();
+    subsets::graph::io::register();
+    subsets::object::io::register();
+    subsets::kit::io::register();
+    subsets::base::io::register();
 }
 //#endregion 🔖️Register
 
@@ -114,7 +114,7 @@ use crate::artifacts::semio::standards::v1::subsets;
 //#region 🧹️SnapshotRetirement
 use std::{marker::PhantomData, sync::Arc};
 
-use dsl::os_store::retirement::{RetireOwned, RetirementCursor, sequence, owned_retirement, shared_retirement};
+use dsl::os_store::retirement::{RetireOwned, RetirementCursor, owned_retirement, shared_retirement};
 use dsl::{artifact_retire_leaf as retire_leaf, artifact_retire_struct as retire_struct, artifact_retirement_sequence as seq};
 
 use subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform, SemioUv};
@@ -1128,7 +1128,7 @@ macro_rules! member_owners {
 semio_subset_table!(member_owners);
 //#endregion 🧹️SnapshotRetirement
 
-/// 🧬️ Eighteen composable subsets, each bound to its exact kind, standard, subset and schema.
+// 🧬️ Eighteen composable subsets, each bound to its exact kind, standard, subset and schema.
 dsl::space_members! {
     pub enum SemioMembers, SemioMembersOpen {
         Animation("s.stdio.semio", "v1", "animation", "stdio.semio") => (subsets::animation::schema::snapshot::SemioAnimationSnapshot, subsets::animation::schema::mutations::SemioAnimationMutation),

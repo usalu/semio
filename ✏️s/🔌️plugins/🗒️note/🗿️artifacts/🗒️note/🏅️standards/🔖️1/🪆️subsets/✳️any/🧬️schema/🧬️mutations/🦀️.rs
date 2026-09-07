@@ -159,7 +159,7 @@ pub const KINDS: &[&str] = &[
 /// beside this one answers `Result<_, _>` and drops the messages.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn apply_note_mutation_outcome(snapshot: &mut NoteSnapshot, mutation: &NoteMutation) -> protocol::MutationOutcome<NoteDiff> {
-    let outcome = <NoteMutation as protocol::Mutation<NoteSnapshot>>::diff(mutation, snapshot);
+    let outcome = <NoteMutation as Mutation<NoteSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
 
@@ -168,7 +168,7 @@ pub fn apply_note_mutation_outcome(snapshot: &mut NoteSnapshot, mutation: &NoteM
 /// `protocol` extern-crate alias is private to `🦀️.rs`.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn inverse_note_mutation_steps(mutation: &NoteMutation, base: &NoteSnapshot) -> Vec<NoteMutation> {
-    <NoteMutation as protocol::Mutation<NoteSnapshot>>::inverse(mutation, base)
+    <NoteMutation as Mutation<NoteSnapshot>>::inverse(mutation, base)
 }
 
 /// 📥️ Decodes the internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) projection the

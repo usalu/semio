@@ -16,7 +16,7 @@ pub struct SetEdgeEndpoints {
 impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for SetEdgeEndpoints {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "edge-endpoints", kind: "set-edge-endpoints", record: "SetEdgeEndpoints" };
 
-    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as Mutation<SemioFlowSnapshot>>::Diff> {
         agg_diff(&SemioFlowMutation::SetEdgeEndpoints(self.clone()), base)
     }
     fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {

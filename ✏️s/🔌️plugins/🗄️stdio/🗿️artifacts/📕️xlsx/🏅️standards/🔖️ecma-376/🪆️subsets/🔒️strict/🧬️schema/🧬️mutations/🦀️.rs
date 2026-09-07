@@ -20,7 +20,7 @@
 //! @see ../../🔣️oracle.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
-use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, NamedTripleDiff, XlsxDiff, XlsxOpcContentTypesDiff, XlsxOpcCtEntriesDiff, XlsxOpcDiff, XlsxOpcPartDiff, XlsxOpcPartsDiff, XlsxOpcRelDiff, XlsxOpcRelListDiff, XlsxOpcRelationshipsDiff};
+use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, NamedTripleDiff, XlsxDiff, XlsxOpcContentTypesDiff, XlsxOpcCtEntriesDiff, XlsxOpcDiff, XlsxOpcPartDiff, XlsxOpcPartsDiff, XlsxOpcRelationshipsDiff};
 use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
 use crate::artifacts::zip::opc::{resolve_relationship_target, OpcPart};
@@ -175,11 +175,6 @@ fn declared_pair_member(base: &XlsxSnapshot, pair: [&str; 2]) -> Option<String> 
 }
 
 /// 🔎️ The relationship-type base the package's own relationships are built on.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn declared_relationship_base(base: &XlsxSnapshot, pair: [&str; 2]) -> Option<String> {
-    pair.into_iter().find(|candidate| base.opc.relationships.values().flatten().any(|relationship| relationship.rel_type.starts_with(candidate))).map(str::to_string)
-}
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn root_attribute(document: &XmlDocument, name: &str) -> Option<String> {
     let XmlNode::Element { attrs, .. } = document.root.as_ref()? else { return None };

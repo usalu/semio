@@ -73,7 +73,7 @@ fn app_catalogue_item(id_path: &str, label: &str, node: AppCatalogueNode) -> sem
 /// 🎨️ Builds the app catalogue tree straight from the production registry — `workflow_palette()`
 /// (every registered `(plugin_id, app_id)`) joined with `os_app_registration` for the document
 /// breadcrumb/primary output kind. Always live, never stale.
-pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mut document = AppCatalogueNode::default();
     for entry in workflow_palette() {
         if entry.app_id == crate::engine::space::S_PLAY_APP_ID {

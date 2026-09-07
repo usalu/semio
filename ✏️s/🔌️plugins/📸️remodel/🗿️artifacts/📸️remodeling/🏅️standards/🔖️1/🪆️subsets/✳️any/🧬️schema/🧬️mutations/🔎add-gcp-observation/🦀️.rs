@@ -1,6 +1,6 @@
 //! 🔎 Remodeling mutation — `AddGcpObservation`: appends one `GcpObservation` to an existing GCP.
 
-use crate::artifacts::remodeling::diff::{RemodelingDiff, RemodelingGcpList};
+use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
 use crate::artifacts::remodeling::{GcpObservation, RemodelingSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};

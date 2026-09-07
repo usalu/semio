@@ -2,10 +2,9 @@
 //! wires-level semantic relationship (`relationship` is `DslValue::Null` when the edge carries no
 //! wires relationship — the pre-migration fixture's own convention, preserved as-is).
 
-use crate::artifacts::wires::diff::{diff_wires_and_board, fixtures_after_add_edge, WiresDiff};
+use crate::artifacts::wires::diff::WiresDiff;
 use crate::artifacts::wires::mutations::WiresMutation;
 use crate::artifacts::wires::schema::entity_id;
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::{find_board_edge, find_board_node};
 use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
 

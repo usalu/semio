@@ -3,7 +3,7 @@
 //! `WM2` as one word, `wm2` — never `w-m2`), not a style choice.
 
 
-use crate::artifacts::din4108::{Din4108Diff, Din4108Mutation, Din4108Snapshot};
+use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

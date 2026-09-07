@@ -80,7 +80,7 @@
           "additionalProperties": false,
           "required": ["kind", "spaceId"],
           "properties": {
-            "kind": { "const": "space.archived" },
+            "kind": { "const": "space.archived", "description": "Atomically freezes the space and demotes every current Author membership to Spectator." },
             "spaceId": { "type": "string" }
           }
         },

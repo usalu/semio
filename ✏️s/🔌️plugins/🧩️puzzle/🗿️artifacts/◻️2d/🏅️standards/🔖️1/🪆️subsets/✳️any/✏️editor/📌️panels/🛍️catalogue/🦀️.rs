@@ -5,7 +5,7 @@
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{inferred_kind_entries, kind_catalog_entries, ui_label, PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{
-    tree_item_with_action, tree_item_with_action_draggable, ActionFactory, BuiltNode, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiMapBuilder, UiText, UiValue,
+    tree_item_with_action, tree_item_with_action_draggable, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiMapBuilder, UiText, UiValue,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 };
 use serde_json::{json, Value};
@@ -63,7 +63,7 @@ fn add_node_args(kind_id: &str) -> semio_framework_plugin::UiAssemblyResult<UiVa
     Ok(UiValue::Map(args.finish()))
 }
 
-fn kind_catalog_items(section_id: &str, slice: &str, entries: &[Value]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+fn kind_catalog_items(section_id: &str, slice: &str, entries: &[Value]) -> semio_framework_plugin::UiAssemblyResult<UiFixedList<BuiltNode>> {
     let actions = ActionFactory::new(PUZZLE2D_PLAY_CONTROLLER_ID);
     let mut items = UiFixedList::<BuiltNode>::default();
     for (index, entry) in entries.iter().enumerate() {
@@ -86,7 +86,7 @@ fn kind_catalog_items(section_id: &str, slice: &str, entries: &[Value]) -> semio
     Ok(items)
 }
 
-pub fn render(fixture: &Value, labels: &Puzzle2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(fixture: &Value, labels: &Puzzle2dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let inferred_nodes = inferred_kind_entries(fixture, "nodes");
     let inferred_handles = inferred_kind_entries(fixture, "handles");
     let inferred_edges = inferred_kind_entries(fixture, "edges");

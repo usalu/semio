@@ -85,6 +85,7 @@ impl ColdDocumentPairOwner {
         self.header.cursor(self.next_page.saturating_sub(1).min(self.header.page_count - 1))
     }
 
+    #[cfg(test)]
     fn retained_bytes(&self) -> usize {
         self.files.pack.len() + self.files.spr.len()
     }

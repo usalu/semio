@@ -4191,6 +4191,15 @@
       }
     },
     {
+      "name": "⚖️gate⏱️process-budgets",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run @semio-tech/repo-lib:test-process-budgets --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": { "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️20/MAKE-BUILD-SCRIPT-BUDGETS-OPT-IN/🗑️generated" },
+      "presentation": { "group": "4_gate", "order": 409.005 }
+    },
+    {
       "name": "⚖️gate🦀️exact-native-law-runner",
       "type": "node-terminal",
       "request": "launch",
@@ -6033,6 +6042,38 @@
       }
     },
     {
+      "name": "⚖️gate🛡️directory-command-authority🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run os-hub:directory-command-authority-native-check --skip-nx-cache",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-command-authority-native",
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
+        "CARGO_BUILD_JOBS": "1"
+      },
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.099905
+      }
+    },
+    {
+      "name": "⚖️gate🎟️directory-invite-authority🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run os-hub:directory-invite-authority-native-check --skip-nx-cache",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/directory-command-authority-native",
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/reactor-lifecycle-native-target",
+        "CARGO_BUILD_JOBS": "1"
+      },
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.099907
+      }
+    },
+    {
       "name": "⚖️gate🧾️directory-command-receipt🦀️native",
       "type": "node-terminal",
       "request": "launch",
@@ -6362,6 +6403,7 @@
       "request": "launch",
       "command": "bun ./📜️script.ts nx run os-hub:browser-actor-gis-describe-check --skip-nx-cache -- --source",
       "cwd": "${workspaceFolder}",
+      "env": { "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/browser-actor-gis-describe-source" },
       "presentation": {
         "group": "4_gate",
         "order": 411.1095051
@@ -6885,6 +6927,40 @@
         "SEMIO_CMD_BUDGET_MS": "86700000"
       },
       "presentation": { "group": "4_gate", "order": 411.1498 }
+    },
+    {
+      "name": "⚖️gate🧊️cold-document-pair-ingress🧵️browser",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run @semio-tech/framework-os:cold-document-pair-browser-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.1499 }
+    },
+    {
+      "name": "⚖️gate🩹️native-ui-patch-marshalling📐️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run @semio-tech/framework-plugin-host:ui-patch-marshalling-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 411.14991 }
+    },
+    {
+      "name": "⚖️gate🩹️native-ui-patch-marshalling🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts nx run @semio-tech/framework-plugin-host:ui-patch-marshalling-native-check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/ui-patch-marshalling-exact",
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/COMPLETE-SEMIO-END-TO-END/🗑️generated/public-member-open-sol-target",
+        "CARGO_BUILD_JOBS": "1",
+        "RUST_MIN_STACK": "268435456",
+        "RUSTC_WRAPPER": "",
+        "SEMIO_BUILD_BUDGET_MS": "86400000",
+        "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
+        "SEMIO_CMD_BUDGET_MS": "86700000"
+      },
+      "presentation": { "group": "4_gate", "order": 411.14992 }
     },
     {
       "name": "🛠️dev🗄️os-hub",

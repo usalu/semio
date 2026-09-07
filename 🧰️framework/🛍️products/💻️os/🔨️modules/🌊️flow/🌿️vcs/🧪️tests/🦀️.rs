@@ -62,7 +62,7 @@ fn assert_codecs(mutation: &FlowMutation) {
     retire_mutation(decoded);
 }
 pub(crate) fn assert_leaf_contract<T>(index: usize, wrap: fn(T) -> FlowMutation, descriptor: &str)
-where T: MutationLeaf + serde::Serialize + serde::de::DeserializeOwned + FromValue {
+where T: MutationLeaf + Serialize + serde::de::DeserializeOwned + FromValue {
     let cases = cases();
     let payload = cases["positives"][index].clone();
     let leaf: T = serde_json::from_value(payload.clone()).expect("actual leaf payload");

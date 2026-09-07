@@ -32,7 +32,7 @@ pub const S_HOME_CONTROLLER_ID: &str = "s.space.home@1/*#editor";
 app_commands! {
     /// 🎯️ `HomeApp::Command` — the SOLE dispatch surface for the Home launcher's own behavior, one
     /// variant per action declared in `create_home_app`'s manifest.
-    pub enum HomeCommand for SHomeSnapshot, crate::artifacts::home::op::SHomeMutation, HomeConfig, crate::editor::home::config::HomeConfigMutation {
+    pub enum HomeCommand for SHomeSnapshot, crate::artifacts::home::op::SHomeMutation, HomeConfig, HomeConfigMutation {
         "applyDirectoryEventPage" as "apply-directory-event-page" => apply_directory_event_page::ApplyDirectoryEventPage,
         "createStudio" as "create-studio" => create_studio::CreateStudio,
         "bindSpaceFile" as "bind-space-file" => bind_space_file::BindSpaceFile,
@@ -201,7 +201,7 @@ fn home_config_retained_bytes(config: &HomeConfig) -> usize {
         .saturating_add(config.directory_json.len())
         .saturating_add(config.directory_session_binding_sha256.len())
         .saturating_add(config.directory_receipt_sha256.len())
-        .saturating_add(std::mem::size_of_val(&config.directory_authorization_generation))
+        .saturating_add(size_of_val(&config.directory_authorization_generation))
         .saturating_add(config.client_id.len())
         .saturating_add(config.client_name.len())
 }
@@ -375,7 +375,7 @@ impl ArtifactEditor for HomeApp {
     type Snapshot = SHomeSnapshot;
     type Mutation = crate::artifacts::home::op::SHomeMutation;
     type Config = HomeConfig;
-    type ConfigMutation = crate::editor::home::config::HomeConfigMutation;
+    type ConfigMutation = HomeConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
     type Presence = HomePresence;
@@ -397,7 +397,7 @@ impl ArtifactEditor for HomeApp {
     /// `validate_tool_job_rows` joins proof and registration by exact contract equality. Both are
     /// pinned by `interactive_job_catalog_tests::tool_proof_catalogs_match_the_runtime_identity_they_are_joined_against`.
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<HomeApp>,
+        owner: EditorApp<HomeApp>,
         owner_file: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.space.home@1/*#editor",
         document_schema: "s.home",
@@ -539,7 +539,7 @@ impl ArtifactEditor for HomeApp {
         _interaction: &InteractionView<'_>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
-    ) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, crate::editor::home::config::HomeConfigMutation, Self::DraftMutation>, Fault> {
+    ) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, HomeConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -797,7 +797,7 @@ mod tests {
         })
         .to_string();
         let base = HomeConfig { locale: locale.into(), ..HomeConfig::default() };
-        protocol::Mutation::diff(&crate::editor::home::config::HomeConfigMutation::FoldDirectoryEvent { event_json }, &base).diff().clone()
+        protocol::Mutation::diff(&HomeConfigMutation::FoldDirectoryEvent { event_json }, &base).diff().clone()
     }
 
     #[semio_framework_async_macros::async_test]

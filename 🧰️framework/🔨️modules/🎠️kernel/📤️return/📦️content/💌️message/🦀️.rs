@@ -1,5 +1,5 @@
 //#region 💌️BorrowedMessageRecord
-use super::{Effect, MessageEndpoint, return_content::ReturnContentHeader};
+use super::{return_content::ReturnContentHeader, Effect, MessageEndpoint};
 use semio_framework_actor::byte_page::ACTOR_BYTE_PAGE_BYTES;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

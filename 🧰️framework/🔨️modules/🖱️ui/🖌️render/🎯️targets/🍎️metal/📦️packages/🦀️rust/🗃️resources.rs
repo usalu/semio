@@ -184,13 +184,9 @@ impl GpuResources {
 fn create_texture(device: &Device, format: MTLPixelFormat, width: u32, height: u32, mip_levels: u32, label: &str) -> Owned<MetalTexture> {
     let descriptor = MTLTextureDescriptor::new();
     descriptor.setPixelFormat(format);
-    // 🔓️ SAFETY: width/height/mipmapLevelCount are ordinary dimension setters; Metal validates and
-    // clamps rather than reading out of bounds, and this crate always passes caller-checked u32s.
-    unsafe {
-        descriptor.setWidth(width.max(1) as _);
-        descriptor.setHeight(height.max(1) as _);
-        descriptor.setMipmapLevelCount(mip_levels.max(1) as _);
-    }
+    descriptor.setWidth(width.max(1) as _);
+    descriptor.setHeight(height.max(1) as _);
+    descriptor.setMipmapLevelCount(mip_levels.max(1) as _);
     descriptor.setUsage(MTLTextureUsage::ShaderRead);
     descriptor.setResourceOptions(MTLResourceOptions::StorageModeShared);
     let texture = device.newTextureWithDescriptor(&descriptor).unwrap_or_else(|| panic!("metal backend: failed to allocate texture {label}"));

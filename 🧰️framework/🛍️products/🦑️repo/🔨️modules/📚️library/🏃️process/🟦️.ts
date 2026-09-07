@@ -1,5 +1,5 @@
-/** @emoji 🏃️ Budgeted process execution for the whole repository: the wall-clock budget classes every
- * spawned command is billed against, the `spawnSync` runners built on them, workspace-aware `.bin`
+/** @emoji 🏃️ Process execution with opt-in wall-clock budgets for repository commands and builds,
+ * the `spawnSync` runners built on them, workspace-aware `.bin`
  * resolution and the dev/ship build-mode switch. Split out of `📦️packages/🟦️typescript/🟦️.ts` so a
  * consumer that only spawns a tool (the plugin package's jco/wasm-opt steps, and through them the
  * extension store and `⚙️vite.config.ts`) never drags the repository library's `🔍️discovery` taxonomy
@@ -9,27 +9,27 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
 
-/** ⏱️Hard ceiling (ms) for a warm-build step preceding a test run, and for any other cargo build/clippy/check/wasm invocation — compile time isn't billed against the test-level budget, but a stuck build (e.g. shared cargo target-dir lock contention) must never hang a command forever. Overridable via `SEMIO_BUILD_BUDGET_MS`. */
-export const BUILD_BUDGET_MS = 1_200_000;
+/** 🏗️Default build budget (ms): zero leaves compilation and Cargo lock waits unlimited. Opt in via `SEMIO_BUILD_BUDGET_MS`. */
+export const BUILD_BUDGET_MS = 0;
 
 /** ⏱️Resolves the active build-class budget: `SEMIO_BUILD_BUDGET_MS` env override, else [[BUILD_BUDGET_MS]]. */
 export function buildBudgetMs(): number {
   return Number(process.env.SEMIO_BUILD_BUDGET_MS ?? BUILD_BUDGET_MS);
 }
 
-/** ⏱️Default hard wall-clock budget (ms) for a generic spawned command — the [[runCmd]]/[[runCmdStatus]] default for anything that isn't a `cargo` invocation. Overridable via `SEMIO_CMD_BUDGET_MS`. */
-export const CMD_BUDGET_MS = 600_000;
+/** 🛠️Default command budget (ms): zero lets build tools and script wrappers finish. Opt in via `SEMIO_CMD_BUDGET_MS`. */
+export const CMD_BUDGET_MS = 0;
 
 /** ⏱️Resolves the active generic-command budget: `SEMIO_CMD_BUDGET_MS` env override, else [[CMD_BUDGET_MS]]. */
 export function cmdBudgetMs(): number {
   return Number(process.env.SEMIO_CMD_BUDGET_MS ?? CMD_BUDGET_MS);
 }
 
-/** ⏱️Default hard wall-clock budget (ms) for nx/script orchestrators fanning out to individually budgeted leaves — overridable via `SEMIO_ORCHESTRATOR_BUDGET_MS`. */
-export const ORCHESTRATOR_BUDGET_MS = 4 * 60 * 60 * 1000;
+/** 🎛️Default Nx/script orchestrator budget (ms): zero avoids imposing a parent build deadline. Opt in via `SEMIO_ORCHESTRATOR_BUDGET_MS`. */
+export const ORCHESTRATOR_BUDGET_MS = 0;
 
-/** ⏱️Default hard wall-clock budget (ms) for dev servers and long-lived daemons — overridable via `SEMIO_DAEMON_BUDGET_MS`. */
-export const DAEMON_BUDGET_MS = 24 * 60 * 60 * 1000;
+/** 🖥️Default dev-server and daemon budget (ms): zero permits long-lived sessions and their builds. Opt in via `SEMIO_DAEMON_BUDGET_MS`. */
+export const DAEMON_BUDGET_MS = 0;
 
 /** ⏱️Resolves the active orchestrator budget: `SEMIO_ORCHESTRATOR_BUDGET_MS` env override, else [[ORCHESTRATOR_BUDGET_MS]]. */
 export function orchestratorBudgetMs(): number {
@@ -41,7 +41,7 @@ export function daemonBudgetMs(): number {
   return Number(process.env.SEMIO_DAEMON_BUDGET_MS ?? DAEMON_BUDGET_MS);
 }
 
-/** ⏱️The default budget class for `cmd`: `cargo` invocations (build/clippy/check/install) default to the longer [[buildBudgetMs]] since compiles routinely exceed the generic command budget; everything else defaults to [[cmdBudgetMs]]. */
+/** 🧭️Selects the opt-in build budget for Cargo and command budget for other executables; both default to unlimited. */
 export function defaultBudgetMs(cmd: string): number {
   return cmd === "cargo" ? buildBudgetMs() : cmdBudgetMs();
 }
@@ -57,7 +57,7 @@ export function budgetTimeoutHint(cmd: string, override?: string): string {
 export interface RunCmdOpts {
   cwd?: string;
   env?: NodeJS.ProcessEnv;
-  /** ⏱️Wall-clock budget (ms). Default: [[defaultBudgetMs]]. Use [[orchestratorBudgetOpts]] / [[daemonBudgetOpts]] for named long-running classes. */
+  /** ⏱️Wall-clock budget (ms); zero disables the timeout. Defaults to [[defaultBudgetMs]]. Named wrappers use [[orchestratorBudgetOpts]] / [[daemonBudgetOpts]]. */
   budgetMs?: number;
   onTimeoutHint?: string;
 }
@@ -102,7 +102,7 @@ function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
 }
 
 /**
- * 🏃️Runs a subprocess with inherited stdio under a hard wall-clock budget (default [[defaultBudgetMs]]);
+ * 🏃️Runs a subprocess with inherited stdio and an opt-in wall-clock budget (default [[defaultBudgetMs]]);
  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
  */

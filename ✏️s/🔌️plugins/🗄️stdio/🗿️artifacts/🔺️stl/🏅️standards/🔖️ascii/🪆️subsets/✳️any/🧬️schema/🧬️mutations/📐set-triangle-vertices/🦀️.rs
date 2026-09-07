@@ -17,7 +17,7 @@ pub struct SetTriangleVertices {
 impl protocol::MutationKind<StlSnapshot, StlMutation> for SetTriangleVertices {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "triangle-vertices", kind: "set-triangle-vertices", record: "SetTriangleVertices" };
 
-    fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as protocol::Mutation<StlSnapshot>>::Diff> {
+    fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as Mutation<StlSnapshot>>::Diff> {
         agg_diff(&StlMutation::SetTriangleVertices(self.clone()), base)
     }
     fn inverse(&self, base: &StlSnapshot) -> Vec<StlMutation> {

@@ -558,7 +558,7 @@ impl Default for UiDocumentArena {
 static UI_DOCUMENT_ARENA: Mutex<UiDocumentArena> = Mutex::new(UiDocumentArena { slots: [const { UiDocumentSlot::empty() }; UI_DOCUMENT_LEASE_SLOTS], close_cursor: 0 });
 
 pub(crate) const fn resident_static_backing_bytes() -> usize {
-    std::mem::size_of::<Mutex<UiDocumentArena>>() + std::mem::size_of::<crate::UiArenaHandbacks<UI_DOCUMENT_LEASE_SLOTS, 1>>()
+    size_of::<Mutex<UiDocumentArena>>() + size_of::<crate::UiArenaHandbacks<UI_DOCUMENT_LEASE_SLOTS, 1>>()
 }
 
 fn with_ui_document_arena<T>(f: impl FnOnce(&mut UiDocumentArena) -> T) -> T {

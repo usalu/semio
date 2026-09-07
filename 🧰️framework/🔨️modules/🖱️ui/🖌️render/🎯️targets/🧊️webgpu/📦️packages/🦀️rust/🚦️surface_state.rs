@@ -56,6 +56,7 @@ impl DeviceHealth {
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[cfg(test)]
     pub(crate) fn is_lost(self) -> bool {
         matches!(self, DeviceHealth::Lost(_))
     }
@@ -81,9 +82,11 @@ impl ScenePhase {
     /// 🌐️ Ordered exactly as [`ui_render::RenderPacket::batches`] is built by `Scene::finish::batch`
     /// (`for overlay in [false, true] { for want_foreground in [false, true] { .. } }`), so a backend
     /// can bucket batches by phase in one pass and replay each bucket in this order.
+    #[cfg(test)]
     pub(crate) const ORDER: [ScenePhase; 4] = [ScenePhase::BackdropContent, ScenePhase::ForegroundContent, ScenePhase::BackdropOverlay, ScenePhase::ForegroundOverlay];
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[cfg(test)]
     pub(crate) fn renders_offscreen(self) -> bool {
         matches!(self, ScenePhase::BackdropContent | ScenePhase::BackdropOverlay)
     }

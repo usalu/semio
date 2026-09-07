@@ -16,8 +16,8 @@ fn bundle() -> ExtensionBundle {
     let bundle = ExtensionBundle::new(EXTENSION_ID, "Sourcing Module Windows", "0.1.0").extends("sourcing");
     // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
     // extension only contributes a topic (`sourcing.module`).
-    let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Declarative));
-    semio_framework::io::resolve_ready(bundle.contributes_topic(
+    let bundle = bundle.mode(ExecutionMode::Declarative);
+    bundle.contributes_topic(
         "sourcing.module",
         semio_framework_os_kernel::DslValue::object([
             ("appId".to_string(), semio_framework_os_kernel::DslValue::String(HOST_APP_ID.to_string())),
@@ -27,7 +27,7 @@ fn bundle() -> ExtensionBundle {
             ("typologyJson".to_string(), semio_framework_os_kernel::DslValue::String(semio_framework_os_kernel::json::to_json_string(&module.typology()))),
             ("kindsJson".to_string(), semio_framework_os_kernel::DslValue::String(semio_framework_os_kernel::json::to_json_string(&module.demo_kinds()))),
         ]),
-    ))
+    )
 }
 
 semio_framework_plugin::extension_exports!(bundle);

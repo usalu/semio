@@ -4,10 +4,13 @@ use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{discard_staged_try_value, FormsConfig, FormsConfigMutation};
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
+#[cfg(test)]
 use serde::de::Deserializer;
+#[cfg(test)]
 use serde::ser::Serializer;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
+#[cfg(test)]
 use serde_json::json;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -55,12 +58,14 @@ impl From<&str> for ChunkAddressableJson {
     }
 }
 
+#[cfg(test)]
 impl Serialize for ChunkAddressableJson {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(self)
     }
 }
 
+#[cfg(test)]
 impl<'de> Deserialize<'de> for ChunkAddressableJson {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct BoundedChunkVisitor;
@@ -90,6 +95,18 @@ impl<'de> Deserialize<'de> for ChunkAddressableJson {
             }
         }
         deserializer.deserialize_str(BoundedChunkVisitor)
+    }
+}
+
+impl dsl::ToValue for ChunkAddressableJson {
+    fn to_value(&self) -> dsl::DslValue { dsl::DslValue::String(self.to_string()) }
+}
+
+impl dsl::FromValue for ChunkAddressableJson {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let dsl::DslValue::String(value) = value else { return Err(dsl::ValueError::new("expected a JSON chunk string")); };
+        if value.len() > MAX_TRY_VALUE_BYTES_PER_STEP { return Err(dsl::ValueError::new("Forms command JSON chunks are limited to 4,096 UTF-8 bytes")); }
+        Ok(value.into())
     }
 }
 
@@ -840,7 +857,7 @@ impl ContainerRewrite {
         if option_value.len() > 512 {
             return None;
         }
-        let token = serde_json::to_string(option_value).ok()?;
+        let token = dsl::os_pack::json::to_json_string(option_value);
         (token.len() <= MAX_TRY_VALUE_BYTES_PER_STEP).then(|| {
             let mut rewrite = Self::new(ContainerEdit::Option { token, value: option_value.into(), pressed: false });
             rewrite.pressed_source = Some(pressed_json);
@@ -852,7 +869,7 @@ impl ContainerRewrite {
         if param_key.len() > 512 {
             return None;
         }
-        let key_token = serde_json::to_string(param_key).ok()?;
+        let key_token = dsl::os_pack::json::to_json_string(param_key);
         (key_token.len() <= MAX_TRY_VALUE_BYTES_PER_STEP).then(|| Self::new(ContainerEdit::Object { key_token, key: param_key.into(), raw }))
     }
 
@@ -1009,7 +1026,7 @@ impl ContainerRewrite {
         let Some(start) = self.member_start else { return };
         match &self.edit {
             ContainerEdit::Option { value, .. } => {
-                let candidate = source.bounded_range(start, end).and_then(|raw| serde_json::from_str::<String>(raw.trim()).ok());
+                let candidate = source.bounded_range(start, end).and_then(|raw| dsl::os_pack::json::from_json_str::<String>(raw.trim()).ok());
                 if candidate.as_deref() == Some(value) {
                     self.found_start = Some(if last { self.previous_separator.unwrap_or(start) } else { start });
                     self.found_end = Some(if last { end } else { end + 1 });
@@ -1017,7 +1034,7 @@ impl ContainerRewrite {
             }
             ContainerEdit::Object { key, .. } => {
                 let Some(key_end) = self.member_key_end else { return };
-                let candidate = source.bounded_range(start, key_end).and_then(|raw| serde_json::from_str::<String>(raw.trim()).ok());
+                let candidate = source.bounded_range(start, key_end).and_then(|raw| dsl::os_pack::json::from_json_str::<String>(raw.trim()).ok());
                 if candidate.as_deref() == Some(key) {
                     self.found_start = self.member_value_start.map(|cursor| {
                         let mut cursor = cursor;
@@ -1217,15 +1234,7 @@ fn queue(payload: &SetTryValueStep) -> Effect {
     Effect::DispatchAction {
         req: RequestId(NEXT_TRY_VALUE_REQUEST.fetch_add(1, Ordering::Relaxed)),
         action: SET_TRY_VALUE_STEP_ACTION_ID.into(),
-        args: semio_framework::optional_json_to_dsl(Some(json!({
-            "appId": payload.app_id,
-            "documentId": payload.document_id,
-            "operationId": payload.operation_id,
-            "generation": payload.generation,
-            "cursor": payload.cursor,
-            "targetIndex": payload.target_index,
-            "baseRevision": payload.base_revision,
-        }))),
+        args: Some(dsl::ToValue::to_value(payload)),
         delay_ms: 0,
     }
 }
@@ -1396,7 +1405,7 @@ fn start_try_value(payload: &SetTryValue, operation: &semio_framework_plugin::Ap
             return Ok(Emit::default());
         }
         let mut rewrite = VectorRewrite::new(input.clone(), target_index);
-        rewrite.key_token = serde_json::to_string(&payload.key).map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("forms.try-value.key-invalid"), "the Forms try-value key cannot be serialized"))?;
+        rewrite.key_token = dsl::os_pack::json::to_json_string(&payload.key);
         Some(TryValueRewrite::Vector(rewrite))
     } else if let Some(option_value) = payload.option_value.as_deref() {
         Some(TryValueRewrite::Container(
@@ -1862,3 +1871,25 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod chunk_value_vectors {
+    use super::*;
+
+    #[test]
+    fn bounded_chunk_values_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️chunks.json")).unwrap();
+        for vector in vectors.as_array().unwrap() {
+            let value = vector.get("value").cloned().unwrap_or_else(|| serde_json::Value::String(vector["text"].as_str().unwrap().repeat(vector["repeat"].as_u64().unwrap() as usize)));
+            let encoded = value.to_string();
+            let actual = dsl::os_pack::json::from_json_str::<ChunkAddressableJson>(&encoded);
+            let oracle = serde_json::from_str::<ChunkAddressableJson>(&encoded);
+            assert_eq!(actual.is_ok(), vector["accepted"].as_bool().unwrap());
+            assert_eq!(actual.is_ok(), oracle.is_ok());
+            if let (Ok(actual), Ok(oracle)) = (actual, oracle) {
+                assert_eq!(actual, oracle);
+                assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&actual)).unwrap(), value);
+            }
+        }
+    }
+}

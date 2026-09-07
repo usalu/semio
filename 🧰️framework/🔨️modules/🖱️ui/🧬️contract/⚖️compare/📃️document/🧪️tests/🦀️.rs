@@ -5,10 +5,10 @@ fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../ðŸ§«ï¸
 fn document(component: crate::Component) -> UiDocumentLease {
     let fixture = fixture();
     let mut builder = UiDocumentBuilder::try_new(fixture["documentGeneration"].as_u64().unwrap(), SurfaceId::try_from("comparison").unwrap(), UiRevision(fixture["revision"].as_u64().unwrap()), Some(UiNodeId(41)), 0).unwrap();
-    let mut record = super::tests::leaf_record(41, "first");
+    let mut record = tests::leaf_record(41, "first");
     record.component = component;
     builder.try_push(record).unwrap();
-    builder.try_push(super::tests::leaf_record(9, "second")).unwrap();
+    builder.try_push(tests::leaf_record(9, "second")).unwrap();
     builder.finish().unwrap()
 }
 fn data(lease: &UiDocumentLease) -> serde_json::Value {
@@ -33,8 +33,8 @@ fn start(lease: UiDocumentLease, component: crate::Component) -> UiDocumentCompo
     match UiDocumentComponentCompare::try_new(lease, 0, UiNodeId(41), component, 32768) {
         Ok((owner, admission)) => {
             assert_eq!(admission.allocated_bytes, 0);
-            assert_eq!(admission.owner_bytes, std::mem::size_of::<UiDocumentComponentCompare>());
-            assert_eq!(admission.moved_bytes, std::mem::size_of::<UiDocumentLease>() + std::mem::size_of::<crate::Component>());
+            assert_eq!(admission.owner_bytes, size_of::<UiDocumentComponentCompare>());
+            assert_eq!(admission.moved_bytes, size_of::<UiDocumentLease>() + size_of::<crate::Component>());
             assert_eq!(admission.owner_bytes + admission.moved_bytes, UiDocumentComponentCompare::required_admission_bytes());
             assert!(admission.owner_bytes > 4096 && admission.owner_bytes + admission.moved_bytes <= 32768);
             owner

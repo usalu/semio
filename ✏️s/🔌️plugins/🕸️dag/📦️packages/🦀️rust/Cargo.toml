@@ -35,6 +35,7 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 
 [dev-dependencies]
+semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

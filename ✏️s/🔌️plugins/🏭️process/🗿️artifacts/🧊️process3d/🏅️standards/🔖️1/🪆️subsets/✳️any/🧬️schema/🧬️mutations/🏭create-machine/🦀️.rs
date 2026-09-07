@@ -4,9 +4,8 @@
 //! rename once a later pass can touch `🦀️.rs`).
 
 use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::delete_machine::DeleteMachine;
 use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::{Process3dSnapshot, Workshop, WorkshopMachine};
+use crate::artifacts::process3d::{Process3dSnapshot, WorkshopMachine};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️CreateMachine

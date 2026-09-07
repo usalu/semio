@@ -1,8 +1,8 @@
 //! 🕸️ Equation play app — the graph window: the editable node-graph canvas.
 
 use crate::artifacts::equation::{EquationCamera, EquationGraph};
-use crate::editor::equation::{empty_component_scene, workflow_json};
-use semio_framework_plugin::{LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use crate::editor::equation::workflow_json;
+use semio_framework_plugin::{LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const MATH_PLAY_WINDOW_GRAPH: &str = "math-graph";
@@ -32,12 +32,10 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(graph: &EquationGraph, camera: &EquationCamera) -> UiNode {
+pub fn render(graph: &EquationGraph, camera: &EquationCamera) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges) = workflow_json(graph);
     let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
-    let mut scene = empty_component_scene(MATH_PLAY_BODY_GRAPH, SurfaceKind::NodeGraph);
-    scene.node_graph = Some(NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) });
-    UiNode::ComponentScene(scene)
+    semio_framework_plugin::scene_surface(MATH_PLAY_BODY_GRAPH, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render
 
@@ -48,11 +46,15 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_node_graph_scene() {
-        // 🌱️ `UiNode` (`semio-framework-plugin`, framework-owned) has not itself gained `ToValue` —
-        // `Debug` gives the same "the scene populated its node_graph slot" check the old JSON
-        // substring check made, without needing `serde_json` for a framework type.
-        let debug = format!("{:?}", render(&EquationGraph::default(), &EquationCamera::default()));
-        assert!(debug.contains("node_graph: Some"), "expected a populated node_graph slot: {debug}");
+        let graph = EquationGraph::default();
+        let camera = EquationCamera::default();
+        let node = render(&graph, &camera).expect("graph surface");
+        let semio_framework_plugin::plugin_app_close_prelude::Component::Surface(props) = node.component else { panic!("graph must render a surface") };
+        let scene: NodeGraphScene = semio_framework_ui_scene::decode(&props).expect("graph payload");
+        let (nodes, edges) = workflow_json(&graph);
+        assert_eq!(scene.editable, Some(true));
+        assert_eq!(scene.nodes, nodes);
+        assert_eq!(scene.edges, edges);
     }
 
     #[semio_framework_async_macros::async_test]

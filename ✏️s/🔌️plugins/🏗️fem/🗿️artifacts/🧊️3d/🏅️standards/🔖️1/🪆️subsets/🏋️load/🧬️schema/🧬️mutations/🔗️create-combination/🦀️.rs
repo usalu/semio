@@ -2,7 +2,7 @@
 
 use crate::artifacts::fem3d::{Fem3dSnapshot, FemCombination};
 use crate::artifacts::fem3d::diff::{Fem3dCombinationsDelta, Fem3dDiff};
-use crate::artifacts::fem3d::mutations::{Fem3dMutation, delete_combination};
+use crate::artifacts::fem3d::mutations::Fem3dMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

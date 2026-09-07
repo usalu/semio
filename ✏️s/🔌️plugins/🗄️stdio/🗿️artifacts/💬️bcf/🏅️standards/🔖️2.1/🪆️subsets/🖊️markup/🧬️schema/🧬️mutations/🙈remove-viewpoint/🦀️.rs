@@ -15,7 +15,7 @@ pub struct RemoveViewpoint {
 impl protocol::MutationKind<BcfSnapshot, BcfMutation> for RemoveViewpoint {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "viewpoint", kind: "remove-viewpoint", record: "RemoveViewpoint" };
 
-    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as protocol::Mutation<BcfSnapshot>>::Diff> {
+    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
         agg_diff(&BcfMutation::RemoveViewpoint(self.clone()), base)
     }
     fn inverse(&self, base: &BcfSnapshot) -> Vec<BcfMutation> {

@@ -16,7 +16,7 @@ pub(crate) enum TestMutation {
 }
 
 impl protocol::OpText for TestMutation {
-    fn parse_op(line: &str) -> Result<Self, crate::store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         for (keyword, spec) in <Self as dsl::DslVariants>::variants() {
             let prefix = format!("{keyword} ");
             if line == keyword || line.starts_with(&prefix) {

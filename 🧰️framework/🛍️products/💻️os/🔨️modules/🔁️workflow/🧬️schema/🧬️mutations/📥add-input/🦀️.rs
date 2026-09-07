@@ -13,7 +13,7 @@ pub struct AddInput { pub input: WorkflowInput }
 impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for AddInput {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "workflow", kind: "add-input", record: "AddedWorkflowInput" };
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> { protocol::MutationOutcome::new(WorkflowDiff::DeclareInput { input: self.input.clone() }) }
-    fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> { vec![WorkflowMutation::RemoveInput(RemoveInput { input_id: self.input.id.clone() })] }
+    fn inverse(&self, _base: &WorkflowSnapshot) -> Vec<WorkflowMutation> { vec![WorkflowMutation::RemoveInput(RemoveInput { input_id: self.input.id.clone() })] }
     fn label(&self) -> String { format!("Add workflow input {}", self.input.id) }
     fn target(&self) -> Vec<String> { vec!["inputs".into(), self.input.id.clone()] }
 }

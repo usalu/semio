@@ -1,9 +1,13 @@
 //#region 🧪️IssuedPatchReceiptLaws
 use super::*;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../🧫️fixture/🔣️.json")).unwrap()
+}
 
-fn unhex(value: &str) -> Vec<u8> { (0..value.len()).step_by(2).map(|offset| u8::from_str_radix(&value[offset..offset + 2], 16).unwrap()).collect() }
+fn unhex(value: &str) -> Vec<u8> {
+    (0..value.len()).step_by(2).map(|offset| u8::from_str_radix(&value[offset..offset + 2], 16).unwrap()).collect()
+}
 
 #[test]
 fn actor_ui_patch_receipt_matches_shared_wire_and_json_oracles() {
@@ -16,14 +20,18 @@ fn actor_ui_patch_receipt_matches_shared_wire_and_json_oracles() {
         assert_eq!(&bytes[..length], unhex(row["hex"].as_str().unwrap()));
         assert_eq!(ActorUiPatchReceipt::decode(&bytes[..length]).unwrap(), receipt);
         assert_eq!(serde_json::to_value(receipt).unwrap(), row["value"]);
-        for prefix in 0..length { assert!(ActorUiPatchReceipt::decode(&bytes[..prefix]).is_err()); }
+        for prefix in 0..length {
+            assert!(ActorUiPatchReceipt::decode(&bytes[..prefix]).is_err());
+        }
     }
 }
 
 #[test]
 fn actor_ui_patch_receipt_rejects_malformed_and_unpaired_authority_before_writing() {
     let fixture = fixture();
-    for hex in fixture["invalidHex"].as_array().unwrap() { assert!(ActorUiPatchReceipt::decode(&unhex(hex.as_str().unwrap())).is_err()); }
+    for hex in fixture["invalidHex"].as_array().unwrap() {
+        assert!(ActorUiPatchReceipt::decode(&unhex(hex.as_str().unwrap())).is_err());
+    }
     let receipt: ActorUiPatchReceipt = serde_json::from_value(fixture["vectors"][1]["value"].clone()).unwrap();
     for invalid in [ActorUiPatchReceipt { patch_sequence: 0, ..receipt }, ActorUiPatchReceipt { lifetime: ActorInstanceLifetime { guest_lifetime: 0, ..receipt.lifetime }, ..receipt }] {
         let mut bytes = [91; ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES];
@@ -40,11 +48,21 @@ async fn actor_ui_patch_receipt_outer_field_preserves_order_and_rejects_partial_
     let fixture = fixture();
     for row in fixture["vectors"].as_array().unwrap() {
         let receipt: ActorUiPatchReceipt = serde_json::from_value(row["value"].clone()).unwrap();
-        let turn = crate::TurnResult { ui_patches: vec![91], effects: vec![], command_ingress: vec![], lifecycle_receipt: None, ui_patch_receipt: Some(receipt), next_wake: None, status: crate::TurnStatus::Idle, usage: Default::default() };
+        let turn = crate::TurnResult {
+            ui_patches: vec![91],
+            effects: vec![],
+            command_ingress: vec![],
+            cold_pair_ingress: Default::default(),
+            lifecycle_receipt: None,
+            ui_patch_receipt: Some(receipt),
+            next_wake: None,
+            status: crate::TurnStatus::Idle,
+            usage: Default::default(),
+        };
         let mut bytes = Vec::new();
         turn.pack_encode(&mut bytes).await.unwrap();
         let body = unhex(row["hex"].as_str().unwrap());
-        let mut expected = vec![1, 91, 0, 0, 0, body.len() as u8];
+        let mut expected = vec![1, 91, 0, 0, 0, 0, body.len() as u8];
         expected.extend_from_slice(&body);
         expected.extend_from_slice(&[0; 26]);
         assert_eq!(bytes, expected);
@@ -54,7 +72,7 @@ async fn actor_ui_patch_receipt_outer_field_preserves_order_and_rejects_partial_
             assert!(invalid.pack_encode(&mut untouched).await.is_err());
             assert_eq!(untouched, [73, 74]);
         }
-        let mut missing = vec![1, 91, 0, 0, 0, 0];
+        let mut missing = vec![1, 91, 0, 0, 0, 0, 0];
         missing.extend_from_slice(&[0; 26]);
         assert!(crate::TurnResult::pack_decode(&missing, &mut 0).await.is_err());
     }

@@ -1,6 +1,7 @@
 //! program -> xlsx
 use crate::artifacts::program::ProgramSnapshot;
-pub use semio_s_plugin_stdio::artifacts::xlsx::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxSnapshot, XlsxWorkbook};
+pub use semio_s_plugin_stdio::artifacts::xlsx::XlsxSnapshot;
+pub use semio_s_plugin_stdio::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
 use std::collections::BTreeSet;
 
 pub fn register() {}

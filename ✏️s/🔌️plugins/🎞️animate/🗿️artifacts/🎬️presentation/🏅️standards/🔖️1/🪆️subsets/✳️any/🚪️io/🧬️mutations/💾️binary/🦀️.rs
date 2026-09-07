@@ -17,7 +17,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::artifacts::presentation::schema::mutations::PresentationMutation;
-use crate::artifacts::presentation::schema::{empty_presentation_snapshot, PresentationError};
+use crate::artifacts::presentation::schema::empty_presentation_snapshot;
 use crate::artifacts::presentation::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use protocol::{Mutation as _, MutationDiff as _, OpBinary};
 use store::{create_document_envelope, ArtifactEnvelope, ArtifactStore};
@@ -1597,7 +1597,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = PresentationMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: Vec::new() });
+        let operation = PresentationMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: Vec::new() });
         test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -1637,7 +1637,7 @@ mod tests {
         let snapshot = empty_presentation_snapshot();
         let pack = <PresentationSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
         let hex = pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-        let mutation_value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&PresentationMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: Vec::new() })));
+        let mutation_value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&PresentationMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: Vec::new() })));
         let mutation = dsl::os_pack::json::to_string(&mutation_value);
         let json = format!(
             "{{\"schema\":\"{PRESENTATION_DOCUMENT_SCHEMA}\",\"id\":\"deck-history\",\"vcs\":{{\"initialSnapshot\":\"{hex}\",\"edits\":[{{\"id\":\"edit-1\",\"forwards\":[{mutation}],\"inverse\":[],\"sequenceNumber\":1,\"startedAt\":\"1\"}}],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}"
@@ -1819,7 +1819,7 @@ mod tests {
         let mut store = PresentationStore::new(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", empty_presentation_snapshot(), None)).await.expect("valid artifact store fixture");
         store
             .dispatch(ArtifactCommand::Apply {
-                mutations: vec![PresentationMutation::CreateTile(create_tile::mutation::CreateTile {
+                mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile {
                     index: 0,
                     tile: crate::artifacts::presentation::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::presentation::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } },
                 })],
@@ -1836,7 +1836,7 @@ mod tests {
         let mut store = PresentationStore::new(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", crate::artifacts::presentation::default_presentation_snapshot(), None)).await.expect("valid artifact store fixture");
         store
             .dispatch(ArtifactCommand::Apply {
-                mutations: vec![PresentationMutation::CreateTile(create_tile::mutation::CreateTile {
+                mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile {
                     index: 0,
                     tile: crate::artifacts::presentation::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::presentation::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } },
                 })],

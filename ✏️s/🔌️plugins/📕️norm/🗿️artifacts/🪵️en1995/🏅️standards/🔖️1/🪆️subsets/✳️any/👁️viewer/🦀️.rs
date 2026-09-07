@@ -8,11 +8,10 @@ use crate::artifacts::en1995::En1995Snapshot;
 use crate::artifacts::en1995::{EN1995_DIALECT, EN1995_DOCUMENT_SCHEMA};
 use crate::viewer::en1995::modes::view;
 use crate::viewer::en1995::modes::view::windows::report;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 // 🚧️ SDK GAP: see the identical note in `✏️editor/🦀️.rs` — `Dialect` is only reachable
 // through `app`, not yet in the crate-root re-export list.
 use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_plugin::ui_text;
 use semio_framework_plugin::Label;
 use store::EngineHandles;
 

@@ -14,7 +14,7 @@
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 // (clippy::result_large_err is allowed crate-wide from the plugin root 🦀️.rs.)
 
-use crate::artifacts::layout::mutations::change_data_fields::mutation::ChangeDataFields;
+use crate::artifacts::layout::mutations::change_data_fields::ChangeDataFields;
 use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutSnapshot;
 use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
@@ -43,7 +43,7 @@ use crate::editor::layout::engine::scene::LayoutEngine;
 //#region 🔖️Constants
 pub const LAYOUT_PLAY_APP_ID: &str = "layout-play";
 pub use blueprint::{LAYOUT_PLAY_BODY_BLUEPRINT, LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_WINDOW_BLUEPRINT};
-pub use catalogue_panel::LAYOUT_PLAY_BODY_CATALOGUE;
+pub(crate) use catalogue_panel::LAYOUT_PLAY_BODY_CATALOGUE;
 pub use document_panel::LAYOUT_PLAY_BODY_DOCUMENT;
 pub use inspection_panel::LAYOUT_PLAY_BODY_INSPECTION;
 pub use preflight_panel::{LAYOUT_PLAY_BODY_PREFLIGHT, LAYOUT_PLAY_PREFLIGHT_TAB_ID};
@@ -263,7 +263,7 @@ impl semio_framework::ToolJobFactory for LayoutRetainedCommandJobFactory {
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutRetainedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<LayoutPlayApp>;
+    type Owner = EditorApp<LayoutPlayApp>;
     const TOOL_IDS: &'static [&'static str] = LAYOUT_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
@@ -282,13 +282,13 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutRetainedComma
 struct LayoutRetainedProofs;
 impl LayoutRetainedProofs {
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<LayoutPlayApp>,
+        owner: EditorApp<LayoutPlayApp>,
         owner_file: "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.layout.layout@1/*#editor",
         document_schema: "layout.layout",
         factory: "LayoutRetainedCommandJobFactory",
         factory_type: LayoutRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+        contract: ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
         tools: ["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "setLocale", "engagementSubmit"]
     }
 }
@@ -296,17 +296,17 @@ impl LayoutRetainedProofs {
 struct LayoutExportProofs;
 impl LayoutExportProofs {
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<LayoutPlayApp>,
+        owner: EditorApp<LayoutPlayApp>,
         owner_file: "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.layout.layout@1/*#editor",
         document_schema: "layout.layout",
         factory: "LayoutExportJobFactory",
         factory_type: LayoutExportJobFactory,
         tools: {
-            "exportPng" => semio_framework::ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
-            "exportSvg" => semio_framework::ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
-            "exportPdf" => semio_framework::ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
-            "exportPackage" => semio_framework::ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
+            "exportPng" => ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
+            "exportSvg" => ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
+            "exportPdf" => ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
+            "exportPackage" => ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
         }
     }
 }

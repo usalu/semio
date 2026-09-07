@@ -166,7 +166,7 @@ pub(crate) struct SurfaceResizeLaneAdmissionRejected {
 
 impl SurfaceResizeLaneAdmissionRejected {
     pub(crate) fn close_step(&mut self) -> bool {
-        self.operation.take().is_some();
+        self.operation.take();
         self.operation.is_none()
     }
 

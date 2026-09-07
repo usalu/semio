@@ -14,7 +14,7 @@ pub struct SetFmt {
 impl protocol::MutationKind<WavSnapshot, WavMutation> for SetFmt {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "fmt", kind: "set-fmt", record: "SetFmt" };
 
-    fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<<WavMutation as protocol::Mutation<WavSnapshot>>::Diff> {
+    fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<<WavMutation as Mutation<WavSnapshot>>::Diff> {
         agg_diff(&WavMutation::SetFmt(self.clone()), base)
     }
     fn inverse(&self, base: &WavSnapshot) -> Vec<WavMutation> {

@@ -85,7 +85,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦move-block-to-step/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦move-block-to-step/🧪️tests/🧩️no-ops-when-the-block-stays-at-its-index-in-its-own-step/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦move-block-to-step/🧪️tests/🧩️no-ops-when-the-55392a/🦀️.rs"]
                                     mod tests_no_ops_when_the_block_stays_at_its_index_in_its_own_step;
                                 }
                                 #[path = "."]
@@ -97,7 +97,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-step/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-step/🧪️tests/🚪️no-ops-when-the-step-already-sits-at-that-index/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-step/🧪️tests/🚪️no-ops-when-the-step-d924f1/🦀️.rs"]
                                     mod tests_no_ops_when_the_step_already_sits_at_that_index;
                                 }
                                 #[path = "."]
@@ -109,7 +109,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-block/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-block/🧪️tests/🧩️rejects-a-block-for-a-step-that-does-not-exist/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-block/🧪️tests/🧩️rejects-a-block-for-a-5cc5b4/🦀️.rs"]
                                     mod tests_rejects_a_block_for_a_step_that_does_not_exist;
                                 }
                                 #[path = "."]
@@ -133,7 +133,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-block/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-block/🧪️tests/🧩️rejects-deleting-a-block-missing-from-an-existing-step/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-block/🧪️tests/🧩️rejects-deleting-a-25d9e0/🦀️.rs"]
                                     mod tests_rejects_deleting_a_block_missing_from_an_existing_step;
                                 }
                                 #[path = "."]
@@ -145,7 +145,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🚫️rejects-deleting-a-step-the-scene-does-not-hold/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🚫️rejects-deleting-a-5162d3/🦀️.rs"]
                                     mod tests_rejects_deleting_a_step_the_scene_does_not_hold;
                                 }
                                 #[path = "."]
@@ -157,7 +157,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-form-title/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-form-title/🧪️tests/⚓️titles-an-untitled-survey/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-form-title/🧪️tests/⚓️titles-an-a340b6/🦀️.rs"]
                                     mod tests_titles_an_untitled_survey;
                                 }
                                 #[path = "."]
@@ -169,7 +169,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-block/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-block/🧪️tests/🧩️no-ops-when-the-replacement-block-is-identical/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-block/🧪️tests/🧩️no-ops-when-the-563fec/🦀️.rs"]
                                     mod tests_no_ops_when_the_replacement_block_is_identical;
                                 }
                                 #[path = "."]
@@ -181,7 +181,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-step-description/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-step-description/🧪️tests/📖️no-ops-when-clearing-an-already-absent-description/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-step-description/🧪️tests/📖️no-ops-when-669699/🦀️.rs"]
                                     mod tests_no_ops_when_clearing_an_already_absent_description;
                                 }
                                 #[path = "."]
@@ -193,7 +193,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-step/🦠️mutation/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-step/🧪️tests/📖️no-ops-when-the-step-already-carries-that-title/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-step/🧪️tests/📖️no-ops-when-the-step-af133f/🦀️.rs"]
                                     mod tests_no_ops_when_the_step_already_carries_that_title;
                                 }
                             }
@@ -557,7 +557,7 @@ pub mod viewer {
 #[path = "../../🦀️.rs"]
 mod plugin;
 pub use plugin::FormsApps;
-semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::FormsApps);
+semio_framework_plugin::plugin_exports!(plugin::plugin, FormsApps);
 
 //#region 📚️Examples
 #[path = "."]

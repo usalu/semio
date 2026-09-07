@@ -317,9 +317,7 @@ impl MemberHistoryDictionaryOwner {
                 if let Some(record) = self.scanner.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.observe_record_header().map_err(diagnostic)? {
                     cx.consume_fuel(1);
                     self.transition = "record";
-                    if let Some(mut consumed) = self.pending.take() {
-                        consumed.value = 0;
-                    }
+                    self.pending = None;
                     if (matches!(record.kind(), 1 | 3 | 8) && record.flags() != 2) || (matches!(record.kind(), 64 | 65) && record.flags() != 0) {
                         return Err(MemberOpenDiagnostic::Malformed);
                     }
@@ -354,7 +352,7 @@ impl MemberHistoryDictionaryOwner {
             }
             cx.consume_fuel(1);
             self.transition = if payload { "payload" } else { "framing-release" };
-            let mut pending = self.pending.take().unwrap();
+            let pending = self.pending.take().unwrap();
             let result = if payload {
                 if matches!(self.record.as_ref().map(RetainedSprRecordObservation::kind), Some(8) | Some(64)) {
                     let expected: &[u8] = if self.record.as_ref().unwrap().kind() == 8 { &[1, 0] } else { &[1, 0, 0, 0] };
@@ -373,7 +371,6 @@ impl MemberHistoryDictionaryOwner {
             } else {
                 Ok(())
             };
-            pending.value = 0;
             result?;
             return Ok(());
         }
@@ -485,11 +482,8 @@ impl ErasedSnapshotRetirement for MemberHistoryDictionaryOwner {
             if bytes == 0 {
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
-            if let Some(mut pending) = self.pending.take() {
-                pending.value = 0;
-            } else if let Some(byte) = self.lookup_byte.as_mut() {
-                *byte = 0;
-                self.lookup_byte.take();
+            if self.pending.take().is_none() {
+                self.lookup_byte = None;
             }
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 1 });
         }

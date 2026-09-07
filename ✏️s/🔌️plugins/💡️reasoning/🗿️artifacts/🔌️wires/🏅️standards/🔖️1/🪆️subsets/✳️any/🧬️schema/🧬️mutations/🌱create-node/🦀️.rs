@@ -1,10 +1,9 @@
 //! 🌱 Wires mutation — `CreateNode`: brings one board node into existence (full initial payload,
 //! id-keyed per `📓️derivation-rules.md` rule 2).
 
-use crate::artifacts::wires::diff::{board_after_add_node, diff_board_fixture, WiresDiff};
+use crate::artifacts::wires::diff::WiresDiff;
 use crate::artifacts::wires::mutations::WiresMutation;
 use crate::artifacts::wires::schema::entity_id;
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
 

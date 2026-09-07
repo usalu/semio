@@ -16,7 +16,7 @@ pub struct RemoveStream {
 impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for RemoveStream {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "stream", kind: "remove-stream", record: "RemoveStream" };
 
-    fn diff(&self, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<<SemioVideoMutation as protocol::Mutation<SemioVideoSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<<SemioVideoMutation as Mutation<SemioVideoSnapshot>>::Diff> {
         agg_diff(&SemioVideoMutation::RemoveStream(self.clone()), base)
     }
     fn inverse(&self, base: &SemioVideoSnapshot) -> Vec<SemioVideoMutation> {

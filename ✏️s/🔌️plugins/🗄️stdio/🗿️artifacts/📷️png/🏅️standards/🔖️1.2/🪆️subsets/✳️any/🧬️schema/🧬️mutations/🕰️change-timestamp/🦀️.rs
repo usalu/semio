@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative change-timestamp mutation.
-use crate::artifacts::png::schema::diff::{self, *};
+use crate::artifacts::png::schema::diff::*;
 use crate::artifacts::png::schema::mutations::PngMutation;
 use crate::artifacts::png::schema::snapshot::*;
 
@@ -27,12 +27,11 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeTimestampMutatio
         protocol::MutationOutcome::new(contribute(base, *time))
     }
     fn inverse(&self, base: &PngSnapshot) -> Vec<PngMutation> {
-        let Self { time } = self;
         let outcome = <Self as protocol::MutationKind<PngSnapshot, PngMutation>>::diff(self, base);
         if <PngDiff as protocol::DiffAlgebra<PngSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
-        vec![PngMutation::ChangeTimestamp(crate::artifacts::png::schema::mutations::ChangeTimestampMutation { time: base.time })]
+        vec![PngMutation::ChangeTimestamp(ChangeTimestampMutation { time: base.time })]
     }
     fn label(&self) -> String {
         "change timestamp".into()

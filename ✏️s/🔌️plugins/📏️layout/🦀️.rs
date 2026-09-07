@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the layout editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum LayoutApps: PluginApp {
-        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::layout::LayoutPlayApp>>),
-        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::layout::LayoutViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::layout::LayoutPlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::layout::LayoutViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -31,12 +31,12 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// persists edits back to the open document. No quota declared: layout's ~20 `Effect` call sites
 /// (`DispatchAction`/`DownloadMediaExport`) are per-turn UI/export effects with no evidence of
 /// long-running computation, large held buffers, or high-frequency timers.
-pub fn plugin() -> Result<Plugin<LayoutApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<LayoutApps>, PluginAssemblyError> {
     Plugin::<LayoutApps>::builder("layout")
         .label("Layout")
         .version("0.1.0")
         .package_id("semio:layout")
-        .artifact(crate::artifacts::layout::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::layout::declaration().map_err(PluginAssemblyError::definition)?)
         .editor::<crate::editor::layout::LayoutPlayApp>(crate::editor::layout::create_layout_app())
         .editor_mutation_roster::<crate::editor::layout::LayoutPlayApp>()
         .viewer::<crate::viewer::layout::LayoutViewer>(crate::viewer::layout::create_layout_viewer())

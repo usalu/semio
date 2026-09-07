@@ -14,7 +14,6 @@ use crate::app_surface::{DisplayMode, ResultDisplay};
 use crate::artifacts::fem3d::{Fem3dSnapshot, FemCamera};
 use crate::editor::fem3d::config::Fem3dConfig;
 use semio_framework_plugin::{built_text_node, BuiltNode, Label};
-use semio_framework_ui_contract::{Buildable, HasChildren};
 
 /// 🪟️ The manifest's Results window kind id.
 pub const FEM3D_WINDOW_RESULTS: &str = "fem3d-results";

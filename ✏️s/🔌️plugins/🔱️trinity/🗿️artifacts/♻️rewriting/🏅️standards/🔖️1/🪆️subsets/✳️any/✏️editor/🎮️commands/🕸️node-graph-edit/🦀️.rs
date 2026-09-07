@@ -95,8 +95,8 @@ fn delete_rule_clause(state: &mut RewritingSnapshot, node_id: &str) -> bool {
         }
     };
     if changed {
-        state.lhs_json = pack::to_json_string(&lhs).unwrap_or_default();
-        state.rhs_json = pack::to_json_string(&rhs).unwrap_or_default();
+        state.lhs_json = pack::to_json_string(&lhs);
+        state.rhs_json = pack::to_json_string(&rhs);
         state.rule_layout.remove(node_id);
     }
     changed

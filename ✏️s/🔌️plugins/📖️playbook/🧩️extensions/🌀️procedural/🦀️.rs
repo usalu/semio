@@ -4,7 +4,6 @@ use flow::playbook::{visible_blocks, PlaybookBlock};
 use flow::{export_solid_json, import_solid_json, tessellate_geometry};
 use flow::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
 use protocol::{Mutation, MutationDiff};
-use semio_framework::mesh_from_indexed;
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::plugin_app_close_prelude::*;
@@ -47,7 +46,7 @@ const SOLID_IMPORT_TOLERANCE: f64 = 0.1;
 /// 🗃️ Closed runtime app fleet for the procedural playbook module surface.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum ProceduralModuleApps: PluginApp {
-        Module(semio_framework_plugin::VcsArtifactApp<ModuleApp>),
+        Module(VcsArtifactApp<ModuleApp>),
     }
 }
 //#endregion 🗃️Apps
@@ -119,7 +118,7 @@ struct ModuleRenderPayload {
     /// an arbitrary `key -> f64` map and forwards every entry to `FlowHost::set_slider_value`) — no
     /// fixed schema spans all fixtures, so a typed `dsl::DslArtifact` derive doesn't apply here.
     #[dsl(value)]
-    params: dsl::DslValue,
+    params: DslValue,
     question_id: String,
     controller_id: String,
     surface: String,
@@ -133,7 +132,7 @@ impl store::ArtifactDsl for ModuleRenderPayload {
     fn envelope_id() -> &'static str {
         "playbook.procedural"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -170,8 +169,8 @@ impl store::ArtifactPack for ModuleRenderPayload {
 
 //#endregion 🔖️ArtifactCodec
 
-fn default_params_field() -> dsl::DslValue {
-    dsl::DslValue::Null
+fn default_params_field() -> DslValue {
+    DslValue::Null
 }
 
 /// 🌱️ The module's default document — the hex-column fixture with its stock procedural params. Used
@@ -187,7 +186,7 @@ fn default_payload() -> ModuleRenderPayload {
     }
 }
 
-fn params_as_json(params: &dsl::DslValue) -> Value {
+fn params_as_json(params: &DslValue) -> Value {
     json_from_dsl_value(params)
 }
 
@@ -207,7 +206,7 @@ enum ModulePayloadMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for ModulePayloadMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -656,7 +655,7 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> U
     // takes `&PlaybookValues` (`HashMap<String, DslValue>`) — first-party already, no `serde_json`
     // boundary here (the prior doc comment claiming a `serde_json::Map<String, serde_json::Value>`
     // signature was stale). Converted field-by-field through `pack`'s own `json_to_dsl_value`.
-    let values_dsl: std::collections::HashMap<String, protocol::DslValue> = values.iter().map(|(key, value)| (key.to_string(), json_to_dsl_value(value))).collect();
+    let values_dsl: HashMap<String, DslValue> = values.iter().map(|(key, value)| (key.to_string(), json_to_dsl_value(value))).collect();
     let visible = visible_blocks(step, &values_dsl);
     let mut children: Vec<UiNode> = visible
         .iter()
@@ -700,17 +699,17 @@ impl protocol::OpBinary for Command {
 pub struct ModuleApp;
 
 impl ArtifactApp for ModuleApp {
-    const DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.playbook.procedural", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+    const DIALECT: Dialect = Dialect { artifact_kind: "s.playbook.procedural", standard: StandardId("1"), subset: SubsetId::ANY };
     type Snapshot = ModuleRenderPayload;
     type Mutation = ModulePayloadMutation;
-    type Config = semio_framework_plugin::NoConfig;
-    type ConfigMutation = semio_framework_plugin::NoConfigMutation;
+    type Config = NoConfig;
+    type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = semio_framework_plugin::NoPresence;
-    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Presence = NoPresence;
+    type PresenceMutation = NoPresenceMutation;
+    type Transient = NoTransient;
+    type TransientMutation = NoTransientMutation;
 
     type Command = Command;
 
@@ -733,12 +732,12 @@ impl ArtifactApp for ModuleApp {
     /// 🎯️ The bridge the React/wgpu shells still speak (`{action,args}`) — parses the two solid
     /// media actions this module dispatches into `Command`; `format` defaults to `"obj"` (matching
     /// the handlers' pre-B1 defaults) and `data` (import's file-callback payload) defaults to empty.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Command, Fault> {
-        let format = args.and_then(|value| value.get("format")).and_then(dsl::DslValue::as_str).unwrap_or("obj").to_string();
+    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Command, Fault> {
+        let format = args.and_then(|value| value.get("format")).and_then(DslValue::as_str).unwrap_or("obj").to_string();
         match action {
             ACTION_EXPORT_SOLID => Ok(Command::ExportSolid { format }),
             ACTION_IMPORT_SOLID => {
-                let data = args.and_then(|value| value.get("data")).and_then(dsl::DslValue::as_str).unwrap_or("").to_string();
+                let data = args.and_then(|value| value.get("data")).and_then(DslValue::as_str).unwrap_or("").to_string();
                 Ok(Command::ImportSolid { format, data })
             }
             other => Err(Fault::from(format!("action '{other}' is not supported by {MODULE_APP_ID}"))),
@@ -748,11 +747,11 @@ impl ArtifactApp for ModuleApp {
     fn handle(
         command: &Command,
         doc: &ArtifactView<'_, ModuleRenderPayload>,
-        _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>,
+        _cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
-    ) -> Result<Emit<ModulePayloadMutation, semio_framework_plugin::NoConfigMutation, Self::DraftMutation>, Fault> {
+    ) -> Result<Emit<ModulePayloadMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             Command::ExportSolid { format } => {
                 let mut payload = doc.snapshot.clone();
@@ -767,7 +766,7 @@ impl ArtifactApp for ModuleApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
         let labels = resolve_labels::<ModuleLabels>();
         match body_key {
             BODY_PARAMS => render_params_body(doc.snapshot, labels),
@@ -781,7 +780,7 @@ impl ArtifactApp for ModuleApp {
 /// definition-time mistake) as a `PluginAssemblyError` this crate's `plugin()` entry point can
 /// propagate, instead of a guest panic that would trap the wasm instance for good (a trapped
 /// `wasm32-wasip2` instance cannot unwind — see `AppBuilder::try_build_definition`'s docs).
-fn create_module_app() -> Result<App, semio_framework_plugin::PluginAssemblyError> {
+fn create_module_app() -> Result<App, PluginAssemblyError> {
     App::try_from_builder(
         App::builder(MODULE_APP_ID, LocalizedLabel::native("Playbook Module Procedural", "Playbook-Modul Prozedural"))
             .document(["semio", "forms"])
@@ -810,21 +809,21 @@ fn solid_format_arg() -> ActionArgDef {
     ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), SOLID_MEDIA_FORMATS.iter().map(|format| ActionArgOption::new(*format, LocalizedLabel::data(format.to_uppercase()))).collect()).default_value("obj")
 }
 
-fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, semio_framework_plugin::PluginAssemblyError> {
+fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, PluginAssemblyError> {
     Plugin::<ProceduralModuleApps>::builder(MODULE_PLUGIN_ID).label("Playbook Module Procedural").version("0.1.0").foreign_document_codec::<ModuleApp>(MODULE_DOCUMENT_SCHEMA).document_app::<ModuleApp>(create_module_app()?).try_build()
 }
 
 fn module_extension_bundle() -> ExtensionBundle {
     ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", "0.1.0").extends("playbook").mode(ExecutionMode::Declarative).contributes_topic(
         "playbook.blockKind",
-        semio_framework_os_kernel::DslValue::object([
-            ("appId".to_string(), semio_framework_os_kernel::DslValue::String("playbook-play".to_string())),
-            ("blockKind".to_string(), semio_framework_os_kernel::DslValue::String("buildingComponent".to_string())),
-            ("label".to_string(), semio_framework_os_kernel::DslValue::String("Building Component".to_string())),
-            ("iconId".to_string(), semio_framework_os_kernel::DslValue::String("building".to_string())),
-            ("defaultValueJson".to_string(), semio_framework_os_kernel::DslValue::String(r#"{"height":6,"radius":0.5,"sides":6}"#.to_string())),
-            ("paramsBodyKey".to_string(), semio_framework_os_kernel::DslValue::String(BODY_PARAMS.to_string())),
-            ("previewBodyKey".to_string(), semio_framework_os_kernel::DslValue::String(BODY_PREVIEW.to_string())),
+        DslValue::object([
+            ("appId".to_string(), DslValue::String("playbook-play".to_string())),
+            ("blockKind".to_string(), DslValue::String("buildingComponent".to_string())),
+            ("label".to_string(), DslValue::String("Building Component".to_string())),
+            ("iconId".to_string(), DslValue::String("building".to_string())),
+            ("defaultValueJson".to_string(), DslValue::String(r#"{"height":6,"radius":0.5,"sides":6}"#.to_string())),
+            ("paramsBodyKey".to_string(), DslValue::String(BODY_PARAMS.to_string())),
+            ("previewBodyKey".to_string(), DslValue::String(BODY_PREVIEW.to_string())),
         ]),
     )
 }

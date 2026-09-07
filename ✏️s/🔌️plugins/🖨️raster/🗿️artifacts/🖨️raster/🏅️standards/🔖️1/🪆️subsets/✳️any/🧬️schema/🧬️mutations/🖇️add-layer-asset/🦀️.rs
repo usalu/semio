@@ -10,8 +10,8 @@
 //! "Attach a set-like member … inverse: remove").
 
 pub mod mutation {
-use crate::artifacts::raster::diff::{diff_add_asset, RasterDiff};
-use crate::artifacts::raster::mutations::{remove_layer_asset, RasterMutation};
+use crate::artifacts::raster::diff::RasterDiff;
+use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::{RasterImageAsset, RasterSnapshot};
 
 //#region 🔖️AddLayerAsset

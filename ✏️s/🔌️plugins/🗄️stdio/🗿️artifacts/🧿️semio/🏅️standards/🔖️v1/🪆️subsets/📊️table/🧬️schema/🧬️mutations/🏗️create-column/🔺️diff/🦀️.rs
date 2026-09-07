@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `CreateColumn`.
 
 use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::{SemioTableColumnList, SemioTableDiff, SemioTableRowList};
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
 
 //#region 🔖️Diff

@@ -1,7 +1,7 @@
 //! 🚫️ `delete-properties` — clears the object's `properties` CHILD slot. Idempotent; inverse
 //! escrows from BASE.
 
-use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::{SemioObjectMutation, create_properties};
+use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Payload

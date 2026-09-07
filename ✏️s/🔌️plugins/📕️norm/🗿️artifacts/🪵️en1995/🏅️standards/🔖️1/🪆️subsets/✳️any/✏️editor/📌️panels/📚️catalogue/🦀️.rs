@@ -4,7 +4,7 @@
 //! catalogue yet); the tab exists so the framework's workbench group has this app's slot reserved and
 //! the body key resolves instead of falling through to the unknown-body text node.
 
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, UiNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const BODY_CATALOGUE: &str = "norm.en1995.play.catalogue";

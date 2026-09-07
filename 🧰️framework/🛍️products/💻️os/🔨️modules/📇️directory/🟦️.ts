@@ -165,6 +165,8 @@ export function fold(model: DirectoryReadModel, event: DirectoryEvent): Director
     case "space.archived":
       withSpace(body.spaceId, (space) => {
         space.view.kind = "archive";
+        for (const member of space.members) member.role = "spectator";
+        if (space.view.role === "author") space.view.role = "spectator";
         space.view.updatedAtMs = event.recordedAtMs;
       });
       break;

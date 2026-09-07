@@ -76,7 +76,7 @@ impl PlaygroundCommandJobFactory {
     }
 }
 
-impl semio_framework::ToolJobFactory for PlaygroundCommandJobFactory {
+impl ToolJobFactory for PlaygroundCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<PlaygroundEditor>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<PlaygroundEditor>>;
 
@@ -115,7 +115,7 @@ impl semio_framework::ToolJobFactory for PlaygroundCommandJobFactory {
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for PlaygroundCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<PlaygroundEditor>;
+    type Owner = EditorApp<PlaygroundEditor>;
     const TOOL_IDS: &'static [&'static str] = PLAYGROUND_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = PLAYGROUND_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] =
@@ -310,14 +310,14 @@ impl ArtifactEditor for PlaygroundEditor {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<PlaygroundEditor>,
+        owner: EditorApp<PlaygroundEditor>,
         owner_file: "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.demonstrator.playground@1/*#editor",
         document_schema: "playground.playground",
         factory: "PlaygroundCommandJobFactory",
         factory_type: PlaygroundCommandJobFactory,
         tools: {
-            "changeSchema" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "changeSchema" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
         }
     }
 

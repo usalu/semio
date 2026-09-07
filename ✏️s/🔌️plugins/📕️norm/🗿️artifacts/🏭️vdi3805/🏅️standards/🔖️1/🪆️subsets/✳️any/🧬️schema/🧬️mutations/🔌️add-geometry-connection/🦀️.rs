@@ -2,8 +2,7 @@
 //! geometry id plus the connection's own stable `id`.
 
 
-use crate::artifacts::vdi3805::{ConnectionPoint, Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
-use crate::artifacts::vdi3805::mutations::remove_geometry_connection;
+use crate::artifacts::vdi3805::{ConnectionPoint, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

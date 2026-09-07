@@ -479,7 +479,7 @@ impl SnapshotChunkBytes {
 
     /// @emoji 🧮️ Returns the exact retained fixed backing debit.
     pub fn backing_bytes(&self) -> usize {
-        self.backing.as_ref().map_or(0, |backing| std::mem::size_of_val(backing.as_ref()))
+        self.backing.as_ref().map_or(0, |backing| size_of_val(backing.as_ref()))
     }
 
     /// @emoji 🧹️ Retires the single fixed backing in one explicit close opportunity.

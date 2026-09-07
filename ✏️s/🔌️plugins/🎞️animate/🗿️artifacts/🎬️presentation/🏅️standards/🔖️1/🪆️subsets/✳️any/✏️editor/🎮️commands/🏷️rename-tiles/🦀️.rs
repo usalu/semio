@@ -2,7 +2,7 @@
 
 #![allow(clippy::result_large_err)]
 
-use crate::artifacts::presentation::mutations::rename_tile::mutation::RenameTile;
+use crate::artifacts::presentation::mutations::rename_tile::RenameTile;
 use crate::artifacts::presentation::op::PresentationMutation;
 use crate::artifacts::presentation::PresentationSnapshot;
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};

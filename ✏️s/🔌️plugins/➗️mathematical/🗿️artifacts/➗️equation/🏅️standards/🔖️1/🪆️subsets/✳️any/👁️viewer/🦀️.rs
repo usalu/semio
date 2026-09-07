@@ -13,7 +13,7 @@ use crate::artifacts::equation::{EquationSnapshot, EQUATION_DIALECT, MATH_DOCUME
 use crate::viewer::equation::modes::view;
 use crate::viewer::equation::modes::view::windows::geometry;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{ui_text, ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -66,11 +66,12 @@ impl ArtifactViewer for EquationViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let node = match body_key {
             geometry::BODY_KEY => geometry::render(doc.snapshot),
-            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        }?;
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 }
 //#endregion 🔖️Viewer

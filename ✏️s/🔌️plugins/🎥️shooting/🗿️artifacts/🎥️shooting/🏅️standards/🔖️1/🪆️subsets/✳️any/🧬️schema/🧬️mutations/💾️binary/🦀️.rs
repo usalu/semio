@@ -36,7 +36,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = ShootingMutation::SetActiveShot(crate::artifacts::shooting::schema::mutations::set_active_shot::mutation::SetActiveShot { shot_id: Some("s1".into()) });
+        let operation = ShootingMutation::SetActiveShot(crate::artifacts::shooting::schema::mutations::set_active_shot::SetActiveShot { shot_id: Some("s1".into()) });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -49,7 +49,7 @@ mod tests {
         let mut store = store::ArtifactStore::<ShootingSnapshot, ShootingMutation>::new(store::create_document_envelope(crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_snapshot(), None))
             .expect("valid artifact store fixture");
         let asset = crate::artifacts::shooting::ShootingAsset { id: "a1".into(), name: "Asset".into(), url: "/mesh/a1.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
-        let create = crate::artifacts::shooting::schema::mutations::create_asset::mutation::CreateAsset { asset, index: Some(0) };
+        let create = crate::artifacts::shooting::schema::mutations::create_asset::CreateAsset { asset, index: Some(0) };
         store.dispatch(ArtifactCommand::Apply { mutations: vec![ShootingMutation::CreateAsset(create)], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);

@@ -1,8 +1,8 @@
 //! 🧩 Block3d mutation — `AddRepresentationAttribute`: a member of a representation's nested `attributes`.
 
-use crate::{BlockAttribute, BlockRepresentation};
+use crate::BlockAttribute;
 use crate::artifacts::block3d::Block3dSnapshot;
-use crate::artifacts::block3d::diff::{Block3dDiff, Block3dRepresentationsDelta, Block3dRepresentationsPatch, Block3dRepresentationsPatchEntry};
+use crate::artifacts::block3d::diff::Block3dDiff;
 use crate::artifacts::block3d::mutations::Block3dMutation;
 
 //#region 🔖️Mutation

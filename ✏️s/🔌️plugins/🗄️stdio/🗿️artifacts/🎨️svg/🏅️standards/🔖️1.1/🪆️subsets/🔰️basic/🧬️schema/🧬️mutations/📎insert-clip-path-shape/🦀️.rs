@@ -17,7 +17,7 @@ pub struct InsertClipPathShape {
 impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for InsertClipPathShape {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "clip-path-shape", kind: "insert-clip-path-shape", record: "InsertClipPathShape" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgBasicMutation as protocol::Mutation<SvgSnapshot>>::Diff> {
+    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgBasicMutation as Mutation<SvgSnapshot>>::Diff> {
         agg_diff(&SvgBasicMutation::InsertClipPathShape(self.clone()), base)
     }
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {

@@ -13,12 +13,12 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the block editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum BlockApps: PluginApp {
-        Block2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::block2d::Block2dPlayApp>>),
-        Block2dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::block2d::Block2dViewer>>),
-        Block3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::block3d::Block3dPlayApp>>),
-        Block3dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::block3d::Block3dViewer>>),
-        Block5dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::block5d::Block5dPlayApp>>),
-        Block5dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::block5d::Block5dViewer>>),
+        Block2dEditor(VcsArtifactApp<EditorApp<crate::editor::block2d::Block2dPlayApp>>),
+        Block2dViewer(VcsArtifactApp<ViewerApp<crate::viewer::block2d::Block2dViewer>>),
+        Block3dEditor(VcsArtifactApp<EditorApp<crate::editor::block3d::Block3dPlayApp>>),
+        Block3dViewer(VcsArtifactApp<ViewerApp<crate::viewer::block3d::Block3dViewer>>),
+        Block5dEditor(VcsArtifactApp<EditorApp<crate::editor::block5d::Block5dPlayApp>>),
+        Block5dViewer(VcsArtifactApp<ViewerApp<crate::viewer::block5d::Block5dViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -201,7 +201,7 @@ pub struct BlockMeta {
 /// crate's migration proof: one `OnArtifactKind` event per owned kind, read live from each
 /// dimension's own `artifact_kind().id`, `Isolated` execution, one `documents.write` ask covering
 /// all three editors' persisted mutations.
-pub fn plugin() -> Result<Plugin<BlockApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<BlockApps>, PluginAssemblyError> {
     Plugin::<BlockApps>::builder("block")
         .label("Block")
         .version("0.1.0")

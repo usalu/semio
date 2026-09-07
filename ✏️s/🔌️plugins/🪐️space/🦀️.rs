@@ -580,12 +580,12 @@ fn space_retained_edit<M>(prefix: &'static str, forward: M, inverse: Vec<M>, des
         forwards: vec![forward],
         inverse,
         mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            mutation_id: Some(MutationId(format!("{id}#0"))),
             dependencies: Vec::new(),
             base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            author_id: Some(ActorId(authority.actor().to_string())),
             timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            undo_policy: UndoPolicy::ExactBaseOnly,
             payload_hash: None,
             semantic_kind: None,
             label: None,
@@ -778,11 +778,11 @@ where
 /// 🗃️ Closed runtime app fleet for the home, space-index, and studio surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum SpaceApps: PluginApp {
-        HomeEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::home::HomeApp>>),
-        HomeViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::home::HomeViewer>>),
-        SpaceIndexEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::space_index::SpaceIndexEditor>>),
-        SpaceIndexViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::space_index::SpaceIndexViewer>>),
-        Studio(semio_framework_plugin::VcsArtifactApp<crate::engine::space::SpaceApp>),
+        HomeEditor(VcsArtifactApp<EditorApp<crate::editor::home::HomeApp>>),
+        HomeViewer(VcsArtifactApp<ViewerApp<crate::viewer::home::HomeViewer>>),
+        SpaceIndexEditor(VcsArtifactApp<EditorApp<crate::editor::space_index::SpaceIndexEditor>>),
+        SpaceIndexViewer(VcsArtifactApp<ViewerApp<crate::viewer::space_index::SpaceIndexViewer>>),
+        Studio(VcsArtifactApp<crate::engine::space::SpaceApp>),
     }
 }
 
@@ -801,18 +801,18 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 // (in scope via `plugin_app_close_prelude::*` above), same poll-once guarantee as every other E5
 // executor-bridge call site in this crate; the `space` artifact/editor/viewer calls below are
 // already sync (no bridge needed).
-pub fn plugin() -> Result<Plugin<SpaceApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<SpaceApps>, PluginAssemblyError> {
     Plugin::<SpaceApps>::builder("space")
         .label("S Studio")
         .version("0.1.0")
         .package_id("semio:space")
         .local_backbone_storage()
-        .artifact(resolve_ready(crate::artifacts::home::declaration()).map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(resolve_ready(crate::artifacts::home::declaration()).map_err(PluginAssemblyError::definition)?)
         .editor::<crate::editor::home::HomeApp>(resolve_ready(crate::editor::home::create_home_app()))
         .editor_mutation_roster::<crate::editor::home::HomeApp>()
         .viewer::<crate::viewer::home::HomeViewer>(resolve_ready(crate::viewer::home::create_home_viewer()))
         .viewer_mutation_roster::<crate::viewer::home::HomeViewer>()
-        .artifact(crate::artifacts::space::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::space::declaration().map_err(PluginAssemblyError::definition)?)
         .editor::<crate::editor::space_index::SpaceIndexEditor>(crate::editor::space_index::create_space_index_editor())
         .editor_mutation_roster::<crate::editor::space_index::SpaceIndexEditor>()
         .viewer::<crate::viewer::space_index::SpaceIndexViewer>(crate::viewer::space_index::create_space_index_viewer())
@@ -913,7 +913,7 @@ mod interactive_job_catalog_tests {
 
     /// 🚦️ Every id the app declares on any surface an interactive dispatch can address, with the
     /// disposition `validate_ui_dispatch_classification` will read for it.
-    fn declared_dispositions(definition: &semio_framework_plugin::AppDefinition) -> BTreeMap<String, InteractiveJobClassification> {
+    fn declared_dispositions(definition: &AppDefinition) -> BTreeMap<String, InteractiveJobClassification> {
         let mut declared = BTreeMap::new();
         for action in definition.window_kinds.iter().flat_map(|window| window.actions.iter()) {
             declared.insert(action.id.clone(), action.semantics.execution.interactive_job);
@@ -976,11 +976,11 @@ mod interactive_job_catalog_tests {
         F::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id.to_string()).collect()
     }
 
-    fn migrated_ids(definition: &semio_framework_plugin::AppDefinition) -> BTreeSet<String> {
+    fn migrated_ids(definition: &AppDefinition) -> BTreeSet<String> {
         declared_dispositions(definition).into_iter().filter(|(_, disposition)| *disposition == InteractiveJobClassification::Migrated).map(|(id, _)| id).collect()
     }
 
-    fn unclassified_ids(definition: &semio_framework_plugin::AppDefinition) -> BTreeSet<String> {
+    fn unclassified_ids(definition: &AppDefinition) -> BTreeSet<String> {
         declared_dispositions(definition).into_iter().filter(|(_, disposition)| *disposition == InteractiveJobClassification::Unclassified).map(|(id, _)| id).collect()
     }
 
@@ -1074,7 +1074,7 @@ mod interactive_job_catalog_tests {
     }
 
     /// 🪪️ The language-agnostic identity tuple, read once and shared by every authority assertion below.
-    fn identity_fixture() -> serde_json::Value {
+    fn identity_fixture() -> Value {
         serde_json::from_str(IDENTITY_FIXTURE).expect("plugin-identity fixture is JSON")
     }
 
@@ -1108,7 +1108,7 @@ mod interactive_job_catalog_tests {
             assert!(app.id.starts_with(prefix), "{} is not owned by {plugin_id} under the canonical s.<plugin>.<kind> grammar", app.id);
         }
 
-        let catalog: serde_json::Value = serde_json::from_str(DEPLOYMENT_CATALOG).expect("deployment catalog is JSON");
+        let catalog: Value = serde_json::from_str(DEPLOYMENT_CATALOG).expect("deployment catalog is JSON");
         let row = catalog["modules"]
             .as_array()
             .expect("deployment catalog modules")
@@ -1117,7 +1117,7 @@ mod interactive_job_catalog_tests {
             .unwrap_or_else(|| panic!("deployment catalog has no row for {plugin_id}"));
         assert_eq!(row["directoryName"], fixture["moduleDirectoryName"]);
 
-        let registry: serde_json::Value = serde_json::from_str(GENERATED_REGISTRY).expect("generated registry is JSON");
+        let registry: Value = serde_json::from_str(GENERATED_REGISTRY).expect("generated registry is JSON");
         let entry = registry
             .as_array()
             .expect("generated registry rows")
@@ -1132,8 +1132,8 @@ mod interactive_job_catalog_tests {
     /// 🏗️ The whole guest assembly, named. `plugin()` runs `build_definition` for every registered
     /// surface — which is where `validate_interactive_job_classification` rejects an `Unclassified`
     /// id — plus the package-identity and artifact-declaration preflights.
-    fn assembled_plugin() -> semio_framework_plugin::Plugin<crate::SpaceApps> {
-        match crate::plugin() {
+    fn assembled_plugin() -> Plugin<SpaceApps> {
+        match plugin() {
             Ok(plugin) => plugin,
             Err(error) => panic!("plugin assembly rejected: {error:?}"),
         }
@@ -1159,27 +1159,27 @@ mod interactive_job_catalog_tests {
     /// same panic the guest takes on its first turn.
     #[semio_framework_async_macros::async_test]
     async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
-        let mut studio = semio_framework_plugin::VcsArtifactApp::<crate::engine::space::SpaceApp>::with_registry(
+        let mut studio = VcsArtifactApp::<crate::engine::space::SpaceApp>::with_registry(
             Default::default(),
-            semio_framework_plugin::AppActionRegistry::from_definition(&crate::engine::space::create_space_app().await.definition),
+            AppActionRegistry::from_definition(&crate::engine::space::create_space_app().await.definition),
         )
         .await;
-        let mut home = semio_framework_plugin::VcsArtifactApp::<EditorApp<crate::editor::home::HomeApp>>::with_registry(
+        let mut home = VcsArtifactApp::<EditorApp<crate::editor::home::HomeApp>>::with_registry(
             Default::default(),
-            semio_framework_plugin::AppActionRegistry::from_definition(&crate::editor::home::create_home_app().await),
+            AppActionRegistry::from_definition(&crate::editor::home::create_home_app().await),
         )
         .await;
-        let mut index = semio_framework_plugin::VcsArtifactApp::<EditorApp<crate::editor::space_index::SpaceIndexEditor>>::with_registry(
+        let mut index = VcsArtifactApp::<EditorApp<crate::editor::space_index::SpaceIndexEditor>>::with_registry(
             Default::default(),
-            semio_framework_plugin::AppActionRegistry::from_definition(&crate::editor::space_index::create_space_index_editor()),
+            AppActionRegistry::from_definition(&crate::editor::space_index::create_space_index_editor()),
         )
         .await;
         assert_eq!(<crate::engine::space::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), 15);
         assert_eq!(<EditorApp<crate::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 18);
         assert_eq!(<EditorApp<crate::editor::space_index::SpaceIndexEditor> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 14);
-        semio_framework_plugin::testkit::close_registered_fixture_app(&mut studio);
-        semio_framework_plugin::testkit::close_registered_fixture_app(&mut home);
-        semio_framework_plugin::testkit::close_registered_fixture_app(&mut index);
+        testkit::close_registered_fixture_app(&mut studio);
+        testkit::close_registered_fixture_app(&mut home);
+        testkit::close_registered_fixture_app(&mut index);
     }
 }
 //#endregion 🧪️InteractiveJobCatalogTests

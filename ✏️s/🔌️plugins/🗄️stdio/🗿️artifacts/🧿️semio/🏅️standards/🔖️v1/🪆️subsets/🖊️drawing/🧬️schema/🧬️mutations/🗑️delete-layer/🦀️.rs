@@ -1,6 +1,6 @@
 //! 🗑️️ `delete-layer` — removes an id-keyed `DrawLayer`, captures its full payload for `inverse`.
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::{SemioDrawingMutation, create_layer};
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Payload

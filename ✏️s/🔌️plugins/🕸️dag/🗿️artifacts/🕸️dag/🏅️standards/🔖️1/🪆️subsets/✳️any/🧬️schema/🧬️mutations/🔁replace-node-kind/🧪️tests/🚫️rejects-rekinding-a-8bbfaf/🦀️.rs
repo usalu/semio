@@ -17,13 +17,13 @@ const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> DagSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> DagSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> DagMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ A rejected `replace-node-kind` leaves the document byte-identical to the committed `after`.
@@ -66,12 +66,12 @@ async fn inverse_has_no_old_kind_to_restore() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: DagSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: DagSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "replace-node-kind/rejects-rekinding-a-missing-node: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "replace-node-kind/rejects-rekinding-a-missing-node: committed mutation JSON is not canonical");
 }

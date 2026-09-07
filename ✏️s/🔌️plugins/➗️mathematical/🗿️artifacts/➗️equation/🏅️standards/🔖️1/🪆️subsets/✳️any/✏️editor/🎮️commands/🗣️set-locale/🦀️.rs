@@ -13,7 +13,7 @@ pub struct SetLocale {
 }
 
 pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
-    Ok(Emit::config(vec![EquationConfigMutation::SetLocale { value: payload.value.clone() }]))
+    Ok(Emit::config(vec![EquationConfigMutation::SetLocale(crate::editor::equation::config::SetLocale { value: payload.value.clone() })]))
 }
 
 //#region 🧪️Tests

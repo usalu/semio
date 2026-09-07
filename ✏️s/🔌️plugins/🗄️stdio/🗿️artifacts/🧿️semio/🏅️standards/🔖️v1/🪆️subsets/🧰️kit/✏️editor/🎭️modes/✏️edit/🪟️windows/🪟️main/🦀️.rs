@@ -5,7 +5,7 @@
 //! root's `handle()` responsibility.
 
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use semio_framework_plugin::{mesh_from_kind, world3d_meshes_json_from_kinds, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::{world3d_meshes_json_from_kinds, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;

@@ -1,7 +1,7 @@
 //! 🪧 Block3d mutation — `ChangeVortexLabel`: a vortex's optional display `label`.
 
-use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexTemplate};
-use crate::artifacts::block3d::diff::{Block3dDiff, Block3dVorticesDelta, Block3dVorticesPatch, Block3dVorticesPatchEntry};
+use crate::artifacts::block3d::Block3dSnapshot;
+use crate::artifacts::block3d::diff::Block3dDiff;
 use crate::artifacts::block3d::mutations::Block3dMutation;
 
 //#region 🔖️Mutation

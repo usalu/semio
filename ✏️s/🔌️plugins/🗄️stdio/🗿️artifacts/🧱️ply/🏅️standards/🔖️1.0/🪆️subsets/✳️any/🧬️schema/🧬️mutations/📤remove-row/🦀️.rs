@@ -15,7 +15,7 @@ pub struct RemoveRow {
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for RemoveRow {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "row", kind: "remove-row", record: "RemoveRow" };
 
-    fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as protocol::Mutation<PlySnapshot>>::Diff> {
+    fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
         agg_diff(&PlyMutation::RemoveRow(self.clone()), base)
     }
     fn inverse(&self, base: &PlySnapshot) -> Vec<PlyMutation> {

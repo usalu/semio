@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `FlattenNode`.
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{DrawNodeDiff, NodePath, SemioDrawingDiff, diff_at_path, node_at};
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{DrawNodeDiff, SemioDrawingDiff, diff_at_path, node_at};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Diff

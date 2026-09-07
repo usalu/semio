@@ -13,7 +13,7 @@
 //! UNRESOLVED handle and `equation_scene` fails soft to an EMPTY point cloud — the state this
 //! case pins, and the state in which `move-point`'s own `mutation.target-missing` fires.
 
-use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::move_point::mutation::MovePoint;
+use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::move_point::MovePoint;
 use crate::artifacts::equation::{equation_geometry, EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::{FromValue, ToValue};
 

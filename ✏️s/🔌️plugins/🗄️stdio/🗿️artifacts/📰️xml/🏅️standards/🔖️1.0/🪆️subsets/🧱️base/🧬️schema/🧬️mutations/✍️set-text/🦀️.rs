@@ -1,7 +1,6 @@
 //! 🧬️ Direct set-text mutation owner.
-use crate::artifacts::xml::schema::diff::{diff_at_path, XmlAttrAdded, XmlAttrModified, XmlAttributesDiff, XmlChildAdded, XmlChildrenDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
+use crate::artifacts::xml::schema::diff::{diff_at_path, XmlDiff, XmlNodeDiff};
 use crate::artifacts::xml::schema::mutation_support::XmlNodePath;
-use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlNode};
 use crate::artifacts::xml::XmlSnapshot;
 
 #[path = "📝️text/🦀️.rs"]
@@ -25,7 +24,7 @@ pub enum SetTextMutation { Apply(SetTextPayload), Restore(XmlDiff) }
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetTextMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text", kind: "set-text", record: "SetText" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
+    fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
         match self {
             Self::Apply(payload) => protocol::MutationOutcome::new(diff_at_path(&payload.path.0, XmlNodeDiff::Text { text: Some(payload.text.clone()) })),
             Self::Restore(diff) => protocol::MutationOutcome::new(diff.clone()),

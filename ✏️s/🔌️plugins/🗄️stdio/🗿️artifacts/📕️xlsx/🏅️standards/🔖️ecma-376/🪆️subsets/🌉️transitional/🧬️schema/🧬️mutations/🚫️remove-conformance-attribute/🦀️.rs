@@ -12,7 +12,7 @@ pub struct RemoveConformanceAttribute {}
 impl protocol::MutationKind<XlsxSnapshot, XlsxTransitionalMutation> for RemoveConformanceAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "conformance-attribute", kind: "remove-conformance-attribute", record: "RemoveConformanceAttribute" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxTransitionalMutation as protocol::Mutation<XlsxSnapshot>>::Diff> {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxTransitionalMutation as Mutation<XlsxSnapshot>>::Diff> {
         agg_diff(&XlsxTransitionalMutation::RemoveConformanceAttribute(self.clone()), base)
     }
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxTransitionalMutation> {

@@ -92,14 +92,36 @@
     "committer": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["capacity", "roles", "children", "phases", "witnessSource", "retryOwner"],
+      "required": ["capacity", "roles", "children", "phases", "witnessSource", "retryOwner", "publicationOrder", "beforePublicAck", "publicationFailure", "ingressAuthority", "abandonedRequest", "documentFence"],
       "properties": {
         "capacity": { "const": 64 },
         "roles": { "const": ["map", "drawing", "value"] },
         "children": { "const": ["gismap-drawing", "gismap-value"] },
-        "phases": { "const": ["ready", "assembly", "journal", "verification", "committed", "closing"] },
+        "phases": { "const": ["ready", "assembly", "journal", "verification", "publishing", "published", "closing"] },
         "witnessSource": { "const": "sole-committed-wal-event" },
-        "retryOwner": { "const": "same-document-three-store-host" }
+        "retryOwner": { "const": "same-document-three-store-host" },
+        "publicationOrder": { "const": ["committed-wal-event", "actor-frontier", "public-checkpoint", "ledger-applied"] },
+        "beforePublicAck": { "const": { "ledgerApplied": false, "documentWrite": "retained", "state": "publishing" } },
+        "publicationFailure": { "const": { "ledgerApplied": false, "documentWrite": "retained", "retry": "same-event-same-owner" } },
+        "ingressAuthority": {
+          "const": {
+            "owner": "hub-private-sorted-binding-guards",
+            "bindings": ["user", "session", "space-authority", "membership"],
+            "documentWrite": "runtime-acquired",
+            "cutover": "durable-wal-receipt",
+            "delivery": "fresh-revalidation-under-same-guards",
+            "recovery": "committed-wal-provenance"
+          }
+        },
+        "abandonedRequest": {
+          "const": {
+            "owner": "runtime-document-maintenance",
+            "abortPhases": ["ready", "preflight", "assembly", "journal-no-receipt"],
+            "commitCutover": "awaiting-ack",
+            "postCutover": ["verification", "public-checkpoint", "ledger-applied"]
+          }
+        },
+        "documentFence": { "const": "mounted-actor-generation" }
       }
     },
     "visibility": {

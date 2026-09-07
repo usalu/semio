@@ -46,18 +46,21 @@ struct MutationAuthorityCommon {
     source_filename: String,
     descriptor_filename: String,
     domain_owners: BTreeMap<String, Vec<(String, String)>>,
+    aggregate_sources: BTreeMap<String, Vec<String>>,
 }
 
 #[derive(Debug)]
 struct MutationAggregateSourceAuthority {
     workspace_root: PathBuf,
     mutation_root: PathBuf,
+    #[cfg(test)]
     source_path: PathBuf,
     taxonomy_path: PathBuf,
     mutation_payload_facet: String,
     source_filename: String,
     descriptor_filename: String,
     domain_operations: Option<Vec<(String, String)>>,
+    component_roots: Vec<(String, Option<Vec<(String, String)>>)>,
 }
 
 fn mutation_authority_common(source: &Path, compiler_cwd: &Path) -> Result<MutationAuthorityCommon, String> {
@@ -76,12 +79,13 @@ fn mutation_authority_common(source: &Path, compiler_cwd: &Path) -> Result<Mutat
     let mutation_collection = mutation_authority_collection(&taxonomy)?;
     let mutation_payload_facet = mutation_authority_payload_facet(&taxonomy)?;
     let domain_owners = mutation_authority_domain_owners(&taxonomy, &mutation_collection)?;
-    Ok(MutationAuthorityCommon { workspace_root, source_path, taxonomy_path, mutation_collection, mutation_payload_facet, source_filename, descriptor_filename, domain_owners })
+    let aggregate_sources = mutation_authority_aggregate_sources(&taxonomy, &mutation_collection)?;
+    Ok(MutationAuthorityCommon { workspace_root, source_path, taxonomy_path, mutation_collection, mutation_payload_facet, source_filename, descriptor_filename, domain_owners, aggregate_sources })
 }
 
 fn mutation_source_authority(source: &Path, compiler_cwd: &Path) -> Result<MutationSourceAuthority, String> {
     let common = mutation_authority_common(source, compiler_cwd)?;
-    let MutationAuthorityCommon { workspace_root, source_path, taxonomy_path, mutation_collection, mutation_payload_facet, source_filename, descriptor_filename, domain_owners } = common;
+    let MutationAuthorityCommon { workspace_root, source_path, taxonomy_path, mutation_collection, mutation_payload_facet, source_filename, descriptor_filename, domain_owners, .. } = common;
     if source_path.file_name().and_then(|name| name.to_str()) != Some(source_filename.as_str()) { return Err("source is not the taxonomy canonical mutation primary".to_string()); }
     let source_parent = source_path.parent().ok_or_else(|| "source has no owner directory".to_string())?;
     let owner_path = if source_parent.file_name().and_then(|name| name.to_str()) == Some(mutation_payload_facet.as_str()) {
@@ -119,16 +123,45 @@ fn mutation_aggregate_source_authority(source: &Path, compiler_cwd: &Path) -> Re
     if mutation_root.file_name().and_then(|name| name.to_str()) != Some(common.mutation_collection.as_str()) { return Err("aggregate source is not directly inside the taxonomy mutation collection".to_string()); }
     let root_name = mutation_authority_relative(&common.workspace_root, mutation_root)?;
     let domain_operations = common.domain_owners.get(&root_name).cloned();
+    let mut component_roots = Vec::new();
+    if let Some(roots) = common.aggregate_sources.get(&root_name) {
+        if domain_operations.is_some() { return Err("a mutation aggregate must declare either direct domain owners or component sources".to_string()); }
+        for root in roots {
+            mutation_authority_no_follow(&common.workspace_root, &common.workspace_root.join(root), true)?;
+            component_roots.push((root.clone(), common.domain_owners.get(root).cloned()));
+        }
+    }
     Ok(MutationAggregateSourceAuthority {
         workspace_root: common.workspace_root,
         mutation_root: mutation_root.to_path_buf(),
+        #[cfg(test)]
         source_path: common.source_path,
         taxonomy_path: common.taxonomy_path,
         mutation_payload_facet: common.mutation_payload_facet,
         source_filename: common.source_filename,
         descriptor_filename: common.descriptor_filename,
         domain_operations,
+        component_roots,
     })
+}
+
+fn mutation_authority_aggregate_sources(taxonomy: &serde_json::Value, collection: &str) -> Result<BTreeMap<String, Vec<String>>, String> {
+    let mut result = BTreeMap::new();
+    let Some(registry) = taxonomy.get("mutationAggregateSources") else { return Ok(result); };
+    let roots = registry.as_object().ok_or_else(|| "mutationAggregateSources must be an exact-root object".to_string())?;
+    let valid = |root: &str| root.ends_with(&format!("/{collection}")) && root.split('/').all(|part| mutation_authority_owner_segment(part) && !part.eq_ignore_ascii_case("compose"));
+    for (root, sources) in roots {
+        if !valid(root) { return Err("mutationAggregateSources contains an unsafe or non-mutation aggregate root".to_string()); }
+        let sources = sources.as_array().filter(|sources| !sources.is_empty()).ok_or_else(|| "mutationAggregateSources requires non-empty source arrays".to_string())?;
+        let mut members = Vec::new();
+        for source in sources {
+            let source = source.as_str().filter(|source| valid(source)).ok_or_else(|| "mutationAggregateSources contains an unsafe or non-mutation component source".to_string())?;
+            if members.iter().any(|member| member == source) { return Err("mutationAggregateSources contains a duplicate component source".to_string()); }
+            members.push(source.to_string());
+        }
+        result.insert(root.clone(), members);
+    }
+    Ok(result)
 }
 
 fn mutation_authority_domain_owners(taxonomy: &serde_json::Value, collection: &str) -> Result<BTreeMap<String, Vec<(String, String)>>, String> {
@@ -522,6 +555,54 @@ mod mutation_aggregate_source_authority_tests {
         let other = mutation_aggregate_source_authority(&other_aggregate_source, &other_cwd).unwrap();
         assert_ne!(mutation_authority_workspace_token(&aggregate.workspace_root, &aggregate.taxonomy_path).unwrap(), mutation_authority_workspace_token(&other.workspace_root, &other.taxonomy_path).unwrap());
         assert!(workspace.exists());
+    }
+
+    #[test]
+    fn validates_explicit_aggregate_component_sources() {
+        fn literals(tokens: proc_macro2::TokenStream) -> Vec<String> {
+            tokens.into_iter().flat_map(|token| match token {
+                proc_macro2::TokenTree::Group(group) => literals(group.stream()),
+                proc_macro2::TokenTree::Literal(literal) => syn::parse_str::<syn::LitStr>(&literal.to_string()).map(|value| vec![value.value()]).unwrap_or_default(),
+                _ => Vec::new(),
+            }).collect()
+        }
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🏛️mutation-aggregate-source-authority/🧫️fixtures/🧩️sources.json")).unwrap();
+        for vector in fixture["cases"].as_array().unwrap() {
+            let name = vector["name"].as_str().unwrap();
+            let (workspace, cwd, source, _) = materialize("direct-canonical");
+            for root in fixture["sources"].as_array().unwrap() { fs::create_dir_all(workspace.join(root.as_str().unwrap())).unwrap(); }
+            let mut sources = fixture["sources"].clone();
+            let mut aggregate = fixture["aggregate"].as_str().unwrap();
+            match name {
+                "empty-sources" => sources = serde_json::json!([]),
+                "duplicate-source" => sources[1] = sources[0].clone(),
+                "unsafe-source" => sources[0] = "graph/../foreign/🧬️mutations".into(),
+                "non-mutation-source" => sources[0] = "graph".into(),
+                "missing-source" => sources[0] = "missing/🧬️mutations".into(),
+                "symlink-source" => {
+                    fs::rename(workspace.join("graph/🧬️mutations"), workspace.join("graph/actual")).unwrap();
+                    link_dir(&workspace.join("graph/actual"), &workspace.join("graph/🧬️mutations"));
+                }
+                "non-array-sources" => sources = serde_json::json!({}),
+                "non-string-source" => sources[0] = 1.into(),
+                "unsafe-aggregate" => aggregate = "../domain/🧬️mutations",
+                "explicit-sources" => (),
+                _ => panic!("unknown component source fixture {name}"),
+            }
+            let taxonomy_path = workspace.join("authority/🔣️taxonomy.json");
+            let mut taxonomy: serde_json::Value = serde_json::from_slice(&fs::read(&taxonomy_path).unwrap()).unwrap();
+            taxonomy["mutationAggregateSources"] = serde_json::json!({ aggregate: sources });
+            fs::write(&taxonomy_path, serde_json::to_vec(&taxonomy).unwrap()).unwrap();
+            let result = mutation_aggregate_source_authority(&source, &cwd);
+            assert_eq!(result.is_ok(), vector["accepted"].as_bool().unwrap(), "{name}: {result:?}");
+            if let Ok(authority) = result {
+                let input: DeriveInput = syn::parse_str("#[mutations(snapshot = Snapshot, diff = Diff, schema = \"probe\")] enum Operations { CreateNode(Create), MovePoint(Move) }").unwrap();
+                let tokens = expand_mutations(&input, &authority).unwrap();
+                syn::parse2::<syn::File>(tokens.clone()).expect("independent Rust parser accepts emitted component scopes");
+                let emitted = literals(tokens);
+                for root in fixture["sources"].as_array().unwrap() { assert!(emitted.iter().any(|value| value == root.as_str().unwrap()), "missing explicit source {root}"); }
+            }
+        }
     }
 }
 //#endregion 🔖️MutationSourceAuthority
@@ -1877,6 +1958,35 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
     } else {
         quote! { ::semio_framework_os_kernel::MutationOwnerLayout::Flat }
     };
+    let components = if authority.component_roots.is_empty() { vec![(mutation_root.clone(), authority.domain_operations.clone())] } else { authority.component_roots.clone() };
+    let mut component_completeness = Vec::new();
+    let scopes = components.iter().map(|(root, operations)| {
+        let layout = if let Some(operations) = operations {
+            let entries = operations.iter().map(|(owner, identity)| quote! { ::semio_framework_os_kernel::MutationDomainOperation { owner: #owner, semantic_kind: #identity } });
+            for (owner, _) in operations {
+                component_completeness.push(quote! {
+                    let mut found = false;
+                    let mut index = 0;
+                    while index < descriptors.len() {
+                        if ::semio_framework_os_kernel::str_eq(descriptors[index].owner, #owner) { found = true; }
+                        index += 1;
+                    }
+                    assert!(found, "Mutations requires every explicitly registered component domain operation");
+                });
+            }
+            quote! { ::semio_framework_os_kernel::MutationOwnerLayout::DomainOperations(&[#(#entries),*]) }
+        } else { quote! { ::semio_framework_os_kernel::MutationOwnerLayout::Flat } };
+        quote! {
+            match (::semio_framework_os_kernel::MutationLeafSourceScope {
+                workspace_token: [#(#workspace_token),*], mutation_root: #root, owner_layout: #layout,
+                taxonomy_path: #taxonomy_path, mutation_payload_facet: #mutation_payload_facet,
+                source_filename: #source_filename, descriptor_filename: #descriptor_filename,
+            }).validate() {
+                Ok(scope) => scope,
+                Err(_) => panic!("Mutations requires a valid aggregate component source scope"),
+            }
+        }
+    }).collect::<Vec<_>>();
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let aggregate_ty = quote! { #name #ty_generics };
     let mut diff_arms = Vec::new();
@@ -1924,16 +2034,19 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
         foreign_steps_arms.push(quote! { Self::#variant_ident(payload) => #kind::foreign_steps(payload, base) });
         kind_consts.push(quote! { #kind::SEMANTICS });
         leaf_descriptors.push(quote! { #leaf::DESCRIPTOR });
-        leaf_checks.push(quote! {
+        leaf_checks.push(quote! { const {
             assert!(::semio_framework_os_kernel::str_eq(#kind::SEMANTICS.kind, #expected_kebab), "Mutations semantic kind must match its variant");
             assert!(::semio_framework_os_kernel::is_approved_verb(#kind::SEMANTICS.verb), "Mutations requires an approved semantic verb");
             assert!(::semio_framework_os_kernel::str_eq(#leaf::DESCRIPTOR.aggregate_variant, #expected_variant), "Mutations descriptor variant must match its wrapped leaf");
             assert!(::semio_framework_os_kernel::str_eq(#leaf::DESCRIPTOR.semantic_kind, #kind::SEMANTICS.kind), "Mutations descriptor and semantic kind must agree");
-            match ::semio_framework_os_kernel::validate_mutation_leaf_source(&#leaf::DESCRIPTOR, &#leaf::PROVENANCE, &scope) {
-                Ok(()) => (),
-                Err(_) => panic!("Mutations leaf source must match its aggregate workspace and direct owner"),
+            let mut scope_index = 0;
+            let mut matched = false;
+            while scope_index < SCOPES.len() {
+                if let Ok(()) = SCOPES[scope_index].validate_leaf(&#leaf::DESCRIPTOR, &#leaf::PROVENANCE) { matched = true; break; }
+                scope_index += 1;
             }
-        });
+            assert!(matched, "Mutations leaf source must match its aggregate workspace and declared component owner");
+        }; });
         conversions.push(quote! {
             impl #impl_generics ::core::convert::From<#payload_ty> for #aggregate_ty #where_clause {
                 fn from(payload: #payload_ty) -> Self {
@@ -1965,14 +2078,11 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
         impl #impl_generics ::semio_framework_os_kernel::Mutation<#snapshot_ty> for #aggregate_ty #where_clause {
             type Diff = #diff_ty;
             const DESCRIPTORS: &'static [::semio_framework_os_kernel::MutationLeafDescriptor] = {
-                let scope = ::semio_framework_os_kernel::MutationLeafSourceScope {
-                    workspace_token: [#(#workspace_token),*], mutation_root: #mutation_root, owner_layout: #owner_layout,
-                    taxonomy_path: #taxonomy_path, mutation_payload_facet: #mutation_payload_facet,
-                    source_filename: #source_filename, descriptor_filename: #descriptor_filename,
-                };
+                const SCOPES: &[::semio_framework_os_kernel::ValidatedMutationLeafSourceScope] = &[#(#scopes),*];
                 #(#leaf_checks)*
                 let descriptors: &'static [::semio_framework_os_kernel::MutationLeafDescriptor] = &[#(#leaf_descriptors),*];
-                match ::semio_framework_os_kernel::validate_mutation_leaf_descriptor_roster(#mutation_root, descriptors, scope.owner_layout) {
+                #(#component_completeness)*
+                match ::semio_framework_os_kernel::validate_mutation_leaf_descriptor_roster_uniqueness(#mutation_root, descriptors, #owner_layout) {
                     Ok(()) => descriptors,
                     Err(_) => panic!("Mutations requires a unique and complete direct leaf descriptor roster"),
                 }
@@ -2079,8 +2189,8 @@ mod mandatory_mutations_tests {
             assert_eq!(!mutation.generics.params.is_empty(), case["generic"].as_bool().unwrap());
             if case["generic"] == true { assert!(mutation.generics.where_clause.is_some()); }
             let expanded = tokens.to_string();
-            assert_eq!(expanded.matches("validate_mutation_leaf_source").count(), conversions);
-            assert_eq!(expanded.matches("validate_mutation_leaf_descriptor_roster").count(), 1);
+            assert_eq!(expanded.matches("validate_leaf").count(), conversions);
+            assert_eq!(expanded.matches("validate_mutation_leaf_descriptor_roster_uniqueness").count(), 1);
             assert_eq!(expanded.matches("include_str !").count(), 3);
             assert!(!expanded.contains("include !"));
             assert!(expanded.contains("MutationLeaf > :: DESCRIPTOR"));
@@ -2090,7 +2200,7 @@ mod mandatory_mutations_tests {
                 _ => None,
             }).unwrap();
             assert_eq!(registration.sig.inputs.len(), 1);
-            assert!(matches!(&registration.sig.output, syn::ReturnType::Type(_, ty) if matches!(ty.as_ref(), syn::Type::Path(path) if path.path.segments.last().unwrap().ident == "Result")));
+            assert!(matches!(&registration.sig.output, syn::ReturnType::Type(_, ty) if matches!(ty.as_ref(), Type::Path(path) if path.path.segments.last().unwrap().ident == "Result")));
             assert_eq!(registration.sig.generics, mutation.generics);
             let descriptors = registration.block.stmts.iter().find_map(|statement| match statement {
                 syn::Stmt::Local(local) if matches!(&local.pat, syn::Pat::Ident(name) if name.ident == "descriptors") => Some(local.init.as_ref().unwrap().expr.as_ref()),

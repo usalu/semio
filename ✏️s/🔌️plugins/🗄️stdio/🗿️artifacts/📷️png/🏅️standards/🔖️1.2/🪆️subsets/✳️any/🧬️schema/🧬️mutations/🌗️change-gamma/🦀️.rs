@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative change-gamma mutation.
-use crate::artifacts::png::schema::diff::{self, *};
+use crate::artifacts::png::schema::diff::*;
 use crate::artifacts::png::schema::mutations::PngMutation;
 use crate::artifacts::png::schema::snapshot::*;
 
@@ -27,12 +27,11 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeGammaMutation {
         protocol::MutationOutcome::new(contribute(base, *gama))
     }
     fn inverse(&self, base: &PngSnapshot) -> Vec<PngMutation> {
-        let Self { gama } = self;
         let outcome = <Self as protocol::MutationKind<PngSnapshot, PngMutation>>::diff(self, base);
         if <PngDiff as protocol::DiffAlgebra<PngSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
-        vec![PngMutation::ChangeGamma(crate::artifacts::png::schema::mutations::ChangeGammaMutation { gama: base.gama })]
+        vec![PngMutation::ChangeGamma(ChangeGammaMutation { gama: base.gama })]
     }
     fn label(&self) -> String {
         "change gamma".into()

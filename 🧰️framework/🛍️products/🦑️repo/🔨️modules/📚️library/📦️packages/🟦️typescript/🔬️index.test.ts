@@ -2540,7 +2540,7 @@ describe("command budgets", () => {
     expect(result.stderr).toContain("[budget]");
   });
 
-  test("orchestratorBudgetOpts supplies a bounded orchestrator budget", () => {
+  test("orchestratorBudgetOpts supplies the opt-in orchestrator budget", () => {
     expect(orchestratorBudgetOpts()).toEqual({ budgetMs: orchestratorBudgetMs() });
     expect(() => runCmd(process.execPath, ["-e", "1"], orchestratorBudgetOpts())).not.toThrow();
   });
@@ -2563,8 +2563,8 @@ describe("command budgets", () => {
     expect(vitestLevelArgs("quick")).toEqual(["--testTimeout", ms, "--hookTimeout", ms, "--teardownTimeout", ms]);
   });
 
-  test("orchestratorBudgetMs defaults to 4h and honors SEMIO_ORCHESTRATOR_BUDGET_MS", () => {
-    expect(orchestratorBudgetMs()).toBe(4 * 60 * 60 * 1000);
+  test("orchestratorBudgetMs defaults to unlimited and honors SEMIO_ORCHESTRATOR_BUDGET_MS", () => {
+    expect(orchestratorBudgetMs()).toBe(0);
     const prev = process.env.SEMIO_ORCHESTRATOR_BUDGET_MS;
     process.env.SEMIO_ORCHESTRATOR_BUDGET_MS = "12345";
     try {
@@ -2575,8 +2575,8 @@ describe("command budgets", () => {
     }
   });
 
-  test("daemonBudgetMs defaults to 24h and honors SEMIO_DAEMON_BUDGET_MS", () => {
-    expect(daemonBudgetMs()).toBe(24 * 60 * 60 * 1000);
+  test("daemonBudgetMs defaults to unlimited and honors SEMIO_DAEMON_BUDGET_MS", () => {
+    expect(daemonBudgetMs()).toBe(0);
     const prev = process.env.SEMIO_DAEMON_BUDGET_MS;
     process.env.SEMIO_DAEMON_BUDGET_MS = "67890";
     try {
@@ -4063,7 +4063,7 @@ describe("policyPluginDependencyParityBreaches", () => {
       mkdirSync(join(extDir, "📦️packages", "🦀️rust"), { recursive: true });
       writeFileSync(join(pluginDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad"\n`);
       writeFileSync(join(pluginDir, "🦀️.rs"), `pub struct CadPlugin;\n`);
-      writeFileSync(join(extDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad-aec-building"\n[dependencies]\nsemio-s-plugin-cad = { path = "../../../📦️packages/🦀️rust" }\n`);
+      writeFileSync(join(extDir, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-cad-aec-building"\n[package.metadata.semio]\nrole = "extension"\nextends = "cad"\n[dependencies]\nsemio-s-plugin-cad = { path = "../../../📦️packages/🦀️rust" }\n`);
       writeFileSync(join(extDir, "🦀️.rs"), `pub fn configure() { b.depends_on("cad", "^1.0.0"); }\n`);
 
       const breaches = policyPluginDependencyParityBreaches(root);
@@ -4074,7 +4074,7 @@ describe("policyPluginDependencyParityBreaches", () => {
     }
   });
 
-  test("flags declared runtime dependency with missing Cargo dependency at extension scope", () => {
+  test("flags a builder-declared runtime dependency that the crate's semio metadata never declares", () => {
     const root = mkdtempSync(join(tmpdir(), "semio-plugin-parity-policy-"));
     try {
       const pluginDir = join(root, "✏️s", "🔌️plugins", "📐️cad");
@@ -4091,7 +4091,28 @@ describe("policyPluginDependencyParityBreaches", () => {
       const extBreaches = breaches.filter((b) => b.scope === "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building");
       expect(extBreaches.length).toBe(1);
       expect(extBreaches[0]!.priority).toBe("high");
-      expect(extBreaches[0]!.id).toBe("plugin-dependency-missing-cargo-✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building-cad");
+      expect(extBreaches[0]!.id).toBe("plugin-dependency-undeclared-metadata-✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building-cad");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a sibling Cargo library link is not a runtime dependency, but a metadata depends-on the builder omits is", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-plugin-parity-policy-"));
+    try {
+      const linker = join(root, "✏️s", "🔌️plugins", "🖨️raster");
+      const declarer = join(root, "✏️s", "🔌️plugins", "🎪️demonstrator");
+      mkdirSync(join(linker, "📦️packages", "🦀️rust"), { recursive: true });
+      mkdirSync(join(declarer, "📦️packages", "🦀️rust"), { recursive: true });
+      writeFileSync(join(linker, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-raster"\n[package.metadata.semio]\nrole = "plugin"\n[dependencies]\nsemio-s-plugin-stdio = { path = "../../🗄️stdio/📦️packages/🦀️rust" }\n`);
+      writeFileSync(join(linker, "🦀️.rs"), `pub fn plugin() { Plugin::builder("raster"); }\n`);
+      writeFileSync(join(declarer, "📦️packages", "🦀️rust", "Cargo.toml"), `[package]\nname = "semio-s-plugin-demonstrator"\n[package.metadata.semio]\nrole = "plugin"\ndepends-on = ["cad"]\n`);
+      writeFileSync(join(declarer, "🦀️.rs"), `pub fn plugin() { Plugin::builder("demonstrator"); }\n`);
+
+      const breaches = policyPluginDependencyParityBreaches(root);
+      expect(breaches.filter((b) => b.scope === "✏️s/🔌️plugins/🖨️raster")).toEqual([]);
+      const declarerBreaches = breaches.filter((b) => b.scope === "✏️s/🔌️plugins/🎪️demonstrator");
+      expect(declarerBreaches.map((b) => b.id)).toEqual(["plugin-dependency-undeclared-runtime-✏️s/🔌️plugins/🎪️demonstrator-cad"]);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

@@ -1,8 +1,7 @@
 //! ⬆️ Note mutation — `RemoveTableRow`: removes a table block's last row (a table always keeps at least one row).
 
 use crate::artifacts::note::{NoteDiff, NoteSnapshot};
-use crate::artifacts::note::schema::diff::note_block_patch_diff;
-use crate::artifacts::note::schema::mutations::{InsertTableRow, NoteMutation};
+use crate::artifacts::note::schema::mutations::NoteMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};

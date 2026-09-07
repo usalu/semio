@@ -5,9 +5,9 @@ use crate::{ArtifactOwnedDisposer, Fault, NoTransient, NoTransientMutation, Plug
 use std::sync::{Arc, Weak};
 
 type Store = TransientStore<NoTransient, NoTransientMutation>;
-const _: () = assert!(std::mem::size_of::<NoTransient>() == 0 && !std::mem::needs_drop::<NoTransient>());
-const _: () = assert!(std::mem::size_of::<NoTransientMutation>() == 0 && !std::mem::needs_drop::<NoTransientMutation>());
-const _: () = assert!(std::mem::size_of::<Store>() == std::mem::size_of::<(Arc<NoTransient>, u64)>());
+const _: () = assert!(size_of::<NoTransient>() == 0 && !std::mem::needs_drop::<NoTransient>());
+const _: () = assert!(size_of::<NoTransientMutation>() == 0 && !std::mem::needs_drop::<NoTransientMutation>());
+const _: () = assert!(size_of::<Store>() == size_of::<(Arc<NoTransient>, u64)>());
 
 /// 🧊️ Only the statically empty transient lane is admitted; arbitrary store payloads cannot use this adapter.
 #[derive(Default)]

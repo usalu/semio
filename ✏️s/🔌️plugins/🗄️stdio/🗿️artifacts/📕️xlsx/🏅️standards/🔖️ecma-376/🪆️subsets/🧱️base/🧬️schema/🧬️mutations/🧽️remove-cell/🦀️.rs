@@ -16,7 +16,7 @@ pub struct RemoveCell {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveCell {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "cell", kind: "remove-cell", record: "RemoveCell" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxMutation as protocol::Mutation<XlsxSnapshot>>::Diff> {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxMutation as Mutation<XlsxSnapshot>>::Diff> {
         agg_diff(&XlsxMutation::RemoveCell(self.clone()), base)
     }
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxMutation> {

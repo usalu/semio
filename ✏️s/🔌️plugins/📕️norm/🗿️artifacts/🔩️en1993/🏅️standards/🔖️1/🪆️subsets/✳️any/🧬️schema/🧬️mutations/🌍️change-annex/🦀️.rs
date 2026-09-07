@@ -1,7 +1,7 @@
 //! 🌍️ `change-annex` — sets the annex scalar.
 
 
-use crate::artifacts::en1993::{En1993Diff, En1993Mutation, En1993Snapshot};
+use crate::artifacts::en1993::{En1993Mutation, En1993Snapshot};
 use crate::document::AnnexChoice;
 
 //#region 🔖️Payload

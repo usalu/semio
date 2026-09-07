@@ -47,7 +47,7 @@ fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssem
 /// the framework stamps this tree's selection/hover presence from that domain (`.interaction_domain`)
 /// and prunes stale ids through that same topology, so no per-item click action is declared here
 /// anymore (clicks are translated into `interactionSelect` generically)?.
-pub fn render(document: &ProcedureSnapshot, labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &ProcedureSnapshot, labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let path = crate::artifacts::procedure::procedure_working_scene(document).path;
     let step_items = ui_node_list(path.steps.iter().enumerate().map(|(index, step)| tree_item_desc(step_row_id(&step.id), format!("{}. {}", index + 1, step.kind), Some(step.id.clone()))))?;
     PanelTreeBuilder::new(IMPERATIVE_PLAY_DOCUMENT_NAMESPACE)?

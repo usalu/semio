@@ -31,28 +31,28 @@ fn terminal_close_state(complete: bool, faulted: bool, blocked: bool) -> std::sy
     std::sync::Arc::new(RuntimeCloseWorkerState {
         instance_id: 7, generation: semio_framework_job::Generation(1),
         cell: std::sync::Mutex::new(std::mem::ManuallyDrop::new(None)), pump: std::sync::Mutex::new(pump),
-        status: std::sync::atomic::AtomicU8::new(RuntimeCloseStatus::Queued.repr()), deadline_resume: AtomicU8::new(u8::MAX), deadline_elapsed_us: AtomicU64::new(0), stalled_steps: std::sync::atomic::AtomicU8::new(0),
-        preview_sequence: std::sync::atomic::AtomicU64::new(0), last_callback_elapsed_us: std::sync::atomic::AtomicU64::new(0),
-        last_fault: std::sync::Mutex::new([0; 256]), last_fault_origin: std::sync::atomic::AtomicU8::new(0), physical_close_calls: AtomicU64::new(0),
-        callback_phase_started_us: std::sync::atomic::AtomicU64::new(0), callback_phase_us: std::array::from_fn(|_| std::sync::atomic::AtomicU64::new(0)),
+        status: AtomicU8::new(RuntimeCloseStatus::Queued.repr()), deadline_resume: AtomicU8::new(u8::MAX), deadline_elapsed_us: AtomicU64::new(0), stalled_steps: AtomicU8::new(0),
+        preview_sequence: AtomicU64::new(0), last_callback_elapsed_us: AtomicU64::new(0),
+        last_fault: std::sync::Mutex::new([0; 256]), last_fault_origin: AtomicU8::new(0), physical_close_calls: AtomicU64::new(0),
+        callback_phase_started_us: AtomicU64::new(0), callback_phase_us: std::array::from_fn(|_| AtomicU64::new(0)),
     })
 }
 
 #[test]
 fn instance_lifetime_close_does_not_publish_terminal_before_watchdog() {
     use super::super::*;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     let state = terminal_close_state(true, false, false);
     let _ = run_runtime_close_turn_inner(&state);
-    assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(std::sync::atomic::Ordering::SeqCst)) == RuntimeCloseStatus::Complete, fixture["owners"]["terminalVisibleBeforeWatchdog"].as_bool().unwrap());
+    assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)) == RuntimeCloseStatus::Complete, fixture["owners"]["terminalVisibleBeforeWatchdog"].as_bool().unwrap());
     for row in fixture["callbacks"].as_array().unwrap() {
         let named = |name: &str| match name { "ready" => RuntimeCloseStatus::Ready, "complete" => RuntimeCloseStatus::Complete, "external-wait" => RuntimeCloseStatus::ExternalWait, "deadline-yield" => RuntimeCloseStatus::DeadlineYield, "fault" => RuntimeCloseStatus::Fault(RuntimeCleanupFault::PriorOutcome), _ => unreachable!() };
         let elapsed_us = row["elapsedUs"].as_u64().unwrap();
-        state.status.store(RuntimeCloseStatus::Running.repr(), std::sync::atomic::Ordering::SeqCst);
+        state.status.store(RuntimeCloseStatus::Running.repr(), Ordering::SeqCst);
         runtime_close_publish_turn(&state, named(row["candidate"].as_str().unwrap()), elapsed_us);
         let expected = named(row["published"].as_str().unwrap());
-        assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(std::sync::atomic::Ordering::SeqCst)), expected, "{row}");
-        assert_eq!(state.last_callback_elapsed_us.load(std::sync::atomic::Ordering::SeqCst), elapsed_us);
+        assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), expected, "{row}");
+        assert_eq!(state.last_callback_elapsed_us.load(Ordering::SeqCst), elapsed_us);
     }
 }
 
@@ -60,7 +60,7 @@ fn instance_lifetime_close_does_not_publish_terminal_before_watchdog() {
 #[test]
 fn instance_lifetime_close_deadline_resume_never_reenters_completed_work() {
     use super::super::*;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     for row in fixture["callbacks"].as_array().unwrap().iter().filter(|row| row["published"] == "deadline-yield") {
         let state = terminal_close_state(true, false, false);
         let first = run_runtime_close_turn_inner(&state).unwrap();
@@ -88,10 +88,10 @@ fn instance_lifetime_close_deadline_resume_never_reenters_completed_work() {
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_late_physical_step_retains_its_exact_outcome() {
     use super::super::*;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     let state = terminal_close_state(false, false, false);
     *state.pump.lock().unwrap() = RuntimeCloseCleanupPump::new();
-    **state.cell.lock().unwrap() = Some(std::sync::Arc::new(RuntimeAppCell::new(crate::app::AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) })));
+    **state.cell.lock().unwrap() = Some(std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) })));
     let limit = fixture["callbackLimitUs"].as_u64().unwrap();
     for _ in 0..4096 {
         state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
@@ -150,7 +150,7 @@ fn instance_lifetime_close_deadline_submit_refusal_preserves_candidate() {
 #[test]
 fn instance_lifetime_close_fault_outcome_dominates_complete_progress() {
     use super::super::*;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     for row in fixture["terminalPump"].as_array().unwrap() {
         let state = terminal_close_state(row["complete"].as_bool().unwrap(), row["faulted"].as_bool().unwrap(), row["blocked"].as_bool().unwrap());
         let actual = runtime_close_cleanup_pump_one(&state, &mut state.pump.lock().unwrap());
@@ -162,14 +162,14 @@ fn instance_lifetime_close_fault_outcome_dominates_complete_progress() {
 #[test]
 fn instance_lifetime_close_optional_monotonic_clock_rejects_missing_and_backward_authority() {
     use super::super::*;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     for row in fixture["clocks"].as_array().unwrap() {
         let state = terminal_close_state(true, false, false);
-        let readings: Vec<Option<u64>> = row["samples"].as_array().unwrap().iter().map(serde_json::Value::as_u64).collect();
+        let readings: Vec<Option<u64>> = row["samples"].as_array().unwrap().iter().map(Value::as_u64).collect();
         let mut samples = readings.clone().into_iter();
         run_runtime_close_turn_with_clock(&state, || samples.next().flatten());
         let expected = if row["published"] == "complete" { RuntimeCloseStatus::Complete } else if row["published"] == "deadline-yield" { RuntimeCloseStatus::DeadlineYield } else { RuntimeCloseStatus::Fault(expected_clock_cause(&readings)) };
-        assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(std::sync::atomic::Ordering::SeqCst)), expected, "{row}");
+        assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), expected, "{row}");
         assert_eq!(state.pump.lock().unwrap().session.is_none(), row["workEntered"].as_bool().unwrap(), "{row}");
         if !row["workEntered"].as_bool().unwrap() {
             let mut pump = state.pump.lock().unwrap();
@@ -182,8 +182,8 @@ fn instance_lifetime_close_optional_monotonic_clock_rejects_missing_and_backward
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_preflight_and_shared_restore_preserve_exact_owner() {
     use super::super::*;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
-    let cell = std::sync::Arc::new(RuntimeAppCell::new(crate::app::AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) }));
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    let cell = std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) }));
     let state = terminal_close_state(true, false, false);
     **state.cell.lock().unwrap() = Some(cell.clone());
     assert_eq!(runtime_close_retire_cell(&state), RuntimeCloseStatus::Fault(RuntimeCleanupFault::InstanceNotDrained));
@@ -204,7 +204,7 @@ async fn instance_lifetime_close_preflight_and_shared_restore_preserve_exact_own
 #[test]
 fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
     use super::super::*;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     let state = terminal_close_state(true, false, false);
     let job = RuntimeCloseCleanupJob { instance_id: 7, state: Some(std::sync::Arc::downgrade(&state)), progress: None, contended: false, closing: false };
     let params = semio_framework_job::BatchJobParams {
@@ -233,7 +233,7 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
     run_runtime_close_turn_with_clock(&state, || Some(10));
     let _ = release_tx.send(());
     holder.join().unwrap();
-    let status = RuntimeCloseStatus::from_repr(state.status.load(std::sync::atomic::Ordering::SeqCst));
+    let status = RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst));
     let mut pump = state.pump.lock().unwrap();
     let session_preserved = pump.session.is_some();
     let source_preserved = matches!(pump.outcome.as_ref(), Some(semio_framework_job::StepOutcome::Complete(candidate)) if candidate.state.single_page().is_some_and(|bytes| bytes.as_ptr() as usize == identity && bytes == [7, 0, 0, 0]));
@@ -252,7 +252,7 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
 }
 
 async fn close_lease_app(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>) {
-    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(crate::app::AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) }));
+    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) }));
     runtime.instances.borrow_mut().insert_admitted(7, cell);
 }
 
@@ -275,7 +275,7 @@ fn drive_close_lease(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_witness_survives_quarantine_removal_and_reused_id() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json")).unwrap();
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
     close_lease_app(&runtime).await;
     let mut lease = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
@@ -295,7 +295,7 @@ async fn instance_lifetime_close_witness_survives_quarantine_removal_and_reused_
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_constructs_worker_shell_before_exact_live_detachment() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️lifetime/🏗️construction.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🚪️lifetime/🏗️construction.json")).unwrap();
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
     close_lease_app(&runtime).await;
     let mut lease = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
@@ -312,7 +312,7 @@ async fn instance_lifetime_close_constructs_worker_shell_before_exact_live_detac
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_rejects_foreign_root_and_exhaustion_before_detach() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture/🔣️.json")).unwrap();
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
     close_lease_app(&runtime).await;
     let mut old = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
@@ -335,7 +335,7 @@ async fn instance_lifetime_close_rejects_foreign_root_and_exhaustion_before_deta
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_construction_failure_preserves_original_live_root() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️lifetime/🏗️construction.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🚪️lifetime/🏗️construction.json")).unwrap();
     let law = &fixture["constructionFailure"];
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
     close_lease_app(&runtime).await;
@@ -388,7 +388,7 @@ async fn run_ingress(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection() {
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
-    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(crate::app::AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) }));
+    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) }));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     let denied = wire_command(&runtime, 0, protocol::AppCommand::TransactionPrepare { seq: 0, txn_id: "denied".into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), label: String::new(), origin: Vec::new() }).await;
     let fault = denied.iter().find_map(|frame| match frame { protocol::AppFrame::Error { in_reply_to: Some(0), fault, .. } => Some(fault), _ => None }).expect("encoded transaction route must remain explicitly unadmitted");
@@ -423,11 +423,11 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
 }
 
 async fn query_app() -> VcsArtifactApp<TestApp> {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
     let mut state = row["expected"].clone(); state["hover"] = serde_json::json!({});
-    let state: protocol::InteractionState = serde_json::from_value(state).unwrap();
-    let envelope = store::create_document_envelope::<protocol::InteractionState, crate::app::InteractionConfigMutation>("framework.interaction", "query-dispatch", state, None);
+    let state: InteractionState = serde_json::from_value(state).unwrap();
+    let envelope = store::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "query-dispatch", state, None);
     let mut interaction = store::ArtifactStore::new(envelope).await.unwrap();
     interaction.install_member_store_owners_exact(crate::local_interaction::retirement::interaction_store_owners());
     let mut app = interaction_app_under_test().await;
@@ -441,7 +441,7 @@ async fn query_app() -> VcsArtifactApp<TestApp> {
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_registered_query_channel_continuation_ack_and_close() {
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
-    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(crate::app::AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) }));
+    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) }));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     let mut pending = std::collections::VecDeque::from(query_command(&runtime, 1, protocol::LocalInteractionQueryCommand::Read { request_id: 13 }).await);
     let mut expected_identity = None;

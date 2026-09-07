@@ -4,7 +4,7 @@
 
 use crate::artifacts::process3d::diff::Process3dDiff;
 use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::{Capability, Process3dSnapshot, Workshop};
+use crate::artifacts::process3d::{Capability, Process3dSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ReplaceMachineCapabilities

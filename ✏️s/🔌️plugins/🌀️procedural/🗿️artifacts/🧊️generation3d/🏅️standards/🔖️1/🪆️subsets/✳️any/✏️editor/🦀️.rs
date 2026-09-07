@@ -46,7 +46,7 @@ pub fn generation3d_action(action: &str, args: Option<Value>) -> ActionDescripto
 }
 
 fn categorized_action(id: &str, label: LocalizedLabel, kind: ActionKind, category: &str) -> ActionDefinition {
-    semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog(id, label, kind).with_category(category))
+    ActionDefinition::bounded_catalog(id, label, kind).with_category(category)
 }
 
 /// 🧵️ Classifies the internal flow continuation as backed by its bounded first-step factory.
@@ -737,42 +737,42 @@ impl ArtifactEditor for Generation3dPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Generation3dPlayApp>,
+        owner: EditorApp<Generation3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.procedural.generation3d@1/*#editor",
         document_schema: "generation.3d",
         factory: "Generation3dBoundedCommandJobFactory",
         factory_type: Generation3dBoundedCommandJobFactory,
         tools: {
-            "setActiveExample" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "nodeGraphEdit" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "deleteSelection" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "removeWidget" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "moveMediaNode" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "addWidget" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "patchFlowWidgets" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "reorganize" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "translateSelection" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "rotateSelection" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "scaleSelection" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "addGeneration" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "removeGeneration" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "renameGeneration" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "updateGenerationValues" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "nodeGraphViewport" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "worldPointerDown" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "graphPointerDown" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setLodMode" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setShowMode" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "toggleSun" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setSunAzimuth" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setSunElevation" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setSunIntensity" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setCamera" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "selectGeneration" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setActiveUtility" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setLocale" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "flowEvalTick" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setActiveExample" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "nodeGraphEdit" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "deleteSelection" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "removeWidget" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "moveMediaNode" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "addWidget" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "patchFlowWidgets" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "reorganize" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "translateSelection" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "rotateSelection" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "scaleSelection" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "addGeneration" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "removeGeneration" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "renameGeneration" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "updateGenerationValues" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "nodeGraphViewport" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "worldPointerDown" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "graphPointerDown" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setLodMode" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setShowMode" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "toggleSun" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setSunAzimuth" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setSunElevation" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setSunIntensity" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setCamera" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "selectGeneration" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setActiveUtility" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setLocale" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "flowEvalTick" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
         }
     }
 
@@ -1055,27 +1055,27 @@ impl ArtifactEditor for Generation3dPlayApp {
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
-        semio_framework::io::resolve_ready(async {
+        {
             let config = cfg.snapshot;
             let labels = generation3d_labels(config);
             let is_de = config.locale.starts_with("de");
             let selected: Vec<String> = Vec::new();
-            let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]).await;
+            let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
             let has_selection = !nodes.is_empty() || !edges.is_empty();
-            let mut menu = Menu::of(registry).await.action("reorganize").await;
+            let mut menu = Menu::of(registry).action("reorganize");
             if has_selection {
-                menu = menu.action("translateSelection").await.action("rotateSelection").await.action("scaleSelection").await;
+                menu = menu.action("translateSelection").action("rotateSelection").action("scaleSelection");
             }
-            menu = menu.group("create", |m| async { m.action("addWidget").await.action("addGeneration").await }).await;
+            menu = menu.group("create", |m| { m.action("addWidget").action("addGeneration") });
             if has_selection {
-                menu = menu.group("targets", |m| async { m.action("removeWidget").await.action("removeGeneration").await }).await;
+                menu = menu.group("targets", |m| { m.action("removeWidget").action("removeGeneration") });
             }
-            menu = menu.group("methods", |m| async { m.action("renameGeneration").await.action("updateGenerationValues").await.action("patchFlowWidgets").await }).await;
-            if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit).await {
-                menu = menu.item(spec).await;
+            menu = menu.group("methods", |m| { m.action("renameGeneration").action("updateGenerationValues").action("patchFlowWidgets") });
+            if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+                menu = menu.item(spec);
             }
-            menu.build().await
-        })
+            menu.build()
+        }
     }
 }
 //#endregion 🔖️Generation3dPlayApp

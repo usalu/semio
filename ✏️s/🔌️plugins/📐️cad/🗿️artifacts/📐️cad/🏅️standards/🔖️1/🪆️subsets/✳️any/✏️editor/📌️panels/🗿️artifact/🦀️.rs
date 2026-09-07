@@ -7,7 +7,7 @@ use crate::artifacts::cad::{CadPaneId, CadReference, CadSnapshot};
 use crate::editor::cad::terminology::{typology_label, CadLabels};
 use crate::editor::cad::{cad_action, cad_tree_item, ui_label, ui_node_list, ui_value_bool, ui_value_list, ui_value_map, ui_value_text, CadPlayRuntime, CadPlayView};
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, BuiltNode, Label as UiLabel, RowAction, RowActionPlacement, Trigger};
-use semio_framework_plugin::{LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::{LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const CAD_PLAY_BODY_DOCUMENT: &str = "cad.play.document";
@@ -26,7 +26,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub(crate) fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let primitive_items = ui_node_list(object.primitives.iter().map(|primitive| {
             // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `UiTreeItemNode` no longer
             // carries `hoverAction`/`unhoverAction` — mesh hover is the framework-owned `"cad"`
@@ -77,7 +77,7 @@ pub(crate) fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &Cad
     Ok(item)
 }
 
-pub fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let select_args = ui_value_map([
         ("modelDefinitionId", ui_value_text(model_definition_id)?),
         ("referenceId", ui_value_text(&reference.id)?),
@@ -181,7 +181,7 @@ pub fn artifact_references_section(
     ))
 }
 
-pub fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let node_items = ui_node_list(envelope.document.nodes.iter().map(|node| {
         let node_ids = ui_value_list([ui_value_text(&node.id)?])?;
         let args = ui_value_map([("nodeIds", node_ids)])?;

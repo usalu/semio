@@ -103,7 +103,7 @@ mod tests {
         let (source, _tiles) = crate::artifacts::presentation::presentation_working_scene(&base);
         let mut next_source = source;
         next_source.kind = "video".into();
-        let operation = PresentationMutation::ReplaceSource(replace_source::mutation::ReplaceSource { new_source: next_source });
+        let operation = PresentationMutation::ReplaceSource(replace_source::ReplaceSource { new_source: next_source });
         let diff: PresentationDiff = operation.diff(&base).into_parts().0;
         assert!(diff.presentation.is_some());
         assert!(diff.artifact.is_none());

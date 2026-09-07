@@ -1492,17 +1492,71 @@ mod tests {
             })]
         });
         let apps = schema.map_or_else(Vec::new, |_| {
-            let manifest = semio_s_plugin_stdio::plugin().expect("stdio fixture app source").manifest;
             [semio_framework::AppRole::Editor, semio_framework::AppRole::Viewer]
                 .into_iter()
                 .map(|role| {
-                    let suffix = format!("#{}", role.as_str());
-                    let mut app = manifest.apps.iter().find(|app| app.id == format!("s.stdio.json@rfc8259/*{suffix}")).unwrap_or_else(|| panic!("stdio json {suffix} app")).clone();
-                    app.dialect.artifact_kind = "s.fixture.document".into();
-                    app.dialect.standard = "1".into();
-                    app.dialect.subset = "*".into();
-                    app.id = semio_framework::surface_app_id(&app.dialect, app.role);
-                    app
+                    let role = role.as_str();
+                    serde_json::from_value::<semio_framework::AppDefinition>(serde_json::json!({
+                        "id": format!("s.fixture.document@1/*#{role}"),
+                        "role": role,
+                        "dialect": { "artifactKind": "s.fixture.document", "standard": "1", "subset": "*" },
+                        "label": {
+                            "native": { "de": format!("Fixture {role}"), "en": format!("Fixture {role}") },
+                            "reuse": { "de": format!("Fixture {role}"), "en": format!("Fixture {role}") }
+                        },
+                        "breadcrumb": ["semio", "fixture", role],
+                        "controllerId": format!("fixture-{role}"),
+                        "modes": [{
+                            "id": if role == "editor" { "edit" } else { "view" },
+                            "label": {
+                                "native": { "de": if role == "editor" { "Bearbeiten" } else { "Ansehen" }, "en": if role == "editor" { "Edit" } else { "View" } },
+                                "reuse": { "de": if role == "editor" { "Bearbeiten" } else { "Ansehen" }, "en": if role == "editor" { "Edit" } else { "View" } }
+                            },
+                            "iconId": if role == "editor" { "pencil" } else { "eye" },
+                            "tools": [],
+                            "commands": []
+                        }],
+                        "defaultModeId": if role == "editor" { "edit" } else { "view" },
+                        "windowKinds": [{
+                            "id": "fixture-main",
+                            "label": {
+                                "native": { "de": "Fixture", "en": "Fixture" },
+                                "reuse": { "de": "Fixture", "en": "Fixture" }
+                            },
+                            "bodyKey": "fixture.main",
+                            "surfaceKind": "canvas2d",
+                            "iconId": "app-window",
+                            "actions": [],
+                            "utilities": [],
+                            "interactions": [],
+                            "capabilities": []
+                        }],
+                        "panelTabs": [],
+                        "keybindings": [],
+                        "utilities": [],
+                        "tools": [],
+                        "commands": [],
+                        "interactions": [],
+                        "namedLayouts": [],
+                        "terminologies": [],
+                        "terminologyBreadcrumbs": {},
+                        "tutorials": [],
+                        "dialogs": [],
+                        "mediaInputs": [],
+                        "mediaOutputs": [],
+                        "artifactKinds": [],
+                        "config": { "fields": [] },
+                        "commandGrammar": { "variants": [] },
+                        "io": {
+                            "documentSchema": "fixture.document",
+                            "documentMediaType": { "class": "data", "form": "value" },
+                            "ports": [],
+                            "exportFormats": [],
+                            "importFormats": [],
+                            "artifact": { "id": "s.fixture.document", "name": "Fixture Document", "dimension": "data", "componentKind": "document" }
+                        }
+                    }))
+                    .expect("handcrafted fixture app")
                 })
                 .collect()
         });
@@ -1703,7 +1757,7 @@ mod tests {
         Box::pin(async { Ok(String::new()) })
     }
 
-    fn fixture_apply<'a>(pack: &'a [u8], spr: &'a [u8], _operations: &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(Vec<u8>, Vec<u8>, String), VcsError>> + 'a>> {
+    fn fixture_apply<'a>(pack: &'a [u8], spr: &'a [u8], _operations: &'a [u8]) -> directory::os_store::ArtifactCodecApplyFuture<'a> {
         Box::pin(async move { Ok((pack.to_vec(), spr.to_vec(), String::new())) })
     }
 
@@ -1749,6 +1803,7 @@ mod tests {
         assert!(document_codec(&format!("{}.base", pair.schema)).await.expect("registry").is_some());
     }
 
+    #[cfg(feature = "native-artifact-execution")]
     #[tokio::test]
     async fn gis_native_provider_selection_binds_literal_owner_version_and_cancellation_without_publication() {
         struct SelectionControl {
@@ -1812,9 +1867,12 @@ mod tests {
                 assert!(existing.is_none(), "{hostile} published second provider");
             }
         }
-        let fixture = prepared_fixture();
-        assert!(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &NativeCodecProviderSetV1::linked(), &TestControl::new().context()).await.is_err());
-        assert!(document_codec(&fixture.schema).await.expect("registry").is_none());
+        #[cfg(feature = "native-artifact-execution")]
+        {
+            let fixture = prepared_fixture();
+            assert!(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &NativeCodecProviderSetV1::linked(), &TestControl::new().context()).await.is_err());
+            assert!(document_codec(&fixture.schema).await.expect("registry").is_none());
+        }
     }
 
     #[tokio::test]

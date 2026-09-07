@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative replace-text-chunk mutation.
-use crate::artifacts::png::schema::diff::{self, *};
+use crate::artifacts::png::schema::diff::*;
 use crate::artifacts::png::schema::mutations::PngMutation;
 use crate::artifacts::png::schema::snapshot::*;
 
@@ -28,13 +28,13 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ReplaceTextChunkMutati
         protocol::MutationOutcome::new(contribute(base, *index, chunk.clone()))
     }
     fn inverse(&self, base: &PngSnapshot) -> Vec<PngMutation> {
-        let Self { index, chunk } = self;
+        let Self { index, .. } = self;
         let outcome = <Self as protocol::MutationKind<PngSnapshot, PngMutation>>::diff(self, base);
         if <PngDiff as protocol::DiffAlgebra<PngSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
         match base.text_chunks.get(*index) {
-            Some(chunk) => vec![PngMutation::ReplaceTextChunk(crate::artifacts::png::schema::mutations::ReplaceTextChunkMutation { index: *index, chunk: chunk.clone() })],
+            Some(chunk) => vec![PngMutation::ReplaceTextChunk(ReplaceTextChunkMutation { index: *index, chunk: chunk.clone() })],
             None => Vec::new(),
         }
     }

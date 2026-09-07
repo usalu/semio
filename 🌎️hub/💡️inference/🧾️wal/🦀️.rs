@@ -42,11 +42,21 @@ pub struct InferenceWalTargetV1 {
     pub command_hash: String,
     pub actor: String,
     pub maximum_records: u64,
+    pub receipt: directory::os_store::durable_group::DurableOwnedGroupJournalReceiptV1,
 }
 
 impl InferenceWalTargetV1 {
     fn validate(&self, fence: &InferenceDocumentFenceV1) -> Result<(), InferenceErrorV1> {
-        if !hex(&self.job_id, 32) || !hex(&self.proposal_hash, 64) || !hex(&self.mutation_id, 32) || !hex(&self.command_hash, 64) || self.maximum_records == 0 || self.maximum_records > 65_536 {
+        if !hex(&self.job_id, 32)
+            || !hex(&self.proposal_hash, 64)
+            || !hex(&self.mutation_id, 32)
+            || !hex(&self.command_hash, 64)
+            || !hex(&self.receipt.anchor_sha256, 64)
+            || !hex(&self.receipt.decision_sha256, 64)
+            || self.receipt.transaction_id == 0
+            || self.maximum_records == 0
+            || self.maximum_records > 65_536
+        {
             return Err(InferenceErrorV1::Bounds);
         }
         let (user, session) = self.actor.strip_prefix("user:").and_then(|value| value.split_once("#session:")).ok_or(InferenceErrorV1::Invalid)?;
@@ -82,6 +92,23 @@ pub struct CommittedInferenceWalWitnessV1 {
 }
 
 impl CommittedInferenceWalWitnessV1 {
+    pub(super) fn from_recovered_decision(target: InferenceWalTargetV1, fence: Arc<InferenceDocumentFenceV1>) -> Result<Self, InferenceErrorV1> {
+        target.validate(&fence)?;
+        Ok(Self {
+            fence,
+            scope: target.scope,
+            generation: target.generation,
+            job_id: target.job_id,
+            proposal_hash: target.proposal_hash,
+            mutation_id: target.mutation_id,
+            command_hash: target.command_hash,
+            decision_hash: target.receipt.decision_sha256,
+            transaction_id: target.receipt.transaction_id,
+            segment_index: target.receipt.segment_index,
+            record_index: 1,
+        })
+    }
+
     pub(super) fn matches(&self, scope: &DocumentScope, generation: u64, job_id: &str, proposal_hash: &str, mutation_id: &str, command_hash: &str) -> bool {
         self.scope == *scope
             && self.generation == generation
@@ -191,11 +218,11 @@ struct Transaction {
     id: u64,
     records: u32,
     events: u32,
-    matched: Option<(u64, u64, String)>,
+    matched: Option<(u64, u64, String, String)>,
 }
 
 #[cfg(feature = "native-artifact-execution")]
-fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, document: &db::ArtifactId) -> Result<Option<String>, InferenceErrorV1> {
+fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, document: &db::ArtifactId) -> Result<(String, String, bool), InferenceErrorV1> {
     use semio_s_plugin_gis::artifacts::gismap::{GisMapSnapshot, mutations::GisMapMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::{
         drawing::schema::{mutations::SemioDrawingMutation, snapshot::SemioDrawingSnapshot},
@@ -219,11 +246,11 @@ fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, doc
         || parent.actor.as_deref() != Some(target.actor.as_str())
         || meta.author_id.as_ref().map(|actor| actor.0.as_str()) != Some(target.actor.as_str())
     {
-        return Ok(None);
+        return Ok((verified.decision_sha256().to_string(), verified.anchor_sha256().to_string(), false));
     }
     let proposal = directory::os_pack::json::to_json_string(&parent.forwards[0]).into_bytes();
     if super::sha256(&proposal) != target.proposal_hash {
-        return Ok(None);
+        return Ok((verified.decision_sha256().to_string(), verified.anchor_sha256().to_string(), false));
     }
     let inverse = directory::os_pack::json::to_json_string(&parent.inverse).into_bytes();
     let command = super::command::encode_server_stamped_command_v1(&super::command::CanonicalInferenceCommandPartsV1 {
@@ -236,7 +263,7 @@ fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, doc
         inverse_payload: &inverse,
         timestamp: meta.timestamp,
     })?;
-    Ok((super::sha256(&command) == target.command_hash).then(|| verified.decision_sha256().to_string()))
+    Ok((verified.decision_sha256().to_string(), verified.anchor_sha256().to_string(), super::sha256(&command) == target.command_hash))
 }
 
 async fn verify_retained(state: &VerifierState, target: &InferenceWalTargetV1, fence: &Arc<InferenceDocumentFenceV1>, control: &InferenceOperationControlV1) -> Result<Option<CommittedInferenceWalWitnessV1>, InferenceErrorV1> {
@@ -244,7 +271,7 @@ async fn verify_retained(state: &VerifierState, target: &InferenceWalTargetV1, f
     let storage = state.storage.wal().await;
     let retained_control = WalCursorControl::new(Arc::new(AtomicBool::new(false)), Instant::now() + Duration::from_secs(2), 1_000_000).map_err(|_| InferenceErrorV1::Storage)?;
     control.checkpoint(0)?;
-    let mut replay = WalReplayCursor::open_genesis(&storage, &document, retained_control).await.map_err(|_| InferenceErrorV1::Storage)?;
+    let mut replay = WalReplayCursor::open_at_segment(&storage, &document, target.receipt.segment_index, retained_control).await.map_err(|_| InferenceErrorV1::Storage)?;
     let outcome = scan(state, &mut replay, target, fence, control).await;
     for _ in 0..CLOSE_MAX_STEPS {
         replay.replenish(Instant::now() + Duration::from_secs(2), 1024).map_err(|_| InferenceErrorV1::Storage)?;
@@ -276,9 +303,10 @@ async fn scan(
     let mut active: Option<Transaction> = None;
     let mut matched_transaction = None;
     let mut last_transaction = 0;
-    let mut next_segment = 0;
-    let mut current_segment = 0;
+    let mut header_seen = false;
     let mut records = 0;
+    let mut target_records = 0;
+    let mut target_finished = false;
     loop {
         control.checkpoint(records)?;
         target.validate(fence)?;
@@ -302,21 +330,33 @@ async fn scan(
             control.checkpoint(records)?;
             target.validate(fence)?;
             if let WalRecord::SegmentHeader { document: stored, segment_index, prev_chain_hash } = &record {
-                if stored != &document || *segment_index != next_segment || active.is_some() || (*segment_index == 0) != prev_chain_hash.is_none() {
+                if header_seen {
+                    if active.is_some() {
+                        return Err(InferenceErrorV1::Invalid);
+                    }
+                    target_finished = true;
+                    return Ok(());
+                }
+                if stored != &document || *segment_index != target.receipt.segment_index || (*segment_index == 0) != prev_chain_hash.is_none() {
                     return Err(InferenceErrorV1::Invalid);
                 }
-                next_segment += 1;
-                current_segment = *segment_index;
+                header_seen = true;
                 return Ok(());
             }
-            if next_segment == 0 || records >= target.maximum_records {
-                return Err(InferenceErrorV1::Bounds);
+            if !header_seen {
+                return Err(InferenceErrorV1::Invalid);
             }
             records += 1;
             match &record {
                 WalRecord::TxBegin { tx_id } => {
                     if active.is_some() || *tx_id <= last_transaction {
                         return Err(InferenceErrorV1::Invalid);
+                    }
+                    if *tx_id == target.receipt.transaction_id {
+                        target_records += 1;
+                        if target_records > target.maximum_records {
+                            return Err(InferenceErrorV1::Bounds);
+                        }
                     }
                     active = Some(Transaction { id: *tx_id, records: 0, events: 0, matched: None });
                 }
@@ -325,36 +365,63 @@ async fn scan(
                     if transaction.id != *tx_id {
                         return Err(InferenceErrorV1::Invalid);
                     }
+                    if transaction.id == target.receipt.transaction_id {
+                        target_records += 1;
+                        if target_records > target.maximum_records {
+                            return Err(InferenceErrorV1::Bounds);
+                        }
+                    }
                     if let WalRecord::TxCommit { record_count, .. } = &record {
                         if transaction.records != *record_count {
                             return Err(InferenceErrorV1::Invalid);
                         }
-                        if let Some((segment_index, record_index, decision_hash)) = transaction.matched {
-                            if transaction.records != 1 || transaction.events != 1 || matched_transaction.replace((*tx_id, segment_index, record_index, decision_hash)).is_some() {
+                        if transaction.id == target.receipt.transaction_id {
+                            if transaction.records != 1 || transaction.events != 1 {
                                 return Err(InferenceErrorV1::Invalid);
                             }
+                            if let Some((segment_index, record_index, decision_hash, anchor_hash)) = transaction.matched {
+                                if decision_hash != target.receipt.decision_sha256 || anchor_hash != target.receipt.anchor_sha256 {
+                                    return Err(InferenceErrorV1::Invalid);
+                                }
+                                matched_transaction = Some((*tx_id, segment_index, record_index, decision_hash));
+                            }
                         }
+                    }
+                    if transaction.id == target.receipt.transaction_id {
+                        target_finished = true;
                     }
                     last_transaction = *tx_id;
                 }
                 _ => {
                     let transaction = active.as_mut().ok_or(InferenceErrorV1::Invalid)?;
                     transaction.records = transaction.records.checked_add(1).ok_or(InferenceErrorV1::Bounds)?;
+                    if transaction.id == target.receipt.transaction_id {
+                        target_records += 1;
+                        if target_records > target.maximum_records {
+                            return Err(InferenceErrorV1::Bounds);
+                        }
+                    }
                     if let WalRecord::Event(bytes) = &record {
                         transaction.events = transaction.events.checked_add(1).ok_or(InferenceErrorV1::Bounds)?;
                         #[cfg(feature = "native-artifact-execution")]
                         {
-                            if bytes.len() > directory::os_store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES || transaction.matched.is_some() {
+                            if bytes.len() > directory::os_store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES || (transaction.id == target.receipt.transaction_id && transaction.matched.is_some()) {
                                 return Err(InferenceErrorV1::Invalid);
                             }
-                            let mut exact = Vec::with_capacity(bytes.len());
-                            for fragment in bytes.fragments() {
-                                control.checkpoint(records)?;
-                                exact.extend_from_slice(fragment);
-                            }
-                            if exact.starts_with(b"\x89SEMIO\r\n\x1a\n") {
-                                if let Some(decision_hash) = durable_decision_event_match(&exact, target, &document)? {
-                                    transaction.matched = Some((current_segment, records, decision_hash));
+                            if transaction.id == target.receipt.transaction_id {
+                                let mut exact = Vec::with_capacity(bytes.len());
+                                for fragment in bytes.fragments() {
+                                    control.checkpoint(records)?;
+                                    exact.extend_from_slice(fragment);
+                                }
+                                if exact.starts_with(b"\x89SEMIO\r\n\x1a\n") {
+                                    let (decision_hash, anchor_hash, matches) = durable_decision_event_match(&exact, target, &document)?;
+                                    if decision_hash != target.receipt.decision_sha256 || anchor_hash != target.receipt.anchor_sha256 {
+                                        return Err(InferenceErrorV1::Invalid);
+                                    }
+                                    if matches {
+                                        transaction.matched = Some((target.receipt.segment_index, records, decision_hash, anchor_hash));
+                                    }
                                 }
                             }
                         }
@@ -379,6 +446,9 @@ async fn scan(
             if let Some(gate) = &_state.replay_gate {
                 gate.acquire().await.map_err(|_| InferenceErrorV1::Storage)?.forget();
             }
+        }
+        if target_finished {
+            break;
         }
         tokio::task::yield_now().await;
     }

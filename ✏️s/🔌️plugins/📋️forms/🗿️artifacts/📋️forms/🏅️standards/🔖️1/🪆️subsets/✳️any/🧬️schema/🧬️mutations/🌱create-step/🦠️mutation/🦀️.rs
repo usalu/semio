@@ -10,6 +10,8 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// A duplicate `step.id` is Fatal `mutation.duplicate-id` (an id-keyed entity that already exists
 /// cannot be re-created).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
 pub struct CreateStep {
     pub step: FormStep,
     pub index: Option<usize>,

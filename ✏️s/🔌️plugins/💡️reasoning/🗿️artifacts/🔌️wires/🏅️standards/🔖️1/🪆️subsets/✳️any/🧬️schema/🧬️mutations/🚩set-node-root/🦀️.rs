@@ -1,11 +1,9 @@
 //! 🚩 Wires mutation — `SetNodeRoot`: narrow addressed single-field boolean setter for one board
 //! node's `root` flag (`📓️taxonomy.md`'s `set` verb — the exact `set-layer-visible` shape).
 
-use crate::artifacts::wires::diff::{diff_board_fixture, WiresDiff};
-use crate::artifacts::wires::mutations::{set_node_field, WiresMutation};
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
+use crate::artifacts::wires::diff::WiresDiff;
+use crate::artifacts::wires::mutations::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
-use dsl::DslValue;
 
 //#region 🔖️Mutation
 /// 🚩 `set-node-root` payload.

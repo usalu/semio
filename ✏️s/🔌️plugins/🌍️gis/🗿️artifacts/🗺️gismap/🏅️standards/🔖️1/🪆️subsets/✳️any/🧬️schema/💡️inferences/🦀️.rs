@@ -10,7 +10,6 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::sch
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::{create_node, inverse_semio_drawing_mutation, SemioDrawingMutation};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::DrawNode;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::{inverse_semio_value_mutation, SemioValueMutation};
-use serde::{Deserialize, Serialize};
 
 use super::bounds::{all_lon_lat_pairs, lon_lat_bounds, GisMapBounds};
 use semio_framework_value_derive::{FromValue, ToValue};

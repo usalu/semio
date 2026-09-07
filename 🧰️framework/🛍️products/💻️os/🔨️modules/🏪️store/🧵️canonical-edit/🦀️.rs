@@ -1265,7 +1265,7 @@ mod tests {
         let original = std::mem::replace(&mut prepared.post_snapshot, Arc::new(17));
         assert!(authority.validate_prepared(prepared).is_err());
         prepared.post_snapshot = original;
-        assert!(super::tests::authority().validate_prepared(prepared).is_err());
+        assert!(tests::authority().validate_prepared(prepared).is_err());
         authority.validate_prepared(prepared).unwrap();
         close(&mut owner, 1);
     }

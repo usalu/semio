@@ -2,7 +2,7 @@
 
 use crate::document::NormHost;
 use crate::editor::vdi3805::Vdi3805Family;
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_RESULTS: &str = "norm-vdi3805-results";

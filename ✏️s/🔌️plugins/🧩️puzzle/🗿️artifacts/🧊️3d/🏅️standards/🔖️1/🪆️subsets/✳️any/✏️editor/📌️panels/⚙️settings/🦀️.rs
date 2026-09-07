@@ -23,7 +23,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn stepper_field(id: &str, label: &str, value: f64, step: f64, action: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn stepper_field(id: &str, label: &str, value: f64, step: f64, action: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let (action, args) = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action(action, None)?;
     let mut control = BuiltNode::try_new(format!("{id}.control"), Component::NumberStepper(NumberStepperProps { value, step, uniform: false }))
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.number-stepper", "number stepper admission failed"))?;
@@ -37,7 +37,7 @@ fn stepper_field(id: &str, label: &str, value: f64, step: f64, action: &str) -> 
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.field", "settings field admission failed"))
 }
 
-pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let runtime = &envelope.runtime;
     ui::section(ui_label(labels.settings.as_str())?)
         .try_id("puzzle3d-play-settings")

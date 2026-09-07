@@ -73,8 +73,8 @@ fn bundle() -> ExtensionBundle {
     let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building Structure", "0.1.0").extends("cad");
     // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
     // extension only contributes a topic (`cad.computer`).
-    let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Declarative));
-    semio_framework::io::resolve_ready(bundle.contributes_topic(
+    let bundle = bundle.mode(ExecutionMode::Declarative);
+    bundle.contributes_topic(
         "cad.computer",
         DslValue::object([
             ("appId".to_string(), DslValue::String(HOST_APP_ID.to_string())),
@@ -83,7 +83,7 @@ fn bundle() -> ExtensionBundle {
             ("iconId".to_string(), DslValue::String("landmark".to_string())),
             ("computersJson".to_string(), DslValue::String(json::to_string(&computers_manifest()))),
         ]),
-    ))
+    )
 }
 
 semio_framework_plugin::extension_exports!(bundle);

@@ -1,7 +1,7 @@
 //! 🪢 Block5d mutation — `ChangeGripKindDefaultRopeKind`: a grip-kind catalog row's `defaultRopeKind`.
 
-use crate::artifacts::block5d::{Block5dGripKind, Block5dSnapshot};
-use crate::artifacts::block5d::diff::{Block5dDiff, Block5dGripKindsDelta, Block5dGripKindsPatch, Block5dGripKindsPatchEntry};
+use crate::artifacts::block5d::Block5dSnapshot;
+use crate::artifacts::block5d::diff::Block5dDiff;
 use crate::artifacts::block5d::mutations::Block5dMutation;
 
 //#region 🔖️Mutation

@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the lowpoly editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum LowpolyApps: PluginApp {
-        LowpolyEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::lowpoly::LowpolyPlayApp>>),
-        LowpolyViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::lowpoly::LowpolyViewer>>),
+        LowpolyEditor(VcsArtifactApp<EditorApp<crate::editor::lowpoly::LowpolyPlayApp>>),
+        LowpolyViewer(VcsArtifactApp<ViewerApp<crate::viewer::lowpoly::LowpolyViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -24,12 +24,12 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// is deleted, not deprecated. `.editor::<E>(…)` registers the mutation-capable surface (the former
 /// sole app), `.viewer::<V>(…)` the new genuinely read-only surface — see `👁️viewer/🦀️.rs`
 /// for why it is not a thin wrapper around the editor.
-pub fn plugin() -> Result<Plugin<LowpolyApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<LowpolyApps>, PluginAssemblyError> {
     Plugin::<LowpolyApps>::builder("lowpoly")
         .label("Lowpoly")
         .version("0.1.0")
         .package_id("semio:lowpoly")
-        .artifact(crate::artifacts::lowpoly::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::lowpoly::declaration().map_err(PluginAssemblyError::definition)?)
         .editor::<crate::editor::lowpoly::LowpolyPlayApp>(crate::editor::lowpoly::create_lowpoly_app())
         .editor_mutation_roster::<crate::editor::lowpoly::LowpolyPlayApp>()
         .viewer::<crate::viewer::lowpoly::LowpolyViewer>(crate::viewer::lowpoly::create_lowpoly_viewer())

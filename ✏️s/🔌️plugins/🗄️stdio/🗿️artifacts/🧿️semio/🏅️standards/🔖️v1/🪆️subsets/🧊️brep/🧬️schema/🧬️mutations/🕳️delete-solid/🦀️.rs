@@ -1,6 +1,6 @@
 //! 🗑️ `delete-solid` — removes an id-keyed solid. Nothing else in this collection set references a solid, so no cascade question arises. Absent `id` is a no-op.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation, create_solid, delete_solid};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Payload

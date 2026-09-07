@@ -126,7 +126,24 @@ macro_rules! impl_float_codec {
         )+
     };
 }
-impl_float_codec!(f64, f32);
+impl_float_codec!(f64);
+
+impl ToValue for f32 {
+    fn to_value(&self) -> DslValue {
+        let shortest = format!("{self:e}");
+        let precision = shortest.split('e').next().unwrap().bytes().filter(u8::is_ascii_digit).count().saturating_sub(1);
+        DslValue::Number(Number::Float(format!("{self:.precision$e}").parse().expect("f32 decimal text is a valid f64")))
+    }
+}
+
+impl FromValue for f32 {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::Number(number) => Ok(number.as_f64() as f32),
+            other => Err(ValueError::new(format!("expected a number, found {other:?}"))),
+        }
+    }
+}
 
 impl ToValue for bool {
     fn to_value(&self) -> DslValue {
@@ -213,9 +230,14 @@ impl<T: FromValue> FromValue for Option<T> {
     }
 }
 
-impl<T: ToValue> ToValue for Vec<T> {
+impl<T: ToValue> ToValue for [T] {
     fn to_value(&self) -> DslValue {
         DslValue::Array(self.iter().map(ToValue::to_value).collect())
+    }
+}
+impl<T: ToValue> ToValue for Vec<T> {
+    fn to_value(&self) -> DslValue {
+        self.as_slice().to_value()
     }
 }
 impl<T: FromValue> FromValue for Vec<T> {
@@ -248,7 +270,7 @@ impl<T: FromValue> FromValue for std::collections::VecDeque<T> {
 /// (matches what a fixed-size `[T; N]` field means: this many, no more, no fewer).
 impl<T: ToValue, const N: usize> ToValue for [T; N] {
     fn to_value(&self) -> DslValue {
-        DslValue::Array(self.iter().map(ToValue::to_value).collect())
+        self.as_slice().to_value()
     }
 }
 impl<T: FromValue, const N: usize> FromValue for [T; N] {
@@ -416,6 +438,17 @@ impl DslValue {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn borrowed_slices_match_neutral_values_and_serde() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔪️slices.json")).expect("slice fixture");
+        for case in fixture["cases"].as_array().unwrap() {
+            let values: Vec<i64> = serde_json::from_value(case.clone()).expect("integer sequence");
+            let actual = crate::to_dsl_value(values.as_slice()).expect("slice encoding");
+            assert_eq!(serde_json::to_string(&actual).unwrap(), serde_json::to_string(values.as_slice()).unwrap());
+            assert_eq!(actual, case.clone());
+        }
+        eprintln!("[DEBUG] Borrowed slice encoding agrees with the neutral corpus and serde");
+    }
     use super::*;
 
     #[test]
@@ -568,6 +601,13 @@ mod tests {
     /// `0.41999998688697815`. `serde_json` is the third-party oracle for both widths here.
     #[test]
     fn f32_widens_through_its_own_shortest_lexeme_not_its_bits() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔢️f32-decimals.json")).expect("float decimal fixture");
+        for case in fixture["cases"].as_array().unwrap() {
+            let value = f32::from_bits(u32::from_str_radix(case["bits"].as_str().unwrap(), 16).unwrap());
+            let decimal = case["decimal"].as_str().unwrap();
+            assert_eq!(serde_json::to_string(&value).unwrap(), decimal);
+            assert_eq!(f64::from_value(value.to_value()).unwrap().to_bits(), decimal.parse::<f64>().unwrap().to_bits());
+        }
         for value in [0.42_f32, 1.1, 3.14159, 1e-7, 16777217.0, -0.02, 0.85, 0.0625, f32::MIN_POSITIVE, f32::MAX, f32::from_bits(1)] {
             let DslValue::Number(Number::Float(widened)) = value.to_value() else {
                 panic!("f32 must encode as Number::Float, found {:?}", value.to_value());
@@ -581,9 +621,10 @@ mod tests {
     /// 🔬️ Deterministic sweep over arbitrary `f32` bit patterns — every finite `f32` must survive
     /// `to_value`/`from_value` bit-exactly (this is what keeps the binary record carriers, which
     /// store `Number::Float`'s `f64` verbatim, lossless for `f32` fields) AND must widen to a
-    /// `f64` that prints as `serde_json` prints the `f32`.
+    /// `f64` equal to serde's parsed decimal value. Serde uses different fixed/scientific
+    /// notation thresholds for f32 and f64, so spelling equality is not a numeric invariant.
     #[test]
-    fn every_finite_f32_round_trips_bit_exactly_and_prints_like_serde_json() {
+    fn every_finite_f32_round_trips_bit_exactly_and_preserves_serde_decimal_value() {
         let mut state: u64 = 0x9E37_79B9_7F4A_7C15;
         let mut checked = 0usize;
         for _ in 0..200_000u32 {
@@ -594,7 +635,8 @@ mod tests {
             }
             let encoded = value.to_value();
             let DslValue::Number(Number::Float(widened)) = encoded else { panic!("f32 must encode as Number::Float") };
-            assert_eq!(serde_json::to_string(&widened).expect("finite f64"), serde_json::to_string(&value).expect("finite f32"), "lexeme mismatch for f32 bits {:#010x}", value.to_bits());
+            let reference: f64 = serde_json::to_string(&value).expect("finite f32").parse().expect("decimal f64");
+            assert_eq!(widened.to_bits(), reference.to_bits(), "decimal value mismatch for f32 bits {:#010x}", value.to_bits());
             assert_eq!(f32::from_value(encoded).expect("float").to_bits(), value.to_bits(), "bit mismatch for f32 bits {:#010x}", value.to_bits());
             checked += 1;
         }

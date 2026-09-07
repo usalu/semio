@@ -15,7 +15,7 @@ pub struct SetRawText {
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetRawText {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "raw-text", kind: "set-raw-text", record: "SetRawText" };
 
-    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as protocol::Mutation<HtmlSnapshot>>::Diff> {
+    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
         agg_diff(&HtmlMutation::SetRawText(self.clone()), base)
     }
     fn inverse(&self, base: &HtmlSnapshot) -> Vec<HtmlMutation> {

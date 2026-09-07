@@ -42,7 +42,7 @@ fn collect_masks(layer: &RasterLayerNode, items: &mut UiFixedList<BuiltNode>, la
 /// document/layers tree's (`layer_row_id`), so the two trees cannot both mirror the same domain
 /// without id collisions — dropped rather than shown stale (matches the acceptance-bar precedent in
 /// lowpoly's inspection panel).
-pub fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mut items = UiFixedList::default();
     for layer in &document.layers {
         collect_masks(layer, &mut items, labels)?;

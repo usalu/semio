@@ -14,7 +14,7 @@ pub struct RemoveHeaderVar {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveHeaderVar {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "header-var", kind: "remove-header-var", record: "RemoveHeaderVar" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as protocol::Mutation<DxfSnapshot>>::Diff> {
+    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
         agg_diff(&DxfMutation::RemoveHeaderVar(self.clone()), base)
     }
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {

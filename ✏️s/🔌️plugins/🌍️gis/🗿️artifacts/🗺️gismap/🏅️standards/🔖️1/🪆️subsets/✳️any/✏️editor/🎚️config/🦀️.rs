@@ -4,7 +4,6 @@
 //! like document content, with a true `backwards` per operation. Nothing here is document state — the
 //! map's positions/routes/regions live in `crate::artifacts::gismap`.
 
-use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use semio_framework_value_derive::{FromValue, ToValue};

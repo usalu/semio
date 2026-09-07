@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative remove-huffman-table mutation.
-use crate::artifacts::jpg::schema::diff::{self, *};
+use crate::artifacts::jpg::schema::diff::*;
 use crate::artifacts::jpg::schema::mutations::JpgMutation;
 use crate::artifacts::jpg::schema::snapshot::*;
 

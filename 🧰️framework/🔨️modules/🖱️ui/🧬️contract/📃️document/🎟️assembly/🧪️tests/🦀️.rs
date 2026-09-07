@@ -46,13 +46,13 @@ fn close(lease: &mut UiDocumentLease, bytes: usize) {
 fn retained_document_assembly_places_exact_pages_and_preserves_wire_and_payload_pointer() {
     let data = fixture();
     let mut owner = open();
-    let mut first = super::tests::leaf_record(41, "first");
+    let mut first = tests::leaf_record(41, "first");
     first.component = serde_json::from_value(serde_json::json!({"type":"surface","kind":"canvas-2d","docSchema":"wire","doc":{"bytes":[1,2,3,4]},"bindings":[]})).unwrap();
     let pointer = match &first.component { crate::Component::Surface(props) => props.doc.bytes.as_slice().as_ptr(), _ => unreachable!() };
     let mut source = Some(first);
     assert!(!owner.place_one(&mut source, 1, 0).unwrap().progressed);
     assert_eq!(owner.allocated_bytes().unwrap(), 0);
-    let allocated = place(&mut owner, &mut source) + place(&mut owner, &mut Some(super::tests::leaf_record(9, "second")));
+    let allocated = place(&mut owner, &mut source) + place(&mut owner, &mut Some(tests::leaf_record(9, "second")));
     assert!(allocated > 0 && allocated < 32768);
     let mut lease = finish(&mut owner);
     let read = lease.try_read().unwrap();
@@ -70,9 +70,9 @@ fn retained_document_assembly_places_exact_pages_and_preserves_wire_and_payload_
 fn retained_document_assembly_rejects_duplicate_without_consuming_input_and_cancels_exact_backing() {
     for bytes in fixture()["closeGrants"].as_array().unwrap() {
         let mut owner = open();
-        place(&mut owner, &mut Some(super::tests::leaf_record(41, "original")));
+        place(&mut owner, &mut Some(tests::leaf_record(41, "original")));
         let before = owner.allocated_bytes().unwrap();
-        let mut duplicate = Some(super::tests::leaf_record(41, "duplicate"));
+        let mut duplicate = Some(tests::leaf_record(41, "duplicate"));
         let mut error = None;
         for _ in 0..10 { match owner.place_one(&mut duplicate, 1, 32768) { Ok(_) => {}, Err(found) => { error = Some(found); break; } } }
         let error = error.unwrap();
@@ -94,7 +94,7 @@ fn retained_document_assembly_rejects_duplicate_without_consuming_input_and_canc
 #[test]
 fn retained_document_assembly_and_read_alias_do_not_wait_on_contended_arena() {
     let mut owner = open();
-    place(&mut owner, &mut Some(super::tests::leaf_record(41, "live")));
+    place(&mut owner, &mut Some(tests::leaf_record(41, "live")));
     let mut lease = finish(&mut owner);
     let mut alias = None;
     assert!(!lease.try_alias_into(&mut alias, 0).unwrap());
@@ -122,7 +122,7 @@ fn retained_document_assembly_and_read_alias_do_not_wait_on_contended_arena() {
 #[test]
 fn retained_document_assembly_reports_metadata_initialization_separately_from_empty_payload_capacity() {
     let mut owner = open();
-    let mut source = Some(super::tests::leaf_record(41, "first"));
+    let mut source = Some(tests::leaf_record(41, "first"));
     let mut allocated = 0;
     let mut initialized = 0;
     for _ in 0..1000 {
@@ -130,7 +130,7 @@ fn retained_document_assembly_reports_metadata_initialization_separately_from_em
         allocated += step.allocated_bytes; initialized += step.initialized_bytes;
         if source.is_none() { break; }
     }
-    let expected = allocated - std::mem::size_of::<UiNodeRecord>();
+    let expected = allocated - size_of::<UiNodeRecord>();
     let mut lease = finish(&mut owner);
     close(&mut lease, 64);
     eprintln!("[DEBUG] document-metadata allocated={allocated} initialized={initialized} expected-initialized={expected}");

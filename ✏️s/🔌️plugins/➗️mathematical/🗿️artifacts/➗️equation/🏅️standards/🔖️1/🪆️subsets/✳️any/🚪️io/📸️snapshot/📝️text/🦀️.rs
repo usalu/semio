@@ -42,7 +42,7 @@ pub struct EquationEdgeDsl {
 pub fn math_edge_to_dsl(edge: &EquationEdge, directed: bool) -> EquationEdgeDsl {
     let from = dsl::WireNode { id: edge.source.clone(), kind: None, port: None };
     let to = dsl::WireNode { id: edge.target.clone(), kind: None, port: None };
-    EquationEdgeDsl { id: edge.id.clone(), wire: dsl::Wire(dsl::WireValue { from, edge: Some((directed, to)), edge_label: dsl::WireEdgeLabel::default(), properties: dsl::DslValue::Object(Vec::new()) }) }
+    EquationEdgeDsl { id: edge.id.clone(), wire: dsl::Wire(dsl::WireValue { from, edge: Some((directed, to)), edge_label: dsl::WireEdgeLabel::default(), properties: DslValue::Object(Vec::new()) }) }
 }
 
 pub fn math_edge_from_dsl(edge: EquationEdgeDsl) -> Result<EquationEdge, String> {
@@ -195,7 +195,7 @@ fn dec_equation(s: &str) -> Result<EquationExprSnapshot, String> {
 }
 
 fn print_equation_snapshot_body(s: &EquationSnapshot) -> String {
-    format!("notation={}\nresults={}\ncomputed={}\nequation={}", enc_child(&s.notation), enc_child(&s.results), enc_child(&s.computed), enc_equation(&s.mathematical))
+    format!("notation={}\nresults={}\ncomputed={}\nequation={}", enc_child(&s.notation), enc_child(&s.results), enc_child(&s.computed), enc_equation(&s.equation))
 }
 fn parse_equation_snapshot_body(body: &str) -> Result<EquationSnapshot, String> {
     let mut notation = None;
@@ -228,7 +228,7 @@ fn parse_equation_snapshot_body(body: &str) -> Result<EquationSnapshot, String> 
 }
 //#endregion 🔖️TextPrimitives
 
-impl store::ArtifactDsl for EquationSnapshot {
+impl ArtifactDsl for EquationSnapshot {
     const EXTENSION: &'static str = "equation";
     fn envelope_id() -> &'static str {
         "mathematical.equation"
@@ -242,7 +242,7 @@ impl store::ArtifactDsl for EquationSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = print_equation_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative change-re-encode-quality mutation.
-use crate::artifacts::jpg::schema::diff::{self, *};
+use crate::artifacts::jpg::schema::diff::*;
 use crate::artifacts::jpg::schema::mutations::JpgMutation;
 use crate::artifacts::jpg::schema::snapshot::*;
 
@@ -27,12 +27,11 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ChangeReEncodeQualityM
         protocol::MutationOutcome::new(contribute(base, *quality))
     }
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgMutation> {
-        let Self { quality } = self;
         let outcome = <Self as protocol::MutationKind<JpgSnapshot, JpgMutation>>::diff(self, base);
         if <JpgDiff as protocol::DiffAlgebra<JpgSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
-        vec![JpgMutation::ChangeReEncodeQuality(crate::artifacts::jpg::schema::mutations::ChangeReEncodeQualityMutation { quality: base.re_encode_quality })]
+        vec![JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: base.re_encode_quality })]
     }
     fn label(&self) -> String {
         "change re encode quality".into()

@@ -1,7 +1,7 @@
 //! 📥️ DIN V 18599 play app — the inputs window: the raw compliance document, rendered as JSON.
 
 use crate::artifacts::din18599::Din18599Snapshot;
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_INPUTS: &str = "norm-din18599-inputs";

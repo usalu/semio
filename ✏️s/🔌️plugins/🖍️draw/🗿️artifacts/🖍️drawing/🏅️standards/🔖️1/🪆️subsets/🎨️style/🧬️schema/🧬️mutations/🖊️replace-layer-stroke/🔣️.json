@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖊️replace-layer-stroke",
+  "semanticKind": "replace-layer-stroke",
+  "displayName": "Replace Layer Stroke",
+  "emoji": "🖊️",
+  "aggregateVariant": "ReplaceLayerStroke",
+  "payloadSchema": "🦠️mutation/🦀️.rs#ReplaceLayerStroke",
+  "textOpcode": "replace-layer-stroke",
+  "binaryTag": 7,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "error",
+    "warning",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary"
+  ]
+}

@@ -74,7 +74,7 @@ impl WorldGlobalsRing {
             let base = buffer.contents().as_ptr().cast::<u8>();
             for (index, slot) in globals.iter().enumerate() {
                 let destination = base.add(index * WORLD_GLOBALS_SLOT_SIZE as usize);
-                std::ptr::copy_nonoverlapping((slot as *const WorldGlobalsGpu).cast::<u8>(), destination, std::mem::size_of::<WorldGlobalsGpu>());
+                std::ptr::copy_nonoverlapping((slot as *const WorldGlobalsGpu).cast::<u8>(), destination, size_of::<WorldGlobalsGpu>());
             }
         }
     }
@@ -127,8 +127,8 @@ pub fn encode_passes(encoder: &Encoder, pipelines: &Pipelines, resources: &GpuRe
     let Some(globals_buffer) = ring.buffer() else { return };
     let instance_buffer = frame_buffers.world_instances.buffer();
     let line_buffer = frame_buffers.world_lines.buffer();
-    let instance_stride = std::mem::size_of::<World3dGpuInstance>();
-    let line_stride = std::mem::size_of::<WorldLineGpuVertex>();
+    let instance_stride = size_of::<World3dGpuInstance>();
+    let line_stride = size_of::<WorldLineGpuVertex>();
 
     let mut instance_cursor: usize = 0;
     let mut line_cursor: usize = 0;

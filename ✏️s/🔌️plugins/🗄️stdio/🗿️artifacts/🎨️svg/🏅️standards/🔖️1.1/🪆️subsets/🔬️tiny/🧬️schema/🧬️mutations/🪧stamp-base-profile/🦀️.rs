@@ -20,7 +20,7 @@ pub struct StampBaseProfile {
 impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for StampBaseProfile {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "base-profile", kind: "stamp-base-profile", record: "StampBaseProfile" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgTinyMutation as protocol::Mutation<SvgSnapshot>>::Diff> {
+    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgTinyMutation as Mutation<SvgSnapshot>>::Diff> {
         agg_diff(&SvgTinyMutation::StampBaseProfile(self.clone()), base)
     }
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgTinyMutation> {

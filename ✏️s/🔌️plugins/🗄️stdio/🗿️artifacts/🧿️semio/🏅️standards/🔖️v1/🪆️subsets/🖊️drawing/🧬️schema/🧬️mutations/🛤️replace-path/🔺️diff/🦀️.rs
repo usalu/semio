@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `ReplacePath`.
 
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{DrawNodeDiff, DrawPathDiff, NodePath, SemioDrawingDiff, diff_at_path, node_at};
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment, SemioDrawingSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{DrawNodeDiff, DrawPathDiff, SemioDrawingDiff, diff_at_path, node_at};
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

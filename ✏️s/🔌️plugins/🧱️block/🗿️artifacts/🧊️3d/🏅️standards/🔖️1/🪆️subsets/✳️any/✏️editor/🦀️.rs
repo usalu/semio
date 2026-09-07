@@ -684,13 +684,13 @@ impl ArtifactEditor for Block3dPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Block3dPlayApp>,
+        owner: EditorApp<Block3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.block.block3d@1/*#editor",
         document_schema: "block.3d",
         factory: "Block3dRetainedCommandJobFactory",
         factory_type: Block3dRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
         tools: [
             "patchObjectKind",
             "addRepresentation",

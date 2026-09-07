@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the raster editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum RasterApps: PluginApp {
-        RasterEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::raster::RasterPlayApp>>),
-        RasterViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::raster::RasterViewer>>),
+        RasterEditor(VcsArtifactApp<EditorApp<crate::editor::raster::RasterPlayApp>>),
+        RasterViewer(VcsArtifactApp<ViewerApp<crate::viewer::raster::RasterViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -24,7 +24,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// only vocabulary is "load a registered example document". `🧩️puzzle` sets the same precedent: it
 /// mounts and tests its three `demo-session` leaves but registers only the artifact-level fixtures in
 /// its subsets' `examples()`; `🧱️block` ships no editor-level session example at all.
-fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+fn examples() -> Vec<ExampleSource> {
     vec![crate::examples::art_raster_demo::source()]
 }
 //#endregion 📚️Examples
@@ -46,12 +46,12 @@ fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
 /// the SDK-gap note in `create_raster_app`'s own doc — "`.editor::<E>(def)` discards `App.examples`,
 /// there is no place left for the old `.example(...)` calls" — was answered by this builder twin,
 /// already in production use on `🌀️procedural`'s two editors. `examples()` above is what it stamps.
-pub fn plugin() -> Result<Plugin<RasterApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<RasterApps>, PluginAssemblyError> {
     Plugin::<RasterApps>::builder("raster")
         .label("Raster")
         .version("0.1.0")
         .package_id("semio:raster")
-        .artifact(crate::artifacts::raster::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::raster::declaration().map_err(PluginAssemblyError::definition)?)
         .editor_with_examples::<crate::editor::raster::RasterPlayApp>(crate::editor::raster::create_raster_app(), examples())
         .editor_mutation_roster::<crate::editor::raster::RasterPlayApp>()
         .viewer::<crate::viewer::raster::RasterViewer>(crate::viewer::raster::create_raster_viewer())

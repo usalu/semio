@@ -330,8 +330,8 @@ impl semio_framework::ToolJobFactory for ShootingCommandJobFactory {
         SHOOTING_RETAINED_PAYLOAD_SCHEMA
     }
 
-    fn classification(&self) -> semio_framework::InteractiveJobClassification {
-        semio_framework::InteractiveJobClassification::Migrated
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
     }
 
     fn execution_contract(&self) -> ToolExecutionContract {
@@ -357,7 +357,7 @@ impl semio_framework::ToolJobFactory for ShootingCommandJobFactory {
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ShootingCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<ShootingPlayApp>;
+    type Owner = EditorApp<ShootingPlayApp>;
     const TOOL_IDS: &'static [&'static str] = SHOOTING_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
@@ -385,15 +385,15 @@ impl ArtifactEditor for ShootingPlayApp {
     const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<ShootingPlayApp>,
+        owner: EditorApp<ShootingPlayApp>,
         owner_file: "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.shooting.shooting@1/*#editor",
         document_schema: "shooting.shooting",
         factory: "ShootingCommandJobFactory",
         factory_type: ShootingCommandJobFactory,
         tools: {
-            "loadRequest" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-            "importAssetRequest" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "loadRequest" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "importAssetRequest" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
         }
     }
 

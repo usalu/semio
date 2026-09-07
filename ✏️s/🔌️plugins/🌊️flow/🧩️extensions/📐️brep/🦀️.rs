@@ -2323,18 +2323,18 @@ mod extension_guest {
         let flow_topic = flow_extension_topic_contribution(FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json);
         let procedural3d_topic = flow_extension_topic_contribution(PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json);
         let bundle = ExtensionBundle::new("flow-extension-brep", "Brep", "0.3.0").extends("flow");
-        let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Linked));
-        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(flow_topic.topic, flow_topic.payload));
-        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload));
-        let bundle = semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
+        let bundle = bundle.mode(ExecutionMode::Linked);
+        let bundle = bundle.contributes_topic(flow_topic.topic, flow_topic.payload);
+        let bundle = bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload);
+        let bundle = bundle.handler("evaluate", |req| {
                 evaluate_invoke_json(&neural_engine::ColdOwner::new(semio_framework::io::resolve_ready(module_registry())), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err))
-            }));
-        semio_framework::io::resolve_ready(bundle.handler("tessellate", |req| {
+            });
+        bundle.handler("tessellate", |req| {
                 let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), err.to_string()))?;
                 let handle = request.get("handle").and_then(pack::json::Value::as_str).ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), "missing field `handle`".to_string()))?;
                 let tolerance = request.get("tolerance").and_then(pack::json::Value::as_f64).unwrap_or(0.05);
                 Ok(flow_extension_sdk::brep_geometry::tessellate_geometry_json_for_wasm(handle, tolerance).into_bytes())
-            }))
+            })
     }
 
     #[test]

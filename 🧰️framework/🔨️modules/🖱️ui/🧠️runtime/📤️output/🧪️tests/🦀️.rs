@@ -40,7 +40,7 @@ fn surface_output_pool_reserves_before_producer_and_refuses_the_sixty_fifth() {
 #[test]
 fn surface_output_pool_static_backing_joins_existing_ledger_once_without_a_root_slot() {
     let before = ui_contract::UiResidentPermit::snapshot().unwrap();
-    let expected = std::mem::size_of::<LazyLock<Mutex<SurfaceReconcileHandbackRegistry>>>() + SurfaceReconcileOutputs::static_backing_bytes();
+    let expected = size_of::<LazyLock<Mutex<SurfaceReconcileHandbackRegistry>>>() + SurfaceReconcileOutputs::static_backing_bytes();
     let mut first = SurfaceReconcileOutputs::default();
     let mut second = SurfaceReconcileOutputs::default();
     assert!(first.try_reserve(1, 0).unwrap().is_none());

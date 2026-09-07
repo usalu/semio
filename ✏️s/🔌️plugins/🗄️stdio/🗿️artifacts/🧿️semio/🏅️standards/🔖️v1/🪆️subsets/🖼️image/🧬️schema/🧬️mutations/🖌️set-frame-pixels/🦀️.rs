@@ -15,7 +15,7 @@ pub struct SetFramePixels {
 impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetFramePixels {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-pixels", kind: "set-frame-pixels", record: "SetFramePixels" };
 
-    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<SemioImageMutation as protocol::Mutation<SemioImageSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<SemioImageMutation as Mutation<SemioImageSnapshot>>::Diff> {
         agg_diff(&SemioImageMutation::SetFramePixels(self.clone()), base)
     }
     fn inverse(&self, base: &SemioImageSnapshot) -> Vec<SemioImageMutation> {

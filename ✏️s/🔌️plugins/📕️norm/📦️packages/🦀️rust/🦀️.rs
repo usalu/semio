@@ -7192,7 +7192,7 @@ pub mod viewer {
 #[path = "../../🦀️.rs"]
 mod plugin;
 pub use plugin::{plugin, NormApps};
-semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::NormApps);
+semio_framework_plugin::plugin_exports!(plugin, NormApps);
 
 //#region 📚️Examples
 #[path = "."]

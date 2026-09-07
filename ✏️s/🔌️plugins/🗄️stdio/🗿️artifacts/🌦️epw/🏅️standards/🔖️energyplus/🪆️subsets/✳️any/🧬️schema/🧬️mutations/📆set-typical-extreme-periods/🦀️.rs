@@ -16,7 +16,7 @@ pub struct SetTypicalExtremePeriods {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetTypicalExtremePeriods {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "typical-extreme-periods", kind: "set-typical-extreme-periods", record: "SetTypicalExtremePeriods" };
 
-    fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as protocol::Mutation<EpwSnapshot>>::Diff> {
+    fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
         agg_diff(&EpwMutation::SetTypicalExtremePeriods(self.clone()), base)
     }
     fn inverse(&self, base: &EpwSnapshot) -> Vec<EpwMutation> {

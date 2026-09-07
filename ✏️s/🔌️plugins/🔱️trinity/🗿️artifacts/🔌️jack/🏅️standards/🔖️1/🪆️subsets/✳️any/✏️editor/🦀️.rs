@@ -506,13 +506,13 @@ impl ArtifactEditor for TrinityJackPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<TrinityJackPlayApp>,
+        owner: EditorApp<TrinityJackPlayApp>,
         owner_file: "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.trinity.jack@1/*#editor",
         document_schema: "trinity.graph",
         factory: "JackRetainedConfigJobFactory",
         factory_type: JackRetainedConfigJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
+        contract: ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
         tools: ["setViewport", "textEdit", "textSelect", "requestCompletions", "setLodMode", "editorEngagementInput", "graphEngagementInput", "resultsEngagementInput"]
     }
 

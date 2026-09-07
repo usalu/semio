@@ -1,6 +1,5 @@
 //! 💾️ Direct replace-tag binary codec.
 use super::*;
-use crate::artifacts::tiff::schema::diff::{self, *};
 use crate::artifacts::tiff::schema::mutations::binary::Entry;
 pub const BINARY_TAG: u8 = 5;
 pub const CODEC: Entry = Entry { tag: BINARY_TAG, encode, decode };
@@ -19,9 +18,6 @@ pub fn encode_payload(payload: &ReplaceTagMutation) -> Result<Vec<u8>, protocol:
     enc_values_bin(values, &mut out);
     Ok(out)
 }
-fn op_pack_err(error: dsl::PackError) -> protocol::ProtocolError {
-    protocol::ProtocolError::Malformed { what: "replace-tag", offset: 0, detail: error.to_string() }
-}
 pub fn decode(bytes: &[u8]) -> Result<TiffMutation, protocol::ProtocolError> {
     let mut reader = store::ByteReader::new(bytes);
     let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
@@ -30,7 +26,7 @@ pub fn decode(bytes: &[u8]) -> Result<TiffMutation, protocol::ProtocolError> {
         let tag = reader.read_u16_le().map_err(|e| malformed("op tag", reader.position(), e.to_string()))?;
         let kind = TiffFieldType::from_u16(reader.read_u8().map_err(|e| malformed("op kind", reader.position(), e.to_string()))? as u16).map_err(|e| malformed("op kind", reader.position(), e))?;
         let values = dec_values_bin(&mut reader).map_err(|e| malformed("op values", reader.position(), e))?;
-        Ok(TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index, tag, kind, values }))
+        Ok(TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index, tag, kind, values }))
     };
     let position = reader.position();
     if position != bytes.len() {

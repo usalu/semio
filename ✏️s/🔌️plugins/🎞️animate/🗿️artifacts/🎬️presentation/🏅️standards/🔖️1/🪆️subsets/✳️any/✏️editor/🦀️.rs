@@ -16,7 +16,7 @@
 //! body-key → node, `🔖️Io`/`🔌️Registration` regions below, and a `🔖️Manifest` region that calls one
 //! `definition()` per node.
 
-use crate::artifacts::presentation::mutations::create_tile::mutation::CreateTile;
+use crate::artifacts::presentation::mutations::create_tile::CreateTile;
 use crate::artifacts::presentation::op::PresentationMutation;
 use crate::artifacts::presentation::schema::build_tile_morph_prompt;
 use crate::artifacts::presentation::{default_presentation_snapshot, FigureTileDraft, PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
@@ -498,13 +498,13 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<AnimatePresentationPlayApp>,
+        owner: EditorApp<AnimatePresentationPlayApp>,
         owner_file: "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.animate.presentation@1/*#editor",
         document_schema: "animate.presentation",
         factory: "AnimatePresentationRetainedCommandJobFactory",
         factory_type: AnimatePresentationRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 65_536, 7_500),
+        contract: ToolExecutionContract::bounded_first_step(8_192, 64, 1, 65_536, 7_500),
         tools: ["setActiveExample", "engagementInput", "setLocale", "noMutation"]
     }
 
@@ -719,7 +719,7 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
                 },
             })
             .window_kind_interactions(tile_editor::PRESENTATION_PLAY_WINDOW_MAIN, vec![InteractionRef::new(PRESENTATION_INTERACTION_DOMAIN)])
-            .config(semio_framework_plugin::resolve_ready(AnimatePresentationPlayApp::config_spec()))
+            .config(AnimatePresentationPlayApp::config_spec())
             .io(presentation_io())
             // 🚧️ SDK GAP (contract §2.4): no `.example(...)`/`.workflow(...)` on `EditorBuilder` — the
             // old `crate::examples::art_presentation_demo::source()` app-level example registration and the

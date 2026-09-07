@@ -3,10 +3,9 @@
 //! no-op (`RasterDiff::default()` / `Vec::new()`), never a panic.
 
 pub mod mutation {
-use crate::artifacts::raster::diff::{diff_patch_layer, RasterDiff};
+use crate::artifacts::raster::diff::RasterDiff;
 use crate::artifacts::raster::mutations::RasterMutation;
-use crate::artifacts::raster::schema::find_layer;
-use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
+use crate::artifacts::raster::RasterSnapshot;
 
 //#region 🔖️ResizeLayer
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]

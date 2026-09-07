@@ -194,7 +194,7 @@ impl DrawingGestureOperationOwner {
     }
 }
 
-impl semio_framework_job::FixedOperationOwner for DrawingGestureOperationOwner {
+impl FixedOperationOwner for DrawingGestureOperationOwner {
     fn retained_bytes(&self) -> usize {
         DRAWING_GESTURE_RETAINED_BYTES
     }
@@ -770,7 +770,7 @@ mod gesture_operation_owner_tests {
 
     #[test]
     fn drawing_completion_rejection_retires_child_before_decoder_without_redispatch() {
-        let mut emit: semio_framework_plugin::Emit<DrawingMutation, DrawingConfigMutation, NoDraftMutation> = semio_framework_plugin::Emit::default();
+        let mut emit: Emit<DrawingMutation, DrawingConfigMutation, NoDraftMutation> = Emit::default();
         emit.child_emits.push(semio_framework_plugin::app::ChildEmit::of::<DrawingSnapshot, DrawingMutation>("member", "drawing-child", Vec::new()));
         let rejected = semio_framework_plugin::app::ArtifactToolCompletionRejection::<semio_framework_plugin::EditorApp<DrawingPlayApp>> {
             emit: Ok(emit),
@@ -1032,8 +1032,8 @@ impl DrawingBoundedCommandJobFactory {
 }
 
 impl semio_framework::ToolJobFactory for DrawingBoundedCommandJobFactory {
-    type Payload = semio_framework_plugin::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<DrawingPlayApp>>;
-    type Job = semio_framework_plugin::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<DrawingPlayApp>>;
+    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<DrawingPlayApp>>;
+    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<DrawingPlayApp>>;
 
     fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
         &self.keys
@@ -1052,7 +1052,7 @@ impl semio_framework::ToolJobFactory for DrawingBoundedCommandJobFactory {
     }
 
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        Ok(semio_framework_plugin::ArtifactRetainedCommandJob::new(payload))
+        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
     }
 
     fn create_job_from_wire_pages_with_payload(
@@ -1065,7 +1065,7 @@ impl semio_framework::ToolJobFactory for DrawingBoundedCommandJobFactory {
         if checkpoint.is_some() || input.declared_bytes() > DRAWING_BOUNDED_RAW_BYTES {
             return Err((semio_framework::ToolJobFactoryError::new("bounded Drawing command ingress rejects a checkpoint or oversized wire owner"), input, checkpoint));
         }
-        Ok(semio_framework_plugin::ArtifactRetainedCommandJob::from_wire(payload, input))
+        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input))
     }
 }
 
@@ -1083,7 +1083,7 @@ fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJo
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.bounded.tool-mismatch"), "bounded Drawing command does not match its exact registered tool or exceeds its declared extent"));
     }
     let tool_id = request.command.command_id();
-    let work: Box<dyn semio_framework_plugin::ArtifactCommandWork<semio_framework_plugin::EditorApp<DrawingPlayApp>>> =
+    let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<DrawingPlayApp>>> =
         Box::new(semio_framework_plugin::BoundedArtifactCommandWork::new(tool_id, drawing_bounded_reduce, drawing_bounded_extent));
     let operation_context = semio_framework_plugin::AppOperationContext {
         app_instance_id: request.app_instance_id,
@@ -1092,7 +1092,7 @@ fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJo
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
     };
-    let payload = semio_framework_plugin::ArtifactRetainedCommandPayload::try_new(
+    let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
         *request.command,
         request.snapshot,
         request.config,
@@ -1873,7 +1873,7 @@ mod tests {
             value.children.push(crate::artifacts::drawing::schema::create_drawing_path_layer("Path", vec![crate::artifacts::drawing::PathSegment::Move { to: [1.0, 2.0] }, crate::artifacts::drawing::PathSegment::Line { to: [3.0, 4.0] }]));
         }
         let retained_target = match &group {
-            DrawingLayerNode::Group(value) => crate::artifacts::drawing::schema::layer_id(&value.children[0]).to_string(),
+            DrawingLayerNode::Group(value) => layer_id(&value.children[0]).to_string(),
             _ => unreachable!("retained Drawing fixture group remains exact"),
         };
         snapshot.layers.push(group);
@@ -1888,7 +1888,7 @@ mod tests {
                 "edits": [{
                     "id": "drawing-retained-edit-final",
                     "actor": "drawing-retained-actor",
-                    "forwards": [crate::artifacts::drawing::mutations::DrawingMutation::RenameLayer(crate::artifacts::drawing::mutations::RenameLayer { layer_id: retained_target.clone(), new_name: "Retained Path".into() })],
+                    "forwards": [DrawingMutation::RenameLayer(crate::artifacts::drawing::mutations::RenameLayer { layer_id: retained_target.clone(), new_name: "Retained Path".into() })],
                     "inverse": [],
                     "sequenceNumber": 1,
                     "startedAt": "2026-08-23T00:00:00.000Z"

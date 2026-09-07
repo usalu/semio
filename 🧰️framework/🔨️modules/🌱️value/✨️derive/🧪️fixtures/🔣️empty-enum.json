@@ -1,0 +1,6 @@
+[
+  { "value": "", "emptyAccepted": false, "unitAccepted": false },
+  { "value": "first", "emptyAccepted": false, "unitAccepted": true },
+  { "value": "secondOne", "emptyAccepted": false, "unitAccepted": true },
+  { "value": "unknown", "emptyAccepted": false, "unitAccepted": false }
+]

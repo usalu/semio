@@ -9,7 +9,7 @@ use crate::artifacts::rewriting::op::RewriteRuleMutation;
 use crate::artifacts::rewriting::{RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
 use crate::viewer::rewriting::modes::view;
 use crate::viewer::rewriting::modes::view::windows::rule;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

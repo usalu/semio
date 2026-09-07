@@ -5,7 +5,7 @@
 
 use crate::pipelines::Pipelines;
 use std::collections::HashMap;
-use ui_render::{AtlasId, BackendError, MeshId, ResourceKind, ResourceOp, TextureId};
+use ui_render::{AtlasId, BackendError, MeshId, ResourceOp, TextureId};
 use wgpu::util::DeviceExt;
 
 //#region 🔖️Resources

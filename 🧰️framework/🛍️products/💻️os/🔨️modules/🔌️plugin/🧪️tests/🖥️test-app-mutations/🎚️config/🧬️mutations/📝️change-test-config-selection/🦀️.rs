@@ -16,9 +16,9 @@ impl ChangeTestConfigSelection {
     const TAG: u8 = 0x73;
 }
 impl OpText for ChangeTestConfigSelection {
-    fn parse_op(line: &str) -> Result<Self, crate::store::TextError> {
-        let value = line.strip_prefix("change-test-config-selection ").ok_or_else(|| crate::store::TextError::new("expected change-test-config-selection", crate::store::TextSpan::at(1, 1)))?;
-        Ok(Self { selected: serde_json::from_str(value).map_err(|_| crate::store::TextError::new("selection must be a JSON nullable string", crate::store::TextSpan::at(1, 1)))? })
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        let value = line.strip_prefix("change-test-config-selection ").ok_or_else(|| store::TextError::new("expected change-test-config-selection", store::TextSpan::at(1, 1)))?;
+        Ok(Self { selected: serde_json::from_str(value).map_err(|_| store::TextError::new("selection must be a JSON nullable string", store::TextSpan::at(1, 1)))? })
     }
     fn print_op(&self) -> String {
         format!("{} {}", Self::OPCODE, serde_json::to_string(&self.selected).expect("nullable string serializes"))

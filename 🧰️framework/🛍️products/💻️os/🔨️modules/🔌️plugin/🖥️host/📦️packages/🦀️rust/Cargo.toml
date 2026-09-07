@@ -23,6 +23,7 @@ path = "../../🧵️shard/👶️child/🦀️.rs"
 
 [dependencies]
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-ui-contract = { path = "../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 ui_wgpu = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }

@@ -4,7 +4,7 @@ use crate::artifacts::dag::schema::document_to_workflow;
 use crate::artifacts::dag::DagSnapshot;
 use crate::editor::dag::terminology::DagPlayLabels;
 use infinite_board_port_directed_dag::DagCamera;
-use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, BuiltNode, UiAssemblyResult, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const DAG_PLAY_WINDOW_MAIN: &str = "dag-main";
@@ -42,10 +42,10 @@ pub fn definition() -> WindowKindDefinition {
 /// `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
 /// (unlike `UiNode::Tree`) — `selection`/`hover` are left at `NodeGraphScene::base`'s defaults
 /// (empty/none), matching `space`'s workflow window's identical gap.
-pub fn render(document: &DagSnapshot, camera: &DagCamera, _labels: &DagPlayLabels) -> UiNode {
+pub fn render(document: &DagSnapshot, camera: &DagCamera, _labels: &DagPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges) = document_to_workflow(document);
     let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
-    build_node_graph_scene(DAG_PLAY_SURFACE_MAIN, crate::editor::dag::DAG_PLAY_APP_ID, NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
+    scene_surface(DAG_PLAY_SURFACE_MAIN, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render
 
@@ -57,8 +57,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_node_graph_scene() {
-        let mut app = new_app();
-        let json = render_body(&mut app, DAG_PLAY_BODY_MAIN);
+        let mut app = new_app().await;
+        let json = render_body(&mut app, DAG_PLAY_BODY_MAIN).await;
         assert!(json.contains("node-graph"));
     }
 

@@ -24,6 +24,9 @@ use serde::{Deserialize, Serialize};
 
 pub use semio_framework_job as job;
 
+#[path = "🎠️activation/🦀️.rs"]
+pub mod activation;
+
 #[path = "🚪️lifetime/🦀️.rs"]
 pub mod instance_lifetime;
 
@@ -33,6 +36,9 @@ pub mod byte_page;
 #[path = "📤️return/🦀️.rs"]
 pub mod return_page;
 
+#[path = "📥️cold-pair/🦀️.rs"]
+pub mod cold_pair;
+
 #[cfg(test)]
 #[path = "📃️page/🧪️tests/🦀️.rs"]
 mod byte_page_tests;
@@ -40,6 +46,10 @@ mod byte_page_tests;
 #[cfg(test)]
 #[path = "📤️return/🧪️tests/🦀️.rs"]
 mod return_page_tests;
+
+#[cfg(test)]
+#[path = "📥️cold-pair/🧪️tests/🦀️.rs"]
+mod cold_pair_tests;
 
 //#region 🧬️SchemaMetadata
 #[cfg(feature = "typegen")]
@@ -142,7 +152,31 @@ pub mod schema_metadata {
         SchemaMetadata { name: "ShardMetricsSample", version: 1, typescript: "export type ShardMetricsSample = { shard: ShardId, metrics: ShardMetrics, };" },
         SchemaMetadata { name: "ShardTable", version: 1, typescript: "export type ShardTable = { kind: ShardKind, shard_count: number, exclusive_reserve: number, assignment: Record<string, ShardId>, exclusive_leases: Record<string, ActorId>, };" },
         SchemaMetadata { name: "TurnGrant", version: 1, typescript: "export type TurnGrant = { actor: ActorId, shard: ShardId, budget: Budget, envelopes: Array<Envelope>, };" },
-        SchemaMetadata { name: "TurnResult", version: 1, typescript: "export type TurnResult = { ui_patches: Array<number>, effects: Array<number>, command_ingress: Array<number>, lifecycle_receipt: import(\"../🚪️lifetime/🟦️component.js\").ActorInstanceLifecycleReceipt | null, ui_patch_receipt: import(\"../🚪️lifetime/🩹️patch/🟦️component.js\").ActorUiPatchReceipt | null, next_wake: bigint | null, status: TurnStatus, usage: Usage, };" },
+        SchemaMetadata {
+            name: "TurnResult",
+            version: 1,
+            typescript: "export type TurnResult = { ui_patches: Array<number>, effects: Array<number>, command_ingress: Array<number>, cold_pair_ingress: ColdPairIngressStatus, lifecycle_receipt: import(\"../🚪️lifetime/🟦️component.js\").ActorInstanceLifecycleReceipt | null, ui_patch_receipt: import(\"../🚪️lifetime/🩹️patch/🟦️component.js\").ActorUiPatchReceipt | null, next_wake: bigint | null, status: TurnStatus, usage: Usage, };",
+        },
+        SchemaMetadata {
+            name: "ColdPairIngressStatus",
+            version: 1,
+            typescript: r#"export type ColdPairIngressStatus = { "kind": "idle" } | { "kind": "pageAccepted", cursor: ColdDocumentPairCursor, } | { "kind": "backpressure", cursor: ColdDocumentPairCursor, } | { "kind": "loading", cursor: ColdDocumentPairCursor, } | { "kind": "applied", receipt: ColdDocumentPairApplied, } | { "kind": "fault", cursor: ColdDocumentPairCursor, fault: Array<number>, };"#,
+        },
+        SchemaMetadata {
+            name: "ColdDocumentPairCursor",
+            version: 1,
+            typescript: "export type ColdDocumentPairCursor = { lifetime: import(\"../🚪️lifetime/🟦️component.js\").ActorInstanceLifetime, transfer_generation: bigint, page_index: number, page_count: number, };",
+        },
+        SchemaMetadata {
+            name: "ColdDocumentPairFrontier",
+            version: 1,
+            typescript: "export type ColdDocumentPairFrontier = { document_id: string, head_edit_ordinal: bigint, head_edit_id: string, last_commit_seq: bigint, chain_sha256: Array<number>, };",
+        },
+        SchemaMetadata {
+            name: "ColdDocumentPairApplied",
+            version: 1,
+            typescript: "export type ColdDocumentPairApplied = { lifetime: import(\"../🚪️lifetime/🟦️component.js\").ActorInstanceLifetime, transfer_generation: bigint, baseline_frontier: ColdDocumentPairFrontier, aggregate_sha256: Array<number>, };",
+        },
         SchemaMetadata {
             name: "TurnStatus",
             version: 1,
@@ -196,6 +230,7 @@ pub mod pack {
         OverlongVarint(usize),
         InvalidLifecycle(&'static str),
         InvalidUiPatchReceipt(&'static str),
+        InvalidColdPair(&'static str),
     }
 
     impl std::fmt::Display for PackError {
@@ -207,6 +242,7 @@ pub mod pack {
                 Self::OverlongVarint(offset) => write!(formatter, "pack: overlong varint at offset {offset}"),
                 Self::InvalidLifecycle(reason) => write!(formatter, "pack: invalid instance lifecycle: {reason}"),
                 Self::InvalidUiPatchReceipt(reason) => write!(formatter, "pack: invalid issued UI patch receipt: {reason}"),
+                Self::InvalidColdPair(reason) => write!(formatter, "pack: invalid cold document pair status: {reason}"),
             }
         }
     }
@@ -343,11 +379,7 @@ pub mod pack {
         }
     }
     pub async fn read_opt_bytes(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<Option<Vec<u8>>, PackError> {
-        if read_bool(bytes, pos, what).await? {
-            Ok(Some(read_bytes(bytes, pos, what).await?))
-        } else {
-            Ok(None)
-        }
+        if read_bool(bytes, pos, what).await? { Ok(Some(read_bytes(bytes, pos, what).await?)) } else { Ok(None) }
     }
 
     /// 🪡 Same rationale as `write_opt_bytes`/`read_opt_bytes`, for `Option<u64>` (deadlines/wake times).
@@ -358,11 +390,7 @@ pub mod pack {
         }
     }
     pub async fn read_opt_u64(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<Option<u64>, PackError> {
-        if read_bool(bytes, pos, what).await? {
-            Ok(Some(read_u64(bytes, pos, what).await?))
-        } else {
-            Ok(None)
-        }
+        if read_bool(bytes, pos, what).await? { Ok(Some(read_u64(bytes, pos, what).await?)) } else { Ok(None) }
     }
 
     /// 🪡 `f` is a bare async fn item (`Type::pack_encode`), never a closure — fn items are
@@ -388,8 +416,7 @@ pub mod pack {
 
 //#region 📦️PackageId
 /// 📦️ Stable identity of an installed plugin or plugin+extension pair: `<plugin>` or `<plugin>/<extension>`.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value", transparent)]
 pub struct PackageId(pub String);
 
@@ -403,8 +430,7 @@ impl PackageId {
 }
 
 /// 🧬️ Blake3 hash of a compiled component's bytes — the compiled-cache key (`~/.semio/cache/wasmtime/...`).
-#[derive(Clone, Copy, PartialEq, Eq, Hash, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value", transparent)]
 pub struct PackageHash(pub [u8; 32]);
 
@@ -432,8 +458,7 @@ impl PackageHash {
 /// 🆔️ Bit-packed actor identifier: `plugin_ordinal:u16 | kind:u2 | ordinal:u32 | generation:u14`.
 /// Generation makes restart-after-trap addressable without id reuse. The kernel re-exports this
 /// type as `RuntimeActorId` (`kernel::ActorId` already names the presence/collab actor — never shadow).
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value", transparent)]
 pub struct ActorId(pub u64);
 
@@ -497,8 +522,7 @@ impl std::fmt::Debug for ActorId {
 //#region 🎭️ActorKind
 /// 🎭️ What an actor slot represents: a running app instance, an activated extension, or a
 /// background job spawned by another actor. Discriminant order matches `ActorId`'s `kind:u2` tag.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ActorKind {
@@ -552,8 +576,7 @@ impl ActorKind {
 //#region 🛣️Lane
 /// 🛣️ Scheduling priority class. Ordered highest-to-lowest priority by declaration order — see
 /// [`Lane::priority_rank`].
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub enum Lane {
     Interactive,
@@ -613,8 +636,7 @@ impl Lane {
 
 //#region ⚖️Budget
 /// ⚖️ Per-turn resource ceilings enforced host-side. Replaces `PLUGIN_FUEL_BUDGET`.
-#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct Budget {
     pub fuel: u64,
@@ -687,8 +709,7 @@ pub mod lane_defaults {
 
 //#region 🪪️JobBridge
 /// 🪪️ Stable operation identity carried by every actor job turn and publication.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct JobOperation {
     pub operation: u64,
@@ -727,8 +748,7 @@ impl JobOperation {
 }
 
 /// 📸️ Opaque resumable state plus the committed progress boundary it represents.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct JobCheckpoint {
     pub state: Vec<u8>,
@@ -747,8 +767,7 @@ impl JobCheckpoint {
 }
 
 /// 🏁️ Final persisted job state and its authoritative output candidate.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct JobCommitCandidate {
     pub state: Vec<u8>,
@@ -767,8 +786,7 @@ impl JobCommitCandidate {
 }
 
 /// 🚦️ Lossless actor-wire mirror of one universal `StepOutcome`.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum JobStepOutcome {
@@ -818,8 +836,7 @@ impl JobStepOutcome {
 }
 
 /// 🎫️ One explicitly-addressed bounded job turn.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct JobTurn {
     pub job: u64,
@@ -840,8 +857,7 @@ impl JobTurn {
 }
 
 /// 📡️ One validated, replay-addressable publication from a bounded job turn.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct JobPublication {
     pub turn: JobTurn,
@@ -880,8 +896,7 @@ const JOB_REPLAY_SCALAR_TRANSFERS: u8 = 12;
 static JOB_REPLAY_PROCESS_PAGES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
 /// 🧭️ Versioned mounted route identity shared by capture and replay.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct JobReplayRoute {
     pub plugin: [u8; 32],
@@ -896,8 +911,7 @@ pub struct JobReplayRoute {
 }
 
 /// 🪪️ Exact fixed request identity retained from `Effect::SpawnJob` through publication.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct JobReplayRequest {
     pub controller: [u8; 32],
@@ -939,8 +953,7 @@ impl JobReplayRoute {
 }
 
 /// 🎯️ Observable P2d disposition recorded after the exact owner crosses the overlay boundary.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub enum JobReplayPublicationPolicy {
     Pending,
@@ -950,8 +963,7 @@ pub enum JobReplayPublicationPolicy {
 }
 
 /// 📡️ Typed publication classification retained without cloning its payload.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub enum JobReplayPublicationKind {
     Yield,
@@ -1018,7 +1030,7 @@ impl JobReplayPage {
             return Err(JobReplayFault::PageBytes);
         }
         JOB_REPLAY_PROCESS_PAGES
-            .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(|next| *next <= JOB_REPLAY_PROCESS_PAGE_CAPACITY))
+            .try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(|next| *next <= JOB_REPLAY_PROCESS_PAGE_CAPACITY))
             .map_err(|_| JobReplayFault::ProcessPages)?;
         let mut storage = Box::new([MaybeUninit::uninit(); JOB_REPLAY_PAGE_BYTES]);
         for (target, byte) in storage[..bytes.len()].iter_mut().zip(bytes.iter().copied()) {
@@ -1702,12 +1714,14 @@ impl std::fmt::Display for JobPublicationError {
 
 impl std::error::Error for JobPublicationError {}
 
+#[cfg(test)]
 struct JobPayloadProjection {
     owner: Option<job::RetainedJobPayload>,
     bytes: Vec<u8>,
     page: usize,
 }
 
+#[cfg(test)]
 impl JobPayloadProjection {
     fn new(owner: job::RetainedJobPayload) -> Self {
         let bytes = Vec::with_capacity(owner.len());
@@ -1742,6 +1756,7 @@ impl JobPayloadProjection {
     }
 }
 
+#[cfg(test)]
 enum JobOutcomeProjection {
     Preview { payload: JobPayloadProjection },
     Checkpoint { state: JobPayloadProjection, applied_progress: u64 },
@@ -1749,6 +1764,7 @@ enum JobOutcomeProjection {
     Fault { detail: JobPayloadProjection },
 }
 
+#[cfg(test)]
 impl JobOutcomeProjection {
     fn start(outcome: job::StepOutcome) -> Result<JobStepOutcome, Self> {
         match outcome {
@@ -2661,8 +2677,7 @@ impl Drop for JobProgressCheckout<'_> {
 //#region ✉️Envelope
 /// 🪟 Local, opaque window identifier ([`Origin::Ui`]'s target) — the concrete `WindowHandle`
 /// lives in the kernel crate; this crate only ever routes by this bare numeric id.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value", transparent)]
 pub struct WindowId(pub u32);
 
@@ -2676,8 +2691,7 @@ impl WindowId {
 }
 
 /// ✉️ Who sent an [`Envelope`].
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Origin {
@@ -2731,8 +2745,7 @@ impl Origin {
 
 /// ✉️ The message body an [`Envelope`] carries. `Event` is an opaque pack-encoded blob of the
 /// kernel crate's concrete `Event` type — see the module-level seam docstring.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Payload {
@@ -2826,8 +2839,7 @@ impl Payload {
 //#region 🔑️CoalesceKey
 /// 🔑️ Latest-wins-per-`(actor, key)` coalescing key. Pointer-move, resize, presence, refresh all
 /// coalesce under this — 200 stale mouse-moves must never queue.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value", transparent)]
 pub struct CoalesceKey(pub String);
 
@@ -2844,8 +2856,7 @@ impl CoalesceKey {
 /// ✉️ One routed message: destination, sender, scheduling lane, an optional deadline that
 /// short-circuits DRR ordering, an optional coalescing key, an optional envelope-seq this cancels,
 /// and its payload.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct Envelope {
     pub to: ActorId,
@@ -2888,8 +2899,7 @@ impl Envelope {
 
 //#region 🔁️TurnResult
 /// 🔁️ How a turn left the actor.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum TurnStatus {
@@ -2954,8 +2964,7 @@ impl TurnStatus {
 }
 
 /// 📊️ What one turn actually spent.
-#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct Usage {
     pub fuel: u64,
@@ -2976,13 +2985,13 @@ impl Usage {
 
 /// 🔁️ What a `GuestRuntime::execute_turn` (packet B1) hands back to the kernel. `ui_patches`/
 /// `effects` are opaque pack-encoded `Vec<UiPatch>`/`Vec<Effect>` blobs — see the module seam docstring.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct TurnResult {
     pub ui_patches: Vec<u8>,
     pub effects: Vec<u8>,
     pub command_ingress: Vec<u8>,
+    pub cold_pair_ingress: cold_pair::ColdPairIngressStatus,
     pub lifecycle_receipt: Option<instance_lifetime::ActorInstanceLifecycleReceipt>,
     pub ui_patch_receipt: Option<instance_lifetime::ActorUiPatchReceipt>,
     pub next_wake: Option<u64>,
@@ -2997,6 +3006,7 @@ impl TurnResult {
             Some(value) => instance_lifetime::ActorInstanceLifecycleWire::Receipt(value).encode(&mut receipt).map_err(pack::PackError::InvalidLifecycle)?,
             None => 0,
         };
+        self.cold_pair_ingress.validate().map_err(pack::PackError::InvalidColdPair)?;
         instance_lifetime::ActorUiPatchReceipt::validate_pairing(self.ui_patch_receipt, usize::from(!self.ui_patches.is_empty())).map_err(pack::PackError::InvalidUiPatchReceipt)?;
         let mut patch_receipt = [0; instance_lifetime::ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES];
         let patch_length = match self.ui_patch_receipt {
@@ -3006,6 +3016,7 @@ impl TurnResult {
         pack::write_bytes(out, &self.ui_patches).await;
         pack::write_bytes(out, &self.effects).await;
         pack::write_bytes(out, &self.command_ingress).await;
+        self.cold_pair_ingress.pack_encode(out).await?;
         pack::write_bytes(out, &receipt[..length]).await;
         pack::write_bytes(out, &patch_receipt[..patch_length]).await;
         pack::write_opt_u64(out, &self.next_wake).await;
@@ -3018,6 +3029,7 @@ impl TurnResult {
             ui_patches: pack::read_bytes(bytes, pos, "TurnResult::ui_patches").await?,
             effects: pack::read_bytes(bytes, pos, "TurnResult::effects").await?,
             command_ingress: pack::read_bytes(bytes, pos, "TurnResult::command_ingress").await?,
+            cold_pair_ingress: cold_pair::ColdPairIngressStatus::pack_decode(bytes, pos).await?,
             lifecycle_receipt: Self::read_lifecycle_receipt(bytes, pos).await?,
             ui_patch_receipt: Self::read_ui_patch_receipt(bytes, pos).await?,
             next_wake: pack::read_opt_u64(bytes, pos, "TurnResult::next_wake").await?,
@@ -3030,8 +3042,12 @@ impl TurnResult {
 
     async fn read_ui_patch_receipt(bytes: &[u8], pos: &mut usize) -> Result<Option<instance_lifetime::ActorUiPatchReceipt>, pack::PackError> {
         let length = pack::read_u8(bytes, pos, "TurnResult::ui_patch_receipt.length").await? as usize;
-        if length > instance_lifetime::ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES { return Err(pack::PackError::InvalidUiPatchReceipt("receipt length exceeds fixed authority")); }
-        if length == 0 { return Ok(None); }
+        if length > instance_lifetime::ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES {
+            return Err(pack::PackError::InvalidUiPatchReceipt("receipt length exceeds fixed authority"));
+        }
+        if length == 0 {
+            return Ok(None);
+        }
         let end = pos.checked_add(length).ok_or(pack::PackError::InvalidUiPatchReceipt("receipt offset overflow"))?;
         let receipt = instance_lifetime::ActorUiPatchReceipt::decode(bytes.get(*pos..end).ok_or(pack::PackError::Truncated(*pos, "TurnResult::ui_patch_receipt"))?).map_err(pack::PackError::InvalidUiPatchReceipt)?;
         *pos = end;
@@ -3040,8 +3056,12 @@ impl TurnResult {
 
     async fn read_lifecycle_receipt(bytes: &[u8], pos: &mut usize) -> Result<Option<instance_lifetime::ActorInstanceLifecycleReceipt>, pack::PackError> {
         let length = pack::read_u8(bytes, pos, "TurnResult::lifecycle_receipt.length").await? as usize;
-        if length > instance_lifetime::ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES { return Err(pack::PackError::InvalidLifecycle("receipt length exceeds fixed authority")); }
-        if length == 0 { return Ok(None); }
+        if length > instance_lifetime::ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES {
+            return Err(pack::PackError::InvalidLifecycle("receipt length exceeds fixed authority"));
+        }
+        if length == 0 {
+            return Ok(None);
+        }
         let end = pos.checked_add(length).ok_or(pack::PackError::InvalidLifecycle("receipt offset overflow"))?;
         let receipt = bytes.get(*pos..end).ok_or(pack::PackError::Truncated(*pos, "TurnResult::lifecycle_receipt"))?;
         let instance_lifetime::ActorInstanceLifecycleWire::Receipt(receipt) = instance_lifetime::ActorInstanceLifecycleWire::decode(receipt).map_err(pack::PackError::InvalidLifecycle)? else {
@@ -3056,8 +3076,7 @@ impl TurnResult {
 //#region 📬️Mailbox
 /// 🚦 What `Mailbox::enqueue` reports back — `Rejected` must always surface as a busy badge, never
 /// a silent drop of a user action.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Backpressure {
@@ -3100,8 +3119,7 @@ impl Backpressure {
 
 /// 📬️ Bounded ring per actor: one `VecDeque` per lane (so pop honors lane priority for free), a
 /// coalescing scan on enqueue, and eviction of the lowest-priority nonempty lane before a hard reject.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct Mailbox {
     pub capacity: u16,
@@ -3213,8 +3231,7 @@ impl Mailbox {
 
 //#region 🔐️CapabilityGrant
 /// 🔐️ Minimal local stand-in for `kernel::CapabilityGrant` — see the module-level seam docstring.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct CapabilityGrant {
     pub capability: String,
@@ -3245,8 +3262,7 @@ pub async fn intersect_capabilities(granted: &[CapabilityGrant], requested: &[Ca
 
 //#region 🚑️FailurePolicy
 /// 🚑️ What triggered a failure-ladder transition.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum FailureSignal {
@@ -3313,8 +3329,7 @@ impl FailureSignal {
 }
 
 /// 🪜️ Rungs of the failure ladder, worst-consequence order.
-#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum FailureStage {
@@ -3390,8 +3405,7 @@ async fn lane_escalation_thresholds(lane: Lane) -> [u32; 2] {
 
 /// 🚑️ Per-actor failure ladder state: current [`FailureStage`], warn/restart counters, and the
 /// clean-turn counter that drives decay.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct FailureState {
     pub stage: FailureStage,
@@ -3545,8 +3559,7 @@ async fn quarantine_duration_ms(restart_count: u32) -> u64 {
 
 //#region 🗂️ActorRecord
 /// 🗂️ Actor lifecycle state, driven by [`Kernel::activate`]/`suspend`/`resume` and the failure ladder.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ActorStatus {
@@ -3594,8 +3607,7 @@ impl ActorStatus {
 
 /// 🗂️ Full snapshot of one actor — assembled on demand by [`Kernel::actor_record`] from the
 /// scheduler's live entry plus this actor's kind/capabilities/status/failure/metrics bookkeeping.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct ActorRecord {
     pub id: ActorId,
@@ -3654,8 +3666,7 @@ impl ActorRecord {
 /// concurrent by construction. `WebWorker`/`Process` were already real boundary crossings (a browser
 /// worker, an OS process) unaffected by this distinction — `Native` is the one variant whose meaning
 /// narrows from "a thread" to "this process, pool-scheduled."
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub enum ShardKind {
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (P1c): renamed from `Thread` — same process,
@@ -3688,8 +3699,7 @@ impl ShardKind {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value", transparent)]
 pub struct ShardId(pub u16);
 
@@ -3756,8 +3766,7 @@ fn shard_actor_map_from_value(value: ::protocol::value::DslValue) -> Result<BTre
 /// 🧩️ Fixed shard pool. An actor is pinned to a shard; migration only happens at a quiescent point
 /// via application-level checkpoint (never a raw linear-memory snapshot). The last `exclusive_reserve`
 /// shards are reserved for [`ShardTable::request_exclusive`] leases.
-#[derive(Clone, Debug, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct ShardTable {
     pub kind: ShardKind,
@@ -3945,8 +3954,7 @@ struct ScheduledActor {
 
 /// ⏱️ Result of one [`Scheduler::tick`] call: the turns granted this call, and (if nothing ran) the
 /// earliest future timestamp worth ticking again for.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct Decision {
     pub run: Vec<TurnGrant>,
@@ -3965,8 +3973,7 @@ impl Decision {
 
 /// ⏱️ One granted turn: which actor, on which shard, with what (possibly throttle-scaled) budget,
 /// and the envelopes drained from its mailbox for this turn.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct TurnGrant {
     pub actor: ActorId,
@@ -4013,10 +4020,14 @@ impl Scheduler {
     }
 
     pub async fn register_actor(&mut self, actor: ActorId, package: PackageId, lane: Lane, budget: Budget, shard: ShardId) {
+        self.register_actor_state(actor, package, lane, budget, shard, true).await;
+    }
+
+    async fn register_actor_state(&mut self, actor: ActorId, package: PackageId, lane: Lane, budget: Budget, shard: ShardId, active: bool) {
         if !self.plugin_order.contains(&package) {
             self.plugin_order.push(package.clone());
         }
-        self.actors.insert(actor, ScheduledActor { package, lane, budget, shard, mailbox: Mailbox::new(budget.mailbox_len).await, active: true, throttle: 1.0, deficit: 0 });
+        self.actors.insert(actor, ScheduledActor { package, lane, budget, shard, mailbox: Mailbox::new(budget.mailbox_len).await, active, throttle: 1.0, deficit: 0 });
     }
 
     pub async fn unregister_actor(&mut self, actor: ActorId) {
@@ -4173,8 +4184,7 @@ impl Scheduler {
 /// 🖼️ One committed, immutable frame of a window's UI. `patches` is an opaque pack-encoded
 /// `Vec<UiPatch>` blob — see the module seam docstring; `node_count` is the host-tracked total used
 /// only for [`Budget::ui_nodes`] quota accounting.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct SceneSnapshot {
     pub revision: u64,
@@ -4285,8 +4295,7 @@ const SATURATION_MIN_TURNS: u64 = 2;
 /// cannot mask a sustained pattern of near-budget turns.
 const SATURATION_THRESHOLD_PERCENT: u64 = 70;
 
-#[derive(Clone, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct ActorMetrics {
     pub turns: u64,
@@ -4434,8 +4443,7 @@ impl ActorMetrics {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct ShardMetrics {
     pub actors: u32,
@@ -4455,8 +4463,7 @@ impl ShardMetrics {
 }
 
 /// 📈️ Sampled by `Kernel::metrics()`; the host publishes this as bus topic `os.runtime.metrics` at 2Hz.
-#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct KernelMetrics {
     pub actors: u32,
@@ -4479,8 +4486,7 @@ impl KernelMetrics {
 /// 🗒️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): one live actor's row for the `os.runtime.metrics`
 /// publication — [`ActorMetrics`] joined with the kernel-level bookkeeping ([`PackageId`]/[`Lane`]/
 /// [`ActorStatus`]) it doesn't itself carry. Built by [`Kernel::actor_metrics_samples`].
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct ActorMetricsSample {
     pub id: ActorId,
@@ -4513,8 +4519,7 @@ impl ActorMetricsSample {
 /// its `Default` (0) by [`Kernel::shard_metrics_samples`] — the pure crate has no clock/transport of
 /// its own (`important.md`'s purity rule), so a host overlays the real value from its own
 /// `ShardTransport::heartbeat()` reading before publishing.
-#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct ShardMetricsSample {
     pub shard: ShardId,
@@ -4535,8 +4540,7 @@ impl ShardMetricsSample {
 /// topic `os.runtime.metrics` at 2Hz." Built by [`Kernel::runtime_metrics_snapshot`], which takes
 /// `sampled_at_ms` as a parameter rather than reading a clock — the crate core has none (transports
 /// and time are injected, per this crate's own `Cargo.toml` description).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(crate = "::protocol::value")]
 pub struct RuntimeMetricsSnapshot {
     pub kernel: KernelMetrics,
@@ -4685,8 +4689,7 @@ pub use thread_transport::ThreadTransport;
 
 //#region 🏛️Kernel
 /// 🏛️ What activated an actor.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ActivationEvent {
@@ -4719,6 +4722,8 @@ impl std::error::Error for KernelError {}
 /// failure ladder, metrics, and which window (if any) its scene patches target.
 #[derive(Clone, Debug)]
 struct ActorMeta {
+    reservation: Option<Arc<activation::ReservationAuthority>>,
+    transport_key: Option<activation::ActorShardKey>,
     kind: ActorKind,
     package: PackageId,
     capabilities: Vec<CapabilityGrant>,
@@ -4732,7 +4737,7 @@ struct ActorMeta {
 /// 🏛️ The one-implementation, three-host runtime façade: `submit`/`tick`/`complete`/`activate`/
 /// `suspend`/`resume`/`request_exclusive`/`commit_frame`/`metrics`. Composes [`Scheduler`],
 /// [`ShardTable`], per-window [`SceneStore`]s and the failure ladder over one actor registry.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Kernel {
     scheduler: Scheduler,
     shards: ShardTable,
@@ -4774,7 +4779,7 @@ impl Kernel {
             self.shards.pin(id).await
         };
         self.scheduler.register_actor(id, package.clone(), lane, budget, shard).await;
-        self.actors.insert(id, ActorMeta { kind, package, capabilities: Vec::new(), budget, status: ActorStatus::Activating, failure: FailureState::new(), metrics: ActorMetrics::default(), window });
+        self.actors.insert(id, ActorMeta { reservation: None, transport_key: None, kind, package, capabilities: Vec::new(), budget, status: ActorStatus::Activating, failure: FailureState::new(), metrics: ActorMetrics::default(), window });
         id
     }
 
@@ -4819,6 +4824,9 @@ impl Kernel {
     /// act on for `Trapped`/`Quarantined` outcomes.
     pub async fn complete(&mut self, actor: ActorId, result: &TurnResult, now_ms: u64) -> Result<FailureEscalation, KernelError> {
         let meta = self.actors.get_mut(&actor).ok_or(KernelError::UnknownActor)?;
+        if meta.reservation.is_some() {
+            return Err(KernelError::InvalidTransition);
+        }
         meta.metrics.record_turn(&result.usage).await;
         let escalation = match &result.status {
             TurnStatus::Faulted { detail } => {
@@ -4867,6 +4875,9 @@ impl Kernel {
 
     pub async fn suspend(&mut self, actor: ActorId, checkpoint: Option<Vec<u8>>) -> Result<(), KernelError> {
         let meta = self.actors.get_mut(&actor).ok_or(KernelError::UnknownActor)?;
+        if meta.reservation.is_some() {
+            return Err(KernelError::InvalidTransition);
+        }
         meta.status = ActorStatus::Suspended { checkpoint };
         self.scheduler.set_active(actor, false).await;
         Ok(())
@@ -4874,6 +4885,9 @@ impl Kernel {
 
     pub async fn resume(&mut self, actor: ActorId) -> Result<(), KernelError> {
         let meta = self.actors.get_mut(&actor).ok_or(KernelError::UnknownActor)?;
+        if meta.reservation.is_some() {
+            return Err(KernelError::InvalidTransition);
+        }
         match meta.status {
             ActorStatus::Suspended { .. } => {
                 meta.status = ActorStatus::Active;
@@ -4888,12 +4902,18 @@ impl Kernel {
         if !self.actors.contains_key(&actor) {
             return Err(KernelError::UnknownActor);
         }
+        if self.actors.get(&actor).is_some_and(|meta| meta.reservation.is_some() || meta.transport_key.is_some()) {
+            return Err(KernelError::InvalidTransition);
+        }
         let shard = self.shards.request_exclusive(actor).await.ok_or(KernelError::NoExclusiveShard)?;
         self.scheduler.set_shard(actor, shard).await;
         Ok(shard)
     }
 
     pub async fn release_exclusive(&mut self, actor: ActorId) {
+        if self.actors.get(&actor).is_some_and(|meta| meta.reservation.is_some() || meta.transport_key.is_some()) {
+            return;
+        }
         self.shards.release_exclusive(actor).await;
         if let Some(shard) = self.shards.shard_of(actor).await {
             self.scheduler.set_shard(actor, shard).await;
@@ -5026,7 +5046,7 @@ impl Kernel {
             }
             None => requested_capabilities,
         };
-        self.actors.insert(id, ActorMeta { kind, package, capabilities, budget, status: ActorStatus::Activating, failure: FailureState::new(), metrics: ActorMetrics::default(), window });
+        self.actors.insert(id, ActorMeta { reservation: None, transport_key: None, kind, package, capabilities, budget, status: ActorStatus::Activating, failure: FailureState::new(), metrics: ActorMetrics::default(), window });
         id
     }
 
@@ -5052,6 +5072,9 @@ impl Kernel {
     pub async fn link_extension(&mut self, parent: ActorId, child: ActorId) -> Result<(), KernelError> {
         if !self.actors.contains_key(&parent) || !self.actors.contains_key(&child) {
             return Err(KernelError::UnknownActor);
+        }
+        if [parent, child].into_iter().any(|actor| self.actors.get(&actor).is_some_and(|meta| meta.reservation.is_some())) {
+            return Err(KernelError::InvalidTransition);
         }
         self.links.entry(parent).or_default().push(child);
         Ok(())
@@ -5217,7 +5240,17 @@ mod tests {
         }
 
         async fn ok_turn() -> TurnResult {
-            TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], lifecycle_receipt: None, ui_patch_receipt: None, next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 100, wall_us: 50, memory_bytes: 1024 } }
+            TurnResult {
+                ui_patches: vec![],
+                effects: vec![],
+                command_ingress: vec![],
+                cold_pair_ingress: Default::default(),
+                lifecycle_receipt: None,
+                ui_patch_receipt: None,
+                next_wake: None,
+                status: TurnStatus::Idle,
+                usage: Usage { fuel: 100, wall_us: 50, memory_bytes: 1024 },
+            }
         }
 
         fn bridge_operation() -> job::Operation {
@@ -5532,7 +5565,14 @@ mod tests {
                     drop(publication);
                     let now = job::default_now_us().expect("native test clock");
                     let mut sequence = 0;
-                    let mut context = job::StepContext::new(job::OperationId(operation.operation.0), job::Generation(operation.generation.0), job::StepBudget::from_duration(1, now, 4_000).expect("test deadline"), job::root_cancel_token(), job::default_now_us, &mut sequence);
+                    let mut context = job::StepContext::new(
+                        job::OperationId(operation.operation.0),
+                        job::Generation(operation.generation.0),
+                        job::StepBudget::from_duration(1, now, 4_000).expect("test deadline"),
+                        job::root_cancel_token(),
+                        job::default_now_us,
+                        &mut sequence,
+                    );
                     log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("P2d ACK");
                     if terminal {
                         break;
@@ -5906,7 +5946,17 @@ mod tests {
             // turns), making it the one and only "clean" shard.
             let shard_ids: Vec<u16> = by_shard.keys().copied().collect();
             let (safe_shard, hot_shards) = shard_ids.split_last().unwrap();
-            let hot_turn = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], lifecycle_receipt: None, ui_patch_receipt: None, next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 100, wall_us: 40_000, memory_bytes: 1024 } };
+            let hot_turn = TurnResult {
+                ui_patches: vec![],
+                effects: vec![],
+                command_ingress: vec![],
+                cold_pair_ingress: Default::default(),
+                lifecycle_receipt: None,
+                ui_patch_receipt: None,
+                next_wake: None,
+                status: TurnStatus::Idle,
+                usage: Usage { fuel: 100, wall_us: 40_000, memory_bytes: 1024 },
+            };
             for shard in hot_shards {
                 for actor in &by_shard[shard] {
                     kernel.complete(*actor, &hot_turn, 0).await.unwrap();
@@ -6006,11 +6056,7 @@ mod tests {
 
         #[semio_framework_async_macros::async_test]
         async fn value_round_trip_actor_instance_lifecycle_receipt() {
-            let value = instance_lifetime::ActorInstanceLifecycleReceipt::Accepted {
-                lifetime: instance_lifetime::ActorInstanceLifetime { activation_generation: 7, instance_id: 3, guest_lifetime: 9 },
-                request_sequence: 11,
-                close_generation: 5,
-            };
+            let value = instance_lifetime::ActorInstanceLifecycleReceipt::Accepted { lifetime: instance_lifetime::ActorInstanceLifetime { activation_generation: 7, instance_id: 3, guest_lifetime: 9 }, request_sequence: 11, close_generation: 5 };
             let encoded = ::protocol::value::ToValue::to_value(&value);
             assert_eq!(encoded["kind"], ::protocol::value::DslValue::String("accepted".to_string()));
             assert_eq!(encoded["requestSequence"], ::protocol::value::DslValue::uint(11));
@@ -6201,7 +6247,17 @@ mod tests {
             let b = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package, app_id: "b".into(), instance_id: 1 }, Lane::Background, None, ActivationEvent::Manual).await;
 
             for i in 0..FAILURE_QUARANTINE_RESTART_THRESHOLD {
-                let faulted = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], lifecycle_receipt: None, ui_patch_receipt: None, next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
+                let faulted = TurnResult {
+                    ui_patches: vec![],
+                    effects: vec![],
+                    command_ingress: vec![],
+                    cold_pair_ingress: Default::default(),
+                    lifecycle_receipt: None,
+                    ui_patch_receipt: None,
+                    next_wake: None,
+                    status: TurnStatus::Faulted { detail: b"boom".to_vec() },
+                    usage: Usage::default(),
+                };
                 kernel.complete(a, &faulted, (i as u64) * 100).await.unwrap();
             }
             assert_eq!(kernel.actor_status(a).await, Some(&ActorStatus::Quarantined));
@@ -6447,7 +6503,17 @@ mod tests {
             let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![]).await;
             kernel.link_extension(parent, extension).await.unwrap();
 
-            let faulted = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], lifecycle_receipt: None, ui_patch_receipt: None, next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
+            let faulted = TurnResult {
+                ui_patches: vec![],
+                effects: vec![],
+                command_ingress: vec![],
+                cold_pair_ingress: Default::default(),
+                lifecycle_receipt: None,
+                ui_patch_receipt: None,
+                next_wake: None,
+                status: TurnStatus::Faulted { detail: b"boom".to_vec() },
+                usage: Usage::default(),
+            };
             let escalation = kernel.complete(extension, &faulted, 10).await.unwrap();
             assert_eq!(escalation, FailureEscalation::Restart, "one trap must only Restart, never quarantine");
             assert_eq!(kernel.actor_status(extension).await, Some(&ActorStatus::Trapped));
@@ -6456,7 +6522,17 @@ mod tests {
             // Push the SAME extension past the quarantine threshold — still must not reach the parent,
             // because this test gave the extension its own PackageId (distinct from the parent's).
             for i in 1..FAILURE_QUARANTINE_RESTART_THRESHOLD {
-                let faulted = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], lifecycle_receipt: None, ui_patch_receipt: None, next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
+                let faulted = TurnResult {
+                    ui_patches: vec![],
+                    effects: vec![],
+                    command_ingress: vec![],
+                    cold_pair_ingress: Default::default(),
+                    lifecycle_receipt: None,
+                    ui_patch_receipt: None,
+                    next_wake: None,
+                    status: TurnStatus::Faulted { detail: b"boom".to_vec() },
+                    usage: Usage::default(),
+                };
                 kernel.complete(extension, &faulted, 10 + i as u64).await.unwrap();
             }
             assert_eq!(kernel.actor_status(extension).await, Some(&ActorStatus::Quarantined), "the extension itself does escalate to quarantine");

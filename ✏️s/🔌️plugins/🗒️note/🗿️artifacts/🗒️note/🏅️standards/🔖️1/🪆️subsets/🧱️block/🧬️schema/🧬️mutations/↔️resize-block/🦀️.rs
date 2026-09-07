@@ -1,7 +1,6 @@
 //! ↔️ Note mutation — `ResizeBlock`: changes a block's extent.
 
 use crate::artifacts::note::{NoteDiff, NoteSnapshot};
-use crate::artifacts::note::schema::diff::note_block_patch_diff;
 use crate::artifacts::note::schema::mutations::NoteMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};

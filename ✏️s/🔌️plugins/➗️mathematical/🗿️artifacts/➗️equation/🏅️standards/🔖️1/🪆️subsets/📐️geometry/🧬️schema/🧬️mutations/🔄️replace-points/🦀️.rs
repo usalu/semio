@@ -2,8 +2,7 @@
 //! replacement for the old generic `SetGeometry`, used by gestures that load/paste an entire point
 //! set (the app's `SetPoints` command) rather than editing one point.
 
-use crate::artifacts::equation::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationGeometry, EquationMutation, EquationPoint, EquationSnapshot};
-use semio_framework_os_kernel::{FromValue, ToValue};
+use crate::artifacts::equation::{EquationMutation, EquationPoint, EquationSnapshot};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload

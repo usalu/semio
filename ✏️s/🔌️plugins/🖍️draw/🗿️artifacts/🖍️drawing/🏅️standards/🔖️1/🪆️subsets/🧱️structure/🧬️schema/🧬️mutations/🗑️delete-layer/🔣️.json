@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer",
+  "semanticKind": "delete-layer",
+  "displayName": "Delete Layer",
+  "emoji": "🗑️",
+  "aggregateVariant": "DeleteLayer",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "delete-layer",
+  "binaryTag": 12,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

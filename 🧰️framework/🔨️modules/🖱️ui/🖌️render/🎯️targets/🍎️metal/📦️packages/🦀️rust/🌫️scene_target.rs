@@ -78,10 +78,6 @@ impl SceneTarget {
         self.height
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn format(&self) -> MTLPixelFormat {
-        self.format
-    }
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -99,13 +95,9 @@ pub fn supported_mip_levels(width: u32, height: u32) -> u32 {
 fn allocate(device: &Device, format: MTLPixelFormat, width: u32, height: u32, label: &str) -> Owned<MetalTexture> {
     let descriptor = MTLTextureDescriptor::new();
     descriptor.setPixelFormat(format);
-    // 🔓️ SAFETY: plain dimension/mip-count setters; Metal validates rather than reading OOB, and
-    // `width`/`height` are already `.max(1)`-clamped by every caller.
-    unsafe {
-        descriptor.setWidth(width as _);
-        descriptor.setHeight(height as _);
-        descriptor.setMipmapLevelCount(supported_mip_levels(width, height) as _);
-    }
+    descriptor.setWidth(width as _);
+    descriptor.setHeight(height as _);
+    descriptor.setMipmapLevelCount(supported_mip_levels(width, height) as _);
     descriptor.setUsage(MTLTextureUsage::RenderTarget | MTLTextureUsage::ShaderRead);
     let texture = device.newTextureWithDescriptor(&descriptor).unwrap_or_else(|| panic!("metal backend: failed to allocate {label} ({width}x{height})"));
     let _ = label;

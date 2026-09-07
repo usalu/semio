@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative insert-ifd mutation.
-use crate::artifacts::tiff::schema::diff::{self, *};
+use crate::artifacts::tiff::schema::diff::*;
 use crate::artifacts::tiff::schema::mutations::TiffMutation;
 use crate::artifacts::tiff::schema::snapshot::*;
 
@@ -28,7 +28,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for InsertIfdMutation {
         protocol::MutationOutcome::new(contribute(base, *index, ifd.clone()))
     }
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffMutation> {
-        let Self { index, ifd } = self;
+        let Self { index, .. } = self;
         let outcome = <Self as protocol::MutationKind<TiffSnapshot, TiffMutation>>::diff(self, base);
         if <TiffDiff as protocol::DiffAlgebra<TiffSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();

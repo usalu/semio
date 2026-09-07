@@ -16,7 +16,7 @@ pub struct SetClipPathReference {
 impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for SetClipPathReference {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "clip-path-reference", kind: "set-clip-path-reference", record: "SetClipPathReference" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgBasicMutation as protocol::Mutation<SvgSnapshot>>::Diff> {
+    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgBasicMutation as Mutation<SvgSnapshot>>::Diff> {
         agg_diff(&SvgBasicMutation::SetClipPathReference(self.clone()), base)
     }
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {

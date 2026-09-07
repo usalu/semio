@@ -8,7 +8,7 @@ use semio_framework::{
     AssetDeclaration, CommandDefinition, ExecutionMode, ExtensionPointDeclaration,
     kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, QuotaSchema},
 };
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet};
 use std::marker::PhantomData;
 
 /// 📏️ Field-by-field `QuotaSchema` merge — `incoming`'s `Some` fields win, `None` fields defer to
@@ -968,8 +968,8 @@ mod schema_stamping_tests {
             Ok(Emit::default())
         }
 
-        fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> crate::app::UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
-            crate::app::built_text_to_component_tree(ui_wgpu::wgpu::Label::data("schema-stamp-editor"))
+        fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<ComponentTree> {
+            built_text_to_component_tree(ui_wgpu::wgpu::Label::data("schema-stamp-editor"))
         }
     }
 
@@ -997,8 +997,8 @@ mod schema_stamping_tests {
             Ok(ViewEmit::default())
         }
 
-        fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> crate::app::UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
-            crate::app::built_text_to_component_tree(ui_wgpu::wgpu::Label::data("schema-stamp-viewer"))
+        fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<ComponentTree> {
+            built_text_to_component_tree(ui_wgpu::wgpu::Label::data("schema-stamp-viewer"))
         }
     }
 
@@ -1011,12 +1011,12 @@ mod schema_stamping_tests {
     use crate::plugin_app_close_prelude::*;
     semio_framework_dispatch_macros::dyn_enum_close! {
         pub enum SchemaStampApps: PluginApp {
-            Editor(crate::app::VcsArtifactApp<crate::app::EditorApp<SchemaStampEditorFixture>>),
-            Viewer(crate::app::VcsArtifactApp<crate::app::ViewerApp<SchemaStampViewerFixture>>),
+            Editor(VcsArtifactApp<EditorApp<SchemaStampEditorFixture>>),
+            Viewer(VcsArtifactApp<ViewerApp<SchemaStampViewerFixture>>),
         }
     }
 
-    fn minimal_surface_def(dialect: Dialect, role: AppRole) -> crate::app::AppDefinition {
+    fn minimal_surface_def(dialect: Dialect, role: AppRole) -> AppDefinition {
         let label = LocalizedLabel::data("Surface");
         match role {
             AppRole::Editor => {
@@ -1076,10 +1076,10 @@ mod schema_stamping_tests {
             algorithm_version: 1,
             policy_version: 1,
         };
-        let plugin = Plugin::<crate::app::NoPluginApp>::builder(metadata.owner).label("Builder Test Routed Inference").version("0.1.0").routed_inference(metadata).try_build().expect("metadata-only routed inference must assemble");
+        let plugin = Plugin::<NoPluginApp>::builder(metadata.owner).label("Builder Test Routed Inference").version("0.1.0").routed_inference(metadata).try_build().expect("metadata-only routed inference must assemble");
         let bytes = plugin.wire_list_artifact_inference_services().expect("frozen roster encodes");
-        let roster: Vec<crate::app::WireArtifactInferenceMetadata> = protocol::json::from_json_str(std::str::from_utf8(&bytes).expect("roster UTF-8")).expect("frozen roster decodes");
+        let roster: Vec<WireArtifactInferenceMetadata> = protocol::json::from_json_str(std::str::from_utf8(&bytes).expect("roster UTF-8")).expect("frozen roster decodes");
         assert_eq!(roster, vec![metadata.into()]);
-        assert!(crate::app::artifact_inference_service(metadata.artifact_kind, metadata.inference_schema).expect("global service lookup").is_none(), "route must not manufacture a synchronous service facade");
+        assert!(artifact_inference_service(metadata.artifact_kind, metadata.inference_schema).expect("global service lookup").is_none(), "route must not manufacture a synchronous service facade");
     }
 }

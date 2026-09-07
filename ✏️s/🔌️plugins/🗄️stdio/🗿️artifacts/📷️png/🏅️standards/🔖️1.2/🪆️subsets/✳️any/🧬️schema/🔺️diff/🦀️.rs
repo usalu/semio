@@ -1772,50 +1772,8 @@ pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl F
     Ok(out)
 }
 /// 🧩 Whole-`PngSnapshot` binary encoding for sparse diff field serialization.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &PngSnapshot) {
-    write_bin_str(w, &s.schema);
-    w.write_u32_le(s.width);
-    w.write_u32_le(s.height);
-    w.write_u8(s.bit_depth);
-    w.write_u8(s.color_type.to_u8());
-    w.write_u8(if s.interlace { 1 } else { 0 });
-    write_bin_option(w, &s.plte, |w, v: &Vec<PngRgb>| write_bin_vec(w, v, write_bin_rgb));
-    write_bin_option(w, &s.trns, write_bin_transparency);
-    write_bin_option(w, &s.gama, |w, v: &u32| w.write_u32_le(*v));
-    write_bin_option(w, &s.chrm, write_bin_chromaticities);
-    write_bin_option(w, &s.srgb, |w, v: &PngSrgbIntent| w.write_u8(v.to_u8()));
-    write_bin_option(w, &s.phys, write_bin_physical_dims);
-    write_bin_option(w, &s.time, write_bin_timestamp);
-    write_bin_option(w, &s.bkgd, write_bin_background);
-    write_bin_vec(w, &s.text_chunks, write_bin_text_chunk);
-    write_bin_blob(w, &s.pixels);
-    write_bin_vec(w, &s.chunk_order, write_bin_chunk_marker);
-    write_bin_vec(w, &s.unknown_chunks, write_bin_chunk);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<PngSnapshot, dsl::PackError> {
-    Ok(PngSnapshot {
-        schema: read_bin_str(r)?,
-        width: r.read_u32_le()?,
-        height: r.read_u32_le()?,
-        bit_depth: r.read_u8()?,
-        color_type: PngColorType::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png color type", offset: 0, detail: e })?,
-        interlace: r.read_u8()? != 0,
-        plte: read_bin_option(r, |r| read_bin_vec(r, read_bin_rgb))?,
-        trns: read_bin_option(r, read_bin_transparency)?,
-        gama: read_bin_option(r, |r| r.read_u32_le())?,
-        chrm: read_bin_option(r, read_bin_chromaticities)?,
-        srgb: read_bin_option(r, |r| PngSrgbIntent::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png srgb intent", offset: 0, detail: e }))?,
-        phys: read_bin_option(r, read_bin_physical_dims)?,
-        time: read_bin_option(r, read_bin_timestamp)?,
-        bkgd: read_bin_option(r, read_bin_background)?,
-        text_chunks: read_bin_vec(r, read_bin_text_chunk)?,
-        pixels: read_bin_blob(r)?,
-        chunk_order: read_bin_vec(r, read_bin_chunk_marker)?,
-        unknown_chunks: read_bin_vec(r, read_bin_chunk)?,
-    })
-}
+
+
 //#endregion 🔖️RealBinaryPrimitives
 
 //#region 🔖️RealBinaryDiffFrame

@@ -15,7 +15,7 @@ pub struct InsertSlide {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for InsertSlide {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "slide", kind: "insert-slide", record: "InsertSlide" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as protocol::Mutation<PptxSnapshot>>::Diff> {
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as Mutation<PptxSnapshot>>::Diff> {
         agg_diff(&PptxMutation::InsertSlide(self.clone()), base)
     }
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {

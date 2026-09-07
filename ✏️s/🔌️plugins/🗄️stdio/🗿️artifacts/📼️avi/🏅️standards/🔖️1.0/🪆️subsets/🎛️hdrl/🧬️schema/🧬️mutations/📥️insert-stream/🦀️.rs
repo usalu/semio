@@ -15,7 +15,7 @@ pub struct InsertStream {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for InsertStream {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "stream", kind: "insert-stream", record: "InsertStream" };
 
-    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as protocol::Mutation<AviSnapshot>>::Diff> {
+    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
         agg_diff(&AviMutation::InsertStream(self.clone()), base)
     }
     fn inverse(&self, base: &AviSnapshot) -> Vec<AviMutation> {

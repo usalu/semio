@@ -6,9 +6,12 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the declaration-owned DAG surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
-    pub enum DagApps: PluginApp {}
+    /// 🗃️ Closed runtime app fleet for the declaration-owned DAG surfaces.
+    pub enum DagApps: PluginApp {
+        DagEditor(VcsArtifactApp<EditorApp<crate::editor::dag::DagPlayApp>>),
+        DagViewer(VcsArtifactApp<ViewerApp<crate::viewer::dag::DagViewer>>),
+    }
 }
 //#endregion 🗃️Apps
 
@@ -24,7 +27,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// reasoning the `🎬️sequence` W4 pass documented). `.activation()`/`.execution()`/`.requests()`
 /// are unrelated microkernel-actor-runtime wiring (ticket MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME,
 /// live peer) — untouched by this pass.
-pub fn plugin() -> Result<Plugin<DagApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<DagApps>, PluginAssemblyError> {
     Plugin::<DagApps>::builder("dag")
         .label("DAG")
         .version("0.1.0")
@@ -49,12 +52,12 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dag_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::dag::DagViewer>();
+        assert_viewer_never_mutates::<crate::viewer::dag::DagViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn dag_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::dag::DagPlayApp, crate::viewer::dag::DagViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::dag::DagPlayApp, crate::viewer::dag::DagViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests

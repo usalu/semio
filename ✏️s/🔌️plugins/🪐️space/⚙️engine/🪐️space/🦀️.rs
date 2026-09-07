@@ -38,7 +38,7 @@ use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, Artif
 use semio_framework_plugin::{
     app::InteractionView, app_commands, create_default_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppOperationContext, ArtifactApp, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
     ArtifactView, CommandDefinition, ConfigView, DomainTopology, DraftView, Effect, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget,
-    InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowLayout, CLEAR_SELECTION_ACTION_ID,
+    InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, WindowLayout, CLEAR_SELECTION_ACTION_ID,
     INTERACTION_SELECT_ACTION_ID, SELECT_ALL_ACTION_ID,
 };
 use std::collections::HashMap;
@@ -121,11 +121,11 @@ pub(crate) async fn space_interaction_select(granularity: &str, id: &str) -> Act
     ActionDescriptor {
         controller_id: S_PLAY_CONTROLLER_ID.into(),
         action: INTERACTION_SELECT_ACTION_ID.into(),
-        args: Some(semio_framework::DslValue::object(vec![
-            ("domainId".to_string(), semio_framework::DslValue::String(S_PLAY_INTERACTION_DOMAIN.into())),
-            ("targets".to_string(), semio_framework::DslValue::String(targets)),
-            ("merge".to_string(), semio_framework::DslValue::String("replace".into())),
-            ("method".to_string(), semio_framework::DslValue::String("pick".into())),
+        args: Some(DslValue::object(vec![
+            ("domainId".to_string(), DslValue::String(S_PLAY_INTERACTION_DOMAIN.into())),
+            ("targets".to_string(), DslValue::String(targets)),
+            ("merge".to_string(), DslValue::String("replace".into())),
+            ("method".to_string(), DslValue::String("pick".into())),
         ])),
     }
 }
@@ -155,7 +155,7 @@ pub(crate) async fn primary_selected_node_id(selected: &[String], config: &Space
 /// command handler needs the POST-command config (not the pre-command `cfg.snapshot`) to build a
 /// derived side value (the presence broadcast) in the very same call, without reaching back into a
 /// store this pure function doesn't own.
-pub(crate) async fn apply_config_mutations(config: &SpaceConfig, operations: &[crate::engine::space::config::SpaceConfigMutation]) -> SpaceConfig {
+pub(crate) async fn apply_config_mutations(config: &SpaceConfig, operations: &[SpaceConfigMutation]) -> SpaceConfig {
     use protocol::Mutation;
     operations.iter().fold(config.clone(), |acc, operation| operation.diff(&acc).diff().clone())
 }
@@ -181,19 +181,19 @@ async fn space_workflow_context_menu_items(
     use semio_framework_plugin::{selection_count_phrase, selection_domains_from_surface, ContextMenuItemSpec, Menu};
 
     let hits: &[semio_framework_plugin::ContextMenuHit] = surface.map_or(&[], |target| target.hits.as_slice());
-    let (nodes, _) = selection_domains_from_surface(surface, selected_node_ids, &[]).await;
+    let (nodes, _) = selection_domains_from_surface(surface, selected_node_ids, &[]);
     let hit_node = hits.iter().find(|hit| hit.domain == "node").map(|hit| hit.id.as_str());
-    let mut menu = Menu::of(registry).await;
+    let mut menu = Menu::of(registry);
     if hits.is_empty() {
         // 🗂️ Empty-canvas menu: paste/select-all stay top-level (the two most frequent verbs here),
         // reorganize is a rarer layout action so it moves into its own taxonomy group.
         menu = menu
             .item(ContextMenuItemSpec { id: "paste-instance".into(), label: Some(labels.context_paste.into()), icon: Some("clipboard".into()), action: Some("pasteAppInstance".into()), ..Default::default() })
-            .await
+            
             .item(ContextMenuItemSpec { id: "select-all".into(), label: Some(labels.context_select_all.into()), icon: Some("maximize-2".into()), action: Some(SELECT_ALL_ACTION_ID.into()), ..Default::default() })
-            .await
+            
             .group("transform", |m| m.item(ContextMenuItemSpec { id: "reorganize".into(), label: Some(labels.context_reorganize.into()), icon: Some("layout-grid".into()), action: Some("reorganizeWorkflow".into()), ..Default::default() }))
-            .await;
+            ;
     }
     if hit_node.is_some() || !nodes.is_empty() {
         // 🗂️ Node menu: open/duplicate stay top-level (the two most frequent verbs); copy moves into
@@ -202,27 +202,27 @@ async fn space_workflow_context_menu_items(
         // `VcsArtifactApp::context_menu` funnel) inserts the pre-destructive separator itself.
         menu = menu
             .item(ContextMenuItemSpec { id: "open-instance".into(), label: Some(labels.context_open_instance.into()), icon: Some("external-link".into()), action: Some("openInstance".into()), ..Default::default() })
-            .await
+            
             .item(ContextMenuItemSpec { id: "duplicate-instance".into(), label: Some(labels.context_duplicate.into()), icon: Some("copy".into()), action: Some("duplicateAppInstance".into()), ..Default::default() })
-            .await
+            
             .group("transfer", |m| m.item(ContextMenuItemSpec { id: "copy-instance".into(), label: Some(labels.context_copy.into()), icon: Some("clipboard-copy".into()), action: Some("copyAppInstance".into()), ..Default::default() }))
-            .await
+            
             .group("settings", |m| m.item(ContextMenuItemSpec { id: "rename-instance".into(), label: Some(labels.context_rename_label.into()), icon: Some("edit-3".into()), action: Some("renameAppInstance".into()), ..Default::default() }))
-            .await;
+            ;
         if !nodes.is_empty() {
             menu = menu
                 .group("selection", |m| {
                     m.item(ContextMenuItemSpec { id: "clear-selection".into(), label: Some(labels.context_clear_selection.into()), icon: Some("square-dashed".into()), action: Some(CLEAR_SELECTION_ACTION_ID.into()), ..Default::default() })
                 })
-                .await;
+                ;
         }
-        let phrase = selection_count_phrase(is_de, &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" })]).await;
+        let phrase = selection_count_phrase(is_de, &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" })]);
         let remove_label = if phrase.is_empty() { labels.context_remove.as_str().to_string() } else { format!("{} ({phrase})", labels.context_remove.as_str()) };
         // 🎯️ Destructive tail always comes last — kept unconditionally after the "selection" group so
         // remove-instance is the final row regardless of whether clear-selection was appended above.
-        menu = menu.item(ContextMenuItemSpec { id: "remove-instance".into(), label: Some(remove_label), icon: Some("trash".into()), action: Some("removeAppInstance".into()), destructive: Some(true), ..Default::default() }).await;
+        menu = menu.item(ContextMenuItemSpec { id: "remove-instance".into(), label: Some(remove_label), icon: Some("trash".into()), action: Some("removeAppInstance".into()), destructive: Some(true), ..Default::default() });
     }
-    menu.build().await
+    menu.build()
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -230,7 +230,7 @@ async fn space_workflow_context_menu_items(
 app_commands! {
     /// 🎯️ `SpaceApp::Command` — the SOLE dispatch surface for the studio app's own behavior, one
     /// variant per action declared in `create_space_app`'s manifest.
-    pub enum SpaceCommand for WorkflowSnapshot, WorkflowMutation, SpaceConfig, crate::engine::space::config::SpaceConfigMutation {
+    pub enum SpaceCommand for WorkflowSnapshot, WorkflowMutation, SpaceConfig, SpaceConfigMutation {
         // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
         "patchParameter" as "patch-parameter" => patch_parameter::PatchParameter,
         "addParameter" as "add-parameter" => add_parameter::AddParameter,
@@ -361,7 +361,7 @@ fn space_bounded_reduce(
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     operation: &AppOperationContext,
-) -> Result<Emit<WorkflowMutation, crate::engine::space::config::SpaceConfigMutation, NoDraftMutation>, Fault> {
+) -> Result<Emit<WorkflowMutation, SpaceConfigMutation, NoDraftMutation>, Fault> {
     if !SPACE_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.retained.route"), "the bounded Space reducer rejects document, registry, payload, and graph routes"));
     }
@@ -398,8 +398,8 @@ impl semio_framework::ToolJobFactory for SpaceCommandJobFactory {
         SPACE_RETAINED_PAYLOAD_SCHEMA
     }
 
-    fn classification(&self) -> semio_framework::InteractiveJobClassification {
-        semio_framework::InteractiveJobClassification::Migrated
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
     }
 
     fn execution_contract(&self) -> ToolExecutionContract {
@@ -490,7 +490,7 @@ fn space_config_bytes(config: &SpaceConfig) -> Result<usize, String> {
     if bytes > SPACE_CONFIG_TEXT_BYTES {
         return Err("Space Config exceeds its encoded text envelope".into());
     }
-    let bytes = bytes.saturating_add(std::mem::size_of::<SpaceConfig>()).saturating_add(items.saturating_mul(128));
+    let bytes = bytes.saturating_add(size_of::<SpaceConfig>()).saturating_add(items.saturating_mul(128));
     if bytes > SPACE_CONFIG_MAXIMUM_BYTES {
         return Err("Space Config exceeds its retained byte envelope".into());
     }
@@ -511,7 +511,7 @@ fn space_config_mutation_bytes(mutation: &SpaceConfigMutation) -> Result<usize, 
     if bytes > SPACE_CONFIG_TEXT_BYTES {
         return Err("Space Config mutation exceeds its encoded text envelope".into());
     }
-    let bytes = bytes.saturating_add(std::mem::size_of::<SpaceConfigMutation>());
+    let bytes = bytes.saturating_add(size_of::<SpaceConfigMutation>());
     if bytes > SPACE_CONFIG_MAXIMUM_BYTES {
         return Err("Space Config mutation exceeds its retained byte envelope".into());
     }
@@ -736,7 +736,7 @@ impl ArtifactApp for SpaceApp {
     type Snapshot = WorkflowSnapshot;
     type Mutation = WorkflowMutation;
     type Config = SpaceConfig;
-    type ConfigMutation = crate::engine::space::config::SpaceConfigMutation;
+    type ConfigMutation = SpaceConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
     type Presence = SpacePresence;
@@ -938,7 +938,7 @@ impl ArtifactApp for SpaceApp {
                 space_id: str_field("spaceId").or_else(|| str_field("space_id")).or_else(|| str_field("nodeId")).or_else(|| str_field("node_id")).unwrap_or_default(),
             })),
             "setAppRegistrations" => Ok(SpaceCommand::SetAppRegistrations(set_app_registrations::SetAppRegistrations { json: json_field("json").unwrap_or_else(|| "[]".into()) })),
-            other => Err(Fault::new(FaultOrigin::App, semio_framework_plugin::FaultCode::new("s.space.unhandled-action"), format!("space: unhandled action id {other}"))),
+            other => Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.unhandled-action"), format!("space: unhandled action id {other}"))),
         }
     }
 
@@ -954,7 +954,7 @@ impl ArtifactApp for SpaceApp {
         interaction: &InteractionView<'_>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
-    ) -> Result<Emit<WorkflowMutation, crate::engine::space::config::SpaceConfigMutation, Self::DraftMutation>, Fault> {
+    ) -> Result<Emit<WorkflowMutation, SpaceConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             SpaceCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction).await,
             SpaceCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction).await,
@@ -1066,17 +1066,17 @@ pub async fn create_space_app() -> App {
         .mutation("moveMediaNode", LocalizedLabel::native("Move Media Node", "Medienknoten verschieben")).await
         .mutation("connectMediaPorts", LocalizedLabel::native("Connect Media Ports", "Medien-Ports verbinden")).await
         .mutation("disconnectMediaEdge", LocalizedLabel::native("Disconnect Media Edge", "Medienverbindung trennen")).await
-        .action_with(ActionDefinition::bounded_catalog("removeAppInstance", LocalizedLabel::native("Remove App Instance", "App-Instanz entfernen"), ActionKind::Mutation).with_category("selection").await).await
+        .action_with(ActionDefinition::bounded_catalog("removeAppInstance", LocalizedLabel::native("Remove App Instance", "App-Instanz entfernen"), ActionKind::Mutation).with_category("selection")).await
         .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen")).await
-        .action_with(ActionDefinition::bounded_catalog("copyAppInstance", LocalizedLabel::native("Copy App Instance", "App-Instanz kopieren"), ActionKind::Mutation).with_category("transfer").await).await
-        .action_with(ActionDefinition::bounded_catalog("duplicateAppInstance", LocalizedLabel::native("Duplicate App Instance", "App-Instanz duplizieren"), ActionKind::Mutation).with_category("create").await).await
-        .action_with(ActionDefinition::bounded_catalog("pasteAppInstance", LocalizedLabel::native("Paste App Instance", "App-Instanz einfügen"), ActionKind::Mutation).with_category("transfer").await).await
-        .action_with(ActionDefinition::bounded_catalog("renameAppInstance", LocalizedLabel::native("Rename App Instance", "App-Instanz umbenennen"), ActionKind::Mutation).with_category("settings").await).await
+        .action_with(ActionDefinition::bounded_catalog("copyAppInstance", LocalizedLabel::native("Copy App Instance", "App-Instanz kopieren"), ActionKind::Mutation).with_category("transfer")).await
+        .action_with(ActionDefinition::bounded_catalog("duplicateAppInstance", LocalizedLabel::native("Duplicate App Instance", "App-Instanz duplizieren"), ActionKind::Mutation).with_category("create")).await
+        .action_with(ActionDefinition::bounded_catalog("pasteAppInstance", LocalizedLabel::native("Paste App Instance", "App-Instanz einfügen"), ActionKind::Mutation).with_category("transfer")).await
+        .action_with(ActionDefinition::bounded_catalog("renameAppInstance", LocalizedLabel::native("Rename App Instance", "App-Instanz umbenennen"), ActionKind::Mutation).with_category("settings")).await
         .mutation("patchMediaNodes", LocalizedLabel::native("Patch Media Nodes", "Medienknoten aktualisieren")).await
         .mutation("patchAppInstances", LocalizedLabel::native("Patch App Instances", "App-Instanzen aktualisieren")).await
         .mutation("bindParameterField", LocalizedLabel::native("Bind Parameter Field", "Parameterfeld verknüpfen")).await
         .mutation("unbindParameterField", LocalizedLabel::native("Unbind Parameter Field", "Parameterfeld lösen")).await
-        .action_with(ActionDefinition::bounded_catalog("reorganizeWorkflow", LocalizedLabel::native("Reorganize Workflow", "Workflow neu anordnen"), ActionKind::Mutation).with_category("transform").await).await
+        .action_with(ActionDefinition::bounded_catalog("reorganizeWorkflow", LocalizedLabel::native("Reorganize Workflow", "Workflow neu anordnen"), ActionKind::Mutation).with_category("transform")).await
         .mutation("workflowEngagementSubmit", LocalizedLabel::native("Workflow Engagement Submit", "Workflow-Eingabe bestätigen")).await
         .mutation("compiledDagEngagementSubmit", LocalizedLabel::native("Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestätigen")).await
         .mutation("nodeGraphEdit", LocalizedLabel::native("Edit Workflow", "Workflow bearbeiten")).await
@@ -1097,7 +1097,7 @@ pub async fn create_space_app() -> App {
         .shell_action("importSpacePack", LocalizedLabel::native("Import Studio Pack", "Studio-Paket importieren")).await
         .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importSpacePackPayload", LocalizedLabel::native("Import Studio Pack Payload", "Studio-Paket-Payload importieren"), ActionKind::Shell) }).await
         .shell_action("openSpace", LocalizedLabel::native("Open Studio", "Studio öffnen")).await
-        .action_with(ActionDefinition::bounded_catalog("openInstance", LocalizedLabel::native("Open Instance", "Instanz öffnen"), ActionKind::Shell).with_category("open").await).await
+        .action_with(ActionDefinition::bounded_catalog("openInstance", LocalizedLabel::native("Open Instance", "Instanz öffnen"), ActionKind::Shell).with_category("open")).await
         .shell_action("closeFocusedInstance", LocalizedLabel::native("Close Focused Instance", "Fokussierte Instanz schließen")).await
         .shell_action("goHome", LocalizedLabel::native("Go Home", "Zur Startseite")).await
         .shell_action("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren")).await
@@ -1266,7 +1266,7 @@ pub(crate) mod testkit {
     /// treating the selection as empty here — exactly the same degradation `SpaceApp::render`'s own
     /// selection-dependent branches already carry — so this helper stays usable for every OTHER
     /// command's non-selection-dependent behavior unchanged.
-    pub(crate) async fn studio_emit(projection: &WorkflowSnapshot, config: &SpaceConfig, command: &SpaceCommand) -> Result<Emit<WorkflowMutation, crate::engine::space::config::SpaceConfigMutation>, Fault> {
+    pub(crate) async fn studio_emit(projection: &WorkflowSnapshot, config: &SpaceConfig, command: &SpaceCommand) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let history = empty_history();
         let doc = ArtifactView::new(projection, &history);
         let cfg = ConfigView { snapshot: config };
@@ -1279,7 +1279,7 @@ pub(crate) mod testkit {
     }
 
     /// 📽️ Folds studio config operations onto a config snapshot the way the store would.
-    pub(crate) async fn apply_config(config: &SpaceConfig, operations: &[crate::engine::space::config::SpaceConfigMutation]) -> SpaceConfig {
+    pub(crate) async fn apply_config(config: &SpaceConfig, operations: &[SpaceConfigMutation]) -> SpaceConfig {
         apply_config_mutations(config, operations).await
     }
 

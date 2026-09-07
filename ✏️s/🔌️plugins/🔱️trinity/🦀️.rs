@@ -9,10 +9,10 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for both Trinity artifact surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum TrinityApps: PluginApp {
-        JackEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::jack::TrinityJackPlayApp>>),
-        JackViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::jack::TrinityJackViewer>>),
-        RewritingEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::rewriting::TrinityRewritingPlayApp>>),
-        RewritingViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::rewriting::TrinityRewritingViewer>>),
+        JackEditor(VcsArtifactApp<EditorApp<crate::editor::jack::TrinityJackPlayApp>>),
+        JackViewer(VcsArtifactApp<ViewerApp<crate::viewer::jack::TrinityJackViewer>>),
+        RewritingEditor(VcsArtifactApp<EditorApp<crate::editor::rewriting::TrinityRewritingPlayApp>>),
+        RewritingViewer(VcsArtifactApp<ViewerApp<crate::viewer::rewriting::TrinityRewritingViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -29,7 +29,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining, `📓️design-abi.md` §3/§6) are this
 /// crate's migration proof: one `OnArtifactKind` event per owned kind, read live from each artifact's
 /// own `artifact_kind().id`, `Isolated` execution, one `documents.write` ask covering both editors.
-pub fn plugin() -> Result<Plugin<TrinityApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<TrinityApps>, PluginAssemblyError> {
     Plugin::<TrinityApps>::builder("trinity")
         .label("Trinity")
         .version("0.1.0")

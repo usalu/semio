@@ -43,12 +43,12 @@ impl ToValue for MapValue {
 }
 
 impl FromValue for MapValue {
-    fn from_value(value: DslValue) -> Result<Self, protocol::ValueError> {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::String(value) => Ok(Self::Text(value)),
             DslValue::Array(value) => value.into_iter().map(Self::from_value).collect::<Result<_, _>>().map(Self::Array),
-            DslValue::Object(value) => value.into_iter().map(|(key, value)| Ok((key, Self::from_value(value)?))).collect::<Result<_, protocol::ValueError>>().map(Self::Object),
-            _ => Err(protocol::ValueError("map fixture requires text, array, or object".into())),
+            DslValue::Object(value) => value.into_iter().map(|(key, value)| Ok((key, Self::from_value(value)?))).collect::<Result<_, ValueError>>().map(Self::Object),
+            _ => Err(ValueError("map fixture requires text, array, or object".into())),
         }
     }
 }
@@ -189,7 +189,7 @@ pub(super) fn fixture() -> (Edit<MapMutation>, serde_json::Value, Arc<MapLifetim
 
 fn owner() -> (ArtifactStoreOneItemSealer<u64, MapMutation>, serde_json::Value, Arc<MapLifetime>) {
     let (edit, fixture, lifetime) = fixture();
-    (super::tests::authority().begin_one_item_seal(edit, Arc::new(17), Arc::new(MapRetirementFactory), Arc::new(super::tests::FixtureSnapshotRetirement)), fixture, lifetime)
+    (tests::authority().begin_one_item_seal(edit, Arc::new(17), Arc::new(MapRetirementFactory), Arc::new(tests::FixtureSnapshotRetirement)), fixture, lifetime)
 }
 
 fn close(owner: &mut ArtifactStoreOneItemSealer<u64, MapMutation>, lifetime: &MapLifetime) {

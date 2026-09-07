@@ -19,11 +19,11 @@ pub(crate) enum WireTestMutation {
 
 impl protocol::OpBinary for WireTestMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|error| crate::store::PackError::Schema(error.to_string()).into())
+        serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()).into())
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|error| crate::store::PackError::Schema(error.to_string()).into())
+        serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()).into())
     }
 }
 //#endregion 🧬️ContributedMutationWireRoster

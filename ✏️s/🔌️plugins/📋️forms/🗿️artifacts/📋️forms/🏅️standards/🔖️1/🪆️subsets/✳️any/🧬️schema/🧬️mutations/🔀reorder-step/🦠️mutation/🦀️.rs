@@ -9,6 +9,8 @@ use protocol::{MutationKind, SemanticDescriptor};
 //#region 🔀️ReorderStep
 /// 🔀️ Repositions a step to a FINAL-state `to_index` within `steps`.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
 pub struct ReorderStep {
     pub id: String,
     pub to_index: usize,

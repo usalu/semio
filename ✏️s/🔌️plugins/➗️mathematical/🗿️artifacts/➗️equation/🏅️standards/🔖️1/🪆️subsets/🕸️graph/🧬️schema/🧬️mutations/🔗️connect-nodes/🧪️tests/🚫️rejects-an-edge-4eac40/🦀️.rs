@@ -13,7 +13,7 @@
 //! UNRESOLVED handle and `equation_scene` fails soft to an empty graph — the state this case
 //! pins, and the state in which `connect-nodes`' endpoint `mutation.target-missing` fires.
 
-use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::disconnect_nodes::mutation::DisconnectNodes;
+use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::disconnect_nodes::DisconnectNodes;
 use crate::artifacts::equation::{equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::{FromValue, ToValue};
 

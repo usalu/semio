@@ -387,7 +387,7 @@ impl<'a> FillPlacementPublishView<'a> {
 }
 
 /// 📤️ Pre-credits the final event destination before materializing the fixed terminal owner.
-fn publish_fixed_placement(placement: FillPlacementPublishView<'_>, mutations: &mut Vec<crate::artifacts::puzzle2d::mutations::Puzzle2dMutation>) -> Result<(), &'static str> {
+fn publish_fixed_placement(placement: FillPlacementPublishView<'_>, mutations: &mut Vec<Puzzle2dMutation>) -> Result<(), &'static str> {
     if placement.handle_count > infinite_canvas::BOARD_FILL_KIND_HANDLE_CAPACITY {
         return Err("puzzle2d-fill-apply-handle-capacity");
     }
@@ -395,9 +395,9 @@ fn publish_fixed_placement(placement: FillPlacementPublishView<'_>, mutations: &
         infinite_canvas::BoardFillCommitShape::Circle => "circle",
         infinite_canvas::BoardFillCommitShape::Rectangle => "rectangle",
     };
-    let mut required_bytes = std::mem::size_of::<crate::artifacts::puzzle2d::mutations::Puzzle2dMutation>()
+    let mut required_bytes = size_of::<Puzzle2dMutation>()
         .checked_mul(2)
-        .and_then(|bytes| bytes.checked_add(std::mem::size_of::<crate::artifacts::puzzle2d::Puzzle2dHandle>().checked_mul(placement.handle_count)?))
+        .and_then(|bytes| bytes.checked_add(size_of::<crate::artifacts::puzzle2d::Puzzle2dHandle>().checked_mul(placement.handle_count)?))
         .and_then(|bytes| bytes.checked_add(placement.node_id.as_str().len().checked_mul(2)?))
         .and_then(|bytes| bytes.checked_add(placement.edge_id.as_str().len()))
         .and_then(|bytes| bytes.checked_add(placement.edge_kind.as_str().len()))
@@ -457,7 +457,7 @@ fn publish_fixed_placement(placement: FillPlacementPublishView<'_>, mutations: &
     Ok(())
 }
 
-fn publish_commit_candidate(candidate: &semio_framework_job::CommitCandidate, mutations: &mut Vec<crate::artifacts::puzzle2d::mutations::Puzzle2dMutation>) -> Option<Result<infinite_canvas::BoardFillResult, &'static str>> {
+fn publish_commit_candidate(candidate: &semio_framework_job::CommitCandidate, mutations: &mut Vec<Puzzle2dMutation>) -> Option<Result<infinite_canvas::BoardFillResult, &'static str>> {
     let candidate = infinite_canvas::BoardFillCommitCandidate::from_commit_candidate(candidate)?;
     if let Some(placement) = candidate.placement.as_ref() {
         if let Err(code) = publish_fixed_placement(FillPlacementPublishView::from_commit(placement), mutations) {
@@ -472,7 +472,7 @@ impl FillPlacementApplyCursor {
         Self { placement: Some(placement), handles: std::array::from_fn(|_| None), handle: None, node: None, edge: None, handle_cursor: 0, text_byte: 0, stage: FillPlacementApplyStage::BeginHandle }
     }
 
-    fn step(&mut self, mutations: &mut Vec<crate::artifacts::puzzle2d::mutations::Puzzle2dMutation>) -> Result<FillPlacementApplyStep, &'static str> {
+    fn step(&mut self, mutations: &mut Vec<Puzzle2dMutation>) -> Result<FillPlacementApplyStep, &'static str> {
         let placement = self.placement.as_ref().ok_or("puzzle2d-fill-apply-owner")?;
         match self.stage {
             FillPlacementApplyStage::BeginHandle => {

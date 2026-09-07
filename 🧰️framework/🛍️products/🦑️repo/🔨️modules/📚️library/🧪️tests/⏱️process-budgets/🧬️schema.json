@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["defaults", "processes"],
+  "properties": {
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["build", "command", "orchestrator", "daemon"],
+      "properties": {
+        "build": { "const": 0 },
+        "command": { "const": 0 },
+        "orchestrator": { "const": 0 },
+        "daemon": { "const": 0 }
+      }
+    },
+    "processes": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "durationMs", "budgetMs", "output", "timeout"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "durationMs": { "type": "integer", "minimum": 1 },
+          "budgetMs": { "type": "integer", "minimum": 0 },
+          "output": { "type": "string" },
+          "timeout": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

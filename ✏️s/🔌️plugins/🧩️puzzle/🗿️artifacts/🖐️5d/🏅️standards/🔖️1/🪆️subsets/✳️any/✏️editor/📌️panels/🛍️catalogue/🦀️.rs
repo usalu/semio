@@ -4,7 +4,7 @@
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{ui_label, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{
-    tree_item_desc, tree_item_with_action_draggable, ActionFactory, BuiltNode, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiMapBuilder, UiText, UiValue,
+    tree_item_desc, tree_item_with_action_draggable, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiMapBuilder, UiText, UiValue,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 };
 use serde_json::{json, Value};
@@ -58,7 +58,7 @@ fn add_part_args(kind_id: &str) -> semio_framework_plugin::UiAssemblyResult<UiVa
     Ok(UiValue::Map(args.finish()))
 }
 
-fn kind_catalog_items(section_id: &str, entries: &[Value], add_action: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+fn kind_catalog_items(section_id: &str, entries: &[Value], add_action: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<UiFixedList<BuiltNode>> {
     let actions = ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID);
     let mut items = UiFixedList::<BuiltNode>::default();
     for (index, entry) in entries.iter().enumerate() {
@@ -81,7 +81,7 @@ fn kind_catalog_items(section_id: &str, entries: &[Value], add_action: Option<&s
 //#endregion 🔖️Rows
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let catalogs = envelope.document.kind_catalogs.clone().unwrap_or(json!({}));
     let slice = |key: &str| catalogs.get(key).and_then(|value| value.as_array()).cloned().unwrap_or_default();
     let mut part_entries = slice("parts");

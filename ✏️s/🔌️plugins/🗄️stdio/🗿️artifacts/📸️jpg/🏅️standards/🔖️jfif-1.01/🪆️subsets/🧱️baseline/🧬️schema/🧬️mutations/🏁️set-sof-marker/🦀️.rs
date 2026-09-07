@@ -14,7 +14,7 @@ pub struct SetSofMarker {
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetSofMarker {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sof-marker", kind: "set-sof-marker", record: "SetSofMarker" };
 
-    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<<JpgBaselineMutation as protocol::Mutation<JpgSnapshot>>::Diff> {
+    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<<JpgBaselineMutation as Mutation<JpgSnapshot>>::Diff> {
         agg_diff(&JpgBaselineMutation::SetSofMarker(self.clone()), base)
     }
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {

@@ -2482,7 +2482,7 @@ mod checkout_integration {
 
     #[test]
     fn dsl_machine_cancel_resume_round_trips_via_shallow_history() {
-        let mut sink: Vec<crate::Command<checkout::Checkout>> = Vec::new();
+        let mut sink: Vec<Command<checkout::Checkout>> = Vec::new();
         let mut snapshot = crate::init::<checkout::Checkout>((), &mut sink);
         let mut inspector = TraceInspector::<checkout::Checkout>::default();
 

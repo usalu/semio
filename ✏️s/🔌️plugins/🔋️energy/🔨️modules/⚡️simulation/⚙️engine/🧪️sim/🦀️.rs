@@ -949,14 +949,14 @@ impl EnergyRestoreJob {
         }
         match rebuild.step(context) {
             StepOutcome::Yield => {}
-            StepOutcome::PreviewReady(mut notice) => {
+            StepOutcome::PreviewReady(notice) => {
                 if !notice.terminal_is_empty() {
                     self.replay_retiring = Some(EnergyWirePacket { kind: EnergyWireKind::Preview, identity: self.packet.as_ref().expect("restore packet").identity, payload: notice, preview: None, reservation: None });
                     return Ok(false);
                 }
                 self.replay_retiring = rebuild.take_preview_packet(self.operation.generation).map_err(|_| EnergyWireRejection::Identity)?;
             }
-            StepOutcome::CheckpointReady(mut checkpoint) => {
+            StepOutcome::CheckpointReady(checkpoint) => {
                 if !checkpoint.state.terminal_is_empty() {
                     self.replay_retiring = Some(EnergyWirePacket { kind: EnergyWireKind::Checkpoint, identity: self.packet.as_ref().expect("restore packet").identity, payload: checkpoint.state, preview: None, reservation: None });
                     self.replay_checkpoint_pending = true;
@@ -966,7 +966,7 @@ impl EnergyRestoreJob {
                     self.replay_checkpoint_lease = Some(lease);
                 }
             }
-            StepOutcome::Fault(mut fault) => {
+            StepOutcome::Fault(fault) => {
                 self.replay_failed = Some(EnergyWireRejection::Backing);
                 if !fault.detail.terminal_is_empty() {
                     self.replay_retiring = Some(EnergyWirePacket { kind: EnergyWireKind::Fault, identity: self.packet.as_ref().expect("restore packet").identity, payload: fault.detail, preview: None, reservation: None });
@@ -974,7 +974,7 @@ impl EnergyRestoreJob {
                 }
                 return Err(self.replay_failed.expect("replay failure retained"));
             }
-            StepOutcome::Complete(mut candidate) => {
+            StepOutcome::Complete(candidate) => {
                 self.replay_failed = Some(EnergyWireRejection::Items);
                 if !candidate.state.terminal_is_empty() {
                     self.replay_retiring = Some(EnergyWirePacket { kind: EnergyWireKind::Commit, identity: self.packet.as_ref().expect("restore packet").identity, payload: candidate.state, preview: None, reservation: None });
@@ -1176,7 +1176,7 @@ impl EnergyNumericalCensus {
         ];
         let observed_items = checked_sum(dimensions.into_iter())?;
         let observed_bytes =
-            observed_model_bytes(model, config)?.checked_add(weather_records.checked_mul(std::mem::size_of::<Option<(usize, WeatherRecord)>>())?)?.checked_add(samples.checked_mul(std::mem::size_of::<f64>() * 3)?)?.checked_add(identifier_bytes)?;
+            observed_model_bytes(model, config)?.checked_add(weather_records.checked_mul(size_of::<Option<(usize, WeatherRecord)>>())?)?.checked_add(samples.checked_mul(size_of::<f64>() * 3)?)?.checked_add(identifier_bytes)?;
         let pages = observed_bytes.checked_add(16_383)?.checked_div(16_384)?;
         Some(Self {
             zones: model.zones.capacity(),
@@ -1378,13 +1378,13 @@ fn observed_model_bytes(model: &Model, config: &SimulationConfig) -> Option<usiz
     backing!(model.daylight_zones);
     backing!(model.room_air_models);
     for surface in &model.surfaces {
-        bytes = bytes.checked_add(surface.vertices_m.capacity().checked_mul(std::mem::size_of::<[f64; 3]>())?)?;
+        bytes = bytes.checked_add(surface.vertices_m.capacity().checked_mul(size_of::<[f64; 3]>())?)?;
     }
     for construction in &model.constructions {
-        bytes = bytes.checked_add(construction.layer_material_ids.capacity().checked_mul(std::mem::size_of::<crate::model::EntityId>())?)?;
+        bytes = bytes.checked_add(construction.layer_material_ids.capacity().checked_mul(size_of::<crate::model::EntityId>())?)?;
     }
     for plant in &model.plant_loops {
-        bytes = bytes.checked_add(plant.equipment_ids.capacity().checked_mul(std::mem::size_of::<crate::model::EntityId>())?)?;
+        bytes = bytes.checked_add(plant.equipment_ids.capacity().checked_mul(size_of::<crate::model::EntityId>())?)?;
     }
     for air_loop in &model.air_loops {
         bytes = bytes.checked_add(observed_vector_bytes(&air_loop.terminal_zone_ids)?)?;
@@ -1404,11 +1404,11 @@ fn observed_model_bytes(model: &Model, config: &SimulationConfig) -> Option<usiz
         bytes = bytes.checked_add(observed_vector_bytes(&center.battery_ids)?)?;
     }
     if let Some(network) = &model.airflow_network {
-        bytes = bytes.checked_add(network.zone_node_ids.capacity().checked_mul(std::mem::size_of::<(crate::model::EntityId, u32)>())?)?;
-        bytes = bytes.checked_add(network.link_ids.capacity().checked_mul(std::mem::size_of::<u32>())?)?;
+        bytes = bytes.checked_add(network.zone_node_ids.capacity().checked_mul(size_of::<(crate::model::EntityId, u32)>())?)?;
+        bytes = bytes.checked_add(network.link_ids.capacity().checked_mul(size_of::<u32>())?)?;
     }
     if let Some(weather) = &config.weather {
-        bytes = bytes.checked_add(weather.records.capacity().checked_mul(std::mem::size_of::<WeatherRecord>())?)?;
+        bytes = bytes.checked_add(weather.records.capacity().checked_mul(size_of::<WeatherRecord>())?)?;
     }
     backing!(config.schedules.constants);
     backing!(config.schedules.daily);
@@ -1426,7 +1426,7 @@ fn observed_model_bytes(model: &Model, config: &SimulationConfig) -> Option<usiz
 }
 
 fn observed_vector_bytes<T>(owners: &Vec<T>) -> Option<usize> {
-    owners.capacity().checked_mul(std::mem::size_of::<T>())
+    owners.capacity().checked_mul(size_of::<T>())
 }
 // #endregion 🔖️NumericalAdmission
 
@@ -5515,7 +5515,7 @@ mod tests {
         assert!(after.weather_records > before.weather_records);
         let weather_delta = after.weather_records - before.weather_records;
         assert_eq!(after.observed_items - before.observed_items, weather_delta);
-        assert_eq!(after.observed_bytes - before.observed_bytes, weather_delta * (std::mem::size_of::<WeatherRecord>() + std::mem::size_of::<Option<(usize, WeatherRecord)>>()));
+        assert_eq!(after.observed_bytes - before.observed_bytes, weather_delta * (size_of::<WeatherRecord>() + size_of::<Option<(usize, WeatherRecord)>>()));
         assert_eq!(after.pages, (after.observed_bytes + 16_383) / 16_384);
         let pointer = config.weather.as_ref().expect("weather").records.as_ptr();
         let mut maximum = EnergyNumericalBounds::default().0;

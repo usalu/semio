@@ -17,7 +17,7 @@ pub struct StripNonTiny {}
 impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for StripNonTiny {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "non-tiny-content", kind: "strip-non-tiny", record: "StripNonTiny" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgTinyMutation as protocol::Mutation<SvgSnapshot>>::Diff> {
+    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgTinyMutation as Mutation<SvgSnapshot>>::Diff> {
         agg_diff(&SvgTinyMutation::StripNonTiny(self.clone()), base)
     }
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgTinyMutation> {

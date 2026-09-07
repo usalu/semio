@@ -973,7 +973,7 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
         ..Default::default()
     };
     if selected.is_empty() {
-        return Menu::of(registry).await.item(item("selectAll", if is_de { "Alles auswählen" } else { "Select All" }, "select-all", "selectAll", None, false, false)).await.build().await;
+        return Menu::of(registry).item(item("selectAll", if is_de { "Alles auswählen" } else { "Select All" }, "select-all", "selectAll", None, false, false)).build();
     }
     let selected_set: HashSet<&str> = selected.iter().map(String::as_str).collect();
     let mut entities: Vec<&Value> = Vec::new();
@@ -1002,7 +1002,7 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
     }
     let any_visible = entities.iter().any(|entity| entity.get("hidden").and_then(|v| v.as_bool()) != Some(true));
     let any_unlocked = entities.iter().any(|entity| entity.get("locked").and_then(|v| v.as_bool()) != Some(true));
-    let phrase = selection_count_phrase(is_de, &[(selected.len(), if is_de { "Element" } else { "item" }, if is_de { "Elemente" } else { "items" })]).await;
+    let phrase = selection_count_phrase(is_de, &[(selected.len(), if is_de { "Element" } else { "item" }, if is_de { "Elemente" } else { "items" })]);
     let hide_label = match (any_visible, is_de) {
         (true, true) => "Ausblenden",
         (true, false) => "Hide",
@@ -1016,21 +1016,21 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
         (false, false) => "Unlock",
     };
     Menu::of(registry)
-        .await
+        
         .item(item("toggleHidden", hide_label, if any_visible { "eye-off" } else { "eye" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": any_visible })), false, false))
-        .await
+        
         .item(item("toggleLocked", lock_label, if any_unlocked { "lock" } else { "lock-open" }, "setSelectionFlag", Some(json!({ "flag": "locked", "value": any_unlocked })), false, false))
-        .await
+        
         .item(item("duplicate", if is_de { "Duplizieren" } else { "Duplicate" }, "copy", "duplicateSelection", None, false, !has_selected_node))
-        .await
+        
         .item(item("focusSelection", if is_de { "Auf Auswahl zoomen" } else { "Zoom to selection" }, "crosshair", "focusSelection", None, false, false))
-        .await
-        .group("selection", |m| async move { m.item(item("selectSameKind", if is_de { "Gleiche Art auswählen" } else { "Select same kind" }, "layers", "selectSameKind", None, false, false)).await })
-        .await
+        
+        .group("selection", |m| { m.item(item("selectSameKind", if is_de { "Gleiche Art auswählen" } else { "Select same kind" }, "layers", "selectSameKind", None, false, false)) })
+        
         .item(item("deleteSelection", &format!("{} ({phrase})", if is_de { "Löschen" } else { "Delete" }), "trash", "deleteSelection", None, true, false))
-        .await
+        
         .build()
-        .await
+        
 }
 //#endregion 🔖️ContextMenu
 
@@ -1140,7 +1140,7 @@ impl Puzzle2dRetainedCommandJobFactory {
     }
 }
 
-impl semio_framework::ToolJobFactory for Puzzle2dRetainedCommandJobFactory {
+impl ToolJobFactory for Puzzle2dRetainedCommandJobFactory {
     type Payload = crate::retained_command::RetainedPuzzleCommandPayload<EditorApp<Puzzle2dPlayApp>>;
     type Job = crate::retained_command::RetainedPuzzleCommandJob<EditorApp<Puzzle2dPlayApp>>;
 
@@ -1187,7 +1187,7 @@ impl semio_framework::ToolJobFactory for Puzzle2dRetainedCommandJobFactory {
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<Puzzle2dPlayApp>;
+    type Owner = EditorApp<Puzzle2dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PUZZLE2D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
@@ -2981,7 +2981,7 @@ fn puzzle2d_retire_vec_backing<T>(owners: &mut Vec<T>, maximum_bytes: usize) -> 
     if !owners.is_empty() || owners.capacity() == 0 {
         return Ok(None);
     }
-    let bytes = owners.capacity().saturating_mul(std::mem::size_of::<T>());
+    let bytes = owners.capacity().saturating_mul(size_of::<T>());
     if bytes > maximum_bytes {
         return Err(Fault::from("puzzle2d import vector backing exceeds its bounded disposal byte slice"));
     }
@@ -3451,9 +3451,9 @@ impl ArtifactReservedJob for Puzzle2dImportJob {
         retire_catalog_slice!(self.catalogs.wires);
         if let Some(fragment) = self.fragment.take() {
             let bytes = match &fragment {
-                Value::Object(object) => object.len().saturating_mul(std::mem::size_of::<Value>()),
-                Value::Array(values) => values.len().saturating_mul(std::mem::size_of::<Value>()),
-                _ => std::mem::size_of::<Value>(),
+                Value::Object(object) => object.len().saturating_mul(size_of::<Value>()),
+                Value::Array(values) => values.len().saturating_mul(size_of::<Value>()),
+                _ => size_of::<Value>(),
             };
             if bytes > maximum_bytes {
                 self.fragment = Some(fragment);
@@ -3603,7 +3603,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Puzzle2dPlayApp>,
+        owner: EditorApp<Puzzle2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.puzzle.puzzle2d@1/*#editor",
         document_schema: "puzzle.2d.fixture",
@@ -3875,15 +3875,15 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             .view_action("setTerminology", LocalizedLabel::native("Set Terminology", "Terminologie festlegen"))
             // 🗂️ Referenced by `puzzle2d_context_menu_items` — categorized for grouped-context-menu disclosure.
-            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection")))
+            .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
             .keybinding("delete,backspace", "deleteSelection")
-            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).with_category("create")))
+            .action_with(ActionDefinition::bounded_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).with_category("create"))
             .mutation("forceLayout", LocalizedLabel::native("Force Layout", "Kraftbasiertes Layout"))
-            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"), ActionKind::Mutation).with_category("view")))
+            .action_with(ActionDefinition::bounded_catalog("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"), ActionKind::Mutation).with_category("view"))
             // 👁️ Palette-visible ephemeral view/selection commands.
-            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("selectSameKind", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).with_category("selection")))
+            .action_with(ActionDefinition::bounded_catalog("selectSameKind", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).with_category("selection"))
             // 🔧️ Internal content operations — inspector/panel/board/import-bound, not palette commands.
-            .action_with(semio_framework::io::resolve_ready(puzzle2d_internal_action("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Mutation).with_category("settings")))
+            .action_with(puzzle2d_internal_action("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Mutation).with_category("settings"))
             .action_with(puzzle2d_internal_action("patchInspectorNodes", LocalizedLabel::native("Patch Inspector Nodes", "Inspektorknoten aktualisieren"), ActionKind::Mutation))
             .action_with(puzzle2d_internal_action("redrawHandles", LocalizedLabel::native("Redraw Handles", "Anschlüsse neu zeichnen"), ActionKind::Mutation))
             .action_with(puzzle2d_internal_action("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation))

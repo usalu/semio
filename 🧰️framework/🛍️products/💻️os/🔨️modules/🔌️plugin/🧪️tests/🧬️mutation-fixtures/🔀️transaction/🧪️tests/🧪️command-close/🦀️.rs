@@ -85,7 +85,7 @@ fn check(id: &str) {
         Command::CoalescedIncrement => TxnCommand::CoalescedIncrement,
         Command::IncrementAndNotify => TxnCommand::IncrementAndNotify,
     });
-    let command_bytes = std::mem::size_of_val(command.as_ref());
+    let command_bytes = size_of_val(command.as_ref());
     assert!(command_bytes > 0, "the three-variant command has a nonzero layout");
     let command_identity = std::ptr::from_ref(command.as_ref());
     let completion = ArtifactToolCompletion::<TxnApp>::new();

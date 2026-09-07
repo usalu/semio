@@ -1,8 +1,8 @@
 //! 🗑️ Fem2d mutation — `DeleteElement` payload + `MutationKind` impl.
 
-use crate::artifacts::fem2d::{Fem2dSnapshot, element_id};
+use crate::artifacts::fem2d::Fem2dSnapshot;
 use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dElementsDelta};
-use crate::artifacts::fem2d::mutations::{Fem2dMutation, create_element};
+use crate::artifacts::fem2d::mutations::Fem2dMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

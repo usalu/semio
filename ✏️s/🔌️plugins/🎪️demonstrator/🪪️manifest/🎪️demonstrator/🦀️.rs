@@ -28,35 +28,34 @@ const PLUGIN_VERSION: &str = "0.1.0";
 /// 🗃️ Closed runtime app fleet for the demonstrator's owned and bundled surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum DemonstratorApps: PluginApp {
-        PlaygroundEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::playground::PlaygroundEditor>>),
-        PlaygroundViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::playground::PlaygroundViewer>>),
-        Generation3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Generation3dPlayApp>>),
-        CadEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<CadPlayApp>>),
-        Puzzle3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Puzzle3dPlayApp>>),
-        SourcingEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<SourcingCurationApp>>),
-        SourcingViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<SourcingViewer>>),
-        ProcessEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Process3dPlayApp>>),
-        ProcessViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<Process3dViewer>>),
-        GisEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Gis2dPlayApp>>),
+        PlaygroundEditor(VcsArtifactApp<EditorApp<crate::editor::playground::PlaygroundEditor>>),
+        PlaygroundViewer(VcsArtifactApp<ViewerApp<crate::viewer::playground::PlaygroundViewer>>),
+        Generation3dEditor(VcsArtifactApp<EditorApp<Generation3dPlayApp>>),
+        CadEditor(VcsArtifactApp<EditorApp<CadPlayApp>>),
+        Puzzle3dEditor(VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>),
+        SourcingEditor(VcsArtifactApp<EditorApp<SourcingCurationApp>>),
+        SourcingViewer(VcsArtifactApp<ViewerApp<SourcingViewer>>),
+        ProcessEditor(VcsArtifactApp<EditorApp<Process3dPlayApp>>),
+        ProcessViewer(VcsArtifactApp<ViewerApp<Process3dViewer>>),
+        GisEditor(VcsArtifactApp<EditorApp<Gis2dPlayApp>>),
     }
 }
 
 /// 🔌️ Builds the concrete demonstrator bundle: declares its owned playground artifact, registers
 /// its own native editor+viewer surfaces over that artifact, then registers the six foreign plugins'
 /// surfaces in their preserved order (`sourcing`/`process` each contribute an editor+viewer pair).
-pub fn plugin() -> Result<Plugin<DemonstratorApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<DemonstratorApps>, PluginAssemblyError> {
     Plugin::<DemonstratorApps>::builder(PLUGIN_ID)
         .label(PLUGIN_LABEL)
         .version(PLUGIN_VERSION)
         .package_id("semio:demonstrator")
-        .depends_on("cad", semio_framework::VersionReq::Any)
-        .depends_on("gis", semio_framework::VersionReq::Any)
-        .depends_on("procedural", semio_framework::VersionReq::Any)
-        .depends_on("process", semio_framework::VersionReq::Any)
-        .depends_on("puzzle", semio_framework::VersionReq::Any)
-        .depends_on("sourcing", semio_framework::VersionReq::Any)
-        .depends_on("stdio", semio_framework::VersionReq::Any)
-        .artifact(crate::artifacts::playground::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .depends_on("cad", VersionReq::Any)
+        .depends_on("gis", VersionReq::Any)
+        .depends_on("procedural", VersionReq::Any)
+        .depends_on("process", VersionReq::Any)
+        .depends_on("puzzle", VersionReq::Any)
+        .depends_on("sourcing", VersionReq::Any)
+        .artifact(crate::artifacts::playground::declaration().map_err(PluginAssemblyError::definition)?)
         .editor::<crate::editor::playground::PlaygroundEditor>(crate::editor::playground::create_playground_editor())
         .editor_mutation_roster::<crate::editor::playground::PlaygroundEditor>()
         .viewer::<crate::viewer::playground::PlaygroundViewer>(crate::viewer::playground::create_playground_viewer())
@@ -118,7 +117,7 @@ mod tests {
         assert_eq!(manifest.plugin_id, PLUGIN_ID);
         assert_eq!(manifest.label, PLUGIN_LABEL);
         assert_eq!(manifest.version, PLUGIN_VERSION);
-        assert_eq!(manifest.dependencies.iter().map(|dependency| dependency.plugin_id.as_str()).collect::<Vec<_>>(), vec!["cad", "gis", "procedural", "process", "puzzle", "sourcing", "stdio"]);
+        assert_eq!(manifest.dependencies.iter().map(|dependency| dependency.plugin_id.as_str()).collect::<Vec<_>>(), vec!["cad", "gis", "procedural", "process", "puzzle", "sourcing"]);
     }
 
     /// 🔗️ Ticket 26/09/05/S-END-TO-END lane H: the dependency list above is not free-standing prose —

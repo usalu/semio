@@ -85,7 +85,7 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
 //#endregion 🔖️Helpers
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let step_items = ui_node_list(fixture.steps.iter().filter(|step| step.slot.is_none()).map(|step| build_step_tree_item(step, fixture, labels)))?;
     let edge_items = ui_node_list(fixture.edges.iter().map(|edge| tree_item_desc(format!("sequence-play-document.edge.{}", edge.id), Label::data(format!("{} → {}", edge.from, edge.to)), Some(edge.id.clone()))))?;
     PanelTreeBuilder::new("sequence-play-document")?

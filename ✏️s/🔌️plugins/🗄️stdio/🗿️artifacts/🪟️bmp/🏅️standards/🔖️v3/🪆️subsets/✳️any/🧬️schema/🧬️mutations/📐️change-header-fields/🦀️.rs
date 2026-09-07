@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative change-header-fields mutation.
-use crate::artifacts::bmp::schema::diff::{self, *};
+use crate::artifacts::bmp::schema::diff::*;
 use crate::artifacts::bmp::schema::mutations::BmpMutation;
 use crate::artifacts::bmp::schema::snapshot::*;
 
@@ -33,7 +33,7 @@ pub mod text;
 //#region Semantics
 impl protocol::MutationKind<BmpSnapshot, BmpMutation> for ChangeHeaderFieldsMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "header-fields", kind: "change-header-fields", record: "ChangeHeaderFields" };
-    fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<BmpDiff> {
+    fn diff(&self, _base: &BmpSnapshot) -> protocol::MutationOutcome<BmpDiff> {
         let Self { header_size, width, height, row_order, planes, bits_per_pixel, compression, image_size, x_pixels_per_meter, y_pixels_per_meter, colors_used, colors_important } = self;
         protocol::MutationOutcome::new(BmpDiff {
             header_size: *header_size,
@@ -57,7 +57,7 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for ChangeHeaderFieldsMuta
         if <BmpDiff as protocol::DiffAlgebra<BmpSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
-        vec![BmpMutation::ChangeHeaderFields(crate::artifacts::bmp::schema::mutations::ChangeHeaderFieldsMutation {
+        vec![BmpMutation::ChangeHeaderFields(ChangeHeaderFieldsMutation {
             header_size: header_size.map(|_| base.header_size),
             width: width.map(|_| base.width),
             height: height.map(|_| base.height),

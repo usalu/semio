@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative change-header mutation.
-use crate::artifacts::png::schema::diff::{self, *};
+use crate::artifacts::png::schema::diff::*;
 use crate::artifacts::png::schema::mutations::PngMutation;
 use crate::artifacts::png::schema::snapshot::*;
 
@@ -31,12 +31,11 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeHeaderMutation {
         protocol::MutationOutcome::new(contribute(base, *width, *height, *bit_depth, *color_type, *interlace))
     }
     fn inverse(&self, base: &PngSnapshot) -> Vec<PngMutation> {
-        let Self { width, height, bit_depth, color_type, interlace } = self;
         let outcome = <Self as protocol::MutationKind<PngSnapshot, PngMutation>>::diff(self, base);
         if <PngDiff as protocol::DiffAlgebra<PngSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
-        vec![PngMutation::ChangeHeader(crate::artifacts::png::schema::mutations::ChangeHeaderMutation { width: base.width, height: base.height, bit_depth: base.bit_depth, color_type: base.color_type, interlace: base.interlace })]
+        vec![PngMutation::ChangeHeader(ChangeHeaderMutation { width: base.width, height: base.height, bit_depth: base.bit_depth, color_type: base.color_type, interlace: base.interlace })]
     }
     fn label(&self) -> String {
         "change header".into()

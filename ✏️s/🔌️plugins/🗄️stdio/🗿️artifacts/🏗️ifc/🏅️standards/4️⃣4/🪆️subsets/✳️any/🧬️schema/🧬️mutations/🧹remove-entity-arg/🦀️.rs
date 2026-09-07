@@ -16,7 +16,7 @@ pub struct RemoveEntityArg {
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for RemoveEntityArg {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "entity-arg", kind: "remove-entity-arg", record: "RemoveEntityArg" };
 
-    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<<IfcMutation as protocol::Mutation<IfcSnapshot>>::Diff> {
+    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<<IfcMutation as Mutation<IfcSnapshot>>::Diff> {
         agg_diff(&IfcMutation::RemoveEntityArg(self.clone()), base)
     }
     fn inverse(&self, base: &IfcSnapshot) -> Vec<IfcMutation> {

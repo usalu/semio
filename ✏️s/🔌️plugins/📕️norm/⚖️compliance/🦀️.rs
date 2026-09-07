@@ -472,8 +472,8 @@ pub enum NormError {
     InvalidValue { field: String, reason: String },
 }
 
-impl std::fmt::Display for NormError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for NormError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::IncompleteInput { field } => write!(formatter, "incomplete input: {field}"),
             Self::OutOfScope { clause } => write!(formatter, "out of scope: {clause}"),

@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative insert-unknown-chunk mutation.
-use crate::artifacts::png::schema::diff::{self, *};
+use crate::artifacts::png::schema::diff::*;
 use crate::artifacts::png::schema::mutations::PngMutation;
 use crate::artifacts::png::schema::snapshot::*;
 
@@ -28,7 +28,7 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for InsertUnknownChunkMuta
         protocol::MutationOutcome::new(contribute(base, *index, chunk.clone()))
     }
     fn inverse(&self, base: &PngSnapshot) -> Vec<PngMutation> {
-        let Self { index, chunk } = self;
+        let Self { index, .. } = self;
         let outcome = <Self as protocol::MutationKind<PngSnapshot, PngMutation>>::diff(self, base);
         if <PngDiff as protocol::DiffAlgebra<PngSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();

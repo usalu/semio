@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `AddRepresentationAttribute`.
 
-use crate::{BlockAttribute, BlockRepresentation};
+use crate::BlockRepresentation;
 use crate::artifacts::block5d::Block5dSnapshot;
 use crate::artifacts::block5d::diff::{Block5dDiff, Block5dRepresentationsDelta, Block5dRepresentationsPatch, Block5dRepresentationsPatchEntry};
 

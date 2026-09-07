@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative replace-pixel-data mutation.
-use crate::artifacts::bmp::schema::diff::{self, *};
+use crate::artifacts::bmp::schema::diff::*;
 use crate::artifacts::bmp::schema::mutations::BmpMutation;
 use crate::artifacts::bmp::schema::snapshot::*;
 
@@ -22,18 +22,17 @@ pub mod text;
 //#region Semantics
 impl protocol::MutationKind<BmpSnapshot, BmpMutation> for ReplacePixelDataMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "pixel-data", kind: "replace-pixel-data", record: "ReplacePixelData" };
-    fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<BmpDiff> {
+    fn diff(&self, _base: &BmpSnapshot) -> protocol::MutationOutcome<BmpDiff> {
         let Self { pixels } = self;
         protocol::MutationOutcome::new(BmpDiff { pixels: Some(pixels.clone()), ..Default::default() })
     }
     fn inverse(&self, base: &BmpSnapshot) -> Vec<BmpMutation> {
-        let Self { pixels } = self;
         let outcome = <Self as protocol::MutationKind<BmpSnapshot, BmpMutation>>::diff(self, base);
         if <BmpDiff as protocol::DiffAlgebra<BmpSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
         {
-            vec![BmpMutation::ReplacePixelData(crate::artifacts::bmp::schema::mutations::ReplacePixelDataMutation { pixels: base.pixels.clone() })]
+            vec![BmpMutation::ReplacePixelData(ReplacePixelDataMutation { pixels: base.pixels.clone() })]
         }
     }
     fn label(&self) -> String {

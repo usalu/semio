@@ -27,7 +27,7 @@ pub fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem2dSnapsho
         buckling_count: payload.buckling_count.map(|value| value as usize).unwrap_or(current.buckling_count),
         deformation_scale: payload.deformation_scale.unwrap_or(current.deformation_scale),
     };
-    Ok(Emit::mutations(vec![Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings })]))
+    Ok(Emit::mutations(vec![Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings { settings })]))
 }
 
 //#region 🧪️Tests

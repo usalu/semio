@@ -5,9 +5,8 @@
 //! `sequence_ui`'s own compiled window (`🎬️sequence/🎛️apps/🎬️sequence/🎭️modes/✏️edit/🪟️windows/🧬️compiled`).
 
 use crate::artifacts::dag::DagSnapshot;
-use crate::editor::dag::DAG_PLAY_APP_ID;
 use infinite_board_port_directed_dag::{dag_fixture_from_document, dag_fixture_to_wire_literal, DagCamera};
-use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, BuiltNode, UiAssemblyResult, LocalizedLabel, SurfaceKind, TextEditorScene, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const DAG_PLAY_WINDOW_COMPILED: &str = "dag-compiled-dag";
@@ -38,9 +37,9 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &DagSnapshot, camera: &DagCamera) -> UiNode {
+pub fn render(document: &DagSnapshot, camera: &DagCamera) -> UiAssemblyResult<BuiltNode> {
     let fixture = dag_fixture_from_document(&infinite_board_port_directed_dag::DagSnapshot::from(document), camera.clone());
-    build_text_editor_scene(DAG_PLAY_SURFACE_COMPILED, DAG_PLAY_APP_ID, TextEditorScene::base(dag_fixture_to_wire_literal(&fixture), Some("wire".into()), None))
+    scene_surface(DAG_PLAY_SURFACE_COMPILED, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::TextEditor, &TextEditorScene::base(dag_fixture_to_wire_literal(&fixture), Some("wire".into()), None))
 }
 //#endregion 🔖️Render
 
@@ -52,8 +51,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_compiled_dag_text_editor() {
-        let mut app = new_app();
-        assert!(render_body(&mut app, DAG_PLAY_BODY_COMPILED).contains("text-editor"));
+        let mut app = new_app().await;
+        assert!(render_body(&mut app, DAG_PLAY_BODY_COMPILED).await.contains("text-editor"));
     }
 }
 //#endregion 🧪️Tests

@@ -1,7 +1,7 @@
 //! ➖️ `remove-type` — removes the TYPE matching `id`. Idempotent no-op if absent; inverse
 //! escrows the removed type from BASE.
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{SemioKitMutation, add_type};
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload

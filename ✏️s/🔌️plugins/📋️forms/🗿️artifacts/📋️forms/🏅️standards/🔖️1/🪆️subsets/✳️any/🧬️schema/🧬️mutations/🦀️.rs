@@ -87,7 +87,7 @@ pub const KINDS: &[&str] = &[
 /// beside this one answers `Result<_, _>` and drops the messages.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn apply_form_mutation_outcome(snapshot: &mut FormsSnapshot, mutation: &FormMutation) -> protocol::MutationOutcome<FormsDiff> {
-    let outcome = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(mutation, snapshot);
+    let outcome = <FormMutation as Mutation<FormsSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
 
@@ -96,7 +96,7 @@ pub fn apply_form_mutation_outcome(snapshot: &mut FormsSnapshot, mutation: &Form
 /// `protocol` extern-crate alias is private to `🦀️.rs`.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn inverse_form_mutation_steps(mutation: &FormMutation, base: &FormsSnapshot) -> Vec<FormMutation> {
-    <FormMutation as protocol::Mutation<FormsSnapshot>>::inverse(mutation, base)
+    <FormMutation as Mutation<FormsSnapshot>>::inverse(mutation, base)
 }
 
 /// 📥️ Decodes the internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) projection the

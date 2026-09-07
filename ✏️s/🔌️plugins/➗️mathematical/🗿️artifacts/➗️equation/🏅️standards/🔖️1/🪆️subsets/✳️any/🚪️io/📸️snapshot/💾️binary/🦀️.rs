@@ -60,7 +60,7 @@ fn encode_equation_snapshot_binary(s: &EquationSnapshot) -> Vec<u8> {
     write_child(&mut out, &s.notation);
     write_child(&mut out, &s.results);
     write_child(&mut out, &s.computed);
-    write_equation(&mut out, &s.mathematical);
+    write_equation(&mut out, &s.equation);
     out
 }
 fn decode_equation_snapshot_binary(bytes: &[u8]) -> Result<EquationSnapshot, String> {
@@ -127,7 +127,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::mutation::UpdateGraphAlgorithm;
+        use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::UpdateGraphAlgorithm;
         use crate::artifacts::equation::op::EquationMutation;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};

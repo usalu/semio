@@ -7,15 +7,12 @@
 
 use crate::artifacts::dag::schema::document_to_workflow;
 use crate::artifacts::dag::DagSnapshot;
-use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, BuiltNode, UiAssemblyResult, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const DAG_VIEW_WINDOW_MAIN: &str = "dag-view-main";
 pub const BODY_KEY: &str = "dag.view.main";
 const DAG_VIEW_SURFACE_MAIN: &str = "dag.view.main";
-/// 👁️ Read-only counterpart of the editor's `DAG_PLAY_APP_ID` controller id — kept distinct so a
-/// viewer session's node-graph controller can never be mistaken for an editor session's.
-const DAG_VIEW_CONTROLLER_ID: &str = "dag-view";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -43,13 +40,13 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `DagSnapshot -> UiNode` read: default camera (a viewer has no persisted per-session
+/// 👁️ Pure `DagSnapshot -> UiAssemblyResult<BuiltNode>` read: default camera (a viewer has no persisted per-session
 /// camera — `Config = NoConfig`), `editable: Some(false)` — the one bit that distinguishes this from
 /// the editor's own main-window render.
-pub fn render(document: &DagSnapshot) -> UiNode {
+pub fn render(document: &DagSnapshot) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges) = document_to_workflow(document);
     let viewport = NodeGraphViewport { x: 0.0, y: 0.0, zoom: 1.0 };
-    build_node_graph_scene(DAG_VIEW_SURFACE_MAIN, DAG_VIEW_CONTROLLER_ID, NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) })
+    scene_surface(DAG_VIEW_SURFACE_MAIN, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render
 
@@ -69,9 +66,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_read_only_node_graph_scene() {
         let document = crate::artifacts::dag::default_snapshot();
-        let json = serde_json::to_string(&render(&document)).expect("render json");
-        assert!(json.contains("node-graph"));
-        assert!(json.contains("\"editable\":false"));
+        let node = render(&document).expect("viewer surface");
+        let semio_framework_plugin::plugin_app_close_prelude::Component::Surface(props) = node.component else { panic!("viewer must produce a surface") };
+        let scene: NodeGraphScene = semio_framework_ui_scene::decode(&props).expect("node graph scene");
+        assert_eq!(scene.editable, Some(false));
+        let (nodes, edges) = document_to_workflow(&document);
+        assert_eq!(scene.nodes, nodes);
+        assert_eq!(scene.edges, edges);
     }
 }
 //#endregion 🧪️Tests

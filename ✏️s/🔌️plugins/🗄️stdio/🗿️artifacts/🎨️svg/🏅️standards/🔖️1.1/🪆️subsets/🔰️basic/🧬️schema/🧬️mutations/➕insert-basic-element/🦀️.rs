@@ -17,7 +17,7 @@ pub struct InsertBasicElement {
 impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for InsertBasicElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "basic-element", kind: "insert-basic-element", record: "InsertBasicElement" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgBasicMutation as protocol::Mutation<SvgSnapshot>>::Diff> {
+    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgBasicMutation as Mutation<SvgSnapshot>>::Diff> {
         agg_diff(&SvgBasicMutation::InsertBasicElement(self.clone()), base)
     }
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {

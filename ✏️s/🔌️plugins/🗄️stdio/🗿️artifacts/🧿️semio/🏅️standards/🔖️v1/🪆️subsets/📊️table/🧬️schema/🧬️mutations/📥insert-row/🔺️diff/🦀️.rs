@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `InsertRow`.
 
 use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::{SemioTableDiff, SemioTableRowList};
-use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableRow, SemioTableSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

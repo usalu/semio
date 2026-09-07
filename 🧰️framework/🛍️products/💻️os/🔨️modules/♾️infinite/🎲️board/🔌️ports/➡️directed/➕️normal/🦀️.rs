@@ -412,7 +412,7 @@ pub mod board_host {
         fn try_new() -> Result<Self, ()> {
             let mut items = Vec::new();
             items.try_reserve_exact(BOARD_FILL_PAGE_ITEMS).map_err(|_| ())?;
-            let backing_bytes = items.capacity().checked_mul(std::mem::size_of::<T>()).ok_or(())?;
+            let backing_bytes = items.capacity().checked_mul(size_of::<T>()).ok_or(())?;
             Ok(Self { items, backing_bytes })
         }
     }
@@ -429,7 +429,7 @@ pub mod board_host {
         }
 
         fn try_new() -> Result<Self, ()> {
-            let _ = CAPACITY.checked_mul(std::mem::size_of::<Option<BoardFillPage<T>>>()).ok_or(())?;
+            let _ = CAPACITY.checked_mul(size_of::<Option<BoardFillPage<T>>>()).ok_or(())?;
             let mut pages = Vec::new();
             pages.try_reserve_exact(CAPACITY).map_err(|_| ())?;
             pages.resize_with(CAPACITY, || None);
@@ -3608,12 +3608,12 @@ pub mod board_host {
             if cache.is_none() {
                 return true;
             }
-            let Some(token) = crate::infinite::canvas::reserve_opaque_scene_retirement() else {
+            let Some(token) = infinite::canvas::reserve_opaque_scene_retirement() else {
                 self.opaque_scene_fault.set(true);
                 return false;
             };
             let (_, _, scene) = cache.take().expect("world content cache was witnessed occupied");
-            crate::infinite::canvas::publish_opaque_scene_retirement(token, scene);
+            infinite::canvas::publish_opaque_scene_retirement(token, scene);
             true
         }
 
@@ -10360,12 +10360,12 @@ pub mod board_host {
             let needs_rebuild = cache.as_ref().map(|c| c.0 != generation || c.1 != lod).unwrap_or(true);
             if needs_rebuild {
                 if cache.is_some() {
-                    let Some(token) = crate::infinite::canvas::reserve_opaque_scene_retirement() else {
+                    let Some(token) = infinite::canvas::reserve_opaque_scene_retirement() else {
                         self.opaque_scene_fault.set(true);
                         return;
                     };
                     let (_, _, stale) = cache.take().expect("stale world content cache was witnessed occupied");
-                    crate::infinite::canvas::publish_opaque_scene_retirement(token, stale);
+                    infinite::canvas::publish_opaque_scene_retirement(token, stale);
                 }
                 let mut content = Scene::new();
                 self.append_nodes_and_handles(&mut content, None, lod, true, None, StyleChromePass::CachedBase, NodeHandlePaintLayer::Icons);
@@ -12508,23 +12508,23 @@ pub mod board_host {
         let virtual_handles = VirtualHandlePages::try_new().expect("virtual-handle descriptor owner");
         assert_eq!(sources.pages.len(), (BOARD_FILL_SOURCE_CAPACITY + BOARD_FILL_PAGE_ITEMS - 1) / BOARD_FILL_PAGE_ITEMS);
         assert_eq!(virtual_handles.pages.len(), (BOARD_FILL_PLACEMENT_CAPACITY * BOARD_FILL_KIND_HANDLE_CAPACITY + BOARD_FILL_PAGE_ITEMS - 1) / BOARD_FILL_PAGE_ITEMS);
-        assert_eq!(std::mem::size_of::<SourcePages>(), 4 * std::mem::size_of::<usize>());
-        assert_eq!(std::mem::size_of::<VirtualHandlePages>(), 4 * std::mem::size_of::<usize>());
-        assert!(std::mem::size_of::<BoardFillSnapshot>() <= 1_024);
-        assert!(std::mem::size_of::<BoardFillSnapshotCapture>() <= 32 * 1_024);
-        assert!(std::mem::size_of::<BoardFillSnapshotIngress>() <= 32 * 1_024);
-        assert!(std::mem::size_of::<BoardFillPlacement>() <= 32 * 1_024);
-        assert!(std::mem::size_of::<BoardFillCommitPlacement>() <= 32 * 1_024);
-        assert!(std::mem::size_of::<BoardFillCommitCandidate>() <= 32 * 1_024);
-        assert!(std::mem::size_of::<BoardFillCommitEncoder>() <= 32 * 1_024);
-        assert!(std::mem::size_of::<BoardFillJobState>() <= 32 * 1_024);
-        assert!(std::mem::size_of::<BoardFillCheckpoint>() <= 32 * 1_024);
-        assert!(std::mem::size_of::<BoardFillJob>() <= 32 * 1_024);
-        assert!(std::mem::size_of::<Result<BoardFillJob, BoardFillCheckpoint>>() <= 32 * 1_024);
-        assert!(std::mem::size_of::<semio_framework_job::WorkerJobOutcome<BoardFillJob>>() <= 32 * 1_024);
-        assert!(std::mem::size_of::<semio_framework_job::MountedWorkerJobSession<BoardFillJob>>() <= 32 * 1_024);
-        assert!(std::mem::size_of::<semio_framework_job::WorkerJobSessionAdmissionRejected<BoardFillJob>>() <= 32 * 1_024);
-        assert!(std::mem::size_of::<Result<semio_framework_job::MountedWorkerJobSession<BoardFillJob>, semio_framework_job::WorkerJobSessionAdmissionRejected<BoardFillJob>>>() <= 32 * 1_024);
+        assert_eq!(size_of::<SourcePages>(), 4 * size_of::<usize>());
+        assert_eq!(size_of::<VirtualHandlePages>(), 4 * size_of::<usize>());
+        assert!(size_of::<BoardFillSnapshot>() <= 1_024);
+        assert!(size_of::<BoardFillSnapshotCapture>() <= 32 * 1_024);
+        assert!(size_of::<BoardFillSnapshotIngress>() <= 32 * 1_024);
+        assert!(size_of::<BoardFillPlacement>() <= 32 * 1_024);
+        assert!(size_of::<BoardFillCommitPlacement>() <= 32 * 1_024);
+        assert!(size_of::<BoardFillCommitCandidate>() <= 32 * 1_024);
+        assert!(size_of::<BoardFillCommitEncoder>() <= 32 * 1_024);
+        assert!(size_of::<BoardFillJobState>() <= 32 * 1_024);
+        assert!(size_of::<BoardFillCheckpoint>() <= 32 * 1_024);
+        assert!(size_of::<BoardFillJob>() <= 32 * 1_024);
+        assert!(size_of::<Result<BoardFillJob, BoardFillCheckpoint>>() <= 32 * 1_024);
+        assert!(size_of::<semio_framework_job::WorkerJobOutcome<BoardFillJob>>() <= 32 * 1_024);
+        assert!(size_of::<semio_framework_job::MountedWorkerJobSession<BoardFillJob>>() <= 32 * 1_024);
+        assert!(size_of::<semio_framework_job::WorkerJobSessionAdmissionRejected<BoardFillJob>>() <= 32 * 1_024);
+        assert!(size_of::<Result<semio_framework_job::MountedWorkerJobSession<BoardFillJob>, semio_framework_job::WorkerJobSessionAdmissionRejected<BoardFillJob>>>() <= 32 * 1_024);
         assert!(sources.terminal_is_empty());
         assert!(virtual_handles.terminal_is_empty());
         assert!(BoardFillFixedPages::<u8, { usize::MAX }>::try_new().is_err());

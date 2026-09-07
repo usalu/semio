@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative change-byte-order mutation.
-use crate::artifacts::tiff::schema::diff::{self, *};
+use crate::artifacts::tiff::schema::diff::*;
 use crate::artifacts::tiff::schema::mutations::TiffMutation;
 use crate::artifacts::tiff::schema::snapshot::*;
 
@@ -27,12 +27,11 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for ChangeByteOrderMutat
         protocol::MutationOutcome::new(contribute(base, *byte_order))
     }
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffMutation> {
-        let Self { byte_order } = self;
         let outcome = <Self as protocol::MutationKind<TiffSnapshot, TiffMutation>>::diff(self, base);
         if <TiffDiff as protocol::DiffAlgebra<TiffSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
-        vec![TiffMutation::ChangeByteOrder(crate::artifacts::tiff::schema::mutations::ChangeByteOrderMutation { byte_order: base.byte_order })]
+        vec![TiffMutation::ChangeByteOrder(ChangeByteOrderMutation { byte_order: base.byte_order })]
     }
     fn label(&self) -> String {
         "change byte order".into()

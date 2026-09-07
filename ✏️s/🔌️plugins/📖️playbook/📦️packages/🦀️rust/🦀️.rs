@@ -116,7 +116,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀move-block/🧪️tests/🧩️rejects-moving-a-block-into-a-missing-step/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀move-block/🧪️tests/🧩️rejects-moving-a-6803e6/🦀️.rs"]
                                     mod tests_rejects_moving_a_block_into_a_missing_step;
                                 }
                                 #[path = "."]
@@ -129,7 +129,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-step/🧪️tests/🚪️no-ops-when-the-step-is-already-at-that-index/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-step/🧪️tests/🚪️no-ops-when-the-6b416f/🦀️.rs"]
                                     mod tests_no_ops_when_the_step_is_already_at_that_index;
                                 }
                                 #[path = "."]
@@ -142,7 +142,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱add-block/🧪️tests/🧩️rejects-adding-a-block-to-a-missing-step/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱add-block/🧪️tests/🧩️rejects-adding-a-c362ef/🦀️.rs"]
                                     mod tests_rejects_adding_a_block_to_a_missing_step;
                                 }
                                 #[path = "."]
@@ -155,7 +155,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-step/🧪️tests/📋️no-ops-on-a-duplicate-step-id/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-step/🧪️tests/📋️no-ops-on-a-ed3a7d/🦀️.rs"]
                                     mod tests_no_ops_on_a_duplicate_step_id;
                                 }
                                 #[path = "."]
@@ -168,7 +168,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-block/🧪️tests/🧩️rejects-removing-a-block-missing-from-its-step/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-block/🧪️tests/🧩️rejects-removing-9847b3/🦀️.rs"]
                                     mod tests_rejects_removing_a_block_missing_from_its_step;
                                 }
                                 #[path = "."]
@@ -181,7 +181,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-step/🧪️tests/🚫️rejects-removing-a-missing-step/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-step/🧪️tests/🚫️rejects-removing-2c29fb/🦀️.rs"]
                                     mod tests_rejects_removing_a_missing_step;
                                 }
                                 #[path = "."]
@@ -194,7 +194,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-title/🧪️tests/🔀️changes-the-playbook-title/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-title/🧪️tests/🔀️changes-the-3364ef/🦀️.rs"]
                                     mod tests_changes_the_playbook_title;
                                 }
                                 #[path = "."]
@@ -207,7 +207,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-block/🧪️tests/🧩️no-ops-when-the-block-is-already-identical/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-block/🧪️tests/🧩️no-ops-when-the-2296e7/🦀️.rs"]
                                     mod tests_no_ops_when_the_block_is_already_identical;
                                 }
                                 #[path = "."]
@@ -220,7 +220,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-step/🧪️tests/📖️no-ops-when-the-header-is-already-current/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-step/🧪️tests/📖️no-ops-when-the-05f86d/🦀️.rs"]
                                     mod tests_no_ops_when_the_header_is_already_current;
                                 }
                             }
@@ -541,7 +541,7 @@ pub mod viewer {
 #[path = "../../🦀️.rs"]
 mod plugin;
 pub use plugin::PlaybookApps;
-semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::PlaybookApps);
+semio_framework_plugin::plugin_exports!(plugin::plugin, PlaybookApps);
 
 //#region 📚️Examples
 #[path = "."]

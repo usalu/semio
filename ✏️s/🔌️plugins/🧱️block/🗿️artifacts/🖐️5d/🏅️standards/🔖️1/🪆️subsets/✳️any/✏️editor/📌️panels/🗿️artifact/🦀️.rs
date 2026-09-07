@@ -34,7 +34,7 @@ fn icon_item(id: String, label: &str, description: Option<String>, icon: &str) -
 /// `gripKind:{id}`/`grip:{id}` targets `Block5dPlayApp::interaction_topology` declares for the `grip`
 /// domain — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology.
-pub fn render(definition: &Block5dSnapshot, labels: &Block5dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(definition: &Block5dSnapshot, labels: &Block5dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let builder = PanelTreeBuilder::new("block5d-play-document")?;
     let grip_kind_items = ui_node_list(definition.grip_kinds.iter().map(|kind| icon_item(format!("gripKind:{}", kind.id), &kind.label, Some(kind.color.clone()), "circle")))?;
     let grip_items = ui_node_list(definition.grips.iter().map(|grip| icon_item(format!("grip:{}", grip.id), &grip.grip_kind, Some(format!("{:.2}", grip.angle)), "circle-dot")))?;

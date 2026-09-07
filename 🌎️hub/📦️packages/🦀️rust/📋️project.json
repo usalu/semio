@@ -3,10 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "namedInputs": {
-    "default": [
-      "{workspaceRoot}/🌎️hub/**/*.rs",
-      "{projectRoot}/**/*"
-    ]
+    "default": ["{workspaceRoot}/🌎️hub/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
     "setup": {
@@ -21,9 +18,7 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": [
-            "os-hub-admin"
-          ]
+          "projects": ["os-hub-admin"]
         }
       ],
       "options": {
@@ -204,6 +199,22 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-command-receipt-check source"
+      }
+    },
+    "directory-command-authority-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-command-receipt-check authority"
+      }
+    },
+    "directory-invite-authority-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-command-receipt-check invites"
       }
     },
     "directory-command-receipt-native-check": {
@@ -620,9 +631,7 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": [
-            "os-hub-admin"
-          ]
+          "projects": ["os-hub-admin"]
         }
       ],
       "options": {
@@ -635,9 +644,7 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": [
-            "os-hub-admin"
-          ]
+          "projects": ["os-hub-admin"]
         }
       ],
       "options": {
@@ -650,9 +657,7 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": [
-            "os-hub-admin"
-          ]
+          "projects": ["os-hub-admin"]
         }
       ],
       "options": {
@@ -665,9 +670,7 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": [
-            "os-hub-admin"
-          ]
+          "projects": ["os-hub-admin"]
         }
       ],
       "options": {
@@ -680,9 +683,7 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": [
-            "os-hub-admin"
-          ]
+          "projects": ["os-hub-admin"]
         }
       ],
       "options": {
@@ -695,9 +696,7 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": [
-            "os-hub-admin"
-          ]
+          "projects": ["os-hub-admin"]
         }
       ],
       "cache": false,

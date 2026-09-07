@@ -133,7 +133,7 @@ fn batch_params(operation: OperationId, generation: Generation, cancel: CancelTo
 /// cancelled) and re-checked next call rather than submitting a second overlapping one.
 pub(crate) struct FrameBuildHandle {
     session: Option<semio_framework_job::WorkerJobSession<ActiveFrameBuild>>,
-    rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ActiveFrameBuild>>,
+    rejected: Option<WorkerJobSessionAdmissionRejected<ActiveFrameBuild>>,
     ticket: Option<semio_framework_job::WorkerJobTicket>,
     #[cfg(not(target_arch = "wasm32"))]
     completion_waker: Option<Arc<dyn Fn() + Send + Sync>>,

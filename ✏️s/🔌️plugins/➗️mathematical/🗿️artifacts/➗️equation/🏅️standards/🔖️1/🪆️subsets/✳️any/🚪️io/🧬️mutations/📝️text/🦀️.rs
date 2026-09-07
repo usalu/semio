@@ -10,11 +10,11 @@ pub use crate::artifacts::equation::schema::mutations::EquationMutation;
 // 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION),
 // so they are no longer reachable through `✳️any::schema::mutations::<name>`.
 use crate::artifacts::equation::standards::v1::subsets::{
-    equation::schema::mutations::change_coefficient::mutation::ChangeCoefficient,
-    geometry::schema::mutations::{insert_point::mutation::InsertPoint, move_point::mutation::MovePoint, remove_point::mutation::RemovePoint, replace_points::mutation::ReplacePoints},
+    equation::schema::mutations::change_coefficient::ChangeCoefficient,
+    geometry::schema::mutations::{insert_point::InsertPoint, move_point::MovePoint, remove_point::RemovePoint, replace_points::ReplacePoints},
     graph::schema::mutations::{
-        change_graph_directed::mutation::ChangeGraphDirected, change_node_label::mutation::ChangeNodeLabel, connect_nodes::mutation::ConnectNodes, create_node::mutation::CreateNode, delete_node::mutation::DeleteNode,
-        delete_nodes::mutation::DeleteNodes, disconnect_nodes::mutation::DisconnectNodes, move_node::mutation::MoveNode, replace_graph::mutation::ReplaceGraph, update_graph_algorithm::mutation::UpdateGraphAlgorithm,
+        change_graph_directed::ChangeGraphDirected, change_node_label::ChangeNodeLabel, connect_nodes::ConnectNodes, create_node::CreateNode, delete_node::DeleteNode,
+        delete_nodes::DeleteNodes, disconnect_nodes::DisconnectNodes, move_node::MoveNode, replace_graph::ReplaceGraph, update_graph_algorithm::UpdateGraphAlgorithm,
     },
 };
 use crate::artifacts::equation::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;

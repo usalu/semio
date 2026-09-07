@@ -923,7 +923,7 @@ pub struct CommandContext {
 //#endregion 🔖️Invocation
 
 //#region 🔖️Presence
-pub use semio_framework_os_kernel::{PresencePeer, PresenceUi, PresenceViewKind, PresenceWindowView, decode_presence_peer, encode_presence_peer};
+pub use semio_framework_os_kernel::{decode_presence_peer, encode_presence_peer, PresencePeer, PresenceUi, PresenceViewKind, PresenceWindowView};
 //#endregion 🔖️Presence
 
 //#region 🔖️Window
@@ -1040,8 +1040,8 @@ pub enum RequestOutcome {
 /// `#[cfg(test)] mod extension_activation_tests` below, via its `use super::*`) keeps resolving —
 /// same pattern this file's own `PresencePeer` re-export above already uses.
 pub use semio_framework_os_kernel::channel::{
-    COMMAND_BATCH_MAXIMUM_ITEMS, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_PAGE_MAXIMUM_BYTES, CommandBatch, CommandBatchDriver, CommandBatchProgress, CommandDriverRegistry, CommandEnvelope, CommandEnvelopeSet, CommandIngressStatus,
-    CommandPageCursor, CommandPageSet, FixedCommandPage, PagedCommand, PagedCommandReader, RejectedCommandBuild, RejectedCommandBuildRegistry,
+    CommandBatch, CommandBatchDriver, CommandBatchProgress, CommandDriverRegistry, CommandEnvelope, CommandEnvelopeSet, CommandIngressStatus, CommandPageCursor, CommandPageSet, FixedCommandPage, PagedCommand, PagedCommandReader,
+    RejectedCommandBuild, RejectedCommandBuildRegistry, COMMAND_BATCH_MAXIMUM_ITEMS, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_PAGE_MAXIMUM_BYTES,
 };
 //#endregion 🔖️PagedCommandIngress
 
@@ -1053,7 +1053,7 @@ pub use semio_framework_actor::instance_lifetime::{ActorInstanceCloseRequest, Ac
 
 #[path = "📥️cold-pair/🦀️.rs"]
 mod cold_pair;
-pub use cold_pair::{COLD_PAIR_MAXIMUM_BYTES, COLD_PAIR_MAXIMUM_PAGES, COLD_PAIR_PAGE_MAXIMUM_BYTES, ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairFrontier, ColdDocumentPairHeader, ColdDocumentPairPage, ColdPairIngressStatus};
+pub use cold_pair::{ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairFrontier, ColdDocumentPairHeader, ColdDocumentPairPage, ColdPairIngressStatus, COLD_PAIR_MAXIMUM_BYTES, COLD_PAIR_MAXIMUM_PAGES, COLD_PAIR_PAGE_MAXIMUM_BYTES};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -1088,6 +1088,8 @@ pub enum Event {
         cursor: CommandPageCursor,
         bytes: FixedCommandPage,
     },
+
+    ColdDocumentPairPage(ColdDocumentPairPage),
 
     /// 🎬️ `wit-flip` (26/08/20) — a user action against a UI node, `pack`-encoded
     /// `semio_framework_ui_contract::UiIntent`. Separate from paged command ingress so the host can
@@ -1296,7 +1298,7 @@ impl UiTurnPatchHandback {
     }
 }
 
-const _: () = assert!(std::mem::size_of::<(UiTurnPatchRetireKey, UiTurnPatchContents)>() <= 4096);
+const _: () = assert!(size_of::<(UiTurnPatchRetireKey, UiTurnPatchContents)>() <= 4096);
 static UI_TURN_PATCH_HANDBACKS: [UiTurnPatchHandback; UI_TURN_PATCH_RETIRE_SLOTS] = [const { UiTurnPatchHandback::new() }; UI_TURN_PATCH_RETIRE_SLOTS];
 static UI_TURN_PATCH_RETIRE_ARENA: std::sync::Mutex<UiTurnPatchRetireArena> =
     std::sync::Mutex::new(UiTurnPatchRetireArena { slots: [const { UiTurnPatchRetireSlot { epoch: 0, reserved: false, contents: None } }; UI_TURN_PATCH_RETIRE_SLOTS], next_epoch: 1, epoch_exhausted: false, close_cursor: 0 });
@@ -1475,6 +1477,7 @@ impl UiTurnPatchTransportArena {
         Ok(UiTurnPatchTransportProgress::Idle)
     }
 
+    #[cfg(test)]
     fn request_session_close(&mut self, session: u64) -> bool {
         let Some(slot) = self.slots.iter_mut().find(|slot| slot.session == session && slot.state != UiTurnPatchTransportState::Vacant) else { return false };
         if slot.state != UiTurnPatchTransportState::CheckedOut {
@@ -1515,7 +1518,7 @@ impl UiTurnPatchTransportHandback {
     }
 }
 
-const _: () = assert!(std::mem::size_of::<(UiTurnPatchTransportKey, Option<UiTurnPatches>)>() <= 4096);
+const _: () = assert!(size_of::<(UiTurnPatchTransportKey, Option<UiTurnPatches>)>() <= 4096);
 static UI_TURN_PATCH_TRANSPORT_HANDBACKS: [UiTurnPatchTransportHandback; UI_TURN_PATCH_TRANSPORT_SLOTS] = [const { UiTurnPatchTransportHandback::new() }; UI_TURN_PATCH_TRANSPORT_SLOTS];
 
 #[cfg(test)]
@@ -1947,6 +1950,7 @@ mod return_source_inventory_tests;
 #[path = "📤️return/🏠️source/📚️entries/🧪️tests/🦀️.rs"]
 mod return_source_entries_tests;
 
+#[cfg(test)]
 #[path = "📤️return/🏠️source/📚️entries/🦀️.rs"]
 pub(crate) mod return_source_entries;
 

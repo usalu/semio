@@ -2,7 +2,7 @@
 
 use crate::artifacts::fem2d::{Fem2dSnapshot, FemMaterial};
 use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dMaterialsDelta};
-use crate::artifacts::fem2d::mutations::{Fem2dMutation, delete_material};
+use crate::artifacts::fem2d::mutations::Fem2dMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

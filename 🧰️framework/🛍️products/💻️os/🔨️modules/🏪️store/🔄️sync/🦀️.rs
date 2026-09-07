@@ -1473,7 +1473,7 @@ mod native_actor {
         connect_future: Option<ConnectFuture>,
         /// @emoji 🏔️ Last frontier the semio_hub reported (`Welcome.server_frontier` / `Commands.frontier` /
         /// `Ack.frontier`) — the wire-v2 replacement for the old `hub_version: i64` counter.
-        server_frontier: Option<crate::os_spr::RuntimeFrontierSummary>,
+        server_frontier: Option<RuntimeFrontierSummary>,
         /// @emoji 🎟️ The semio_hub's last `Welcome.resume_token`, echoed in the next `SocketHelloV1` after a
         /// reconnect so the semio_hub can resume rather than replay from scratch.
         resume_token: Option<String>,
@@ -1603,7 +1603,7 @@ mod native_actor {
         }
 
         /// @emoji 🏃️ Advances exactly one command, readiness source, timer, backbone owner, or status turn.
-        pub(super) async fn drive_one(&mut self) -> ArtifactDrive {
+        async fn drive_one(&mut self) -> ArtifactDrive {
             if !self.started {
                 self.started = true;
                 self.setup().await;
@@ -2686,7 +2686,7 @@ mod native_actor {
         }
 
         pub(super) fn issue_ticket(&self, host: Arc<std::sync::Mutex<ArtifactHostState>>) -> ArtifactActorRunnerTicket {
-            self.runner.external_tickets.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |count| count.checked_add(1)).expect("artifact actor ticket capacity exhausted");
+            self.runner.external_tickets.try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |count| count.checked_add(1)).expect("artifact actor ticket capacity exhausted");
             ArtifactActorRunnerTicket { generation: self.generation, runner: Arc::downgrade(&self.runner), host: Some(host), returned: false }
         }
 
@@ -2802,7 +2802,7 @@ mod native_actor {
             match self.pool.try_submit(semio_framework_async::Lane::UserVisible, job) {
                 Ok(()) => {}
                 Err(error) => match error.kind() {
-                    kind @ (semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated) if attempt < ACTOR_RUNNER_RETRY_LIMIT => {
+                    semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated if attempt < ACTOR_RUNNER_RETRY_LIMIT => {
                         *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), attempt + 1));
                         self.arm_retry();
                     }
@@ -5277,7 +5277,7 @@ mod tests {
             assert_eq!(&decoded, frame, "{name} frame round trip");
         }
 
-        let frontier = crate::os_spr::RuntimeFrontierSummary { document_id: ArtifactId("doc-1".to_string()), head_edit_ordinal: 1, head_edit_id: "op-1".to_string(), last_commit_seq: 1, chain_hash: [9u8; 32] };
+        let frontier = RuntimeFrontierSummary { document_id: ArtifactId("doc-1".to_string()), head_edit_ordinal: 1, head_edit_id: "op-1".to_string(), last_commit_seq: 1, chain_hash: [9u8; 32] };
         let wire_envelope = MutationEnvelope {
             mutation_id: MutationId("op-1".to_string()),
             document_id: ArtifactId("doc-1".to_string()),
@@ -5613,8 +5613,8 @@ mod tests {
             broadcast: tokio_broadcast::Sender<ServerFrame>,
         }
 
-        async fn mock_frontier(ordinal: u64) -> crate::os_spr::RuntimeFrontierSummary {
-            crate::os_spr::RuntimeFrontierSummary { document_id: ArtifactId("mock".to_string()), head_edit_ordinal: ordinal, head_edit_id: format!("edit-{ordinal}"), last_commit_seq: ordinal, chain_hash: [0u8; 32] }
+        async fn mock_frontier(ordinal: u64) -> RuntimeFrontierSummary {
+            RuntimeFrontierSummary { document_id: ArtifactId("mock".to_string()), head_edit_ordinal: ordinal, head_edit_id: format!("edit-{ordinal}"), last_commit_seq: ordinal, chain_hash: [0u8; 32] }
         }
 
         async fn spawn_mock_hub() -> (std::net::SocketAddr, Arc<MockHub>) {

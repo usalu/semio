@@ -19,7 +19,7 @@ pub struct DwgIntoDraw;
 impl Deserializer<DrawingSnapshot> for DwgIntoDraw {
     const FROM: Dialect = DWG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(_payload: &IoPayload) -> IoResult<DrawingSnapshot> {
+    async fn deserialize(_payload: &IoPayload) -> IoResult<DrawingSnapshot> {
         let mut snap = empty_drawing_snapshot();
         snap.id = create_drawing_id("dwg-import", b"dwg");
         snap.title = Some("Imported dwg".into());

@@ -2,6 +2,7 @@
 /** 🖥️ Runs owned plugin-host checks and exact native test filters. */
 import assert from "node:assert/strict";
 import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020.js";
 import findIndex from "lodash-es/findIndex.js";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -122,7 +123,6 @@ function guestFaultOracle(): number {
   return fixture.cases.length;
 }
 
-
 /** 📨️ Checks neutral retry ordering against an independent collection implementation. */
 function retainedLifecycleOracle(): number {
   const root = join(import.meta.dir, "..", "..", "🧵️shard", "🔁️lifecycle");
@@ -153,22 +153,103 @@ function retainedLifecycleOracle(): number {
   return fixture.traces.length;
 }
 
+/** 🎠️ Checks failed activation ownership with a separate declarative validator. */
+function activationOwnershipOracle(): number {
+  const root = join(import.meta.dir, "..", "..", "🎠️activation");
+  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixture", "🔣️.json"), "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  const validate = ajv.compile(JSON.parse(readFileSync(join(root, "🧬️schema.json"), "utf8")));
+  assert(validate(fixture), JSON.stringify(validate.errors));
+  for (const row of fixture.cases) {
+    const actual = { actorRetained: row.stage === "complete", instantiations: ["instantiate", "register", "complete"].includes(row.stage) ? 1 : 0, drops: row.stage === "register" ? 1 : 0, admitted: row.stage === "complete" };
+    const expected = { actorRetained: row.actorRetained, instantiations: row.instantiations, drops: row.drops, admitted: row.admitted };
+    assert.deepEqual(actual, expected, row.id);
+    const independent = ajv.compile({ type: "object", required: Object.keys(expected), properties: Object.fromEntries(Object.entries(expected).map(([key, value]) => [key, { const: value }])) });
+    assert(independent(actual), row.id);
+  }
+  assert(existsSync(join(root, "🦀️.rs")), "shared activation ownership boundary must be mounted");
+  const osRoot = join(root, "..", "..", "..", "..");
+  for (const facade of [join(osRoot, "🖥️host", "🎠️activation", "🦀️.rs"), join(osRoot, "🔨️modules", "📺️renderer", "🧑‍🎨engine", "🎯️targets", "🧊️wgpu", "🎠️runtime", "🦀️.rs")]) {
+    assert.equal(countOccurrences(readFileSync(facade, "utf8"), "semio_framework_plugin_host::activation::install_actor("), 1, facade);
+  }
+  return fixture.cases.length;
+}
+
+/** 🎟️ Validates reservation event traces against a separate collection-based transition model. */
+function kernelReservationOracle(): number {
+  const root = join(import.meta.dir, "..", "..", "..", "..", "..", "..", "..", "🔨️modules", "🎭️actor", "🎠️activation");
+  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixture", "🔣️.json"), "utf8"));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️schema.json"), "utf8")));
+  assert(validate(fixture), JSON.stringify(validate.errors));
+  for (const row of fixture.traces) {
+    let live = false,
+      active = false,
+      queued = false,
+      grants = 0;
+    for (const event of row.events) {
+      if (event === "reserve") live = true;
+      if (event === "submit") queued = true;
+      if (event === "bind") active = true;
+      if (event === "abort") live = active = queued = false;
+      if (event === "tick" && live && active && queued) {
+        grants++;
+        queued = false;
+      }
+    }
+    const bind = findIndex(row.events, (event: string) => event === "bind");
+    const granted = bind >= 0 && findIndex(row.events, (event: string, index: number) => index > bind && event === "tick") >= 0;
+    assert.equal(grants, Number(granted), row.id);
+    assert.equal(grants, row.grants, row.id);
+    assert.equal(live, row.actorRetained, row.id);
+  }
+  assert(existsSync(join(root, "🦀️.rs")), "owned Kernel activation reservation must be mounted");
+  return fixture.traces.length;
+}
+
 class GuestFaultCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     assert(
       segments.every((segment) => segment === "--native"),
       "guest-fault-check accepts only --native",
     );
-    console.log(`guest-fault-oracle cases=${guestFaultOracle()} retries=${retainedLifecycleOracle()}`);
+    console.log(`guest-fault-oracle cases=${guestFaultOracle()} retries=${retainedLifecycleOracle()} activations=${activationOwnershipOracle()} reservations=${kernelReservationOracle()}`);
     if (!segments.includes("--native")) return;
     const receipts = await runExactCargoLaws({
       cwd: this.root,
       env: { ...process.env, RUST_MIN_STACK: "33554432", CARGO_BUILD_JOBS: "1" },
       groups: [
         {
+          package: "semio-framework-actor",
+          target: { kind: "lib" },
+          laws: ["activation::tests::neutral_reservation_traces_gate_dispatch_until_exact_binding", "activation::tests::reservation_exhaustion_collision_and_stale_binding_leave_no_partial_admission"],
+        },
+        {
           package: "semio-framework-plugin-host",
           target: { kind: "lib" },
-          laws: ["component::guest_fault_tests::structured_guest_fault_survives_wit_owned_and_async_channels", "component::guest_fault_tests::malformed_and_oversized_guest_faults_cannot_authorize_retry"],
+          laws: [
+            "component::shard::executor::tests::terminal_registration_reply_wakes_outside_the_state_lock",
+            "component::shard::executor::tests::admitted_registration_reply_wakes_outside_the_state_lock",
+            "component::shard::executor::tests::shard_stack_authority_matches_the_neutral_fixture",
+            "component::shard::executor::tests::shard_executor_drives_a_turn_for_a_registered_actor_via_the_worker_pool",
+            "component::shard::executor::tests::fifo_ingress_selects_interactive_before_earlier_background_without_unbounded_drain",
+            "component::shard::executor::tests::every_actors_grant_lands_on_the_shard_it_was_registered_on_across_k_shards",
+            "component::shard::executor::tests::suspend_then_resume_round_trip_lands_on_a_shard_where_the_actor_is_registered",
+            "component::shard::executor::tests::concurrent_send_frame_bursts_never_drop_an_outcome",
+            "component::shard::executor::tests::pending_drive_wake_and_wake_storm_claim_exactly_one_schedule",
+            "component::shard::executor::tests::registration_acknowledgement_and_terminal_refusal_preserve_exact_owners",
+            "component::shard::lifecycle::tests::unknown_transport_actors_never_allocate_host_bookkeeping",
+            "component::cold_pair::tests::neutral_cold_ingress_variants_preserve_authority_and_refuse_hostile_wit",
+            "component::cold_pair::tests::native_cold_pages_use_dedicated_bounded_input",
+            "component::activation::tests::neutral_activation_failures_retire_the_exact_kernel_and_guest_owners",
+            "component::guest_fault_tests::structured_guest_fault_survives_wit_owned_and_async_channels",
+            "component::guest_fault_tests::malformed_and_oversized_guest_faults_cannot_authorize_retry",
+            "component::shard::lifecycle::tests::neutral_retry_order_uses_the_production_selector",
+            "component::shard::lifecycle::tests::retry_keeps_exact_event_budget_credit_and_one_peer_order",
+            "component::shard::lifecycle::tests::retry_refuses_replacement_and_stale_queue_cannot_reach_same_id_successor",
+            "component::shard::lifecycle::tests::cancellation_revokes_retry_before_another_guest_call",
+            "component::shard::lifecycle::tests::retry_occupies_the_original_fixed_lane_capacity",
+            "component::shard::lifecycle::tests::terminal_faults_never_create_a_lifecycle_retry",
+          ],
         },
       ],
       buildBudgetMs: 86_400_000,
@@ -181,11 +262,96 @@ class GuestFaultCheckScript extends BundleScript {
   }
 }
 
+/** 🩹️ Validates the one-owner reverse WIT patch bridge and its two native host insertions. */
+class UiPatchMarshallingCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    assert(
+      segments.every((segment) => segment === "--native"),
+      "ui-patch-marshalling-check accepts only --native",
+    );
+    const hostRoot = join(import.meta.dir, "..", "..");
+    const owner = join(hostRoot, "📥️ui-patch");
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture", "🔣️.json"), "utf8"));
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(owner, "🧬️schema.json"), "utf8")));
+    assert(validate(fixture), JSON.stringify(validate.errors));
+    assert.equal(new Set(fixture.operationKinds).size, 11);
+    for (const row of fixture.cases) {
+      const count = row.emitted + row.returned;
+      const accepted = count <= 1 && row.receipt === (count === 1);
+      assert.equal(accepted ? "accepted" : "rejected", row.expected, row.id);
+    }
+    const componentExpected = new Map([
+      ["returned", ["accepted", "returned", 201]],
+      ["imported", ["accepted", "emitted", 101]],
+      ["both-channels", ["rejected", "both", null]],
+      ["malformed-then-recovered", ["rejected", "emitted", 302]],
+    ]);
+    for (const row of fixture.componentCases) {
+      const expected = componentExpected.get(row.id);
+      assert(expected, row.id);
+      assert.equal(row.first, expected[0], row.id);
+      assert.equal(row.channel, expected[1], row.id);
+      assert.equal(row.root, expected[2], row.id);
+    }
+    const codec = readFileSync(join(owner, "🦀️.rs"), "utf8");
+    const synchronous = readFileSync(join(hostRoot, "🦀️.rs"), "utf8");
+    const asynchronous = readFileSync(join(hostRoot, "⏳️runtime", "🦀️.rs"), "utf8");
+    const scale = readFileSync(join(this.repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧫️fixtures", "⚖️scale", "🦀️.rs"), "utf8");
+    for (const kind of ["Upsert", "SetComponent", "SetLayout", "SetActivity", "SetChildren", "SetStyle", "SetAccessibility", "SetBindings", "SetMenu", "Remove", "SetRoot"]) {
+      assert(codec.includes(`wit_ui::PatchOp::${kind}`), `missing ${kind} reverse codec`);
+    }
+    assert.equal(countOccurrences(synchronous, "ui_patch::wit_ui_patches_to_kernel("), 1);
+    assert.equal(countOccurrences(asynchronous, "super::ui_patch::wit_ui_patches_to_kernel("), 1);
+    assert(!synchronous.includes("let _emitted_patches"));
+    assert(!asynchronous.includes("let (emitted, _patches)"));
+    assert(scale.includes("semio::framework::host_async::emit_patch(&patch)"));
+    assert(scale.includes("ui_patch_receipt"));
+    console.log(`plugin-host-ui-patch-marshalling-source: ajv=1 cases=${fixture.cases.length} component=${fixture.componentCases.length} ops=${fixture.operationKinds.length} sync=1 async=1 passed`);
+    if (!segments.includes("--native")) return;
+    const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    assert(artifactRoot, "SEMIO_TEST_ARTIFACT_DIR is required");
+    const scaleTarget = join(artifactRoot, "..", "ui-patch-scale-wasi-target");
+    runCmd("bun", [join(this.repoRoot, "📜️script.ts"), "nx", "run", "@semio-tech/framework-os-scale-fixture:build-wasm", "--skip-nx-cache"], {
+      cwd: this.repoRoot,
+      budgetMs: 3_600_000,
+      env: { ...process.env, CARGO_TARGET_DIR: scaleTarget, CARGO_BUILD_JOBS: "1" },
+    });
+    const scaleWasm = join(scaleTarget, "wasm32-wasip2", "wasm-dev", "semio_framework_os_scale_fixture.wasm");
+    assert(existsSync(scaleWasm), "registered scale component was not materialized");
+    const receipts = await runExactCargoLaws({
+      cwd: this.root,
+      env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432", CARGO_BUILD_JOBS: "1", SEMIO_UI_PATCH_SCALE_WASM: scaleWasm },
+      nativeEnv: { RUST_MIN_STACK: "268435456" },
+      groups: [
+        {
+          package: "semio-framework-plugin-host",
+          target: { kind: "lib" },
+          laws: [
+            "component::ui_patch::tests::every_wit_patch_variant_moves_into_one_exact_kernel_owner",
+            "component::ui_patch::tests::emitted_and_returned_channels_are_atomic_bounded_and_drained_once",
+            "component::ui_patch::tests::target_budget_receipt_and_malformed_pack_refuse_before_publication",
+            "component::ui_patch_component_tests::genuine_component_returned_and_imported_patches_keep_channel_order_and_exact_authority",
+            "component::ui_patch_component_tests::imported_then_returned_channels_refuse_atomically_without_a_transport_token",
+            "component::ui_patch_component_tests::malformed_import_is_drained_before_the_next_exact_patch_owner_is_published",
+          ],
+        },
+      ],
+      buildBudgetMs: 86_400_000,
+      lawBudgetMs: 60_000,
+      progress(event) {
+        console.log(`ui-patch-marshalling ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+      },
+    });
+    console.log(`ui-patch-marshalling-receipts: ${JSON.stringify(receipts)}`);
+  }
+}
+
 const router = new ScriptRouter(import.meta.dir)
   .register("check", CheckScript)
   .register("test", TestScript)
   .register("inference-proposal-conversion-check", InferenceProposalConversionCheckScript)
   .register("lifecycle-check", LifecycleCheckScript)
-  .register("guest-fault-check", GuestFaultCheckScript);
+  .register("guest-fault-check", GuestFaultCheckScript)
+  .register("ui-patch-marshalling-check", UiPatchMarshallingCheckScript);
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });
 //#endregion 🎯️Tasks

@@ -32,7 +32,7 @@
 
 use crate::db_ids::{check_len, ArtifactId, DbError};
 use crate::*;
-use db_storage::{IndexStorage as _, LeaseStorage as _, PayloadStorage as _, SnapshotStorage as _, WalStorage as _};
+use db_storage::{LeaseStorage as _, SnapshotStorage as _};
 use semio_framework_async::{Lane, WorkerPool, WorkerPoolUse};
 use std::future::Future;
 use std::sync::Arc;
@@ -347,7 +347,7 @@ impl CompactionRetainedPages {
         Self { pages: std::array::from_fn(|_| None), credits: [0; COMPACTION_RETAINED_PAGE_OWNERS], len: 0, retirement: None }
     }
 
-    fn contains(&self, hash: pack::ContentHash) -> bool {
+    fn contains(&self, hash: ContentHash) -> bool {
         self.pages[..self.len()].iter().flatten().any(|page| page.hash == hash)
     }
 
@@ -467,6 +467,7 @@ fn install_reserved_compaction_pages(owner: CompactionRetainedPages) {
     }
 }
 
+#[cfg(test)]
 fn retire_compaction_pages(owner: CompactionRetainedPages) -> Result<(), CompactionRetainedPages> {
     if owner.retirement.is_some() {
         install_reserved_compaction_pages(owner);
@@ -544,6 +545,7 @@ impl Drop for CompactionRetainedPages {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(test)]
 enum CompactionCloseExit {
     Running,
     Closed,
@@ -551,18 +553,21 @@ enum CompactionCloseExit {
 }
 
 /// @emoji 🛰️ Mounted close state that advances one retained page opportunity per poll.
+#[cfg(test)]
 struct MountedCompactionPageClose<'owner> {
     owner: &'owner mut CompactionRetainedPages,
     exit: CompactionCloseExit,
 }
 
+#[cfg(test)]
 impl<'owner> MountedCompactionPageClose<'owner> {
     fn new(owner: &'owner mut CompactionRetainedPages) -> Self {
         Self { owner, exit: CompactionCloseExit::Running }
     }
 }
 
-impl std::future::Future for MountedCompactionPageClose<'_> {
+#[cfg(test)]
+impl Future for MountedCompactionPageClose<'_> {
     type Output = Result<CompactionCloseExit, DbError>;
 
     fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
@@ -593,7 +598,7 @@ async fn collect_chain_pages<S: db_storage::SnapshotStorage>(
     through_generation: u64,
     budget: &CompactionBudget,
 ) -> Result<(db_snapshot::SnapshotDescriptor, CompactionRetainedPages), DbError> {
-    let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let control = db_snapshot::SnapshotCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
     let mut cursor = manager.chain_cursor(document, through_generation, control);
     let latest_descriptor = cursor.latest_descriptor().await?;
@@ -689,7 +694,7 @@ impl<'storage, S: db_storage::SnapshotStorage> SnapshotConsolidator<'storage, S>
 #[cfg(test)]
 pub async fn build_cold_archive(storage: &impl db_storage::SnapshotStorage, document: &ArtifactId, through_generation: u64) -> Result<db_storage::DbIoPages, DbError> {
     let manager = db_snapshot::SnapshotManager::new(storage).await;
-    let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let control = db_snapshot::SnapshotCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
     let mut cursor = manager.chain_cursor(document, through_generation, control);
     let pages = cursor.materialize_pages().await?;
@@ -828,6 +833,7 @@ impl<'storage> Compactor<'storage> {
 //#region 🧵️RetainedCompactionJob
 const DATABASE_COMPACTION_SLOTS: usize = 32;
 const DATABASE_COMPACTION_MAX_SEGMENTS: usize = 64;
+#[cfg(test)]
 const DATABASE_COMPACTION_MAX_HASHES: usize = 4_096;
 const DATABASE_COMPACTION_OPERATION_ITEMS: u64 = 16_768;
 const DATABASE_COMPACTION_OPERATION_BYTES: u64 = 2 * 1024 * 1024;
@@ -878,7 +884,7 @@ fn database_compaction_descriptor_backing(descriptor: &db_snapshot::SnapshotDesc
         .and_then(|value| value.checked_add(1))
         .ok_or(DbError::LimitExceeded("database compaction snapshot backing items"))?;
     let hash_bytes =
-        descriptor.roots.capacity().checked_add(descriptor.new_pages.capacity()).and_then(|value| value.checked_mul(std::mem::size_of::<pack::ContentHash>())).ok_or(DbError::LimitExceeded("database compaction snapshot backing bytes"))?;
+        descriptor.roots.capacity().checked_add(descriptor.new_pages.capacity()).and_then(|value| value.checked_mul(size_of::<ContentHash>())).ok_or(DbError::LimitExceeded("database compaction snapshot backing bytes"))?;
     let bytes = hash_bytes.checked_add(descriptor.document.0.capacity()).and_then(|value| value.checked_add(descriptor.vcs_head.as_ref().map_or(0, String::capacity))).ok_or(DbError::LimitExceeded("database compaction snapshot backing bytes"))?;
     Ok((items, bytes))
 }
@@ -1084,17 +1090,15 @@ impl DatabaseCompactionSegmentOwners {
     }
 }
 
+#[cfg(test)]
 struct DatabaseCompactionHashOwners {
-    slots: [Option<pack::ContentHash>; DATABASE_COMPACTION_MAX_HASHES],
+    slots: [Option<ContentHash>; DATABASE_COMPACTION_MAX_HASHES],
     len: u16,
 }
 
+#[cfg(test)]
 impl DatabaseCompactionHashOwners {
-    fn new() -> Self {
-        Self { slots: [None; DATABASE_COMPACTION_MAX_HASHES], len: 0 }
-    }
-
-    async fn contains(&self, hash: pack::ContentHash, cancelled: &std::sync::atomic::AtomicBool) -> Result<bool, DbError> {
+    async fn contains(&self, hash: ContentHash, cancelled: &std::sync::atomic::AtomicBool) -> Result<bool, DbError> {
         for slot in self.slots.iter().take(usize::from(self.len)) {
             compaction_opportunity(cancelled).await?;
             if *slot == Some(hash) {
@@ -1104,7 +1108,7 @@ impl DatabaseCompactionHashOwners {
         Ok(false)
     }
 
-    async fn insert(&mut self, hash: pack::ContentHash, cancelled: &std::sync::atomic::AtomicBool) -> Result<(), DbError> {
+    async fn insert(&mut self, hash: ContentHash, cancelled: &std::sync::atomic::AtomicBool) -> Result<(), DbError> {
         if self.contains(hash, cancelled).await? {
             return Ok(());
         }
@@ -1114,13 +1118,6 @@ impl DatabaseCompactionHashOwners {
         Ok(())
     }
 
-    fn get(&self, index: usize) -> Option<pack::ContentHash> {
-        self.slots.get(index).copied().flatten()
-    }
-
-    fn len(&self) -> usize {
-        usize::from(self.len)
-    }
 }
 
 async fn compaction_opportunity(cancelled: &std::sync::atomic::AtomicBool) -> Result<(), DbError> {
@@ -1543,7 +1540,7 @@ impl DatabaseCompactionLeaseRecovery {
             #[cfg(test)]
             recovery.release_attempts.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
             #[cfg(test)]
-            let injected = recovery.controlled_release_failures.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |remaining| remaining.checked_sub(1)).is_ok();
+            let injected = recovery.controlled_release_failures.try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |remaining| remaining.checked_sub(1)).is_ok();
             #[cfg(not(test))]
             let injected = false;
             let result = if injected { Err(DbError::Unavailable("database compaction controlled lease release failure".to_string())) } else { recovery.storage.lease().await.release(recovery.resource.as_str(), recovery.holder.as_str(), fence).await };
@@ -2254,7 +2251,7 @@ impl Future for DatabaseCompactionFuture {
             state.cancelled.store(true, std::sync::atomic::Ordering::Release);
             state.callback_close.store(true, std::sync::atomic::Ordering::Release);
             state.schedule();
-            return std::task::Poll::Ready(Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(state.generation), actual: crate::db_ids::GenerationId(state.observed_generation()) }));
+            return std::task::Poll::Ready(Err(DbError::StaleGeneration { expected: GenerationId(state.generation), actual: GenerationId(state.observed_generation()) }));
         }
         let execution = { state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).output.take() };
         if let Some(execution) = execution {
@@ -2419,7 +2416,7 @@ mod tests {
     }
 
     async fn wal_bytes(source: &[u8]) -> db_wal::WalBytes {
-        let mut control = db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
+        let mut control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
         db_wal::WalBytes::try_admit(source.to_vec(), 1024 * 1024, &mut control).await.unwrap()
     }
 
@@ -2447,7 +2444,7 @@ mod tests {
         document: &ArtifactId,
         row: &serde_json::Value,
         previous: Option<[u8; 32]>,
-        payloads: &[(&str, pack::ContentHash)],
+        payloads: &[(&str, ContentHash)],
     ) -> [u8; 32] {
         let index = row["index"].as_u64().unwrap();
         let options = protocol::format::WriteOptions { required_flags: protocol::wire::REQUIRED_HASH_CHAIN, optional_flags: 0 };
@@ -2495,7 +2492,7 @@ mod tests {
     }
 
     async fn index_put(handle: &db_index::IndexHandle<'_, MemoryStorage>, key: &[u8], value: &[u8]) {
-        let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let mut control = db_index::IndexCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
         let key = db_index::IndexBytes::try_admit(key.to_vec(), 1024 * 1024, &mut control).await.unwrap();
         let value = db_index::IndexBytes::try_admit(value.to_vec(), 1024 * 1024, &mut control).await.unwrap();
@@ -2544,7 +2541,7 @@ mod tests {
     }
 
     async fn retained_compaction_storage() -> Arc<db_storage::DbBackend> {
-        Arc::new(db_storage::DbBackend::Memory(MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()))
+        Arc::new(db_storage::DbBackend::Memory(MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()))
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2630,8 +2627,8 @@ mod tests {
         assert_eq!(holder.as_str(), "exact-holder");
         assert!(holder.close_step());
         let cancelled = std::sync::atomic::AtomicBool::new(false);
-        let mut hashes = DatabaseCompactionHashOwners { slots: [Some(pack::ContentHash([7; 32])); DATABASE_COMPACTION_MAX_HASHES], len: DATABASE_COMPACTION_MAX_HASHES as u16 };
-        assert_eq!(hashes.insert(pack::ContentHash([9; 32]), &cancelled).await, Err(DbError::LimitExceeded("database compaction payload hash owners")));
+        let mut hashes = DatabaseCompactionHashOwners { slots: [Some(ContentHash([7; 32])); DATABASE_COMPACTION_MAX_HASHES], len: DATABASE_COMPACTION_MAX_HASHES as u16 };
+        assert_eq!(hashes.insert(ContentHash([9; 32]), &cancelled).await, Err(DbError::LimitExceeded("database compaction payload hash owners")));
         let descriptor = db_snapshot::SnapshotDescriptor {
             document: ArtifactId(String::from("p1y-observed-backing")),
             generation: 1,
@@ -2692,7 +2689,7 @@ mod tests {
         let state = future.state.as_ref().unwrap().clone();
         let replacement = state.generation.checked_add(1).unwrap();
         DATABASE_COMPACTION_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).slots[state.slot].generation = replacement;
-        assert_eq!(future.await.unwrap_err(), DbError::StaleGeneration { expected: crate::db_ids::GenerationId(state.generation), actual: crate::db_ids::GenerationId(replacement) });
+        assert_eq!(future.await.unwrap_err(), DbError::StaleGeneration { expected: GenerationId(state.generation), actual: GenerationId(replacement) });
         assert!(database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[state.slot].is_some());
         DATABASE_COMPACTION_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).slots[state.slot].generation = state.generation;
         held.store(false, std::sync::atomic::Ordering::Release);
@@ -2745,7 +2742,7 @@ mod tests {
         let mut control = db_snapshot::SnapshotCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_millis(8), DATABASE_COMPACTION_INDEX_FUEL).unwrap();
         let rejected = manager.publish_retained_expected(&document, expected, &[], 0, sample_body(1).await, &mut control).await.unwrap_err();
         let (error, body) = rejected.into_parts();
-        assert_eq!(error, DbError::StaleGeneration { expected: crate::db_ids::GenerationId(0), actual: crate::db_ids::GenerationId(1) });
+        assert_eq!(error, DbError::StaleGeneration { expected: GenerationId(0), actual: GenerationId(1) });
         retire_compaction_snapshot_body(body).await;
         let mut generations = snapshot.list_generations(&document).await.unwrap();
         assert_eq!(generations.as_slice(), &[0, 1]);
@@ -2943,7 +2940,7 @@ mod tests {
     //#region 🔖️Lease
     #[semio_framework_async_macros::async_test]
     async fn compaction_lease_round_trips_and_is_scoped_distinctly_from_the_snapshot_lease() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = doc("doc-1").await;
 
         let fence = db_actor::block_on(CompactionLease::acquire(&storage, &document, "holder-a", 1_000, 0)).unwrap();
@@ -3011,7 +3008,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn compaction_applies_only_committed_frontier_snapshot_and_payload_effects() {
         let fixture = committed_compaction_fixture();
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = doc("committed-compaction-effects").await;
         let aborted = storage.put(pages(b"aborted-payload")).await.unwrap();
         let committed = storage.put(pages(b"committed-payload")).await.unwrap();
@@ -3041,7 +3038,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_compaction_retains_shared_and_private_cas_without_global_reference_authority() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document_a = doc("payload-owner-a").await;
         let document_b = doc("payload-owner-b").await;
         let shared = storage.put(pages(b"shared-across-documents")).await.unwrap();
@@ -3085,7 +3082,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn apply_wal_retention_deletes_selected_segments_and_is_idempotent() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = doc("doc-1").await;
         let writer = storage.acquire_writer(&document).await.unwrap();
         db_actor::block_on(storage.create_segment(&writer, 0)).unwrap();
@@ -3105,7 +3102,7 @@ mod tests {
     //#region 🔖️PayloadGc
     #[semio_framework_async_macros::async_test]
     async fn sweep_payloads_deletes_orphaned_candidates_but_keeps_hashes_still_referenced_elsewhere() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let orphan_hash = db_actor::block_on(storage.put(pages(b"orphan-payload"))).unwrap();
         let shared_hash = db_actor::block_on(storage.put(pages(b"shared-payload"))).unwrap();
         let document = doc("doc-1").await;
@@ -3131,7 +3128,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn sweep_payloads_respects_the_budget_cap() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let hash_a = db_actor::block_on(storage.put(pages(b"a"))).unwrap();
         let hash_b = db_actor::block_on(storage.put(pages(b"b"))).unwrap();
         let document = doc("doc-1").await;
@@ -3149,12 +3146,12 @@ mod tests {
     //#region 🔖️IndexCompaction
     #[semio_framework_async_macros::async_test]
     async fn compact_all_indexes_reports_every_kind_and_merges_multiple_runs_into_one() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = doc("doc-1").await;
         let handle = db_index::IndexHandle::new(&storage, document.clone(), db_index::IndexKind::Command).await;
         index_put(&handle, b"a", b"1").await;
         index_put(&handle, b"b", b"2").await;
-        let mut control = db_index::IndexCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
+        let mut control = db_index::IndexCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
         assert!(handle.stats(&mut control).await.unwrap().run_count >= 2, "two separate put calls must land in separate runs below the auto-merge threshold");
 
         let reports = db_actor::block_on(compact_all_indexes(&storage, &document)).unwrap();
@@ -3169,7 +3166,7 @@ mod tests {
     //#region 🔖️SnapshotConsolidation
     #[semio_framework_async_macros::async_test]
     async fn consolidate_produces_a_self_sufficient_full_baseline_covering_the_whole_chain() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = doc("doc-1").await;
         let manager = db_snapshot::SnapshotManager::new(&storage).await;
 
@@ -3193,7 +3190,7 @@ mod tests {
         while prepared.close_step().unwrap() {}
         while bytes.close_step().unwrap().is_some() {}
 
-        let control = db_snapshot::SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
+        let control = db_snapshot::SnapshotCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
         let mut cursor = manager.chain_cursor(&document, new_generation, control);
         for page in gen0_pages.iter().chain(gen1_pages.iter()) {
             let mut read_back = cursor.read_page(page.hash).await.unwrap();
@@ -3205,7 +3202,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retain_from_after_consolidate_prunes_every_generation_below_the_new_baseline() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = doc("doc-1").await;
         let manager = db_snapshot::SnapshotManager::new(&storage).await;
         db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(0).await)).unwrap();
@@ -3220,7 +3217,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn consolidate_respects_the_snapshot_chain_depth_budget() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = doc("doc-1").await;
         let manager = db_snapshot::SnapshotManager::new(&storage).await;
         db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(0).await)).unwrap();
@@ -3236,14 +3233,14 @@ mod tests {
     //#region 🔖️ColdArchive
     #[semio_framework_async_macros::async_test]
     async fn build_cold_archive_matches_materialize_chain_and_reopens_independently() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = doc("doc-1").await;
         let manager = db_snapshot::SnapshotManager::new(&storage).await;
         let pages = vec![state_page(b"page-a").await];
         db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &pages, sample_body(0).await)).unwrap();
 
         let mut archive = db_actor::block_on(build_cold_archive(&storage, &document, 0)).unwrap();
-        let control = db_snapshot::SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
+        let control = db_snapshot::SnapshotCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
         let mut cursor = manager.chain_cursor(&document, 0, control);
         let mut expected = db_actor::block_on(cursor.materialize_pages()).unwrap();
         assert_eq!(archive, expected);
@@ -3261,7 +3258,7 @@ mod tests {
     //#region 🔖️Compactor
     #[semio_framework_async_macros::async_test]
     async fn run_never_deletes_the_sole_or_active_wal_segment() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = doc("doc-1").await;
         let mut wal = db_actor::block_on(db_wal::ArtifactWal::create(&storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         submit_record(&storage, &mut wal, WalRecord::Frontier(frontier(&document, 100).await), 0).await;
@@ -3276,7 +3273,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn run_end_to_end_compacts_indexes_and_consolidates_snapshots_then_releases_the_lease() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = doc("doc-1").await;
         let manager = db_snapshot::SnapshotManager::new(&storage).await;
         let gen0_pages = vec![state_page(b"p0").await];
@@ -3305,7 +3302,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn run_fails_with_conflict_when_another_holder_already_holds_the_compaction_lease() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = doc("doc-1").await;
         let fence = db_actor::block_on(CompactionLease::acquire(&storage, &document, "holder-a", 10_000, 0)).unwrap();
         let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);
@@ -3319,7 +3316,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn run_releases_the_compaction_lease_even_when_a_step_fails() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = doc("doc-1").await;
         let writer = storage.acquire_writer(&document).await.unwrap();
         db_actor::block_on(storage.create_segment(&writer, 0)).unwrap();
@@ -3338,7 +3335,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn run_from_latest_snapshot_derives_the_floor_from_the_current_snapshot_head_seq() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = doc("doc-1").await;
         let manager = db_snapshot::SnapshotManager::new(&storage).await;
         db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(42).await)).unwrap();

@@ -24,7 +24,7 @@ pub struct SetTextBoxBlocks {
 impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation> for SetTextBoxBlocks {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text-box-blocks", kind: "set-text-box-blocks", record: "SetTextBoxBlocks" };
 
-    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<SemioPresentationMutation as protocol::Mutation<SemioPresentationSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::Diff> {
         agg_diff(&SemioPresentationMutation::SetTextBoxBlocks(self.clone()), base)
     }
     fn inverse(&self, base: &SemioPresentationSnapshot) -> Vec<SemioPresentationMutation> {

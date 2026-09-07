@@ -653,8 +653,8 @@ impl semio_framework::ToolJobFactory for RemodelingRetainedCommandJobFactory {
         REMODELING_RETAINED_PAYLOAD_SCHEMA
     }
 
-    fn classification(&self) -> semio_framework::InteractiveJobClassification {
-        semio_framework::InteractiveJobClassification::Migrated
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
     }
 
     fn execution_contract(&self) -> ToolExecutionContract {
@@ -680,7 +680,7 @@ impl semio_framework::ToolJobFactory for RemodelingRetainedCommandJobFactory {
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RemodelingRetainedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<RemodelingPlayApp>;
+    type Owner = EditorApp<RemodelingPlayApp>;
     const TOOL_IDS: &'static [&'static str] = REMODELING_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = REMODELING_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = REMODELING_PUBLICATION_CONTRACTS;
@@ -978,13 +978,13 @@ impl ArtifactEditor for RemodelingPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<RemodelingPlayApp>,
+        owner: EditorApp<RemodelingPlayApp>,
         owner_file: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.remodel.remodeling@1/*#editor",
         document_schema: "remodeling.scene",
         factory: "RemodelingRetainedCommandJobFactory",
         factory_type: RemodelingRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
         tools: [
             "runReconstruction", "retryStage", "runStage",
             "importFramePayload", "importVideoFramePayload", "importVideoDone", "importVideoBytesPayload",

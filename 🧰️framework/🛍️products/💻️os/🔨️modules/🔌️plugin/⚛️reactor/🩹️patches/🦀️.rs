@@ -267,7 +267,7 @@ impl Drop for MountedReconcileGrant {
 #[derive(Clone, Copy)]
 struct ClosingInstance {
     instance: u32,
-    key: super::instance_lifetime::NativeCloseKey,
+    key: NativeCloseKey,
     active: bool,
     complete: bool,
 }
@@ -589,7 +589,7 @@ impl PatchTracker {
         if target.is_some() {
             return Ok(false);
         }
-        let metadata = std::mem::size_of::<ReadySlot>();
+        let metadata = size_of::<ReadySlot>();
         let Some(bytes) = admitted_bytes.checked_sub(metadata) else { return Ok(false) };
         let mut state = self.state.try_borrow_mut().map_err(|_| "patch publication target is busy")?;
         let Some(index) = next_ready_index(&state) else { return Ok(false) };
@@ -696,7 +696,7 @@ impl PatchTracker {
             .unwrap_or_default()
     }
 
-    pub(crate) fn preflight_close_instance(&self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub(crate) fn preflight_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
         let state = self.state.try_borrow().map_err(|_| "patch close reservation is busy")?;
         if let Some(closing) = state.closing_instances.iter().flatten().find(|closing| closing.instance == key.instance()) {
             return if closing.key == key { Ok(()) } else { Err("patch close reservation belongs to another allocation") };
@@ -716,7 +716,7 @@ impl PatchTracker {
         Ok(())
     }
 
-    pub(crate) fn reserve_close_instance(&self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub(crate) fn reserve_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
         let mut state = self.state.try_borrow_mut().map_err(|_| "patch close reservation is busy")?;
         if let Some(closing) = state.closing_instances.iter().flatten().find(|closing| closing.instance == key.instance()) {
             return if closing.key == key { Ok(()) } else { Err("patch close reservation belongs to another allocation") };
@@ -735,19 +735,19 @@ impl PatchTracker {
         Ok(())
     }
 
-    pub(crate) fn activate_close_instance(&self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub(crate) fn activate_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
         let mut state = self.state.try_borrow_mut().map_err(|_| "patch close reservation is busy")?;
         let closing = state.closing_instances.iter_mut().flatten().find(|closing| closing.key == key).ok_or("exact patch close reservation missing")?;
         closing.active = true;
         Ok(())
     }
 
-    pub(crate) fn close_instance_complete(&self, key: super::instance_lifetime::NativeCloseKey) -> Result<bool, &'static str> {
+    pub(crate) fn close_instance_complete(&self, key: NativeCloseKey) -> Result<bool, &'static str> {
         let state = self.state.try_borrow().map_err(|_| "patch close receipt is busy")?;
         state.closing_instances.iter().flatten().find(|closing| closing.key == key).map(|closing| closing.complete).ok_or("exact patch close receipt missing")
     }
 
-    pub(crate) fn release_close_instance(&self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub(crate) fn release_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
         let mut state = self.state.try_borrow_mut().map_err(|_| "patch close receipt is busy")?;
         let closing = state.closing_instances.iter_mut().find(|closing| closing.is_some_and(|closing| closing.key == key && closing.complete)).ok_or("exact patch close receipt is not terminal")?;
         *closing = None;
@@ -979,7 +979,7 @@ fn drive_job_one(state: &mut PatchTrackerState, index: usize) {
         if slot.job.as_mut().expect("retained ready job authority").drive_one(&mut context) != SurfaceReconcileJobStep::Ready {
             return;
         }
-        let receiver_bytes = std::mem::size_of::<ReadySlot>();
+        let receiver_bytes = size_of::<ReadySlot>();
         let Some(grant) = semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES.checked_sub(receiver_bytes) else { return };
         let output = state.ready[output_index].as_mut().expect("output reserved before producer");
         let result = output.outputs.receive_job_into(&mut output.reservation, slot.job.as_mut().expect("structural job receiver"), &mut slot.reconciler, grant);
@@ -1165,7 +1165,7 @@ mod tests {
     }
 
     fn close_instance_to_empty(tracker: &PatchTracker, instance: u32) {
-        let key = super::super::instance_lifetime::NativeCloseKey::fixture(instance, 1);
+        let key = NativeCloseKey::fixture(instance, 1);
         tracker.reserve_close_instance(key).expect("exact close reservation");
         tracker.activate_close_instance(key).expect("activate retained close");
         for _ in 0..65_536 {
@@ -1206,7 +1206,7 @@ mod tests {
     #[test]
     fn mounted_output_admission_refuses_before_tree_when_shared_output_pool_is_full() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧫️fixture/🔣️.json")).unwrap();
-        let mut outputs = semio_framework_ui_runtime::SurfaceReconcileOutputs::default();
+        let mut outputs = SurfaceReconcileOutputs::default();
         let mut reservations = Vec::new();
         for generation in 1..=fixture["entrySlots"].as_u64().unwrap() {
             reservations.push(outputs.try_reserve(generation, fixture["physicalGrant"].as_u64().unwrap() as usize).unwrap().unwrap());
@@ -1434,7 +1434,7 @@ mod tests {
 
     #[test]
     fn tracker_initialization_fits_the_component_stack_budget() {
-        let bytes = std::mem::size_of::<PatchTrackerState>();
+        let bytes = size_of::<PatchTrackerState>();
         assert!(bytes <= 256, "PatchTrackerState requires {bytes} bytes");
         let state = PatchTrackerState::default();
         assert_eq!(state.slots.len(), SURFACE_RECONCILE_ADMISSION_SLOTS);
@@ -1971,7 +1971,7 @@ mod tests {
                 close: true,
             });
         }
-        let key = super::super::instance_lifetime::NativeCloseKey::fixture(instance, 1);
+        let key = NativeCloseKey::fixture(instance, 1);
         tracker.reserve_close_instance(key).expect("exact close reservation");
         tracker.activate_close_instance(key).expect("activate retained close");
         assert_eq!(tracker.take_ready_patch().is_some(), fixture["stalePatch"].as_bool().unwrap());

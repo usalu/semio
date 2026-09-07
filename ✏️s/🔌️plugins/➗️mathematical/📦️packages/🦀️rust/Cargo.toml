@@ -25,6 +25,7 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-job.workspace = true
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false, features = ["full-artifact-catalog"] }
 geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
@@ -55,4 +56,5 @@ semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️
 pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 
 [dev-dependencies]
+semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

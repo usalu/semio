@@ -17,7 +17,7 @@ pub struct SetVersionInfo {
 impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetVersionInfo {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "version-info", kind: "set-version-info", record: "SetVersionInfo" };
 
-    fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<<DwgMutation as protocol::Mutation<DwgSnapshot>>::Diff> {
+    fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<<DwgMutation as Mutation<DwgSnapshot>>::Diff> {
         agg_diff(&DwgMutation::SetVersionInfo(self.clone()), base)
     }
     fn inverse(&self, base: &DwgSnapshot) -> Vec<DwgMutation> {

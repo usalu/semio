@@ -2,7 +2,7 @@
 
 use crate::editor::dag::{dag_action, ui_value_map, ui_value_text};
 use crate::editor::dag::terminology::DagPlayLabels;
-use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const DAG_PLAY_BODY_CATALOGUE: &str = "dag.play.catalogue";
@@ -26,11 +26,11 @@ pub fn render(labels: &DagPlayLabels) -> semio_framework_plugin::UiAssemblyResul
     let mut items = UiFixedList::default();
     for (kind, label) in kinds {
         let args = ui_value_map([("kind", ui_value_text(kind)?)])?;
-        let item = tree_item_with_action(format!("dag-play-catalogue.kind.{kind}"), label, Some(kind.into()), dag_action("addNode", Some(args))?)?;
+        let item = tree_item_with_action(format!("dag-play-catalogue.kind.{kind}"), label.as_str(), Some(kind.into()), dag_action("addNode", Some(args))?)?;
         items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "dag catalogue item admission failed"))?;
     }
     PanelTreeBuilder::new("dag-play-catalogue")?
-        .section("dag-play-catalogue.node-kinds", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items)?
+        .section("dag-play-catalogue.node-kinds", Some(semio_framework_plugin::plugin_app_close_prelude::Label::try_from(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "catalogue heading admission failed"))?), true, items)?
         .build()
 }
 //#endregion 🔖️Render
@@ -43,8 +43,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_every_node_kind() {
-        let mut app = new_app();
-        let json = render_body(&mut app, DAG_PLAY_BODY_CATALOGUE);
+        let mut app = new_app().await;
+        let json = render_body(&mut app, DAG_PLAY_BODY_CATALOGUE).await;
         for kind in ["computation", "slider", "select", "screen", "note", "preview"] {
             assert!(json.contains(kind), "catalogue must list the {kind} kind: {json}");
         }

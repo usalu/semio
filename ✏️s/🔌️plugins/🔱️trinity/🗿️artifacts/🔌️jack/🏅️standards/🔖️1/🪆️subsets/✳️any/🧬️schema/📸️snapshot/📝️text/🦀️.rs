@@ -127,9 +127,9 @@ fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
 
 fn print_jack_snapshot_body(s: &JackSnapshot) -> String {
     let scene = crate::artifacts::jack::jack_working_scene(s);
-    let camera_json = pack::to_json_string(&s.camera).unwrap_or_default();
-    let nodes_json = pack::to_json_string(&scene.nodes).unwrap_or_default();
-    let edges_json = pack::to_json_string(&scene.edges).unwrap_or_default();
+    let camera_json = pack::to_json_string(&s.camera);
+    let nodes_json = pack::to_json_string(&scene.nodes);
+    let edges_json = pack::to_json_string(&scene.edges);
     format!(
         "schema={}\nname={}\nmanifestId={}\ncamera={}\nnodes={}\nedges={}\nrootNodeId={}",
         enc_str(&s.schema),
@@ -239,9 +239,9 @@ impl store::ArtifactPack for JackSnapshot {
         write_str_lp(&mut out, &self.name);
         write_str_lp(&mut out, self.manifest_id.as_deref().unwrap_or(""));
         write_str_lp(&mut out, &self.manifest_id.is_some().to_string());
-        write_str_lp(&mut out, &pack::to_json_string(&self.camera).unwrap_or_default());
-        write_str_lp(&mut out, &pack::to_json_string(&scene.nodes).unwrap_or_default());
-        write_str_lp(&mut out, &pack::to_json_string(&scene.edges).unwrap_or_default());
+        write_str_lp(&mut out, &pack::to_json_string(&self.camera));
+        write_str_lp(&mut out, &pack::to_json_string(&scene.nodes));
+        write_str_lp(&mut out, &pack::to_json_string(&scene.edges));
         write_str_lp(&mut out, self.root_node_id.as_deref().unwrap_or(""));
         write_str_lp(&mut out, &self.root_node_id.is_some().to_string());
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;

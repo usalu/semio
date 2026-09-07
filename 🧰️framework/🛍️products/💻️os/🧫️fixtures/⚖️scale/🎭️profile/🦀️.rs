@@ -45,11 +45,27 @@ pub struct FixtureConfig {
     pub crash_after_turns: u64,
     /// 🔑️ `io` profile: the capability id requested on activation.
     pub io_capability_id: String,
+    /// 🧪️ `ui` boundary fixture: publish through the real `host-async.emit-patch` import.
+    pub ui_import_sink: bool,
+    /// 🧪️ `ui` boundary fixture: deliberately also return a patch after importing one.
+    pub ui_return_with_import: bool,
+    /// 🧪️ `ui` boundary fixture: make only the first imported patch non-canonical.
+    pub ui_malformed_first: bool,
 }
 
 impl Default for FixtureConfig {
     fn default() -> Self {
-        Self { profile: Profile::default(), cpu_busy_ms: 5, ui_patches_per_turn: 1, hang_overrun_multiplier: 3, crash_after_turns: 1, io_capability_id: "scale-fixture.io".to_string() }
+        Self {
+            profile: Profile::default(),
+            cpu_busy_ms: 5,
+            ui_patches_per_turn: 1,
+            hang_overrun_multiplier: 3,
+            crash_after_turns: 1,
+            io_capability_id: "scale-fixture.io".to_string(),
+            ui_import_sink: false,
+            ui_return_with_import: false,
+            ui_malformed_first: false,
+        }
     }
 }
 //#endregion 🔖️Config
@@ -118,6 +134,14 @@ impl Default for EngineState {
 /// instance's configured capability id since the last `on_instance_open`.
 pub fn revocation_count() -> u64 {
     STATE.with(|state| state.borrow().revocations)
+}
+
+/// 🧪️ Returns the three schema-owned UI boundary switches for the component bridge.
+pub fn ui_boundary_mode() -> (bool, bool, bool) {
+    STATE.with(|state| {
+        let config = &state.borrow().config;
+        (config.ui_import_sink, config.ui_return_with_import, config.ui_malformed_first)
+    })
 }
 
 thread_local! {

@@ -23,9 +23,7 @@ pub type DagStore = store::ArtifactStore<DagSnapshot, DagMutation>;
 /// `crate::editor::dag::DagPlayApp` no longer overriding `whole_document_operation`; use
 /// `store::ArtifactStore::reset` for a real whole-document load).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[mutations(snapshot = DagSnapshot, diff = DagDiff, schema = "dag.dag")]
 pub enum DagMutation {
     CreateNode(CreateNode),
@@ -208,7 +206,7 @@ pub fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<
 mod tests {
     use super::*;
     use crate::artifacts::dag::default_snapshot;
-    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_deterministic};
+    use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_deterministic};
     use protocol::Mutation;
     use protocol::SemanticMutation;
     use vcs::apply_mutation;
@@ -294,35 +292,35 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn create_node_inverse_law() {
         let base = default_snapshot();
-        assert_mutation_inverse_law(&base, &create_node(sample_node("node-99", 5.0, 6.0)));
+        assert_mutation_inverse_law(&base, &create_node(sample_node("node-99", 5.0, 6.0))).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_node_inverse_law() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
-        assert_mutation_inverse_law(&base, &delete_node(id));
+        assert_mutation_inverse_law(&base, &delete_node(id)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_node_inverse_law() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
-        assert_mutation_inverse_law(&base, &rename_node(id, "renamed-node".into()));
+        assert_mutation_inverse_law(&base, &rename_node(id, "renamed-node".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn move_node_inverse_law() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
-        assert_mutation_inverse_law(&base, &move_node(id, 42.0, -8.0));
+        assert_mutation_inverse_law(&base, &move_node(id, 42.0, -8.0)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn resize_node_inverse_law() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
-        assert_mutation_inverse_law(&base, &resize_node(id, 200.0, 90.0));
+        assert_mutation_inverse_law(&base, &resize_node(id, 200.0, 90.0)).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -334,9 +332,9 @@ mod tests {
         }
         let source = nodes[0].id.clone();
         let target = nodes[1].id.clone();
-        assert_mutation_inverse_law(&base, &connect_nodes("edge-99".into(), format!("{source}@out"), format!("{target}@in"), infinite_board_port_directed_dag::EdgeRouteStyle::default(), Default::default()));
+        assert_mutation_inverse_law(&base, &connect_nodes("edge-99".into(), format!("{source}@out"), format!("{target}@in"), infinite_board_port_directed_dag::EdgeRouteStyle::default(), Default::default())).await;
         if let Some(edge_id) = base.edges().first().map(|edge| edge.id.clone()) {
-            assert_mutation_inverse_law(&base, &disconnect_nodes(edge_id));
+            assert_mutation_inverse_law(&base, &disconnect_nodes(edge_id)).await;
         }
     }
 
@@ -349,7 +347,7 @@ mod tests {
         }
         let mut order: Vec<String> = nodes.iter().map(|node| node.id.clone()).collect();
         order.reverse();
-        assert_mutation_inverse_law(&base, &reorder_nodes(order));
+        assert_mutation_inverse_law(&base, &reorder_nodes(order)).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -360,7 +358,7 @@ mod tests {
         let d1 = move_node(id.clone(), 10.0, 10.0).diff(&base).diff().clone();
         let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
         let d2 = move_node(id, 20.0, 30.0).diff(&mid).diff().clone();
-        assert_mutation_diff_absorb_law(&base, d1, d2);
+        assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -382,26 +380,26 @@ mod tests {
         let base = default_snapshot();
         let Some(existing_id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         let outcome = create_node(sample_node(&existing_id, 0.0, 0.0)).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_node_missing_target_is_error() {
         let base = default_snapshot();
-        assert_missing_target_is_error(&base, &delete_node("ghost-node".into()));
+        assert_missing_target_is_error(&base, &delete_node("ghost-node".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_node_missing_target_is_error() {
         let base = default_snapshot();
-        assert_missing_target_is_error(&base, &rename_node("ghost-node".into(), "x".into()));
+        assert_missing_target_is_error(&base, &rename_node("ghost-node".into(), "x".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn move_node_missing_target_is_error() {
         let base = default_snapshot();
-        assert_missing_target_is_error(&base, &move_node("ghost-node".into(), 1.0, 1.0));
+        assert_missing_target_is_error(&base, &move_node("ghost-node".into(), 1.0, 1.0)).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -409,39 +407,39 @@ mod tests {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         let outcome = move_node(id, f64::NAN, 0.0).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn resize_node_missing_target_is_error() {
         let base = default_snapshot();
-        assert_missing_target_is_error(&base, &resize_node("ghost-node".into(), 10.0, 10.0));
+        assert_missing_target_is_error(&base, &resize_node("ghost-node".into(), 10.0, 10.0)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_node_name_missing_target_is_error() {
         let base = default_snapshot();
-        assert_missing_target_is_error(&base, &change_node_name("ghost-node".into(), "x".into()));
+        assert_missing_target_is_error(&base, &change_node_name("ghost-node".into(), "x".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn replace_node_kind_missing_target_is_error() {
         let base = default_snapshot();
         let Some(kind) = base.nodes().first().map(|node| node.kind.clone()) else { return };
-        assert_missing_target_is_error(&base, &replace_node_kind("ghost-node".into(), kind));
+        assert_missing_target_is_error(&base, &replace_node_kind("ghost-node".into(), kind)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn disconnect_nodes_missing_target_is_error() {
         let base = default_snapshot();
-        assert_missing_target_is_error(&base, &disconnect_nodes("ghost-edge".into()));
+        assert_missing_target_is_error(&base, &disconnect_nodes("ghost-edge".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn connect_nodes_missing_endpoint_is_error() {
         let base = default_snapshot();
-        assert_missing_target_is_error(&base, &connect_nodes("edge-99".into(), "ghost-source@out".into(), "ghost-target@in".into(), infinite_board_port_directed_dag::EdgeRouteStyle::default(), Default::default()));
+        assert_missing_target_is_error(&base, &connect_nodes("edge-99".into(), "ghost-source@out".into(), "ghost-target@in".into(), infinite_board_port_directed_dag::EdgeRouteStyle::default(), Default::default())).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -449,7 +447,7 @@ mod tests {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         let outcome = connect_nodes("edge-99".into(), format!("{id}@out"), format!("{id}@in"), infinite_board_port_directed_dag::EdgeRouteStyle::default(), Default::default()).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
@@ -458,7 +456,7 @@ mod tests {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         let outcome = reorder_nodes(vec![id.clone(), id]).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
@@ -466,7 +464,7 @@ mod tests {
     async fn move_node_diff_is_deterministic() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
-        assert_outcome_deterministic(&base, &move_node(id, 7.0, 8.0));
+        assert_outcome_deterministic(&base, &move_node(id, 7.0, 8.0)).await;
     }
     //#endregion 🔖️OutcomeLaws
 }

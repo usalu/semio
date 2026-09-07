@@ -25,7 +25,7 @@ use crate::bridge::{BridgeHandle, GatewayToShell, ShellConnectionId, ShellToGate
 /// construction would mean a second pool), and `stdio` never serves `/bridge` at all — so the tool
 /// registry captures this slot at build time and the transport fills it in once, on `start`. An
 /// unfilled slot is exactly the "no bridge at all" tier, not an error.
-pub type BridgeSlot = Arc<std::sync::OnceLock<Arc<BridgeHandle>>>;
+pub type BridgeSlot = Arc<OnceLock<Arc<BridgeHandle>>>;
 
 /// 🔎️ Resolves the slot to the live handle, if one was ever published into it.
 fn resolve_bridge(slot: Option<&BridgeSlot>) -> Option<&Arc<BridgeHandle>> {
@@ -774,7 +774,7 @@ mod quick {
     /// 🔌️ A `BridgeSlot` already filled with a live handle — the "bridge exists, no shell attached"
     /// tier, which every `Option<BridgeSlot>` entry point now takes instead of a bare handle.
     fn filled_slot() -> BridgeSlot {
-        let slot: BridgeSlot = Arc::new(std::sync::OnceLock::new());
+        let slot: BridgeSlot = Arc::new(OnceLock::new());
         assert!(slot.set(Arc::new(BridgeHandle::new())).is_ok(), "a fresh slot is empty");
         slot
     }

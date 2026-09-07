@@ -13,7 +13,7 @@ pub enum PublicationPresenceMutation {
 }
 
 impl protocol::OpText for PublicationPresenceMutation {
-    fn parse_op(line: &str) -> Result<Self, crate::store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(<ChangePublicationPresence as protocol::OpText>::parse_op(line)?.into())
     }
 

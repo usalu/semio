@@ -1,6 +1,6 @@
 //! 🖌️ Block5d mutation — `UpdatePart2d`: the whole 2D-projection presentation facet atomically — mirrors block2d's `update-presentation` (same shape, same no-identity-field reasoning).
 
-use crate::artifacts::block5d::{Block5dPart2d, Block5dSnapshot};
+use crate::artifacts::block5d::Block5dSnapshot;
 use crate::artifacts::block5d::diff::Block5dDiff;
 use crate::artifacts::block5d::mutations::Block5dMutation;
 

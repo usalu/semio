@@ -2022,13 +2022,13 @@ mod native_pool {
             let barrier = Arc::new(std::sync::Barrier::new(3));
             let acquire_pool = pool.clone();
             let acquire_barrier = barrier.clone();
-            let acquire = std::thread::spawn(move || {
+            let acquire = thread::spawn(move || {
                 acquire_barrier.wait();
                 acquire_pool.acquire_use()
             });
             let shutdown_pool = pool.clone();
             let shutdown_barrier = barrier.clone();
-            let shutdown = std::thread::spawn(move || {
+            let shutdown = thread::spawn(move || {
                 shutdown_barrier.wait();
                 shutdown_pool.shutdown()
             });
@@ -2067,7 +2067,7 @@ mod native_pool {
             pool.defer_wake(ticket, 0, Waker::from(probe.clone())).expect("exact deferred slot");
             assert_eq!(probe.wakes.load(Ordering::SeqCst), 0);
             let closing = pool.clone();
-            let shutdown = std::thread::spawn(move || closing.shutdown());
+            let shutdown = thread::spawn(move || closing.shutdown());
             drop(guard);
             release_tx.send(()).expect("release worker");
             shutdown.join().expect("shutdown drains accepted waker");
@@ -2095,11 +2095,11 @@ mod native_pool {
             let deadline = Instant::now() + Duration::from_secs(5);
             while STEPS.load(Ordering::SeqCst) != fixture["idleWake"]["steps"].as_u64().unwrap() as usize {
                 assert!(Instant::now() < deadline, "idle native worker did not service maintenance without ingress");
-                std::thread::yield_now();
+                thread::yield_now();
             }
             while !pool.remove_maintenance_hook(ticket).unwrap() {
                 assert!(Instant::now() < deadline, "native hook did not retain then retire its running callback");
-                std::thread::yield_now();
+                thread::yield_now();
             }
             assert_eq!(pool.request_maintenance(ticket), Err(WorkerMaintenanceError::Stale));
             let queued = pool.inner.workers.iter().flat_map(|worker| &worker.queues).map(|queue| queue.lock().unwrap().len()).sum::<usize>();
@@ -2124,7 +2124,7 @@ mod native_pool {
                 loop {
                     match pool.request_maintenance(ticket) {
                         Err(WorkerMaintenanceError::Stale) => break,
-                        Ok(WorkerMaintenanceRequest::Requested | WorkerMaintenanceRequest::Coalesced) => std::thread::yield_now(),
+                        Ok(WorkerMaintenanceRequest::Requested | WorkerMaintenanceRequest::Coalesced) => thread::yield_now(),
                         other => panic!("self-retiring maintenance hook lost exact generation: {other:?}"),
                     }
                     assert!(Instant::now() < deadline, "self-retiring maintenance callback did not release its exact slot");
@@ -2148,7 +2148,7 @@ mod native_pool {
                 let deadline = Instant::now() + Duration::from_secs(5);
                 while !RELEASE.load(Ordering::SeqCst) {
                     assert!(Instant::now() < deadline);
-                    std::thread::yield_now();
+                    thread::yield_now();
                 }
                 WorkerMaintenanceStep::More
             }
@@ -2162,15 +2162,15 @@ mod native_pool {
                 let deadline = Instant::now() + Duration::from_secs(5);
                 while !ENTERED.load(Ordering::SeqCst) {
                     assert!(Instant::now() < deadline);
-                    std::thread::yield_now();
+                    thread::yield_now();
                 }
                 if shutdown {
                     assert_eq!(pool.request_maintenance(ticket), Ok(WorkerMaintenanceRequest::Requested));
                     let closing = pool.clone();
-                    let thread = std::thread::spawn(move || closing.shutdown());
+                    let thread = thread::spawn(move || closing.shutdown());
                     while !pool.is_shutdown() {
                         assert!(Instant::now() < deadline);
-                        std::thread::yield_now();
+                        thread::yield_now();
                     }
                     RELEASE.store(true, Ordering::SeqCst);
                     thread.join().unwrap();
@@ -2182,7 +2182,7 @@ mod native_pool {
                     RELEASE.store(true, Ordering::SeqCst);
                     while !pool.remove_maintenance_hook(ticket).unwrap() {
                         assert!(Instant::now() < deadline);
-                        std::thread::yield_now();
+                        thread::yield_now();
                     }
                     assert_eq!(pool.request_maintenance(ticket), Err(WorkerMaintenanceError::Stale));
                     pool.shutdown();
@@ -2226,12 +2226,12 @@ mod native_pool {
             let deadline = Instant::now() + Duration::from_secs(5);
             while ORDER.lock().unwrap().len() < 4 {
                 assert!(Instant::now() < deadline);
-                std::thread::yield_now();
+                thread::yield_now();
             }
             for ticket in tickets {
                 while !pool.remove_maintenance_hook(ticket).unwrap() {
                     assert!(Instant::now() < deadline);
-                    std::thread::yield_now();
+                    thread::yield_now();
                 }
             }
             pool.shutdown();

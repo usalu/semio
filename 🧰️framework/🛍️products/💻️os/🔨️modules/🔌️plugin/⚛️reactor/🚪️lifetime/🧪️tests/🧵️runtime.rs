@@ -1,16 +1,16 @@
-fn reactor_native_lifecycle_budget() -> semio_framework::kernel::Budget {
-    semio_framework::kernel::Budget { fuel: 64, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 }
+fn reactor_native_lifecycle_budget() -> Budget {
+    Budget { fuel: 64, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 }
 }
 
-fn reactor_native_lifecycle_open(instance: u32, request_sequence: u64, actor: String) -> semio_framework::kernel::Event {
-    semio_framework::kernel::Event::InstanceOpen {
-        request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 41, instance_id: instance, request_sequence },
-        app_id: semio_framework::kernel::AppInstanceId(TestApp::<false>::APP_ID.into()),
+fn reactor_native_lifecycle_open(instance: u32, request_sequence: u64, actor: String) -> Event {
+    Event::InstanceOpen {
+        request: ActorInstanceOpenRequest { activation_generation: 41, instance_id: instance, request_sequence },
+        app_id: AppInstanceId(TestApp::<false>::APP_ID.into()),
         actor, config: Vec::new(), assets: Vec::new(), capabilities: Vec::new(), quotas: Default::default(),
     }
 }
 
-async fn reactor_native_lifecycle_poll(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, events: Vec<semio_framework::kernel::Event>) -> semio_framework::kernel::TurnResult {
+async fn reactor_native_lifecycle_poll(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, events: Vec<Event>) -> TurnResult {
     for attempt in 0..64 {
         match crate::reactor::poll_kernel(runtime, events.clone(), None, None, reactor_native_lifecycle_budget()).await {
             Ok(result) => return result,
@@ -24,11 +24,11 @@ async fn reactor_native_lifecycle_poll(runtime: &crate::plugin_runtime::PluginRu
     panic!("retained lifecycle could not finish within 64 exact-event retries")
 }
 
-async fn reactor_native_lifecycle_ack(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, receipt: semio_framework::kernel::ActorInstanceLifecycleReceipt) {
-    reactor_native_lifecycle_poll(runtime, vec![semio_framework::kernel::Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt })]).await;
+async fn reactor_native_lifecycle_ack(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, receipt: ActorInstanceLifecycleReceipt) {
+    reactor_native_lifecycle_poll(runtime, vec![Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt })]).await;
 }
 
-async fn reactor_native_lifecycle_finish(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, lifetime: semio_framework::kernel::ActorInstanceLifetime, request_sequence: u64) {
+async fn reactor_native_lifecycle_finish(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, lifetime: ActorInstanceLifetime, request_sequence: u64) {
     use semio_framework::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleReceipt as Receipt, Event};
     let request = ActorInstanceCloseRequest { lifetime, request_sequence };
     let first = reactor_native_lifecycle_poll(runtime, vec![Event::InstanceClose(request)]).await.lifecycle_receipt.expect("accepted native close");
@@ -65,7 +65,7 @@ async fn reactor_native_lifecycle_finish(runtime: &crate::plugin_runtime::Plugin
 #[semio_framework_async_macros::async_test]
 async fn reactor_native_lifecycle_retains_exact_close_until_ack() {
     use semio_framework::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleReceipt as Receipt, Event};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixture/🧵️production.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixture/🧵️production.json")).unwrap();
     let instance = fixture["open"]["instance_id"].as_u64().unwrap() as u32;
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
     crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
@@ -96,8 +96,8 @@ async fn reactor_native_lifecycle_rejects_foreign_and_colliding_owners() {
     assert_eq!(runtime.guest_lifetimes.borrow().get(7).unwrap().cell.lifetime(), lifetime);
     reactor_native_lifecycle_ack(&runtime, captured).await;
     for foreign in [
-        semio_framework::kernel::ActorInstanceLifetime { activation_generation: 42, ..lifetime },
-        semio_framework::kernel::ActorInstanceLifetime { guest_lifetime: lifetime.guest_lifetime + 1, ..lifetime },
+        ActorInstanceLifetime { activation_generation: 42, ..lifetime },
+        ActorInstanceLifetime { guest_lifetime: lifetime.guest_lifetime + 1, ..lifetime },
     ] {
         assert!(crate::reactor::poll_kernel(&runtime, vec![Event::InstanceClose(ActorInstanceCloseRequest { lifetime: foreign, request_sequence: 9 })], None, None, reactor_native_lifecycle_budget()).await.is_err());
         assert!(crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).is_ok());
@@ -146,7 +146,7 @@ async fn reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_a
         reactor_native_lifecycle_ack(&runtime, captured_a).await;
         let captured_b = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(8, 8, "native-fixture".into())]).await.lifecycle_receipt.unwrap();
         let Receipt::Captured { lifetime: b, .. } = captured_b else { unreachable!() };
-        crate::reactor::test_support::queue_external_patch(semio_framework_ui_contract::UiPatch {
+        crate::reactor::test_support::queue_external_patch(UiPatch {
             surface: semio_framework_ui_contract::SurfaceId::try_from("7:window").unwrap(),
             base_revision: semio_framework_ui_contract::UiRevision(0), revision: semio_framework_ui_contract::UiRevision(2), ops: Default::default(),
         });
@@ -168,7 +168,7 @@ async fn reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_a
         assert_eq!(patch.surface.0.as_str(), "7:window");
         assert_eq!(patch.revision.0, 2);
         assert!(runtime.guest_lifetimes.borrow().get(8).unwrap().cell.is_live());
-        let foreign = semio_framework::kernel::ActorUiPatchReceipt { lifetime: semio_framework::kernel::ActorInstanceLifetime { guest_lifetime: a.guest_lifetime + 1, ..a }, ..issued };
+        let foreign = ActorUiPatchReceipt { lifetime: ActorInstanceLifetime { guest_lifetime: a.guest_lifetime + 1, ..a }, ..issued };
         for receipt in [provisional, foreign] {
             reactor_native_lifecycle_poll(&runtime, vec![Event::PatchAck { receipt, surface: "7:window".into(), revision: 2 }]).await;
             assert!(crate::reactor::test_support::patch_receipt_is_issued(issued));

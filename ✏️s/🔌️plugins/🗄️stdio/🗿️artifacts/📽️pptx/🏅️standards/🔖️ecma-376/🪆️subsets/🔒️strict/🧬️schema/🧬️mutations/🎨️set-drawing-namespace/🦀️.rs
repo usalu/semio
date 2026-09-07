@@ -14,7 +14,7 @@ pub struct SetDrawingNamespace {
 impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for SetDrawingNamespace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "drawing-namespace", kind: "set-drawing-namespace", record: "SetDrawingNamespace" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxStrictMutation as protocol::Mutation<PptxSnapshot>>::Diff> {
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxStrictMutation as Mutation<PptxSnapshot>>::Diff> {
         agg_diff(&PptxStrictMutation::SetDrawingNamespace(self.clone()), base)
     }
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxStrictMutation> {

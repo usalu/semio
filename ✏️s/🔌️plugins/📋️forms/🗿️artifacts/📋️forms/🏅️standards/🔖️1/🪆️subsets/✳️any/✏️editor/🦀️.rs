@@ -773,7 +773,7 @@ impl ArtifactEditor for FormsPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<FormsPlayApp>,
+        owner: EditorApp<FormsPlayApp>,
         owner_file: "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.forms.forms@1/*#editor",
         document_schema: "forms.form",
@@ -951,8 +951,8 @@ pub fn create_forms_app() -> AppDefinition {
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setSpecJson", LocalizedLabel::native("Set Spec JSON", "Spezifikations-JSON festlegen"), ActionKind::Mutation) })
             .view_action("setTryValue", LocalizedLabel::native("Set Try Value", "Testwert festlegen"))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(set_try_value::SET_TRY_VALUE_STEP_ACTION_ID, LocalizedLabel::native("Set Try Value Step", "Testwert-Schritt festlegen"), ActionKind::View) })
-            .action_interactive_job("setTryValue", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job(set_try_value::SET_TRY_VALUE_STEP_ACTION_ID, semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setTryValue", InteractiveJobClassification::Migrated)
+            .action_interactive_job(set_try_value::SET_TRY_VALUE_STEP_ACTION_ID, InteractiveJobClassification::Migrated)
             .view_action("setTryValues", LocalizedLabel::native("Set Try Values", "Testwerte festlegen"))
             .view_action("resetTry", LocalizedLabel::native("Reset Try", "Test zurücksetzen"))
             .view_action("previousStep", LocalizedLabel::native("Previous Step", "Vorheriger Schritt"))

@@ -80,13 +80,13 @@ pub fn decode_sequence_mutation_json(text: &str) -> Result<SequenceMutation, Str
 /// a composed content child is seeded with. `StepParams` wraps a `Dictionary` whose integer/decimal
 /// distinction only its own `serde` round trip preserves, so a caller outside this crate cannot
 /// rebuild a step by hand without losing exactly the fidelity `edit-step-params` exists to move.
-pub fn decode_sequence_scene_json(text: &str) -> Result<(Vec<crate::artifacts::sequence::SequenceStep>, Vec<crate::artifacts::sequence::SequenceEdge>), String> {
+pub fn decode_sequence_scene_json(text: &str) -> Result<(Vec<SequenceStep>, Vec<SequenceEdge>), String> {
     #[derive(serde::Deserialize)]
     struct CommittedScene {
         #[serde(default)]
-        steps: Vec<crate::artifacts::sequence::SequenceStep>,
+        steps: Vec<SequenceStep>,
         #[serde(default)]
-        edges: Vec<crate::artifacts::sequence::SequenceEdge>,
+        edges: Vec<SequenceEdge>,
     }
     let scene: CommittedScene = serde_json::from_str(text).map_err(|error| error.to_string())?;
     Ok((scene.steps, scene.edges))

@@ -67,19 +67,19 @@ fn decode_dag_snapshot_binary(bytes: &[u8]) -> Result<DagSnapshot, String> {
 
 //#region 🔖️HandcraftedArtifactPack
 impl store::ArtifactPack for DagSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let _ = options;
         let raw = encode_dag_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        let mut snapshot = decode_dag_snapshot_binary(&inner).map_err(store::PackError::Schema)?;
+        let mut snapshot = decode_dag_snapshot_binary(&inner).map_err(PackError::Schema)?;
         snapshot.schema = DAG_DOCUMENT_SCHEMA.into();
         Ok(snapshot)
     }
@@ -113,11 +113,11 @@ mod tests {
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let document = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), content: crate::artifacts::dag::dag_content_child_with_owner(Vec::new(), Vec::new()) };
-        let mut store: ArtifactStore<DagSnapshot, DagMutation> = ArtifactStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag-demo", document, None)).expect("valid artifact store fixture");
+        let mut store: ArtifactStore<DagSnapshot, DagMutation> = ArtifactStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag-demo", document, None)).await.expect("valid artifact store fixture");
         let node = crate::artifacts::dag::schema::default_node_for_kind("note", "node-1", 0.0, 0.0);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::dag::mutations::create_node(node)], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::dag::mutations::create_node(node)], description: None }).await.expect("apply");
         let edit: &Edit<DagMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

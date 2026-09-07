@@ -36,7 +36,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
-        use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::change_graph_directed::mutation::ChangeGraphDirected;
+        use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::change_graph_directed::ChangeGraphDirected;
         let operation = EquationMutation::ChangeGraphDirected(ChangeGraphDirected { new_directed: false });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
@@ -45,7 +45,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn math_document_text_round_trips_through_store() {
-        use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::mutation::UpdateGraphAlgorithm;
+        use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::UpdateGraphAlgorithm;
         let initial = EquationSnapshot::default();
         let envelope = store::create_document_envelope(crate::artifacts::equation::MATH_DOCUMENT_SCHEMA, "math-demo", initial, None);
         let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");

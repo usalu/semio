@@ -2085,7 +2085,7 @@ mod quick {
             store::sync::PersistenceBinding::Hub { surface, .. } => assert_eq!(surface.as_deref(), Some(PROBE_SURFACE_ID)),
             store::sync::PersistenceBinding::Folder { .. } => panic!("hub origin must bind a hub persistence binding"),
         }
-        assert!(!std::fs::read_to_string(std::path::Path::new(file!())).expect("probe source").contains("probe_document_socket_surface"));
+        assert!(!std::fs::read_to_string(Path::new(file!())).expect("probe source").contains("probe_document_socket_surface"));
     }
 
     #[test]
@@ -2118,7 +2118,7 @@ mod quick {
             .collect();
         let documents = documents.rows;
         let view = documents[0].clone();
-        let scope = semio_framework_os_kernel::os_directory::DocumentScope::new("space-a", "shared-doc");
+        let scope = DocumentScope::new("space-a", "shared-doc");
         let digest = semio_framework_os_kernel::os_directory::descriptor_digest_v1(&view.descriptor).unwrap();
         let document = remote::AuthorizedDocumentView { scope: scope.clone(), descriptor_digest_v1: semio_framework_os_kernel::os_directory::hex_lower(digest.as_bytes()), view };
         let snapshot = AuthorizedDescriptorSnapshot {

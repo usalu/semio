@@ -717,7 +717,7 @@ mod io_tests {
     async fn every_declared_hop_is_a_distinct_directed_pair() {
         let entries = io().entries;
         assert_eq!(entries.len(), 16, "8 formats x 2 directions");
-        let coordinate = |dialect: semio_framework::io_schema::Dialect| format!("{}@{}/{}", dialect.artifact_kind, dialect.standard.0, dialect.subset.0);
+        let coordinate = |dialect: Dialect| format!("{}@{}/{}", dialect.artifact_kind, dialect.standard.0, dialect.subset.0);
         let mut pairs: Vec<(String, String)> = entries.iter().map(|entry| (coordinate(entry.from), coordinate(entry.into))).collect();
         pairs.sort();
         let before = pairs.len();

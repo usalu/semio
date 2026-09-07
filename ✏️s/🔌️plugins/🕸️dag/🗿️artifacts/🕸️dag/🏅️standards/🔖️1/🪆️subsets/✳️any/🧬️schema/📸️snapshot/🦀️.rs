@@ -30,9 +30,7 @@ use schema::ArtifactSchema;
 //#region 🔖️Snapshot
 /// 📸️ Persisted DAG document snapshot — schema tag plus the composed `graph` content child.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.dag.dag")]
 pub struct DagSnapshot {
     #[state(artifact)]

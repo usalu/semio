@@ -298,8 +298,8 @@ impl FormsTryValues {
             node = child;
         }
         let mut entries = Vec::new();
-        collect_try_values(node, &mut prefix.as_bytes().to_vec(), &mut entries);
-        entries
+        collect_try_value_contents(node, &mut prefix.as_bytes().to_vec(), &mut entries);
+        entries.into_iter().map(|(key, value)| (key, value.id)).collect()
     }
 }
 

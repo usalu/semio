@@ -6,7 +6,8 @@ use crate::artifacts::drawing::{DrawingLayerNode, DrawingSnapshot};
 
 //#region 🔖️Mutation
 /// 🌱 `create-layer` payload — full initial payload plus optional (parent, index) address.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]

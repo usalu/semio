@@ -3,7 +3,7 @@
 
 use crate::artifacts::presentation::{FigureTileFrame, PresentationSnapshot};
 use semio_framework_plugin::{LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
-use semio_framework_ui_contract::{surface, Buildable, BuiltNode, HasBase};
+use semio_framework_ui_contract::{surface, BuiltNode};
 use semio_framework_ui_scene::{encode, Canvas2dScene};
 
 //#region 🔖️Constants

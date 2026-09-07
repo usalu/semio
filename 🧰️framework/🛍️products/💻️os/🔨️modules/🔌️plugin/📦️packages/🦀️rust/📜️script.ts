@@ -306,9 +306,16 @@ async function coldDocumentPairIngressOracle(repoRoot: string): Promise<number> 
   }
   const kernel = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎠️kernel/📥️cold-pair/🦀️.rs"), "utf8");
   const ingress = readFileSync(new URL("../../⚛️reactor/📥️cold-pair/🦀️.rs", import.meta.url), "utf8");
+  const actorFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧪️fixture/🔣️.json"), "utf8"));
+  const actorSchema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧬️schema/🔣️.json"), "utf8"));
+  const validateActorStatus = new Ajv2020({ strict: true, allErrors: true }).compile(actorSchema);
+  for (const row of actorFixture.statusRows) assert(validateActorStatus(row), JSON.stringify(validateActorStatus.errors));
+  for (const row of [actorFixture.hostileRows[0], actorFixture.hostileRows[1], actorFixture.hostileRows[4]]) assert.equal(validateActorStatus(row), false, "actor cold status structural hostile must fail AJV");
+  const actorCold = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🦀️.rs"), "utf8");
   for (const marker of ["COLD_PAIR_PAGE_MAXIMUM_BYTES", "COLD_PAIR_MAXIMUM_BYTES", "COLD_PAIR_MAXIMUM_PAGES", "ColdDocumentPairHeader", "ColdPairIngressStatus"]) assert(kernel.includes(marker), marker);
   for (const marker of ["ColdDocumentPairIngressRegistry", "cold-pair.not-live", "cold-pair.slot-collision", "try_reserve_exact", "reserved_bytes", "live != Some(header.lifetime)", "preflight_close_instance", "advance_close_one", "close_step", "files.spr[start..].fill(0)", "bounded terminal close before teardown"]) assert(ingress.includes(marker), marker);
-  return fixture.hostile.length;
+  for (const marker of ["ColdDocumentPairFrontier", "ColdDocumentPairCursor", "ColdDocumentPairApplied", "InvalidColdPair", "COLD_PAIR_FAULT_MAXIMUM_BYTES"]) assert(actorCold.includes(marker), marker);
+  return fixture.hostile.length + actorFixture.hostileRows.length;
 }
 
 class ColdDocumentPairIngressCheckScript extends BundleScript {
@@ -321,10 +328,20 @@ class ColdDocumentPairIngressCheckScript extends BundleScript {
       cwd: this.root,
       env: { ...process.env, RUST_MIN_STACK: "33554432", CARGO_BUILD_JOBS: "1" },
       nativeEnv: { RUST_MIN_STACK: "268435456", CARGO_BUILD_RUSTFLAGS: "-Z threads=1" },
-      groups: [{
-        package: "semio-framework-plugin",
-        target: { kind: "lib" },
-        laws: [
+      groups: [
+        {
+          package: "semio-framework-actor",
+          target: { kind: "lib" },
+          laws: [
+            "cold_pair_tests::cold_pair_ingress_status_pack_round_trips_every_exact_variant",
+            "cold_pair_tests::cold_pair_ingress_neutral_fixture_has_exact_semantic_receipts_and_hostiles",
+            "cold_pair_tests::cold_pair_ingress_decode_refuses_noncanonical_authority_before_publication",
+          ],
+        },
+        {
+          package: "semio-framework-plugin",
+          target: { kind: "lib" },
+          laws: [
           "component::reactor::cold_pair::tests::cold_pair_ingress_streams_the_exact_four_mibibyte_pair_and_loads_once",
           "component::reactor::cold_pair::tests::cold_pair_ingress_rechecks_live_and_rejects_hostile_pages_without_displacement",
           "component::reactor::cold_pair::tests::cold_pair_ingress_keeps_the_structural_owner_across_load_cancel_and_bounded_close",
@@ -332,8 +349,9 @@ class ColdDocumentPairIngressCheckScript extends BundleScript {
           "component::reactor::cold_pair::tests::cold_pair_ingress_charges_aggregate_reserved_capacity_until_final_close",
           "component::reactor::cold_pair::tests::cold_pair_ingress_is_an_exact_retained_native_close_participant",
           "component::reactor::cold_pair::tests::cold_pair_header_requires_an_active_checkpoint_frontier_and_exact_hashes",
-        ],
-      }],
+          ],
+        },
+      ],
       buildBudgetMs: 86_400_000,
       lawBudgetMs: 60_000,
       progress(event) { console.log(`cold-document-pair-ingress ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },

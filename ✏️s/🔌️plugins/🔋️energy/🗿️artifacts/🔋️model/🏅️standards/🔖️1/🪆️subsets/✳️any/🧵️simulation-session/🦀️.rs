@@ -252,7 +252,7 @@ struct CaptureCensus {
 
 impl CaptureCensus {
     fn new() -> Self {
-        Self { lane: 0, index: 0, items: 2, bytes: std::mem::size_of::<Model>() + std::mem::size_of::<SimulationConfig>() }
+        Self { lane: 0, index: 0, items: 2, bytes: size_of::<Model>() + size_of::<SimulationConfig>() }
     }
 
     fn charge_backing(&mut self, capacity: usize, item_bytes: usize) -> Result<(), &'static str> {
@@ -297,16 +297,16 @@ impl CaptureCensus {
         match self.lane {
             0 => self.charge(source.name.capacity(), 1)?,
             1 => self.charge(source.version.capacity(), 1)?,
-            2 => self.charge(1, std::mem::size_of_val(&source.site))?,
+            2 => self.charge(1, size_of_val(&source.site))?,
             3 => nested!(zones, |item: &crate::model::Zone| (item.name.capacity(), item.name.capacity())),
             4 => nested!(spaces, |item: &crate::model::Space| (item.name.capacity(), item.name.capacity())),
             5 => {
-                nested!(surfaces, |item: &crate::model::Surface| { (item.name.capacity().saturating_add(item.vertices_m.capacity()), item.name.capacity().saturating_add(item.vertices_m.capacity().saturating_mul(std::mem::size_of::<[f64; 3]>())),) })
+                nested!(surfaces, |item: &crate::model::Surface| { (item.name.capacity().saturating_add(item.vertices_m.capacity()), item.name.capacity().saturating_add(item.vertices_m.capacity().saturating_mul(size_of::<[f64; 3]>())),) })
             }
             6 => nested!(fenestrations, |item: &crate::model::Fenestration| (item.name.capacity(), item.name.capacity())),
             7 => nested!(materials, |item: &crate::model::Material| (item.name.capacity(), item.name.capacity())),
             8 => nested!(constructions, |item: &crate::model::Construction| {
-                (item.name.capacity().saturating_add(item.layer_material_ids.capacity()), item.name.capacity().saturating_add(item.layer_material_ids.capacity().saturating_mul(std::mem::size_of::<crate::model::EntityId>())))
+                (item.name.capacity().saturating_add(item.layer_material_ids.capacity()), item.name.capacity().saturating_add(item.layer_material_ids.capacity().saturating_mul(size_of::<crate::model::EntityId>())))
             }),
             9 => vector!(people),
             10 => vector!(lighting),
@@ -317,39 +317,39 @@ impl CaptureCensus {
             15 => vector!(ideal_loads),
             16 => vector!(zone_equipment),
             17 => nested!(air_loops, |item: &crate::model::ModelAirLoop| {
-                (item.name.capacity().saturating_add(item.terminal_zone_ids.capacity()), item.name.capacity().saturating_add(item.terminal_zone_ids.capacity().saturating_mul(std::mem::size_of::<crate::model::EntityId>())))
+                (item.name.capacity().saturating_add(item.terminal_zone_ids.capacity()), item.name.capacity().saturating_add(item.terminal_zone_ids.capacity().saturating_mul(size_of::<crate::model::EntityId>())))
             }),
             18 => nested!(plant_loops, |item: &crate::model::PlantLoopConfig| {
-                (item.name.capacity().saturating_add(item.equipment_ids.capacity()), item.name.capacity().saturating_add(item.equipment_ids.capacity().saturating_mul(std::mem::size_of::<crate::model::EntityId>())))
+                (item.name.capacity().saturating_add(item.equipment_ids.capacity()), item.name.capacity().saturating_add(item.equipment_ids.capacity().saturating_mul(size_of::<crate::model::EntityId>())))
             }),
             19 => vector!(outdoor_air_systems),
             20 => vector!(infiltrations),
             21 => vector!(mechanical_ventilations),
             22 => nested!(shading_surfaces, |item: &crate::model::ShadingSurface| {
-                (item.name.capacity().saturating_add(item.vertices_m.capacity()), item.name.capacity().saturating_add(item.vertices_m.capacity().saturating_mul(std::mem::size_of::<[f64; 3]>())))
+                (item.name.capacity().saturating_add(item.vertices_m.capacity()), item.name.capacity().saturating_add(item.vertices_m.capacity().saturating_mul(size_of::<[f64; 3]>())))
             }),
             23 => nested!(space_lists, |item: &crate::model::SpaceList| {
-                (item.name.capacity().saturating_add(item.space_ids.capacity()), item.name.capacity().saturating_add(item.space_ids.capacity().saturating_mul(std::mem::size_of::<crate::model::EntityId>())))
+                (item.name.capacity().saturating_add(item.space_ids.capacity()), item.name.capacity().saturating_add(item.space_ids.capacity().saturating_mul(size_of::<crate::model::EntityId>())))
             }),
             24 => nested!(thermal_enclosures, |item: &crate::model::ThermalEnclosure| {
-                (item.name.capacity().saturating_add(item.zone_ids.capacity()), item.name.capacity().saturating_add(item.zone_ids.capacity().saturating_mul(std::mem::size_of::<crate::model::EntityId>())))
+                (item.name.capacity().saturating_add(item.zone_ids.capacity()), item.name.capacity().saturating_add(item.zone_ids.capacity().saturating_mul(size_of::<crate::model::EntityId>())))
             }),
             25 => vector!(adjacency_pairs),
             26 => {
                 if self.index == 0 {
                     if let Some(item) = source.airflow_network.as_ref() {
-                        self.charge_backing(item.zone_node_ids.capacity(), std::mem::size_of::<(crate::model::EntityId, u32)>())?;
-                        self.charge_backing(item.link_ids.capacity(), std::mem::size_of::<u32>())?;
+                        self.charge_backing(item.zone_node_ids.capacity(), size_of::<(crate::model::EntityId, u32)>())?;
+                        self.charge_backing(item.link_ids.capacity(), size_of::<u32>())?;
                     }
                     self.index = 1;
                 } else {
-                    self.charge(usize::from(source.airflow_network.is_some()), source.airflow_network.as_ref().map_or(0, std::mem::size_of_val))?;
+                    self.charge(usize::from(source.airflow_network.is_some()), source.airflow_network.as_ref().map_or(0, size_of_val))?;
                 }
             }
             27 => nested!(electrical_load_centers, |item: &crate::model::ElectricalLoadCenter| {
                 (
                     item.name.capacity().saturating_add(item.generator_ids.capacity()).saturating_add(item.pv_ids.capacity()).saturating_add(item.battery_ids.capacity()),
-                    item.name.capacity().saturating_add(item.generator_ids.capacity().saturating_add(item.pv_ids.capacity()).saturating_add(item.battery_ids.capacity()).saturating_mul(std::mem::size_of::<crate::model::EntityId>())),
+                    item.name.capacity().saturating_add(item.generator_ids.capacity().saturating_add(item.pv_ids.capacity()).saturating_add(item.battery_ids.capacity()).saturating_mul(size_of::<crate::model::EntityId>())),
                 )
             }),
             28 => vector!(pv_systems),
@@ -366,7 +366,7 @@ impl CaptureCensus {
             36 => vector!(sizing_objects),
             37 => vector!(daylight_zones),
             38 => vector!(room_air_models),
-            39 => self.charge(1, std::mem::size_of_val(&source.ground_temperature))?,
+            39 => self.charge(1, size_of_val(&source.ground_temperature))?,
             _ => return Ok(true),
         }
         Ok(self.lane > 39)
@@ -374,7 +374,7 @@ impl CaptureCensus {
 }
 
 fn vector_credit<T>(owner: &Vec<T>) -> (usize, usize) {
-    (owner.capacity(), std::mem::size_of::<T>())
+    (owner.capacity(), size_of::<T>())
 }
 
 struct ModelCapture {
@@ -1149,31 +1149,33 @@ impl MountedState {
         }
         let Some(now) = semio_framework_job::default_now_us() else { return JobStep::Running(None) };
         let Some(deadline) = now.checked_add(u64::from(budget.deadline_ms).min(7) * 1_000) else { return JobStep::Running(None) };
-        let mut context = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel.min(1), deadline), self.cancel.clone(), semio_framework_job::default_now_us, &mut self.preview_sequence);
-        if context.should_yield() {
-            return JobStep::Running(None);
-        }
-        if let Some(restore) = self.restore.as_mut() {
-            match restore.step(&mut context) {
-                Ok(false) => return JobStep::Running(None),
-                Ok(true) => {
-                    let restore = self.restore.take().expect("ready Energy restore remains mounted");
-                    match restore.finish(&context) {
-                        Ok(job) => {
-                            self.job = Some(job);
-                            self.projection.status = EnergySimulationStatus::Running;
-                            return JobStep::Running(None);
-                        }
-                        Err(restore) => {
-                            self.restore = Some(restore);
-                            self.projection.status = EnergySimulationStatus::Faulted;
-                            return JobStep::Failed(b"energy.session.restore-finish".to_vec());
+        {
+            let mut context = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel.min(1), deadline), self.cancel.clone(), semio_framework_job::default_now_us, &mut self.preview_sequence);
+            if context.should_yield() {
+                return JobStep::Running(None);
+            }
+            if let Some(restore) = self.restore.as_mut() {
+                match restore.step(&mut context) {
+                    Ok(false) => return JobStep::Running(None),
+                    Ok(true) => {
+                        let restore = self.restore.take().expect("ready Energy restore remains mounted");
+                        match restore.finish(&context) {
+                            Ok(job) => {
+                                self.job = Some(job);
+                                self.projection.status = EnergySimulationStatus::Running;
+                                return JobStep::Running(None);
+                            }
+                            Err(restore) => {
+                                self.restore = Some(restore);
+                                self.projection.status = EnergySimulationStatus::Faulted;
+                                return JobStep::Failed(b"energy.session.restore-finish".to_vec());
+                            }
                         }
                     }
-                }
-                Err(_) => {
-                    self.projection.status = EnergySimulationStatus::Faulted;
-                    return JobStep::Failed(b"energy.session.restore-replay".to_vec());
+                    Err(_) => {
+                        self.projection.status = EnergySimulationStatus::Faulted;
+                        return JobStep::Failed(b"energy.session.restore-replay".to_vec());
+                    }
                 }
             }
         }
@@ -1185,6 +1187,7 @@ impl MountedState {
             return JobStep::Running(None);
         }
         let Some(job) = self.job.as_mut() else { return JobStep::Failed(b"energy.session.job-missing".to_vec()) };
+        let mut context = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel.min(1), deadline), self.cancel.clone(), semio_framework_job::default_now_us, &mut self.preview_sequence);
         let outcome = job.step(&mut context);
         match outcome {
             StepOutcome::Yield => JobStep::Running(None),
@@ -2491,10 +2494,10 @@ mod tests {
         let mut census = CaptureCensus { lane: 5, index: 0, items: 0, bytes: 0 };
         assert!(!census.step_one(&source).unwrap());
         assert_eq!(census.items, 11);
-        assert_eq!(census.bytes, 8 + 3 * std::mem::size_of::<[f64; 3]>());
+        assert_eq!(census.bytes, 8 + 3 * size_of::<[f64; 3]>());
         assert!(!census.step_one(&source).unwrap());
         assert_eq!(census.items, 12);
-        assert_eq!(census.bytes, 8 + 3 * std::mem::size_of::<[f64; 3]>() + std::mem::size_of::<crate::model::Surface>());
+        assert_eq!(census.bytes, 8 + 3 * size_of::<[f64; 3]>() + size_of::<crate::model::Surface>());
         let mut capture = ModelCapture::new();
         capture.lane = 5;
         for _ in 0..64 {

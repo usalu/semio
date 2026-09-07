@@ -1396,7 +1396,7 @@ impl ShellDirectoryRunner {
                     self.pool.submit(
                         Lane::Io,
                         Box::new(move || {
-                            let result = client.open_stream_ws(&context, since, Self::DIAL_TIMEOUT_MS).map_err(|error| semio_framework_os_kernel::os_directory::client::TransportError::Io(error.to_string()));
+                            let result = client.open_stream_ws(&context, since, Self::DIAL_TIMEOUT_MS).map_err(|error| TransportError::Io(error.to_string()));
                             if let Some(runner) = weak.upgrade() {
                                 let now_ms = runner.pool.now_ms();
                                 let _ = runner.stream.lock().expect("directory stream mutex poisoned").complete_dial(now_ms, result);
@@ -5622,7 +5622,9 @@ impl ShellState {
         let mut navigate_uri: Option<String> = None;
         while !pending.is_empty() {
             let batch = std::mem::take(&mut pending);
-            let mut follow_up_operations: Vec<String> = Vec::new();
+            let follow_up_operations: Vec<String> = Vec::new();
+            #[cfg(target_arch = "wasm32")]
+            let mut follow_up_operations = follow_up_operations;
             for operation_json in batch {
                 let operation: Value = serde_json::from_str(&operation_json).unwrap_or(Value::Null);
                 if operation.get("operation").and_then(|v| v.as_str()) == Some("setDocument") {
@@ -7798,21 +7800,21 @@ mod shell_input_tests {
 
     #[test]
     fn ui_event_from_key_action_maps_plain_char_to_text_input() {
-        let modifiers = ui_wgpu::wgpu::PointerModifiers::default();
+        let modifiers = PointerModifiers::default();
         let event = ui_event_from_key_action(&ui_wgpu::wgpu::KeyAction::Char("a".into()), &modifiers);
         assert_eq!(event, Some(ui_wgpu::wgpu::UiEvent::TextInput { text: "a".into() }));
     }
 
     #[test]
     fn ui_event_from_key_action_routes_ctrl_char_as_key_down_for_clipboard_chords() {
-        let modifiers = ui_wgpu::wgpu::PointerModifiers { ctrl: true, ..Default::default() };
+        let modifiers = PointerModifiers { ctrl: true, ..Default::default() };
         let event = ui_event_from_key_action(&ui_wgpu::wgpu::KeyAction::Char("c".into()), &modifiers);
         assert_eq!(event, Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "c".into(), modifiers: ui_wgpu::wgpu::EventModifiers { shift: false, ctrl: true, alt: false, meta: false } }));
     }
 
     #[test]
     fn ui_event_from_key_action_maps_editing_and_tab_keys_to_matching_key_down_strings() {
-        let modifiers = ui_wgpu::wgpu::PointerModifiers::default();
+        let modifiers = PointerModifiers::default();
         let cases = [
             (ui_wgpu::wgpu::KeyAction::Backspace, "Backspace"),
             (ui_wgpu::wgpu::KeyAction::Delete, "Delete"),
@@ -7832,7 +7834,7 @@ mod shell_input_tests {
 
     #[test]
     fn ui_event_from_key_action_has_no_mapping_for_space() {
-        let event = ui_event_from_key_action(&ui_wgpu::wgpu::KeyAction::Space(true), &ui_wgpu::wgpu::PointerModifiers::default());
+        let event = ui_event_from_key_action(&ui_wgpu::wgpu::KeyAction::Space(true), &PointerModifiers::default());
         assert_eq!(event, None);
     }
 
@@ -9698,7 +9700,7 @@ mod command_registry_tests {
             named_layouts: vec![],
             default_layout: None,
             terminologies: vec!["de".into()],
-            terminology_breadcrumbs: std::collections::HashMap::new(),
+            terminology_breadcrumbs: HashMap::new(),
             introduction: None,
             tutorials: Vec::new(),
             dialogs: Vec::new(),
@@ -10125,8 +10127,8 @@ mod command_registry_tests {
             let mut receipt = DirectoryCommandReceiptV1 {
                 schema: "semio.directory.command-receipt.v1".into(),
                 request_id: request.request_id.clone(),
-                command_sha256: semio_framework_os_kernel::os_directory::directory_command_sha256(&request.command),
-                outcome: semio_framework_os_kernel::os_directory::DirectoryCommandOutcomeV1::Accepted,
+                command_sha256: directory_command_sha256(&request.command),
+                outcome: DirectoryCommandOutcomeV1::Accepted,
                 events: Vec::new(),
                 result: DirectoryCommandResultV1::Invite { invite_token: "invite.v1.secret".into() },
                 receipt_sha256: String::new(),
@@ -10387,7 +10389,7 @@ mod command_registry_tests {
     #[test]
     fn build_os_commands_terminology_options_include_app_terminologies() {
         let mut shell = test_shell_state();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
         let terminology_command = shell.build_os_commands().into_iter().find(|command| command.id == "os.setTerminology").expect("terminology command present");
         let ActionArgControl::Select { options } = &terminology_command.args[0].control() else {
             panic!("expected a select control");
@@ -10472,7 +10474,7 @@ mod command_registry_tests {
     #[test]
     fn command_search_items_expands_select_options_and_tags_os_category() {
         let mut shell = test_shell_state();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
         let items = shell.command_search_items();
         let appearance_dark = items.iter().find(|item| item.id == "command.os:os.setAppearance.dark").expect("expanded dark option present");
         assert_eq!(appearance_dark.label, "Set Appearance: Dark");
@@ -10488,7 +10490,7 @@ mod command_registry_tests {
     #[test]
     fn apply_os_command_reset_dock_clears_layout_override_locally() {
         let mut shell = test_shell_state();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
         shell.layout_override = Some(shell.dock.to_window_layout());
         semio_framework_async::block_on(shell.apply_os_command("os.resetDock", None)).expect("reset dock never errors");
         assert!(shell.layout_override.is_none());
@@ -10497,7 +10499,7 @@ mod command_registry_tests {
     #[test]
     fn apply_os_command_set_locale_dispatches_through_framework_controller() {
         let mut shell = test_shell_state();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
         semio_framework_async::block_on(shell.apply_os_command("os.setLocale", Some("de"))).expect("set locale never errors");
         assert_eq!(shell.locale_id, "de");
     }
@@ -10530,7 +10532,7 @@ mod command_registry_tests {
     #[test]
     fn build_command_panel_ui_groups_rows_under_category_headers() {
         let mut shell = test_shell_state();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
         let UiNode::Stack(panel) = shell.build_command_panel_ui() else {
             panic!("expected a stack root");
         };
@@ -10566,9 +10568,9 @@ mod command_registry_tests {
         assert_eq!(action.controller_id, "controller-1");
         assert_eq!(action.action, "noteShellCommand");
         let args = action.args.expect("noteShellCommand always carries args");
-        assert_eq!(args.get("commandId").and_then(semio_framework::DslValue::as_str), Some("os.setLocale"));
-        assert_eq!(args.get("label").and_then(semio_framework::DslValue::as_str), Some("Set Locale"));
-        assert_eq!(args.get("detail").and_then(|value| value.get("value")).and_then(semio_framework::DslValue::as_str), Some("de"));
+        assert_eq!(args.get("commandId").and_then(DslValue::as_str), Some("os.setLocale"));
+        assert_eq!(args.get("label").and_then(DslValue::as_str), Some("Set Locale"));
+        assert_eq!(args.get("detail").and_then(|value| value.get("value")).and_then(DslValue::as_str), Some("de"));
     }
 
     #[test]
@@ -16579,7 +16581,7 @@ mod ui_prefs_themes_i18n_tests {
             std::thread::yield_now();
         };
         let reloaded: HashMap<String, String> = serde_json::from_str(&raw).expect("valid JSON");
-        let config: serde_json::Value = serde_json::from_str(reloaded.get(OS_SHELL_CONFIG_STORAGE_KEY).expect("one config document")).expect("valid config JSON");
+        let config: Value = serde_json::from_str(reloaded.get(OS_SHELL_CONFIG_STORAGE_KEY).expect("one config document")).expect("valid config JSON");
         assert_eq!(config["preferences"][UI_CHROME_APPEARANCE_STORAGE_KEY], "dark");
         assert_eq!(config["dockLayouts"]["apps"], serde_json::json!({}));
         assert_eq!(config["namedLayouts"]["draw"][0]["id"], "wide", "preference writes must preserve sibling projections");
@@ -17575,7 +17577,7 @@ fn request_media_frames(
     _max_long_edge_px: u32,
     _fps_hint: f64,
     payload: Option<&str>,
-    args: Option<serde_json::Value>,
+    args: Option<Value>,
 ) -> Vec<ActionDescriptor> {
     match payload.and_then(decode_data_url) {
         Some(bytes) => vec![fallback_action_descriptor(controller_id, fallback_action, &bytes, "video", &args.unwrap_or_else(|| serde_json::json!({})))],
@@ -17654,9 +17656,9 @@ mod media_frames_tests {
         assert_eq!(descriptor.controller_id, "app.controller");
         assert_eq!(descriptor.action, "importVideoBytesPayload");
         let args = descriptor.args.unwrap();
-        assert_eq!(args.get("streamId").and_then(semio_framework::DslValue::as_str), Some("s1"));
-        assert_eq!(args.get("name").and_then(semio_framework::DslValue::as_str), Some("clip.mp4"));
-        assert!(args.get("payload").and_then(semio_framework::DslValue::as_str).is_some_and(|payload| payload.starts_with("data:application/octet-stream;base64,")));
+        assert_eq!(args.get("streamId").and_then(DslValue::as_str), Some("s1"));
+        assert_eq!(args.get("name").and_then(DslValue::as_str), Some("clip.mp4"));
+        assert!(args.get("payload").and_then(DslValue::as_str).is_some_and(|payload| payload.starts_with("data:application/octet-stream;base64,")));
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -17683,7 +17685,7 @@ mod media_frames_tests {
         ));
         assert_eq!(actions.len(), 1, "garbage payload never yields real frames: {actions:?}");
         assert_eq!(actions[0].action, "importVideoBytesPayload");
-        assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("streamId")).and_then(semio_framework::DslValue::as_str), Some("s1"));
+        assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("streamId")).and_then(DslValue::as_str), Some("s1"));
     }
 }
 //#endregion RequestMediaFrames
@@ -17723,10 +17725,10 @@ mod context_menu_keyboard_tests {
     fn render_context_menu_level_renders_a_labeled_separator_as_a_header_without_a_hit() {
         let items = vec![ContextMenuItem { id: "header-1".into(), label: "Header".into(), separator: true, ..Default::default() }, ContextMenuItem { id: "leaf-1".into(), label: "Leaf".into(), ..Default::default() }];
         let menu = ContextMenuState { items: items.clone(), ..Default::default() };
-        let mut draw = ui_wgpu::wgpu::DrawList::default();
-        let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
-        let icons = ui_wgpu::wgpu::IconAtlas::default();
-        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        let icons = IconAtlas::default();
+        let mut input = InputState::<ActionDescriptor>::default();
         let theme = Theme::default();
         ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input, &theme, &menu, &menu.items, &[], 0.0, 0.0, 800.0, 600.0);
         assert!(input.hit_targets.iter().all(|hit| hit.control_id.as_deref() != Some("header-1")), "a labeled separator must stay non-interactive");
@@ -17740,18 +17742,18 @@ mod context_menu_keyboard_tests {
         let row_h = theme.control_height;
         let viewport_h = row_h * 4.0;
         let menu_at = |scroll_offset: f32| ContextMenuState { items: items.clone(), scroll_offset, ..Default::default() };
-        let mut draw = ui_wgpu::wgpu::DrawList::default();
-        let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
-        let icons = ui_wgpu::wgpu::IconAtlas::default();
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        let icons = IconAtlas::default();
 
-        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = InputState::<ActionDescriptor>::default();
         let menu = menu_at(0.0);
         ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input, &theme, &menu, &menu.items, &[], 0.0, 0.0, 800.0, viewport_h);
         let visible_ids: Vec<String> = input.hit_targets.iter().filter_map(|hit| hit.control_id.clone()).collect();
         assert!(visible_ids.len() < items.len(), "expected the viewport clip to hide some rows, got {} of {}", visible_ids.len(), items.len());
         assert!(!visible_ids.contains(&"item-19".to_string()), "the last row should be scrolled out of view without scrolling");
 
-        let mut input2 = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        let mut input2 = InputState::<ActionDescriptor>::default();
         let menu2 = menu_at(row_h * 16.0);
         ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input2, &theme, &menu2, &menu2.items, &[], 0.0, 0.0, 800.0, viewport_h);
         let scrolled_ids: Vec<String> = input2.hit_targets.iter().filter_map(|hit| hit.control_id.clone()).collect();
@@ -17764,10 +17766,10 @@ mod context_menu_keyboard_tests {
         let child_items = vec![ContextMenuItem { id: "child-1".into(), label: "Child one".into(), ..Default::default() }];
         let parent_items = vec![ContextMenuItem { id: "menu.group.view".into(), label: "View".into(), children: child_items, ..Default::default() }];
         let menu = ContextMenuState { items: parent_items.clone(), active: vec![0], ..Default::default() };
-        let mut draw = ui_wgpu::wgpu::DrawList::default();
-        let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
-        let icons = ui_wgpu::wgpu::IconAtlas::default();
-        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        let icons = IconAtlas::default();
+        let mut input = InputState::<ActionDescriptor>::default();
         let viewport_w = 220.0;
         ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input, &theme, &menu, &menu.items, &[], 0.0, 0.0, viewport_w, 600.0);
         let parent_w = ShellState::context_menu_level_width(&parent_items, &theme);

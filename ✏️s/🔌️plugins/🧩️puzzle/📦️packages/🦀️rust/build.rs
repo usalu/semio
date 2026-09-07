@@ -25,7 +25,7 @@ fn icon_sources(root: &Path, directory: &Path, sources: &mut BTreeMap<String, Pa
 }
 
 fn main() {
-    let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let icons_src = manifest_dir.join("../../../../../🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons");
     println!("cargo:rerun-if-changed={}", icons_src.display());
 

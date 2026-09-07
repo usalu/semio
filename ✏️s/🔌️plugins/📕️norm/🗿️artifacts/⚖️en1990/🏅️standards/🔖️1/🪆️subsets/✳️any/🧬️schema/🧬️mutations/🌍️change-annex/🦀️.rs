@@ -1,7 +1,7 @@
 //! 🇪🇺 `change-annex` payload — changes the EN 1990 document's national annex.
 
 
-use crate::artifacts::en1990::{En1990Diff, En1990Snapshot};
+use crate::artifacts::en1990::En1990Snapshot;
 use crate::artifacts::en1990::mutations::En1990Mutation;
 use crate::document::AnnexChoice;
 

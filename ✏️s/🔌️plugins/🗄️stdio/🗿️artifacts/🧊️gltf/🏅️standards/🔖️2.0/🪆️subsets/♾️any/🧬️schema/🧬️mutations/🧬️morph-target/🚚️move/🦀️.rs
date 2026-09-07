@@ -1,8 +1,7 @@
 //! 🧬️ Direct move-morph-target mutation owner: payload, validation, typed diff, inverse, and outcomes.
 use crate::artifacts::gltf::GltfSnapshot;
-use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level::{GltfTopLevelMutationRejection, reject};
-use crate::artifacts::gltf::schema::modules::mutation_support::structure_geometry::{checked_index, checked_position};
+use crate::artifacts::gltf::schema::modules::mutation_support::structure_geometry::checked_index;
 pub const ID: &str = "s.stdio.gltf.mutation.move-morph-target.v1";
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]

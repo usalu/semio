@@ -2,9 +2,8 @@
 //! whole subtree cascade — `remove_layer_from_tree` deletes the node it finds, children included).
 
 pub mod mutation {
-use crate::artifacts::raster::diff::{diff_remove_layer, RasterDiff};
-use crate::artifacts::raster::mutations::{create_layer, RasterMutation};
-use crate::artifacts::raster::schema::{find_layer, locate_layer};
+use crate::artifacts::raster::diff::RasterDiff;
+use crate::artifacts::raster::mutations::RasterMutation;
 use crate::artifacts::raster::RasterSnapshot;
 
 //#region 🔖️DeleteLayer

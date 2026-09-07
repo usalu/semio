@@ -16,7 +16,7 @@ pub struct SetTrackCodec {
 
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetTrackCodec {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "track-codec", kind: "set-track-codec", record: "SetTrackCodec" };
-    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::Diff> {
+    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
         agg_diff(&Mp4Mutation::SetTrackCodec(self.clone()), base)
     }
     fn inverse(&self, base: &Mp4Snapshot) -> Vec<Mp4Mutation> {

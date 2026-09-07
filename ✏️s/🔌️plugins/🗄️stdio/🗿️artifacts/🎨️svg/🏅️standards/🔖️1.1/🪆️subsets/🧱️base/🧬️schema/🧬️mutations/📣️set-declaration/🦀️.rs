@@ -1,9 +1,7 @@
 //! 🧬️ Direct set-declaration mutation owner.
-use crate::artifacts::svg::schema::diff::{diff_at_path, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
-use crate::artifacts::svg::schema::mutation_support::attribute_diff_at_path;
-use crate::artifacts::svg::schema::snapshot::{transform_list_to_string, view_box_to_string, NodePath, TransformOp, ViewBox};
+use crate::artifacts::svg::schema::diff::SvgDiff;
 use crate::artifacts::svg::SvgSnapshot;
-use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlNode};
+use crate::artifacts::xml::schema::snapshot::XmlDeclaration;
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
@@ -25,7 +23,7 @@ pub enum SetDeclarationMutation { Apply(SetDeclarationPayload), Restore(SvgDiff)
 impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetDeclarationMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "declaration", kind: "set-declaration", record: "SetDeclaration" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
+    fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         match self {
             Self::Apply(payload) => protocol::MutationOutcome::new(SvgDiff { prolog: None, declaration: Some(payload.declaration.clone()), doctype: None, root: None }),
             Self::Restore(diff) => protocol::MutationOutcome::new(diff.clone()),

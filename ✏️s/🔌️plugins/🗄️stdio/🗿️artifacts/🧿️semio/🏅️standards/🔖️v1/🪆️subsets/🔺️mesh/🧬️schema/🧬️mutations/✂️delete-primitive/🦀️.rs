@@ -1,6 +1,6 @@
 //! ✂️ `delete-primitive` — removes primitive `primitive_id` from mesh `mesh_id`.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::{SemioMeshMutation, create_primitive};
+use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Payload

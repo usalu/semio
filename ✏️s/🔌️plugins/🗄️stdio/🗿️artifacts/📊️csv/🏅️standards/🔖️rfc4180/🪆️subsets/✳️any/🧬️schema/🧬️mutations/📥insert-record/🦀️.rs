@@ -15,7 +15,7 @@ pub struct InsertRecord {
 impl protocol::MutationKind<CsvSnapshot, CsvMutation> for InsertRecord {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "record", kind: "insert-record", record: "InsertRecord" };
 
-    fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as protocol::Mutation<CsvSnapshot>>::Diff> {
+    fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
         agg_diff(&CsvMutation::InsertRecord(self.clone()), base)
     }
     fn inverse(&self, base: &CsvSnapshot) -> Vec<CsvMutation> {

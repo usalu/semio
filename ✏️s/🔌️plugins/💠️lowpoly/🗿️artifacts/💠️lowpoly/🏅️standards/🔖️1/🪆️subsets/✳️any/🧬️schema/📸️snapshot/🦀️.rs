@@ -9,7 +9,6 @@
 
 use crate::artifacts::lowpoly::{LowpolyObject, LowpolyPaintLayer, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted lowpoly document snapshot (persistent fields of the artifact).

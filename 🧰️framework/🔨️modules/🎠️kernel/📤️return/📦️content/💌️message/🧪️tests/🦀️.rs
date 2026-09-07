@@ -57,7 +57,7 @@ fn return_content_message_all_endpoints_match_independent_bytes_without_payload_
 #[test]
 fn return_content_message_large_payload_and_cancel_keep_original_source_allocation() {
     assert!(!std::mem::needs_drop::<ReturnMessageCursor<'_>>());
-    assert!(std::mem::size_of::<ReturnMessageCursor<'_>>() <= 256);
+    assert!(size_of::<ReturnMessageCursor<'_>>() <= 256);
     let fixture = fixture();
     let length = fixture["largePayload"]["length"].as_u64().unwrap() as usize;
     let payload: Vec<_> = (0..length).map(|index| ((index * 37 + 11) % 256) as u8).collect();

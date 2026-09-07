@@ -17,7 +17,7 @@ pub struct SetField {
 impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetField {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "field", kind: "set-field", record: "SetField" };
 
-    fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as protocol::Mutation<CsvSnapshot>>::Diff> {
+    fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
         agg_diff(&CsvMutation::SetField(self.clone()), base)
     }
     fn inverse(&self, base: &CsvSnapshot) -> Vec<CsvMutation> {

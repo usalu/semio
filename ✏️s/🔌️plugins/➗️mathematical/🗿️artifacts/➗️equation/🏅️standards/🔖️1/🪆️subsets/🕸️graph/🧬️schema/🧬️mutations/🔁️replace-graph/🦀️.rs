@@ -3,8 +3,7 @@
 //! `SetGraph`, used by gestures that load/paste an entire graph (e.g. the app's `SetArtifact`
 //! command) rather than editing one field or one node/edge.
 
-use crate::artifacts::equation::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationGraph, EquationMutation, EquationSnapshot};
-use semio_framework_os_kernel::{FromValue, ToValue};
+use crate::artifacts::equation::{EquationGraph, EquationMutation, EquationSnapshot};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload

@@ -1,7 +1,7 @@
 //! 🧭 Block5d mutation — `MoveGrip3d`: a grip's 3D position + facing direction together.
 
-use crate::artifacts::block5d::{Block5dGripTemplate, Block5dSnapshot};
-use crate::artifacts::block5d::diff::{Block5dDiff, Block5dGripsDelta, Block5dGripsPatch, Block5dGripsPatchEntry};
+use crate::artifacts::block5d::Block5dSnapshot;
+use crate::artifacts::block5d::diff::Block5dDiff;
 use crate::artifacts::block5d::mutations::Block5dMutation;
 
 //#region 🔖️Mutation

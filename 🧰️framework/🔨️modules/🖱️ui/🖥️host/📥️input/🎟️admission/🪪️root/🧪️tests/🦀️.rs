@@ -28,7 +28,7 @@ pub(super) fn interfere_after_load(counter: &AtomicU64) {
 }
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🔣️.json")).unwrap() }
 fn number(value: &serde_json::Value) -> u64 { value.as_str().unwrap().parse().unwrap() }
-fn grant() -> usize { std::mem::size_of::<EventQueue>() }
+fn grant() -> usize { size_of::<EventQueue>() }
 pub(super) fn allocations_start() {
     ALLOCATIONS.with(|value| value.set(0));
     OBSERVE.with(|value| value.set(true));
@@ -175,11 +175,11 @@ fn input_root_native_permanent_exhaustion_and_exact_fixed_layout() {
         assert_eq!(refused.discrete.capacity(), 0);
         assert_eq!(sequence.last.load(Ordering::SeqCst), u64::MAX);
     }
-    let atomic = std::mem::size_of::<InputRootSequence>();
+    let atomic = size_of::<InputRootSequence>();
     assert_eq!(atomic as u64, fixture["storage"]["nativeAtomicBytes"].as_u64().unwrap());
-    assert_eq!(atomic, std::mem::size_of::<AtomicU64>());
+    assert_eq!(atomic, size_of::<AtomicU64>());
     assert!(!std::mem::needs_drop::<InputRootSequence>());
-    assert_eq!(std::mem::size_of_val(&last.root), std::mem::size_of::<u64>());
-    eprintln!("[DEBUG] input root static={atomic} queue={} rootField={} queueBacking={}", grant(), std::mem::size_of_val(&last.root), last.discrete.capacity());
+    assert_eq!(size_of_val(&last.root), size_of::<u64>());
+    eprintln!("[DEBUG] input root static={atomic} queue={} rootField={} queueBacking={}", grant(), size_of_val(&last.root), last.discrete.capacity());
 }
 //#endregion 🧪️InputRoots

@@ -2,7 +2,7 @@
 
 use crate::BlockCompatibilityRule;
 use crate::artifacts::block2d::Block2dSnapshot;
-use crate::artifacts::block2d::diff::{Block2dCompatibilityDelta, Block2dDiff};
+use crate::artifacts::block2d::diff::Block2dDiff;
 use crate::artifacts::block2d::mutations::Block2dMutation;
 
 //#region 🔖️Mutation

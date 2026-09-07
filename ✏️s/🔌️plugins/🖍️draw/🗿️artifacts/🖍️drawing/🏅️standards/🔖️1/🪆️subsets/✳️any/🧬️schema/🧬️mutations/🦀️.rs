@@ -392,9 +392,21 @@ mod kinds_catalog_tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🔮️oracle/🔣️.json");
-        for kind in KINDS {
-            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed drawing-1-any catalog");
+        let manifests: Vec<serde_json::Value> = [
+            include_str!("../../../🎨️style/🔮️oracle/🔣️.json"),
+            include_str!("../../../🏷️metadata/🔮️oracle/🔣️.json"),
+            include_str!("../../../🔀️transform/🔮️oracle/🔣️.json"),
+            include_str!("../../../🧱️structure/🔮️oracle/🔣️.json"),
+        ].into_iter().map(|text| serde_json::from_str(text).expect("language-neutral subset oracle")).collect();
+        let entries: Vec<_> = manifests.iter().flat_map(|manifest| manifest["mutationManifests"].as_array().unwrap()).flat_map(|manifest| manifest["mutations"].as_array().unwrap()).collect();
+        let leaf_descriptors = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::DESCRIPTORS;
+        assert_eq!(entries.len(), leaf_descriptors.len());
+        for (index, descriptor) in leaf_descriptors.iter().enumerate() {
+            let entry = entries.iter().find(|entry| entry["id"] == descriptor.semantic_kind).expect("every leaf has a declared catalog entry");
+            assert_eq!(entry["productionDispatch"]["variant"], descriptor.aggregate_variant);
+            assert!(entry["payloadSchema"].as_str().unwrap().ends_with(descriptor.payload_schema));
+            assert_eq!(descriptor.text_opcode, Some(KINDS[index]));
+            assert_eq!(descriptor.binary_tag, Some(index as u32));
         }
     }
 }

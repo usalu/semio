@@ -37,7 +37,9 @@
 //! @see ../🔣️oracle.json — the `step-ap214-cc3` catalog `KINDS` is checked against.
 
 use crate::artifacts::step::schema::diff::StepDiff;
-use crate::artifacts::step::standards::v_ap214::engine::ladder::{self, ClassEdit, ProductIdentity, ShapeRepresentationRow};
+use crate::artifacts::step::standards::v_ap214::engine::ladder::{self, ClassEdit};
+#[cfg(test)]
+use crate::artifacts::step::standards::v_ap214::engine::ladder::ShapeRepresentationRow;
 use crate::artifacts::step::standards::v_ap214::subsets::cc3::schema::MAX_RUNG;
 use crate::artifacts::step::StepSnapshot;
 use protocol::command::DiffAlgebra;

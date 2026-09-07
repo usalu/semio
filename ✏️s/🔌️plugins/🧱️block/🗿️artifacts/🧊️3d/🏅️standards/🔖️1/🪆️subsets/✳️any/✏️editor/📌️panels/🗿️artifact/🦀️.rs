@@ -36,7 +36,7 @@ fn icon_item(id: String, label: &str, description: Option<String>, icon: &str) -
 /// `vortex` domain — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology, so no per-item click
 /// action is declared here anymore (clicks are translated into `interactionSelect` generically)?.
-pub fn render(definition: &Block3dSnapshot, labels: &Block3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(definition: &Block3dSnapshot, labels: &Block3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let builder = PanelTreeBuilder::new("block3d-play-document")?;
     let representation_items =
         ui_node_list(definition.representations.iter().map(|representation| icon_item(format!("surface:{}", representation.id), &representation.name, representation.mesh_url.clone(), "box")))?;

@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ReplacePrimitiveGeometry`.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::{SemioMeshDiff, primitive_at};
+use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::primitive_at;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 

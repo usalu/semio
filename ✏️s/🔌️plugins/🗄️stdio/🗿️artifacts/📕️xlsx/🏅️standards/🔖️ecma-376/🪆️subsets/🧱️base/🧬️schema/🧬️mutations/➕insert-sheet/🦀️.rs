@@ -14,7 +14,7 @@ pub struct InsertSheet {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for InsertSheet {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "sheet", kind: "insert-sheet", record: "InsertSheet" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxMutation as protocol::Mutation<XlsxSnapshot>>::Diff> {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxMutation as Mutation<XlsxSnapshot>>::Diff> {
         agg_diff(&XlsxMutation::InsertSheet(self.clone()), base)
     }
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxMutation> {

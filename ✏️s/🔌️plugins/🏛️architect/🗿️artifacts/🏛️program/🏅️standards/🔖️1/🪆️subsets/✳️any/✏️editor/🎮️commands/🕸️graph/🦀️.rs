@@ -34,7 +34,7 @@ pub mod node_graph_edit {
                     }
                 }
                 "deleteSelection" => {
-                    if let Some(ids) = operation.get("nodeIds").and_then(|value| <Vec<String> as dsl::FromValue>::from_value(value.clone()).ok()) {
+                    if let Some(ids) = operation.get("nodeIds").and_then(|value| <Vec<String> as FromValue>::from_value(value.clone()).ok()) {
                         for id in ids {
                             emitted.push(ProgramMutation::DeleteProgramElement(leaves::delete_program_element::DeleteProgramElement { id: EntityId(id.clone()) }));
                             for adjacency in program.adjacencies.iter().filter(|row| row.element_a_id.0 == id || row.element_b_id.0 == id) {

@@ -17,7 +17,7 @@ pub struct SetBlockEntityGeometry {
 impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for SetBlockEntityGeometry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "block-entity-geometry", kind: "set-block-entity-geometry", record: "SetBlockEntityGeometry" };
 
-    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<SemioCadMutation as protocol::Mutation<SemioCadSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<SemioCadMutation as Mutation<SemioCadSnapshot>>::Diff> {
         agg_diff(&SemioCadMutation::SetBlockEntityGeometry(self.clone()), base)
     }
     fn inverse(&self, base: &SemioCadSnapshot) -> Vec<SemioCadMutation> {

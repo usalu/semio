@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `CreateGripKind`.
 
-use crate::artifacts::block5d::{Block5dGripKind, Block5dSnapshot};
+use crate::artifacts::block5d::Block5dSnapshot;
 use crate::artifacts::block5d::diff::{Block5dDiff, Block5dGripKindsDelta};
 
 //#region 🔖️Diff

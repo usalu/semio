@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative replace-quant-table mutation.
-use crate::artifacts::jpg::schema::diff::{self, *};
+use crate::artifacts::jpg::schema::diff::*;
 use crate::artifacts::jpg::schema::mutations::JpgMutation;
 use crate::artifacts::jpg::schema::snapshot::*;
 
@@ -33,7 +33,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplaceQuantTableMutat
             return Vec::new();
         }
         match base.quant_tables.iter().find(|t| t.id == table.id) {
-            Some(existing) => vec![JpgMutation::ReplaceQuantTable(crate::artifacts::jpg::schema::mutations::ReplaceQuantTableMutation { table: existing.clone() })],
+            Some(existing) => vec![JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: existing.clone() })],
             None => vec![JpgMutation::RemoveQuantTable(crate::artifacts::jpg::schema::mutations::RemoveQuantTableMutation { id: table.id })],
         }
     }

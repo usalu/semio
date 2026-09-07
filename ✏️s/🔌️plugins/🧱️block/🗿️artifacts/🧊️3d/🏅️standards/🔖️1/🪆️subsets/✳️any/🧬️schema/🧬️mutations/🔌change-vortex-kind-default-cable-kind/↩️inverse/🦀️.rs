@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ChangeVortexKindDefaultCableKind`.
 
-use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexKind};
+use crate::artifacts::block3d::Block3dSnapshot;
 use crate::artifacts::block3d::mutations::Block3dMutation;
 
 //#region 🔖️Inverse

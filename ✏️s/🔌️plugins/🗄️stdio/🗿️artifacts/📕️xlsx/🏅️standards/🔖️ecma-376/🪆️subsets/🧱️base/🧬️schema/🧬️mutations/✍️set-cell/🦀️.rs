@@ -17,7 +17,7 @@ pub struct SetCell {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for SetCell {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "cell", kind: "set-cell", record: "SetCell" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxMutation as protocol::Mutation<XlsxSnapshot>>::Diff> {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxMutation as Mutation<XlsxSnapshot>>::Diff> {
         agg_diff(&XlsxMutation::SetCell(self.clone()), base)
     }
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxMutation> {

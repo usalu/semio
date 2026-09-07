@@ -1,7 +1,7 @@
 //! 📥️ DIN 4108 play app — the inputs window: the raw compliance document, rendered as JSON.
 
 use crate::artifacts::din4108::Din4108Snapshot;
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_INPUTS: &str = "norm-din4108-inputs";

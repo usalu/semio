@@ -18,10 +18,10 @@ fn contributed_registry_replacement_preserves_readers_and_drains_old_versions() 
     install_flow_extension_manifest(plugin, &replacement.to_string()).unwrap();
     assert_eq!(reader.schema("owned").unwrap().name, "Owned");
     assert_eq!(flow_extension_registry().schema("owned").unwrap().name, "New Schema");
-    let catalogue: serde_json::Value = serde_json::from_str(&crate::catalogue::flow_neuron_kind_infos_json()).unwrap();
+    let catalogue: serde_json::Value = serde_json::from_str(&flow_neuron_kind_infos_json()).unwrap();
     assert!(catalogue.as_array().unwrap().iter().any(|item| item["id"] == "owned.echo"));
     assert!(!flow_catalogue_sections().is_empty());
-    assert!(!crate::catalogue::flow_operator_catalogue_records().is_empty());
+    assert!(!flow_operator_catalogue_records().is_empty());
     assert_eq!(retire_flow_extension_registries_step(0, 64).unwrap(), neural::ValueRetirementStep::Blocked);
     for _ in 0..1000 {
         if retire_flow_extension_registries_step(1, 64).unwrap() == neural::ValueRetirementStep::Blocked { break; }

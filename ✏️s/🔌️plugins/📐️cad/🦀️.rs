@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin,
 /// 🗃️ Closed runtime app fleet for the CAD editor and viewer.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum CadApps: PluginApp {
-        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::cad::CadPlayApp>>),
-        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::cad::CadViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::cad::CadPlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::cad::CadViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -22,12 +22,12 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `Isolated` (no publisher trust assumed beyond the sandbox default — nothing in this crate's own
 /// effects, all UI-chrome/RPC `Effect` variants with no documented `CapabilityId`, justifies
 /// otherwise), and it asks the broker for document write access to persist edits.
-pub fn plugin() -> Result<Plugin<CadApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<CadApps>, PluginAssemblyError> {
     Plugin::<CadApps>::builder("cad")
         .label("CAD")
         .version("0.1.0")
         .package_id("semio:cad")
-        .artifact(crate::artifacts::cad::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::cad::declaration().map_err(PluginAssemblyError::definition)?)
         .host_media_handler(HostMediaHandlerDeclaration::mesh_import("s.cad.host-media.mesh-import", crate::artifacts::cad::artifact_kind(), crate::artifacts::cad::CAD_DOCUMENT_SCHEMA, crate::artifacts::cad::io::cad_document_from_mesh)?)
         .editor::<crate::editor::cad::CadPlayApp>(crate::editor::cad::create_cad_app())
         .editor_mutation_roster::<crate::editor::cad::CadPlayApp>()

@@ -2,8 +2,8 @@
 
 use crate::artifacts::equation::dsl::EquationGraphDsl;
 use crate::artifacts::equation::op::EquationMutation;
-use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::replace_graph::mutation::ReplaceGraph;
-use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::replace_points::mutation::ReplacePoints;
+use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
+use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::replace_points::ReplacePoints;
 use crate::artifacts::equation::{EquationGeometry, EquationSnapshot};
 use crate::editor::equation::config::{EquationConfig, EquationConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

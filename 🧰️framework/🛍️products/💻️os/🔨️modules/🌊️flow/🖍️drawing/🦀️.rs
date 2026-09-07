@@ -899,7 +899,7 @@ impl From<serde_json::Error> for DrawingKernelError {
 }
 
 /// 🌉️ Single-key `{"error": message}` JSON wrapper, shared by every drawing-bridge JSON export.
-fn json_error(message: impl std::fmt::Display) -> String {
+fn json_error(message: impl fmt::Display) -> String {
     crate::os_pack::json::to_string(&crate::os_pack::json::object([("error".to_string(), crate::os_pack::json::Value::String(message.to_string()))]))
 }
 

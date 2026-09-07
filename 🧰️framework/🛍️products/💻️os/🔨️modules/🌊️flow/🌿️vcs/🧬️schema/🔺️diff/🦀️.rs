@@ -1,5 +1,5 @@
 //! 🧵️ Ordered Flow structural changes corresponding to the adjacent JSON schema.
-use super::{apply_flow_collection_delta, FlowCollectionDelta, FlowFixture, FlowLayoutEntry, MutationApplyResult, MutationDiff, SynapseSpec, Widget};
+use super::{FlowCollectionDelta, FlowFixture, FlowLayoutEntry, MutationApplyResult, MutationDiff, SynapseSpec, Widget};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};

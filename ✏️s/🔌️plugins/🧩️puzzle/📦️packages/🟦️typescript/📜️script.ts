@@ -73,6 +73,14 @@ function fixtureOracle(fixture: PublicationFixture): boolean {
   });
 }
 
+/** @emoji 🧩️ Whether `production` implements `traitName` for `typeName`, regardless of how the trait
+ * path happens to be spelled. Repo-wide import-normalisation sweeps rewrite `semio_framework::Foo`
+ * to a bare `Foo` (and back) as a formatting concern; asserting one exact spelling makes this oracle
+ * fail on import style rather than on real publication-authority divergence. */
+function implementsFor(production: string, traitName: string, typeName: string): boolean {
+  return new RegExp(`impl (?:[A-Za-z_][A-Za-z0-9_]*::)*${traitName} for ${typeName}\\b`).test(production);
+}
+
 function ownerOracle(owner: PublicationOwner, source: string): boolean {
   const production = source.split("//#region 🧪️Testkit")[0]!;
   const pairs = manifestPairs(production);
@@ -84,15 +92,15 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
   if (!appRoutes.every((route) => pairs.get(route) === expectedPairs.get(route))) return false;
   if (!exactArray(retainedIds(production, owner.owner), migrated)) return false;
   const factory = `${owner.owner.slice(0, 8)}RetainedCommandJobFactory`;
-  const factoryBlock = production.split(`impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ${factory}`)[1]?.split("//#endregion 🧵️RetainedCommands")[0] ?? "";
+  const factoryBlock = production.split(new RegExp(`impl (?:[A-Za-z_][A-Za-z0-9_]*::)*ArtifactOwnedToolJobFactory for ${factory}\\b`))[1]?.split("//#endregion 🧵️RetainedCommands")[0] ?? "";
   const contracts = publicationContracts(factoryBlock);
   const proofBlock = production.split("semio_framework_plugin::bounded_first_step_tool_proofs!")[1]?.split("fn register_tool_job_factories")[0] ?? "";
   const proofIds = quotedValues(proofBlock.match(/tools:\s*\[([^\]]*)\]/)?.[1] ?? "");
-  const exactFactory = production.includes(`impl semio_framework::ToolJobFactory for ${factory}`)
-    && production.includes(`impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ${factory}`)
+  const exactFactory = implementsFor(production, "ToolJobFactory", factory)
+    && implementsFor(production, "ArtifactOwnedToolJobFactory", factory)
     && proofBlock.includes(`factory: "${factory}"`)
     && proofBlock.includes(`factory_type: ${factory}`)
-    && production.includes(`type Owner = semio_framework_plugin::EditorApp<${owner.owner}>;`)
+    && new RegExp(`type Owner = (?:[A-Za-z_][A-Za-z0-9_]*::)*EditorApp<${owner.owner}>;`).test(production)
     && production.includes(owner.owner === "Puzzle5dPlayApp"
       ? `registry.register(${factory}::new(&controller_id))`
       : `registry.register(${factory}::new(&controller))`)

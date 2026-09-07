@@ -21,7 +21,7 @@ pub struct SetStreamMeta {
 impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for SetStreamMeta {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "stream-meta", kind: "set-stream-meta", record: "SetStreamMeta" };
 
-    fn diff(&self, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<<SemioVideoMutation as protocol::Mutation<SemioVideoSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<<SemioVideoMutation as Mutation<SemioVideoSnapshot>>::Diff> {
         agg_diff(&SemioVideoMutation::SetStreamMeta(self.clone()), base)
     }
     fn inverse(&self, base: &SemioVideoSnapshot) -> Vec<SemioVideoMutation> {

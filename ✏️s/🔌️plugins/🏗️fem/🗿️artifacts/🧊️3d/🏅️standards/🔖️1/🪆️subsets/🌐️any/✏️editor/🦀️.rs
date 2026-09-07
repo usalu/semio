@@ -202,7 +202,7 @@ impl Fem3dRetainedCommandJobFactory {
     }
 }
 
-impl semio_framework::ToolJobFactory for Fem3dRetainedCommandJobFactory {
+impl ToolJobFactory for Fem3dRetainedCommandJobFactory {
     type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<Fem3dPlayApp>>;
     type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Fem3dPlayApp>>;
 
@@ -243,8 +243,8 @@ impl semio_framework::ToolJobFactory for Fem3dRetainedCommandJobFactory {
     }
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Fem3dRetainedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<Fem3dPlayApp>;
+impl ArtifactOwnedToolJobFactory for Fem3dRetainedCommandJobFactory {
+    type Owner = EditorApp<Fem3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = FEM3D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem3d::FEM_3D_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = FEM3D_RETAINED_PUBLICATION_CONTRACTS;
@@ -400,7 +400,7 @@ struct Fem3dConfigPreparation {
 }
 
 fn fem3d_config_retained_bytes(config: &Fem3dConfig) -> usize {
-    config.result_source_id.as_ref().map_or(0, String::len).saturating_add(config.result_mode.len()).saturating_add(config.camera.json.len()).saturating_add(std::mem::size_of::<u32>())
+    config.result_source_id.as_ref().map_or(0, String::len).saturating_add(config.result_mode.len()).saturating_add(config.camera.json.len()).saturating_add(size_of::<u32>())
 }
 
 fn fem3d_config_edit(forward: Fem3dConfigMutation, inverse: Fem3dConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Fem3dConfigMutation> {
@@ -883,7 +883,7 @@ impl ArtifactEditor for Fem3dPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Fem3dPlayApp>,
+        owner: EditorApp<Fem3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
         controller: "s.fem.fem3d@1/*#editor",
         document_schema: "fem.3d",
@@ -1052,7 +1052,7 @@ impl ArtifactEditor for Fem3dPlayApp {
                 let material_id = doc.snapshot.materials.first().map(|material| material.id.clone()).unwrap_or_else(|| "unassigned".into());
                 let id = crate::app_surface::next_id(doc.snapshot.solids.iter().map(|s| s.id.clone()), "sol");
                 let solid = crate::artifacts::fem3d::FemSolid { id, name: "Imported Geometry".into(), outline, holes, base_z, height, layers, mesh_size: 0.5, material_id };
-                Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::mutation::CreateSolid { solid })]))
+                Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::CreateSolid { solid })]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -1413,14 +1413,14 @@ mod tests {
         let boot = crate::artifacts::fem3d::dsl::fem3d_boot_snapshot();
         let factory = Fem3dArtifactPreparationFactory;
         for solid in &boot.solids {
-            let mutation = Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::mutation::CreateSolid { solid: solid.clone() });
+            let mutation = Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::CreateSolid { solid: solid.clone() });
             assert!(factory.preflight(&mutation, None, store::HistoryLane::Document).is_ok(), "solid {} exceeds the artifact one-item envelope", solid.id);
         }
         for node in &boot.nodes {
-            let mutation = Fem3dMutation::CreateNode(crate::artifacts::fem3d::mutations::create_node::mutation::CreateNode { node: node.clone() });
+            let mutation = Fem3dMutation::CreateNode(crate::artifacts::fem3d::mutations::create_node::CreateNode { node: node.clone() });
             assert!(factory.preflight(&mutation, None, store::HistoryLane::Document).is_ok(), "node {} exceeds the artifact one-item envelope", node.id);
         }
-        assert!(factory.preflight(&Fem3dMutation::CreateNode(crate::artifacts::fem3d::mutations::create_node::mutation::CreateNode { node: crate::artifacts::fem3d::FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 } }), None, store::HistoryLane::Interaction).is_err());
+        assert!(factory.preflight(&Fem3dMutation::CreateNode(crate::artifacts::fem3d::mutations::create_node::CreateNode { node: crate::artifacts::fem3d::FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 } }), None, store::HistoryLane::Interaction).is_err());
     }
 
     /// 🚀️ LAW: the editor boots with real geometry, so the `World3d` Model window has something to mesh
@@ -1646,7 +1646,7 @@ mod tests {
         let emit = Fem3dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
         assert_eq!(emit.artifact_mutations.len(), 1);
         match &emit.artifact_mutations[0] {
-            Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::mutation::CreateSolid { solid }) => {
+            Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::CreateSolid { solid }) => {
                 assert_eq!(solid.outline, vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]);
                 assert_eq!(solid.base_z, 0.5);
                 assert_eq!(solid.height, 3.0);

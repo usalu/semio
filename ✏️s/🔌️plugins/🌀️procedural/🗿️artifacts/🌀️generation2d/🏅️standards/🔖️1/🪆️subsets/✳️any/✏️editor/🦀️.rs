@@ -36,7 +36,7 @@ use store::EngineHandles;
 pub const GENERATION2D_PLAY_APP_ID: &str = "procedural2d-play";
 
 fn categorized_action(id: &str, label: LocalizedLabel, kind: ActionKind, category: &str) -> ActionDefinition {
-    semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog(id, label, kind).with_category(category))
+    ActionDefinition::bounded_catalog(id, label, kind).with_category(category)
 }
 
 //#endregion 🔖️Constants
@@ -189,7 +189,7 @@ impl semio_framework::ToolJobFactory for Generation2dBoundedCommandJobFactory {
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation2dBoundedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<Generation2dPlayApp>;
+    type Owner = EditorApp<Generation2dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = GENERATION2D_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
@@ -403,20 +403,20 @@ impl ArtifactEditor for Generation2dPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Generation2dPlayApp>,
+        owner: EditorApp<Generation2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.procedural.generation2d@1/*#editor",
         document_schema: "generation.2d",
         factory: "Generation2dBoundedCommandJobFactory",
         factory_type: Generation2dBoundedCommandJobFactory,
         tools: {
-            "nodeGraphViewport" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setShowMode" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "generate" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "canvasPointerDown" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "canvasPointerMove" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "canvasPointerUp" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "canvasWheel" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "nodeGraphViewport" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setShowMode" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "generate" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "canvasPointerDown" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "canvasPointerMove" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "canvasPointerUp" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "canvasWheel" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
         }
     }
 
@@ -627,21 +627,21 @@ impl ArtifactEditor for Generation2dPlayApp {
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        semio_framework::io::resolve_ready(async {
+        {
             let config = cfg.snapshot;
             let labels = semio_framework_plugin::resolve_labels_for_locale::<Generation2dLabels>(&config.locale);
             let is_de = config.locale.starts_with("de");
             let selected: Vec<String> = Vec::new();
-            let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]).await;
-            let mut menu = Menu::of(registry).await.action("addWidget").await.action("reorganize").await.action("generate").await;
-            menu = menu.group("mode", |m| async { m.action("setShowMode").await }).await;
-            menu = menu.group("create", |m| async { m.action("addGeneration").await }).await;
-            menu = menu.group("methods", |m| async { m.action("selectGeneration").await }).await;
-            if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit).await {
-                menu = menu.item(spec).await;
+            let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
+            let mut menu = Menu::of(registry).action("addWidget").action("reorganize").action("generate");
+            menu = menu.group("mode", |m| { m.action("setShowMode") });
+            menu = menu.group("create", |m| { m.action("addGeneration") });
+            menu = menu.group("methods", |m| { m.action("selectGeneration") });
+            if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+                menu = menu.item(spec);
             }
-            menu.build().await
-        })
+            menu.build()
+        }
     }
 
     /// 🎞️ Declares `export_media`'s default document schema — pack-encodes `doc.snapshot`, wrapped

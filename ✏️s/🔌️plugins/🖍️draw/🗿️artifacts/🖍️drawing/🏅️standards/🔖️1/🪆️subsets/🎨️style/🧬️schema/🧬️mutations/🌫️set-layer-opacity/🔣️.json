@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity",
+  "semanticKind": "set-layer-opacity",
+  "displayName": "Set Layer Opacity",
+  "emoji": "🌫️",
+  "aggregateVariant": "SetLayerOpacity",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "set-layer-opacity",
+  "binaryTag": 2,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "error",
+    "warning",
+    "fatal",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

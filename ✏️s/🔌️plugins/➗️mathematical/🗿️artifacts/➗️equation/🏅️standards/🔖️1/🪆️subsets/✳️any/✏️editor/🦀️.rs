@@ -26,14 +26,13 @@ use crate::editor::equation::commands::{node_graph_edit, node_graph_viewport, se
 use crate::editor::equation::config::{EquationConfig, EquationConfigMutation};
 use crate::editor::equation::modes::edit;
 use crate::editor::equation::modes::edit::windows::{geometry as geometry_window, graph as graph_window};
-use crate::editor::equation::presence::{EquationPresence, EquationPresenceMutation};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::{
-    ui_text, ActionArgDef, ActionArgOption, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media,
-    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence,
+    ActionArgDef, ActionArgOption, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media,
+    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation,
 };
 use pack::json::{self, Value};
 use std::collections::BTreeSet;
@@ -73,36 +72,7 @@ pub fn equation_io() -> semio_framework_plugin::AppIo {
 }
 //#endregion 🔖️Io
 
-//#region 🔖️Scene
-/// 🖼️ An empty `UiComponentSceneNode` shell for a body key, ready for its `node_graph`/`canvas_2d` field
-/// to be filled in — shared by both `🎭️modes/✏️edit/🪟️windows/*` renderers.
-pub fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiComponentSceneNode {
-    UiComponentSceneNode {
-        surface_id: surface_id.into(),
-        controller_id: MATH_APP_ID.into(),
-        component_kind,
-        pane_id: None,
-        binding_id: None,
-        presence: UiPresence::default(),
-        canvas_2d: None,
-        world_3d: None,
-        node_graph: None,
-        text_editor: None,
-        table: None,
-        paint_2d: None,
-        virtual_file_system: None,
-        tiled_map: None,
-        board2d: None,
-        icon_render: None,
-        ink_canvas: None,
-        graph_timeline: None,
-        block_list: None,
-        diff_view: None,
-        event_feed: None,
-        menu: None,
-    }
-}
-//#endregion 🔖️Scene
+
 
 //#region 🔖️GraphAlgorithms
 /// 🕸️ Runs the selected algorithm over the current graph and returns a per-node label suffix overlay.
@@ -289,7 +259,7 @@ fn equation_edit_preflight(payload: &node_graph_edit::NodeGraphEdit) -> Option<u
     if payload.operations_json.len() > EQUATION_MAX_EDIT_JSON_BYTES {
         return None;
     }
-    let values = json::parse(&payload.operations_json).ok().and_then(|value| value.as_array().map(<[Value]>::to_vec))?;
+    let values = json::parse(&payload.operations_json).ok().and_then(|value| value.as_array().map(|values| values.to_vec()))?;
     if values.len() > EQUATION_MAX_EDIT_OPERATIONS {
         return None;
     }
@@ -392,10 +362,10 @@ impl EquationEditOperation {
 
     fn retained_bytes(&self) -> usize {
         match self {
-            Self::AddNode { .. } | Self::Ignore => std::mem::size_of::<Self>(),
-            Self::Move { node_id, .. } => std::mem::size_of::<Self>() + node_id.capacity(),
-            Self::Connect { source, target } => std::mem::size_of::<Self>() + source.capacity() + target.capacity(),
-            Self::DeleteSelection { ids } => std::mem::size_of::<Self>() + ids.capacity() * std::mem::size_of::<String>() + ids.iter().map(|id| id.capacity()).sum::<usize>(),
+            Self::AddNode { .. } | Self::Ignore => size_of::<Self>(),
+            Self::Move { node_id, .. } => size_of::<Self>() + node_id.capacity(),
+            Self::Connect { source, target } => size_of::<Self>() + source.capacity() + target.capacity(),
+            Self::DeleteSelection { ids } => size_of::<Self>() + ids.capacity() * size_of::<String>() + ids.iter().map(|id| id.capacity()).sum::<usize>(),
         }
     }
 }
@@ -548,8 +518,8 @@ impl EquationRetainedCommandWork {
     }
 
     fn finish(&mut self, command: &EquationCommand) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
-        use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::replace_graph::mutation::ReplaceGraph;
-        use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::replace_points::mutation::ReplacePoints;
+        use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
+        use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::replace_points::ReplacePoints;
         Ok(match command {
             EquationCommand::SetAlgorithm(_) => Emit::commit(vec![EquationMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("equation-command-graph-owner"))? })], "setAlgorithm"),
             EquationCommand::SetDirected(_) => Emit::mutations(vec![EquationMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("equation-command-graph-owner"))? })]),
@@ -566,8 +536,8 @@ impl EquationRetainedCommandWork {
                 }
                 Emit::mutations(mutations)
             }
-            EquationCommand::NodeGraphViewport(payload) => Emit::config(vec![EquationConfigMutation::SetCamera { camera: payload.camera.clone() }]),
-            EquationCommand::SetLocale(payload) => Emit::config(vec![EquationConfigMutation::SetLocale { value: payload.value.clone() }]),
+            EquationCommand::NodeGraphViewport(payload) => Emit::config(vec![EquationConfigMutation::SetCamera(crate::editor::equation::config::SetCamera { camera: payload.camera.clone() })]),
+            EquationCommand::SetLocale(payload) => Emit::config(vec![EquationConfigMutation::SetLocale(crate::editor::equation::config::SetLocale { value: payload.value.clone() })]),
         })
     }
 
@@ -575,7 +545,7 @@ impl EquationRetainedCommandWork {
         if !values.is_empty() {
             return None;
         }
-        let bytes = values.capacity().saturating_mul(std::mem::size_of::<T>());
+        let bytes = values.capacity().saturating_mul(size_of::<T>());
         if bytes == 0 {
             return None;
         }
@@ -715,7 +685,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
             }
             EquationWorkPhase::JsonDecode => {
                 let EquationCommand::NodeGraphEdit(payload) = command else { return Err(Fault::from("equation-command-json-decode")) };
-                let values = json::parse(&payload.operations_json).ok().and_then(|value| value.as_array().map(<[Value]>::to_vec)).unwrap_or_default();
+                let values = json::parse(&payload.operations_json).ok().and_then(|value| value.as_array().map(|values| values.to_vec())).unwrap_or_default();
                 if values.len() > EQUATION_MAX_EDIT_OPERATIONS {
                     return Err(Fault::from("equation-command-operation-capacity"));
                 }
@@ -900,7 +870,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
             return step;
         }
         if let Some(id) = self.delete_ids.first() {
-            let bytes = std::mem::size_of::<String>() + id.capacity();
+            let bytes = size_of::<String>() + id.capacity();
             if maximum_items == 0 || maximum_bytes < bytes {
                 return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
@@ -908,7 +878,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
             return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
         }
         if let Some(node) = self.rewrite_nodes.last() {
-            let bytes = std::mem::size_of_val(node) + node.id.capacity() + node.label.capacity();
+            let bytes = size_of_val(node) + node.id.capacity() + node.label.capacity();
             if maximum_items == 0 || maximum_bytes < bytes {
                 return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
@@ -919,7 +889,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
             return step;
         }
         if let Some(edge) = self.rewrite_edges.last() {
-            let bytes = std::mem::size_of_val(edge) + edge.id.capacity() + edge.source.capacity() + edge.target.capacity();
+            let bytes = size_of_val(edge) + edge.id.capacity() + edge.source.capacity() + edge.target.capacity();
             if maximum_items == 0 || maximum_bytes < bytes {
                 return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
@@ -930,7 +900,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
             return step;
         }
         if let Some(point) = self.points.last() {
-            let bytes = std::mem::size_of_val(point);
+            let bytes = size_of_val(point);
             if maximum_items == 0 || maximum_bytes < bytes {
                 return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
@@ -942,7 +912,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
         }
         if let Some(graph) = self.graph.as_mut() {
             if let Some(edge) = graph.edges.last() {
-                let bytes = std::mem::size_of_val(edge) + edge.id.capacity() + edge.source.capacity() + edge.target.capacity();
+                let bytes = size_of_val(edge) + edge.id.capacity() + edge.source.capacity() + edge.target.capacity();
                 if maximum_items == 0 || maximum_bytes < bytes {
                     return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
                 }
@@ -953,7 +923,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
                 return step;
             }
             if let Some(node) = graph.nodes.last() {
-                let bytes = std::mem::size_of_val(node) + node.id.capacity() + node.label.capacity();
+                let bytes = size_of_val(node) + node.id.capacity() + node.label.capacity();
                 if maximum_items == 0 || maximum_bytes < bytes {
                     return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
                 }
@@ -963,7 +933,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
             if let Some(step) = Self::close_vec_capacity(&mut graph.nodes, maximum_items, maximum_bytes) {
                 return step;
             }
-            let bytes = std::mem::size_of::<EquationGraph>() + graph.algorithm.capacity() + graph.algorithm_seed.as_ref().map_or(0, String::capacity);
+            let bytes = size_of::<EquationGraph>() + graph.algorithm.capacity() + graph.algorithm_seed.as_ref().map_or(0, String::capacity);
             if maximum_items == 0 || maximum_bytes < bytes {
                 return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
@@ -1039,8 +1009,8 @@ impl semio_framework::ToolJobFactory for EquationCommandJobFactory {
     }
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for EquationCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<EquationPlayApp>;
+impl ArtifactOwnedToolJobFactory for EquationCommandJobFactory {
+    type Owner = EditorApp<EquationPlayApp>;
     const TOOL_IDS: &'static [&'static str] = EQUATION_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = EQUATION_PUBLICATION_CONTRACTS;
@@ -1202,8 +1172,8 @@ impl ArtifactEditor for EquationPlayApp {
     type ConfigMutation = EquationConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = EquationPresence;
-    type PresenceMutation = EquationPresenceMutation;
+    type Presence = semio_framework_plugin::NoPresence;
+    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
@@ -1221,20 +1191,20 @@ impl ArtifactEditor for EquationPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<EquationPlayApp>,
+        owner: EditorApp<EquationPlayApp>,
         owner_file: "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.mathematical.equation@1/*#editor",
         document_schema: "semio.equation/v1",
         factory: "EquationCommandJobFactory",
         factory_type: EquationCommandJobFactory,
         tools: {
-            "setDocument" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
-            "setAlgorithm" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
-            "setDirected" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
-            "nodeGraphEdit" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
-            "nodeGraphViewport" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
-            "setPoints" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
-            "setLocale" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1)
+            "setDocument" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
+            "setAlgorithm" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
+            "setDirected" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
+            "nodeGraphEdit" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
+            "nodeGraphViewport" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
+            "setPoints" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
+            "setLocale" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1)
         }
     }
 
@@ -1329,12 +1299,13 @@ impl ArtifactEditor for EquationPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, EquationSnapshot>, cfg: &ConfigView<'_, EquationConfig>) -> UiNode {
-        match body_key {
+    fn render(body_key: &str, doc: &ArtifactView<'_, EquationSnapshot>, cfg: &ConfigView<'_, EquationConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let node = match body_key {
             MATH_PLAY_BODY_GRAPH => graph_window::render(&crate::artifacts::equation::equation_graph(doc.snapshot), &cfg.snapshot.camera),
             MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&crate::artifacts::equation::equation_geometry(doc.snapshot)),
-            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        }?;
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 }
 //#endregion 🔖️EquationPlayApp

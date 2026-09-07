@@ -26,7 +26,7 @@
 use crate::catalog::{CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::tool_from_capability;
-use crate::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry, Resource, ResourceContent, Tool};
+use crate::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry, Resource, ResourceContent};
 use crate::policy::{AgentPrincipal, PolicyEngine};
 use crate::workspace::remote::percent_encode;
 use crate::workspace::{HeadlessWorkspace, PROBE_SCHEMA};

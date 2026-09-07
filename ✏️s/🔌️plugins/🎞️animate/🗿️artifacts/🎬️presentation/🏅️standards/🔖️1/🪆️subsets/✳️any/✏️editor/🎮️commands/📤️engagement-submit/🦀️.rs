@@ -2,8 +2,8 @@
 
 #![allow(clippy::result_large_err)]
 
-use crate::artifacts::presentation::mutations::create_tile::mutation::CreateTile;
-use crate::artifacts::presentation::mutations::replace_tiles::mutation::ReplaceTiles;
+use crate::artifacts::presentation::mutations::create_tile::CreateTile;
+use crate::artifacts::presentation::mutations::replace_tiles::ReplaceTiles;
 use crate::artifacts::presentation::op::PresentationMutation;
 use crate::artifacts::presentation::schema::{parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::artifacts::presentation::{FigureTileDraft, FigureTileFrame, PresentationSnapshot};

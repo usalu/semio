@@ -1,7 +1,7 @@
 //! ❌ Block3d mutation — `DeleteVortexKind`: a vortex-kind catalog row.
 
 use crate::artifacts::block3d::Block3dSnapshot;
-use crate::artifacts::block3d::diff::{Block3dDiff, Block3dVortexKindsDelta};
+use crate::artifacts::block3d::diff::Block3dDiff;
 use crate::artifacts::block3d::mutations::Block3dMutation;
 
 //#region 🔖️Mutation

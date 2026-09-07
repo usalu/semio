@@ -14,7 +14,7 @@ pub struct SetPhotometricInterpretation {
 impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetPhotometricInterpretation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "photometric-interpretation", kind: "set-photometric-interpretation", record: "SetPhotometricInterpretation" };
 
-    fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffBaselineMutation as protocol::Mutation<TiffSnapshot>>::Diff> {
+    fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffBaselineMutation as Mutation<TiffSnapshot>>::Diff> {
         agg_diff(&TiffBaselineMutation::SetPhotometricInterpretation(self.clone()), base)
     }
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {

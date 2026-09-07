@@ -55,7 +55,7 @@ pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribut
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn bundle() -> semio_framework_plugin::ExtensionBundle {
+fn bundle() -> semio_framework_plugin::ExtensionBundle {
     let topic_contribution = imperative_module_topic_contribution();
     semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Control", MODULE_VERSION)
         .extends("imperative")

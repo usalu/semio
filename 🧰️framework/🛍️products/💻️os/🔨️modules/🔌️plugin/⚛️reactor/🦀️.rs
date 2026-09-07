@@ -32,7 +32,7 @@ pub mod requests;
 // 🧬️ Only `wit_bridge` below (component-guest/-extension-guest wasm32-wasip2) consumes these —
 // a plain native build never reaches the WIT-boundary translation code, so unlike `RefCell` these
 // two must be gated identically to `wit_bridge` itself or they warn as unused on native.
-use semio_framework::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleReceipt, ActorInstanceLifetime, ActorUiPatchReceipt, Effect, Event, MessageEndpoint, RequestOutcome, TurnStatus, UiPatch, UiPatchOp};
+use semio_framework::kernel::{ActorInstanceLifecycleReceipt, ActorUiPatchReceipt, Effect, Event, MessageEndpoint, TurnStatus, UiPatch};
 // 🧬️ Same gating rationale as the `kernel` import above: only the WIT-boundary code below names the
 // semantic-UI contract types (`UiIntent`, `UiRevision`, `Activity`), so an ungated alias warns as
 // unused on native. ALSO enabled under `cfg(test)` (M2, ticket 26/08/17 `design-unified.md`): the
@@ -50,21 +50,24 @@ use semio_framework_ui_contract as ui_contract;
 /// `patches::PatchTracker` (an equally wit_bridge-only consumer) is reached through the ungated
 /// `pub mod patches;` at this file's top.
 use semio_framework_ui_runtime::PresenceHub;
-use semio_framework_ui_runtime::{DEFAULT_REVISION_TOLERANCE, SurfaceReconcilePublishedPatch, SurfaceReconcileReadyPatch, is_stale_intent};
+use semio_framework_ui_runtime::{DEFAULT_REVISION_TOLERANCE, is_stale_intent};
+#[cfg(test)]
+use semio_framework_ui_runtime::SurfaceReconcileReadyPatch;
+#[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
+use semio_framework::kernel::{RequestOutcome, UiPatchOp};
 use std::cell::{Cell, RefCell};
 // 🧵️ Turn-local command/intent grouping and the pre-admitted task-resume ring use these
 // collections; all identity and close authority is held by fixed direct registries below.
-use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 
 const RECONCILE_STEP_OPPORTUNITY_LIMIT: u64 = 1_024;
 
 //#region 📬️ShellFaultFrame
-fn shell_fault_effect(instance: u32, fault: &semio_framework::Fault) -> semio_framework::kernel::Effect {
+fn shell_fault_effect(instance: u32, fault: &semio_framework::Fault) -> Effect {
     let fault = store::pack_rt::encode_wire_value(&dsl::to_dsl_value(fault).expect("shell diagnostic must serialize"));
     let frame = protocol::AppFrame::Error { in_reply_to: None, fault, report: Vec::new() };
-    semio_framework::kernel::Effect::SendMessage {
-        target: semio_framework::kernel::MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
+    Effect::SendMessage {
+        target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
         payload: semio_framework::io::resolve_ready(protocol::encode_app_frame(&frame)),
     }
 }
@@ -152,8 +155,11 @@ struct TaskRecord {
 
 const REACTOR_TASK_SLOTS: usize = 1_024;
 const REACTOR_FIXED_WORDS: usize = REACTOR_TASK_SLOTS / u64::BITS as usize;
+#[cfg(test)]
 const REACTOR_TASK_KEY_BYTES: usize = 256;
+#[cfg(test)]
 const REACTOR_TASK_LABEL_BYTES: usize = 256;
+#[cfg(test)]
 const REACTOR_TASK_RESTART_BYTES: usize = 64 * 1_024;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -710,6 +716,7 @@ impl Drop for FixedResumeQueue {
 /// `instance` — `QuotaSchema.outstanding_requests`, defaulting to 16 when the instance never
 /// declared one (or hasn't opened yet, which should not happen in practice: `spawn_task` is only
 /// ever reachable from `dispatch_emit`, itself only reachable after `Event::InstanceOpen`).
+#[cfg(test)]
 async fn instance_task_quota(instance: u32) -> u64 {
     INSTANCE_METADATA.with(|metadata| metadata.borrow().get(instance).and_then(|entry| entry.quota.outstanding_requests)).unwrap_or(16)
 }
@@ -1165,7 +1172,7 @@ mod wit_bridge {
         let kernel_budget = semio_framework::kernel::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
         let command_page = command_page.map(wit_command_page_to_kernel).transpose()?;
         let cold_pair_page = cold_pair_page.map(wit_cold_pair_page_to_kernel).transpose()?;
-        super::turn::poll_kernel_output(runtime, kernel_events, command_page, cold_pair_page, kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared).await
+        turn::poll_kernel_output(runtime, kernel_events, command_page, cold_pair_page, kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared).await
     }
 
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: decodes `instance-open-event.quotas` (a wire
@@ -1381,15 +1388,15 @@ mod wit_bridge {
         wit_lifetime::Lifetime { activation_generation: value.activation_generation, instance_id: value.instance_id, guest_lifetime: value.guest_lifetime }
     }
 
-    fn wit_patch_receipt_to_kernel(value: wit_lifetime::UiPatchReceipt) -> semio_framework::kernel::ActorUiPatchReceipt {
-        semio_framework::kernel::ActorUiPatchReceipt { lifetime: wit_lifetime_to_kernel(value.lifetime), patch_sequence: value.patch_sequence }
+    fn wit_patch_receipt_to_kernel(value: wit_lifetime::UiPatchReceipt) -> ActorUiPatchReceipt {
+        ActorUiPatchReceipt { lifetime: wit_lifetime_to_kernel(value.lifetime), patch_sequence: value.patch_sequence }
     }
 
-    fn kernel_patch_receipt_to_wit(value: semio_framework::kernel::ActorUiPatchReceipt) -> wit_lifetime::UiPatchReceipt {
+    fn kernel_patch_receipt_to_wit(value: ActorUiPatchReceipt) -> wit_lifetime::UiPatchReceipt {
         wit_lifetime::UiPatchReceipt { lifetime: kernel_lifetime_to_wit(value.lifetime), patch_sequence: value.patch_sequence }
     }
 
-    fn wit_lifecycle_receipt_to_kernel(value: wit_lifetime::Receipt) -> semio_framework::kernel::ActorInstanceLifecycleReceipt {
+    fn wit_lifecycle_receipt_to_kernel(value: wit_lifetime::Receipt) -> ActorInstanceLifecycleReceipt {
         use semio_framework::kernel::ActorInstanceLifecycleReceipt as R;
         match value {
             wit_lifetime::Receipt::Captured(value) => R::Captured { lifetime: wit_lifetime_to_kernel(value.lifetime), request_sequence: value.request_sequence },
@@ -1398,7 +1405,7 @@ mod wit_bridge {
         }
     }
 
-    fn kernel_lifecycle_receipt_to_wit(value: semio_framework::kernel::ActorInstanceLifecycleReceipt) -> wit_lifetime::Receipt {
+    fn kernel_lifecycle_receipt_to_wit(value: ActorInstanceLifecycleReceipt) -> wit_lifetime::Receipt {
         use semio_framework::kernel::ActorInstanceLifecycleReceipt as R;
         match value {
             R::Captured { lifetime, request_sequence } => wit_lifetime::Receipt::Captured(wit_lifetime::CapturedReceipt { lifetime: kernel_lifetime_to_wit(lifetime), request_sequence }),
@@ -1708,11 +1715,11 @@ pub(crate) mod test_support {
     use super::*;
 
     pub(crate) fn queue_external_patch(patch: UiPatch) {
-        super::pending::with_state(|pending| pending.borrow_mut().push_external(patch)).unwrap();
+        pending::with_state(|pending| pending.borrow_mut().push_external(patch)).unwrap();
     }
 
-    pub(crate) fn patch_receipt_is_issued(receipt: semio_framework::kernel::ActorUiPatchReceipt) -> bool {
-        super::pending::with_state(|pending| pending.borrow().receipt_is_issued(receipt))
+    pub(crate) fn patch_receipt_is_issued(receipt: ActorUiPatchReceipt) -> bool {
+        pending::with_state(|pending| pending.borrow().receipt_is_issued(receipt))
     }
 
     pub(crate) async fn poll_with_patch_output_fault<PA: crate::app::PluginApp>(
@@ -1720,9 +1727,9 @@ pub(crate) mod test_support {
         events: Vec<Event>,
         budget: semio_framework::kernel::Budget,
         late_clock: bool,
-    ) -> (Result<(), semio_framework::Fault>, Option<semio_framework::kernel::ActorUiPatchReceipt>) {
+    ) -> (Result<(), semio_framework::Fault>, Option<ActorUiPatchReceipt>) {
         let mut receipt = None;
-        let result = super::turn::poll_kernel_output(
+        let result = turn::poll_kernel_output(
             runtime,
             events,
             None,
@@ -1744,7 +1751,7 @@ pub(crate) mod test_support {
     }
 
     pub(crate) async fn poll_with_output_failure<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, events: Vec<Event>, budget: semio_framework::kernel::Budget) -> Result<(), semio_framework::Fault> {
-        super::turn::poll_kernel_output(runtime, events, None, None, budget, |_| Err(reactor_close_fault("injected output conversion failure")), |_, ()| ()).await
+        turn::poll_kernel_output(runtime, events, None, None, budget, |_| Err(reactor_close_fault("injected output conversion failure")), |_, ()| ()).await
     }
 
     /// ▶️ The exact `run_until_idle` call `poll` makes after routing events, exposed directly.
@@ -1816,7 +1823,7 @@ pub(crate) mod test_support {
     }
 
     /// 🩹️ Test-only completion driver over the same retained mounted authority.
-    pub(crate) async fn patches_diff(surface: &str, tree: semio_framework_ui_runtime::ComponentTree) -> Option<ui_contract::UiPatch> {
+    pub(crate) async fn patches_diff(surface: &str, tree: semio_framework_ui_runtime::ComponentTree) -> Option<UiPatch> {
         PATCHES.with(|patches| {
             if !patches.can_begin(surface) {
                 return None;
@@ -1830,7 +1837,7 @@ pub(crate) mod test_support {
                 if let Some(mut owner) = patches.take_ready_patch() {
                     let mut payload = ui_contract::UiPendingPatch::default();
                     let mut published = None;
-                    let bytes = owner.publish_into(&mut payload, &mut published, semio_framework_ui_runtime::SurfaceReconcileReadyPatch::required_publish_bytes()).expect("test-owned publication grant");
+                    let bytes = owner.publish_into(&mut payload, &mut published, SurfaceReconcileReadyPatch::required_publish_bytes()).expect("test-owned publication grant");
                     assert!(bytes > 0);
                     let patch = payload.source_mut().expect("test-owned writable payload").take();
                     while !owner.close_step_with_grant(1, 4096).expect("test ready close").complete {}

@@ -1,7 +1,7 @@
 //! 🚫 Block3d mutation — `RemoveRepresentationTag`: a member of a representation's `tags` set.
 
 use crate::artifacts::block3d::Block3dSnapshot;
-use crate::artifacts::block3d::diff::{Block3dDiff, Block3dRepresentationsDelta, Block3dRepresentationsPatch, Block3dRepresentationsPatchEntry};
+use crate::artifacts::block3d::diff::Block3dDiff;
 use crate::artifacts::block3d::mutations::Block3dMutation;
 
 //#region 🔖️Mutation

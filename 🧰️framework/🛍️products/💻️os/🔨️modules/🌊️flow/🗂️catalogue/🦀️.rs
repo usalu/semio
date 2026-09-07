@@ -163,7 +163,7 @@ pub(crate) fn titleize_module(module: &str) -> String {
 
 /// 📚️ Serializes module-grouped operator catalogue sections for host catalogue seeding.
 pub fn flow_operator_catalogue_json() -> String {
-    crate::os_pack::json::to_json_string(&crate::registry::flow_catalogue_sections())
+    crate::os_pack::json::to_json_string(&flow_catalogue_sections())
 }
 
 /// 🧠️ Serializes operator catalogue entries for neuron port layout seeding.

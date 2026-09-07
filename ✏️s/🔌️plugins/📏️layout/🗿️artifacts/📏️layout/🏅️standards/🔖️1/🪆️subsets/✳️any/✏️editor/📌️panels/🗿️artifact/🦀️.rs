@@ -193,7 +193,7 @@ pub fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &LayoutLabel
             "layout-document.document",
             Some(labels.document.into()),
             true,
-            crate::editor::layout::ui_node_list([layout_tree_item("layout-document.document.root", Label::data(doc.name.clone()), Some(LAYOUT_DOCUMENT_SCHEMA.into()), Some("file-text".into()), None)])?,
+            ui_node_list([layout_tree_item("layout-document.document.root", Label::data(doc.name.clone()), Some(LAYOUT_DOCUMENT_SCHEMA.into()), Some("file-text".into()), None)])?,
         )?
         .section("layout-document.spreads", Some(labels.spreads.into()), false, spread_items)?
         .section("layout-document.pages", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, page_items)?

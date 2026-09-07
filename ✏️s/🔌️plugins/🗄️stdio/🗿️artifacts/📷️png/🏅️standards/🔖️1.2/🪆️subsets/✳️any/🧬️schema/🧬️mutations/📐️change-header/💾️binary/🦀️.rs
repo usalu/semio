@@ -1,6 +1,5 @@
 //! 💾️ Direct change-header binary codec.
 use super::*;
-use crate::artifacts::png::schema::diff::{self, *};
 use crate::artifacts::png::schema::mutations::binary::Entry;
 pub const BINARY_TAG: u8 = 2;
 pub const CODEC: Entry = Entry { tag: BINARY_TAG, encode, decode };
@@ -24,8 +23,7 @@ fn op_pack_err(error: dsl::PackError) -> protocol::ProtocolError {
 }
 pub fn decode(bytes: &[u8]) -> Result<PngMutation, protocol::ProtocolError> {
     let mut r = dsl::ByteReader::new(bytes);
-    let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-    let result: Result<PngMutation, protocol::ProtocolError> = Ok(PngMutation::ChangeHeader(crate::artifacts::png::schema::mutations::ChangeHeaderMutation {
+    let result: Result<PngMutation, protocol::ProtocolError> = Ok(PngMutation::ChangeHeader(ChangeHeaderMutation {
         width: r.read_u32_le().map_err(op_pack_err)?,
         height: r.read_u32_le().map_err(op_pack_err)?,
         bit_depth: r.read_u8().map_err(op_pack_err)?,

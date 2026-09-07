@@ -8,6 +8,7 @@
 //! plus the locale the UI used to read off the deleted `ViewModel`.
 
 use crate::artifacts::equation::EquationCamera;
+#[cfg(test)]
 use protocol::Mutation;
 // 🌱️ Additive `ToValue`/`FromValue` — required by `Mutation<P>`/`MutationDiff<P>`'s trait bound
 // (`EquationConfigMutation` implements `Mutation<EquationConfig>` below); see
@@ -16,7 +17,9 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 
 //#region 🔖️Config
 #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslArtifact)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[dsl(id = "equation.config", layout = "lines")]
 pub struct EquationConfig {
     /// 🎥️ Node-graph viewport camera — session-only, never a document field. Was
@@ -80,109 +83,9 @@ impl Default for EquationConfig {
 store::impl_whole_record_config!(EquationConfig);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigMutations
-/// 🧮️ `EquationConfig`'s operation enum — one variant per settled interaction (mirrors the pre-migration
-/// `MathPlayRuntime` field writes); each variant's `backwards()` re-emits the SAME variant with the old
-/// field value read from `base` (no whole-config snapshot sentinel). `Mutation::Diff` is the WHOLE
-/// `EquationConfig` (not a granular patch type), `diff()` returns "the full config after this op", and
-/// `protocol::MutationDiff<EquationConfig>::apply` for `EquationConfig` itself (see `store::impl_whole_record_config!`)
-/// just returns that snapshot verbatim, ignoring `base`.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslOps)]
-pub enum EquationConfigMutation {
-    #[dsl(key = "camera")]
-    SetCamera {
-        #[dsl(block)]
-        camera: EquationCamera,
-    },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
-}
-
-//#region 🔖️OpCodec
-impl protocol::OpText for EquationConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for EquationConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
-    }
-}
-
-//#endregion 🔖️OpCodec
-
-impl Mutation<EquationConfig> for EquationConfigMutation {
-    type Diff = EquationConfig;
-
-    fn diff(&self, base: &EquationConfig) -> protocol::MutationOutcome<EquationConfig> {
-        let mut next = base.clone();
-        match self {
-            EquationConfigMutation::SetCamera { camera } => {
-                if &base.camera == camera {
-                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Camera is already at the requested position.");
-                }
-                next.camera = camera.clone();
-            }
-            EquationConfigMutation::SetLocale { value } => {
-                if &base.locale == value {
-                    return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Locale is already \"{}\".", value));
-                }
-                next.locale = value.clone();
-            }
-        }
-        protocol::MutationOutcome::new(next)
-    }
-
-    fn inverse(&self, base: &EquationConfig) -> Vec<Self> {
-        match self {
-            EquationConfigMutation::SetCamera { .. } => vec![EquationConfigMutation::SetCamera { camera: base.camera.clone() }],
-            EquationConfigMutation::SetLocale { .. } => vec![EquationConfigMutation::SetLocale { value: base.locale.clone() }],
-        }
-    }
-}
-//#endregion 🔖️ConfigMutations
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::{EquationConfigMutation, SetCamera, SetLocale};
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -207,7 +110,7 @@ mod tests {
     async fn config_operation_set_camera_diff_writes_the_targeted_field() {
         let base = EquationConfig::default();
         let camera = EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 };
-        let operation = EquationConfigMutation::SetCamera { camera: camera.clone() };
+        let operation = EquationConfigMutation::SetCamera(crate::editor::equation::config::SetCamera { camera: camera.clone() });
         assert_eq!(Mutation::diff(&operation, &base).diff().camera, camera);
     }
 
@@ -215,18 +118,43 @@ mod tests {
     async fn config_operation_set_camera_round_trips() {
         let base = EquationConfig::default();
         let camera = EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 };
-        let operation = EquationConfigMutation::SetCamera { camera: camera.clone() };
+        let operation = EquationConfigMutation::SetCamera(crate::editor::equation::config::SetCamera { camera: camera.clone() });
         let next = Mutation::diff(&operation, &base).diff().clone();
         assert_eq!(next.camera, camera);
         let backwards = Mutation::inverse(&operation, &base);
-        assert_eq!(backwards, vec![EquationConfigMutation::SetCamera { camera: base.camera.clone() }]);
+        assert_eq!(backwards, vec![EquationConfigMutation::SetCamera(crate::editor::equation::config::SetCamera { camera: base.camera.clone() })]);
         assert_eq!(Mutation::diff(&backwards[0], &next).diff().clone(), base);
         store::os_store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn config_operation_set_locale_round_trips() {
-        store::os_store::test_support::assert_op_line_round_trip(&EquationConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&EquationConfigMutation::SetLocale(crate::editor::equation::config::SetLocale { value: "de-DE".into() }));
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod mutation_vectors {
+    use super::*;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+
+    #[test]
+    fn language_neutral_mutations_match_json_oracle_and_restore_base() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutations.json")).unwrap();
+        for vector in vectors.as_array().unwrap() {
+            let base: EquationConfig = dsl::json::from_json_str(&vector["base"].to_string()).unwrap();
+            let mutation: EquationConfigMutation = dsl::json::from_json_str(&vector["mutation"].to_string()).unwrap();
+            let oracle: EquationConfigMutation = serde_json::from_value(vector["mutation"].clone()).unwrap();
+            assert_eq!(mutation, oracle);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());
+            let next = mutation.diff(&base).diff().apply(&base).unwrap();
+            assert_eq!(serde_json::to_value(&next).unwrap(), vector["after"]);
+            assert_eq!(EquationConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+            assert_eq!(EquationConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
+            let mut restored = next;
+            for inverse in mutation.inverse(&base) { restored = inverse.diff(&restored).diff().apply(&restored).unwrap(); }
+            assert_eq!(restored, base);
+        }
+    }
+}

@@ -66,6 +66,6 @@ fn retained_pending_patch_keeps_empty_backing_and_partial_owner_through_unwind()
     assert!(owner.terminal_is_empty());
     *owner.source_mut().unwrap() = Some(exact);
     assert_eq!(close(&mut owner, 64), 4);
-    eprintln!("[DEBUG] pending-whole-patch unwind-frontiers=6 empty-reserved-backing-retired=true exact-handoff=true owner-bytes={}", std::mem::size_of::<UiPendingPatch>());
+    eprintln!("[DEBUG] pending-whole-patch unwind-frontiers=6 empty-reserved-backing-retired=true exact-handoff=true owner-bytes={}", size_of::<UiPendingPatch>());
 }
 //#endregion 🧪️WholePatchRetirement

@@ -16,7 +16,7 @@ pub struct InsertChunk {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for InsertChunk {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "chunk", kind: "insert-chunk", record: "InsertChunk" };
 
-    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as protocol::Mutation<AviSnapshot>>::Diff> {
+    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
         agg_diff(&AviMutation::InsertChunk(self.clone()), base)
     }
     fn inverse(&self, base: &AviSnapshot) -> Vec<AviMutation> {

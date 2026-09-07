@@ -1051,7 +1051,7 @@ fn queue_trace_pointer(payload: &CanvasPointerDown, job: &TracePointerJob) -> Op
         checkpoint_pending_work: Some(job.work.len() as u64),
         ..payload.clone()
     };
-    let args = Some(dsl::ToValue::to_value(&continuation));
+    let args = Some(ToValue::to_value(&continuation));
     Some(Effect::DispatchAction { req: RequestId(NEXT_TRACE_POINTER_REQUEST.fetch_add(1, Ordering::Relaxed)), action: "canvasPointerDown".into(), args, delay_ms: 0 })
 }
 

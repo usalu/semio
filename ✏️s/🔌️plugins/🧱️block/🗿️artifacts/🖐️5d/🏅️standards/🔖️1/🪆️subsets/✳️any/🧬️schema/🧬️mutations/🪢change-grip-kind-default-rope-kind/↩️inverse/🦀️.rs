@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ChangeGripKindDefaultRopeKind`.
 
-use crate::artifacts::block5d::{Block5dGripKind, Block5dSnapshot};
+use crate::artifacts::block5d::Block5dSnapshot;
 use crate::artifacts::block5d::mutations::Block5dMutation;
 
 //#region 🔖️Inverse

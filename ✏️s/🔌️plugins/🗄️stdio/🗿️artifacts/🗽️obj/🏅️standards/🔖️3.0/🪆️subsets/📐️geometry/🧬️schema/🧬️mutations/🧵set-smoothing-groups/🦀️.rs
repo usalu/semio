@@ -21,7 +21,7 @@ pub struct SetSmoothingGroups {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetSmoothingGroups {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "smoothing-groups", kind: "set-smoothing-groups", record: "SetSmoothingGroups" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as protocol::Mutation<ObjSnapshot>>::Diff> {
+    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         agg_diff(&ObjMutation::SetSmoothingGroups(self.clone()), base)
     }
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {

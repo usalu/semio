@@ -23,14 +23,14 @@ fn decode_value<T: dsl::FromValue>(bytes: &[u8]) -> Result<T, String> {
 }
 
 fn reserve_exact_owner_page<T>(owner: &mut Vec<T>, additional: usize) -> bool {
-    owner.try_reserve_exact(additional).is_ok() && owner.capacity().checked_mul(std::mem::size_of::<T>()).is_some_and(|bytes| bytes <= MOUNTED_OWNER_PAGE_BYTES)
+    owner.try_reserve_exact(additional).is_ok() && owner.capacity().checked_mul(size_of::<T>()).is_some_and(|bytes| bytes <= MOUNTED_OWNER_PAGE_BYTES)
 }
 
 fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
     if owner.pop().is_some() {
         return Ok(Some((1, 0)));
     }
-    let bytes = owner.capacity().checked_mul(std::mem::size_of::<T>()).ok_or(())?;
+    let bytes = owner.capacity().checked_mul(size_of::<T>()).ok_or(())?;
     if bytes == 0 {
         return Ok(None);
     }
@@ -324,7 +324,7 @@ fn close_analysis_model_step(owner: &mut Arc<AnalysisModel>, cursor: &mut Analys
                 return (false, 1, 0);
             }
             1 => {
-                let bytes = model.nodes.capacity() * std::mem::size_of::<Node>();
+                let bytes = model.nodes.capacity() * size_of::<Node>();
                 if bytes > maximum_bytes {
                     return (false, 0, 0);
                 }
@@ -350,7 +350,7 @@ fn close_analysis_model_step(owner: &mut Arc<AnalysisModel>, cursor: &mut Analys
                 return (false, 1, 0);
             }
             3 => {
-                let bytes = model.elements.capacity() * std::mem::size_of::<Elements>();
+                let bytes = model.elements.capacity() * size_of::<Elements>();
                 if bytes > maximum_bytes {
                     return (false, 0, 0);
                 }
@@ -374,7 +374,7 @@ fn close_analysis_model_step(owner: &mut Arc<AnalysisModel>, cursor: &mut Analys
                 if support.fixed.pop().is_some() {
                     return (false, 1, 0);
                 }
-                let bytes = support.fixed.capacity() * std::mem::size_of::<Dof>();
+                let bytes = support.fixed.capacity() * size_of::<Dof>();
                 if bytes != 0 {
                     if bytes > maximum_bytes {
                         return (false, 0, 0);
@@ -386,7 +386,7 @@ fn close_analysis_model_step(owner: &mut Arc<AnalysisModel>, cursor: &mut Analys
                 return (false, 1, 0);
             }
             5 => {
-                let bytes = model.supports.capacity() * std::mem::size_of::<Support>();
+                let bytes = model.supports.capacity() * size_of::<Support>();
                 if bytes > maximum_bytes {
                     return (false, 0, 0);
                 }
@@ -500,7 +500,7 @@ impl FemJobGraph {
 
     /// 🧹️ Retires at most one retained plan owner. `true` is an exact empty witness.
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        let bytes = std::mem::size_of::<FemStagePlan>();
+        let bytes = size_of::<FemStagePlan>();
         if maximum_bytes < bytes {
             return (false, 0, 0);
         }
@@ -1750,7 +1750,7 @@ impl<'model> AssemblyJob<'model> {
                         self.state.partitions.pop();
                         (1, 0)
                     } else {
-                        let bytes = self.state.partitions.capacity() * std::mem::size_of::<AssemblyPartitionBuffer>();
+                        let bytes = self.state.partitions.capacity() * size_of::<AssemblyPartitionBuffer>();
                         if bytes != 0 {
                             if bytes > maximum_bytes {
                                 return (false, 0, 0);
@@ -1962,7 +1962,7 @@ impl<'model> AssemblyJob<'model> {
             }
             PendingElementBuildStage::ReserveStiffnessCredit => {
                 let side = build.indices_new.len();
-                let requested_bytes = side.checked_mul(side).and_then(|cells| cells.checked_mul(std::mem::size_of::<f64>())).ok_or(FemError::Singular)?;
+                let requested_bytes = side.checked_mul(side).and_then(|cells| cells.checked_mul(size_of::<f64>())).ok_or(FemError::Singular)?;
                 if requested_bytes > MOUNTED_OWNER_PAGE_BYTES {
                     return Err(FemError::Singular);
                 }
@@ -2018,7 +2018,7 @@ impl<'model> AssemblyJob<'model> {
             }
             PendingElementBuildStage::ObserveStiffnessBacking => {
                 let side = build.indices_new.len();
-                let Some(observed_bytes) = build.stiffness.capacity().checked_mul(std::mem::size_of::<f64>()) else { return Err(FemError::Singular) };
+                let Some(observed_bytes) = build.stiffness.capacity().checked_mul(size_of::<f64>()) else { return Err(FemError::Singular) };
                 build.stiffness_observed_bytes = observed_bytes;
                 if !build.stiffness_credit_reserved || build.stiffness_dimensions != [side, side] || observed_bytes > MOUNTED_OWNER_PAGE_BYTES {
                     return Err(FemError::Singular);
@@ -2360,7 +2360,7 @@ impl AssemblyCsrBuild {
                 return (false, items, bytes);
             }
             self.assembly = None;
-            return (false, 1, std::mem::size_of::<AssemblyJob<'static>>());
+            return (false, 1, size_of::<AssemblyJob<'static>>());
         }
         match close_vec_owner_step(&mut self.entries, maximum_bytes) {
             Ok(Some((items, bytes))) => return (false, items, bytes),
@@ -2385,7 +2385,7 @@ impl AssemblyCsrBuild {
                 return (false, items, bytes);
             }
             self.matrix = None;
-            return (false, 1, std::mem::size_of::<Csr>());
+            return (false, 1, size_of::<Csr>());
         }
         (true, 0, 0)
     }
@@ -2428,8 +2428,8 @@ impl InteractiveJob for AssemblyJob<'_> {
         if self.state.stage == AssemblyJobStage::Complete {
             if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
                 return StepOutcome::Complete(CommitCandidate {
-                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                    state: RetainedJobPayload::empty(JobPayloadStream::CommitState),
+                    output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput),
                 });
             }
             let bytes = encode_value(&self.preview());

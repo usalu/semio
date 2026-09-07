@@ -1,6 +1,6 @@
 //! 🗑️ `delete-face` — removes an id-keyed face. Does NOT cascade into `shell.faces` membership: no modify-verb exists for a shell's face list (only `create-shell`/`delete-shell` govern the shell's own existence), so severing that membership here would be uninvertible within the approved vocabulary — flagged, not invented. Absent `id` is a no-op.
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation, create_face, delete_face};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Payload

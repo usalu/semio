@@ -351,7 +351,7 @@ impl RasterOwnedRetirement {
                         return Ok(RasterRetirementAction::Push(RasterRetirementOwner::Layer(layer)));
                     }
                     let layers = std::mem::take(&mut value.layers);
-                    let bytes = layers.capacity().saturating_mul(std::mem::size_of::<RasterLayerNode>());
+                    let bytes = layers.capacity().saturating_mul(size_of::<RasterLayerNode>());
                     if bytes > maximum_bytes {
                         value.layers = layers;
                         return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
@@ -406,7 +406,7 @@ impl RasterOwnedRetirement {
                 }
                 if fields.children.as_ref().is_some_and(Vec::is_empty) {
                     let children = fields.children.take().expect("Raster empty child vector remains retained");
-                    let bytes = children.capacity().saturating_mul(std::mem::size_of::<RasterLayerNode>());
+                    let bytes = children.capacity().saturating_mul(size_of::<RasterLayerNode>());
                     if bytes > maximum_bytes {
                         fields.children = Some(children);
                         return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
@@ -543,7 +543,7 @@ impl RasterOwnedRetirement {
                     if let Some(value) = values.pop() {
                         Ok(RasterRetirementAction::Push(RasterRetirementOwner::Value(value)))
                     } else {
-                        let bytes = values.capacity().saturating_mul(std::mem::size_of::<dsl::DslValue>());
+                        let bytes = values.capacity().saturating_mul(size_of::<dsl::DslValue>());
                         if bytes > maximum_bytes {
                             return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
                         }
@@ -555,7 +555,7 @@ impl RasterOwnedRetirement {
                     if let Some((key, value)) = values.pop() {
                         Ok(RasterRetirementAction::Push(RasterRetirementOwner::ValueEntry { key, value: Some(value) }))
                     } else {
-                        let bytes = values.capacity().saturating_mul(std::mem::size_of::<(String, dsl::DslValue)>());
+                        let bytes = values.capacity().saturating_mul(size_of::<(String, dsl::DslValue)>());
                         if bytes > maximum_bytes {
                             return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
                         }
@@ -642,7 +642,7 @@ impl RasterOwnedRetirement {
             }
             let (page_index, slot) = Self::page_and_slot(self.depth);
             if self.pages[page_index].is_none() {
-                if std::mem::size_of::<RasterRetirementFramePage>() > RASTER_CONTROL_BACKING_BYTES {
+                if size_of::<RasterRetirementFramePage>() > RASTER_CONTROL_BACKING_BYTES {
                     return Err("Raster retirement frame page exceeded its conservative control credit".into());
                 }
                 if self.pending_page_credit.is_none() {
@@ -747,6 +747,41 @@ pub struct RasterSnapshotRetirementFactory;
 impl store::ArtifactOwnedValueRetirementFactory<RasterSnapshot> for RasterSnapshotRetirementFactory {
     fn retire_owned(&self, value: RasterSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(value)))
+    }
+}
+
+/// 🧪️ Test-only retirement drive for a snapshot a test built and owns outright.
+///
+/// `RasterOwnedMap`'s `Drop` fails closed (`🗿️artifacts/🖨️raster/🦀️.rs:252`) — a populated snapshot
+/// that merely goes out of scope aborts the whole test binary with a non-unwinding
+/// "panic in a destructor during cleanup". Production reaches terminal through
+/// `RasterSnapshotRetirementFactory`; a test that mints its own populated `RasterSnapshot` must reach
+/// the same terminal, one owner per grant, which is exactly what this drives.
+#[cfg(test)]
+pub(crate) mod test_support {
+    use super::{RasterSnapshot, RasterSnapshotRetirementFactory, RASTER_OWNED_FIELD_BYTES};
+
+    pub(crate) fn retire_raster_snapshot(snapshot: RasterSnapshot) {
+        let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&RasterSnapshotRetirementFactory, snapshot);
+        let mut steps = 0_u64;
+        let mut idle = 0_u64;
+        loop {
+            steps += 1;
+            match retirement.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("one Raster test snapshot owner retires") {
+                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                    assert!(released_items <= 1);
+                    assert!(released_bytes <= RASTER_OWNED_FIELD_BYTES);
+                    idle = if released_items == 0 && released_bytes == 0 { idle + 1 } else { 0 };
+                    assert!(idle <= 4_096, "Raster test snapshot retirement stalled: {idle} consecutive zero-release turns after {steps} turns");
+                }
+                store::SnapshotRetirementStep::Complete => {
+                    assert!(retirement.terminal_is_empty(), "Raster test snapshot retirement reported a false terminal");
+                    drop(retirement);
+                    return;
+                }
+                store::SnapshotRetirementStep::Blocked => panic!("an unshared Raster test snapshot retirement cannot block"),
+            }
+        }
     }
 }
 
@@ -1166,7 +1201,7 @@ impl RasterOwnerTotals {
     }
 
     fn vector<T>(&mut self, value: &Vec<T>) -> Result<(), &'static str> {
-        let bytes = value.capacity().checked_mul(std::mem::size_of::<T>()).ok_or("raster-store.preflight-vector-byte-overflow")?;
+        let bytes = value.capacity().checked_mul(size_of::<T>()).ok_or("raster-store.preflight-vector-byte-overflow")?;
         if bytes > RASTER_OWNED_FIELD_BYTES {
             return Err("raster-store.preflight-vector-allocation-capacity");
         }
@@ -1174,9 +1209,9 @@ impl RasterOwnerTotals {
     }
 
     fn layer_vector(&mut self, value: &Vec<RasterLayerNode>) -> Result<(), &'static str> {
-        let source_bytes = value.capacity().checked_mul(std::mem::size_of::<RasterLayerNode>()).ok_or("raster-store.preflight-layer-vector-byte-overflow")?;
+        let source_bytes = value.capacity().checked_mul(size_of::<RasterLayerNode>()).ok_or("raster-store.preflight-layer-vector-byte-overflow")?;
         let candidate_capacity = value.capacity().checked_add(1).ok_or("raster-store.preflight-layer-vector-capacity-overflow")?;
-        let candidate_bytes = candidate_capacity.checked_mul(std::mem::size_of::<RasterLayerNode>()).ok_or("raster-store.preflight-layer-candidate-byte-overflow")?;
+        let candidate_bytes = candidate_capacity.checked_mul(size_of::<RasterLayerNode>()).ok_or("raster-store.preflight-layer-candidate-byte-overflow")?;
         if source_bytes > RASTER_OWNED_FIELD_BYTES || candidate_bytes > RASTER_OWNED_FIELD_BYTES {
             return Err("raster-store.preflight-layer-vector-allocation-capacity");
         }
@@ -1288,7 +1323,7 @@ impl RasterDslValueBoundsAuthority {
             if !raster_reserve_unit(cx) {
                 return Ok(false);
             }
-            totals.add(1, std::mem::size_of::<dsl::DslValue>(), 1, std::mem::size_of::<dsl::DslValue>())?;
+            totals.add(1, size_of::<dsl::DslValue>(), 1, size_of::<dsl::DslValue>())?;
             match value {
                 dsl::DslValue::String(value) => totals.string(value)?,
                 dsl::DslValue::Array(values) => totals.vector(values)?,
@@ -1381,7 +1416,7 @@ impl RasterLayerBoundsAuthority {
                 if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
-                totals.add(1, std::mem::size_of::<RasterLayerNode>(), 1, std::mem::size_of::<RasterLayerNode>())?;
+                totals.add(1, size_of::<RasterLayerNode>(), 1, size_of::<RasterLayerNode>())?;
                 self.frames[self.depth].phase = 1;
             }
             1..=3 => {
@@ -1571,8 +1606,8 @@ impl RasterDslValueCloneAuthority {
 
     fn observe_container_capacity(source: &dsl::DslValue, target: &dsl::DslValue, totals: &mut RasterOwnerTotals) -> Result<(), &'static str> {
         match (source, target) {
-            (dsl::DslValue::Array(source), dsl::DslValue::Array(target)) => totals.observe_candidate_capacity(source.capacity(), target.capacity(), std::mem::size_of::<dsl::DslValue>()),
-            (dsl::DslValue::Object(source), dsl::DslValue::Object(target)) => totals.observe_candidate_capacity(source.capacity(), target.capacity(), std::mem::size_of::<(String, dsl::DslValue)>()),
+            (dsl::DslValue::Array(source), dsl::DslValue::Array(target)) => totals.observe_candidate_capacity(source.capacity(), target.capacity(), size_of::<dsl::DslValue>()),
+            (dsl::DslValue::Object(source), dsl::DslValue::Object(target)) => totals.observe_candidate_capacity(source.capacity(), target.capacity(), size_of::<(String, dsl::DslValue)>()),
             _ => Ok(()),
         }
     }
@@ -1819,7 +1854,7 @@ impl RasterLayerCloneAuthority {
                 return Ok(false);
             }
             if let (RasterLayerNode::Group { children: source, .. }, RasterLayerNode::Group { children: target, .. }) = (source_root, self.value.as_ref().ok_or("raster-store.clone-layer-observed-target")?) {
-                self.totals.observe_candidate_capacity(source.capacity().saturating_add(1), target.capacity(), std::mem::size_of::<RasterLayerNode>())?;
+                self.totals.observe_candidate_capacity(source.capacity().saturating_add(1), target.capacity(), size_of::<RasterLayerNode>())?;
             }
             self.root_capacity_observed = true;
             return Ok(false);
@@ -1910,7 +1945,7 @@ impl RasterLayerCloneAuthority {
                             *self.pending_parameter_key = Some(raster_clone_owned_string(key)?);
                             return Ok(false);
                         }
-                        if std::mem::size_of::<RasterDslValueCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
+                        if size_of::<RasterDslValueCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
                             return Err("raster-store.clone-parameter-control-capacity");
                         }
                         if !raster_reserve_unit(cx) {
@@ -1934,7 +1969,7 @@ impl RasterLayerCloneAuthority {
                         }
                         target.push(Self::skeleton(&source[frame.child]));
                         if let (RasterLayerNode::Group { children: source_child, .. }, RasterLayerNode::Group { children: target_child, .. }) = (&source[frame.child], target.last().ok_or("raster-store.clone-layer-child-target")?) {
-                            self.totals.observe_candidate_capacity(source_child.capacity().saturating_add(1), target_child.capacity(), std::mem::size_of::<RasterLayerNode>())?;
+                            self.totals.observe_candidate_capacity(source_child.capacity().saturating_add(1), target_child.capacity(), size_of::<RasterLayerNode>())?;
                         }
                         self.path[self.depth] = frame.child;
                         self.frames[self.depth].child += 1;
@@ -2031,7 +2066,7 @@ impl RasterSnapshotBoundsAuthority {
                 if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
-                self.totals.add(1, std::mem::size_of::<RasterSnapshot>(), 1, std::mem::size_of::<RasterSnapshot>())?;
+                self.totals.add(1, size_of::<RasterSnapshot>(), 1, size_of::<RasterSnapshot>())?;
                 self.totals.fixed_control_backings()?;
                 self.phase = 1;
             }
@@ -2198,7 +2233,7 @@ impl RasterSnapshotCloneAuthority {
                         return Ok(false);
                     }
                     target.layers.try_reserve_exact(source.layers.capacity().saturating_add(1)).map_err(|_| "raster-store.initializer-layer-admission")?;
-                    self.bounds.totals.observe_candidate_capacity(source.layers.capacity().saturating_add(1), target.layers.capacity(), std::mem::size_of::<RasterLayerNode>())?;
+                    self.bounds.totals.observe_candidate_capacity(source.layers.capacity().saturating_add(1), target.layers.capacity(), size_of::<RasterLayerNode>())?;
                     return Ok(false);
                 }
                 if let Some(layer) = self.layer.as_mut() {
@@ -2213,7 +2248,7 @@ impl RasterSnapshotCloneAuthority {
                     return Ok(false);
                 }
                 if let Some(layer) = source.layers.get(self.index) {
-                    if std::mem::size_of::<RasterLayerCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
+                    if size_of::<RasterLayerCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
                         return Err("raster-store.initializer-layer-control-capacity");
                     }
                     if !raster_reserve_unit(cx) {
@@ -2483,7 +2518,7 @@ impl RasterMutationDigestAuthority {
                 3 => scalar_phase!(&(value.index as u64).to_be_bytes(), 4),
                 4 => {
                     if self.layer.is_none() {
-                        if std::mem::size_of::<RasterLayerCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
+                        if size_of::<RasterLayerCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
                             return Err("raster-store.digest-layer-control-capacity");
                         }
                         if !raster_reserve_unit(cx) {
@@ -2904,7 +2939,7 @@ impl RasterMutationCandidateAuthority {
         match self.phase {
             RasterMutationCandidatePhase::Clone => {
                 if self.clone.is_none() {
-                    if std::mem::size_of::<RasterSnapshotCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
+                    if size_of::<RasterSnapshotCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
                         return Err("raster-store.mutation-clone-control-capacity");
                     }
                     if !raster_reserve_unit(cx) {
@@ -2982,7 +3017,7 @@ impl RasterMutationCandidateAuthority {
             RasterMutationCandidatePhase::PrepareLayer => {
                 let RasterMutation::CreateLayer(value) = operation else { return Err("raster-store.mutation-prepare-variant") };
                 if self.layer_clone.is_none() {
-                    if std::mem::size_of::<RasterLayerCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
+                    if size_of::<RasterLayerCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
                         return Err("raster-store.mutation-layer-control-capacity");
                     }
                     if !raster_reserve_unit(cx) {
@@ -4072,8 +4107,8 @@ mod tests {
             }),
         });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
-        let bytes = encode_op(&operation).expect("encode");
-        assert_eq!(decode_op(&bytes).expect("decode"), operation);
+        let bytes = encode_op(&operation).await.expect("encode");
+        assert_eq!(decode_op(&bytes).await.expect("decode"), operation);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4081,7 +4116,7 @@ mod tests {
         use crate::artifacts::raster::RasterSnapshot;
 
         let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "doc-text-test", empty_raster_document(), None);
-        let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
+        let mut store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
         store
             .dispatch(store::ArtifactCommand::Apply {
                 mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {
@@ -4100,9 +4135,10 @@ mod tests {
                 })],
                 description: None,
             })
+            .await
             .expect("apply");
-        store::os_store::test_support::assert_document_text_round_trip(&store);
-        store::os_store::test_support::assert_document_pack_round_trip(&store);
+        store::os_store::test_support::assert_document_text_round_trip(&store).await;
+        store::os_store::test_support::assert_document_pack_round_trip(&store).await;
     }
 
     fn empty_raster_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> RasterStoreInitializationAuthority {
@@ -4134,6 +4170,7 @@ mod tests {
                     assert!(released_items <= 1);
                     assert!(released_bytes <= RASTER_OWNED_FIELD_BYTES);
                 }
+                semio_framework_plugin::PluginCloseStep::AwaitingInput { reason } => panic!("fresh Raster candidate close unexpectedly awaited input: {reason}"),
                 semio_framework_plugin::PluginCloseStep::Blocked { reason } => panic!("fresh Raster candidate close unexpectedly blocked: {reason}"),
                 semio_framework_plugin::PluginCloseStep::Complete => {
                     assert!(disposer.terminal_is_empty(&candidate));
@@ -4624,11 +4661,11 @@ mod tests {
 
     #[test]
     fn raster_box_and_arc_control_backings_require_and_report_fixed_credit() {
-        assert!(std::mem::size_of::<RasterOwnedRetirement>() <= RASTER_CONTROL_BACKING_BYTES);
-        assert!(std::mem::size_of::<RasterRetirementFramePage>() <= RASTER_CONTROL_BACKING_BYTES);
-        assert!(std::mem::size_of::<RasterSnapshotCloneAuthority>() <= RASTER_CONTROL_BACKING_BYTES);
-        assert!(std::mem::size_of::<RasterLayerCloneAuthority>() <= RASTER_CONTROL_BACKING_BYTES);
-        assert!(std::mem::size_of::<RasterDslValueCloneAuthority>() <= RASTER_CONTROL_BACKING_BYTES);
+        assert!(size_of::<RasterOwnedRetirement>() <= RASTER_CONTROL_BACKING_BYTES);
+        assert!(size_of::<RasterRetirementFramePage>() <= RASTER_CONTROL_BACKING_BYTES);
+        assert!(size_of::<RasterSnapshotCloneAuthority>() <= RASTER_CONTROL_BACKING_BYTES);
+        assert!(size_of::<RasterLayerCloneAuthority>() <= RASTER_CONTROL_BACKING_BYTES);
+        assert!(size_of::<RasterDslValueCloneAuthority>() <= RASTER_CONTROL_BACKING_BYTES);
         let layer =
             Box::new(RasterLayerNode::Pixel { id: String::new(), name: String::new(), visible: true, opacity: 1.0, blend_mode: String::new(), transform: RasterTransform::default(), mask: None, width: Some(1), height: Some(1), image_key: None });
         let mut boxed = RasterOwnedRetirement::new(RasterRetirementOwner::BoxedLayer(Some(layer)));
@@ -5065,7 +5102,7 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
 
         let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "command-envelope-demo", empty_raster_document(), None);
-        let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
+        let mut store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
         store
             .dispatch(store::ArtifactCommand::Apply {
                 mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {
@@ -5086,9 +5123,10 @@ mod tests {
                 })],
                 description: None,
             })
+            .await
             .expect("apply");
         let edit: &Edit<RasterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<RasterSnapshot, RasterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<RasterSnapshot, RasterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

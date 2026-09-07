@@ -290,7 +290,7 @@ pub fn forms_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 /// `FormsBuilderConstruction` (`empty`/`from_snapshot`/`from_text`/`from_binary`/`mutate`/`absorb`/
 /// `build`) did nothing beyond the ordinary `Mutation`/`MutationDiff` algebra — a trivial subset,
 /// per the SDK's own `SnapshotBuilder<S, M>` (W1-C task 3).
-pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::artifacts::forms::FormsSnapshot, crate::artifacts::forms::FormMutation>;
+pub type Construction = semio_framework_plugin::app::SnapshotBuilder<FormsSnapshot, FormMutation>;
 //#endregion 🏗️Construction
 
 //#region 🧪️Tests

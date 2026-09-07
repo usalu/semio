@@ -39,6 +39,12 @@ class LintScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "process-budgets") {
+      if (process.env.SEMIO_TEST_ARTIFACT_DIR) mkdirSync(process.env.SEMIO_TEST_ARTIFACT_DIR, { recursive: true });
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⏱️process-budgets/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot, budgetMs: 30_000 });
+      return;
+    }
     if (segments[0] === "exact-cargo-laws") {
       if (segments.length !== 1) throw new Error("Expected test exact-cargo-laws");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️exact-cargo-laws/🟦️.ts");

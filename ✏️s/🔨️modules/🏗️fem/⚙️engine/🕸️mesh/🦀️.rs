@@ -10,7 +10,7 @@ fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<O
     if owner.pop().is_some() {
         return Ok(Some((1, 0)));
     }
-    let bytes = owner.capacity().checked_mul(std::mem::size_of::<T>()).ok_or(())?;
+    let bytes = owner.capacity().checked_mul(size_of::<T>()).ok_or(())?;
     if bytes == 0 {
         return Ok(None);
     }
@@ -485,7 +485,7 @@ impl OwnedTriangulation {
             }
             MountedTriangulationStage::ReserveInsertionOrder => {
                 self.insertion_order.try_reserve_exact(self.input_len).map_err(|_| MeshError::TriangulationFailed("mounted insertion-order backing rejected".into()))?;
-                if self.insertion_order.capacity().checked_mul(std::mem::size_of::<usize>()).is_none_or(|bytes| bytes > 4_096) {
+                if self.insertion_order.capacity().checked_mul(size_of::<usize>()).is_none_or(|bytes| bytes > 4_096) {
                     return Err(MeshError::TriangulationFailed("mounted insertion-order backing exceeded page".into()));
                 }
                 self.mounted_initialization.cursor = 0;
@@ -519,7 +519,7 @@ impl OwnedTriangulation {
             }
             MountedTriangulationStage::ReserveSuperPoints => {
                 self.points.try_reserve_exact(3).map_err(|_| MeshError::TriangulationFailed("mounted triangulation-point backing rejected".into()))?;
-                if self.points.capacity().checked_mul(std::mem::size_of::<[f64; 2]>()).is_none_or(|bytes| bytes > 4_096) {
+                if self.points.capacity().checked_mul(size_of::<[f64; 2]>()).is_none_or(|bytes| bytes > 4_096) {
                     return Err(MeshError::TriangulationFailed("mounted triangulation-point backing exceeded page".into()));
                 }
                 self.mounted_initialization.cursor = 0;
@@ -538,7 +538,7 @@ impl OwnedTriangulation {
             }
             MountedTriangulationStage::ReserveTriangles => {
                 self.triangles.try_reserve_exact(self.maximum_triangles.saturating_mul(4).saturating_add(1)).map_err(|_| MeshError::TriangulationFailed("mounted triangulation-face backing rejected".into()))?;
-                if self.triangles.capacity().checked_mul(std::mem::size_of::<[usize; 3]>()).is_none_or(|bytes| bytes > 4_096) {
+                if self.triangles.capacity().checked_mul(size_of::<[usize; 3]>()).is_none_or(|bytes| bytes > 4_096) {
                     return Err(MeshError::TriangulationFailed("mounted triangulation-face backing exceeded page".into()));
                 }
                 self.mounted_initialization.stage = MountedTriangulationStage::SeedTriangle;
@@ -2040,9 +2040,9 @@ impl InteractiveJob for MeshJob {
                     if preparation.points.try_reserve_exact(self.maximum_points).is_err()
                         || preparation.point_indices.try_reserve_exact(self.maximum_points).is_err()
                         || preparation.constraints.try_reserve_exact(maximum_constraints).is_err()
-                        || preparation.points.capacity().checked_mul(std::mem::size_of::<[f64; 2]>()).is_none_or(|bytes| bytes > 4_096)
-                        || preparation.point_indices.capacity().checked_mul(std::mem::size_of::<((u64, u64), usize)>()).is_none_or(|bytes| bytes > 4_096)
-                        || preparation.constraints.capacity().checked_mul(std::mem::size_of::<Edge>()).is_none_or(|bytes| bytes > 4_096)
+                        || preparation.points.capacity().checked_mul(size_of::<[f64; 2]>()).is_none_or(|bytes| bytes > 4_096)
+                        || preparation.point_indices.capacity().checked_mul(size_of::<((u64, u64), usize)>()).is_none_or(|bytes| bytes > 4_096)
+                        || preparation.constraints.capacity().checked_mul(size_of::<Edge>()).is_none_or(|bytes| bytes > 4_096)
                     {
                         return Self::fail(b"mesh-fixed-preparation-backing".to_vec());
                     }
@@ -2125,9 +2125,9 @@ impl InteractiveJob for MeshJob {
                 if self.fixed_constraints.try_reserve_exact(self.maximum_triangles.saturating_mul(3)).is_err()
                     || self.indexed_edges.try_reserve_exact(edge_capacity).is_err()
                     || self.indexed_constraint_edges.try_reserve_exact(edge_capacity).is_err()
-                    || self.fixed_constraints.capacity().checked_mul(std::mem::size_of::<Edge>()).is_none_or(|bytes| bytes > 4_096)
-                    || self.indexed_edges.capacity().checked_mul(std::mem::size_of::<Edge>()).is_none_or(|bytes| bytes > 4_096)
-                    || self.indexed_constraint_edges.capacity().checked_mul(std::mem::size_of::<IndexedConstraintEdge>()).is_none_or(|bytes| bytes > 16_384)
+                    || self.fixed_constraints.capacity().checked_mul(size_of::<Edge>()).is_none_or(|bytes| bytes > 4_096)
+                    || self.indexed_edges.capacity().checked_mul(size_of::<Edge>()).is_none_or(|bytes| bytes > 4_096)
+                    || self.indexed_constraint_edges.capacity().checked_mul(size_of::<IndexedConstraintEdge>()).is_none_or(|bytes| bytes > 16_384)
                 {
                     return Self::fail(b"mesh-fixed-edge-authority-backing".to_vec());
                 }
@@ -2198,21 +2198,21 @@ impl InteractiveJob for MeshJob {
                 StepOutcome::Yield
             }
             MeshJobStage::ReservePointIndex => {
-                if self.point_index.try_reserve_exact(self.maximum_points).is_err() || self.point_index.capacity().checked_mul(std::mem::size_of::<((u64, u64), u32)>()).is_none_or(|bytes| bytes > 4_096) {
+                if self.point_index.try_reserve_exact(self.maximum_points).is_err() || self.point_index.capacity().checked_mul(size_of::<((u64, u64), u32)>()).is_none_or(|bytes| bytes > 4_096) {
                     return Self::fail(b"mesh-fixed-point-index-backing".to_vec());
                 }
                 self.stage = MeshJobStage::ReserveMeshPoints;
                 StepOutcome::Yield
             }
             MeshJobStage::ReserveMeshPoints => {
-                if self.mesh.points.try_reserve_exact(self.maximum_points).is_err() || self.mesh.points.capacity().checked_mul(std::mem::size_of::<[f64; 2]>()).is_none_or(|bytes| bytes > 4_096) {
+                if self.mesh.points.try_reserve_exact(self.maximum_points).is_err() || self.mesh.points.capacity().checked_mul(size_of::<[f64; 2]>()).is_none_or(|bytes| bytes > 4_096) {
                     return Self::fail(b"mesh-fixed-point-backing".to_vec());
                 }
                 self.stage = MeshJobStage::ReserveMeshTriangles;
                 StepOutcome::Yield
             }
             MeshJobStage::ReserveMeshTriangles => {
-                if self.mesh.tris.try_reserve_exact(self.maximum_triangles).is_err() || self.mesh.tris.capacity().checked_mul(std::mem::size_of::<[u32; 3]>()).is_none_or(|bytes| bytes > 4_096) {
+                if self.mesh.tris.try_reserve_exact(self.maximum_triangles).is_err() || self.mesh.tris.capacity().checked_mul(size_of::<[u32; 3]>()).is_none_or(|bytes| bytes > 4_096) {
                     return Self::fail(b"mesh-fixed-triangle-backing".to_vec());
                 }
                 self.begin_classification(if self.refinement_steps == 0 { MeshQualityTier::Coarse } else { MeshQualityTier::Final });

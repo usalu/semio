@@ -1,8 +1,7 @@
 //! 📈️ `create-curve` — brings a new id-keyed characteristic curve into existence.
 
 
-use crate::artifacts::vdi3805::{CharacteristicCurve, Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
-use crate::artifacts::vdi3805::mutations::delete_curve;
+use crate::artifacts::vdi3805::{CharacteristicCurve, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

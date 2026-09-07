@@ -1043,7 +1043,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn bundle_contributes_draw_for_flow_and_procedural3d_play() {
-        use flow_extension_sdk::{build_manifest_json, evaluate_json};
+        use flow_extension_sdk::build_manifest_json;
         use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 
         let manifest_json = build_manifest_json("draw", "Draw", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
@@ -1089,12 +1089,12 @@ mod extension_guest {
         let flow_topic = flow_extension_topic_contribution(FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "draw", &manifest_json);
         let procedural3d_topic = flow_extension_topic_contribution(PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "draw", &manifest_json);
         let bundle = ExtensionBundle::new("flow-extension-draw", "Draw", "0.1.0").extends("flow");
-        let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Linked));
-        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(flow_topic.topic, flow_topic.payload));
-        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload));
-        semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
+        let bundle = bundle.mode(ExecutionMode::Linked);
+        let bundle = bundle.contributes_topic(flow_topic.topic, flow_topic.payload);
+        let bundle = bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload);
+        bundle.handler("evaluate", |req| {
             evaluate_invoke_json(&module_registry(), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err))
-        }))
+        })
     }
 
     #[test]

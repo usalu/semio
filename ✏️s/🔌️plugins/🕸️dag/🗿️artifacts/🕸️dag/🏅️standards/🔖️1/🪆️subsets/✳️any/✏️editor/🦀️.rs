@@ -36,7 +36,7 @@ use semio_framework_plugin::{
 use store::EngineHandles;
 
 //#region 🔖️Constants
-pub const DAG_PLAY_APP_ID: &str = "dag-play";
+pub const DAG_PLAY_APP_ID: &str = "s.dag.dag@1/*#editor";
 /// 🕹️ The `graph` interaction domain id (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
 /// node/edge selection + transitive hover over the DAG's own edge-derived parent links.
 pub const DAG_PLAY_INTERACTION_DOMAIN: &str = "graph";
@@ -226,7 +226,7 @@ impl semio_framework::ToolJobFactory for DagConfigCommandJobFactory {
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DagConfigCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<DagPlayApp>;
+    type Owner = EditorApp<DagPlayApp>;
     const TOOL_IDS: &'static [&'static str] = DAG_RETAINED_CONFIG_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = "dag.dag";
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
@@ -257,9 +257,9 @@ struct DagConfigPreparation {
 
 fn dag_config_footprint(mutation: &DagConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = match mutation {
-        DagConfigMutation::Snapshot { .. } => return Err("DAG Config preparation rejects whole-snapshot input".into()),
-        DagConfigMutation::SetLocale { value } => value.len(),
-        DagConfigMutation::SetCamera { .. } => 0,
+        DagConfigMutation::ReplaceConfig(crate::editor::dag::config::ReplaceConfig { .. }) => return Err("DAG Config preparation rejects whole-snapshot input".into()),
+        DagConfigMutation::ChangeLocale(crate::editor::dag::config::ChangeLocale { value }) => value.len(),
+        DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { .. }) => 0,
     };
     if retained_bytes > DAG_CONFIG_TEXT_BYTES { return Err("DAG Config mutation exceeds its fixed preparation envelope".into()); }
     Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024 })
@@ -270,12 +270,12 @@ fn prepare_dag_config(base: &DagConfig, mutation: DagConfigMutation) -> Result<(
     if base.locale.len() > DAG_CONFIG_TEXT_BYTES { return Err("DAG Config base exceeds its fixed preparation envelope".into()); }
     let mut post = base.clone();
     let inverse = match &mutation {
-        DagConfigMutation::Snapshot { .. } => return Err("DAG Config preparation rejects whole-snapshot input".into()),
-        DagConfigMutation::SetCamera { x, y, zoom } => {
+        DagConfigMutation::ReplaceConfig(crate::editor::dag::config::ReplaceConfig { .. }) => return Err("DAG Config preparation rejects whole-snapshot input".into()),
+        DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { x, y, zoom }) => {
             post.camera_x = *x; post.camera_y = *y; post.camera_zoom = *zoom;
-            DagConfigMutation::SetCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom }
+            DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom })
         }
-        DagConfigMutation::SetLocale { value } => { post.locale = value.clone(); DagConfigMutation::SetLocale { value: base.locale.clone() } }
+        DagConfigMutation::ChangeLocale(crate::editor::dag::config::ChangeLocale { value }) => { post.locale = value.clone(); DagConfigMutation::ChangeLocale(crate::editor::dag::config::ChangeLocale { value: base.locale.clone() }) }
     };
     Ok((post, vec![inverse], mutation))
 }
@@ -387,15 +387,15 @@ impl ArtifactEditor for DagPlayApp {
     const DOCUMENT_SCHEMA: &'static str = "dag.dag";
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<DagPlayApp>,
+        owner: EditorApp<DagPlayApp>,
         owner_file: "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        controller: "dag-play",
+        controller: "s.dag.dag@1/*#editor",
         document_schema: "dag.dag",
         factory: "DagConfigCommandJobFactory",
         factory_type: DagConfigCommandJobFactory,
         tools: {
-            "nodeGraphViewport" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
-            "setLocale" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
+            "nodeGraphViewport" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
+            "setLocale" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
         }
     }
 
@@ -477,14 +477,15 @@ impl ArtifactEditor for DagPlayApp {
         let config = cfg.snapshot;
         let camera = dag_config_camera(config);
         let labels = dag_play_labels(config);
-        match body_key {
+        let node = match body_key {
             DAG_PLAY_BODY_MAIN => main::render(document, &camera, labels),
             DAG_PLAY_BODY_COMPILED => compiled::render(document, &camera),
             DAG_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
             DAG_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             DAG_PLAY_BODY_INSPECTOR => inspection_panel::render(document, &[], labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        }?;
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
     /// 🕹️ `context_menu` carries no `InteractionView` either (same gap as `render`), so the
@@ -563,6 +564,7 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             // actions yourself).
             .view_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
             .view_action("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"))
+            .view_action("setLocale", LocalizedLabel::native("Set Language", "Sprache einstellen"))
             .keybinding("delete,backspace", "deleteSelection")
             // 📝️ Staged argument form for the panel-visible create action.
             .action_args("addNode", vec![
@@ -631,14 +633,14 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::testkit::{meta, new_app as framework_new_app, new_app_with_registry as framework_new_app_with_registry};
-    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::testkit::new_app_with_registry as framework_new_app_with_registry;
+    use semio_framework_plugin::{EditorApp, PluginApp, VcsArtifactApp, ViewModel};
 
     pub type DagApp = VcsArtifactApp<EditorApp<DagPlayApp>>;
 
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn new_app() -> DagApp {
-        framework_new_app::<EditorApp<DagPlayApp>>()
+    /// 🧪️ An app instance using its declared tool catalog and concrete factories.
+    pub async fn new_app() -> DagApp {
+        new_app_with_registry().await
     }
 
     /// ✏️ Adapts `create_dag_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
@@ -649,16 +651,12 @@ pub(crate) mod testkit {
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn new_app_with_registry() -> DagApp {
-        framework_new_app_with_registry::<EditorApp<DagPlayApp>>(dag_app_manifest_for_testkit)
+    pub async fn new_app_with_registry() -> DagApp {
+        framework_new_app_with_registry::<EditorApp<DagPlayApp>>(dag_app_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut DagApp, command: DagCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
-    }
-
-    pub fn render(app: &mut DagApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub async fn render(app: &mut DagApp, body_key: &str) -> String {
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render").root).expect("render json")
     }
 }
 //#endregion 🧪️Testkit
@@ -674,12 +672,12 @@ mod tests {
         let base = DagConfig::default();
         let mut expected = serde_json::to_value(&base).expect("JSON oracle base");
         expected["locale"] = serde_json::json!("de-DE");
-        let (post, inverse, _) = prepare_dag_config(&base, DagConfigMutation::SetLocale { value: "de-DE".into() }).expect("bounded config candidate");
+        let (post, inverse, _) = prepare_dag_config(&base, DagConfigMutation::ChangeLocale(crate::editor::dag::config::ChangeLocale { value: "de-DE".into() })).expect("bounded config candidate");
         assert_eq!(serde_json::to_value(post).expect("JSON oracle post"), expected);
-        assert!(matches!(&inverse[0], DagConfigMutation::SetLocale { value } if value == &base.locale));
-        assert!(dag_config_footprint(&DagConfigMutation::SetLocale { value: "x".repeat(DAG_CONFIG_TEXT_BYTES) }).is_ok());
-        assert!(dag_config_footprint(&DagConfigMutation::SetLocale { value: "x".repeat(DAG_CONFIG_TEXT_BYTES + 1) }).is_err());
-        assert!(dag_config_footprint(&DagConfigMutation::Snapshot { config: base }).is_err());
+        assert!(matches!(&inverse[0], DagConfigMutation::ChangeLocale(crate::editor::dag::config::ChangeLocale { value }) if value == &base.locale));
+        assert!(dag_config_footprint(&DagConfigMutation::ChangeLocale(crate::editor::dag::config::ChangeLocale { value: "x".repeat(DAG_CONFIG_TEXT_BYTES) })).is_ok());
+        assert!(dag_config_footprint(&DagConfigMutation::ChangeLocale(crate::editor::dag::config::ChangeLocale { value: "x".repeat(DAG_CONFIG_TEXT_BYTES + 1) })).is_err());
+        assert!(dag_config_footprint(&DagConfigMutation::ReplaceConfig(crate::editor::dag::config::ReplaceConfig { config: base })).is_err());
         assert_eq!(DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024, 4_096);
     }
     //#endregion 🧪️RetainedConfigOracle
@@ -820,7 +818,7 @@ mod tests {
     /// target, and for transitive hover to cover a node's downstream nodes and edges.
     #[semio_framework_async_macros::async_test]
     async fn interaction_topology_covers_every_node_and_edge_via_their_edges() {
-        let mut app: DagApp = new_app_with_registry();
+        let mut app: DagApp = new_app_with_registry().await;
         let snapshot = app.snapshot().expect("snapshot");
         let node_id = snapshot.nodes().first().expect("seed node").id.clone();
         let history = semio_framework_plugin::HistoryView::empty();
@@ -843,7 +841,7 @@ mod tests {
     async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
         use semio_framework_plugin::{ContextMenuHit, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
 
-        let mut app: DagApp = new_app_with_registry();
+        let mut app: DagApp = new_app_with_registry().await;
         let node_ids: Vec<String> = app.snapshot().expect("projection").nodes().iter().map(|node| node.id.clone()).collect();
         // 🕹️ The click-carried `request.surface.selection` drives the menu directly —
         // `dag_context_menu_items`'s own `selected` fallback param is always `&[]` now (`render`/
@@ -860,7 +858,7 @@ mod tests {
             window_instance_id: None,
             point: None,
         };
-        let menu = app.context_menu(&request);
+        let menu = app.context_menu(&request).await;
         assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
         let last = menu.last().expect("grouped disclosure menu should not be empty");
         let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("nodeGraphEdit");
@@ -873,8 +871,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::dag::testkit::{new_app, render};
-        let mut app = new_app();
-        assert!(render(&mut app, "dag.play.nope").contains("Unknown body"));
+        let mut app = new_app().await;
+        assert!(render(&mut app, "dag.play.nope").await.contains("Unknown body"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -896,14 +894,14 @@ mod tests {
                 let nodes = projection.nodes();
                 (nodes.iter().any(|node| matches!(node.kind, infinite_board_port_directed_dag::DagNodeKind::Note { .. })), nodes.iter().any(|node| matches!(node.kind, infinite_board_port_directed_dag::DagNodeKind::Slider { .. })))
             },
-        );
+        ).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_dag() {
         semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<DagPlayApp>, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| {
             app.snapshot().expect("projection").nodes().len()
-        });
+        }).await;
     }
     //#endregion 🔖️CrossCutting
 }

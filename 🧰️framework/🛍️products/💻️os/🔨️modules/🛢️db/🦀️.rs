@@ -41,14 +41,6 @@ pub use crate::db_engine::{
 #[cfg(feature = "vcs")]
 pub use crate::db_engine::vcs_integration;
 
-/// 🗄️#⃣ `CommandReceipt.state_hash`'s type — hashing is pack-style `ContentHash` throughout the
-/// `db` family per the contract, so it is nameable at the facade root without reaching past this
-/// crate into `pack`/`pack_core` directly.
-/// 🗄️🎚️ Bootstrap vocabulary the facade round-trip needs at its root: the profile a `Database`
-/// opens with, the durability class a submit requests, and the one error type the family returns.
-pub use crate::db_durability::DurabilityClass;
-pub use crate::db_ids::DbError;
-pub use crate::db_policy::Profile;
 //#endregion 🔖️Database
 
 //#region 🔖️Family

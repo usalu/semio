@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative change-background mutation.
-use crate::artifacts::png::schema::diff::{self, *};
+use crate::artifacts::png::schema::diff::*;
 use crate::artifacts::png::schema::mutations::PngMutation;
 use crate::artifacts::png::schema::snapshot::*;
 
@@ -27,12 +27,11 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeBackgroundMutati
         protocol::MutationOutcome::new(contribute(base, bkgd))
     }
     fn inverse(&self, base: &PngSnapshot) -> Vec<PngMutation> {
-        let Self { bkgd } = self;
         let outcome = <Self as protocol::MutationKind<PngSnapshot, PngMutation>>::diff(self, base);
         if <PngDiff as protocol::DiffAlgebra<PngSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
-        vec![PngMutation::ChangeBackground(crate::artifacts::png::schema::mutations::ChangeBackgroundMutation { bkgd: base.bkgd.clone() })]
+        vec![PngMutation::ChangeBackground(ChangeBackgroundMutation { bkgd: base.bkgd.clone() })]
     }
     fn label(&self) -> String {
         "change background".into()

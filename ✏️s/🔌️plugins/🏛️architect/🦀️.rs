@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the architect editor and viewer.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum ArchitectApps: PluginApp {
-        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::architect::ArchitectPlayApp>>),
-        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::architect::ArchitectViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::architect::ArchitectPlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::architect::ArchitectViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -22,12 +22,12 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// M6-remaining, `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s
 /// shape: the host activates one instance whenever a `program::artifact_kind().id` artifact is
 /// opened, this plugin's actor runs `Isolated`, and it asks the broker for document write access.
-pub fn plugin() -> Result<Plugin<ArchitectApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<ArchitectApps>, PluginAssemblyError> {
     Plugin::<ArchitectApps>::builder("architect")
         .label("Architect")
         .version("0.1.0")
         .package_id("semio:architect")
-        .artifact(crate::artifacts::program::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
+        .artifact(crate::artifacts::program::declaration().map_err(PluginAssemblyError::definition)?)
         .editor::<crate::editor::architect::ArchitectPlayApp>(crate::editor::architect::create_architect_app())
         .editor_mutation_roster::<crate::editor::architect::ArchitectPlayApp>()
         .viewer::<crate::viewer::architect::ArchitectViewer>(crate::viewer::architect::create_architect_viewer())

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible",
+  "semanticKind": "set-layer-visible",
+  "displayName": "Set Layer Visible",
+  "emoji": "👁️",
+  "aggregateVariant": "SetLayerVisible",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "set-layer-visible",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "error",
+    "warning",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

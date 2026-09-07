@@ -1,7 +1,7 @@
 //! 🚷️ Block2d mutation — `RemoveAuthor`: a credited author.
 
 use crate::artifacts::block2d::Block2dSnapshot;
-use crate::artifacts::block2d::diff::{Block2dAuthorList, Block2dDiff};
+use crate::artifacts::block2d::diff::Block2dDiff;
 use crate::artifacts::block2d::mutations::Block2dMutation;
 
 //#region 🔖️Mutation

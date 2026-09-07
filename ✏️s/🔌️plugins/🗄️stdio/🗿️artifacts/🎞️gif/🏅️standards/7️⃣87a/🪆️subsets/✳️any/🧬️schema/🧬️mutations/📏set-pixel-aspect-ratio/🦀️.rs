@@ -14,7 +14,7 @@ pub struct SetPixelAspectRatio {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetPixelAspectRatio {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "pixel-aspect-ratio", kind: "set-pixel-aspect-ratio", record: "SetPixelAspectRatio" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as protocol::Mutation<GifSnapshot>>::Diff> {
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
         agg_diff(&GifMutation::SetPixelAspectRatio(self.clone()), base)
     }
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {

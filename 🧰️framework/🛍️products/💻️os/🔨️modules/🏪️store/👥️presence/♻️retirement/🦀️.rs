@@ -193,7 +193,7 @@ impl<P: Send + Sync + 'static> PresencePeersCommit<P> {
 //#endregion 🧹️StoreRetirement
 
 //#region 🔌️OwnerTransfer
-impl<P: Clone + Send + Sync + 'static, M: self::Mutation<P>> PresenceStore<P, M> {
+impl<P: Clone + Send + Sync + 'static, M: Mutation<P>> PresenceStore<P, M> {
     /// 🧹️ Detaches exact roots once after the concrete domain validates its empty terminal value.
     pub fn begin_retirement(&mut self, terminal_local: Arc<P>, terminal_is_empty: fn(&P) -> bool) -> Result<PresenceStoreRetirement<P>, (&'static str, Arc<P>)> {
         if self.close_started || !terminal_is_empty(terminal_local.as_ref()) {

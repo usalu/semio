@@ -45,7 +45,6 @@ use std::sync::{Arc, Mutex};
 use crate::db_ids::{ActorId, ArtifactId, DbError};
 use crate::*;
 use db_storage::CatalogStorage as _;
-use db_storage::PayloadStorage as _;
 use semio_framework_async::{Lane, WorkerPool, WorkerPoolUse};
 
 //#region 🔖️Reexports
@@ -126,8 +125,8 @@ impl DatabaseCapabilityOpenAdmissionState {
     }
 }
 
-static DATABASE_CAPABILITY_OPEN_ADMISSION: std::sync::Mutex<DatabaseCapabilityOpenAdmissionState> =
-    std::sync::Mutex::new(DatabaseCapabilityOpenAdmissionState { slots: [EMPTY_DATABASE_CAPABILITY_OPEN_SLOT; DATABASE_CAPABILITY_OPEN_SLOTS], items: 0, bytes: 0, next_generation: 1 });
+static DATABASE_CAPABILITY_OPEN_ADMISSION: Mutex<DatabaseCapabilityOpenAdmissionState> =
+    Mutex::new(DatabaseCapabilityOpenAdmissionState { slots: [EMPTY_DATABASE_CAPABILITY_OPEN_SLOT; DATABASE_CAPABILITY_OPEN_SLOTS], items: 0, bytes: 0, next_generation: 1 });
 
 struct DatabaseCapabilityOpenAdmission {
     slot: usize,
@@ -325,19 +324,19 @@ struct DatabaseCapabilityOpenState {
     _pool_use: Arc<WorkerPoolUse>,
     slot: usize,
     generation: u64,
-    admission: std::sync::Mutex<Option<DatabaseCapabilityOpenAdmission>>,
-    work: std::sync::Mutex<Option<DatabaseCapabilityOpenWork>>,
-    poll_work: std::sync::Mutex<Option<DatabaseCapabilityOpenWork>>,
-    staged_result: std::sync::Mutex<Option<DatabaseCapabilityOpenResult>>,
-    terminal_error: std::sync::Mutex<Option<(DbError, DatabaseCapabilityOpenProgress)>>,
-    completion: std::sync::Mutex<Option<Result<DatabaseCapabilityOpenResult, DbError>>>,
-    terminal_work: std::sync::Mutex<Option<DatabaseCapabilityOpenWork>>,
-    terminal_result: std::sync::Mutex<Option<Result<DatabaseCapabilityOpenResult, DbError>>>,
+    admission: Mutex<Option<DatabaseCapabilityOpenAdmission>>,
+    work: Mutex<Option<DatabaseCapabilityOpenWork>>,
+    poll_work: Mutex<Option<DatabaseCapabilityOpenWork>>,
+    staged_result: Mutex<Option<DatabaseCapabilityOpenResult>>,
+    terminal_error: Mutex<Option<(DbError, DatabaseCapabilityOpenProgress)>>,
+    completion: Mutex<Option<Result<DatabaseCapabilityOpenResult, DbError>>>,
+    terminal_work: Mutex<Option<DatabaseCapabilityOpenWork>>,
+    terminal_result: Mutex<Option<Result<DatabaseCapabilityOpenResult, DbError>>>,
     terminal_result_checked_out: std::sync::atomic::AtomicBool,
-    terminal_completion: std::sync::Mutex<Option<Result<DatabaseCapabilityOpenResult, DbError>>>,
-    retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
-    terminal_job: std::sync::Mutex<Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>>,
-    waker: std::sync::Mutex<Option<std::task::Waker>>,
+    terminal_completion: Mutex<Option<Result<DatabaseCapabilityOpenResult, DbError>>>,
+    retry_job: Mutex<Option<(semio_framework_async::Job, u8)>>,
+    terminal_job: Mutex<Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>>,
+    waker: Mutex<Option<std::task::Waker>>,
     retry_armed: std::sync::atomic::AtomicBool,
     retry_generation: std::sync::atomic::AtomicU64,
     scheduled: std::sync::atomic::AtomicBool,
@@ -350,9 +349,9 @@ struct DatabaseCapabilityOpenState {
     phase: std::sync::atomic::AtomicU8,
     progress: std::sync::atomic::AtomicU8,
     #[cfg(test)]
-    poll_publication_hook: std::sync::Mutex<Option<Box<dyn FnOnce() + Send>>>,
+    poll_publication_hook: Mutex<Option<Box<dyn FnOnce() + Send>>>,
     #[cfg(test)]
-    controlled_submit_hook: std::sync::Mutex<Option<Arc<dyn Fn(semio_framework_async::Job) -> Result<(), semio_framework_async::Job> + Send + Sync>>>,
+    controlled_submit_hook: Mutex<Option<Arc<dyn Fn(semio_framework_async::Job) -> Result<(), semio_framework_async::Job> + Send + Sync>>>,
 }
 
 struct DatabaseCapabilityOpenWake {
@@ -360,9 +359,9 @@ struct DatabaseCapabilityOpenWake {
     generation: u64,
 }
 
-fn database_capability_open_registry() -> &'static std::sync::Mutex<[Option<Arc<DatabaseCapabilityOpenState>>; DATABASE_CAPABILITY_OPEN_SLOTS]> {
-    static REGISTRY: std::sync::OnceLock<std::sync::Mutex<[Option<Arc<DatabaseCapabilityOpenState>>; DATABASE_CAPABILITY_OPEN_SLOTS]>> = std::sync::OnceLock::new();
-    REGISTRY.get_or_init(|| std::sync::Mutex::new(std::array::from_fn(|_| None)))
+fn database_capability_open_registry() -> &'static Mutex<[Option<Arc<DatabaseCapabilityOpenState>>; DATABASE_CAPABILITY_OPEN_SLOTS]> {
+    static REGISTRY: std::sync::OnceLock<Mutex<[Option<Arc<DatabaseCapabilityOpenState>>; DATABASE_CAPABILITY_OPEN_SLOTS]>> = std::sync::OnceLock::new();
+    REGISTRY.get_or_init(|| Mutex::new(std::array::from_fn(|_| None)))
 }
 
 impl std::task::Wake for DatabaseCapabilityOpenWake {
@@ -905,19 +904,19 @@ impl DatabaseCapabilityOpenFuture {
             _pool_use: pool_use,
             slot,
             generation,
-            admission: std::sync::Mutex::new(Some(admission)),
-            work: std::sync::Mutex::new(Some(DatabaseCapabilityOpenWork::new(storage))),
-            poll_work: std::sync::Mutex::new(None),
-            staged_result: std::sync::Mutex::new(None),
-            terminal_error: std::sync::Mutex::new(None),
-            completion: std::sync::Mutex::new(None),
-            terminal_work: std::sync::Mutex::new(None),
-            terminal_result: std::sync::Mutex::new(None),
+            admission: Mutex::new(Some(admission)),
+            work: Mutex::new(Some(DatabaseCapabilityOpenWork::new(storage))),
+            poll_work: Mutex::new(None),
+            staged_result: Mutex::new(None),
+            terminal_error: Mutex::new(None),
+            completion: Mutex::new(None),
+            terminal_work: Mutex::new(None),
+            terminal_result: Mutex::new(None),
             terminal_result_checked_out: std::sync::atomic::AtomicBool::new(false),
-            terminal_completion: std::sync::Mutex::new(None),
-            retry_job: std::sync::Mutex::new(None),
-            terminal_job: std::sync::Mutex::new(None),
-            waker: std::sync::Mutex::new(None),
+            terminal_completion: Mutex::new(None),
+            retry_job: Mutex::new(None),
+            terminal_job: Mutex::new(None),
+            waker: Mutex::new(None),
             retry_armed: std::sync::atomic::AtomicBool::new(false),
             retry_generation: std::sync::atomic::AtomicU64::new(1),
             scheduled: std::sync::atomic::AtomicBool::new(false),
@@ -930,9 +929,9 @@ impl DatabaseCapabilityOpenFuture {
             phase: std::sync::atomic::AtomicU8::new(DatabaseCapabilityOpenPhase::Handoff as u8),
             progress: std::sync::atomic::AtomicU8::new(DatabaseCapabilityOpenProgress::Admitted as u8),
             #[cfg(test)]
-            poll_publication_hook: std::sync::Mutex::new(None),
+            poll_publication_hook: Mutex::new(None),
             #[cfg(test)]
-            controlled_submit_hook: std::sync::Mutex::new(None),
+            controlled_submit_hook: Mutex::new(None),
         });
         database_capability_open_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[slot] = Some(state.clone());
         if schedule {
@@ -1253,8 +1252,8 @@ impl DatabaseCatalogReadAdmissionState {
     }
 }
 
-static DATABASE_CATALOG_READ_ADMISSION: std::sync::Mutex<DatabaseCatalogReadAdmissionState> =
-    std::sync::Mutex::new(DatabaseCatalogReadAdmissionState { slots: [EMPTY_DATABASE_CATALOG_READ_SLOT; DATABASE_CATALOG_READ_SLOTS], items: 0, bytes: 0, next_generation: 1 });
+static DATABASE_CATALOG_READ_ADMISSION: Mutex<DatabaseCatalogReadAdmissionState> =
+    Mutex::new(DatabaseCatalogReadAdmissionState { slots: [EMPTY_DATABASE_CATALOG_READ_SLOT; DATABASE_CATALOG_READ_SLOTS], items: 0, bytes: 0, next_generation: 1 });
 
 struct DatabaseCatalogReadAdmission {
     slot: usize,
@@ -1383,24 +1382,24 @@ impl DatabaseCatalogReadRejected {
 
 struct DatabaseCatalogReadRejectedClose {
     pool: Arc<WorkerPool>,
-    owner: std::sync::Mutex<Option<DatabaseCatalogReadRejected>>,
-    retry_job: std::sync::Mutex<Option<semio_framework_async::Job>>,
+    owner: Mutex<Option<DatabaseCatalogReadRejected>>,
+    retry_job: Mutex<Option<semio_framework_async::Job>>,
     scheduled: std::sync::atomic::AtomicBool,
     finished: std::sync::atomic::AtomicBool,
     #[cfg(test)]
-    controlled_submit_hook: std::sync::Mutex<Option<Arc<dyn Fn(semio_framework_async::Job) -> Result<(), semio_framework_async::Job> + Send + Sync>>>,
+    controlled_submit_hook: Mutex<Option<Arc<dyn Fn(semio_framework_async::Job) -> Result<(), semio_framework_async::Job> + Send + Sync>>>,
 }
 
 impl DatabaseCatalogReadRejectedClose {
     fn mount(pool: Arc<WorkerPool>, owner: DatabaseCatalogReadRejected, schedule: bool) -> Arc<Self> {
         let state = Arc::new(Self {
             pool,
-            owner: std::sync::Mutex::new(Some(owner)),
-            retry_job: std::sync::Mutex::new(None),
+            owner: Mutex::new(Some(owner)),
+            retry_job: Mutex::new(None),
             scheduled: std::sync::atomic::AtomicBool::new(false),
             finished: std::sync::atomic::AtomicBool::new(false),
             #[cfg(test)]
-            controlled_submit_hook: std::sync::Mutex::new(None),
+            controlled_submit_hook: Mutex::new(None),
         });
         if schedule {
             state.schedule();
@@ -1545,18 +1544,18 @@ struct DatabaseCatalogReadState {
     _pool_use: Arc<WorkerPoolUse>,
     slot: usize,
     generation: u64,
-    admission: std::sync::Mutex<Option<DatabaseCatalogReadAdmission>>,
-    work: std::sync::Mutex<Option<DatabaseCatalogReadWork>>,
-    poll_work: std::sync::Mutex<Option<DatabaseCatalogReadWork>>,
-    staged_result: std::sync::Mutex<Option<DatabaseCatalogReadResult>>,
-    terminal_error: std::sync::Mutex<Option<(DbError, DatabaseCatalogReadProgress)>>,
-    completion: std::sync::Mutex<Option<Result<DatabaseCatalogReadResult, DbError>>>,
-    terminal_work: std::sync::Mutex<Option<DatabaseCatalogReadWork>>,
-    terminal_result: std::sync::Mutex<Option<Result<DatabaseCatalogReadResult, DbError>>>,
-    terminal_completion: std::sync::Mutex<Option<Result<DatabaseCatalogReadResult, DbError>>>,
-    retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
-    terminal_job: std::sync::Mutex<Option<semio_framework_async::Job>>,
-    waker: std::sync::Mutex<Option<std::task::Waker>>,
+    admission: Mutex<Option<DatabaseCatalogReadAdmission>>,
+    work: Mutex<Option<DatabaseCatalogReadWork>>,
+    poll_work: Mutex<Option<DatabaseCatalogReadWork>>,
+    staged_result: Mutex<Option<DatabaseCatalogReadResult>>,
+    terminal_error: Mutex<Option<(DbError, DatabaseCatalogReadProgress)>>,
+    completion: Mutex<Option<Result<DatabaseCatalogReadResult, DbError>>>,
+    terminal_work: Mutex<Option<DatabaseCatalogReadWork>>,
+    terminal_result: Mutex<Option<Result<DatabaseCatalogReadResult, DbError>>>,
+    terminal_completion: Mutex<Option<Result<DatabaseCatalogReadResult, DbError>>>,
+    retry_job: Mutex<Option<(semio_framework_async::Job, u8)>>,
+    terminal_job: Mutex<Option<semio_framework_async::Job>>,
+    waker: Mutex<Option<std::task::Waker>>,
     retry_armed: std::sync::atomic::AtomicBool,
     scheduled: std::sync::atomic::AtomicBool,
     polling: std::sync::atomic::AtomicBool,
@@ -1569,9 +1568,9 @@ struct DatabaseCatalogReadState {
     phase: std::sync::atomic::AtomicU8,
     progress: std::sync::atomic::AtomicU8,
     #[cfg(test)]
-    controlled_submit_hook: std::sync::Mutex<Option<Arc<dyn Fn(semio_framework_async::Job) -> Result<(), semio_framework_async::Job> + Send + Sync>>>,
+    controlled_submit_hook: Mutex<Option<Arc<dyn Fn(semio_framework_async::Job) -> Result<(), semio_framework_async::Job> + Send + Sync>>>,
     #[cfg(test)]
-    controlled_publication_before_waker_hook: std::sync::Mutex<Option<Box<dyn FnOnce() + Send>>>,
+    controlled_publication_before_waker_hook: Mutex<Option<Box<dyn FnOnce() + Send>>>,
     #[cfg(test)]
     poll_worker_thread: std::sync::atomic::AtomicBool,
 }
@@ -1581,9 +1580,9 @@ struct DatabaseCatalogReadWake {
     generation: u64,
 }
 
-fn database_catalog_read_registry() -> &'static std::sync::Mutex<[Option<Arc<DatabaseCatalogReadState>>; DATABASE_CATALOG_READ_SLOTS]> {
-    static REGISTRY: std::sync::OnceLock<std::sync::Mutex<[Option<Arc<DatabaseCatalogReadState>>; DATABASE_CATALOG_READ_SLOTS]>> = std::sync::OnceLock::new();
-    REGISTRY.get_or_init(|| std::sync::Mutex::new(std::array::from_fn(|_| None)))
+fn database_catalog_read_registry() -> &'static Mutex<[Option<Arc<DatabaseCatalogReadState>>; DATABASE_CATALOG_READ_SLOTS]> {
+    static REGISTRY: std::sync::OnceLock<Mutex<[Option<Arc<DatabaseCatalogReadState>>; DATABASE_CATALOG_READ_SLOTS]>> = std::sync::OnceLock::new();
+    REGISTRY.get_or_init(|| Mutex::new(std::array::from_fn(|_| None)))
 }
 
 impl std::task::Wake for DatabaseCatalogReadWake {
@@ -2007,18 +2006,18 @@ impl DatabaseCatalogReadFuture {
             _pool_use: pool_use,
             slot,
             generation,
-            admission: std::sync::Mutex::new(Some(admission)),
-            work: std::sync::Mutex::new(Some(DatabaseCatalogReadWork::new(storage, key))),
-            poll_work: std::sync::Mutex::new(None),
-            staged_result: std::sync::Mutex::new(None),
-            terminal_error: std::sync::Mutex::new(None),
-            completion: std::sync::Mutex::new(None),
-            terminal_work: std::sync::Mutex::new(None),
-            terminal_result: std::sync::Mutex::new(None),
-            terminal_completion: std::sync::Mutex::new(None),
-            retry_job: std::sync::Mutex::new(None),
-            terminal_job: std::sync::Mutex::new(None),
-            waker: std::sync::Mutex::new(None),
+            admission: Mutex::new(Some(admission)),
+            work: Mutex::new(Some(DatabaseCatalogReadWork::new(storage, key))),
+            poll_work: Mutex::new(None),
+            staged_result: Mutex::new(None),
+            terminal_error: Mutex::new(None),
+            completion: Mutex::new(None),
+            terminal_work: Mutex::new(None),
+            terminal_result: Mutex::new(None),
+            terminal_completion: Mutex::new(None),
+            retry_job: Mutex::new(None),
+            terminal_job: Mutex::new(None),
+            waker: Mutex::new(None),
             retry_armed: std::sync::atomic::AtomicBool::new(false),
             scheduled: std::sync::atomic::AtomicBool::new(false),
             polling: std::sync::atomic::AtomicBool::new(false),
@@ -2031,9 +2030,9 @@ impl DatabaseCatalogReadFuture {
             phase: std::sync::atomic::AtomicU8::new(DatabaseCatalogReadPhase::Handoff as u8),
             progress: std::sync::atomic::AtomicU8::new(DatabaseCatalogReadProgress::Admitted as u8),
             #[cfg(test)]
-            controlled_submit_hook: std::sync::Mutex::new(None),
+            controlled_submit_hook: Mutex::new(None),
             #[cfg(test)]
-            controlled_publication_before_waker_hook: std::sync::Mutex::new(None),
+            controlled_publication_before_waker_hook: Mutex::new(None),
             #[cfg(test)]
             poll_worker_thread: std::sync::atomic::AtomicBool::new(false),
         });
@@ -2308,8 +2307,8 @@ impl DatabaseCatalogBootstrapAdmissionState {
     }
 }
 
-static DATABASE_CATALOG_BOOTSTRAP_ADMISSION: std::sync::Mutex<DatabaseCatalogBootstrapAdmissionState> =
-    std::sync::Mutex::new(DatabaseCatalogBootstrapAdmissionState { slots: [EMPTY_DATABASE_CATALOG_BOOTSTRAP_SLOT; DATABASE_CATALOG_BOOTSTRAP_SLOTS], items: 0, bytes: 0, next_generation: 1 });
+static DATABASE_CATALOG_BOOTSTRAP_ADMISSION: Mutex<DatabaseCatalogBootstrapAdmissionState> =
+    Mutex::new(DatabaseCatalogBootstrapAdmissionState { slots: [EMPTY_DATABASE_CATALOG_BOOTSTRAP_SLOT; DATABASE_CATALOG_BOOTSTRAP_SLOTS], items: 0, bytes: 0, next_generation: 1 });
 
 struct DatabaseCatalogBootstrapAdmission {
     slot: usize,
@@ -2497,7 +2496,7 @@ impl DatabaseCatalogBootstrapRejected {
         Self { error: Some(error), close: DatabaseCatalogBootstrapRejectedClose::prepare(pool, owner), expected }
     }
 
-    pub fn retry(mut self, pool: Arc<WorkerPool>) -> Result<DatabaseCatalogBootstrapFuture, Self> {
+    pub fn retry(self, pool: Arc<WorkerPool>) -> Result<DatabaseCatalogBootstrapFuture, Self> {
         let mut owner = self.close.take_owner().unwrap_or_else(DatabaseCatalogBootstrapRejectedCloseOwner::empty);
         let storage = owner.storage.take();
         let pages = owner.pages.take();
@@ -2566,15 +2565,15 @@ impl Drop for DatabaseCatalogBootstrapRejected {
 
 struct DatabaseCatalogBootstrapRejectedClose {
     pool: Arc<WorkerPool>,
-    owner: std::sync::Mutex<Option<DatabaseCatalogBootstrapRejectedCloseOwner>>,
-    retry_job: std::sync::Mutex<Option<semio_framework_async::Job>>,
+    owner: Mutex<Option<DatabaseCatalogBootstrapRejectedCloseOwner>>,
+    retry_job: Mutex<Option<semio_framework_async::Job>>,
     scheduled: std::sync::atomic::AtomicBool,
-    fault: std::sync::Mutex<Option<DbError>>,
+    fault: Mutex<Option<DbError>>,
 }
 
 impl DatabaseCatalogBootstrapRejectedClose {
     fn prepare(pool: Arc<WorkerPool>, owner: DatabaseCatalogBootstrapRejectedCloseOwner) -> Arc<Self> {
-        Arc::new(Self { pool, owner: std::sync::Mutex::new(Some(owner)), retry_job: std::sync::Mutex::new(None), scheduled: std::sync::atomic::AtomicBool::new(false), fault: std::sync::Mutex::new(None) })
+        Arc::new(Self { pool, owner: Mutex::new(Some(owner)), retry_job: Mutex::new(None), scheduled: std::sync::atomic::AtomicBool::new(false), fault: Mutex::new(None) })
     }
 
     fn take_owner(&self) -> Option<DatabaseCatalogBootstrapRejectedCloseOwner> {
@@ -2758,21 +2757,21 @@ struct DatabaseCatalogBootstrapState {
     _pool_use: Arc<WorkerPoolUse>,
     slot: usize,
     generation: u64,
-    admission: std::sync::Mutex<Option<DatabaseCatalogBootstrapAdmission>>,
-    storage: std::sync::Mutex<Option<Arc<db_storage::DbBackend>>>,
-    pages: std::sync::Mutex<Option<db_storage::DbIoPages>>,
-    key: std::sync::Mutex<Option<DatabaseCatalogBootstrapKey>>,
+    admission: Mutex<Option<DatabaseCatalogBootstrapAdmission>>,
+    storage: Mutex<Option<Arc<db_storage::DbBackend>>>,
+    pages: Mutex<Option<db_storage::DbIoPages>>,
+    key: Mutex<Option<DatabaseCatalogBootstrapKey>>,
     expected: EpochFence,
-    work: std::sync::Mutex<Option<DatabaseCatalogBootstrapWork>>,
-    poll_work: std::sync::Mutex<Option<DatabaseCatalogBootstrapWork>>,
-    terminal_work: std::sync::Mutex<Option<DatabaseCatalogBootstrapWork>>,
-    staged_actual: std::sync::Mutex<Option<Result<EpochFence, DbError>>>,
-    terminal_error: std::sync::Mutex<Option<DbError>>,
-    completion: std::sync::Mutex<Option<Result<DatabaseCatalogBootstrapResult, DbError>>>,
-    terminal_completion: std::sync::Mutex<Option<Result<DatabaseCatalogBootstrapResult, DbError>>>,
-    retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
-    terminal_job: std::sync::Mutex<Option<semio_framework_async::Job>>,
-    waker: std::sync::Mutex<Option<std::task::Waker>>,
+    work: Mutex<Option<DatabaseCatalogBootstrapWork>>,
+    poll_work: Mutex<Option<DatabaseCatalogBootstrapWork>>,
+    terminal_work: Mutex<Option<DatabaseCatalogBootstrapWork>>,
+    staged_actual: Mutex<Option<Result<EpochFence, DbError>>>,
+    terminal_error: Mutex<Option<DbError>>,
+    completion: Mutex<Option<Result<DatabaseCatalogBootstrapResult, DbError>>>,
+    terminal_completion: Mutex<Option<Result<DatabaseCatalogBootstrapResult, DbError>>>,
+    retry_job: Mutex<Option<(semio_framework_async::Job, u8)>>,
+    terminal_job: Mutex<Option<semio_framework_async::Job>>,
+    waker: Mutex<Option<std::task::Waker>>,
     driver_authority: std::sync::atomic::AtomicU8,
     scheduled: std::sync::atomic::AtomicBool,
     polling: std::sync::atomic::AtomicBool,
@@ -2788,13 +2787,13 @@ struct DatabaseCatalogBootstrapState {
     phase: std::sync::atomic::AtomicU8,
     progress: std::sync::atomic::AtomicU8,
     #[cfg(test)]
-    controlled_submit_hook: std::sync::Mutex<Option<Arc<dyn Fn(semio_framework_async::Job) -> Result<(), semio_framework_async::Job> + Send + Sync>>>,
+    controlled_submit_hook: Mutex<Option<Arc<dyn Fn(semio_framework_async::Job) -> Result<(), semio_framework_async::Job> + Send + Sync>>>,
     #[cfg(test)]
-    controlled_publication_before_waker_hook: std::sync::Mutex<Option<Box<dyn FnOnce() + Send>>>,
+    controlled_publication_before_waker_hook: Mutex<Option<Box<dyn FnOnce() + Send>>>,
     #[cfg(test)]
-    controlled_driver_claim_hook: std::sync::Mutex<Option<Arc<dyn Fn(DatabaseCatalogBootstrapPhase) + Send + Sync>>>,
+    controlled_driver_claim_hook: Mutex<Option<Arc<dyn Fn(DatabaseCatalogBootstrapPhase) + Send + Sync>>>,
     #[cfg(test)]
-    controlled_driver_release_hook: std::sync::Mutex<Option<Arc<dyn Fn(DatabaseCatalogBootstrapPhase) + Send + Sync>>>,
+    controlled_driver_release_hook: Mutex<Option<Arc<dyn Fn(DatabaseCatalogBootstrapPhase) + Send + Sync>>>,
     #[cfg(test)]
     active_drivers: std::sync::atomic::AtomicUsize,
     #[cfg(test)]
@@ -2808,9 +2807,9 @@ struct DatabaseCatalogBootstrapWake {
     generation: u64,
 }
 
-fn database_catalog_bootstrap_registry() -> &'static std::sync::Mutex<[Option<Arc<DatabaseCatalogBootstrapState>>; DATABASE_CATALOG_BOOTSTRAP_SLOTS]> {
-    static REGISTRY: std::sync::OnceLock<std::sync::Mutex<[Option<Arc<DatabaseCatalogBootstrapState>>; DATABASE_CATALOG_BOOTSTRAP_SLOTS]>> = std::sync::OnceLock::new();
-    REGISTRY.get_or_init(|| std::sync::Mutex::new(std::array::from_fn(|_| None)))
+fn database_catalog_bootstrap_registry() -> &'static Mutex<[Option<Arc<DatabaseCatalogBootstrapState>>; DATABASE_CATALOG_BOOTSTRAP_SLOTS]> {
+    static REGISTRY: std::sync::OnceLock<Mutex<[Option<Arc<DatabaseCatalogBootstrapState>>; DATABASE_CATALOG_BOOTSTRAP_SLOTS]>> = std::sync::OnceLock::new();
+    REGISTRY.get_or_init(|| Mutex::new(std::array::from_fn(|_| None)))
 }
 
 impl std::task::Wake for DatabaseCatalogBootstrapWake {
@@ -2970,7 +2969,7 @@ impl DatabaseCatalogBootstrapState {
             return;
         }
         if !self.is_current() && matches!(self.phase(), DatabaseCatalogBootstrapPhase::Handoff | DatabaseCatalogBootstrapPhase::Poll) {
-            self.stage_error(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.generation), actual: crate::db_ids::GenerationId(self.observed_generation()) }, DatabaseCatalogBootstrapProgress::Fault);
+            self.stage_error(DbError::StaleGeneration { expected: GenerationId(self.generation), actual: GenerationId(self.observed_generation()) }, DatabaseCatalogBootstrapProgress::Fault);
             return;
         }
         if self.cancelled.load(Ordering::Acquire) && self.phase() != DatabaseCatalogBootstrapPhase::Terminal {
@@ -3015,7 +3014,7 @@ impl DatabaseCatalogBootstrapState {
                 } else if let Some(Err(error)) = step {
                     *self.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(error);
                     self.set_progress(DatabaseCatalogBootstrapProgress::Fault);
-                    self.closing.store(true, std::sync::atomic::Ordering::Release);
+                    self.closing.store(true, Ordering::Release);
                     self.schedule();
                 } else {
                     self.stage_error(DbError::LimitExceeded("database catalog-bootstrap work witness"), DatabaseCatalogBootstrapProgress::Fault);
@@ -3078,7 +3077,7 @@ impl DatabaseCatalogBootstrapState {
             Ok(std::task::Poll::Pending) => {
                 *self.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
                 if !self.is_current() {
-                    self.publish_poll_error(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.generation), actual: crate::db_ids::GenerationId(self.observed_generation()) }, DatabaseCatalogBootstrapProgress::Fault);
+                    self.publish_poll_error(DbError::StaleGeneration { expected: GenerationId(self.generation), actual: GenerationId(self.observed_generation()) }, DatabaseCatalogBootstrapProgress::Fault);
                 } else if self.cancelled.load(Ordering::Acquire) {
                     self.publish_poll_error(DbError::Closed, DatabaseCatalogBootstrapProgress::Cancelled);
                 } else {
@@ -3091,7 +3090,7 @@ impl DatabaseCatalogBootstrapState {
                 *self.staged_actual.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(actual);
                 self.set_phase(DatabaseCatalogBootstrapPhase::RetainWork);
                 if !self.is_current() {
-                    self.publish_poll_error(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.generation), actual: crate::db_ids::GenerationId(self.observed_generation()) }, DatabaseCatalogBootstrapProgress::Fault);
+                    self.publish_poll_error(DbError::StaleGeneration { expected: GenerationId(self.generation), actual: GenerationId(self.observed_generation()) }, DatabaseCatalogBootstrapProgress::Fault);
                 } else if self.cancelled.load(Ordering::Acquire) {
                     self.publish_poll_error(DbError::Closed, DatabaseCatalogBootstrapProgress::Cancelled);
                 }
@@ -3183,7 +3182,7 @@ impl DatabaseCatalogBootstrapState {
     fn publish_one(self: &Arc<Self>) {
         if !self.is_current() && self.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
             *self.staged_actual.lock().unwrap_or_else(std::sync::PoisonError::into_inner) =
-                Some(Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.generation), actual: crate::db_ids::GenerationId(self.observed_generation()) }));
+                Some(Err(DbError::StaleGeneration { expected: GenerationId(self.generation), actual: GenerationId(self.observed_generation()) }));
             self.set_progress(DatabaseCatalogBootstrapProgress::Fault);
         }
         let storage = self.storage.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
@@ -3367,21 +3366,21 @@ impl DatabaseCatalogBootstrapFuture {
             _pool_use: pool_use,
             slot,
             generation,
-            admission: std::sync::Mutex::new(Some(admission)),
-            storage: std::sync::Mutex::new(Some(storage)),
-            pages: std::sync::Mutex::new(Some(pages)),
-            key: std::sync::Mutex::new(Some(key)),
+            admission: Mutex::new(Some(admission)),
+            storage: Mutex::new(Some(storage)),
+            pages: Mutex::new(Some(pages)),
+            key: Mutex::new(Some(key)),
             expected,
-            work: std::sync::Mutex::new(None),
-            poll_work: std::sync::Mutex::new(None),
-            terminal_work: std::sync::Mutex::new(None),
-            staged_actual: std::sync::Mutex::new(None),
-            terminal_error: std::sync::Mutex::new(None),
-            completion: std::sync::Mutex::new(None),
-            terminal_completion: std::sync::Mutex::new(None),
-            retry_job: std::sync::Mutex::new(None),
-            terminal_job: std::sync::Mutex::new(None),
-            waker: std::sync::Mutex::new(None),
+            work: Mutex::new(None),
+            poll_work: Mutex::new(None),
+            terminal_work: Mutex::new(None),
+            staged_actual: Mutex::new(None),
+            terminal_error: Mutex::new(None),
+            completion: Mutex::new(None),
+            terminal_completion: Mutex::new(None),
+            retry_job: Mutex::new(None),
+            terminal_job: Mutex::new(None),
+            waker: Mutex::new(None),
             driver_authority: std::sync::atomic::AtomicU8::new(DatabaseCatalogBootstrapDriverAuthority::Idle as u8),
             scheduled: std::sync::atomic::AtomicBool::new(false),
             polling: std::sync::atomic::AtomicBool::new(false),
@@ -3397,13 +3396,13 @@ impl DatabaseCatalogBootstrapFuture {
             phase: std::sync::atomic::AtomicU8::new(DatabaseCatalogBootstrapPhase::Handoff as u8),
             progress: std::sync::atomic::AtomicU8::new(DatabaseCatalogBootstrapProgress::Admitted as u8),
             #[cfg(test)]
-            controlled_submit_hook: std::sync::Mutex::new(None),
+            controlled_submit_hook: Mutex::new(None),
             #[cfg(test)]
-            controlled_publication_before_waker_hook: std::sync::Mutex::new(None),
+            controlled_publication_before_waker_hook: Mutex::new(None),
             #[cfg(test)]
-            controlled_driver_claim_hook: std::sync::Mutex::new(None),
+            controlled_driver_claim_hook: Mutex::new(None),
             #[cfg(test)]
-            controlled_driver_release_hook: std::sync::Mutex::new(None),
+            controlled_driver_release_hook: Mutex::new(None),
             #[cfg(test)]
             active_drivers: std::sync::atomic::AtomicUsize::new(0),
             #[cfg(test)]
@@ -3770,9 +3769,9 @@ pub struct QueryStream {
 }
 
 const ENGINE_RETIRED_QUERY_STREAMS: usize = 64;
-static ENGINE_QUERY_RETIREMENT: std::sync::Mutex<[Option<QueryStream>; ENGINE_RETIRED_QUERY_STREAMS]> = std::sync::Mutex::new([const { None }; ENGINE_RETIRED_QUERY_STREAMS]);
-static ENGINE_QUERY_RETIREMENT_OVERFLOW: std::sync::Mutex<[Option<QueryStream>; ENGINE_RETIRED_QUERY_STREAMS]> = std::sync::Mutex::new([const { None }; ENGINE_RETIRED_QUERY_STREAMS]);
-static ENGINE_QUERY_RETIREMENT_QUARANTINE: std::sync::Mutex<[Option<QueryStream>; ENGINE_RETIRED_QUERY_STREAMS]> = std::sync::Mutex::new([const { None }; ENGINE_RETIRED_QUERY_STREAMS]);
+static ENGINE_QUERY_RETIREMENT: Mutex<[Option<QueryStream>; ENGINE_RETIRED_QUERY_STREAMS]> = Mutex::new([const { None }; ENGINE_RETIRED_QUERY_STREAMS]);
+static ENGINE_QUERY_RETIREMENT_OVERFLOW: Mutex<[Option<QueryStream>; ENGINE_RETIRED_QUERY_STREAMS]> = Mutex::new([const { None }; ENGINE_RETIRED_QUERY_STREAMS]);
+static ENGINE_QUERY_RETIREMENT_QUARANTINE: Mutex<[Option<QueryStream>; ENGINE_RETIRED_QUERY_STREAMS]> = Mutex::new([const { None }; ENGINE_RETIRED_QUERY_STREAMS]);
 static ENGINE_QUERY_RETIREMENT_RESERVATIONS: [std::sync::atomic::AtomicU64; 3] = [const { std::sync::atomic::AtomicU64::new(0) }; 3];
 static ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
@@ -3905,6 +3904,7 @@ impl QueryStream {
     }
 }
 
+#[cfg(test)]
 fn retire_engine_query_stream(owner: QueryStream) -> Result<(), QueryStream> {
     if owner.retirement.is_some() {
         install_reserved_engine_query_stream(owner);
@@ -4509,7 +4509,7 @@ pub mod vcs_integration {
     }
 
     fn record_credit(document: &ArtifactId, change: &ChangeRecord) -> Result<(usize, u64), DbError> {
-        vcs_credit(1 + usize::from(change.parent.is_some()), [document.0.capacity(), change.parent.as_ref().map_or(0, String::capacity), change.author.0.capacity(), change.message.capacity(), std::mem::size_of::<HashMutation>()])
+        vcs_credit(1 + usize::from(change.parent.is_some()), [document.0.capacity(), change.parent.as_ref().map_or(0, String::capacity), change.author.0.capacity(), change.message.capacity(), size_of::<HashMutation>()])
     }
 
     fn checkpoint_credit(document: &ArtifactId, request: &CheckpointRequest) -> Result<(usize, u64), DbError> {
@@ -4520,9 +4520,9 @@ pub mod vcs_integration {
             .and_then(|value| value.checked_add(request.authors.len()))
             .and_then(|value| value.checked_add(derived_author_items))
             .ok_or(DbError::LimitExceeded("vcs checkpoint item credit"))?;
-        let change_owner_bytes = request.change_ids.capacity().checked_mul(std::mem::size_of::<String>()).ok_or(DbError::LimitExceeded("vcs checkpoint change owner bytes"))?;
-        let author_owner_bytes = request.authors.capacity().checked_mul(std::mem::size_of::<ActorId>()).ok_or(DbError::LimitExceeded("vcs checkpoint author owner bytes"))?;
-        let derived_author_owner_bytes = request.authors.capacity().checked_mul(std::mem::size_of::<vcs::Author>()).ok_or(DbError::LimitExceeded("vcs checkpoint derived author owner bytes"))?;
+        let change_owner_bytes = request.change_ids.capacity().checked_mul(size_of::<String>()).ok_or(DbError::LimitExceeded("vcs checkpoint change owner bytes"))?;
+        let author_owner_bytes = request.authors.capacity().checked_mul(size_of::<ActorId>()).ok_or(DbError::LimitExceeded("vcs checkpoint author owner bytes"))?;
+        let derived_author_owner_bytes = request.authors.capacity().checked_mul(size_of::<vcs::Author>()).ok_or(DbError::LimitExceeded("vcs checkpoint derived author owner bytes"))?;
         let derived_author_id_bytes = request.authors.iter().try_fold(0usize, |bytes, author| bytes.checked_add(author.0.capacity())).ok_or(DbError::LimitExceeded("vcs checkpoint derived author id bytes"))?;
         let fixed = [document.0.capacity(), request.parent_checkpoint.as_ref().map_or(0, String::capacity), request.message.capacity(), change_owner_bytes, author_owner_bytes, derived_author_owner_bytes, derived_author_id_bytes];
         vcs_credit(items, fixed.into_iter().chain(request.change_ids.iter().map(String::capacity)).chain(request.authors.iter().map(|author| author.0.capacity())))
@@ -4586,7 +4586,7 @@ pub mod vcs_integration {
 
         fn close_store_step(&self) -> Result<bool, DbError> {
             #[cfg(test)]
-            let inject_failure = self.shutdown_failures.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |remaining| remaining.checked_sub(1)).is_ok();
+            let inject_failure = self.shutdown_failures.try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |remaining| remaining.checked_sub(1)).is_ok();
             let mut store = {
                 let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
                 if state.busy_generation.is_some() || state.waiters.iter().any(Option::is_some) {
@@ -4966,7 +4966,7 @@ pub mod vcs_integration {
         #[test]
         fn vcs_record_derived_owner_credit_cap_plus_one_preserves_exact_input() {
             let document = ArtifactId(String::new());
-            let author_bytes = VCS_OPERATION_BYTES as usize - VCS_OPERATION_PAGE_BYTES as usize - std::mem::size_of::<HashMutation>();
+            let author_bytes = VCS_OPERATION_BYTES as usize - VCS_OPERATION_PAGE_BYTES as usize - size_of::<HashMutation>();
             let accepted = record_with_author_bytes(author_bytes);
             assert_eq!(record_credit(&document, &accepted).unwrap(), (1, VCS_OPERATION_BYTES));
             let rejected = record_with_author_bytes(author_bytes + 1);
@@ -4979,7 +4979,7 @@ pub mod vcs_integration {
         #[test]
         fn vcs_checkpoint_derived_owner_credit_cap_plus_one_preserves_exact_input() {
             let document = ArtifactId(String::new());
-            let fixed = VCS_OPERATION_PAGE_BYTES as usize + std::mem::size_of::<ActorId>() + std::mem::size_of::<vcs::Author>();
+            let fixed = VCS_OPERATION_PAGE_BYTES as usize + size_of::<ActorId>() + size_of::<vcs::Author>();
             let author_bytes = (VCS_OPERATION_BYTES as usize - fixed) / 2;
             let accepted = checkpoint_with_author_bytes(author_bytes);
             assert_eq!(checkpoint_credit(&document, &accepted).unwrap().1, VCS_OPERATION_BYTES);
@@ -5019,7 +5019,7 @@ pub mod vcs_integration {
         fn vcs_derived_owner_process_aggregate_plus_one_rejects_without_consuming_input() {
             let _guard = TEST_LOCK.lock().unwrap();
             let document = ArtifactId(String::new());
-            let author_bytes = VCS_OPERATION_BYTES as usize - VCS_OPERATION_PAGE_BYTES as usize - std::mem::size_of::<HashMutation>();
+            let author_bytes = VCS_OPERATION_BYTES as usize - VCS_OPERATION_PAGE_BYTES as usize - size_of::<HashMutation>();
             let accepted = record_with_author_bytes(author_bytes);
             let (items, bytes) = record_credit(&document, &accepted).unwrap();
             let claims: Vec<VcsOperationAdmission> = (0..VCS_OPERATION_ITEMS).map(|_| VcsOperationAdmission::try_claim(items, bytes).unwrap()).collect();
@@ -5031,11 +5031,11 @@ pub mod vcs_integration {
             assert_eq!(VCS_ADMISSION.lock().unwrap().bytes, VCS_TOTAL_BYTES);
             drop(claims);
 
-            let checkpoint = checkpoint_with_author_bytes((VCS_OPERATION_BYTES as usize - VCS_OPERATION_PAGE_BYTES as usize - std::mem::size_of::<ActorId>() - std::mem::size_of::<vcs::Author>()) / 2);
+            let checkpoint = checkpoint_with_author_bytes((VCS_OPERATION_BYTES as usize - VCS_OPERATION_PAGE_BYTES as usize - size_of::<ActorId>() - size_of::<vcs::Author>()) / 2);
             let (items, bytes) = checkpoint_credit(&document, &checkpoint).unwrap();
             let claims: Vec<VcsOperationAdmission> = (0..VCS_OPERATION_ITEMS).map(|_| VcsOperationAdmission::try_claim(items, bytes).unwrap()).collect();
             assert_eq!(VCS_ADMISSION.lock().unwrap().bytes, VCS_TOTAL_BYTES);
-            let rejected = checkpoint_with_author_bytes((VCS_OPERATION_BYTES as usize - VCS_OPERATION_PAGE_BYTES as usize - std::mem::size_of::<ActorId>() - std::mem::size_of::<vcs::Author>()) / 2);
+            let rejected = checkpoint_with_author_bytes((VCS_OPERATION_BYTES as usize - VCS_OPERATION_PAGE_BYTES as usize - size_of::<ActorId>() - size_of::<vcs::Author>()) / 2);
             let author_owner = rejected.authors[0].0.as_ptr();
             assert!(checkpoint_credit(&document, &rejected).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes)).is_err());
             assert_eq!(rejected.authors[0].0.as_ptr(), author_owner);
@@ -5053,8 +5053,8 @@ pub mod vcs_integration {
             cell.state.lock().unwrap().busy_generation = Some(owner.generation);
             let second_wake = std::sync::Arc::new(CountWake(AtomicUsize::new(0)));
             let third_wake = std::sync::Arc::new(CountWake(AtomicUsize::new(0)));
-            let second_waker = std::task::Waker::from(second_wake.clone());
-            let third_waker = std::task::Waker::from(third_wake.clone());
+            let second_waker = Waker::from(second_wake.clone());
+            let third_waker = Waker::from(third_wake.clone());
             let mut second_context = Context::from_waker(&second_waker);
             let mut third_context = Context::from_waker(&third_waker);
             let mut second_acquire = VcsStoreAcquire { cell: cell.clone(), slot: second.slot, generation: second.generation, resolved: false };
@@ -5068,7 +5068,7 @@ pub mod vcs_integration {
             assert_eq!(third_wake.0.load(Ordering::Acquire), 0);
             let late = VcsOperationAdmission::try_claim(1, VCS_OPERATION_PAGE_BYTES).unwrap();
             let late_wake = std::sync::Arc::new(CountWake(AtomicUsize::new(0)));
-            let late_waker = std::task::Waker::from(late_wake.clone());
+            let late_waker = Waker::from(late_wake.clone());
             let mut late_context = Context::from_waker(&late_waker);
             let mut late_acquire = VcsStoreAcquire { cell: cell.clone(), slot: late.slot, generation: late.generation, resolved: false };
             assert!(Pin::new(&mut late_acquire).poll(&mut late_context).is_pending());
@@ -5087,7 +5087,7 @@ pub mod vcs_integration {
             let waiter = VcsOperationAdmission::try_claim(1, VCS_OPERATION_PAGE_BYTES).unwrap();
             let cell = std::sync::Arc::new(VcsStoreCell::new());
             cell.state.lock().unwrap().busy_generation = Some(owner.generation);
-            let waker = std::task::Waker::from(std::sync::Arc::new(CountWake(AtomicUsize::new(0))));
+            let waker = Waker::from(std::sync::Arc::new(CountWake(AtomicUsize::new(0))));
             let mut context = Context::from_waker(&waker);
             let mut acquire = VcsStoreAcquire { cell: cell.clone(), slot: waiter.slot, generation: waiter.generation, resolved: false };
             assert!(Pin::new(&mut acquire).poll(&mut context).is_pending());
@@ -5136,7 +5136,6 @@ pub mod vcs_integration {
 // whole closing site is duplicated per feature state instead of gating one variant inside it —
 // still ONE concrete `VersionGraphs` type per build, never a generic thread through
 // `ArtifactEngineConfig`/`ArtifactEngine`/`Database`. Replaces `Arc<dyn VersionGraph>`.
-use crate::__semio_dispatch_VersionGraph;
 use semio_framework_dispatch_macros::dyn_enum_close;
 
 #[cfg(feature = "vcs")]
@@ -5302,12 +5301,12 @@ const DATABASE_CREATE_CATALOG_MAX_PAGES: usize = db_storage::DB_IO_OPERATION_PAG
 const DATABASE_CREATE_CATALOG_COPY_BYTES: usize = 256;
 const DATABASE_CREATE_CATALOG_ITEMS: u64 = (DATABASE_CREATE_CATALOG_MAX_ENTRIES * 4 + DATABASE_CREATE_CATALOG_MAX_PAGES + 64) as u64;
 const DATABASE_CREATE_CATALOG_BYTES: u64 =
-    (DATABASE_CREATE_CATALOG_MAX_ENTRIES * 2 * (DATABASE_CREATE_CATALOG_MAX_ID_BYTES + std::mem::size_of::<CatalogEntry>()) + DATABASE_CREATE_CATALOG_MAX_PAGES * db_storage::DB_IO_PAGE_BYTES + 128 * 1024) as u64;
+    (DATABASE_CREATE_CATALOG_MAX_ENTRIES * 2 * (DATABASE_CREATE_CATALOG_MAX_ID_BYTES + size_of::<CatalogEntry>()) + DATABASE_CREATE_CATALOG_MAX_PAGES * db_storage::DB_IO_PAGE_BYTES + 128 * 1024) as u64;
 const DATABASE_CREATE_CATALOG_TOTAL_ITEMS: u64 = DATABASE_CREATE_CATALOG_ITEMS * DATABASE_CREATE_CATALOG_SLOTS as u64;
 const DATABASE_CREATE_CATALOG_TOTAL_BYTES: u64 = DATABASE_CREATE_CATALOG_BYTES * DATABASE_CREATE_CATALOG_SLOTS as u64;
 const DATABASE_CREATE_CATALOG_RETRY_LIMIT: u8 = 8;
 const DATABASE_CREATE_CATALOG_DEADLINE_MS: u64 = 30_000;
-const DATABASE_CREATE_CATALOG_ARC_CONTROL_BYTES: usize = std::mem::size_of::<Vec<CatalogEntry>>() + std::mem::size_of::<usize>() * 2;
+const DATABASE_CREATE_CATALOG_ARC_CONTROL_BYTES: usize = size_of::<Vec<CatalogEntry>>() + size_of::<usize>() * 2;
 
 #[derive(Clone, Copy)]
 struct DatabaseCreateCatalogBackingLedger {
@@ -5317,7 +5316,7 @@ struct DatabaseCreateCatalogBackingLedger {
 
 impl DatabaseCreateCatalogBackingLedger {
     fn new(document_capacity: usize, base_capacity: usize) -> Result<Self, DbError> {
-        let base_bytes = base_capacity.checked_mul(std::mem::size_of::<CatalogEntry>()).ok_or(DbError::LimitExceeded("database create-catalog base backing bytes"))?;
+        let base_bytes = base_capacity.checked_mul(size_of::<CatalogEntry>()).ok_or(DbError::LimitExceeded("database create-catalog base backing bytes"))?;
         let bytes = document_capacity.checked_add(base_bytes).and_then(|bytes| bytes.checked_add(DATABASE_CREATE_CATALOG_ARC_CONTROL_BYTES)).ok_or(DbError::LimitExceeded("database create-catalog initial backing bytes"))?;
         let items = u64::try_from(base_capacity).ok().and_then(|items| items.checked_add(3)).ok_or(DbError::LimitExceeded("database create-catalog initial backing items"))?;
         let bytes = u64::try_from(bytes).map_err(|_| DbError::LimitExceeded("database create-catalog initial backing bytes"))?;
@@ -5404,8 +5403,8 @@ impl DatabaseCreateCatalogAdmissionState {
     }
 }
 
-static DATABASE_CREATE_CATALOG_ADMISSION: std::sync::Mutex<DatabaseCreateCatalogAdmissionState> =
-    std::sync::Mutex::new(DatabaseCreateCatalogAdmissionState { slots: [EMPTY_DATABASE_CREATE_CATALOG_SLOT; DATABASE_CREATE_CATALOG_SLOTS], items: 0, bytes: 0, next_generation: 1 });
+static DATABASE_CREATE_CATALOG_ADMISSION: Mutex<DatabaseCreateCatalogAdmissionState> =
+    Mutex::new(DatabaseCreateCatalogAdmissionState { slots: [EMPTY_DATABASE_CREATE_CATALOG_SLOT; DATABASE_CREATE_CATALOG_SLOTS], items: 0, bytes: 0, next_generation: 1 });
 
 struct DatabaseCreateCatalogAdmission {
     slot: usize,
@@ -5552,10 +5551,10 @@ impl DatabaseCreateCatalogRejectedOwner {
 
 struct DatabaseCreateCatalogRejectedClose {
     pool: Arc<WorkerPool>,
-    owner: std::sync::Mutex<Option<DatabaseCreateCatalogRejectedOwner>>,
+    owner: Mutex<Option<DatabaseCreateCatalogRejectedOwner>>,
     driver: std::sync::atomic::AtomicU8,
-    retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
-    terminal_job: std::sync::Mutex<Option<semio_framework_async::Job>>,
+    retry_job: Mutex<Option<(semio_framework_async::Job, u8)>>,
+    terminal_job: Mutex<Option<semio_framework_async::Job>>,
     deadline_ms: u64,
     callback_close: std::sync::atomic::AtomicBool,
     callback_armed: std::sync::atomic::AtomicBool,
@@ -5572,10 +5571,10 @@ impl DatabaseCreateCatalogRejectedClose {
         let deadline_ms = pool.now_ms().checked_add(DATABASE_CREATE_CATALOG_DEADLINE_MS).unwrap_or(u64::MAX);
         Arc::new(Self {
             pool,
-            owner: std::sync::Mutex::new(Some(owner)),
+            owner: Mutex::new(Some(owner)),
             driver: std::sync::atomic::AtomicU8::new(DatabaseCreateCatalogDriverAuthority::Idle as u8),
-            retry_job: std::sync::Mutex::new(None),
-            terminal_job: std::sync::Mutex::new(None),
+            retry_job: Mutex::new(None),
+            terminal_job: Mutex::new(None),
             deadline_ms,
             callback_close: std::sync::atomic::AtomicBool::new(false),
             callback_armed: std::sync::atomic::AtomicBool::new(false),
@@ -5658,7 +5657,7 @@ impl DatabaseCreateCatalogRejectedClose {
             return true;
         }
         let mut owner = self.owner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        owner.as_mut().is_some_and(DatabaseCreateCatalogRejectedOwner::close_one);
+        if let Some(owner) = owner.as_mut() { owner.close_one(); }
         if owner.as_ref().is_some_and(DatabaseCreateCatalogRejectedOwner::terminal_is_empty) {
             owner.take();
         }
@@ -6013,23 +6012,23 @@ enum DatabaseCreateCatalogDriverAuthority {
 
 struct DatabaseCreateCatalogState {
     pool: Arc<WorkerPool>,
-    pool_use: std::sync::Mutex<Option<Arc<WorkerPoolUse>>>,
+    pool_use: Mutex<Option<Arc<WorkerPoolUse>>>,
     catalog: Arc<Mutex<CatalogState>>,
     slot: usize,
     generation: u64,
-    admission: std::sync::Mutex<Option<DatabaseCreateCatalogAdmission>>,
-    storage: std::sync::Mutex<Option<Arc<db_storage::DbBackend>>>,
-    document: std::sync::Mutex<Option<protocol::ArtifactId>>,
-    cursor: std::sync::Mutex<DatabaseCreateCatalogCursor>,
-    work: std::sync::Mutex<Option<DatabaseCreateCatalogWork>>,
-    poll_work: std::sync::Mutex<Option<DatabaseCreateCatalogWork>>,
-    terminal_work: std::sync::Mutex<Option<DatabaseCreateCatalogWork>>,
-    outcome: std::sync::Mutex<Option<Result<EpochFence, DbError>>>,
-    completion: std::sync::Mutex<Option<Result<DatabaseCreateCatalogResult, DbError>>>,
-    terminal_completion: std::sync::Mutex<Option<Result<DatabaseCreateCatalogResult, DbError>>>,
-    retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
-    terminal_job: std::sync::Mutex<Option<semio_framework_async::Job>>,
-    waker: std::sync::Mutex<Option<std::task::Waker>>,
+    admission: Mutex<Option<DatabaseCreateCatalogAdmission>>,
+    storage: Mutex<Option<Arc<db_storage::DbBackend>>>,
+    document: Mutex<Option<protocol::ArtifactId>>,
+    cursor: Mutex<DatabaseCreateCatalogCursor>,
+    work: Mutex<Option<DatabaseCreateCatalogWork>>,
+    poll_work: Mutex<Option<DatabaseCreateCatalogWork>>,
+    terminal_work: Mutex<Option<DatabaseCreateCatalogWork>>,
+    outcome: Mutex<Option<Result<EpochFence, DbError>>>,
+    completion: Mutex<Option<Result<DatabaseCreateCatalogResult, DbError>>>,
+    terminal_completion: Mutex<Option<Result<DatabaseCreateCatalogResult, DbError>>>,
+    retry_job: Mutex<Option<(semio_framework_async::Job, u8)>>,
+    terminal_job: Mutex<Option<semio_framework_async::Job>>,
+    waker: Mutex<Option<std::task::Waker>>,
     driver_authority: std::sync::atomic::AtomicU8,
     polling: std::sync::atomic::AtomicBool,
     wake_requested: std::sync::atomic::AtomicBool,
@@ -6063,9 +6062,9 @@ struct DatabaseCreateCatalogState {
     #[cfg(test)]
     controlled_capacity_overage: std::sync::atomic::AtomicUsize,
     #[cfg(test)]
-    controlled_driver_hook: std::sync::Mutex<Option<Arc<dyn Fn(DatabaseCreateCatalogPhase) + Send + Sync>>>,
+    controlled_driver_hook: Mutex<Option<Arc<dyn Fn(DatabaseCreateCatalogPhase) + Send + Sync>>>,
     #[cfg(test)]
-    controlled_publication_before_waker_hook: std::sync::Mutex<Option<Box<dyn FnOnce() + Send>>>,
+    controlled_publication_before_waker_hook: Mutex<Option<Box<dyn FnOnce() + Send>>>,
 }
 
 struct DatabaseCreateCatalogWake {
@@ -6073,9 +6072,9 @@ struct DatabaseCreateCatalogWake {
     generation: u64,
 }
 
-fn database_create_catalog_registry() -> &'static std::sync::Mutex<[Option<Arc<DatabaseCreateCatalogState>>; DATABASE_CREATE_CATALOG_SLOTS]> {
-    static REGISTRY: std::sync::OnceLock<std::sync::Mutex<[Option<Arc<DatabaseCreateCatalogState>>; DATABASE_CREATE_CATALOG_SLOTS]>> = std::sync::OnceLock::new();
-    REGISTRY.get_or_init(|| std::sync::Mutex::new(std::array::from_fn(|_| None)))
+fn database_create_catalog_registry() -> &'static Mutex<[Option<Arc<DatabaseCreateCatalogState>>; DATABASE_CREATE_CATALOG_SLOTS]> {
+    static REGISTRY: std::sync::OnceLock<Mutex<[Option<Arc<DatabaseCreateCatalogState>>; DATABASE_CREATE_CATALOG_SLOTS]>> = std::sync::OnceLock::new();
+    REGISTRY.get_or_init(|| Mutex::new(std::array::from_fn(|_| None)))
 }
 
 impl std::task::Wake for DatabaseCreateCatalogWake {
@@ -6180,7 +6179,7 @@ impl DatabaseCreateCatalogState {
         self.callback_worker_thread.store(std::thread::current().name().is_some_and(|name| name.starts_with("semio-pool-worker-")), Ordering::Release);
         let Some((job, attempt)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() else { return };
         let terminal = if !self.is_current() {
-            Some((DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.generation), actual: crate::db_ids::GenerationId(self.observed_generation()) }, DatabaseCreateCatalogProgress::Fault))
+            Some((DbError::StaleGeneration { expected: GenerationId(self.generation), actual: GenerationId(self.observed_generation()) }, DatabaseCreateCatalogProgress::Fault))
         } else if self.cancelled.load(Ordering::Acquire) {
             Some((DbError::Closed, DatabaseCreateCatalogProgress::Cancelled))
         } else if self.pool.now_ms() >= self.deadline_ms.load(Ordering::Acquire) {
@@ -6301,7 +6300,7 @@ impl DatabaseCreateCatalogState {
     fn drive_claimed(self: &Arc<Self>, generation: u64) {
         use std::sync::atomic::Ordering;
         if !self.retry_closing.load(Ordering::Acquire) && (generation != self.generation || !self.is_current()) {
-            self.stage_error(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.generation), actual: crate::db_ids::GenerationId(self.observed_generation()) }, DatabaseCreateCatalogProgress::Fault);
+            self.stage_error(DbError::StaleGeneration { expected: GenerationId(self.generation), actual: GenerationId(self.observed_generation()) }, DatabaseCreateCatalogProgress::Fault);
             return;
         }
         if self.closing.load(Ordering::Acquire) && self.phase() == DatabaseCreateCatalogPhase::Terminal {
@@ -6359,16 +6358,16 @@ impl DatabaseCreateCatalogState {
 
     fn scan_one(&self) {
         self.set_progress(DatabaseCreateCatalogProgress::Scanning);
-        let document = self.document.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(document) = document.as_ref() else {
-            drop(document);
+        let document_guard = self.document.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(document) = document_guard.as_ref() else {
+            drop(document_guard);
             self.stage_error(DbError::LimitExceeded("database create-catalog document owner"), DatabaseCreateCatalogProgress::Fault);
             return;
         };
         let mut cursor = self.cursor.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let Some(base) = cursor.base.as_ref().map(Arc::clone) else {
             drop(cursor);
-            drop(document);
+            drop(document_guard);
             self.stage_error(DbError::LimitExceeded("database create-catalog base owner"), DatabaseCreateCatalogProgress::Fault);
             return;
         };
@@ -6381,7 +6380,7 @@ impl DatabaseCreateCatalogState {
         };
         if source_capacity > DATABASE_CREATE_CATALOG_MAX_ID_BYTES || source.len() > DATABASE_CREATE_CATALOG_MAX_ID_BYTES {
             drop(cursor);
-            drop(document);
+            drop(document_guard);
             self.stage_error(DbError::LimitExceeded("database create-catalog base document bytes"), DatabaseCreateCatalogProgress::Fault);
             return;
         }
@@ -6389,14 +6388,14 @@ impl DatabaseCreateCatalogState {
             if cursor.scan_entry < entry_count {
                 if let Err(error) = cursor.backing.observe(1, source_capacity) {
                     drop(cursor);
-                    drop(document);
+                    drop(document_guard);
                     self.stage_error(error, DatabaseCreateCatalogProgress::Fault);
                     return;
                 }
             }
             if duplicate {
                 drop(cursor);
-                drop(document);
+                drop(document_guard);
                 self.stage_error(DbError::AlreadyExists(String::from("document already exists")), DatabaseCreateCatalogProgress::Fault);
                 return;
             }
@@ -6404,7 +6403,7 @@ impl DatabaseCreateCatalogState {
             let fixed = usize::from(cursor.scan_entry != 0) + b"{\"document\":\"".len() + b"\",\"created_at_ms\":".len() + decimal_u64(created_at_ms, &mut decimal).len() + 1;
             if let Err(error) = Self::add_encoded(&mut cursor, fixed) {
                 drop(cursor);
-                drop(document);
+                drop(document_guard);
                 self.stage_error(error, DatabaseCreateCatalogProgress::Fault);
                 return;
             }
@@ -6422,7 +6421,7 @@ impl DatabaseCreateCatalogState {
             };
             if let Err(error) = Self::add_encoded(&mut cursor, bytes) {
                 drop(cursor);
-                drop(document);
+                drop(document_guard);
                 self.stage_error(error, DatabaseCreateCatalogProgress::Fault);
                 return;
             }
@@ -6459,7 +6458,7 @@ impl DatabaseCreateCatalogState {
         }
         let observed_capacity = self.observed_capacity(candidate.capacity());
         cursor.candidate = Some(candidate);
-        let backing_bytes = match observed_capacity.checked_mul(std::mem::size_of::<CatalogEntry>()) {
+        let backing_bytes = match observed_capacity.checked_mul(size_of::<CatalogEntry>()) {
             Some(bytes) => bytes,
             None => {
                 drop(cursor);
@@ -6501,16 +6500,16 @@ impl DatabaseCreateCatalogState {
 
     fn clone_one(&self) {
         self.set_progress(DatabaseCreateCatalogProgress::Copying);
-        let document = self.document.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(document) = document.as_ref() else {
-            drop(document);
+        let document_guard = self.document.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(document) = document_guard.as_ref() else {
+            drop(document_guard);
             self.stage_error(DbError::LimitExceeded("database create-catalog clone document"), DatabaseCreateCatalogProgress::Fault);
             return;
         };
         let mut cursor = self.cursor.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let Some(base) = cursor.base.as_ref().map(Arc::clone) else {
             drop(cursor);
-            drop(document);
+            drop(document_guard);
             self.stage_error(DbError::LimitExceeded("database create-catalog clone base"), DatabaseCreateCatalogProgress::Fault);
             return;
         };
@@ -6524,7 +6523,7 @@ impl DatabaseCreateCatalogState {
             let mut text = String::new();
             if text.try_reserve_exact(source.len()).is_err() {
                 drop(cursor);
-                drop(document);
+                drop(document_guard);
                 self.stage_error(DbError::LimitExceeded("database create-catalog string backing"), DatabaseCreateCatalogProgress::Fault);
                 return;
             }
@@ -6532,13 +6531,13 @@ impl DatabaseCreateCatalogState {
             cursor.clone_text = Some(text);
             if observed_capacity > DATABASE_CREATE_CATALOG_MAX_ID_BYTES {
                 drop(cursor);
-                drop(document);
+                drop(document_guard);
                 self.stage_error(DbError::LimitExceeded("database create-catalog cloned string capacity"), DatabaseCreateCatalogProgress::Fault);
                 return;
             }
             if let Err(error) = cursor.backing.observe(1, observed_capacity) {
                 drop(cursor);
-                drop(document);
+                drop(document_guard);
                 self.stage_error(error, DatabaseCreateCatalogProgress::Fault);
                 return;
             }
@@ -6556,7 +6555,7 @@ impl DatabaseCreateCatalogState {
         let text = cursor.clone_text.take().unwrap_or_default();
         let Some(candidate) = cursor.candidate.as_mut() else {
             drop(cursor);
-            drop(document);
+            drop(document_guard);
             self.stage_error(DbError::LimitExceeded("database create-catalog candidate owner"), DatabaseCreateCatalogProgress::Fault);
             return;
         };
@@ -7134,14 +7133,14 @@ impl DatabaseCreateCatalogFuture {
         let deadline_ms = created_at_ms.checked_add(DATABASE_CREATE_CATALOG_DEADLINE_MS).unwrap_or(u64::MAX);
         let state = Arc::new(DatabaseCreateCatalogState {
             pool,
-            pool_use: std::sync::Mutex::new(Some(pool_use)),
+            pool_use: Mutex::new(Some(pool_use)),
             catalog,
             slot,
             generation,
-            admission: std::sync::Mutex::new(Some(admission)),
-            storage: std::sync::Mutex::new(Some(storage)),
-            document: std::sync::Mutex::new(Some(document)),
-            cursor: std::sync::Mutex::new(DatabaseCreateCatalogCursor {
+            admission: Mutex::new(Some(admission)),
+            storage: Mutex::new(Some(storage)),
+            document: Mutex::new(Some(document)),
+            cursor: Mutex::new(DatabaseCreateCatalogCursor {
                 base: Some(base),
                 backing,
                 base_epoch,
@@ -7161,15 +7160,15 @@ impl DatabaseCreateCatalogFuture {
                 writer: None,
                 pages: None,
             }),
-            work: std::sync::Mutex::new(None),
-            poll_work: std::sync::Mutex::new(None),
-            terminal_work: std::sync::Mutex::new(None),
-            outcome: std::sync::Mutex::new(None),
-            completion: std::sync::Mutex::new(None),
-            terminal_completion: std::sync::Mutex::new(None),
-            retry_job: std::sync::Mutex::new(None),
-            terminal_job: std::sync::Mutex::new(None),
-            waker: std::sync::Mutex::new(None),
+            work: Mutex::new(None),
+            poll_work: Mutex::new(None),
+            terminal_work: Mutex::new(None),
+            outcome: Mutex::new(None),
+            completion: Mutex::new(None),
+            terminal_completion: Mutex::new(None),
+            retry_job: Mutex::new(None),
+            terminal_job: Mutex::new(None),
+            waker: Mutex::new(None),
             driver_authority: std::sync::atomic::AtomicU8::new(DatabaseCreateCatalogDriverAuthority::Idle as u8),
             polling: std::sync::atomic::AtomicBool::new(false),
             wake_requested: std::sync::atomic::AtomicBool::new(false),
@@ -7203,9 +7202,9 @@ impl DatabaseCreateCatalogFuture {
             #[cfg(test)]
             controlled_capacity_overage: std::sync::atomic::AtomicUsize::new(0),
             #[cfg(test)]
-            controlled_driver_hook: std::sync::Mutex::new(None),
+            controlled_driver_hook: Mutex::new(None),
             #[cfg(test)]
-            controlled_publication_before_waker_hook: std::sync::Mutex::new(None),
+            controlled_publication_before_waker_hook: Mutex::new(None),
         });
         database_create_catalog_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[slot] = Some(state.clone());
         if schedule {
@@ -7981,7 +7980,7 @@ impl DatabaseOpenAtRejected {
     pub async fn retry_close(self) -> Result<DbError, Self> {
         match self {
             Self::Storage(rejected) => rejected.retry_close().await.map_err(Self::Storage),
-            Self::Database { cause, mut cleanup_error, storage } => {
+            Self::Database { cause, cleanup_error: _, storage } => {
                 let result = match storage.as_ref() {
                     #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
                     db_storage::DbBackend::Fs(storage) => storage.close().await,
@@ -7990,8 +7989,7 @@ impl DatabaseOpenAtRejected {
                 match result {
                     Ok(()) => Ok(cause),
                     Err(error) => {
-                        cleanup_error = Some(error);
-                        Err(Self::Database { cause, cleanup_error, storage })
+                        Err(Self::Database { cause, cleanup_error: Some(error), storage })
                     }
                 }
             }
@@ -8631,7 +8629,7 @@ struct ArtifactSubmitAdmissionState {
     next_generation: u64,
 }
 
-static ARTIFACT_SUBMIT_ADMISSION: std::sync::Mutex<ArtifactSubmitAdmissionState> = std::sync::Mutex::new(ArtifactSubmitAdmissionState { slots: [EMPTY_ARTIFACT_SUBMIT_SLOT; ARTIFACT_SUBMIT_OPERATION_ITEMS], bytes: 0, next_generation: 1 });
+static ARTIFACT_SUBMIT_ADMISSION: Mutex<ArtifactSubmitAdmissionState> = Mutex::new(ArtifactSubmitAdmissionState { slots: [EMPTY_ARTIFACT_SUBMIT_SLOT; ARTIFACT_SUBMIT_OPERATION_ITEMS], bytes: 0, next_generation: 1 });
 
 struct ArtifactSubmitAdmission {
     slot: usize,
@@ -8681,14 +8679,14 @@ fn artifact_submit_credit(batch: &db_artifact::CommandBatch) -> Result<(usize, u
     }
     let mut items = batch.envelopes.len();
     let mut bytes = ARTIFACT_SUBMIT_PAGE_BYTES;
-    let envelope_owner_bytes = batch.envelopes.capacity().checked_mul(std::mem::size_of::<protocol::MutationEnvelope>()).ok_or(DbError::LimitExceeded("artifact submit envelope owner bytes"))?;
+    let envelope_owner_bytes = batch.envelopes.capacity().checked_mul(size_of::<protocol::MutationEnvelope>()).ok_or(DbError::LimitExceeded("artifact submit envelope owner bytes"))?;
     bytes = bytes.checked_add(envelope_owner_bytes as u64).ok_or(DbError::LimitExceeded("artifact submit envelope owner bytes"))?;
     for envelope in &batch.envelopes {
         items = items.checked_add(envelope.dependencies.len()).ok_or(DbError::LimitExceeded("artifact submit nested items"))?;
         if items > ARTIFACT_SUBMIT_NESTED_ITEMS {
             return Err(DbError::LimitExceeded("artifact submit nested item credit"));
         }
-        let dependency_owner_bytes = envelope.dependencies.capacity().checked_mul(std::mem::size_of::<protocol::MutationId>()).ok_or(DbError::LimitExceeded("artifact submit dependency owner bytes"))?;
+        let dependency_owner_bytes = envelope.dependencies.capacity().checked_mul(size_of::<protocol::MutationId>()).ok_or(DbError::LimitExceeded("artifact submit dependency owner bytes"))?;
         bytes = bytes
             .checked_add(envelope.mutation_id.0.capacity() as u64)
             .and_then(|value| value.checked_add(envelope.document_id.0.capacity() as u64))
@@ -8734,15 +8732,15 @@ struct ArtifactSubmitState {
     authority: Arc<db_artifact::ArtifactAuthority>,
     document: protocol::ArtifactId,
     generation: u64,
-    authority_generation: db_ids::GenerationId,
-    admission: std::sync::Mutex<Option<ArtifactSubmitAdmission>>,
-    work: std::sync::Mutex<Option<ArtifactSubmitWorkOwner>>,
-    completion: std::sync::Mutex<Option<ArtifactSubmitOutcome>>,
-    terminal_work: std::sync::Mutex<Option<ArtifactSubmitWorkOwner>>,
-    terminal_result: std::sync::Mutex<Option<ArtifactSubmitOutcome>>,
-    retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
-    terminal_job: std::sync::Mutex<Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>>,
-    waker: std::sync::Mutex<Option<std::task::Waker>>,
+    authority_generation: GenerationId,
+    admission: Mutex<Option<ArtifactSubmitAdmission>>,
+    work: Mutex<Option<ArtifactSubmitWorkOwner>>,
+    completion: Mutex<Option<ArtifactSubmitOutcome>>,
+    terminal_work: Mutex<Option<ArtifactSubmitWorkOwner>>,
+    terminal_result: Mutex<Option<ArtifactSubmitOutcome>>,
+    retry_job: Mutex<Option<(semio_framework_async::Job, u8)>>,
+    terminal_job: Mutex<Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>>,
+    waker: Mutex<Option<std::task::Waker>>,
     retry_armed: std::sync::atomic::AtomicBool,
     retry_generation: std::sync::atomic::AtomicU64,
     scheduled: std::sync::atomic::AtomicBool,
@@ -8872,7 +8870,7 @@ impl ArtifactSubmitState {
         if self.retry_armed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return;
         }
-        let generation = match self.retry_generation.fetch_update(Ordering::AcqRel, Ordering::Acquire, |generation| generation.checked_add(1).filter(|next| *next != 0)) {
+        let generation = match self.retry_generation.try_update(Ordering::AcqRel, Ordering::Acquire, |generation| generation.checked_add(1).filter(|next| *next != 0)) {
             Ok(previous) => match previous.checked_add(1) {
                 Some(generation) => generation,
                 None => {
@@ -9009,14 +9007,14 @@ impl SubmitFuture {
             document: handle.document.clone(),
             generation,
             authority_generation: handle.authority.generation(),
-            admission: std::sync::Mutex::new(credit.ok()),
-            work: std::sync::Mutex::new(work),
-            completion: std::sync::Mutex::new(None),
-            terminal_work: std::sync::Mutex::new(terminal_work),
-            terminal_result: std::sync::Mutex::new(None),
-            retry_job: std::sync::Mutex::new(None),
-            terminal_job: std::sync::Mutex::new(None),
-            waker: std::sync::Mutex::new(None),
+            admission: Mutex::new(credit.ok()),
+            work: Mutex::new(work),
+            completion: Mutex::new(None),
+            terminal_work: Mutex::new(terminal_work),
+            terminal_result: Mutex::new(None),
+            retry_job: Mutex::new(None),
+            terminal_job: Mutex::new(None),
+            waker: Mutex::new(None),
             retry_armed: std::sync::atomic::AtomicBool::new(false),
             retry_generation: std::sync::atomic::AtomicU64::new(1),
             scheduled: std::sync::atomic::AtomicBool::new(false),
@@ -9210,7 +9208,7 @@ struct ArtifactHistoryAdmissionState {
     next_generation: u64,
 }
 
-static ARTIFACT_HISTORY_ADMISSION: std::sync::Mutex<ArtifactHistoryAdmissionState> = std::sync::Mutex::new(ArtifactHistoryAdmissionState { slots: [EMPTY_ARTIFACT_HISTORY_SLOT; ARTIFACT_HISTORY_OPERATION_SLOTS], bytes: 0, next_generation: 1 });
+static ARTIFACT_HISTORY_ADMISSION: Mutex<ArtifactHistoryAdmissionState> = Mutex::new(ArtifactHistoryAdmissionState { slots: [EMPTY_ARTIFACT_HISTORY_SLOT; ARTIFACT_HISTORY_OPERATION_SLOTS], bytes: 0, next_generation: 1 });
 
 struct ArtifactHistoryAdmission {
     slot: usize,
@@ -9314,19 +9312,19 @@ struct ArtifactHistoryState {
     pool: WorkerPool,
     authority: Arc<db_artifact::ArtifactAuthority>,
     generation: u64,
-    authority_generation: db_ids::GenerationId,
-    admission: std::sync::Mutex<Option<ArtifactHistoryAdmission>>,
-    work: std::sync::Mutex<Option<ArtifactHistoryWorkOwner>>,
-    completion: std::sync::Mutex<Option<ArtifactHistoryOutcome>>,
-    terminal_work: std::sync::Mutex<Option<ArtifactHistoryWorkOwner>>,
-    terminal_result: std::sync::Mutex<Option<ArtifactHistoryOutcome>>,
-    terminal_reservation: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationCloseCursor>>,
+    authority_generation: GenerationId,
+    admission: Mutex<Option<ArtifactHistoryAdmission>>,
+    work: Mutex<Option<ArtifactHistoryWorkOwner>>,
+    completion: Mutex<Option<ArtifactHistoryOutcome>>,
+    terminal_work: Mutex<Option<ArtifactHistoryWorkOwner>>,
+    terminal_result: Mutex<Option<ArtifactHistoryOutcome>>,
+    terminal_reservation: Mutex<Option<db_artifact::HistoryReplayReservationCloseCursor>>,
     reservation_checked_out: std::sync::atomic::AtomicBool,
-    terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFault>>,
+    terminal_construction: Mutex<Option<db_artifact::HistoryReplayReservationConstructionFault>>,
     construction_checked_out: std::sync::atomic::AtomicBool,
-    retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
-    terminal_job: std::sync::Mutex<Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>>,
-    waker: std::sync::Mutex<Option<std::task::Waker>>,
+    retry_job: Mutex<Option<(semio_framework_async::Job, u8)>>,
+    terminal_job: Mutex<Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>>,
+    waker: Mutex<Option<std::task::Waker>>,
     retry_armed: std::sync::atomic::AtomicBool,
     retry_generation: std::sync::atomic::AtomicU64,
     scheduled: std::sync::atomic::AtomicBool,
@@ -9370,9 +9368,9 @@ struct ArtifactHistoryWake {
     generation: u64,
 }
 
-fn artifact_history_registry() -> &'static std::sync::Mutex<[Option<Arc<ArtifactHistoryState>>; ARTIFACT_HISTORY_OPERATION_SLOTS]> {
-    static REGISTRY: std::sync::OnceLock<std::sync::Mutex<[Option<Arc<ArtifactHistoryState>>; ARTIFACT_HISTORY_OPERATION_SLOTS]>> = std::sync::OnceLock::new();
-    REGISTRY.get_or_init(|| std::sync::Mutex::new(std::array::from_fn(|_| None)))
+fn artifact_history_registry() -> &'static Mutex<[Option<Arc<ArtifactHistoryState>>; ARTIFACT_HISTORY_OPERATION_SLOTS]> {
+    static REGISTRY: std::sync::OnceLock<Mutex<[Option<Arc<ArtifactHistoryState>>; ARTIFACT_HISTORY_OPERATION_SLOTS]>> = std::sync::OnceLock::new();
+    REGISTRY.get_or_init(|| Mutex::new(std::array::from_fn(|_| None)))
 }
 
 fn register_artifact_history(state: &Arc<ArtifactHistoryState>) {
@@ -9589,7 +9587,7 @@ impl ArtifactHistoryState {
         if self.retry_armed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return;
         }
-        let generation = match self.retry_generation.fetch_update(Ordering::AcqRel, Ordering::Acquire, |generation| generation.checked_add(1).filter(|next| *next != 0)) {
+        let generation = match self.retry_generation.try_update(Ordering::AcqRel, Ordering::Acquire, |generation| generation.checked_add(1).filter(|next| *next != 0)) {
             Ok(previous) => match previous.checked_add(1) {
                 Some(generation) => generation,
                 None => {
@@ -9786,18 +9784,18 @@ impl HistoryFuture {
             authority: handle.authority.clone(),
             generation,
             authority_generation: handle.authority.generation(),
-            admission: std::sync::Mutex::new(admission),
-            work: std::sync::Mutex::new(ready.then_some(ArtifactHistoryWorkOwner::Request)),
-            completion: std::sync::Mutex::new(None),
-            terminal_work: std::sync::Mutex::new(None),
-            terminal_result: std::sync::Mutex::new(None),
-            terminal_reservation: std::sync::Mutex::new(None),
+            admission: Mutex::new(admission),
+            work: Mutex::new(ready.then_some(ArtifactHistoryWorkOwner::Request)),
+            completion: Mutex::new(None),
+            terminal_work: Mutex::new(None),
+            terminal_result: Mutex::new(None),
+            terminal_reservation: Mutex::new(None),
             reservation_checked_out: std::sync::atomic::AtomicBool::new(false),
-            terminal_construction: std::sync::Mutex::new(construction_fault),
+            terminal_construction: Mutex::new(construction_fault),
             construction_checked_out: std::sync::atomic::AtomicBool::new(false),
-            retry_job: std::sync::Mutex::new(None),
-            terminal_job: std::sync::Mutex::new(None),
-            waker: std::sync::Mutex::new(None),
+            retry_job: Mutex::new(None),
+            terminal_job: Mutex::new(None),
+            waker: Mutex::new(None),
             retry_armed: std::sync::atomic::AtomicBool::new(false),
             retry_generation: std::sync::atomic::AtomicU64::new(1),
             scheduled: std::sync::atomic::AtomicBool::new(false),
@@ -9999,7 +9997,7 @@ impl ArtifactHistoryTerminalJob {
     }
 
     pub fn close(mut self) {
-        self.owner.take().expect("terminal artifact history job already resolved");
+        drop(self.owner.take().expect("terminal artifact history job already resolved"));
         self.state.finish_if_terminal_empty();
     }
 }
@@ -10164,6 +10162,38 @@ impl ArtifactHandle {
     /// already-retained WAL writer; no generic command submission or second permit is exposed.
     pub fn durable_group_journal_sink(&self, now_ms: u64) -> Box<dyn store::durable_group::DurableOwnedGroupJournalSinkV1> {
         self.authority.durable_group_journal_sink(now_ms)
+    }
+
+    /// 🧭 Replays committed fixed-three decisions through this document's existing actor and WAL
+    /// owner. The returned owner retains all three Stores if its awaiting caller is cancelled.
+    pub fn durable_group_recovery_retained<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
+        &self,
+        admission: store::durable_group::DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
+    ) -> db_artifact::ArtifactDurableGroupRecoveryOwnerV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+    where
+        ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+        ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+        DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+        ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+    {
+        self.authority.durable_group_recovery_retained(db_ids::ArtifactId(self.document.0.clone()), admission)
+    }
+
+    pub fn resume_durable_group_recovery<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
+        &self,
+        owner: &mut db_artifact::ArtifactDurableGroupRecoveryOwnerV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
+    ) -> Result<(), DbError>
+    where
+        ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+        ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+        DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
+        ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+    {
+        self.authority.resume_durable_group_recovery(owner)
     }
 
     /// @emoji ✍️ The frozen `submit`: commits `batch` through the document's real
@@ -10342,7 +10372,7 @@ mod tests {
 
     #[derive(Clone, Default)]
     struct ControlledMountEmit {
-        state: Arc<(std::sync::Mutex<ControlledMountEmitState>, std::sync::Condvar)>,
+        state: Arc<(Mutex<ControlledMountEmitState>, std::sync::Condvar)>,
     }
 
     impl ControlledMountEmit {
@@ -10496,8 +10526,8 @@ mod tests {
         mode: ControlledCapabilityPoll,
         storage: Option<Arc<db_storage::DbBackend>>,
         polls: Arc<std::sync::atomic::AtomicUsize>,
-        waker: Arc<std::sync::Mutex<Option<std::task::Waker>>>,
-        boundary: Option<Arc<(std::sync::Mutex<(bool, bool)>, std::sync::Condvar)>>,
+        waker: Arc<Mutex<Option<std::task::Waker>>>,
+        boundary: Option<Arc<(Mutex<(bool, bool)>, std::sync::Condvar)>>,
         wake_during_poll: bool,
     }
 
@@ -10572,13 +10602,13 @@ mod tests {
 
     async fn controlled_capability_probe(
         mode: ControlledCapabilityPoll,
-        boundary: Option<Arc<(std::sync::Mutex<(bool, bool)>, std::sync::Condvar)>>,
-    ) -> (DatabaseCapabilityOpenFuture, Arc<std::sync::atomic::AtomicUsize>, Arc<std::sync::Mutex<Option<std::task::Waker>>>, usize) {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        boundary: Option<Arc<(Mutex<(bool, bool)>, std::sync::Condvar)>>,
+    ) -> (DatabaseCapabilityOpenFuture, Arc<std::sync::atomic::AtomicUsize>, Arc<Mutex<Option<std::task::Waker>>>, usize) {
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
         let probe = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), storage.clone(), false).expect("controlled capability-open preparation");
         let polls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let waker = Arc::new(std::sync::Mutex::new(None));
+        let waker = Arc::new(Mutex::new(None));
         let future = ControlledCapabilityFuture { mode, storage: Some(storage), polls: polls.clone(), waker: waker.clone(), boundary, wake_during_poll: true };
         *probe.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(DatabaseCapabilityOpenWork::controlled(Box::pin(future), pointer));
         let work = probe.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().expect("controlled poll owner");
@@ -10600,7 +10630,7 @@ mod tests {
         key: Option<DatabaseCatalogRootKey>,
         root: Option<db_storage::DbIoPages>,
         polls: Arc<std::sync::atomic::AtomicUsize>,
-        waker: Arc<std::sync::Mutex<Option<std::task::Waker>>>,
+        waker: Arc<Mutex<Option<std::task::Waker>>>,
     }
 
     impl Future for ControlledCatalogReadFuture {
@@ -10624,12 +10654,12 @@ mod tests {
         }
     }
 
-    async fn controlled_catalog_read_probe(mode: ControlledCatalogReadPoll) -> (DatabaseCatalogReadFuture, Arc<std::sync::atomic::AtomicUsize>, Arc<std::sync::Mutex<Option<std::task::Waker>>>, usize) {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+    async fn controlled_catalog_read_probe(mode: ControlledCatalogReadPoll) -> (DatabaseCatalogReadFuture, Arc<std::sync::atomic::AtomicUsize>, Arc<Mutex<Option<std::task::Waker>>>, usize) {
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
         let probe = DatabaseCatalogReadFuture::try_prepare(test_worker_pool(), storage.clone(), DatabaseCatalogRootKey::root(), false).expect("controlled catalog-read preparation");
         let polls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let waker = Arc::new(std::sync::Mutex::new(None));
+        let waker = Arc::new(Mutex::new(None));
         let root = db_storage::db_io_copy_pages(&[1, 2, 3]).unwrap().await.unwrap();
         let future = ControlledCatalogReadFuture { mode, storage: Some(storage), key: Some(DatabaseCatalogRootKey::root()), root: Some(root), polls: polls.clone(), waker: waker.clone() };
         *probe.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(DatabaseCatalogReadWork::controlled(Box::pin(future), pointer));
@@ -10652,7 +10682,7 @@ mod tests {
         mode: ControlledCatalogBootstrapPoll,
         pages: Option<db_storage::DbIoPages>,
         polls: Arc<std::sync::atomic::AtomicUsize>,
-        waker: Arc<std::sync::Mutex<Option<std::task::Waker>>>,
+        waker: Arc<Mutex<Option<std::task::Waker>>>,
     }
 
     impl Future for ControlledCatalogBootstrapFuture {
@@ -10695,15 +10725,15 @@ mod tests {
         writer.seal_retained().await.unwrap()
     }
 
-    async fn controlled_catalog_bootstrap_probe(mode: ControlledCatalogBootstrapPoll) -> (DatabaseCatalogBootstrapFuture, Arc<std::sync::atomic::AtomicUsize>, Arc<std::sync::Mutex<Option<std::task::Waker>>>, usize, u64) {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+    async fn controlled_catalog_bootstrap_probe(mode: ControlledCatalogBootstrapPoll) -> (DatabaseCatalogBootstrapFuture, Arc<std::sync::atomic::AtomicUsize>, Arc<Mutex<Option<std::task::Waker>>>, usize, u64) {
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
         let pages = empty_catalog_bootstrap_pages().await;
         let probe = DatabaseCatalogBootstrapFuture::try_prepare_with_key(test_worker_pool(), storage, pages, DatabaseCatalogBootstrapKey::root(), EpochFence::INITIAL, false).unwrap();
         let pages = probe.state.pages.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().unwrap();
         let page_identity = pages.operation();
         let polls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let waker = Arc::new(std::sync::Mutex::new(None));
+        let waker = Arc::new(Mutex::new(None));
         let future = ControlledCatalogBootstrapFuture { mode, pages: Some(pages), polls: polls.clone(), waker: waker.clone() };
         *probe.state.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(DatabaseCatalogBootstrapWork::controlled(Box::pin(future), pointer, page_identity));
         probe.state.set_phase(DatabaseCatalogBootstrapPhase::Poll);
@@ -10737,7 +10767,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_catalog_bootstrap_real_max_plus_one_refusal_returns_pages_storage_key_and_fence() {
         let pool = test_worker_pool();
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let storage_pointer = Arc::as_ptr(&storage) as usize;
         let pages = catalog_bootstrap_pages(usize::from(DATABASE_CATALOG_BOOTSTRAP_PAGES) + 1).await;
         let operation = pages.operation();
@@ -10763,7 +10793,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_catalog_bootstrap_success_runs_on_pool_io_worker_and_returns_exact_storage_epoch() {
         let pool = test_worker_pool();
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
         let probe = DatabaseCatalogBootstrapFuture::try_submit(pool, storage, empty_catalog_bootstrap_pages().await, EpochFence::INITIAL).unwrap();
         let state = probe.state.clone();
@@ -10779,7 +10809,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_catalog_bootstrap_cas_mismatch_returns_identical_storage_and_exact_fenced_error_without_retry() {
         let pool = test_worker_pool();
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let first = DatabaseCatalogBootstrapFuture::try_submit(pool.clone(), storage, empty_catalog_bootstrap_pages().await, EpochFence::INITIAL).unwrap().await.unwrap();
         let (storage, _, _, installed) = first.into_parts().unwrap();
         assert_eq!(installed.unwrap(), EpochFence::INITIAL.next());
@@ -10796,7 +10826,7 @@ mod tests {
         for mode in [ControlledCatalogBootstrapPoll::Ready, ControlledCatalogBootstrapPoll::Fenced, ControlledCatalogBootstrapPoll::Panic] {
             let (probe, polls, _, pointer, _) = controlled_catalog_bootstrap_probe(mode).await;
             let state = probe.state.clone();
-            let submitted = Arc::new(std::sync::Mutex::new(ControlledCapabilitySubmitQueue::new()));
+            let submitted = Arc::new(Mutex::new(ControlledCapabilitySubmitQueue::new()));
             let queue = submitted.clone();
             *state.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move |job| queue.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(job)));
             state.schedule();
@@ -10832,11 +10862,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_catalog_bootstrap_handoff_interruption_retires_unpolled_pages_one_lane_opportunity_at_a_time() {
         let pool = test_worker_pool();
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
         let probe = DatabaseCatalogBootstrapFuture::try_prepare_with_key(pool, storage, catalog_bootstrap_pages(3).await, DatabaseCatalogBootstrapKey::root(), EpochFence::INITIAL, false).unwrap();
         let state = probe.state.clone();
-        let submitted = Arc::new(std::sync::Mutex::new(ControlledCapabilitySubmitQueue::new()));
+        let submitted = Arc::new(Mutex::new(ControlledCapabilitySubmitQueue::new()));
         let queue = submitted.clone();
         *state.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move |job| queue.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(job)));
         state.schedule();
@@ -10869,7 +10899,7 @@ mod tests {
             let admission = admission.as_ref().unwrap();
             (admission.slot, admission.generation, admission.bytes)
         };
-        let gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
         let frozen = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let (claimed_tx, claimed_rx) = std::sync::mpsc::sync_channel(1);
         let hook_gate = gate.clone();
@@ -10918,7 +10948,7 @@ mod tests {
         for mode in [ControlledCatalogBootstrapPoll::Pending, ControlledCatalogBootstrapPoll::Ready, ControlledCatalogBootstrapPoll::Panic] {
             let (probe, polls, _, pointer, _) = controlled_catalog_bootstrap_probe(mode).await;
             let state = probe.state.clone();
-            let gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+            let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
             let frozen = Arc::new(std::sync::atomic::AtomicBool::new(false));
             let (published_tx, published_rx) = std::sync::mpsc::sync_channel(1);
             let hook_gate = gate.clone();
@@ -10956,12 +10986,12 @@ mod tests {
             assert_eq!(state.max_active_drivers.load(std::sync::atomic::Ordering::Acquire), 1);
         }
 
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let result_probe = DatabaseCatalogBootstrapFuture::try_submit(test_worker_pool(), storage, empty_catalog_bootstrap_pages().await, EpochFence::INITIAL).unwrap();
         let generation = result_probe.generation();
         let state = result_probe.state.clone();
         let result = result_probe.await.unwrap();
-        let gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
         let frozen = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let (retire_tx, retire_rx) = std::sync::mpsc::sync_channel(1);
         let hook_gate = gate.clone();
@@ -11066,7 +11096,7 @@ mod tests {
         let result = probe.await.unwrap();
         let (storage, _, _, actual) = result.into_parts().unwrap();
         assert_eq!(Arc::as_ptr(&storage) as usize, pointer);
-        assert_eq!(actual, Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(stale_generation), actual: crate::db_ids::GenerationId(replacement_generation) }));
+        assert_eq!(actual, Err(DbError::StaleGeneration { expected: GenerationId(stale_generation), actual: GenerationId(replacement_generation) }));
         {
             let mut admission = DATABASE_CATALOG_BOOTSTRAP_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             assert_eq!(admission.slots[state.slot].generation, replacement_generation, "stale authority cannot release or rewrite the replacement generation");
@@ -11078,7 +11108,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_catalog_bootstrap_real_queue_saturation_retains_exact_job_and_recovers_identity() {
         let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
-        let gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
         let (started_tx, started_rx) = std::sync::mpsc::sync_channel(1);
         let worker_gate = gate.clone();
         pool.try_submit(
@@ -11102,7 +11132,7 @@ mod tests {
                 break;
             }
         }
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
         let probe = DatabaseCatalogBootstrapFuture::try_submit(pool.clone(), storage, empty_catalog_bootstrap_pages().await, EpochFence::INITIAL).unwrap();
         assert!(probe.state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some());
@@ -11123,7 +11153,7 @@ mod tests {
     async fn database_catalog_bootstrap_replay_is_deterministic_and_never_reuses_initial_after_a_winner() {
         for _ in 0..2 {
             let pool = test_worker_pool();
-            let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+            let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
             let installed = DatabaseCatalogBootstrapFuture::try_submit(pool.clone(), storage, empty_catalog_bootstrap_pages().await, EpochFence::INITIAL).unwrap().await.unwrap();
             let (storage, _, _, actual) = installed.into_parts().unwrap();
             assert_eq!(actual.unwrap(), EpochFence::INITIAL.next());
@@ -11136,7 +11166,7 @@ mod tests {
     async fn database_catalog_bootstrap_publication_race_and_queue_pressure_keep_exact_successor() {
         let (mut probe, polls, retained_waker, _, _) = controlled_catalog_bootstrap_probe(ControlledCatalogBootstrapPoll::Ready).await;
         let state = probe.state.clone();
-        let submitted = Arc::new(std::sync::Mutex::new(ControlledCapabilitySubmitQueue::new()));
+        let submitted = Arc::new(Mutex::new(ControlledCapabilitySubmitQueue::new()));
         let queue = submitted.clone();
         *state.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move |job| queue.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(job)));
         state.schedule();
@@ -11170,14 +11200,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_catalog_bootstrap_public_result_drop_hands_back_exact_owner_without_post_admission_allocation() {
         let pool = test_worker_pool();
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
         let probe = DatabaseCatalogBootstrapFuture::try_submit(pool, storage, empty_catalog_bootstrap_pages().await, EpochFence::INITIAL).unwrap();
         let generation = probe.generation();
         let state = probe.state.clone();
         let result = probe.await.unwrap();
         assert!(state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some());
-        let submitted = Arc::new(std::sync::Mutex::new(ControlledCapabilitySubmitQueue::new()));
+        let submitted = Arc::new(Mutex::new(ControlledCapabilitySubmitQueue::new()));
         let queue = submitted.clone();
         *state.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move |job| queue.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(job)));
         drop(result);
@@ -11227,7 +11257,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_capability_open_success_returns_exact_storage_owner_and_scalar() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage);
         let probe = match DatabaseCapabilityOpenFuture::try_submit(test_worker_pool(), storage) {
             Ok(probe) => probe,
@@ -11242,7 +11272,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_capability_open_cancel_and_stale_generation_retain_exact_owner_for_public_close() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
         let probe = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), storage, false).expect("fixed capability-open preparation");
         let generation = probe.generation();
@@ -11267,7 +11297,7 @@ mod tests {
         }
         assert!(terminal.terminal_is_empty());
 
-        let stale_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let stale_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let stale_pointer = Arc::as_ptr(&stale_storage) as usize;
         let stale = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), stale_storage, false).expect("fixed stale capability-open preparation");
         let stale_generation = stale.generation();
@@ -11292,7 +11322,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_capability_open_saturation_and_shutdown_keep_retry_job_and_public_terminal() {
         let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
-        let gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
         let (started_tx, started_rx) = std::sync::mpsc::sync_channel(1);
         let worker_gate = gate.clone();
         pool.try_submit(
@@ -11319,7 +11349,7 @@ mod tests {
                 }
             }
         }
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
         let probe = DatabaseCapabilityOpenFuture::try_submit(pool.clone(), storage).expect("capability operation admission remains independent of queue saturation");
         assert_eq!(probe.retained_storage_identity(), Some(pointer));
@@ -11348,7 +11378,7 @@ mod tests {
             probe.resolved = true;
             let state = probe.state.clone();
             state.abandoned.store(true, std::sync::atomic::Ordering::Release);
-            let submitted = Arc::new(std::sync::Mutex::new(ControlledCapabilitySubmitQueue::new()));
+            let submitted = Arc::new(Mutex::new(ControlledCapabilitySubmitQueue::new()));
             let submitted_hook = submitted.clone();
             *state.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move |job| submitted_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(job)));
             state.schedule();
@@ -11449,7 +11479,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_capability_open_rejection_take_retry_and_close_preserve_exact_storage() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage);
         let rejected = DatabaseCapabilityOpenRejected { error: Some(DbError::Closed), storage: Some(storage) };
         let mut resumed = rejected.retry(test_worker_pool()).expect("rejected storage retry");
@@ -11462,7 +11492,7 @@ mod tests {
             let _ = terminal.close_step();
         }
 
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage);
         let mut rejected = DatabaseCapabilityOpenRejected { error: Some(DbError::Closed), storage: Some(storage) };
         let returned = rejected.take_storage().expect("exact rejected storage take");
@@ -11475,7 +11505,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_capability_open_terminal_result_take_resume_and_checked_out_drop_handback() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage);
         let mut probe = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), storage.clone(), false).expect("terminal-result preparation");
         probe.resolved = true;
@@ -11499,7 +11529,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_capability_open_retry_contention_is_one_compare_exchange_per_callback() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let mut probe = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), storage, false).expect("retry-contention preparation");
         probe.resolved = true;
         let state = probe.state.clone();
@@ -11534,7 +11564,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_catalog_read_success_returns_exact_storage_key_and_root() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage);
         let result = DatabaseCatalogReadFuture::try_submit(test_worker_pool(), storage, DatabaseCatalogRootKey::root()).expect("catalog-read success admission").await.expect("catalog-read success completion");
         let (returned_storage, returned_key, root) = result.into_parts();
@@ -11550,7 +11580,7 @@ mod tests {
             probe.resolved = true;
             let state = probe.state.clone();
             state.abandoned.store(true, std::sync::atomic::Ordering::Release);
-            let queue = Arc::new(std::sync::Mutex::new(ControlledCapabilitySubmitQueue::new()));
+            let queue = Arc::new(Mutex::new(ControlledCapabilitySubmitQueue::new()));
             let queue_hook = queue.clone();
             *state.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move |job| queue_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(job)));
             state.schedule();
@@ -11585,7 +11615,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_catalog_read_publication_between_check_and_waker_registration_is_observed() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let mut probe = DatabaseCatalogReadFuture::try_prepare(test_worker_pool(), storage, DatabaseCatalogRootKey::root(), false).expect("public lost-wake preparation");
         let state = probe.state.clone();
         let mut work = state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().expect("public lost-wake retained work");
@@ -11593,7 +11623,7 @@ mod tests {
         assert!(work.terminal_is_empty());
         drop(work);
 
-        let result_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let result_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let result_pointer = Arc::as_ptr(&result_storage) as usize;
         let publish_state = state.clone();
         *state.controlled_publication_before_waker_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Box::new(move || {
@@ -11611,12 +11641,12 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_catalog_read_rejected_mount_retires_storage_and_key_on_distinct_grants() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let storage_weak = Arc::downgrade(&storage);
         let rejected = DatabaseCatalogReadRejected { error: Some(DbError::Closed), storage: Some(storage), key: Some(DatabaseCatalogRootKey::root()) };
         let (error, close) = rejected.mount_close_and_take_error(test_worker_pool(), false);
         assert_eq!(error, DbError::Closed);
-        let queue = Arc::new(std::sync::Mutex::new(ControlledCapabilitySubmitQueue::new()));
+        let queue = Arc::new(Mutex::new(ControlledCapabilitySubmitQueue::new()));
         let queue_hook = queue.clone();
         *close.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move |job| queue_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(job)));
         close.schedule();
@@ -11640,7 +11670,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_catalog_read_cancel_stale_and_rejection_preserve_exact_storage_key() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage);
         let mut rejected = DatabaseCatalogReadRejected { error: Some(DbError::Closed), storage: Some(storage), key: Some(DatabaseCatalogRootKey::root()) };
         assert_eq!(Arc::as_ptr(rejected.storage.as_ref().expect("rejected storage")), pointer);
@@ -11654,7 +11684,7 @@ mod tests {
             let (probe, _, _, pointer) = controlled_catalog_read_probe(ControlledCatalogReadPoll::Pending).await;
             let state = probe.state.clone();
             let generation = state.generation;
-            let queue = Arc::new(std::sync::Mutex::new(ControlledCapabilitySubmitQueue::new()));
+            let queue = Arc::new(Mutex::new(ControlledCapabilitySubmitQueue::new()));
             let queue_hook = queue.clone();
             *state.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move |job| queue_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(job)));
             if stale {
@@ -11683,7 +11713,7 @@ mod tests {
         let (mut probe, _, _, _) = controlled_catalog_read_probe(ControlledCatalogReadPoll::Ready).await;
         probe.resolved = true;
         probe.state.abandoned.store(true, std::sync::atomic::Ordering::Release);
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let result_pointer = Arc::as_ptr(&storage) as usize;
         *probe.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Ok(DatabaseCatalogReadResult { storage, key: DatabaseCatalogRootKey::root(), root: Ok(None) }));
         let terminal = DatabaseCatalogReadTerminalHandle { state: probe.state.clone() };
@@ -11744,7 +11774,7 @@ mod tests {
     }
 
     async fn create_catalog_fixture(entries: Vec<CatalogEntry>) -> (Arc<db_storage::DbBackend>, Arc<Mutex<CatalogState>>, EpochFence) {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pages = encode_catalog_pages(&entries).await.unwrap();
         let epoch = storage.catalog().await.cas_root(EpochFence::INITIAL, pages).await.unwrap();
         let catalog = Arc::new(Mutex::new(CatalogState { epoch, revision: 1, entries: Arc::new(entries), pending: None }));
@@ -11764,7 +11794,7 @@ mod tests {
         ready_epoch: EpochFence,
         cancel_on_ready: Option<std::sync::Weak<DatabaseCreateCatalogState>>,
         polls: Arc<std::sync::atomic::AtomicUsize>,
-        waker: Arc<std::sync::Mutex<Option<std::task::Waker>>>,
+        waker: Arc<Mutex<Option<std::task::Waker>>>,
     }
 
     impl Future for ControlledCreateCatalogFuture {
@@ -11787,9 +11817,9 @@ mod tests {
         }
     }
 
-    fn held_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(std::sync::Mutex<bool>, std::sync::Condvar)>) {
+    fn held_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(Mutex<bool>, std::sync::Condvar)>) {
         let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
-        let gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
         let (started_tx, started_rx) = std::sync::mpsc::sync_channel(1);
         let worker_gate = gate.clone();
         pool.try_submit(
@@ -11827,9 +11857,9 @@ mod tests {
         })
     }
 
-    fn replenishing_held_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(std::sync::Mutex<bool>, std::sync::Condvar)>, Arc<std::sync::atomic::AtomicBool>) {
+    fn replenishing_held_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(Mutex<bool>, std::sync::Condvar)>, Arc<std::sync::atomic::AtomicBool>) {
         let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
-        let gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
         let active = Arc::new(std::sync::atomic::AtomicBool::new(true));
         let (started_tx, started_rx) = std::sync::mpsc::sync_channel(1);
         let worker_gate = gate.clone();
@@ -11858,11 +11888,11 @@ mod tests {
         (pool, gate, active)
     }
 
-    fn reserved_replenishing_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(std::sync::Mutex<bool>, std::sync::Condvar)>, Arc<(std::sync::Mutex<bool>, std::sync::Condvar)>, Arc<std::sync::atomic::AtomicBool>) {
+    fn reserved_replenishing_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(Mutex<bool>, std::sync::Condvar)>, Arc<(Mutex<bool>, std::sync::Condvar)>, Arc<std::sync::atomic::AtomicBool>) {
         let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
         assert_eq!(pool.worker_count(), 2);
-        let maintenance_gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
-        let service_gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let maintenance_gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
+        let service_gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
         let active = Arc::new(std::sync::atomic::AtomicBool::new(true));
         let (maintenance_tx, maintenance_rx) = std::sync::mpsc::sync_channel(1);
         let held_maintenance = maintenance_gate.clone();
@@ -11907,7 +11937,7 @@ mod tests {
         (pool, maintenance_gate, service_gate, active)
     }
 
-    fn release_held_create_catalog_worker(gate: &Arc<(std::sync::Mutex<bool>, std::sync::Condvar)>) {
+    fn release_held_create_catalog_worker(gate: &Arc<(Mutex<bool>, std::sync::Condvar)>) {
         let (lock, ready) = &**gate;
         *lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = true;
         ready.notify_one();
@@ -12048,7 +12078,7 @@ mod tests {
         let (storage, document, _, actual) = stale.await.unwrap().into_parts().unwrap();
         assert_eq!(Arc::as_ptr(&storage) as usize, pointer);
         assert_eq!(document.0, "stale");
-        assert_eq!(actual, Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(state.generation), actual: crate::db_ids::GenerationId(replacement) }));
+        assert_eq!(actual, Err(DbError::StaleGeneration { expected: GenerationId(state.generation), actual: GenerationId(replacement) }));
         DATABASE_CREATE_CATALOG_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).release(state.slot, replacement);
     }
 
@@ -12062,7 +12092,7 @@ mod tests {
         let operation = pages.operation();
         state.cursor.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pages = Some(pages);
         state.set_phase(DatabaseCreateCatalogPhase::Handoff);
-        let gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
         let frozen = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let (claimed_tx, claimed_rx) = std::sync::mpsc::sync_channel(1);
         let hook_gate = gate.clone();
@@ -12113,7 +12143,7 @@ mod tests {
             let pages = writer.seal_retained().await.unwrap();
             let operation = pages.operation();
             let polls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-            let waker = Arc::new(std::sync::Mutex::new(None));
+            let waker = Arc::new(Mutex::new(None));
             let future = ControlledCreateCatalogFuture { mode, pages: Some(pages), ready_epoch: epoch.next(), cancel_on_ready: (mode == ControlledCreateCatalogPoll::Ready).then(|| Arc::downgrade(&state)), polls: polls.clone(), waker: waker.clone() };
             *state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(DatabaseCreateCatalogWork::controlled(Box::pin(future), pointer, operation));
             state.set_phase(DatabaseCreateCatalogPhase::Poll);
@@ -12143,7 +12173,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_create_catalog_saturation_retains_exact_job_and_recovers() {
         let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
-        let gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
         let (started_tx, started_rx) = std::sync::mpsc::sync_channel(1);
         let worker_gate = gate.clone();
         pool.try_submit(
@@ -12251,7 +12281,7 @@ mod tests {
         pool.shutdown();
 
         let (pool, gate, active) = replenishing_held_create_catalog_io_pool();
-        let rejection_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let rejection_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let rejection_pointer = Arc::as_ptr(&rejection_storage) as usize;
         let oversized = protocol::ArtifactId(String::with_capacity(DATABASE_CREATE_CATALOG_MAX_ID_BYTES + 1));
         let rejected = match DatabaseCreateCatalogFuture::try_submit(pool.clone(), Arc::new(Mutex::new(CatalogState { epoch: EpochFence::INITIAL, revision: 1, entries: Arc::new(Vec::new()), pending: None })), rejection_storage, oversized) {
@@ -12351,7 +12381,7 @@ mod tests {
         pool.shutdown();
 
         let (pool, maintenance_gate, service_gate, active) = reserved_replenishing_create_catalog_io_pool();
-        let rejection_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let rejection_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let rejection_pointer = Arc::as_ptr(&rejection_storage) as usize;
         let oversized = protocol::ArtifactId(String::with_capacity(DATABASE_CREATE_CATALOG_MAX_ID_BYTES + 1));
         let rejected = match DatabaseCreateCatalogFuture::try_submit(pool.clone(), Arc::new(Mutex::new(CatalogState { epoch: EpochFence::INITIAL, revision: 1, entries: Arc::new(Vec::new()), pending: None })), rejection_storage, oversized) {
@@ -12518,7 +12548,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_create_catalog_durable_publication_precedes_authority_spawn_emit_and_registration() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let database = Database::open(test_worker_pool(), DbConfig::for_profile(Profile::Test), storage).await.unwrap();
         let transaction = database.create_document_catalog_retained(protocol::ArtifactId(String::from("durable-first"))).unwrap();
         let (_, document, _, actual) = transaction.await.unwrap().into_parts().unwrap();
@@ -12551,7 +12581,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_concurrent_ensure_mounts_one_actor_and_one_writer() {
         let pool = test_worker_pool();
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let mut database = Database::open(pool.clone(), DbConfig::for_profile(Profile::Test), storage.clone()).await.unwrap();
         let document = protocol::ArtifactId(String::from("single-flight-empty"));
         let mut first_future = Box::pin(database.ensure_document(&document));
@@ -12608,7 +12638,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_worker_pool_use_blocks_early_shutdown_and_releases_at_terminal_ack() {
         let pool = test_worker_pool();
-        let memory = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let memory = db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let storage = Arc::new(db_storage::DbBackend::Memory(memory));
         let mut database = Database::open(pool.clone(), DbConfig::for_profile(Profile::Test), storage).await.unwrap();
         assert_eq!(pool.shutdown(), Err(semio_framework_async::WorkerPoolShutdownError::Busy { retained_uses: 1 }));
@@ -12643,7 +12673,7 @@ mod tests {
     async fn database_worker_pool_use_is_admitted_before_the_first_storage_probe() {
         let pool = test_worker_pool();
         assert_eq!(pool.shutdown(), Ok(()));
-        let memory = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let memory = db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let storage = Arc::new(db_storage::DbBackend::Memory(memory));
         let error = match Database::open(pool, DbConfig::for_profile(Profile::Test), storage).await {
             Err(error) => error,
@@ -12682,10 +12712,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_published_opening_joins_without_actor_overwrite() {
         let pool = test_worker_pool();
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let mut database = Database::open(pool.clone(), DbConfig::for_profile(Profile::Test), storage).await.unwrap();
         let document = protocol::ArtifactId(String::from("single-flight-published"));
-        let gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
         let (published_tx, published_rx) = std::sync::mpsc::sync_channel(1);
         let hook_gate = gate.clone();
         *database.mount_catalog_published_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move |document| {
@@ -12733,7 +12763,7 @@ mod tests {
     async fn database_cancelled_ensure_waiter_does_not_cancel_mount_owner() {
         eprintln!("[DEBUG] cancelled-waiter stage=setup");
         let pool = test_worker_pool();
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let mut database = Database::open(pool.clone(), DbConfig::for_profile(Profile::Test), storage).await.unwrap();
         let document = protocol::ArtifactId(String::from("single-flight-cancel"));
         let mut cancelled = Box::pin(database.ensure_document(&document));
@@ -12782,7 +12812,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_mount_owner_emits_before_ready_and_survives_elected_waiter_cancellation() {
         let pool = test_worker_pool();
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let emit = ControlledMountEmit::default();
         let mut database = Database::open_with_emit(pool.clone(), DbConfig::for_profile(Profile::Test), storage, Arc::new(emit.clone())).await.unwrap();
         let document = protocol::ArtifactId(String::from("single-flight-emission"));
@@ -12828,7 +12858,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_mount_waiter_capacity_rejects_33_and_reuses_one_cancelled_slot() {
         let pool = test_worker_pool();
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let emit = ControlledMountEmit::default();
         let mut database = Database::open_with_emit(pool.clone(), DbConfig::for_profile(Profile::Test), storage, Arc::new(emit.clone())).await.unwrap();
         let document = protocol::ArtifactId(String::from("single-flight-capacity"));
@@ -12875,7 +12905,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_document_mount_fanout_wakes_only_after_registry_unlock_and_internal_owner_handoff() {
         let pool = test_worker_pool();
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let emit = ControlledMountEmit::default();
         let mut database = Database::open_with_emit(pool.clone(), DbConfig::for_profile(Profile::Test), storage, Arc::new(emit.clone())).await.unwrap();
         let document = protocol::ArtifactId(String::from("single-flight-reentrant-wake"));
@@ -12899,7 +12929,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_shutdown_interrupt_retains_waiterless_opening_owner_until_ready() {
         let pool = test_worker_pool();
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let emit = ControlledMountEmit::default();
         let mut database = Database::open_with_emit(pool.clone(), DbConfig::for_profile(Profile::Test), storage, Arc::new(emit.clone())).await.unwrap();
         let document = protocol::ArtifactId(String::from("single-flight-shutdown"));
@@ -13008,11 +13038,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_document_mount_failure_terminalizes_authority_builder_wal_owner_before_fanout() {
         let inner = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(test_worker_pool()).await.unwrap()));
-        let fault = crate::db_testkit::FaultStorage::new(inner).await;
+        let fault = db_testkit::FaultStorage::new(inner).await;
         let storage = Arc::new(db_storage::DbBackend::Fault(Box::new(fault)));
         let mut database = Database::open(test_worker_pool(), DbConfig::for_profile(Profile::Test), storage.clone()).await.unwrap();
         let db_storage::DbBackend::Fault(fault) = storage.as_ref() else { unreachable!() };
-        fault.set_script(crate::db_testkit::FaultScript { fail_nth_write: Some(1), ..crate::db_testkit::FaultScript::default() }).await;
+        fault.set_script(db_testkit::FaultScript { fail_nth_write: Some(1), ..db_testkit::FaultScript::default() }).await;
         let document = protocol::ArtifactId("database-retained-open-rejection".to_string());
         let rejected = match database.create_document(ArtifactSpec::new(document.clone()).await).await {
             Err(rejected) => rejected,
@@ -13033,12 +13063,12 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_document_mount_failure_waiters_share_terminal_cleanup_and_retry_generation() {
         let pool = test_worker_pool();
-        let inner = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
-        let fault = crate::db_testkit::FaultStorage::new(inner).await;
+        let inner = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
+        let fault = db_testkit::FaultStorage::new(inner).await;
         let storage = Arc::new(db_storage::DbBackend::Fault(Box::new(fault)));
         let mut database = Database::open(pool.clone(), DbConfig::for_profile(Profile::Test), storage.clone()).await.unwrap();
         let db_storage::DbBackend::Fault(fault) = storage.as_ref() else { unreachable!() };
-        fault.set_script(crate::db_testkit::FaultScript { fail_nth_sync: Some(1), ..crate::db_testkit::FaultScript::default() }).await;
+        fault.set_script(db_testkit::FaultScript { fail_nth_sync: Some(1), ..db_testkit::FaultScript::default() }).await;
         let document = protocol::ArtifactId(String::from("single-flight-retained-failure"));
         let mut first_future = Box::pin(database.ensure_document(&document));
         let mut second_future = Box::pin(database.ensure_document(&document));
@@ -13081,7 +13111,7 @@ mod tests {
         assert!(database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
         let core = to_core_document_id(&document).await;
         storage.wal().await.acquire_writer(&core).await.unwrap().release().await.unwrap();
-        fault.set_script(crate::db_testkit::FaultScript::default()).await;
+        fault.set_script(db_testkit::FaultScript::default()).await;
         let handle = database.ensure_document(&document).await.unwrap();
         assert_eq!(database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).ready_count(), 1);
         drop(handle);
@@ -13092,14 +13122,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_document_mount_unlock_fault_parks_exact_owner_until_controlled_shutdown_resume() {
         let pool = test_worker_pool();
-        let memory = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let memory = db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         memory.fail_next_writer_release();
         let inner = Arc::new(db_storage::DbBackend::Memory(memory));
-        let fault = crate::db_testkit::FaultStorage::new(inner).await;
+        let fault = db_testkit::FaultStorage::new(inner).await;
         let storage = Arc::new(db_storage::DbBackend::Fault(Box::new(fault)));
         let mut database = Database::open(pool.clone(), DbConfig::for_profile(Profile::Test), storage.clone()).await.unwrap();
         let db_storage::DbBackend::Fault(fault) = storage.as_ref() else { unreachable!() };
-        fault.set_script(crate::db_testkit::FaultScript { fail_nth_sync: Some(1), ..crate::db_testkit::FaultScript::default() }).await;
+        fault.set_script(db_testkit::FaultScript { fail_nth_sync: Some(1), ..db_testkit::FaultScript::default() }).await;
         let document = protocol::ArtifactId(String::from("single-flight-unlock-fault"));
         let (parked_tx, parked_rx) = std::sync::mpsc::sync_channel(1);
         *database.mount_parked_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move || parked_tx.send(()).unwrap()));
@@ -13143,7 +13173,7 @@ mod tests {
         assert!(database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
         let core = to_core_document_id(&document).await;
         storage.wal().await.acquire_writer(&core).await.unwrap().release().await.unwrap();
-        fault.set_script(crate::db_testkit::FaultScript::default()).await;
+        fault.set_script(db_testkit::FaultScript::default()).await;
         let handle = database.ensure_document(&document).await.unwrap();
         drop(handle);
         if let Err(error) = database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await {
@@ -13163,10 +13193,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_document_mount_coalesces_join_drives_without_shared_pool_starvation() {
         let pool = test_worker_pool();
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let mut database = Database::open(pool.clone(), DbConfig::for_profile(Profile::Test), storage).await.unwrap();
         let document = protocol::ArtifactId(String::from("single-flight-poller-coalescing"));
-        let gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
         let (published_tx, published_rx) = std::sync::mpsc::sync_channel(1);
         let hook_gate = gate.clone();
         *database.mount_catalog_published_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move |_| {
@@ -13218,16 +13248,16 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_document_mount_cleanup_fault_consumes_racing_resume_request_exactly_once() {
         let pool = test_worker_pool();
-        let memory = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let memory = db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         memory.fail_next_writer_release();
         let inner = Arc::new(db_storage::DbBackend::Memory(memory));
-        let fault = crate::db_testkit::FaultStorage::new(inner).await;
+        let fault = db_testkit::FaultStorage::new(inner).await;
         let storage = Arc::new(db_storage::DbBackend::Fault(Box::new(fault)));
         let mut database = Database::open(pool.clone(), DbConfig::for_profile(Profile::Test), storage.clone()).await.unwrap();
         let db_storage::DbBackend::Fault(fault) = storage.as_ref() else { unreachable!() };
-        fault.set_script(crate::db_testkit::FaultScript { fail_nth_sync: Some(1), ..crate::db_testkit::FaultScript::default() }).await;
+        fault.set_script(db_testkit::FaultScript { fail_nth_sync: Some(1), ..db_testkit::FaultScript::default() }).await;
         let document = protocol::ArtifactId(String::from("single-flight-racing-cleanup-resume"));
-        let gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
         let (fault_tx, fault_rx) = std::sync::mpsc::sync_channel(1);
         let hook_gate = gate.clone();
         let hook_count = Arc::new(std::sync::atomic::AtomicUsize::new(0));

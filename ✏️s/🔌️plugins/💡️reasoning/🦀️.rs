@@ -17,7 +17,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s shape. No
 /// `.handler(…)` and no `🧩️extensions/` dir anywhere in this crate, so `Isolated` (the SDK default)
 /// is honest.
-pub fn plugin() -> Result<Plugin<ReasoningApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<ReasoningApps>, PluginAssemblyError> {
     Plugin::<ReasoningApps>::builder("reasoning")
         .label("Mindmap")
         .version("0.1.0")

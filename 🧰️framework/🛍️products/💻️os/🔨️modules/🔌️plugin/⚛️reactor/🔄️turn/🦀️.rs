@@ -205,6 +205,9 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
             Event::CommandIngressPage { .. } => {
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-page-event-bypass"), "command page must use poll_kernel's dedicated owner argument"));
             }
+            Event::ColdDocumentPairPage(_) => {
+                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.cold-pair-page-event-bypass"), "cold document pair page must use poll_kernel's dedicated owner argument"));
+            }
             // 🎯️ M1 (ticket 26/08/17 `design-unified.md`): decodes the pack-encoded
             // `ui_contract::UiIntent`, drops it if it targets a tree the user can no longer see (the
             // revision guard, at the reconciler that owns the revision — `PATCHES.revision`,
@@ -826,7 +829,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
             let prepared = prepare(&result)?;
             if let Some(instance) = focus {
                 runtime.guest_lifetimes.borrow_mut().finish_turn(instance, started_us).map_err(|reason| {
-                    if reason == super::instance_lifetime::GUEST_LIFECYCLE_TURN_DEADLINE {
+                    if reason == instance_lifetime::GUEST_LIFECYCLE_TURN_DEADLINE {
                         semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.reactor-turn-deadline"), reason).with_retryable(retryable_lifecycle)
                     } else {
                         reactor_close_fault(reason)
@@ -851,7 +854,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     })
 }
 
-fn live_patch_receipt<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, receipt: semio_framework::kernel::ActorUiPatchReceipt) -> bool {
+fn live_patch_receipt<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, receipt: ActorUiPatchReceipt) -> bool {
     runtime.guest_lifetimes.borrow().get(receipt.lifetime.instance_id).is_some_and(|slot| slot.cell.is_live() && slot.cell.lifetime() == receipt.lifetime)
 }
 

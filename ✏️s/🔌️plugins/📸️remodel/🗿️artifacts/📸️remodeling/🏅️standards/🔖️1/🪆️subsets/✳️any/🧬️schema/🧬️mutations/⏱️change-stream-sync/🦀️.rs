@@ -1,6 +1,6 @@
 //! ⏱️ Remodeling mutation — `ChangeStreamSync`: sets one media stream's `sync_offset_ms`.
 
-use crate::artifacts::remodeling::diff::{RemodelingDiff, RemodelingMediaStreamList};
+use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
 use crate::artifacts::remodeling::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};

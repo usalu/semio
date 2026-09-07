@@ -42,7 +42,7 @@ impl<T: Copy + Send + 'static> RetirementCursor for Leaf<T> {
 }
 
 pub fn leaf<T: Copy + Send + 'static>(value: T) -> Box<dyn RetirementCursor> {
-    Box::new(Leaf { value: Some(value), remaining: std::mem::size_of::<T>() })
+    Box::new(Leaf { value: Some(value), remaining: size_of::<T>() })
 }
 
 #[macro_export]

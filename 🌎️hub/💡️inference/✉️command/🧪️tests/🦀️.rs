@@ -11,7 +11,21 @@ fn inference_command_exact_decoder_executes_neutral_bounds_canonical_eof_and_act
     assert_eq!(fixture["limits"]["dependencyCount"], DEPENDENCY_MAX_COUNT);
     assert_eq!(fixture["limits"]["payloadBytes"], PAYLOAD_MAX_BYTES);
     assert_eq!(fixture["limits"]["integerMaximum"], SAFE_INTEGER_MAX);
-    let base = crate::inference::wal::tests::envelope(&source);
+    let command = &source["command"];
+    let decode_hex = |value: &str| (0..value.len()).step_by(2).map(|index| u8::from_str_radix(&value[index..index + 2], 16).unwrap()).collect();
+    let base = protocol::MutationEnvelope {
+        mutation_id: protocol::MutationId(command["mutationId"].as_str().unwrap().into()),
+        document_id: protocol::ArtifactId(command["documentId"].as_str().unwrap().into()),
+        actor: protocol::ActorId(command["actor"].as_str().unwrap().into()),
+        dependencies: Vec::new(),
+        diff: protocol::ArtifactDiff { schema: protocol::SchemaId(command["diff"]["schema"].as_str().unwrap().into()), payload: decode_hex(command["diff"]["payloadHex"].as_str().unwrap()) },
+        inverse: protocol::InverseMutation { schema: protocol::SchemaId(command["inverse"]["schema"].as_str().unwrap().into()), payload: decode_hex(command["inverse"]["payloadHex"].as_str().unwrap()) },
+        timestamp: protocol::HybridLogicalTimestamp {
+            actor: command["timestamp"]["actor"].as_u64().unwrap(),
+            physical_ms: command["timestamp"]["physicalMs"].as_u64().unwrap(),
+            logical: command["timestamp"]["logical"].as_u64().unwrap(),
+        },
+    };
     for vector in fixture["vectors"].as_array().unwrap() {
         let mut command = base.clone();
         let change = vector["change"].as_str().unwrap();

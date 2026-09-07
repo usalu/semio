@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative change-restart-interval mutation.
-use crate::artifacts::jpg::schema::diff::{self, *};
+use crate::artifacts::jpg::schema::diff::*;
 use crate::artifacts::jpg::schema::mutations::JpgMutation;
 use crate::artifacts::jpg::schema::snapshot::*;
 
@@ -27,12 +27,11 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ChangeRestartIntervalM
         protocol::MutationOutcome::new(contribute(base, *restart_interval))
     }
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgMutation> {
-        let Self { restart_interval } = self;
         let outcome = <Self as protocol::MutationKind<JpgSnapshot, JpgMutation>>::diff(self, base);
         if <JpgDiff as protocol::DiffAlgebra<JpgSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
-        vec![JpgMutation::ChangeRestartInterval(crate::artifacts::jpg::schema::mutations::ChangeRestartIntervalMutation { restart_interval: base.restart_interval })]
+        vec![JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: base.restart_interval })]
     }
     fn label(&self) -> String {
         "change restart interval".into()

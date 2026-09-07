@@ -15,7 +15,7 @@ pub struct DrawingIntoPng;
 impl Serializer<DrawingSnapshot> for DrawingIntoPng {
     const INTO: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(_from: &DrawingSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(_from: &DrawingSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "DrawingIntoPng: PNG export is not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

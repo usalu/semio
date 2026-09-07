@@ -262,7 +262,7 @@ pub enum BootstrapPlan {
 /// @emoji 🧭️ Decides `BootstrapPlan` for `replica` (`None` meaning a totally fresh replica with no
 /// prior frontier at all) against `state`, consulting `snapshots` only when the replica's
 /// `head_seq` has fallen behind `state.floor_head_seq`.
-pub async fn decide_bootstrap(state: &ArtifactSyncState, snapshots: &impl db_storage::SnapshotStorage, replica: Option<&Frontier>) -> Result<BootstrapPlan, DbError> {
+pub async fn decide_bootstrap(state: &ArtifactSyncState, snapshots: &impl SnapshotStorage, replica: Option<&Frontier>) -> Result<BootstrapPlan, DbError> {
     let replica_head_seq = replica.map_or(0, |frontier| frontier.head_seq);
     if replica_head_seq >= state.floor_head_seq {
         let missing = match replica {
@@ -465,14 +465,14 @@ fn database_sync_hello_allocate_vec<T>(ledger: &mut DatabaseSyncHelloBackingLedg
     if count == 0 {
         return Ok(Vec::new());
     }
-    let requested = count.checked_mul(std::mem::size_of::<T>()).ok_or(DbError::LimitExceeded(label))?;
+    let requested = count.checked_mul(size_of::<T>()).ok_or(DbError::LimitExceeded(label))?;
     let reserved = ledger.reserve_allocation(1, requested, label)?;
     let mut owner = Vec::new();
     if owner.try_reserve_exact(count).is_err() {
         ledger.release(1, reserved)?;
         return Err(DbError::LimitExceeded(label));
     }
-    let actual = owner.capacity().checked_mul(std::mem::size_of::<T>()).ok_or(DbError::LimitExceeded(label))?;
+    let actual = owner.capacity().checked_mul(size_of::<T>()).ok_or(DbError::LimitExceeded(label))?;
     if actual > reserved {
         drop(owner);
         ledger.release(1, reserved)?;
@@ -698,7 +698,7 @@ impl DatabaseSyncHelloOwners {
 fn database_sync_hello_input_credit(owners: &DatabaseSyncHelloOwners) -> Result<(usize, usize), DbError> {
     let frontier_items = owners.hello_frontier.as_ref().map_or(0, |_| 3);
     let items = 4usize.checked_add(frontier_items).ok_or(DbError::LimitExceeded("database sync hello input items"))?;
-    let frontier_bytes = owners.hello_frontier.as_ref().map_or(0, |frontier| frontier.document_id.0.capacity().saturating_add(frontier.head_edit_id.capacity()).saturating_add(std::mem::size_of::<protocol::RuntimeFrontierSummary>()));
+    let frontier_bytes = owners.hello_frontier.as_ref().map_or(0, |frontier| frontier.document_id.0.capacity().saturating_add(frontier.head_edit_id.capacity()).saturating_add(size_of::<protocol::RuntimeFrontierSummary>()));
     let bytes = owners
         .document
         .0
@@ -748,7 +748,7 @@ fn database_sync_hello_allocate_envelope_vec<T>(ledger: &mut DatabaseSyncHelloBa
         return Ok(Vec::new());
     }
     let label = "database sync hello cumulative envelope backing";
-    let requested = count.checked_mul(std::mem::size_of::<T>()).ok_or(DbError::LimitExceeded(label))?;
+    let requested = count.checked_mul(size_of::<T>()).ok_or(DbError::LimitExceeded(label))?;
     let reserved = DATABASE_SYNC_HELLO_MAX_BYTES.checked_sub(ledger.bytes).ok_or(DbError::LimitExceeded(label))?;
     if requested > reserved {
         return Err(DbError::LimitExceeded(label));
@@ -759,7 +759,7 @@ fn database_sync_hello_allocate_envelope_vec<T>(ledger: &mut DatabaseSyncHelloBa
         ledger.release(1, reserved)?;
         return Err(DbError::LimitExceeded(label));
     }
-    let actual = owner.capacity().checked_mul(std::mem::size_of::<T>()).ok_or(DbError::LimitExceeded(label))?;
+    let actual = owner.capacity().checked_mul(size_of::<T>()).ok_or(DbError::LimitExceeded(label))?;
     if actual > reserved {
         drop(owner);
         ledger.release(1, reserved)?;
@@ -770,7 +770,7 @@ fn database_sync_hello_allocate_envelope_vec<T>(ledger: &mut DatabaseSyncHelloBa
 }
 
 fn database_sync_hello_retire_vec<T>(owner: &mut Vec<T>, ledger: &mut DatabaseSyncHelloBackingLedger) -> Result<(), DbError> {
-    let capacity = owner.capacity().checked_mul(std::mem::size_of::<T>()).ok_or(DbError::LimitExceeded("database sync hello retirement capacity"))?;
+    let capacity = owner.capacity().checked_mul(size_of::<T>()).ok_or(DbError::LimitExceeded("database sync hello retirement capacity"))?;
     if capacity == 0 {
         return Ok(());
     }
@@ -943,19 +943,6 @@ async fn database_sync_hello_decode_envelope(
             Err(control_error.unwrap_or(error))
         }
     }
-}
-
-fn database_sync_hello_envelope_credit(envelope: &protocol::MutationEnvelope) -> Result<(usize, usize), DbError> {
-    let items = 7usize.checked_add(envelope.dependencies.len()).ok_or(DbError::LimitExceeded("database sync hello envelope items"))?;
-    let dependency_shell = envelope.dependencies.capacity().checked_mul(std::mem::size_of::<protocol::MutationId>()).ok_or(DbError::LimitExceeded("database sync hello dependency shell"))?;
-    let mut bytes = envelope.mutation_id.0.capacity();
-    for backing in [envelope.document_id.0.capacity(), envelope.actor.0.capacity(), dependency_shell, envelope.diff.schema.0.capacity(), envelope.diff.payload.capacity(), envelope.inverse.schema.0.capacity(), envelope.inverse.payload.capacity()] {
-        bytes = bytes.checked_add(backing).ok_or(DbError::LimitExceeded("database sync hello envelope bytes"))?;
-    }
-    for dependency in &envelope.dependencies {
-        bytes = bytes.checked_add(dependency.0.capacity()).ok_or(DbError::LimitExceeded("database sync hello dependency bytes"))?;
-    }
-    Ok((items, bytes))
 }
 
 async fn database_sync_hello_close_pages(pages: &mut db_storage::DbIoPages, cancelled: &std::sync::atomic::AtomicBool, expired: &std::sync::atomic::AtomicBool) -> Result<(), DbError> {
@@ -1358,7 +1345,7 @@ async fn database_sync_hello_execute(
             if observed_generation != Some(generation) {
                 database_sync_hello_close_pages(&mut pages, &cancelled, &expired).await?;
                 ledger.release(page_items, page_bytes)?;
-                return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(generation), actual: crate::db_ids::GenerationId(observed_generation.unwrap_or(0)) });
+                return Err(DbError::StaleGeneration { expected: GenerationId(generation), actual: GenerationId(observed_generation.unwrap_or(0)) });
             }
             let pack_hash = *hash.finalize().as_bytes();
             (protocol::Bootstrap::Snapshot { pack_hash, inline: None }, DatabaseSyncHelloFollowUp::Snapshot { pages, chunk_bytes: owners.snapshot_chunk_bytes, offset: 0, page: 0, page_offset: 0, seq: 0, chunk: None, done: false })
@@ -1644,7 +1631,7 @@ impl DatabaseSyncHelloState {
                 }
                 Err(_) => {
                     let mut core = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                    let bytes = std::mem::size_of_val(&*future);
+                    let bytes = size_of_val(&*future);
                     core.quarantined = Some(DatabaseSyncHelloQuarantineClose { future: Some(future), items: 1, bytes });
                     core.frame = Some(Err(DbError::Internal("database sync hello worker panic".to_string())));
                     self.progress.store(DatabaseSyncHelloProgress::Fault as u8, std::sync::atomic::Ordering::Release);
@@ -1924,7 +1911,7 @@ impl std::future::Future for DatabaseSyncHelloFuture {
             state.abandoned.store(true, std::sync::atomic::Ordering::Release);
             state.cancelled.store(true, std::sync::atomic::Ordering::Release);
             state.arm_close();
-            return std::task::Poll::Ready(Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(state.generation), actual: crate::db_ids::GenerationId(0) }));
+            return std::task::Poll::Ready(Err(DbError::StaleGeneration { expected: GenerationId(state.generation), actual: GenerationId(0) }));
         }
         if state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).execution.is_some() {
             self.completed = true;
@@ -2013,7 +2000,7 @@ fn database_sync_hello_lease_frame(state: &std::sync::Arc<DatabaseSyncHelloState
         }
         return Err(DbError::Unavailable("database sync hello returned frame lease occupied".to_string()));
     }
-    let generation = match state.returned_generation.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |generation| generation.checked_add(1).filter(|next| *next != 0)) {
+    let generation = match state.returned_generation.try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |generation| generation.checked_add(1).filter(|next| *next != 0)) {
         Ok(generation) => generation,
         Err(generation) => {
             let (items, bytes) = database_sync_hello_returned_frame_credit(&frame)?;
@@ -2063,7 +2050,7 @@ impl DatabaseSyncHelloReturnedFrame {
             core.returned_fallback = Some(DatabaseSyncHelloReturnedFrameLease { generation: self.generation, items, bytes, close: Some(DatabaseSyncHelloFrameClose { owner: Some(frame), envelope: None }) });
             drop(core);
             state.schedule();
-            return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.generation), actual: crate::db_ids::GenerationId(actual) });
+            return Err(DbError::StaleGeneration { expected: GenerationId(self.generation), actual: GenerationId(actual) });
         }
         lease.close = Some(DatabaseSyncHelloFrameClose { owner: Some(frame), envelope: None });
         drop(core);
@@ -2233,7 +2220,7 @@ fn database_sync_hello_rejected_registry() -> &'static std::sync::Mutex<Option<s
 fn database_sync_hello_install_rejected_registry(owner: &std::sync::Arc<DatabaseSyncHelloRejectedClose>) -> Result<u64, DbError> {
     static GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
     let generation = GENERATION
-        .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |generation| generation.checked_add(1).filter(|generation| *generation != 0))
+        .try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |generation| generation.checked_add(1).filter(|generation| *generation != 0))
         .map_err(|_| DbError::LimitExceeded("database sync hello rejection generation"))?;
     owner.registry_generation.store(generation, std::sync::atomic::Ordering::Release);
     let mut registry = database_sync_hello_rejected_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -2289,7 +2276,7 @@ pub fn database_sync_hello_rejected_terminal_witness(generation: u64) -> Option<
 
 impl DatabaseSyncHelloRejectedClose {
     fn claim_submission(&self) -> bool {
-        self.submissions.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |submissions| submissions.checked_add(1).filter(|next| *next <= DATABASE_SYNC_HELLO_RETRY_LIMIT)).is_ok()
+        self.submissions.try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |submissions| submissions.checked_add(1).filter(|next| *next <= DATABASE_SYNC_HELLO_RETRY_LIMIT)).is_ok()
     }
 
     fn publish_terminal_recovery(self: &std::sync::Arc<Self>, terminal: u8) {
@@ -2737,7 +2724,7 @@ mod tests {
     //#region 🔖️ReplicaState
     #[semio_framework_async_macros::async_test]
     async fn replay_sync_state_derives_frontier_and_ordered_commands() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 3).await;
 
@@ -2752,7 +2739,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn replay_sync_state_on_empty_document_is_genesis() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 0).await;
 
@@ -2764,7 +2751,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn replay_sync_state_tracks_the_latest_snapshot_pub_as_the_floor() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 5).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 2, commit_seq: 2, chain_hash: [1u8; 32], epoch: 0 };
@@ -2791,7 +2778,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn frontier_summary_bridges_round_trip() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 2).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
@@ -2813,7 +2800,7 @@ mod tests {
     //#region 🔖️MissingCommands
     #[semio_framework_async_macros::async_test]
     async fn missing_commands_transfer_round_trip_from_genesis() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 4).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
@@ -2829,7 +2816,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn missing_commands_transfer_round_trip_for_a_partially_caught_up_replica() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 3).await;
         let first_state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
@@ -2853,7 +2840,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn missing_commands_rejects_document_mismatch_and_a_replica_ahead_of_server() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 2).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
@@ -2867,7 +2854,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn missing_commands_rejects_a_replica_behind_the_retained_floor() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 5).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 3, commit_seq: 3, chain_hash: [2u8; 32], epoch: 0 };
@@ -2882,7 +2869,7 @@ mod tests {
     //#region 🔖️Bootstrap
     #[semio_framework_async_macros::async_test]
     async fn decide_bootstrap_serves_tail_for_a_fresh_replica_within_the_floor() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 3).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
@@ -2893,7 +2880,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn decide_bootstrap_reports_none_for_an_already_caught_up_replica() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 3).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
@@ -2904,13 +2891,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn decide_bootstrap_serves_snapshot_when_a_generation_is_available_below_the_floor() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 5).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [3u8; 32], epoch: 0 };
         publish_snapshot_marker(&storage, &document, 7, floor_frontier).await;
         let pages = db_storage::db_io_copy_pages(b"snapshot-bytes").unwrap().await.unwrap();
-        db_storage::SnapshotStorage::write_generation(&storage, &document, 7, pages).await.unwrap();
+        SnapshotStorage::write_generation(&storage, &document, 7, pages).await.unwrap();
         let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
 
         let stale_replica = Frontier { document, head_seq: 0, commit_seq: 0, chain_hash: [0u8; 32], epoch: 0 };
@@ -2927,7 +2914,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn decide_bootstrap_reports_unavailable_when_below_floor_with_no_snapshot() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 5).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [3u8; 32], epoch: 0 };
@@ -2952,12 +2939,12 @@ mod tests {
     //#region 🔖️Hello
     #[semio_framework_async_macros::async_test]
     async fn handle_hello_bootstraps_a_fresh_replica_via_tail_and_issues_a_resume_token() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 3).await;
         let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(storage));
 
-        let response = db_actor::block_on(handle_hello(crate::db_storage::db_io_test_pool(), storage, document, None, "session-1".to_string(), protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
+        let response = db_actor::block_on(handle_hello(db_storage::db_io_test_pool(), storage, document, None, "session-1".to_string(), protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
         let protocol::ServerFrame::Welcome { bootstrap, server_frontier, resume_token, .. } = &response.welcome else {
             panic!("expected a Welcome frame");
         };
@@ -2973,14 +2960,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn handle_hello_reports_no_follow_up_for_an_already_caught_up_replica() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 2).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
         let hello_frontier = state_frontier_summary(&state).await;
         let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(storage));
 
-        let response = db_actor::block_on(handle_hello(crate::db_storage::db_io_test_pool(), storage, document, Some(hello_frontier), "session-2".to_string(), protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
+        let response = db_actor::block_on(handle_hello(db_storage::db_io_test_pool(), storage, document, Some(hello_frontier), "session-2".to_string(), protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
         let protocol::ServerFrame::Welcome { bootstrap, .. } = &response.welcome else {
             panic!("expected a Welcome frame");
         };
@@ -2990,18 +2977,18 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn handle_hello_chunks_a_snapshot_larger_than_the_requested_chunk_size() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 4).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [1u8; 32], epoch: 0 };
         publish_snapshot_marker(&storage, &document, 9, floor_frontier).await;
         let big_snapshot = vec![7u8; 10];
         let pages = db_storage::db_io_copy_pages(&big_snapshot).unwrap().await.unwrap();
-        db_storage::SnapshotStorage::write_generation(&storage, &document, 9, pages).await.unwrap();
+        SnapshotStorage::write_generation(&storage, &document, 9, pages).await.unwrap();
         let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(storage));
 
         let stale_hello_frontier = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0u8; 32] };
-        let response = db_actor::block_on(handle_hello(crate::db_storage::db_io_test_pool(), storage, document, Some(stale_hello_frontier), "session-3".to_string(), protocol::ActorId("semio_hub".to_string()), 4)).unwrap();
+        let response = db_actor::block_on(handle_hello(db_storage::db_io_test_pool(), storage, document, Some(stale_hello_frontier), "session-3".to_string(), protocol::ActorId("semio_hub".to_string()), 4)).unwrap();
 
         let protocol::ServerFrame::Welcome { bootstrap, .. } = &response.welcome else {
             panic!("expected a Welcome frame");
@@ -3014,16 +3001,16 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn handle_hello_rejects_zero_snapshot_chunk_bytes() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 1).await;
         let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(storage));
-        assert!(matches!(db_actor::block_on(handle_hello(crate::db_storage::db_io_test_pool(), storage, document, None, "s".to_string(), protocol::ActorId("semio_hub".to_string()), 0)), Err(DbError::InvalidArgument(_))));
+        assert!(matches!(db_actor::block_on(handle_hello(db_storage::db_io_test_pool(), storage, document, None, "s".to_string(), protocol::ActorId("semio_hub".to_string()), 0)), Err(DbError::InvalidArgument(_))));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn handle_frontier_advertise_relays_missing_commands_and_none_when_caught_up() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 2).await;
         let first_state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
@@ -3097,7 +3084,7 @@ mod tests {
     }
 
     async fn retained_sync_hello_storage() -> std::sync::Arc<db_storage::DbBackend> {
-        std::sync::Arc::new(db_storage::DbBackend::Memory(MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()))
+        std::sync::Arc::new(db_storage::DbBackend::Memory(MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()))
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3145,7 +3132,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn retained_sync_hello_tail_stream_publishes_welcome_then_one_backpressured_frame() {
         let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
-        let memory = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let memory = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = ArtifactId(String::from("p1z-tail-stream"));
         seed_wal(&memory, &document, 3).await;
         let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(memory));
@@ -3163,13 +3150,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn retained_sync_hello_snapshot_cursor_copies_at_most_one_page_fragment_per_driver_opportunity() {
         let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
-        let memory = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let memory = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = ArtifactId(String::from("p1z-snapshot-stream"));
         seed_wal(&memory, &document, 4).await;
         let floor = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [1; 32], epoch: 0 };
         publish_snapshot_marker(&memory, &document, 9, floor).await;
         let pages = db_storage::db_io_copy_pages(b"0123456789").unwrap().await.unwrap();
-        db_storage::SnapshotStorage::write_generation(&memory, &document, 9, pages).await.unwrap();
+        SnapshotStorage::write_generation(&memory, &document, 9, pages).await.unwrap();
         let stale = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0; 32] };
         let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(memory));
         let result = DatabaseSyncHelloFuture::try_submit(pool, storage, document, Some(stale), String::from("p1z-snapshot"), protocol::ActorId(String::from("p1z-origin")), 4).unwrap().await.unwrap();
@@ -3191,13 +3178,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn retained_sync_hello_returned_snapshot_credit_waits_for_exact_generation_ack() {
         let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
-        let memory = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let memory = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = ArtifactId(String::from("p1z-returned-credit"));
         seed_wal(&memory, &document, 2).await;
         let floor = Frontier { document: document.clone(), head_seq: 2, commit_seq: 2, chain_hash: [2; 32], epoch: 0 };
         publish_snapshot_marker(&memory, &document, 7, floor).await;
         let pages = db_storage::db_io_copy_pages(b"abcdefgh").unwrap().await.unwrap();
-        db_storage::SnapshotStorage::write_generation(&memory, &document, 7, pages).await.unwrap();
+        SnapshotStorage::write_generation(&memory, &document, 7, pages).await.unwrap();
         let stale = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0; 32] };
         let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(memory));
         let result = DatabaseSyncHelloFuture::try_submit(pool, storage, document, Some(stale), String::from("p1z-returned-credit-session"), protocol::ActorId(String::from("p1z-returned-credit-origin")), 4).unwrap().await.unwrap();
@@ -3260,14 +3247,14 @@ mod tests {
         assert!(fixed_ledger.terminal_is_empty());
 
         let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
-        let memory = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let memory = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = ArtifactId(String::from("p1z-maximum-frame-unit"));
         seed_wal(&memory, &document, 2).await;
         let floor = Frontier { document: document.clone(), head_seq: 2, commit_seq: 2, chain_hash: [3; 32], epoch: 0 };
         publish_snapshot_marker(&memory, &document, 11, floor).await;
         let source = vec![b'x'; DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES * 2 + 1];
         let pages = db_storage::db_io_copy_pages(&source).unwrap().await.unwrap();
-        db_storage::SnapshotStorage::write_generation(&memory, &document, 11, pages).await.unwrap();
+        SnapshotStorage::write_generation(&memory, &document, 11, pages).await.unwrap();
         let stale = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0; 32] };
         let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(memory));
         let result =
@@ -3323,7 +3310,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn retained_sync_hello_cancel_before_stream_demand_publishes_no_new_frame() {
         let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
-        let memory = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let memory = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
         let document = ArtifactId(String::from("p1z-cancel-before-stream"));
         seed_wal(&memory, &document, 2).await;
         let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(memory));
@@ -3381,7 +3368,7 @@ mod tests {
     #[test]
     fn retained_sync_hello_quarantine_cursor_and_byte_item_ledger_reach_zero_before_release() {
         let future: DatabaseSyncHelloExecutionFuture = Box::pin(std::future::pending());
-        let bytes = std::mem::size_of_val(&*future);
+        let bytes = size_of_val(&*future);
         let mut quarantine = DatabaseSyncHelloQuarantineClose { future: Some(future), items: 1, bytes };
         assert!(quarantine.close_one());
         assert!(quarantine.terminal_is_empty());

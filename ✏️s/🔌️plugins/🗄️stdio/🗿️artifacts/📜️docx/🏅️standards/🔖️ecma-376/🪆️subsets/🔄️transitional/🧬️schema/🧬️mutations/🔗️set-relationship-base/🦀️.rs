@@ -14,7 +14,7 @@ pub struct SetRelationshipBase {
 impl protocol::MutationKind<DocxSnapshot, DocxTransitionalMutation> for SetRelationshipBase {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "relationship-base", kind: "set-relationship-base", record: "SetRelationshipBase" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxTransitionalMutation as protocol::Mutation<DocxSnapshot>>::Diff> {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxTransitionalMutation as Mutation<DocxSnapshot>>::Diff> {
         agg_diff(&DocxTransitionalMutation::SetRelationshipBase(self.clone()), base)
     }
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxTransitionalMutation> {

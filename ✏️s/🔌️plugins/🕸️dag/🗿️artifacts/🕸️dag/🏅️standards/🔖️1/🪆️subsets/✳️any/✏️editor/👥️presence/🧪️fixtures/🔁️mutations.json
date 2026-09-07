@@ -1,0 +1,25 @@
+[
+  {
+    "kind": "replace-presence",
+    "mutation": {
+      "mutation": "replacePresence",
+      "payload": {
+        "presence": {
+          "cameraX": 4.0,
+          "cameraY": 5.0,
+          "cameraZoom": 6.0
+        }
+      }
+    },
+    "base": {
+      "cameraX": 1.0,
+      "cameraY": 2.0,
+      "cameraZoom": 3.0
+    },
+    "after": {
+      "cameraX": 4.0,
+      "cameraY": 5.0,
+      "cameraZoom": 6.0
+    }
+  }
+]

@@ -13,7 +13,7 @@ pub struct AddParameter { #[dsl(statements)] pub parameter: Box<WorkflowParamete
 impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for AddParameter {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "workflow", kind: "add-parameter", record: "AddedWorkflowParameter" };
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> { protocol::MutationOutcome::new(WorkflowDiff::AddParameter { parameter: (*self.parameter).clone() }) }
-    fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> { vec![WorkflowMutation::RemoveParameter(RemoveParameter { parameter_id: workflow_parameter_entity_id(&self.parameter).into() })] }
+    fn inverse(&self, _base: &WorkflowSnapshot) -> Vec<WorkflowMutation> { vec![WorkflowMutation::RemoveParameter(RemoveParameter { parameter_id: workflow_parameter_entity_id(&self.parameter).into() })] }
     fn label(&self) -> String { format!("Add workflow parameter {}", workflow_parameter_entity_id(&self.parameter)) }
     fn target(&self) -> Vec<String> { vec!["parameters".into(), workflow_parameter_entity_id(&self.parameter).into()] }
 }

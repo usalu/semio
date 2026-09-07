@@ -569,6 +569,56 @@ impl InferenceJobLedgerV1 {
         Ok(InferenceApprovalPageV1 { rows, next_cursor })
     }
 
+    pub(crate) fn prepared_approval_by_mutation(&self, mutation_id: &str) -> Result<Option<InferenceApprovalOutboxV1>, InferenceErrorV1> {
+        if !hex(mutation_id, 32) {
+            return Err(InferenceErrorV1::Invalid);
+        }
+        let connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
+        let row: Option<(String, String, String, String, u64, Vec<u8>)> = connection
+            .query_row(
+                "SELECT job_id,mutation_id,command_hash,proposal_hash,prepared_at,command FROM inference_approval_outbox_v1 WHERE mutation_id=?1 AND phase='prepared'",
+                [mutation_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, read_integer(row, 4)?, row.get(5)?)),
+            )
+            .optional()
+            .map_err(storage)?;
+        row.map(|(job_id, mutation_id, command_hash, proposal_hash, prepared_at_ms, command)| {
+            Ok(InferenceApprovalOutboxV1 { job_id, mutation_id, command_hash, proposal_hash, prepared_at_ms, command: InferencePrivateBytesV1::new(command, 8192)? })
+        })
+        .transpose()
+    }
+
+    pub(crate) fn approval_recovery_by_mutation(&self, mutation_id: &str) -> Result<Option<(InferenceApprovalOutboxV1, InferenceIdentityV1, bool)>, InferenceErrorV1> {
+        if !hex(mutation_id, 32) {
+            return Err(InferenceErrorV1::Invalid);
+        }
+        let mut connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
+        let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(storage)?;
+        let row: Option<(String, String, String, String, u64, Vec<u8>, String)> = tx
+            .query_row(
+                "SELECT job_id,mutation_id,command_hash,proposal_hash,prepared_at,command,phase FROM inference_approval_outbox_v1 WHERE mutation_id=?1 AND phase IN ('prepared','committed')",
+                [mutation_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, read_integer(row, 4)?, row.get(5)?, row.get(6)?)),
+            )
+            .optional()
+            .map_err(storage)?;
+        let Some((job_id, mutation_id, command_hash, proposal_hash, prepared_at_ms, command, phase)) = row else {
+            tx.commit().map_err(storage)?;
+            return Ok(None);
+        };
+        let accepted = identity(&tx, &job_id)?;
+        tx.commit().map_err(storage)?;
+        let outbox = InferenceApprovalOutboxV1 {
+            job_id,
+            mutation_id,
+            command_hash,
+            proposal_hash,
+            prepared_at_ms,
+            command: InferencePrivateBytesV1::new(command, 8192)?,
+        };
+        Ok(Some((outbox, accepted, phase == "committed")))
+    }
+
     pub(crate) fn reconcile_committed_approval(&self, job_id: &str, witness: &super::wal::CommittedInferenceWalWitnessV1, document_generation: u64, now: u64) -> Result<bool, InferenceErrorV1> {
         if !hex(job_id, 32) || document_generation == 0 || document_generation > SAFE_INTEGER_MAX || now > SAFE_INTEGER_MAX {
             return Err(InferenceErrorV1::Bounds);
@@ -876,15 +926,18 @@ mod tests {
         assert_eq!(pending.rows[0].command.as_slice(), command.as_slice());
         assert!(pending.next_cursor.is_none());
         assert!(matches!(reopened.read(&receipt.job_id, &reader(&selected), receipt.expires_at_ms), Err(InferenceErrorV1::Expired)));
-        let (witness, fence) = super::super::wal::tests::committed_fixture_witness().await;
-        assert_eq!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 18, receipt.expires_at_ms), Err(InferenceErrorV1::Conflict));
-        assert!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, receipt.expires_at_ms).unwrap());
-        assert!(!reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, receipt.expires_at_ms).unwrap());
-        fence.invalidate();
-        assert_eq!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, receipt.expires_at_ms), Err(InferenceErrorV1::Conflict));
-        assert!(reopened.pending_approvals(None, &control).unwrap().rows.is_empty());
-        let count = reopened.connection.lock().unwrap().query_row("SELECT COUNT(*) FROM inference_job_event_v1 WHERE kind='approved'", [], |row| read_integer(row, 0)).unwrap();
-        assert_eq!(count, outbox["reconciledCount"].as_u64().unwrap());
+        #[cfg(feature = "native-artifact-execution")]
+        {
+            let (witness, fence) = super::super::wal::tests::committed_fixture_witness().await;
+            assert_eq!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 18, receipt.expires_at_ms), Err(InferenceErrorV1::Conflict));
+            assert!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, receipt.expires_at_ms).unwrap());
+            assert!(!reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, receipt.expires_at_ms).unwrap());
+            fence.invalidate();
+            assert_eq!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, receipt.expires_at_ms), Err(InferenceErrorV1::Conflict));
+            assert!(reopened.pending_approvals(None, &control).unwrap().rows.is_empty());
+            let count = reopened.connection.lock().unwrap().query_row("SELECT COUNT(*) FROM inference_job_event_v1 WHERE kind='approved'", [], |row| read_integer(row, 0)).unwrap();
+            assert_eq!(count, outbox["reconciledCount"].as_u64().unwrap());
+        }
         drop(reopened);
         std::fs::remove_file(path).unwrap();
     }

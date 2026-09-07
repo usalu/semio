@@ -25,7 +25,7 @@ pub struct SetScaleAndOffset {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetScaleAndOffset {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "scale-and-offset", kind: "set-scale-and-offset", record: "SetScaleAndOffset" };
 
-    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as protocol::Mutation<LasSnapshot>>::Diff> {
+    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
         agg_diff(&LasMutation::SetScaleAndOffset(self.clone()), base)
     }
     fn inverse(&self, base: &LasSnapshot) -> Vec<LasMutation> {

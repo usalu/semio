@@ -6,7 +6,6 @@
 
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 use super::bounds::{imported_lon_lat_positions, lon_lat_bounds, GisTerrainBounds};
 use semio_framework_value_derive::{FromValue, ToValue};

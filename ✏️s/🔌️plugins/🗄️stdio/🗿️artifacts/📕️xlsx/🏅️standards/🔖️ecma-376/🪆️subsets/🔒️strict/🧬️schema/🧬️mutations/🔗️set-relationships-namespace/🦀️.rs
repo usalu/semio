@@ -14,7 +14,7 @@ pub struct SetRelationshipsNamespace {
 impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for SetRelationshipsNamespace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "relationships-namespace", kind: "set-relationships-namespace", record: "SetRelationshipsNamespace" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxStrictMutation as protocol::Mutation<XlsxSnapshot>>::Diff> {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxStrictMutation as Mutation<XlsxSnapshot>>::Diff> {
         agg_diff(&XlsxStrictMutation::SetRelationshipsNamespace(self.clone()), base)
     }
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxStrictMutation> {

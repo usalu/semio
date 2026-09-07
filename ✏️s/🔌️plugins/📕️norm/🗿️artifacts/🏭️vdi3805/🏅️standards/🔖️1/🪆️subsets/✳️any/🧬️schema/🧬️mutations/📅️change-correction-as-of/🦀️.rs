@@ -1,7 +1,7 @@
 //! 📅️ `change-correction-as-of` — sets the document root's correction cut-off edition.
 
 
-use crate::artifacts::vdi3805::{EditionId, Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
+use crate::artifacts::vdi3805::{EditionId, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

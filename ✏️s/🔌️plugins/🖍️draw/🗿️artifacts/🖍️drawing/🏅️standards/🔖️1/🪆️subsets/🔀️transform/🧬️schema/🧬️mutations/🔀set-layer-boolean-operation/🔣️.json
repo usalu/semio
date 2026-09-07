@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean-operation",
+  "semanticKind": "set-layer-boolean-operation",
+  "displayName": "Set Layer Boolean Operation",
+  "emoji": "🔀",
+  "aggregateVariant": "SetLayerBooleanOperation",
+  "payloadSchema": "🔣️.schema.json",
+  "textOpcode": "set-layer-boolean-operation",
+  "binaryTag": 8,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "error",
+    "warning",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

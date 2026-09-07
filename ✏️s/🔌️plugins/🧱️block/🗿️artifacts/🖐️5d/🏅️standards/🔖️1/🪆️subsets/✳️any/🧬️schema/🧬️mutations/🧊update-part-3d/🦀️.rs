@@ -1,6 +1,6 @@
 //! 🧊 Block5d mutation — `UpdatePart3d`: the whole 2-field 3D-projection pose facet atomically (orientation quaternion + scale vector, always edited together in a 3D pose gizmo).
 
-use crate::artifacts::block5d::{Block5dPart3d, Block5dSnapshot};
+use crate::artifacts::block5d::Block5dSnapshot;
 use crate::artifacts::block5d::diff::Block5dDiff;
 use crate::artifacts::block5d::mutations::Block5dMutation;
 

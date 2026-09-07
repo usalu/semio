@@ -21,6 +21,7 @@ pub mod mutations;
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
+    #[cfg(test)]
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::mutations::set_snapshot;
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSnapshot, XlsxWorkbook};
     use crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::{check_transitional_conformance, TRANSITIONAL_R_NS, TRANSITIONAL_SML_NS};

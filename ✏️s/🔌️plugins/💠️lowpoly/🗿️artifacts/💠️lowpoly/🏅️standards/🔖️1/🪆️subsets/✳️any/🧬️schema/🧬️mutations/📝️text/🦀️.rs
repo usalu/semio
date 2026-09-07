@@ -120,7 +120,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_parse_rejects_garbage() {
-        let result = <LowpolyMutation as protocol::OpText>::parse_op("not json at all");
+        let result = <LowpolyMutation as OpText>::parse_op("not json at all");
         assert!(result.is_err());
     }
 }

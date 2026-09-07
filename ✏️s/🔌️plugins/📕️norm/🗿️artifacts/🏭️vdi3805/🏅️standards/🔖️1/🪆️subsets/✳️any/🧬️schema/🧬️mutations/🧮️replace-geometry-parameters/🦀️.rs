@@ -2,7 +2,7 @@
 //! addressed by id.
 
 
-use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
+use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
 use std::collections::BTreeMap;
 
 //#region 🔖️Payload

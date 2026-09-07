@@ -8,7 +8,7 @@ use crate::artifacts::fem2d::{Fem2dSnapshot, FEM2D_DIALECT, FEM_2D_SCHEMA};
 use crate::viewer::fem2d::modes::view;
 use crate::viewer::fem2d::modes::view::windows::model;
 use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

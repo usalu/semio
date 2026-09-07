@@ -15,7 +15,7 @@
 //! `directed = true` against it takes this verb's own `mutation.no-op` guard: an empty diff, no
 //! re-minting at all, and an `➡️after` byte-identical to `⬅️before`.
 
-use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::change_graph_directed::mutation::ChangeGraphDirected;
+use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::change_graph_directed::ChangeGraphDirected;
 use crate::artifacts::equation::{equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::{FromValue, ToValue};
 

@@ -46,5 +46,5 @@ pub fn handle(payload: &AddRegion, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: 
     let id = crate::app_surface::next_id(snapshot.regions.iter().map(|r| r.id.clone()), "r");
     let outline = vec![[payload.x, payload.y], [payload.x + payload.width, payload.y], [payload.x + payload.width, payload.y + payload.height], [payload.x, payload.y + payload.height]];
     let region = FemRegion { id, name: "Region".into(), outline, holes: Vec::new(), thickness: payload.thickness.unwrap_or(0.02), material_id: payload.material_id.clone(), mesh_size: payload.mesh_size.unwrap_or(0.25) };
-    Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(crate::artifacts::fem2d::mutations::create_region::mutation::CreateRegion { region })]))
+    Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(crate::artifacts::fem2d::mutations::create_region::CreateRegion { region })]))
 }

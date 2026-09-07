@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `MoveGrip2d`.
 
-use crate::artifacts::block5d::{Block5dGripTemplate, Block5dSnapshot};
+use crate::artifacts::block5d::Block5dSnapshot;
 use crate::artifacts::block5d::mutations::Block5dMutation;
 
 //#region 🔖️Inverse

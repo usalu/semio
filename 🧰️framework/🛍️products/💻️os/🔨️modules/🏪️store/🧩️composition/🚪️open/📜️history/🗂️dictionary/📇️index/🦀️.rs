@@ -214,7 +214,7 @@ mod tests {
 
     #[test]
     fn retained_dictionary_range_index_never_publishes_partial_delta_and_retires_two_pages() {
-        assert_eq!(std::mem::size_of::<[DictionaryRange; PAGE_ENTRIES]>(), PAGE_BYTES);
+        assert_eq!(size_of::<[DictionaryRange; PAGE_ENTRIES]>(), PAGE_BYTES);
         for grant in [1, 7, 4096] {
             let mut index = RetainedDictionaryIndex::new(10_000, 8192, 1048576).unwrap();
             index.begin_delta(0, 65).unwrap();

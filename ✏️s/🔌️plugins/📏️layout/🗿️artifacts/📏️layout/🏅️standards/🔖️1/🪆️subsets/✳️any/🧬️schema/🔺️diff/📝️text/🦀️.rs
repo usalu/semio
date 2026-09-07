@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#region 🔖️Apply
 fn apply_identified_delta<T, P, E, F>(items: &[T], removed: &[String], added: &[T], patched: &[E], reordered: Option<&Vec<String>>, entry_parts: F) -> protocol::MutationApplyResult<Vec<T>>
 where
-    T: Clone + protocol::Identified<String> + Patchable<P>,
+    T: Clone + Identified<String> + Patchable<P>,
     P: Clone,
     F: Fn(&E) -> (&String, &P),
 {
@@ -306,7 +306,7 @@ mod tests {
             background_drawing: None,
             referenced_model: None,
         };
-        let operation = crate::artifacts::layout::mutations::LayoutMutation::ChangeDataFields(crate::artifacts::layout::mutations::change_data_fields::mutation::ChangeDataFields { new_json: Some("{}".into()) });
+        let operation = crate::artifacts::layout::mutations::LayoutMutation::ChangeDataFields(crate::artifacts::layout::mutations::change_data_fields::ChangeDataFields { new_json: Some("{}".into()) });
         let diff: LayoutDiff = operation.diff(&base).into_parts().0;
         let applied = diff.apply(&base).expect("valid mutation diff");
         assert_eq!(applied.data_fields_json.as_deref(), Some("{}"));

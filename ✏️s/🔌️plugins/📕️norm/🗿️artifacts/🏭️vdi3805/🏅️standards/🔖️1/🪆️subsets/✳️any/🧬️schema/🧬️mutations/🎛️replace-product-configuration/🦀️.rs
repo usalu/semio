@@ -2,8 +2,7 @@
 //! function-ref configuration block, addressed by article number.
 
 
-use crate::artifacts::vdi3805::{Configuration, Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
-use crate::artifacts::vdi3805::mutations::extract_dn;
+use crate::artifacts::vdi3805::{Configuration, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

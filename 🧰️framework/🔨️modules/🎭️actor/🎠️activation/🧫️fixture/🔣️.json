@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "ordinalMaximum": 4294967295,
+  "registrationMaximum": "18446744073709551615",
+  "traces": [
+    { "id": "unbound-mailbox", "events": ["reserve", "submit", "tick"], "grants": 0, "actorRetained": true },
+    { "id": "exact-bind", "events": ["reserve", "submit", "tick", "bind", "tick"], "grants": 1, "actorRetained": true },
+    { "id": "abort", "events": ["reserve", "submit", "abort", "tick"], "grants": 0, "actorRetained": false },
+    { "id": "transition-bypass", "events": ["reserve", "submit", "attempt-transitions", "tick", "abort"], "grants": 0, "actorRetained": false },
+    { "id": "quarantined-bind", "events": ["reserve", "submit", "quarantined-bind", "tick", "abort"], "grants": 0, "actorRetained": false },
+    { "id": "foreign-bind", "events": ["reserve", "submit", "foreign-bind", "tick", "abort"], "grants": 0, "actorRetained": false }
+  ]
+}

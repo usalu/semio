@@ -31,12 +31,12 @@ pub use crate::os_spr::channel::{
 };
 pub use crate::os_spr::command::{
     apply_collection_mutation, collection_diff_from_mutation, fold_plan_diff, fold_plan_inverse, indexed_apply, inverse_collection_mutation, is_approved_verb, mutation_descriptor, named_apply, plan_foreign_steps, plan_of,
-    register_mutation_descriptor, register_mutation_descriptors, str_eq, validate_mutation_leaf_descriptor, validate_mutation_leaf_descriptor_roster, validate_mutation_leaf_source, worst_level, CollectionDiff, CollectionMutation, CommandOutcome,
-    CompositeMutationKind, DiffAlgebra, DiffCodec, DiffRegions, Edit, ForeignStep, ForeignTarget, Identified, IndexedTripleDiff, Inference, InferenceFieldSpec, InferenceSpec, ItemPatch, Mutation, MutationApplyError, MutationApplyResult,
-    MutationComposition, MutationDescriptor, MutationDescriptorError, MutationDescriptorRegistry, MutationDiff, MutationDiffParticipation, MutationDomainOperation, MutationEvent, MutationInvertibility, MutationKind, MutationLanguageSurface,
-    MutationLeaf, MutationLeafDescriptor, MutationLeafDescriptorRosterValidationError, MutationLeafDescriptorValidationError, MutationLeafSourceScope, MutationLeafSourceValidationError, MutationMessage, MutationMeta, MutationOrigin, MutationOutcome,
-    MutationOutcomeClass, MutationOwnerLayout, MutationSourceProvenance, MutationUpcaster, NamedTripleDiff, OpBinary, OpText, Patchable, PlanError, PlanStep, Planner, SemanticDescriptor, SemanticMutation, TouchedPaths, APPROVED_VERBS,
-    MAX_PLAN_DEPTH,
+    register_mutation_descriptor, register_mutation_descriptors, str_eq, validate_mutation_leaf_descriptor, validate_mutation_leaf_descriptor_roster, validate_mutation_leaf_descriptor_roster_uniqueness, validate_mutation_leaf_source, worst_level,
+    CollectionDiff, CollectionMutation, CommandOutcome, CompositeMutationKind, DiffAlgebra, DiffCodec, DiffRegions, Edit, ForeignStep, ForeignTarget, Identified, IndexedTripleDiff, Inference, InferenceFieldSpec, InferenceSpec, ItemPatch, Mutation,
+    MutationApplyError, MutationApplyResult, MutationComposition, MutationDescriptor, MutationDescriptorError, MutationDescriptorRegistry, MutationDiff, MutationDiffParticipation, MutationDomainOperation, MutationEvent, MutationInvertibility,
+    MutationKind, MutationLanguageSurface, MutationLeaf, MutationLeafDescriptor, MutationLeafDescriptorRosterValidationError, MutationLeafDescriptorValidationError, MutationLeafSourceScope, ValidatedMutationLeafSourceScope, MutationLeafSourceValidationError, MutationMessage,
+    MutationMeta, MutationOrigin, MutationOutcome, MutationOutcomeClass, MutationOwnerLayout, MutationSourceProvenance, MutationUpcaster, NamedTripleDiff, OpBinary, OpText, Patchable, PlanError, PlanStep, Planner, SemanticDescriptor,
+    SemanticMutation, TouchedPaths, APPROVED_VERBS, MAX_PLAN_DEPTH,
 };
 pub use crate::os_spr::conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessages, MergeReport};
 pub use crate::os_spr::wire::{

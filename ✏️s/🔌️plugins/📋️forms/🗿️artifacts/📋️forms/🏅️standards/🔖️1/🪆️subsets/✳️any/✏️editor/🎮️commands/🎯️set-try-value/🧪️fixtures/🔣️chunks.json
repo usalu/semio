@@ -1,0 +1,9 @@
+[
+  {"text":"a","repeat":4096,"accepted":true},
+  {"text":"a","repeat":4097,"accepted":false},
+  {"text":"é","repeat":2048,"accepted":true},
+  {"text":"é","repeat":2049,"accepted":false},
+  {"text":"🙂","repeat":1024,"accepted":true},
+  {"text":"🙂","repeat":1025,"accepted":false},
+  {"value":false,"accepted":false}
+]

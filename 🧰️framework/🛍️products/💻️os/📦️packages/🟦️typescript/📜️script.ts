@@ -13,17 +13,22 @@ class TestScript extends BundleScript {
 
 /** 🏗️ Routes the package generator through the shared workspace implementation. */
 class GenerateWgpuScript extends BundleScript {
-  async run(): Promise<void> { await (await import("../../../../../📜️script.ts")).runWgpuPackageGenerator(getWorkspaceRoot(), "generate"); }
+  async run(): Promise<void> {
+    await (await import("../../../../../📜️script.ts")).runWgpuPackageGenerator(getWorkspaceRoot(), "generate");
+  }
 }
 /** 🔎️ Checks the exact package artifacts without writing outputs. */
 class CheckWgpuScript extends BundleScript {
-  async run(): Promise<void> { await (await import("../../../../../📜️script.ts")).runWgpuPackageGenerator(getWorkspaceRoot(), "check"); }
+  async run(): Promise<void> {
+    await (await import("../../../../../📜️script.ts")).runWgpuPackageGenerator(getWorkspaceRoot(), "check");
+  }
 }
 /** 🔮️ Streams the canonical read-only package preview. */
 class PreviewGeneratedScript extends BundleScript {
-  async run(): Promise<void> { await (await import("../../../../../📜️script.ts")).runWgpuPackageGenerator(getWorkspaceRoot(), "preview"); }
+  async run(): Promise<void> {
+    await (await import("../../../../../📜️script.ts")).runWgpuPackageGenerator(getWorkspaceRoot(), "preview");
+  }
 }
-
 
 //#region 💡️InferencePortCheck
 /** 💡️ One rendered phase of the host-owned inference port, restated independently of production. */
@@ -101,7 +106,8 @@ function oracleReduce(current: OracleStatus, event: OracleEvent): OracleStatus {
       code: phase === "failed" ? (current.code ?? "inference.storage") : current.code,
     };
   }
-  if (event.kind === "approve") return current.phase === "offered" && current.proposalHash !== null && current.preview?.proposalHash === current.proposalHash && current.preview.jobId === current.jobId && !current.cancelRequested ? { ...current, phase: "approving" } : current;
+  if (event.kind === "approve")
+    return current.phase === "offered" && current.proposalHash !== null && current.preview?.proposalHash === current.proposalHash && current.preview.jobId === current.jobId && !current.cancelRequested ? { ...current, phase: "approving" } : current;
   if (event.kind === "approval") {
     const receipt = event.receipt as { jobId: string; proposalHash: string; applied: boolean };
     if (current.phase !== "approving" || current.jobId !== receipt.jobId || current.proposalHash !== receipt.proposalHash) return current;
@@ -147,7 +153,20 @@ async function proveGisMapInferencePortFixture(repoRoot: string): Promise<Record
 
   const production = await import("../../🟦️.ts");
   if (JSON.stringify(production.parseGisMapInferencePreviewV1(fixture.preview)) !== JSON.stringify(fixture.preview)) throw new Error("production preview parser changed the validated projection");
-  for (const candidate of [{ ...fixture.preview, jobId: fixture.otherJobId }, { ...fixture.preview, regionId: "substituted" }, { ...fixture.preview, ring: [[7, 46], [9, 46], [8, 48], [7, 48], [7, 46]] }]) {
+  for (const candidate of [
+    { ...fixture.preview, jobId: fixture.otherJobId },
+    { ...fixture.preview, regionId: "substituted" },
+    {
+      ...fixture.preview,
+      ring: [
+        [7, 46],
+        [9, 46],
+        [8, 48],
+        [7, 48],
+        [7, 46],
+      ],
+    },
+  ]) {
     try {
       production.parseGisMapInferencePreviewV1(candidate);
       throw new Error("production preview parser accepted substituted geometry");
@@ -194,12 +213,14 @@ async function proveGisMapInferencePortFixture(repoRoot: string): Promise<Record
     if (Object.keys(row).sort().join(",") !== "de,en" || row.en === row.de) throw new Error(`control ${control} has no explicit EN/DE text`);
     strings += 2;
   }
-  if (production.GIS_MAP_INFERENCE_REQUEST_MAX_BYTES !== fixture.limits.requestMaxBytes
-    || production.GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES !== fixture.limits.responseMaxBytes
-    || production.GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR !== fixture.limits.progressMaxCursor
-    || production.GIS_MAP_INFERENCE_EVENT_PAGE_MAX_ITEMS !== fixture.limits.eventPageMaxItems
-    || production.GIS_MAP_INFERENCE_JOB_MAX_LIFETIME_MS !== fixture.limits.jobMaxLifetimeMs
-    || production.GIS_MAP_INFERENCE_SERVICE_ID !== fixture.serviceId) {
+  if (
+    production.GIS_MAP_INFERENCE_REQUEST_MAX_BYTES !== fixture.limits.requestMaxBytes ||
+    production.GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES !== fixture.limits.responseMaxBytes ||
+    production.GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR !== fixture.limits.progressMaxCursor ||
+    production.GIS_MAP_INFERENCE_EVENT_PAGE_MAX_ITEMS !== fixture.limits.eventPageMaxItems ||
+    production.GIS_MAP_INFERENCE_JOB_MAX_LIFETIME_MS !== fixture.limits.jobMaxLifetimeMs ||
+    production.GIS_MAP_INFERENCE_SERVICE_ID !== fixture.serviceId
+  ) {
     throw new Error("the production port constants and the neutral corpus disagree");
   }
 
@@ -216,7 +237,12 @@ async function proveGisMapInferencePortFixture(repoRoot: string): Promise<Record
   if (JSON.stringify(approvalKinds) !== JSON.stringify(fixture.crossFixture.serverLifecycleKinds)) throw new Error("the hub approval lifecycle and this corpus disagree");
   if (JSON.stringify(approvalCancelKinds) !== JSON.stringify(fixture.crossFixture.serverCancelLifecycleKinds)) throw new Error("the hub cancel lifecycle and this corpus disagree");
   for (const kind of [...approvalKinds, ...approvalCancelKinds]) if (!(kind in fixture.crossFixture.serverKindToPhase)) throw new Error(`hub lifecycle kind ${kind} has no rendered phase`);
-  if (approval.limits.progressMaxCursor !== fixture.limits.progressMaxCursor || approval.limits.eventPageMaxItems !== fixture.limits.eventPageMaxItems || approval.limits.jobMaxLifetimeMs !== fixture.limits.jobMaxLifetimeMs || approval.limits.requestMaxBytes !== fixture.limits.requestMaxBytes) {
+  if (
+    approval.limits.progressMaxCursor !== fixture.limits.progressMaxCursor ||
+    approval.limits.eventPageMaxItems !== fixture.limits.eventPageMaxItems ||
+    approval.limits.jobMaxLifetimeMs !== fixture.limits.jobMaxLifetimeMs ||
+    approval.limits.requestMaxBytes !== fixture.limits.requestMaxBytes
+  ) {
     throw new Error("the hub approval limits and this corpus disagree");
   }
   if (approval.proposalHash !== fixture.proposalHash || approval.sampleJobId !== fixture.sampleJobId) throw new Error("the hub approval identity and this corpus disagree");
@@ -226,11 +252,13 @@ async function proveGisMapInferencePortFixture(repoRoot: string): Promise<Record
     readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🌉️mcp", "💡️inference", "🦀️.rs"), "utf8"),
   ];
   for (const source of rustClients) {
-    if (!source.includes("pub struct GisMapInferencePreviewV1") || !source.includes("pub preview: Option<GisMapInferencePreviewV1>") || !source.includes("pub ring: [[f64; 2]; 5]")) throw new Error("a strict Rust Hub client is missing the optional typed preview DTO");
+    if (!source.includes("pub struct GisMapInferencePreviewV1") || !source.includes("pub preview: Option<GisMapInferencePreviewV1>") || !source.includes("pub ring: [[f64; 2]; 5]"))
+      throw new Error("a strict Rust Hub client is missing the optional typed preview DTO");
     if (/derive\([^\n]*\bEq\b[^\n]*\)\n[^\n]*\npub struct GisMapInferenceEventPageV1/u.test(source)) throw new Error("a Rust events page unsafely derives Eq through floating-point preview geometry");
   }
   const directoryRust = rustClients[0]!;
-  if (/derive\([^\n]*\bEq\b[^\n]*\)\n[^\n]*\npub struct GisMapInferencePortStatusV1/u.test(directoryRust) || !directoryRust.includes("next.preview = if matches!(phase") || !directoryRust.includes("let preview_matches = current.preview.as_ref()")) throw new Error("the shared Rust inference reducer does not retain and require the typed preview safely");
+  if (/derive\([^\n]*\bEq\b[^\n]*\)\n[^\n]*\npub struct GisMapInferencePortStatusV1/u.test(directoryRust) || !directoryRust.includes("next.preview = if matches!(phase") || !directoryRust.includes("let preview_matches = current.preview.as_ref()"))
+    throw new Error("the shared Rust inference reducer does not retain and require the typed preview safely");
 
   const shellRoot = join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🖥️shell");
   const mirror = readFileSync(join(shellRoot, "🤖️generated", "🟦️.ts"), "utf8");
@@ -258,18 +286,35 @@ class GisMapInferencePortCheckScript extends BundleScript {
     const browser = segments.includes("--browser");
     const { rest } = resolveTestLevel(segments.filter((segment) => segment !== "--browser"));
     const receipts = await proveGisMapInferencePortFixture(this.repoRoot);
-    console.log(`gis-map-inference-port-oracle: ${Object.entries(receipts).map(([key, value]) => `${key}=${value}`).join(" ")}`);
+    console.log(
+      `gis-map-inference-port-oracle: ${Object.entries(receipts)
+        .map(([key, value]) => `${key}=${value}`)
+        .join(" ")}`,
+    );
     if (browser) await runVitest(this.root, ["--testNamePattern", "gis map inference port", ...rest], "🧪️tests/🟦️.ts");
     console.log("gis-map-inference-port-check: no WGPU map rendering, no external model provider and no two-user process journey is run or claimed here.");
   }
 }
 //#endregion 💡️InferencePortCheck
 
+/** 🧵️ Executes the authenticated Session lifecycle and exact 64 KiB page-transfer browser laws. */
+class ColdDocumentPairBrowserCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runVitest(
+      this.root,
+      ["--testNamePattern", "(?:browser document actor (?:reservation activates only after an exact current socket Session|transfers one verified cold pair only after lifecycle ACK and exact page receipts)|browser actor patch handoff validates the neutral schema)", ...rest],
+      "🧪️tests/🟦️.ts",
+    );
+  }
+}
+
 const router = new ScriptRouter(import.meta.dir)
   .register("test", TestScript)
   .register("generate-wgpu", GenerateWgpuScript)
   .register("check-wgpu", CheckWgpuScript)
   .register("preview-generated", PreviewGeneratedScript)
-  .register("gis-map-inference-port-check", GisMapInferencePortCheckScript);
+  .register("gis-map-inference-port-check", GisMapInferencePortCheckScript)
+  .register("cold-document-pair-browser-check", ColdDocumentPairBrowserCheckScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

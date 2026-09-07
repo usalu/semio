@@ -150,7 +150,7 @@ pub fn default_snapshot() -> ShootingSnapshot {
 /// for this migration) — derives the JSON from the DSL fixture rather than keeping a second, redundant
 /// JSON copy of it on disk.
 pub fn default_snapshot_json() -> String {
-    dsl::os_pack::json::to_json_string(&default_snapshot())
+    json::to_json_string(&default_snapshot())
 }
 
 /// 📸️ The active shot — falls back to the first shot when `active_shot_id` names nothing (an empty
@@ -303,7 +303,7 @@ pub fn shooting_scene_svg(snapshot: &ShootingSnapshot) -> Result<(String, u32, u
 
 /// 🌉️ `shooting_scene_svg` over an already-deserialized document `Value`.
 pub fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    let dsl_value: dsl::DslValue = dsl::os_pack::json::to_dsl_value(value);
+    let dsl_value: dsl::DslValue = json::to_dsl_value(value);
     let snapshot: ShootingSnapshot = dsl::FromValue::from_value(dsl_value).map_err(|error| error.to_string())?;
     shooting_scene_svg(&snapshot)
 }

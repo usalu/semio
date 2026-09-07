@@ -75,6 +75,7 @@ export interface DirectoryEventSpaceVisibilityChanged {
   visibility: DirectorySpaceVisibility;
 }
 
+/** 🧊️ Atomically freezes the space and demotes every current Author membership to Spectator. */
 export interface DirectoryEventSpaceArchived {
   kind: "space.archived";
   spaceId: string;

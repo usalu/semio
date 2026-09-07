@@ -17,7 +17,7 @@ use crate::editor::remodeling::engine::images as remodeling_image;
 use crate::editor::remodeling::testkit::{app_with_registry, dispatch, RemodelingApp};
 use crate::editor::remodeling::RemodelingCommand;
 use crate::lie::{umeyama, Quatd, Sim3, So3};
-use semio_framework_plugin::{Effect, PluginApp};
+use semio_framework_plugin::Effect;
 
 //#region 🔖️FixtureConstants
 /// 🎲 splitmix64 seed shared with the Python reference generator.

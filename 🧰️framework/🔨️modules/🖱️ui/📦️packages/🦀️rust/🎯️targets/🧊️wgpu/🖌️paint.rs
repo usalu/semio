@@ -16,17 +16,24 @@
 //! date's scope.
 
 use crate::wgpu::arena::NodeId;
-use crate::wgpu::chrome::{chrome_item_bg, item_bg, item_text, push_chrome_border, push_control_border, push_icon, ICON_TINY};
+#[cfg(test)]
+use crate::wgpu::chrome::chrome_item_bg;
+use crate::wgpu::chrome::{item_bg, item_text, push_chrome_border, push_control_border, push_icon, ICON_TINY};
 use crate::wgpu::component::ui::{
-    UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSectionNode, UiSelectItem,
-    UiSelectNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER,
+    UiControlNode, UiNode, UiPresence, UiStackNode, UiState, UiStatus, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
+#[cfg(test)]
+use crate::wgpu::component::ui::{UiButtonNode, UiComponentSceneNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNumberStepperNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiTextNode, UiToggleNode};
 use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::{Level, Rgba, Theme};
-use crate::wgpu::tree::{EditState, NodeFlags, NodeKey, UiTree};
+#[cfg(test)]
+use crate::wgpu::tree::EditState;
+use crate::wgpu::tree::{NodeFlags, NodeKey, UiTree};
+#[cfg(test)]
 use crate::wgpu::widgets::{draw_text_on, wrap_text};
+#[cfg(test)]
 use crate::wgpu::IconName;
 use crate::wgpu::Label;
 use crate::wgpu::UiTreeActionPlacement;
@@ -98,7 +105,7 @@ pub fn paint_retained_glyph_step(value: &str, bounds: Rect, size: f32, color: Rg
         cursor.pen_x = 0.0;
         return RetainedGlyphStep::Pending;
     }
-    if draw.begin_retained_output(1, std::mem::size_of::<crate::wgpu::draw::UiInstance>()).is_err() {
+    if draw.begin_retained_output(1, size_of::<crate::wgpu::draw::UiInstance>()).is_err() {
         return RetainedGlyphStep::Fault;
     }
     let atlas_w = atlas.width as f32;
@@ -158,10 +165,12 @@ pub(crate) enum RetainedNodePaintStep {
 }
 
 impl RetainedNodePaintCursor {
+    #[cfg(test)]
     pub(crate) fn terminal_is_empty(&self) -> bool {
         self.node.is_none()
     }
 
+    #[cfg(test)]
     pub(crate) fn close_step(&mut self) -> bool {
         if self.node.take().is_some() {
             self.reset_progress();
@@ -1095,12 +1104,14 @@ pub(crate) fn paint_node_step(
 /// this call, in `Ui::frame`'s `collect_scene_slots` loop — instead of this pass drawing placeholder
 /// chrome that the host would then have to paint over. With no host (`false`), behavior is unchanged
 /// from before this parameter existed: `paint_component_scene`/`paint_image`'s own placeholder chrome.
+#[cfg(test)]
 pub(crate) fn paint_tree(tree: &mut UiTree, root: NodeId, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
     sync_interactive_state(tree, root, theme);
     paint_node(tree, root, 0.0, 0.0, theme, atlas, icons, has_scene_host, draw);
     clear_dirty_paint(tree, root);
 }
 
+#[cfg(test)]
 fn clear_dirty_paint(tree: &mut UiTree, id: NodeId) {
     if let Some(node) = tree.node_mut(id) {
         node.flags.set(NodeFlags::DIRTY_PAINT, false);
@@ -1275,6 +1286,7 @@ impl RetainedInteractiveSyncCursor {
         true
     }
 
+    #[cfg(test)]
     pub(crate) fn terminal_is_empty(&self) -> bool {
         self.node.is_none() && self.tree_record_len == 0 && self.tree_frames[0].is_none()
     }
@@ -1512,10 +1524,12 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
 /// its already-existing retained `NodeId`, robust to reconcile's insertion-order quirks (a re-used
 /// matched child physically keeps its old sibling-list position — see that module's own doc comment
 /// on why key lookup, not positional indexing, is the safe way to do this).
+#[cfg(test)]
 fn find_child_by_key(tree: &UiTree, parent: NodeId, key: &NodeKey) -> Option<NodeId> {
     tree.children(parent).find(|&child| tree.node(child).map(|n| &n.key) == Some(key))
 }
 
+#[cfg(test)]
 fn sync_interactive_state(tree: &mut UiTree, id: NodeId, theme: &Theme) {
     sync_interactive_state_node(tree, id, theme);
     let children: Vec<NodeId> = tree.children(id).collect();
@@ -1524,6 +1538,7 @@ fn sync_interactive_state(tree: &mut UiTree, id: NodeId, theme: &Theme) {
     }
 }
 
+#[cfg(test)]
 pub(crate) fn sync_interactive_state_node(tree: &mut UiTree, id: NodeId, theme: &Theme) {
     let accepted = tree.accepted_layout(id);
     let select_open: Option<(Vec<UiSelectItem>, f32, f32)> = tree.node(id).and_then(|node| match &node.spec.0 {
@@ -1560,6 +1575,7 @@ fn select_popup_row_rect(select_w: f32, select_h: f32, index: usize, theme: &The
     Rect::new(2.0, menu_y + 2.0 + index as f32 * item_h, (select_w - 4.0).max(0.0), item_h)
 }
 
+#[cfg(test)]
 fn sync_select_popup_rows(tree: &mut UiTree, select_id: NodeId, items: &[UiSelectItem], select_w: f32, select_h: f32, theme: &Theme) {
     for (index, item) in items.iter().enumerate() {
         let Some(row_id) = find_child_by_key(tree, select_id, &NodeKey::Explicit(item.value.clone())) else { continue };
@@ -1577,6 +1593,7 @@ fn sync_select_popup_rows(tree: &mut UiTree, select_id: NodeId, items: &[UiSelec
 /// arm, keyed by `section.id`) real `LayoutBucket` geometry, cumulative down the tree exactly like
 /// `paint_tree_widget`'s own procedural walk (header height, then each item's row height including
 /// any expanded nested rows).
+#[cfg(test)]
 fn sync_tree_row_layout(tree: &mut UiTree, tree_id: NodeId) {
     let Some(tree_node) = tree.node(tree_id).and_then(|node| match &node.spec.0 {
         UiNode::Tree(tree_node) => Some(tree_node.clone()),
@@ -1610,6 +1627,7 @@ fn sync_tree_row_layout(tree: &mut UiTree, tree_id: NodeId) {
 /// recursion. Also keeps `NodeFlags::DRAG_SOURCE` synced with `item.draggable` (see
 /// `events::is_plain_stack_container`/`set_drag_payload` for the two consumers of that bit). Returns
 /// the total height (own row + any expanded nested rows) consumed, for the caller's own cursor.
+#[cfg(test)]
 fn sync_tree_item_layout(tree: &mut UiTree, parent: NodeId, item: &UiTreeItemNode, y_offset: f32, width: f32) -> f32 {
     if !item.presence.visible() {
         return 0.0;
@@ -1678,6 +1696,7 @@ fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: 
     }
 }
 
+#[cfg(test)]
 pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
     paint_node_self(tree, id, origin_x, origin_y, theme, atlas, icons, has_scene_host, draw);
     let Some(node) = tree.node(id) else { return };
@@ -1697,6 +1716,7 @@ pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32
     }
 }
 
+#[cfg(test)]
 pub(crate) fn paint_node_self(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
     let Some(node) = tree.node(id) else { return };
     let Some(layout) = tree.accepted_layout(id) else { return };
@@ -1814,6 +1834,7 @@ fn paint_stack_frame(stack: &UiStackNode, bounds: Rect, flags: NodeFlags, theme:
 /// `reconcile::children_of`) — `paint_stack_frame` doesn't apply to either (neither carries
 /// `activate`/`selected`).
 #[allow(clippy::too_many_arguments, reason = "one arg per paint context resource; grouping into a struct is a T2 restructure, out of scope")]
+#[cfg(test)]
 fn paint_stack(tree: &UiTree, id: NodeId, abs_x: f32, abs_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
     let children: Vec<NodeId> = tree.children(id).collect();
     for child in children {
@@ -1821,6 +1842,7 @@ fn paint_stack(tree: &UiTree, id: NodeId, abs_x: f32, abs_y: f32, theme: &Theme,
     }
 }
 
+#[cfg(test)]
 fn paint_text(node: &UiTextNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let emphasize = node.emphasize.unwrap_or(false);
     let size = if emphasize { theme.font_size_emphasized } else { theme.font_size_body };
@@ -1837,6 +1859,7 @@ fn paint_separator(bounds: Rect, theme: &Theme, draw: &mut DrawList) {
     draw.push_line(bounds.x, y, bounds.x + bounds.w, y, theme.separator, 1.0);
 }
 
+#[cfg(test)]
 fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     // 🚫️ `disabled:opacity-50` is the shared dimming convention this codebase's React reference
     // (`ui/js/react/index.tsx`'s form controls) uses for every disabled interactive control; ported
@@ -1870,6 +1893,7 @@ fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: &The
 /// which is smaller (see `tree::EditState`'s own doc comment). Duplicated rather than imported
 /// across the `paint`/`events` module boundary for a one-line pure function; keep the two in sync
 /// if `EditState`'s selection convention ever changes.
+#[cfg(test)]
 fn edit_selection_bounds(anchor: usize, caret: usize) -> (usize, usize) {
     (anchor.min(caret), anchor.max(caret))
 }
@@ -1884,6 +1908,7 @@ fn edit_selection_bounds(anchor: usize, caret: usize) -> (usize, usize) {
 /// CSS/JSX to port for their exact geometry) has anything to port from, so caret/selection styling
 /// (`theme.accent`) is this pass's own independent choice, kept consistent with `paint_input`'s own
 /// pre-existing `border_emphasized`-on-focus convention.
+#[cfg(test)]
 fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let focused = flags.contains(NodeFlags::FOCUSED);
     let border = if focused { theme.border_emphasized } else { theme.border_normal };
@@ -1924,6 +1949,7 @@ fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, flags
 /// popup paints below the trigger with the exact geometry `select_popup_row_rect` also writes into
 /// the rows' `LayoutBucket` (see `sync_select_popup_rows`), so clicking a row actually hit-tests.
 #[allow(clippy::too_many_arguments, reason = "one arg per paint context resource; grouping into a struct is a T2 restructure, out of scope")]
+#[cfg(test)]
 fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool, retained: Option<(&UiTree, NodeId)>, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let hovered = flags.contains(NodeFlags::HOVERED);
     // 🎯️ `SelectTrigger`'s own `formControlFocusBorderClass` (`ui/js/react/index.tsx`) swaps its
@@ -1957,6 +1983,7 @@ fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool,
     }
 }
 
+#[cfg(test)]
 fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let pressed = node.presence.selected;
     let hovered = flags.contains(NodeFlags::HOVERED);
@@ -1978,6 +2005,7 @@ fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme: &The
     }
 }
 
+#[cfg(test)]
 fn paint_key_value(node: &UiKeyValueNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let label_w = node.entries.iter().map(|entry| atlas.measure_text(entry.label.as_str(), theme.font_size_small).0).fold(0.0f32, f32::max);
     let value_x = bounds.x + label_w + theme.gap_standard * 2.0;
@@ -1989,6 +2017,7 @@ fn paint_key_value(node: &UiKeyValueNode, bounds: Rect, theme: &Theme, atlas: &m
     }
 }
 
+#[cfg(test)]
 fn paint_slider(node: &UiSliderNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let track_y = bounds.y + bounds.h * 0.5;
     draw.push_rounded([bounds.x, track_y - 2.0, bounds.w, 4.0], theme.separator, 2.0);
@@ -2009,6 +2038,7 @@ fn paint_slider(node: &UiSliderNode, bounds: Rect, theme: &Theme, atlas: &mut Fo
     }
 }
 
+#[cfg(test)]
 fn paint_number_stepper(node: &UiNumberStepperNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let seg = bounds.w / 3.0;
     let minus = Rect::new(bounds.x, bounds.y, seg, bounds.h);
@@ -2046,6 +2076,7 @@ fn paint_number_stepper(node: &UiNumberStepperNode, bounds: Rect, flags: NodeFla
     draw_text_on(draw, atlas, "+", plus.x + seg * 0.5 - 4.0, plus.y + 18.0, theme.font_size_body, theme.text);
 }
 
+#[cfg(test)]
 fn paint_ring(node: &UiRingNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
     let cx = bounds.x + bounds.w * 0.5;
     let cy = bounds.y + bounds.h * 0.5;
@@ -2067,6 +2098,7 @@ fn paint_ring(node: &UiRingNode, bounds: Rect, theme: &Theme, draw: &mut DrawLis
     draw.push_rounded([kx - 6.0, ky - 6.0, 12.0, 12.0], accent, 6.0);
 }
 
+#[cfg(test)]
 fn paint_icon_select(node: &UiIconSelectNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let hovered = flags.contains(NodeFlags::HOVERED);
     // 🎯️ Same border-swap-on-focus convention as `paint_button`/`paint_select`/`paint_toggle` — the
@@ -2093,6 +2125,7 @@ fn paint_icon_select(node: &UiIconSelectNode, bounds: Rect, flags: NodeFlags, th
 /// yet reserve the child control's layout slot below this text (see `golden_field_known_gap`'s doc
 /// comment — a documented `flex` gap, out of scope here), so these lines are positioned relative to
 /// `bounds.y` only; they'll land correctly once that flex gap is fixed.
+#[cfg(test)]
 fn paint_field(node: &UiFieldNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let label_size = theme.font_size_small;
     draw_text_on(draw, atlas, node.label.as_str(), bounds.x, bounds.y + label_size, label_size, theme.text_muted);
@@ -2115,6 +2148,7 @@ fn paint_field(node: &UiFieldNode, bounds: Rect, theme: &Theme, atlas: &mut Font
 /// `paint_stack`. Collapsed state still reads `default_open` directly — no `WidgetState`-backed
 /// toggle persistence exists for `Section` yet (unlike `Select`'s popup open/closed state and
 /// `Input`'s live edit buffer, both wired by now — see `WidgetState`'s own doc comment).
+#[cfg(test)]
 fn paint_section(node: &UiSectionNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let Some(label) = &node.label else { return };
     let collapsed = !node.default_open.unwrap_or(true);
@@ -2128,6 +2162,7 @@ fn paint_section(node: &UiSectionNode, bounds: Rect, theme: &Theme, atlas: &mut 
 /** @emoji 🌿️ Same header chrome as {@link paint_section} (chevron + label), for a `Group`'s always-
  * present `label` — used when a nested subtree (e.g. `Origin`) is painted directly in the native
  * retained tree rather than pre-expanded into `UiTreeItemNode.items`. */
+#[cfg(test)]
 fn paint_group(node: &UiGroupNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let collapsed = !node.default_open.unwrap_or(true);
     let chevron = if collapsed { "chevron-right" } else { "chevron-down" };
@@ -2137,6 +2172,7 @@ fn paint_group(node: &UiGroupNode, bounds: Rect, theme: &Theme, atlas: &mut Font
     draw_text_on(draw, atlas, node.label.as_str(), bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard, bounds.y + (PANEL_HEADER + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
 }
 
+#[cfg(test)]
 fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     draw.push_scissor(bounds);
     let mut y = bounds.y;
@@ -2172,6 +2208,7 @@ fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: &mut
 /// retained item children — see `paint_select`'s neighboring doc comment for the same root cause), so
 /// there is nowhere to read a live per-row hover/drag flag from until that reconcile expansion lands.
 #[allow(clippy::too_many_arguments, reason = "one arg per paint context resource; grouping into a struct is a T2 restructure, out of scope")]
+#[cfg(test)]
 fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32, tree_node: &UiTreeNode, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList, is_last_at_level: &[bool]) -> f32 {
     if !item.presence.visible() {
         return y;
@@ -2251,6 +2288,7 @@ fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32
 /// for `paint_tree_item`'s `depth` starting at `1` for top-level items (`widgets`' `render_tree_item`
 /// starts its own `depth` at `0`), so every `widgets_depth` reference there is this function's
 /// `depth - 1`.
+#[cfg(test)]
 fn paint_tree_guides(draw: &mut DrawList, row_x: f32, row_y: f32, row_h: f32, depth: u32, is_last_at_level: &[bool], theme: &Theme) {
     let hair = theme.stroke_hairline.max(1.0);
     let guide_color = theme.border_normal;
@@ -2274,6 +2312,7 @@ fn paint_tree_guides(draw: &mut DrawList, row_x: f32, row_y: f32, row_h: f32, de
 /// `paint_node`'s `UiNode` dispatch table one level down. No per-control `NodeId` exists for an inline
 /// tree-row control yet, so it always paints at rest (`NodeFlags::empty()`) — same interactive-state
 /// caveat as the rest of this function's caller.
+#[cfg(test)]
 fn paint_control(control: &UiControlNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let flags = NodeFlags::empty();
     match control {
@@ -2295,6 +2334,7 @@ fn paint_control(control: &UiControlNode, bounds: Rect, theme: &Theme, atlas: &m
 /// lives in the renderer's `program_bridge`/`engine_canvas`, outside this crate's scope); paints a
 /// raster quad keyed by `src` on the chance a caller-owned `RasterTextureTable` already has that key
 /// uploaded, falling back to `alt` text when there's nothing to show yet.
+#[cfg(test)]
 fn paint_image(node: &UiImageNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     if node.src.is_empty() {
         if let Some(alt) = &node.alt {
@@ -2310,6 +2350,7 @@ fn paint_image(node: &UiImageNode, bounds: Rect, theme: &Theme, atlas: &mut Font
 /// the actual scene surface (canvas2d/world3d/node-graph/…) into this same rect right after this
 /// pass returns (see `paint_node`'s `UiNode::ComponentScene` arm), so this placeholder chrome is
 /// purely the no-host fallback — "there's something visible in that rect" rather than nothing.
+#[cfg(test)]
 fn paint_component_scene(node: &UiComponentSceneNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
     let _ = &node.surface_id;
     push_control_border(draw, bounds, theme, theme.border_normal, theme.panel);
@@ -2317,6 +2358,7 @@ fn paint_component_scene(node: &UiComponentSceneNode, bounds: Rect, theme: &Them
 
 /// 🧩️ Same placeholder-chrome treatment as `paint_component_scene`: the plugin body itself is a host
 /// concern (`program_bridge`), out of scope here; label the slot with its `body_key` for now.
+#[cfg(test)]
 fn paint_external_slot(node: &UiExternalSlotNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     push_control_border(draw, bounds, theme, theme.border_normal, theme.panel);
     draw_text_on(draw, atlas, &node.body_key, bounds.x + theme.padding_standard, bounds.y + (bounds.h + theme.font_size_small) * 0.5 - 2.0, theme.font_size_small, theme.text_muted);

@@ -14,7 +14,7 @@ pub struct RemoveMetadataEntry {
 impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for RemoveMetadataEntry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "metadata-entry", kind: "remove-metadata-entry", record: "RemoveMetadataEntry" };
 
-    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<SemioImageMutation as protocol::Mutation<SemioImageSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<SemioImageMutation as Mutation<SemioImageSnapshot>>::Diff> {
         agg_diff(&SemioImageMutation::RemoveMetadataEntry(self.clone()), base)
     }
     fn inverse(&self, base: &SemioImageSnapshot) -> Vec<SemioImageMutation> {

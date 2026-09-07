@@ -1,7 +1,7 @@
 //! ➕️ `insert-row` — places a new row at a FINAL-state index in the row sequence (an intrinsically
 //! ordered, anonymous collection — no stable id on `SemioTableRow`).
 
-use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::{SemioTableMutation, remove_row};
+use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableRow, SemioTableSnapshot};
 
 //#region 🔖️Payload

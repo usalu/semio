@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative replace-tag mutation.
-use crate::artifacts::tiff::schema::diff::{self, *};
+use crate::artifacts::tiff::schema::diff::*;
 use crate::artifacts::tiff::schema::mutations::TiffMutation;
 use crate::artifacts::tiff::schema::snapshot::*;
 
@@ -30,14 +30,14 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for ReplaceTagMutation {
         protocol::MutationOutcome::new(contribute(base, *ifd_index, *tag, *kind, values.clone()))
     }
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffMutation> {
-        let Self { ifd_index, tag, kind, values } = self;
+        let Self { ifd_index, tag, .. } = self;
         let outcome = <Self as protocol::MutationKind<TiffSnapshot, TiffMutation>>::diff(self, base);
         if <TiffDiff as protocol::DiffAlgebra<TiffSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
         match base.ifds.get(*ifd_index) {
             Some(ifd) => match ifd.entries.iter().find(|t| t.tag == *tag) {
-                Some(existing) => vec![TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: *ifd_index, tag: *tag, kind: existing.kind, values: existing.values.clone() })],
+                Some(existing) => vec![TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: *ifd_index, tag: *tag, kind: existing.kind, values: existing.values.clone() })],
                 None => vec![TiffMutation::RemoveTag(crate::artifacts::tiff::schema::mutations::RemoveTagMutation { ifd_index: *ifd_index, tag: *tag })],
             },
             None => Vec::new(),

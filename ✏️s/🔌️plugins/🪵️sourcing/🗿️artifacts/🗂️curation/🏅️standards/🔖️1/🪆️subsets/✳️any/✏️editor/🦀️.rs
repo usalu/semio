@@ -318,8 +318,8 @@ impl semio_framework::ToolJobFactory for SourcingCurationBoundedCommandJobFactor
     }
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SourcingCurationBoundedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<SourcingCurationApp>;
+impl ArtifactOwnedToolJobFactory for SourcingCurationBoundedCommandJobFactory {
+    type Owner = EditorApp<SourcingCurationApp>;
     const TOOL_IDS: &'static [&'static str] = SOURCING_CURATION_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;
     /// 🛤️ The lane each tool publishes on. `HostOnly` is a whole-document replacement carried as an
@@ -377,8 +377,8 @@ fn sourcing_curation_config_bytes(config: &SourcingCurationConfig) -> Result<usi
         .saturating_add(config.locale.len())
         .saturating_add(config.contributions_json.len());
     if bytes > SOURCING_CURATION_CONFIG_TEXT_BYTES { return Err("Sourcing Config base exceeds its encoded text envelope".into()); }
-    let bytes = bytes.saturating_add(std::mem::size_of::<SourcingCurationConfig>())
-        .saturating_add(items.saturating_mul(std::mem::size_of::<String>()));
+    let bytes = bytes.saturating_add(size_of::<SourcingCurationConfig>())
+        .saturating_add(items.saturating_mul(size_of::<String>()));
     if bytes > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES { return Err("Sourcing Config base exceeds its retained byte envelope".into()); }
     Ok(bytes)
 }
@@ -399,7 +399,7 @@ fn sourcing_curation_config_mutation_footprint(mutation: &SourcingCurationConfig
         SourcingCurationConfigMutation::SetFilterMinAvailability { .. } => (1, 0),
     };
     if retained_bytes > SOURCING_CURATION_CONFIG_TEXT_BYTES { return Err("Sourcing Config mutation exceeds its encoded text envelope".into()); }
-    let retained_bytes = retained_bytes.saturating_add(std::mem::size_of::<SourcingCurationConfigMutation>()).saturating_add(work_items.saturating_mul(std::mem::size_of::<String>()));
+    let retained_bytes = retained_bytes.saturating_add(size_of::<SourcingCurationConfigMutation>()).saturating_add(work_items.saturating_mul(size_of::<String>()));
     if work_items > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS || retained_bytes > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES {
         return Err("Sourcing Config mutation exceeds its fixed one-item preparation envelope".into());
     }
@@ -592,8 +592,8 @@ fn sourcing_curation_document_bytes(document: &CurationSnapshot) -> Result<usize
     }
     let bytes = document.curated.iter().map(|item| item.object_id.len()).sum::<usize>()
         .saturating_add(document.stock_extra.iter().map(|extra| extra.id.len().saturating_add(extra.name.len()).saturating_add(extra.module_id.len()).saturating_add(extra.typology_path.iter().map(String::len).sum::<usize>())).sum::<usize>())
-        .saturating_add(std::mem::size_of::<CurationSnapshot>())
-        .saturating_add(items.saturating_mul(std::mem::size_of::<CuratedItem>().max(std::mem::size_of::<ObjectKindExtra>())));
+        .saturating_add(size_of::<CurationSnapshot>())
+        .saturating_add(items.saturating_mul(size_of::<CuratedItem>().max(size_of::<ObjectKindExtra>())));
     if bytes > SOURCING_CURATION_DOCUMENT_MAXIMUM_BYTES { return Err("Sourcing Curation base exceeds its retained byte envelope".into()); }
     Ok(bytes)
 }
@@ -607,7 +607,7 @@ fn sourcing_curation_mutation_footprint(mutation: &SourcingMutation) -> Result<s
         SourcingMutation::ChangeCuratedItemCount(payload) => payload.object_id.len(),
     };
     if text > SOURCING_CURATION_DOCUMENT_TEXT_BYTES { return Err("Sourcing Curation mutation exceeds its encoded text envelope".into()); }
-    let retained_bytes = text.saturating_add(std::mem::size_of::<SourcingMutation>()).saturating_add(std::mem::size_of::<String>());
+    let retained_bytes = text.saturating_add(size_of::<SourcingMutation>()).saturating_add(size_of::<String>());
     if retained_bytes > SOURCING_CURATION_DOCUMENT_MAXIMUM_BYTES { return Err("Sourcing Curation mutation exceeds its fixed one-item preparation envelope".into()); }
     Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
 }
@@ -765,12 +765,12 @@ impl semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<semio_f
         _maximum_bytes: usize,
     ) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
         if maximum_items == 0 { return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
-        assert_eq!(std::mem::size_of::<semio_framework_plugin::NoTransient>(), 0);
+        assert_eq!(size_of::<semio_framework_plugin::NoTransient>(), 0);
         Ok(semio_framework_plugin::PluginCloseStep::Complete)
     }
 
     fn terminal_is_empty(&self, _owner: &store::TransientStore<semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation>) -> bool {
-        std::mem::size_of::<semio_framework_plugin::NoTransient>() == 0
+        size_of::<semio_framework_plugin::NoTransient>() == 0
     }
 }
 //#endregion 🧹️EmptyLaneRetirement
@@ -798,7 +798,7 @@ impl ArtifactEditor for SourcingCurationApp {
     }
 
     fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
-        assert_eq!(std::mem::size_of::<NoDraft>(), 0);
+        assert_eq!(size_of::<NoDraft>(), 0);
         Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
     }
 
@@ -842,27 +842,27 @@ impl ArtifactEditor for SourcingCurationApp {
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<SourcingCurationApp>,
+        owner: EditorApp<SourcingCurationApp>,
         owner_file: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.sourcing.curation@1/*#editor",
         document_schema: "sourcing.curation/v1",
         factory: "SourcingCurationBoundedCommandJobFactory",
         factory_type: SourcingCurationBoundedCommandJobFactory,
         tools: {
-            "setActiveExample" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setDocument" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "stockFromCatalogue" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "curationAdd" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "curationSetCount" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "curationRemove" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "dropOnPool" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "dropOnCurated" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setFilterQuery" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setFilterModule" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setFilterTypology" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setFilterMinAvailability" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "sortTable" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setContributions" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setActiveExample" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setDocument" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "stockFromCatalogue" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "curationAdd" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "curationSetCount" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "curationRemove" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "dropOnPool" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "dropOnCurated" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setFilterQuery" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setFilterModule" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setFilterTypology" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setFilterMinAvailability" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "sortTable" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setContributions" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
         }
     }
 
@@ -1047,10 +1047,10 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
     Editor::builder(crate::artifacts::curation::SOURCING_DIALECT)
             .command({
                 let mut definition = CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) };
-                definition.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
+                definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
                 definition
             })
-            .action_interactive_job("setContributions", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
             .document(["semio", "sourcing", "curation"])
             .artifact_kind(crate::artifacts::curation::artifact_kind())
             .artifact_kind(ArtifactKindSpec {
@@ -1146,20 +1146,20 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             // undeclared above, mirroring `flow_ui`: `VcsArtifactApp`'s kind-discipline check only runs
             // when the registry actually declares a command's id).
             .io(sourcing_curation_io())
-            .action_interactive_job("setDocument", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("stockFromCatalogue", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("curationAdd", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("curationSetCount", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("curationRemove", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("dropOnPool", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("dropOnCurated", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setFilterQuery", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setFilterModule", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setFilterTypology", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setFilterMinAvailability", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("sortTable", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::ForbiddenFromUi)
+            .action_interactive_job("setDocument", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("stockFromCatalogue", InteractiveJobClassification::Migrated)
+            .action_interactive_job("curationAdd", InteractiveJobClassification::Migrated)
+            .action_interactive_job("curationSetCount", InteractiveJobClassification::Migrated)
+            .action_interactive_job("curationRemove", InteractiveJobClassification::Migrated)
+            .action_interactive_job("dropOnPool", InteractiveJobClassification::Migrated)
+            .action_interactive_job("dropOnCurated", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFilterQuery", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFilterModule", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFilterTypology", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFilterMinAvailability", InteractiveJobClassification::Migrated)
+            .action_interactive_job("sortTable", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLocale", InteractiveJobClassification::ForbiddenFromUi)
             .build_definition()
 }
 //#endregion 🔖️Manifest

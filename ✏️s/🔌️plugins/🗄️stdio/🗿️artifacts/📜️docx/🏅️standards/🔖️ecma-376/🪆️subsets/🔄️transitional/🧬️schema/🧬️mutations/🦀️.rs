@@ -20,7 +20,7 @@
 //! @see ../../🔣️oracle.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
-use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, NamedTripleDiff, DocxDiff, DocxOpcContentTypesDiff, DocxOpcCtEntriesDiff, DocxOpcDiff, DocxOpcPartDiff, DocxOpcPartsDiff, DocxOpcRelDiff, DocxOpcRelListDiff, DocxOpcRelationshipsDiff};
+use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, NamedTripleDiff, DocxDiff, DocxOpcContentTypesDiff, DocxOpcDiff, DocxOpcPartDiff, DocxOpcPartsDiff, DocxOpcRelDiff, DocxOpcRelListDiff, DocxOpcRelationshipsDiff};
 use crate::artifacts::docx::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
 use crate::artifacts::zip::opc::{resolve_relationship_target, OpcPart};
@@ -115,11 +115,6 @@ fn is_xml_part(path: &str) -> bool {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_part(part: &OpcPart) -> Option<XmlDocument> {
     xml_document_from_text(std::str::from_utf8(&part.bytes).ok()?).ok()
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn part_text(base: &DocxSnapshot, path: &str) -> Option<String> {
-    String::from_utf8(base.opc.part(path)?.bytes.clone()).ok()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

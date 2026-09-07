@@ -232,10 +232,10 @@ fn open_fs_storage(root: &Path) -> Result<db::storage::FsStorage, db::db_ids::Db
 
 /// 🧵️ The CLI process's one headless worker pool, shared by every database authority the
 /// selected subcommand opens.
-fn cli_worker_pool() -> std::sync::Arc<db::semio_framework_async::WorkerPool> {
+fn cli_worker_pool() -> std::sync::Arc<semio_framework_async::WorkerPool> {
     let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
-    let config = db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, cores);
-    std::sync::Arc::new(db::semio_framework_async::process_worker_pool(config))
+    let config = semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, cores);
+    std::sync::Arc::new(semio_framework_async::process_worker_pool(config))
 }
 
 /// 🗄️ Opens a database and injects the CLI process worker pool before any authority can spawn.
@@ -876,7 +876,7 @@ async fn verify_document(storage: &db::storage::FsStorage, document: &db::db_ids
             let mut transaction = match records.next_transaction_step().await? {
                 db::wal::WalCommittedStep::Transaction(transaction) => transaction,
                 db::wal::WalCommittedStep::Yield => {
-                    db::semio_framework_async::yield_once().await;
+                    semio_framework_async::yield_once().await;
                     continue;
                 }
                 db::wal::WalCommittedStep::Done => break,
@@ -885,13 +885,13 @@ async fn verify_document(storage: &db::storage::FsStorage, document: &db::db_ids
                 match transaction.next_record_step()? {
                     db::wal::WalCommittedRecordStep::Record(_) => record_count += 1,
                     db::wal::WalCommittedRecordStep::Yield => {
-                        db::semio_framework_async::yield_once().await;
+                        semio_framework_async::yield_once().await;
                         continue;
                     }
                     db::wal::WalCommittedRecordStep::Done => break,
                 }
                 while transaction.close_record_step()? {
-                    db::semio_framework_async::yield_once().await;
+                    semio_framework_async::yield_once().await;
                 }
             }
             transaction.finish()?;

@@ -34,7 +34,7 @@ use semio_framework::kernel::Effect;
 use semio_framework_plugin::{
     tree_item_with_action, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppOperationContext, ArtifactOwnedToolJobFactory,
     ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DraftView,
-    EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, PluginAssemblyError, UiNode, UiText, UiValue, UtilityCategory,
+    EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, PluginAssemblyError, UiText, UiValue, UtilityCategory,
     UtilityDefinition, WindowEngagement, WindowMeasure, WorldSunConfig, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -322,7 +322,7 @@ pub struct CadPlayView {
     pub runtime: CadPlayRuntime,
 }
 
-pub fn cad_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
+pub fn cad_action(action: &str, args: Option<UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<UiValue>)> {
     semio_framework_plugin::ActionFactory::new(CAD_PLAY_CONTROLLER_ID).action(action, args)
 }
 
@@ -842,8 +842,8 @@ pub struct CadPreviewOperationIdentity {
     pub canonical_base_revision: String,
 }
 
-impl From<&semio_framework_plugin::AppOperationContext> for CadPreviewOperationIdentity {
-    fn from(operation: &semio_framework_plugin::AppOperationContext) -> Self {
+impl From<&AppOperationContext> for CadPreviewOperationIdentity {
+    fn from(operation: &AppOperationContext) -> Self {
         Self {
             app_instance_id: operation.app_instance_id,
             parent_document_id: operation.parent_document_id.clone(),
@@ -1190,7 +1190,7 @@ impl CadRetainedCommandJobFactory {
     }
 }
 
-impl semio_framework::ToolJobFactory for CadRetainedCommandJobFactory {
+impl ToolJobFactory for CadRetainedCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<CadPlayApp>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<CadPlayApp>>;
 
@@ -1228,8 +1228,8 @@ impl semio_framework::ToolJobFactory for CadRetainedCommandJobFactory {
     }
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<CadPlayApp>;
+impl ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory {
+    type Owner = EditorApp<CadPlayApp>;
     const TOOL_IDS: &'static [&'static str] = CAD_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = CAD_RETAINED_PUBLICATION_CONTRACTS;
@@ -1654,12 +1654,12 @@ impl semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<semio_f
         if maximum_items == 0 {
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        assert_eq!(std::mem::size_of::<semio_framework_plugin::NoTransient>(), 0);
+        assert_eq!(size_of::<semio_framework_plugin::NoTransient>(), 0);
         Ok(semio_framework_plugin::PluginCloseStep::Complete)
     }
 
     fn terminal_is_empty(&self, _owner: &store::TransientStore<semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation>) -> bool {
-        std::mem::size_of::<semio_framework_plugin::NoTransient>() == 0
+        size_of::<semio_framework_plugin::NoTransient>() == 0
     }
 }
 //#endregion 🧹️EmptyLaneRetirement
@@ -1686,7 +1686,7 @@ impl ArtifactEditor for CadPlayApp {
     }
 
     fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
-        assert_eq!(std::mem::size_of::<NoDraft>(), 0);
+        assert_eq!(size_of::<NoDraft>(), 0);
         Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
     }
 
@@ -1730,13 +1730,13 @@ impl ArtifactEditor for CadPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<CadPlayApp>,
+        owner: EditorApp<CadPlayApp>,
         owner_file: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.cad.cad@1/*#editor",
         document_schema: "cad.scene",
         factory: "CadRetainedCommandJobFactory",
         factory_type: CadRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+        contract: ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
         tools: [
             "addNode",
             "renameNode",
@@ -1969,7 +1969,7 @@ impl ArtifactEditor for CadPlayApp {
     /// the section; a bare right-click with nothing selected is a documented reduced-fidelity gap
     /// (each action already no-ops on an empty selection at dispatch time)?.
     fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        semio_framework_plugin::resolve_ready(async { Menu::of(registry).await.action("translateSelection").await.action("rotateSelection").await.action("scaleSelection").await.action("duplicateObject").await.destructive("deleteObject").await.build().await })
+        { Menu::of(registry).action("translateSelection").action("rotateSelection").action("scaleSelection").action("duplicateObject").destructive("deleteObject").build() }
     }
 }
 //#endregion 🔖️PlayApp
@@ -2019,7 +2019,7 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::cad::CAD_DIALECT).document(["semio", "cad"])
             .command({
                 let mut definition = CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) };
-                definition.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
+                definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
                 definition
             })
             .artifact_kind(artifact_kind())
@@ -2036,13 +2036,13 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .mutation("addObject", LocalizedLabel::native("Add Object", "Objekt hinzufügen"))
             .mutation("patchObject", LocalizedLabel::native("Patch Object", "Objekt aktualisieren"))
             .mutation("patchSelection", LocalizedLabel::native("Patch Selection", "Auswahl aktualisieren"))
-            .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("deleteObject", LocalizedLabel::native("Delete Object", "Objekt löschen"), ActionKind::Mutation).category("actions")))
-            .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("duplicateObject", LocalizedLabel::native("Duplicate Object", "Objekt duplizieren"), ActionKind::Mutation).category("create")))
+            .action_with(ActionDefinition::bounded_catalog("deleteObject", LocalizedLabel::native("Delete Object", "Objekt löschen"), ActionKind::Mutation).category("actions"))
+            .action_with(ActionDefinition::bounded_catalog("duplicateObject", LocalizedLabel::native("Duplicate Object", "Objekt duplizieren"), ActionKind::Mutation).category("create"))
             .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
             .mutation("renameNode", LocalizedLabel::native("Rename Node", "Knoten umbenennen"))
-            .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Mutation).category("transform")))
-            .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Mutation).category("transform")))
-            .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"), ActionKind::Mutation).category("transform")))
+            .action_with(ActionDefinition::bounded_catalog("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Mutation).category("transform"))
+            .action_with(ActionDefinition::bounded_catalog("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Mutation).category("transform"))
+            .action_with(ActionDefinition::bounded_catalog("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"), ActionKind::Mutation).category("transform"))
             .mutation("applyTransformation", LocalizedLabel::native("Apply Transformation", "Transformation anwenden"))
             .mutation("importCadFile", LocalizedLabel::native("Import CAD File", "CAD-Datei importieren"))
             .action_with(ActionDefinition::bounded_catalog("patchCadPlayReference", LocalizedLabel::native("Patch Reference", "Referenz aktualisieren"), ActionKind::Mutation).in_palette(false))
@@ -2112,46 +2112,46 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             // shooting's format defaults — every `CadConfig` field is session view-state, not a setting).
             .config(CadPlayApp::config_spec())
             .io(cad_io())
-            .action_interactive_job("setActiveUtility", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("addObject", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("patchObject", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("patchSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("deleteObject", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("duplicateObject", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("renameNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("translateSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("rotateSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("scaleSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("applyTransformation", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("importCadFile", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("patchCadPlayReference", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("focusModelDefinition", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("worldPointerDown", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setProjection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setProjectionParam", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setDislocateOption", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setNodeSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setReferenceSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("referenceHover", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementPossibleSelect", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementRepeatLast", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementAbort", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("worldPointerMove", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("toggleSun", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSunAzimuth", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSunElevation", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSunIntensity", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setTerminology", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("saveSelected", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("saveInPlay", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("saveCurrent", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("loadRawRequest", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveUtility", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addObject", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("patchObject", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("patchSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("deleteObject", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("duplicateObject", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("renameNode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("translateSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("rotateSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("scaleSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("applyTransformation", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("importCadFile", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("patchCadPlayReference", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("focusModelDefinition", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("worldPointerDown", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setProjection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setProjectionParam", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setDislocateOption", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setNodeSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setReferenceSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("referenceHover", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementPossibleSelect", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementRepeatLast", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementAbort", InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldPointerMove", InteractiveJobClassification::Migrated)
+            .action_interactive_job("toggleSun", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunAzimuth", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setTerminology", InteractiveJobClassification::Migrated)
+            .action_interactive_job("saveSelected", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("saveInPlay", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("saveCurrent", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("loadRawRequest", InteractiveJobClassification::Migrated)
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`Viewer`/`.editor::<E>(def: AppDefinition)`
             // take a bare `AppDefinition`, not the old `App { definition, examples }` — there is no
             // `.example(...)`/`.workflow(...)` on this builder, so the old

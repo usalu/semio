@@ -2,7 +2,13 @@
   "name": "@semio-tech/framework-os",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧫️fixtures/**/*", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧫️fixtures/**/*",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "generate-wgpu": {
@@ -24,6 +30,10 @@
     "gis-map-inference-port-browser-check": {
       "executor": "nx:run-commands",
       "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts gis-map-inference-port-check long --browser" }
+    },
+    "cold-document-pair-browser-check": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts cold-document-pair-browser-check long" }
     },
     "test": {
       "executor": "nx:run-commands",

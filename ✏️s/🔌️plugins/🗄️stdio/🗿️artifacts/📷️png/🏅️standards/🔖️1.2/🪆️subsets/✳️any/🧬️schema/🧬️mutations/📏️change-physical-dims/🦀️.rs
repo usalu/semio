@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative change-physical-dims mutation.
-use crate::artifacts::png::schema::diff::{self, *};
+use crate::artifacts::png::schema::diff::*;
 use crate::artifacts::png::schema::mutations::PngMutation;
 use crate::artifacts::png::schema::snapshot::*;
 
@@ -27,12 +27,11 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangePhysicalDimsMuta
         protocol::MutationOutcome::new(contribute(base, *phys))
     }
     fn inverse(&self, base: &PngSnapshot) -> Vec<PngMutation> {
-        let Self { phys } = self;
         let outcome = <Self as protocol::MutationKind<PngSnapshot, PngMutation>>::diff(self, base);
         if <PngDiff as protocol::DiffAlgebra<PngSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
-        vec![PngMutation::ChangePhysicalDims(crate::artifacts::png::schema::mutations::ChangePhysicalDimsMutation { phys: base.phys })]
+        vec![PngMutation::ChangePhysicalDims(ChangePhysicalDimsMutation { phys: base.phys })]
     }
     fn label(&self) -> String {
         "change physical dims".into()

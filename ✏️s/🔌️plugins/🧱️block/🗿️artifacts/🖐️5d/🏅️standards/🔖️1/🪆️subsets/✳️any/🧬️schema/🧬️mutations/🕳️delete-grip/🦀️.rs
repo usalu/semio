@@ -1,7 +1,7 @@
 //! 🕳 Block5d mutation — `DeleteGrip`: a rim-grip template.
 
 use crate::artifacts::block5d::Block5dSnapshot;
-use crate::artifacts::block5d::diff::{Block5dDiff, Block5dGripsDelta};
+use crate::artifacts::block5d::diff::Block5dDiff;
 use crate::artifacts::block5d::mutations::Block5dMutation;
 
 //#region 🔖️Mutation

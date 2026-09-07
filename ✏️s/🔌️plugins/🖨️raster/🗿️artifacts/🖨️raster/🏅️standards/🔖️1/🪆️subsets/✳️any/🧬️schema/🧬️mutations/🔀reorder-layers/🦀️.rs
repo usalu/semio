@@ -2,10 +2,9 @@
 //! position, never spatial — the coordinator's explicit ruling; spatial reposition is `move-layer`).
 
 pub mod mutation {
-use crate::artifacts::raster::diff::{diff_move_layer, RasterDiff};
+use crate::artifacts::raster::diff::RasterDiff;
 use crate::artifacts::raster::mutations::RasterMutation;
-use crate::artifacts::raster::schema::{find_layer, layer_node_id, locate_layer};
-use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
+use crate::artifacts::raster::RasterSnapshot;
 
 //#region 🔖️ReorderLayers
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]

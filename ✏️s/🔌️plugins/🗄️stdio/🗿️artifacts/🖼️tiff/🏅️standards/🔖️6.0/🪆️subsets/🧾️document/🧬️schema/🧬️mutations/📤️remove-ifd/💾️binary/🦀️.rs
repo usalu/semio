@@ -1,6 +1,5 @@
 //! 💾️ Direct remove-ifd binary codec.
 use super::*;
-use crate::artifacts::tiff::schema::diff::{self, *};
 use crate::artifacts::tiff::schema::mutations::binary::Entry;
 pub const BINARY_TAG: u8 = 4;
 pub const CODEC: Entry = Entry { tag: BINARY_TAG, encode, decode };
@@ -15,15 +14,12 @@ pub fn encode_payload(payload: &RemoveIfdMutation) -> Result<Vec<u8>, protocol::
     store::pack_rt::write_varint_u64(&mut out, *index as u64);
     Ok(out)
 }
-fn op_pack_err(error: dsl::PackError) -> protocol::ProtocolError {
-    protocol::ProtocolError::Malformed { what: "remove-ifd", offset: 0, detail: error.to_string() }
-}
 pub fn decode(bytes: &[u8]) -> Result<TiffMutation, protocol::ProtocolError> {
     let mut reader = store::ByteReader::new(bytes);
     let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
     let result: Result<TiffMutation, protocol::ProtocolError> = {
         let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
-        Ok(TiffMutation::RemoveIfd(crate::artifacts::tiff::schema::mutations::RemoveIfdMutation { index }))
+        Ok(TiffMutation::RemoveIfd(RemoveIfdMutation { index }))
     };
     let position = reader.position();
     if position != bytes.len() {

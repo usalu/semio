@@ -1,6 +1,5 @@
 //! 💾️ Direct insert-unknown-chunk binary codec.
 use super::*;
-use crate::artifacts::png::schema::diff::{self, *};
 use crate::artifacts::png::schema::mutations::binary::Entry;
 pub const BINARY_TAG: u8 = 15;
 pub const CODEC: Entry = Entry { tag: BINARY_TAG, encode, decode };
@@ -13,7 +12,7 @@ pub fn encode_payload(payload: &InsertUnknownChunkMutation) -> Result<Vec<u8>, p
     let InsertUnknownChunkMutation { index, chunk } = payload;
     let mut w = dsl::ByteWriter::new();
     w.write_varint_u64(*index as u64);
-    diff::write_bin_chunk(&mut w, chunk);
+    write_bin_chunk(&mut w, chunk);
     Ok(w.into_bytes())
 }
 fn op_pack_err(error: dsl::PackError) -> protocol::ProtocolError {
@@ -21,11 +20,10 @@ fn op_pack_err(error: dsl::PackError) -> protocol::ProtocolError {
 }
 pub fn decode(bytes: &[u8]) -> Result<PngMutation, protocol::ProtocolError> {
     let mut r = dsl::ByteReader::new(bytes);
-    let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
     let result: Result<PngMutation, protocol::ProtocolError> = Ok({
         let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
-        let chunk = diff::read_bin_chunk(&mut r).map_err(op_pack_err)?;
-        PngMutation::InsertUnknownChunk(crate::artifacts::png::schema::mutations::InsertUnknownChunkMutation { index, chunk })
+        let chunk = read_bin_chunk(&mut r).map_err(op_pack_err)?;
+        PngMutation::InsertUnknownChunk(InsertUnknownChunkMutation { index, chunk })
     });
     let position = r.position();
     if position != bytes.len() {

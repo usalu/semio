@@ -17,7 +17,7 @@ pub struct AddNode {
 pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.nodes.iter().map(|n| n.id.clone()), "n");
-    Ok(Emit::mutations(vec![Fem3dMutation::CreateNode(crate::artifacts::fem3d::mutations::create_node::mutation::CreateNode { node: crate::artifacts::fem3d::FemNode { id, x: payload.x, y: payload.y, z: payload.z } })]))
+    Ok(Emit::mutations(vec![Fem3dMutation::CreateNode(crate::artifacts::fem3d::mutations::create_node::CreateNode { node: crate::artifacts::fem3d::FemNode { id, x: payload.x, y: payload.y, z: payload.z } })]))
 }
 
 #[cfg(test)]

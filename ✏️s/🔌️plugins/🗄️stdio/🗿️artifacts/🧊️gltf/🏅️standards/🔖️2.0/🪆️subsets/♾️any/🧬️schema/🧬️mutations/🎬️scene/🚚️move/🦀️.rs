@@ -1,6 +1,4 @@
 //! 🧬️ Direct move-scene mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
-use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level_collections::*;
 pub const ID: &str = "s.stdio.gltf.mutation.move-scene.v1";

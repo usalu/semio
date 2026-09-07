@@ -21,7 +21,7 @@ pub struct SetPresetDictionary {
 impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetPresetDictionary {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "preset-dictionary", kind: "set-preset-dictionary", record: "SetPresetDictionary" };
 
-    fn diff(&self, base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as protocol::Mutation<DeflateSnapshot>>::Diff> {
+    fn diff(&self, base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as Mutation<DeflateSnapshot>>::Diff> {
         agg_diff(&DeflateMutation::SetPresetDictionary(self.clone()), base)
     }
     fn inverse(&self, base: &DeflateSnapshot) -> Vec<DeflateMutation> {

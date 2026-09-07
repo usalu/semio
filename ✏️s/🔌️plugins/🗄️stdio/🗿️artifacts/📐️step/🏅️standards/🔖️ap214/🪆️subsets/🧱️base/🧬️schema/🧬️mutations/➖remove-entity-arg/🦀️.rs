@@ -16,7 +16,7 @@ pub struct RemoveEntityArg {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for RemoveEntityArg {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "entity-arg", kind: "remove-entity-arg", record: "RemoveEntityArg" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepMutation as protocol::Mutation<StepSnapshot>>::Diff> {
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepMutation as Mutation<StepSnapshot>>::Diff> {
         agg_diff(&StepMutation::RemoveEntityArg(self.clone()), base)
     }
     fn inverse(&self, base: &StepSnapshot) -> Vec<StepMutation> {

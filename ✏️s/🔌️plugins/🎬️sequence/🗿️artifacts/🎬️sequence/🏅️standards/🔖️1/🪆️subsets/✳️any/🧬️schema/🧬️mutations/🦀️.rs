@@ -16,7 +16,8 @@ pub use crate::artifacts::sequence::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🧮️ Closed sequence mutation vocabulary backed by direct semantic owners.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::ToValue, dsl::FromValue, dsl::DslEnum, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = SequenceSnapshot, diff = SequenceDiff, schema = "sequence.sequence")]
 pub enum SequenceMutation {

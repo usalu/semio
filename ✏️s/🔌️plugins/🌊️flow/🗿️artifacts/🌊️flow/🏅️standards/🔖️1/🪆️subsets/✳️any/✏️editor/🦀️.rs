@@ -243,16 +243,16 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot,
     // groups; `delete-selection` stays a direct destructive item last — `organize_context_menu`
     // (applied automatically at the `VcsArtifactApp::context_menu` funnel) sorts the groups into
     // `RIBBON_PARENT_CATEGORIES` order and inserts the pre-destructive separator itself.
-    semio_framework_plugin::resolve_ready(async {
-        let mut menu = Menu::of(registry).await;
+    {
+        let mut menu = Menu::of(registry);
         if hits.is_empty() {
             menu = menu
                 .item(ContextMenuItemSpec { id: "add-node".into(), label: Some(labels.add_node.into()), icon: Some("plus".into()), action: Some("openSpotlight".into()), ..Default::default() })
-                .await
+                
                 .action("selectAll")
-                .await
+                
                 .group("transform", |m| m.action("reorganize"))
-                .await;
+                ;
         }
         if let Some(node_id) = hit_node {
             menu = menu
@@ -266,7 +266,7 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot,
                         ..Default::default()
                     })
                 })
-                .await;
+                ;
             if is_image {
                 menu = menu
                     .group("actions", |m| {
@@ -279,15 +279,15 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot,
                             ..Default::default()
                         })
                     })
-                    .await;
+                    ;
             }
         }
         if has_selection {
             menu = menu
                 .action("focusSelection")
-                .await
+                
                 .action("clearSelection")
-                .await
+                
                 .group("view", |m| {
                     m.item(ContextMenuItemSpec {
                         id: "toggle-preview".into(),
@@ -299,8 +299,8 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot,
                         ..Default::default()
                     })
                 })
-                .await;
-            let phrase = selection_count_phrase(is_de, &[(nodes.len(), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" }), (edges.len(), if is_de { "Kante" } else { "edge" }, if is_de { "Kanten" } else { "edges" })]).await;
+                ;
+            let phrase = selection_count_phrase(is_de, &[(nodes.len(), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" }), (edges.len(), if is_de { "Kante" } else { "edge" }, if is_de { "Kanten" } else { "edges" })]);
             if !phrase.is_empty() {
                 menu = menu
                     .item(ContextMenuItemSpec {
@@ -311,11 +311,11 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot,
                         action: Some("deleteSelection".into()),
                         ..Default::default()
                     })
-                    .await;
+                    ;
             }
         }
-        menu.build().await
-    })
+        menu.build()
+    }
 }
 //#endregion 🔖️ContextMenu
 
@@ -343,7 +343,7 @@ struct FlowStoreOneItemPreparation<P, M> {
     base: Option<store::SnapshotRead<P>>,
     mutation: Option<M>,
     description: Option<String>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    authority: Option<Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepare: FlowStorePrepare<P, M>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -704,7 +704,7 @@ where
         let (post, inverse, forward) = (self.prepare)(base.get(), mutation)?;
         let authority = self.authority.as_ref().ok_or_else(|| "Flow preparation lost its Store authority".to_string())?;
         let edit = flow_store_edit(forward, inverse, self.description.take(), authority);
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        let prepared = authority.prepare_one_item(edit, Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -1438,10 +1438,10 @@ const FLOW_HOST_ONLY_RAW_BYTES: usize = 16_384;
 
 struct FlowHostEffectPayload {
     command: FlowCommand,
-    snapshot: std::sync::Arc<FlowSnapshot>,
-    config: std::sync::Arc<FlowConfig>,
-    history: std::sync::Arc<semio_framework_plugin::HistoryView>,
-    children: std::sync::Arc<semio_framework_plugin::ChildContentView>,
+    snapshot: Arc<FlowSnapshot>,
+    config: Arc<FlowConfig>,
+    history: Arc<semio_framework_plugin::HistoryView>,
+    children: Arc<semio_framework_plugin::ChildContentView>,
     instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     completion: semio_framework_plugin::ArtifactToolCompletion<semio_framework_plugin::EditorApp<FlowPlayApp>>,
 }
@@ -1786,8 +1786,8 @@ impl ArtifactEditor for FlowPlayApp {
         store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.child-projection"), error.to_string()))
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(std::sync::Arc::new(retained::artifact::preparation::PreparationFactory))
+    fn build_artifact_store_one_item_preparation_factory() -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(Arc::new(retained::artifact::preparation::PreparationFactory))
     }
 
     fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
@@ -1830,8 +1830,8 @@ impl ArtifactEditor for FlowPlayApp {
         Some(Box::new(semio_framework_plugin::NoTransientStoreDisposer::new()))
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(std::sync::Arc::new(retained::config::PreparationFactory))
+    fn build_config_store_one_item_preparation_factory() -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(Arc::new(retained::config::PreparationFactory))
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
@@ -2123,11 +2123,11 @@ pub fn create_flow_app() -> AppDefinition {
         .mutation("duplicateWidget", LocalizedLabel::native("Duplicate Widget", "Widget duplizieren"))
         .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(duplicate_widget::DUPLICATE_WIDGET_STEP_ACTION_ID, LocalizedLabel::native("Continue Duplicating Widget", "Widgetduplizierung fortsetzen"), ActionKind::Mutation) })
         // 🗂️ Referenced by flow_context_menu_items — categorized for grouped-context-menu disclosure.
-        .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection")))
+        .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
         .mutation("disconnect", LocalizedLabel::native("Disconnect", "Trennen"))
         .mutation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Anschlüsse verbinden"))
         .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
-        .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform")))
+        .action_with(ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
         .mutation("patchFlowWidgets", LocalizedLabel::native("Patch Widgets", "Widgets aktualisieren"))
         .mutation("renameFlowWidget", LocalizedLabel::native("Rename Widget", "Widget umbenennen"))
         .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
@@ -2139,7 +2139,7 @@ pub fn create_flow_app() -> AppDefinition {
         // `nodeGraphHover`/`graphPointerDown`) are no longer declared here: framework-owned, injected
         // via `.interaction(...)` below (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
         .view_action("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"))
-        .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("focusSelection", LocalizedLabel::native("Zoom to Selection", "Auf Auswahl zoomen"), ActionKind::View).with_category("view")))
+        .action_with(ActionDefinition::bounded_catalog("focusSelection", LocalizedLabel::native("Zoom to Selection", "Auf Auswahl zoomen"), ActionKind::View).with_category("view"))
         .action_with(flow_internal_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), ActionKind::View))
         .action_with(flow_internal_action("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View))
         .action_with(flow_internal_action("setProximityDistance", LocalizedLabel::native("Set Proximity Distance", "Näheabstand festlegen"), ActionKind::View))
@@ -2147,9 +2147,9 @@ pub fn create_flow_app() -> AppDefinition {
         .action_with(flow_internal_action("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"), ActionKind::View))
         .action_with(flow_internal_action("setGridFactor", LocalizedLabel::native("Set Grid Factor", "Rasterfaktor festlegen"), ActionKind::View))
         .action_with(flow_internal_action("contextMenuAt", LocalizedLabel::native("Context Menu At", "Kontextmenü an Position"), ActionKind::View))
-        .action_with(semio_framework_plugin::resolve_ready(flow_internal_action("setPreviewOff", LocalizedLabel::native("Set Preview Off", "Vorschau deaktivieren"), ActionKind::View).with_category("view")))
-        .action_with(semio_framework_plugin::resolve_ready(flow_internal_action("openSpotlight", LocalizedLabel::native("Open Spotlight", "Spotlight öffnen"), ActionKind::View).with_category("create")))
-        .action_with(semio_framework_plugin::resolve_ready(flow_internal_action("replaceImage", LocalizedLabel::native("Replace Image", "Bild ersetzen"), ActionKind::View).with_category("actions")))
+        .action_with(flow_internal_action("setPreviewOff", LocalizedLabel::native("Set Preview Off", "Vorschau deaktivieren"), ActionKind::View).with_category("view"))
+        .action_with(flow_internal_action("openSpotlight", LocalizedLabel::native("Open Spotlight", "Spotlight öffnen"), ActionKind::View).with_category("create"))
+        .action_with(flow_internal_action("replaceImage", LocalizedLabel::native("Replace Image", "Bild ersetzen"), ActionKind::View).with_category("actions"))
         .action_with(flow_internal_action("setCatalogueSections", LocalizedLabel::native("Set Catalogue Sections", "Katalogabschnitte festlegen"), ActionKind::View))
         .action_with(flow_internal_action("toggleExtension", LocalizedLabel::native("Toggle Extension", "Erweiterung umschalten"), ActionKind::View))
         // 📝️ Staged argument form for the panel-visible create action (module operators stay catalogue-driven).

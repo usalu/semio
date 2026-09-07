@@ -113,7 +113,7 @@ pub struct OsHost {
     /// distinguishable events in `Watchdog::violations()`, not one indistinguishable repeat.
     pub frame_generation: u64,
     pub frame_ready: bool,
-    pub(crate) cursor_wake_requested: Option<crate::infinite_world::world::WorldCursorWakeToken>,
+    pub(crate) cursor_wake_requested: Option<infinite_world::world::WorldCursorWakeToken>,
     pub(crate) platform_fullscreen: Option<bool>,
     pub(crate) present_fault: Option<String>,
     /// 📬️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the fixed-capacity enqueue-only
@@ -151,7 +151,7 @@ struct OsHostRetirementState {
     surface_resize: Option<crate::surface_lane::SurfaceResizeAuthority>,
     engine_surfaces: PairedEngineSurfaceClose,
     raster_uploads: Option<crate::scenes::PendingRasterAuthorityClose>,
-    cursor_wake_requested: Option<crate::infinite_world::world::WorldCursorWakeToken>,
+    cursor_wake_requested: Option<infinite_world::world::WorldCursorWakeToken>,
     #[cfg(not(target_arch = "wasm32"))]
     kernel_progress_close: Option<crate::kernel_runtime::KernelCloseHandle>,
 }
@@ -439,13 +439,13 @@ impl OsHost {
         Ok(OsHostRetirement { state: Some(Box::new(state)), abandonment: Some(abandonment) })
     }
 
-    pub(crate) fn retain_cursor_wake_directive(&mut self, token: crate::infinite_world::world::WorldCursorWakeToken) {
+    pub(crate) fn retain_cursor_wake_directive(&mut self, token: infinite_world::world::WorldCursorWakeToken) {
         if self.cursor_wake_requested.as_ref().is_none_or(|pending| token.generation() > pending.generation()) {
             self.cursor_wake_requested = Some(token);
         }
     }
 
-    pub(crate) fn take_cursor_wake_directive(&mut self) -> Option<crate::infinite_world::world::WorldCursorWakeToken> {
+    pub(crate) fn take_cursor_wake_directive(&mut self) -> Option<infinite_world::world::WorldCursorWakeToken> {
         self.cursor_wake_requested.take()
     }
 }
@@ -594,7 +594,7 @@ impl OsHostRetirement {
         if OS_HOST_RETIREMENT_ABANDONMENT_OCCUPIED.load(Ordering::Acquire) == 0 {
             return true;
         }
-        let index = match OS_HOST_RETIREMENT_ABANDONMENT_SCAN.fetch_update(Ordering::AcqRel, Ordering::Acquire, |index| Some(index.checked_add(1).map_or(0, |next| next % OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY))) {
+        let index = match OS_HOST_RETIREMENT_ABANDONMENT_SCAN.try_update(Ordering::AcqRel, Ordering::Acquire, |index| Some(index.checked_add(1).map_or(0, |next| next % OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY))) {
             Ok(index) | Err(index) => index % OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY,
         };
         let slot = &OS_HOST_RETIREMENT_ABANDONMENTS[index];

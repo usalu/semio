@@ -300,7 +300,7 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     };
 
     if args.dry {
-        let report = plan(&graph, &documents, &configs, &parameter_values, &snapshot.parameter_bindings, &prior_node_records)?;
+        let report = plan(&graph, &documents, &configs, &parameter_values, &snapshot.parameter_bindings, &prior_node_records).await?;
         println!("recompute: {:?}", report.recomputed);
         println!("clean:     {:?}", report.clean);
         return Ok(());
@@ -336,7 +336,7 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     // 📊️ Dev-boot smoke line (W7): real `io_router_stats()` numbers, not hardcoded — a zero-plugin or
     // zero-key router (the shared cross-plugin `IoRouter` silently doing nothing) is visible right
     // here, regardless of whether the run itself succeeded or failed partway through.
-    let (io_router_plugins, io_router_keys) = runner.into_host().io_router_stats();
+    let (io_router_plugins, io_router_keys) = runner.into_host().io_router_stats().await;
     eprintln!("[os run] io-router: {io_router_plugins} plugins / {io_router_keys} keys");
     eprintln!("[os run] merge-policy: {:?}", args.policy);
     match run_result {

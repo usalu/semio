@@ -198,7 +198,7 @@ fn semio_node_from_jack_node(node: &Node) -> SemioGraphNode {
         label: node.name.clone(),
         position: SemioPoint2 { x: node.x, y: node.y },
         ports,
-        properties: vec![SemioValueEntry { key: JACK_NODE_JSON_PROPERTY.into(), value: SemioValue::Str { value: pack::to_json_string(node).unwrap_or_default() } }],
+        properties: vec![SemioValueEntry { key: JACK_NODE_JSON_PROPERTY.into(), value: SemioValue::Str { value: pack::to_json_string(node) } }],
     }
 }
 
@@ -243,7 +243,7 @@ fn semio_edge_from_jack_edge(edge: &Edge) -> SemioGraphEdge {
         source: SemioGraphNodeId::new(source_node.to_string()),
         target: SemioGraphNodeId::new(target_node.to_string()),
         kind: edge.kind.clone(),
-        label: pack::to_json_string(edge).unwrap_or_default(),
+        label: pack::to_json_string(edge),
     }
 }
 
@@ -271,7 +271,7 @@ pub fn working_from_jack_content_snapshot(content: &SemioGraphSnapshot) -> (Vec<
 pub fn jack_content_child_handle(nodes: &[Node], edges: &[Edge]) -> JackContentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = jack_content_snapshot_from_working(nodes, edges);
-    let content_json = pack::to_json_string(&snapshot).unwrap_or_default();
+    let content_json = pack::to_json_string(&snapshot);
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     let content_hash = hasher.finish();

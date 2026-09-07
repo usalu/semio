@@ -16,17 +16,17 @@ impl ChangePublicationTransient {
     pub const TEXT_OPCODE: &'static str = "change-publication-transient";
     pub const BINARY_TAG: u8 = 0x52;
 
-    fn parse_revision(line: &str) -> Result<u64, crate::store::TextError> {
-        let revision = line.strip_prefix(&format!("{} ", Self::TEXT_OPCODE)).ok_or_else(|| crate::store::TextError::new(format!("unknown publication transient op '{line}'"), crate::store::TextSpan::at(1, 1)))?;
+    fn parse_revision(line: &str) -> Result<u64, store::TextError> {
+        let revision = line.strip_prefix(&format!("{} ", Self::TEXT_OPCODE)).ok_or_else(|| store::TextError::new(format!("unknown publication transient op '{line}'"), store::TextSpan::at(1, 1)))?;
         if revision.is_empty() || !revision.bytes().all(|byte| byte.is_ascii_digit()) {
-            return Err(crate::store::TextError::new("publication transient revision must be one unsigned decimal", crate::store::TextSpan::at(1, 1)));
+            return Err(store::TextError::new("publication transient revision must be one unsigned decimal", store::TextSpan::at(1, 1)));
         }
-        revision.parse().map_err(|_| crate::store::TextError::new("publication transient revision is outside u64", crate::store::TextSpan::at(1, 1)))
+        revision.parse().map_err(|_| store::TextError::new("publication transient revision is outside u64", store::TextSpan::at(1, 1)))
     }
 }
 
 impl OpText for ChangePublicationTransient {
-    fn parse_op(line: &str) -> Result<Self, crate::store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(Self { revision: Self::parse_revision(line)? })
     }
 

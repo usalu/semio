@@ -1,40 +1,5 @@
-//! 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the native
-//! kernel-activation facade `semio-framework-os-run`'s `WasmtimeNodeHost` drives instead of minting
-//! [`semio_framework_actor::ActorId`]s ad hoc (`RuntimeActorId::new(0, 0, counter, 0)`) and calling
-//! [`GuestRuntime::instantiate`] directly — the exact bypass this packet's brief names: "🏃️run
-//! bypasses the microkernel entirely: it constructs a runtime directly ... and mints its own
-//! `RuntimeActorId`s", which made "33/33 native smoke" nearly meaningless as evidence (it exercised a
-//! code path the product does not use).
-//!
-//! Lives HERE (this product's own host crate, which `semio-framework-os-run` already depends on) —
-//! not in `🎯️targets/🧊️wgpu`'s own `ParallelRuntime` (`🎠️runtime.rs`, the pattern this mirrors almost
-//! line-for-line) — because that crate's dependency stack (wgpu/vello/winit/image/resvg/rfd) is
-//! wildly inappropriate for a headless CLI or this host crate; pulling it in just to reuse one struct
-//! would itself be the "external implementation detail leaking into an unrelated consumer" CLAUDE.md's
-//! own interface rule forbids. `ParallelRuntime`'s own code is NOT edited by this file
-//! (`🎯️targets/🧊️wgpu/**` is outside this packet's boundary too); this is a **parallel implementation
-//! of the same proven pattern**: [`semio_framework_actor::Kernel::activate`] mints the `ActorId` and
-//! pins a shard, [`GuestRuntime::instantiate`] builds the guest instance, [`ShardExecutor::register`]
-//! hands it to the pinned shard — turns are then genuinely DISPATCHED BY THE KERNEL:
-//! `Kernel::submit` → `Kernel::tick` → per-shard `ShardFrame::Grant` → `ShardOutcome` →
-//! `Kernel::complete`, never a direct in-process call.
-//!
-//! 🚧️ Honest gap, named rather than papered over: a real long-term architecture has exactly ONE such
-//! facade, not two parallel copies (`ParallelRuntime` and this one). `ParallelRuntime` already lives
-//! beside every type it is built from (`ShardExecutor`, `shard::*`, `GuestRuntime`) inside
-//! `semio-framework-plugin-host` — that crate, not this product crate, is `ParallelRuntime`'s natural
-//! home, and a follow-up packet should relocate it there so `run`, this host, and the wgpu target all
-//! share ONE literal type. Left as a named gap, not attempted here.
-//!
-//! MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (P1c, one-pool-worker-runtime): this facade used to own K
-//! `ShardExecutor` THREADS plus K `semio-os-host-kernel-shard-forward-*` outcome-forwarder threads
-//! polling `ThreadTransport::recv_deadline` every 250ms. Both kinds of thread are gone.
-//! [`ShardExecutor`] is now a logical affinity unit scheduled onto one shared, process-wide
-//! `semio_framework_async::WorkerPool` (`ProcessKind::InteractiveNative` — this host boundary shares
-//! the process contract with plugin and renderer subsystems, so reserving the UI core cannot depend
-//! on which subsystem reaches the singleton first); turn outcomes flow back via
-//! [`semio_framework_plugin_host::shard::executor::OutcomeSink`], pushed directly by whichever pool
-//! worker executed the turn — "completion notification through the pool," never a polled channel.
+//! 🎠️ Headless native Kernel and pooled shard coordination.
+//! Guest activation ownership is shared with the WGPU host through plugin-host activation.
 
 #![cfg(not(target_arch = "wasm32"))]
 
@@ -115,19 +80,9 @@ impl NativeKernelRuntime {
         caps: &[BrokerCapabilityGrant],
         instantiate_budget: &TurnBudget,
     ) -> Result<ActorId, String> {
-        let actor = self.kernel.activate(package, plugin_ordinal, kind, lane, window, event).await;
-        let shard_index = self.kernel.actor_record(actor).await.map(|record| record.shard.0 as usize).unwrap_or(0);
-        let instance = match self.guest_runtime.instantiate(compiled, actor, caps, instantiate_budget).await {
-            Ok(instance) => instance,
-            Err(error) => return Err(error.to_string()),
-        };
-        match self.shards.get(shard_index) {
-            Some(shard) => {
-                shard.register(actor, instance).await;
-                Ok(actor)
-            }
-            None => Err(format!("NativeKernelRuntime::activate: Kernel::activate assigned shard {shard_index} but only {} shards were spawned", self.shards.len())),
-        }
+        let request = semio_framework_actor::activation::KernelActivationRequest { package, plugin_ordinal, kind, lane, window, event };
+        let reservation = self.kernel.reserve_activation(request).await.map_err(|refused| format!("Kernel activation refused: {:?}", refused.reason))?;
+        semio_framework_plugin_host::activation::install_actor(&mut self.kernel, &self.guest_runtime, &self.shards, reservation, compiled, caps, instantiate_budget).await
     }
 
     /// ✉️ `Kernel::submit` — enqueues onto the actor's DRR mailbox; drained by the next
@@ -144,6 +99,11 @@ impl NativeKernelRuntime {
     /// tick_and_dispatch`'s own doc (grant.budget is NOT what gets dispatched; the caller's own
     /// per-lane ceiling is).
     pub async fn tick_and_dispatch(&mut self, now_ms: u64, budget_for: impl Fn(ActorId) -> semio_framework_actor::Budget) -> Decision {
+        for shard in &self.shards {
+            if let Some((_, instance)) = shard.take_unclaimed_registration() {
+                self.guest_runtime.drop_instance(instance).await;
+            }
+        }
         let decision = self.kernel.tick(now_ms).await;
         for grant in &decision.run {
             let shard_index = grant.shard.0 as usize;

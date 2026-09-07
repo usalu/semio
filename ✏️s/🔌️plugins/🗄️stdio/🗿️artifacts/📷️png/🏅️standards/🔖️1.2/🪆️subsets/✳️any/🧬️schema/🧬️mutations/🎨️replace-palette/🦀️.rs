@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative replace-palette mutation.
-use crate::artifacts::png::schema::diff::{self, *};
+use crate::artifacts::png::schema::diff::*;
 use crate::artifacts::png::schema::mutations::PngMutation;
 use crate::artifacts::png::schema::snapshot::*;
 
@@ -27,12 +27,11 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ReplacePaletteMutation
         protocol::MutationOutcome::new(contribute(base, plte))
     }
     fn inverse(&self, base: &PngSnapshot) -> Vec<PngMutation> {
-        let Self { plte } = self;
         let outcome = <Self as protocol::MutationKind<PngSnapshot, PngMutation>>::diff(self, base);
         if <PngDiff as protocol::DiffAlgebra<PngSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
-        vec![PngMutation::ReplacePalette(crate::artifacts::png::schema::mutations::ReplacePaletteMutation { plte: base.plte.clone() })]
+        vec![PngMutation::ReplacePalette(ReplacePaletteMutation { plte: base.plte.clone() })]
     }
     fn label(&self) -> String {
         "replace palette".into()

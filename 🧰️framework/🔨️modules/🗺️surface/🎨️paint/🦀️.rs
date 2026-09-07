@@ -1019,7 +1019,7 @@ use web_sys::HtmlCanvasElement;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 struct RasterSessionInner {
     host: RasterHost,
-    gpu: canvas::gpu_session::CanvasGpuSession,
+    gpu: gpu_session::CanvasGpuSession,
     isolated_view: Option<String>,
     view_mode: String,
 }
@@ -1035,15 +1035,15 @@ impl RasterSessionInner {
         let scene = match self.view_mode.as_str() {
             "layer" => {
                 let id = self.isolated_view.clone().unwrap_or_default();
-                canvas::render::scale_scene_for_device_pixel_ratio(self.host.build_layer_scene(&id), self.host.viewport.dpr)
+                render::scale_scene_for_device_pixel_ratio(self.host.build_layer_scene(&id), self.host.viewport.dpr)
             }
             "mask" => {
                 let id = self.isolated_view.clone().unwrap_or_default();
-                canvas::render::scale_scene_for_device_pixel_ratio(self.host.build_mask_scene(&id), self.host.viewport.dpr)
+                render::scale_scene_for_device_pixel_ratio(self.host.build_mask_scene(&id), self.host.viewport.dpr)
             }
             _ => self.host.build_render_scene(),
         };
-        self.gpu.render_frame(&scene, canvas::canvas_content::CanvasContent::clear_color(&self.host))
+        self.gpu.render_frame(&scene, canvas_content::CanvasContent::clear_color(&self.host))
     }
 }
 
@@ -1058,7 +1058,7 @@ pub struct RasterSession {
 impl RasterSession {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self { state: Rc::new(RefCell::new(RasterSessionInner { host: RasterHost::new(), gpu: canvas::gpu_session::CanvasGpuSession::default(), isolated_view: None, view_mode: "composite".into() })) }
+        Self { state: Rc::new(RefCell::new(RasterSessionInner { host: RasterHost::new(), gpu: gpu_session::CanvasGpuSession::default(), isolated_view: None, view_mode: "composite".into() })) }
     }
 
     #[wasm_bindgen(js_name = gpuReady)]
@@ -1080,7 +1080,7 @@ impl RasterSession {
         }
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+            let (render_ctx, renderer, surface) = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
             let mut g = inner.borrow_mut();
             if g.gpu.gpu_ready() {
                 g.set_logical_size(lw, lh, dpr, pw, ph);

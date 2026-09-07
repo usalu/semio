@@ -2,7 +2,7 @@
 
 use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutDropPreviewState;
-use crate::artifacts::layout::{LayoutCamera, LayoutSnapshot};
+use crate::artifacts::layout::LayoutSnapshot;
 use crate::editor::layout::canvas::active_page;
 use crate::editor::layout::commands::{add_frame, add_page};
 use crate::editor::layout::config::LayoutConfig;

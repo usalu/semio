@@ -15,7 +15,7 @@ pub struct SetSolidName {
 impl protocol::MutationKind<StlSnapshot, StlMutation> for SetSolidName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "solid-name", kind: "set-solid-name", record: "SetSolidName" };
 
-    fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as protocol::Mutation<StlSnapshot>>::Diff> {
+    fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as Mutation<StlSnapshot>>::Diff> {
         agg_diff(&StlMutation::SetSolidName(self.clone()), base)
     }
     fn inverse(&self, base: &StlSnapshot) -> Vec<StlMutation> {

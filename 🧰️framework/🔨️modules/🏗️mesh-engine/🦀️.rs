@@ -55,18 +55,18 @@ pub struct MeshData {
 /// matches what `serde_json` itself does for `f32`, so the emitted numbers are unchanged.
 /// Needed because the viewer/editor main-window template moved from `serde_json::json!` (which
 /// reached this type through `Serialize`) to `pack::json!` (which reaches leaves through `From`).
-impl From<MeshData> for pack::json::Value {
+impl From<MeshData> for json::Value {
     fn from(mesh: MeshData) -> Self {
-        fn floats(values: Vec<f32>) -> pack::json::Value {
-            pack::json::Value::Array(values.into_iter().map(|v| pack::json::Value::from(v as f64)).collect())
+        fn floats(values: Vec<f32>) -> json::Value {
+            json::Value::Array(values.into_iter().map(|v| json::Value::from(v as f64)).collect())
         }
-        fn ints(values: Vec<u32>) -> pack::json::Value {
-            pack::json::Value::Array(values.into_iter().map(pack::json::Value::from).collect())
+        fn ints(values: Vec<u32>) -> json::Value {
+            json::Value::Array(values.into_iter().map(json::Value::from).collect())
         }
-        fn bytes(values: Vec<u8>) -> pack::json::Value {
-            pack::json::Value::Array(values.into_iter().map(|v| pack::json::Value::from(u32::from(v))).collect())
+        fn bytes(values: Vec<u8>) -> json::Value {
+            json::Value::Array(values.into_iter().map(|v| json::Value::from(u32::from(v))).collect())
         }
-        let mut object = pack::json::Object::new();
+        let mut object = json::Object::new();
         object.insert("positions", floats(mesh.positions));
         object.insert("normals", floats(mesh.normals));
         object.insert("colors", floats(mesh.colors));
@@ -78,8 +78,8 @@ impl From<MeshData> for pack::json::Value {
         if !mesh.edge_ids.is_empty() { object.insert("edgeIds", ints(mesh.edge_ids)); }
         if !mesh.edge_uvs.is_empty() { object.insert("edgeUvs", floats(mesh.edge_uvs)); }
         if !mesh.edge_is_seam.is_empty() { object.insert("edgeIsSeam", bytes(mesh.edge_is_seam)); }
-        if let Some(texture) = mesh.paint_texture_base64 { object.insert("paintTextureBase64", pack::json::Value::from(texture)); }
-        pack::json::Value::Object(object)
+        if let Some(texture) = mesh.paint_texture_base64 { object.insert("paintTextureBase64", json::Value::from(texture)); }
+        json::Value::Object(object)
     }
 }
 
@@ -88,7 +88,7 @@ impl From<MeshData> for pack::json::Value {
 /// through both `pack::json!` (which uses `From`) and `ToValue::to_value`, and they must agree.
 impl pack::value::ToValue for MeshData {
     fn to_value(&self) -> pack::value::DslValue {
-        pack::json::to_dsl_value(&pack::json::Value::from(self.clone()))
+        json::to_dsl_value(&json::Value::from(self.clone()))
     }
 }
 
@@ -1596,9 +1596,9 @@ mod mesh_data_json_oracle_tests {
     use super::*;
 
     fn assert_matches_oracle(mesh: &MeshData) {
-        let ours = pack::json::Value::from(mesh.clone());
+        let ours = json::Value::from(mesh.clone());
         let oracle = serde_json::to_value(mesh).expect("oracle encode");
-        let ours_text = pack::json::to_string(&ours);
+        let ours_text = json::to_string(&ours);
         let oracle_text = serde_json::to_string(&oracle).expect("oracle stringify");
         let ours_reparsed: serde_json::Value = serde_json::from_str(&ours_text).expect("reparse ours");
         assert_eq!(ours_reparsed, oracle, "first-party JSON diverged from serde_json:\n ours: {ours_text}\n serde: {oracle_text}");
@@ -1613,7 +1613,7 @@ mod mesh_data_json_oracle_tests {
     fn default_mesh_omits_every_sparse_field() {
         let mesh = MeshData::default();
         assert_matches_oracle(&mesh);
-        let ours = pack::json::Value::from(mesh);
+        let ours = json::Value::from(mesh);
         for always in ["positions", "normals", "colors", "indices"] {
             assert!(ours.get(always).is_some(), "{always} must always be emitted");
         }
@@ -1634,7 +1634,7 @@ mod mesh_data_json_oracle_tests {
         mesh.edge_is_seam = vec![1, 0];
         mesh.paint_texture_base64 = Some("abc".to_string());
         assert_matches_oracle(&mesh);
-        let ours = pack::json::Value::from(mesh);
+        let ours = json::Value::from(mesh);
         for sparse in ["uvs", "faceIds", "vertexIds", "edgePositions", "edgeIds", "edgeUvs", "edgeIsSeam", "paintTextureBase64"] {
             assert!(ours.get(sparse).is_some(), "{sparse} must be emitted when populated");
         }
@@ -1730,8 +1730,8 @@ mod mesh_data_from_value_round_trip {
     #[test]
     fn from_value_agrees_with_serde_json_oracle_decode() {
         let mesh = populated_mesh();
-        let json_value = pack::json::Value::from(mesh.clone());
-        let json_text = pack::json::to_string(&json_value);
+        let json_value = json::Value::from(mesh.clone());
+        let json_text = json::to_string(&json_value);
         let oracle: MeshData = serde_json::from_str(&json_text).expect("serde_json decode");
         let ours = MeshData::from_value(mesh.to_value()).expect("first-party decode");
         assert_eq!(ours, oracle);

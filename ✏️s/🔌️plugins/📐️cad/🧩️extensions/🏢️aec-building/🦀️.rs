@@ -101,8 +101,8 @@ fn bundle() -> ExtensionBundle {
     // artifact, one composite mutation + one inference (both dispatched by the host through
     // the contributed-mutation/inference registries as bounded Cold job kinds at invocation
     // time, not by running this extension's own actor).
-    let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Declarative));
-    let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(
+    let bundle = bundle.mode(ExecutionMode::Declarative);
+    let bundle = bundle.contributes_topic(
         "cad.computer",
         DslValue::object([
             ("appId".to_string(), DslValue::String(HOST_APP_ID.to_string())),
@@ -111,7 +111,7 @@ fn bundle() -> ExtensionBundle {
             ("iconId".to_string(), DslValue::String("building".to_string())),
             ("computersJson".to_string(), DslValue::String(json::to_string(&computers_manifest()))),
         ]),
-    ));
+    );
     semio_framework::io::resolve_ready(bundle.contributes(building_storey_contribution()))
 }
 

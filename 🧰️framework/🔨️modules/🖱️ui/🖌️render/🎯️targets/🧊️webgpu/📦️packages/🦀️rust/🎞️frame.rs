@@ -250,7 +250,7 @@ fn replay_world_passes(
         if scene.line_range.1 > 0 {
             if let Some(line_buffer) = line_buffer {
                 pass.set_pipeline(&pipelines.world_line_pipeline);
-                let stride = std::mem::size_of::<WorldLineGpuVertex>() as u64;
+                let stride = size_of::<WorldLineGpuVertex>() as u64;
                 let byte_offset = scene.line_range.0 as u64 * stride;
                 pass.set_vertex_buffer(0, line_buffer.slice(byte_offset..byte_offset + scene.line_range.1 as u64 * stride));
                 pass.draw(0..scene.line_range.1, 0..1);
@@ -272,7 +272,7 @@ fn replay_world_passes(
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn draw_mesh_range(pass: &mut wgpu::RenderPass<'_>, resources: &GpuResources, mesh: ui_render::MeshId, instance_buffer: wgpu::BufferSlice<'_>, offset: u32, count: u32) -> Result<(), BackendError> {
     let gpu_mesh = resources.mesh(mesh).ok_or(BackendError::UnknownResource(ResourceKind::Mesh))?;
-    let stride = std::mem::size_of::<World3dGpuInstance>() as u64;
+    let stride = size_of::<World3dGpuInstance>() as u64;
     let byte_offset = offset as u64 * stride;
     pass.set_vertex_buffer(0, gpu_mesh.vertex_buffer.slice(..));
     pass.set_vertex_buffer(1, instance_buffer.slice(byte_offset..byte_offset + count as u64 * stride));

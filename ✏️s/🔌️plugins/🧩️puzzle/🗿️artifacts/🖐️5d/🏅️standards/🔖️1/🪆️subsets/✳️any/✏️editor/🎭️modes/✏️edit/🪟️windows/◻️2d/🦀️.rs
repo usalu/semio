@@ -11,9 +11,9 @@ use crate::editor::puzzle5d::modes::edit::options as mode_options;
 use crate::editor::puzzle5d::modes::edit::windows::board2d::{options, utilities};
 use crate::editor::puzzle5d::precompute::Puzzle5dPrecomputeSession;
 use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
-use crate::editor::puzzle5d::{puzzle5d_grip_full_id, puzzle5d_scene_mode, Puzzle5dDocument, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_BOARD_FIXTURE_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::{puzzle5d_grip_full_id, puzzle5d_scene_mode, Puzzle5dDocument, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_BOARD_FIXTURE_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS};
 use semio_framework_plugin::{Board2dScene, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
-use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase};
+use semio_framework_ui_contract::BuiltNode;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants

@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative replace-pixels mutation.
-use crate::artifacts::jpg::schema::diff::{self, *};
+use crate::artifacts::jpg::schema::diff::*;
 use crate::artifacts::jpg::schema::mutations::JpgMutation;
 use crate::artifacts::jpg::schema::snapshot::*;
 
@@ -27,12 +27,11 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplacePixelsMutation 
         protocol::MutationOutcome::new(contribute(base, pixels.clone()))
     }
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgMutation> {
-        let Self { pixels } = self;
         let outcome = <Self as protocol::MutationKind<JpgSnapshot, JpgMutation>>::diff(self, base);
         if <JpgDiff as protocol::DiffAlgebra<JpgSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
-        vec![JpgMutation::ReplacePixels(crate::artifacts::jpg::schema::mutations::ReplacePixelsMutation { pixels: base.pixels.clone() })]
+        vec![JpgMutation::ReplacePixels(ReplacePixelsMutation { pixels: base.pixels.clone() })]
     }
     fn label(&self) -> String {
         "replace pixels".into()

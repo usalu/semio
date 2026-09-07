@@ -1,35 +1,5 @@
-//! 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-kernel-loop; rewritten by
-//! INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 1, packet P1e). `ParallelRuntime` owns one
-//! [`semio_framework_actor::Kernel`] and K [`semio_framework_plugin_host::shard::executor::
-//! ShardExecutor`]s — real `Kernel::submit`/`tick`/`complete` (DRR fairness, failure-ladder/metrics
-//! bookkeeping) dispatched to each granted [`semio_framework_actor::TurnGrant`]'s PINNED shard.
-//!
-//! P1e retires the K dedicated `"semio-kernel-shard-forward-*"` OS threads (one `ShardExecutor`
-//! thread + one outcome-forwarder thread per shard) this file used to spawn: P1c
-//! (`.🧬semio/…/PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1c-actor-shards.md`) turned [`ShardExecutor`] into
-//! a logical affinity unit — a single-flight `std::sync::Mutex`-guarded scheduling protocol — that
-//! runs its turns as ordinary jobs on ONE shared, process-wide [`semio_framework_async::WorkerPool`]
-//! instead of owning a thread. Turn outcomes flow back via
-//! [`semio_framework_plugin_host::shard::executor::OutcomeSink`], pushed directly by whichever pool
-//! worker executed the turn — "completion notification through the pool," never a polled channel —
-//! so the `//#region 🔀️OutcomeForwarding` this file used to carry (its own forwarder-thread fan-in,
-//! `std::sync::mpsc`-backed, `FORWARD_POLL`-bounded) no longer has anything to bridge.
-//!
-//! This type is a near-verbatim mirror of `semio-framework-os`'s own `NativeKernelRuntime`
-//! (`🖥️host/🎠️activation/🦀️.rs`, P1c's own "parallel implementation of the same proven pattern" —
-//! see that file's module doc for why the two are not yet unified into one shared type) with exactly
-//! ONE deliberate deviation: **`ParallelRuntime::new` does not construct its own `WorkerPool`.** P1a's
-//! and P1b's own reports (`📓️p1a-worker-pool.md`, `📓️p1b-services.md`) both name this file explicitly
-//! as "the natural place a future packet should inject a single real, externally-owned `WorkerPool`
-//! instead of ever falling through to a crate-private lazy default" — the renderer is not allowed to
-//! size or own its own thread pool, that is the entire point of Phase 1. The caller
-//! (`🦀️.rs`'s `crate::renderer_worker_pool()`, `kernel_runtime::KernelThreadState::new`) injects
-//! the ONE process-wide pool this whole renderer crate shares — with the directory-client
-//! `TokioHostRuntime` in `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` — rather than this type minting a second one.
-//!
-//! Native-only end to end (unchanged): [`semio_framework_actor::ShardKind::Native`] — the execution
-//! HOST is "native process, shared pool," never wasm — so this module stays mounted
-//! `#[cfg(not(target_arch = "wasm32"))]` from `🦀️.rs`.
+//! 🎠️ Rendered native Kernel coordination over the caller-owned process worker pool.
+//! Guest activation ownership is shared with the headless host through plugin-host activation.
 
 use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, TurnResult as KernelTurnResult};
 use semio_framework_actor::{ActivationEvent, ActorId, ActorKind, Backpressure, Decision, Envelope, FailureEscalation, Kernel, KernelError, Lane, PackageId, ShardKind, WindowId};
@@ -103,19 +73,9 @@ impl ParallelRuntime {
         caps: &[BrokerCapabilityGrant],
         instantiate_budget: &TurnBudget,
     ) -> Result<ActorId, String> {
-        let actor = self.kernel.activate(package, plugin_ordinal, kind, lane, window, event).await;
-        let shard_index = self.kernel.actor_record(actor).await.map(|record| record.shard.0 as usize).unwrap_or(0);
-        let instance = match self.guest_runtime.instantiate(compiled, actor, caps, instantiate_budget).await {
-            Ok(instance) => instance,
-            Err(error) => return Err(error.to_string()),
-        };
-        match self.shards.get(shard_index) {
-            Some(shard) => {
-                shard.register(actor, instance).await;
-                Ok(actor)
-            }
-            None => Err(format!("ParallelRuntime::activate: ShardTable::pin assigned shard {shard_index} but only {} shards were spawned", self.shards.len())),
-        }
+        let request = semio_framework_actor::activation::KernelActivationRequest { package, plugin_ordinal, kind, lane, window, event };
+        let reservation = self.kernel.reserve_activation(request).await.map_err(|refused| format!("Kernel activation refused: {:?}", refused.reason))?;
+        semio_framework_plugin_host::activation::install_actor(&mut self.kernel, &self.guest_runtime, &self.shards, reservation, compiled, caps, instantiate_budget).await
     }
 
     /// ✉️ `Kernel::submit` — enqueues onto the actor's DRR mailbox; drained by the NEXT
@@ -143,6 +103,11 @@ impl ParallelRuntime {
     ///
     /// Returns the raw `Decision` so a caller can honour `wake_at` for its own park deadline.
     pub async fn tick_and_dispatch(&mut self, now_ms: u64, budget_for: impl Fn(ActorId) -> semio_framework_actor::Budget) -> Decision {
+        for shard in &self.shards {
+            if let Some((_, instance)) = shard.take_unclaimed_registration() {
+                self.guest_runtime.drop_instance(instance).await;
+            }
+        }
         let decision = self.kernel.tick(now_ms).await;
         for grant in &decision.run {
             let shard_index = grant.shard.0 as usize;

@@ -1,6 +1,6 @@
 //! ➖️ `remove-run` — takes one run out of the sequence, addressed by BASE-state index.
 
-use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::{SemioTextMutation, insert_run};
+use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Payload

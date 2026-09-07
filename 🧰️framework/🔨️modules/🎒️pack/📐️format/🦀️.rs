@@ -175,7 +175,9 @@ impl Footer {
 /// them a writer needs to record chunk-table/manifest-span metadata without re-parsing.
 struct EncodedSegment {
     bytes: Vec<u8>,
+    #[cfg(test)]
     header_len: usize,
+    #[cfg(test)]
     stored_len: usize,
 }
 
@@ -231,11 +233,12 @@ async fn encode_segment(kind: u8, codec: CodecId, payload: &[u8]) -> Result<Enco
     if compressed {
         write_varint_u64(&mut buf, payload.len() as u64);
     }
+    #[cfg(test)]
     let header_len = buf.len();
     buf.extend_from_slice(&stored);
     let crc = crc32c(&buf);
     buf.extend_from_slice(&crc.to_le_bytes());
-    Ok(EncodedSegment { bytes: buf, header_len, stored_len: stored.len() })
+    Ok(EncodedSegment { bytes: buf, #[cfg(test)] header_len, #[cfg(test)] stored_len: stored.len() })
 }
 
 /// @emoji 👓️ A decoded, CRC-checked, decompressed segment plus enough position bookkeeping for

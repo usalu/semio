@@ -2,7 +2,7 @@
 
 #![allow(clippy::result_large_err)]
 
-use crate::artifacts::presentation::mutations::delete_tile::mutation::DeleteTile as DeleteTileMutation;
+use crate::artifacts::presentation::mutations::delete_tile::DeleteTile as DeleteTileMutation;
 use crate::artifacts::presentation::op::PresentationMutation;
 use crate::artifacts::presentation::PresentationSnapshot;
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};

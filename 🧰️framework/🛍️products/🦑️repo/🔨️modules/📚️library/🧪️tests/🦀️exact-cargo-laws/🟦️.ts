@@ -40,7 +40,7 @@ for (const mode of ["exit", "timeout", "cancelled", "output-limit"] as const) {
     const source = mode === "exit" ? "process.stdout.write('stdout');process.stderr.write('stderr');process.exitCode=7"
       : mode === "output-limit" ? "process.stdout.write('x'.repeat(16384));setInterval(()=>{},1000)"
       : "process.stdout.write('ready');setInterval(()=>{},1000)";
-    const options = { cwd: root, env: process.env, budgetMs: mode === "timeout" ? 250 : 3000, maxOutputBytes: 1024, stdoutPath: join(root, "stdout"), stderrPath: join(root, "stderr"), cancelled: () => mode === "cancelled" && Date.now() - started >= 150 };
+    const options = { cwd: root, env: process.env, budgetMs: mode === "timeout" ? 250 : 0, maxOutputBytes: 1024, stdoutPath: join(root, "stdout"), stderrPath: join(root, "stderr"), cancelled: () => mode === "cancelled" && Date.now() - started >= 150 };
     const result = await runExactCargoLawProcess(process.execPath, ["-e", source], options);
     expect(result.reason).toBe(mode === "exit" ? "exit" : mode);
     expect(Buffer.byteLength(result.stdout) + Buffer.byteLength(result.stderr)).toBeLessThanOrEqual(1024);
@@ -109,7 +109,8 @@ for (const row of fixture.cases) {
         const lease = JSON.parse(readFileSync(join(root, leases[0], fixture.activeLease.manifestName), "utf8"));
         expect(lease).toEqual({ version: fixture.activeLease.version, pid: process.pid });
         calls.push({ command, args });
-        expect(options.budgetMs).toBeGreaterThan(0);
+        if (command === "cargo") expect(options.budgetMs).toBe(0);
+        else expect(options.budgetMs).toBeGreaterThan(0);
         expect(options.maxOutputBytes).toBeGreaterThan(0);
         expect(options.stdoutPath.startsWith(root)).toBe(true);
         expect(options.env.CARGO_TARGET_DIR).toBe(join(root, "cargo-target"));

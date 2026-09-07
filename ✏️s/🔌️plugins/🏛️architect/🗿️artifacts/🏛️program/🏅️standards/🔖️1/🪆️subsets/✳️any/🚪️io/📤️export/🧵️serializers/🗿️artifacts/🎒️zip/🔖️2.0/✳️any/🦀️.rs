@@ -1,7 +1,8 @@
 //! program -> zip
 use crate::artifacts::program::ProgramSnapshot;
 use semio_s_plugin_stdio::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA;
-pub use semio_s_plugin_stdio::artifacts::zip::{ZipEntry, ZipSnapshot};
+pub use semio_s_plugin_stdio::artifacts::zip::ZipSnapshot;
+pub use semio_s_plugin_stdio::artifacts::zip::schema::snapshot::ZipEntry;
 
 pub fn register() {}
 

@@ -8,7 +8,6 @@
 //! whole-snapshot scalar: no `InferredField` caching, feature counts here are small.
 
 use crate::artifacts::gismap::GisMapSnapshot;
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 📦Bounds

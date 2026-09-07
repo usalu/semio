@@ -1259,3 +1259,55 @@ author. Left a patient retry loop that re-runs `describe` and bails only if the 
 
 Nothing about the six flow-host fixes is invalidated by either failure — neither error came from that
 file. But they remain **unverified at runtime**: no rebuild has completed since they were written.
+
+## 2026-09-07: the `Dictionary` panic is FIXED; the next wall is the interactive time contract
+
+Component rebuilt with the six flow-host retirement fixes and materialized
+(`semio_s_plugin_procedural_component.core.wasm`, 64,507,898 bytes, Sep 7 08:45 — replacing the 63,733,433
+byte Sep 6 08:46 build). Verified in the browser.
+
+**The `unreachable` / `Dictionary` panic is gone.** It no longer appears anywhere in the console. The
+retirement fix worked.
+
+The new fault, decoded by the temporary `[DEBUG] boot fault text` hook:
+
+```json
+{"code":"plugin.reactor-turn-deadline",
+ "message":"guest lifecycle turn exceeded strict time authority; receipt retained",
+ "origin":"framework","retryable":true}
+```
+
+at `[handler/first-step]`, so the shell shows "No plugins loaded" — the actor now traps *earlier* than
+before, at boot rather than at render.
+
+### Why this is progress, not regression
+
+The old component **panicked** inside the turn, which aborted it almost immediately. With the panic fixed
+the turn now runs to completion and does real work — and that work exceeds the budget. Same code path,
+one wall further along.
+
+### The contract
+
+- `INTERACTIVE_STEP_CEILING_US = 8_000` (`🧰️framework/🔨️modules/⏱️trace/🦀️.rs:90`) is a **hard 8 ms
+  ceiling**, enforced in `GuestLifecycleCell::finish_turn`
+  (`🔌️plugin/⚛️reactor/🚪️lifetime/🦀️.rs:244-247`) via `interactive_step_contract_violated`.
+- gen3d itself declares a **7 500 µs** first-step budget:
+  `ToolExecutionContract::bounded_first_step(GENERATION3D_RETAINED_RAW_BYTES, 32, 32, 16_384, 7_500)`
+  (`✏️editor/🦀️.rs:210`), and the same 7 500 for all 29 tools.
+- There is **no env override**; the ceiling is committed and unchanged from HEAD (the peer's
+  `🚪️lifetime` diff is cosmetic: `pub(super)`→`pub(crate)` and `std::mem::size_of`→`size_of`).
+
+### Diagnosis
+
+`wasm-dev` inherits `dev`, i.e. **`opt-level = 0`**. An unoptimized wasm guest runs roughly 10-50× slower
+than the optimized guest those budgets were written for, so work sized to fit 7.5 ms optimized takes
+75-375 ms here. Peers boot other plugins on the dev profile because their first-step does far less than
+gen3d's flow evaluation.
+
+Rebuilding the component with `CARGO_PROFILE_WASM_DEV_OPT_LEVEL=2` and `CARGO_PROFILE_WASM_DEV_DEBUG=false`
+into a separate `target-gen3d-opt`.
+
+**`codegen-units` deliberately left at the manifest's 1.** `Cargo.toml:257` documents it as the mitigation
+for *"rust-lld's ElemSection crash"* on WASI component links — overriding it to 16 to shorten the build
+would trade a deadline bug for a linker crash. An initial launch that did override it was killed and
+relaunched without it.

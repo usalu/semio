@@ -35,10 +35,10 @@ const JOB_COUNTER_MAXIMUM: u64 = 0x000f_ffff_ffff_ffff;
 const INPUT_BYTES: usize = 63;
 const FEM3D_SOLVER_FIELDS_PER_PAGE: usize = 16;
 const FEM3D_SOLVER_PAGE_COUNT: usize = MAXIMUM_FIELDS / FEM3D_SOLVER_FIELDS_PER_PAGE;
-const FEM3D_SOLVER_SCALAR_PAGE_BYTES: usize = std::mem::size_of::<Fem3dSolverScalar>() * FEM3D_SOLVER_FIELDS_PER_PAGE;
-const FEM3D_SOLVER_INITIALIZED_PAGE_BYTES: usize = std::mem::size_of::<bool>() * FEM3D_SOLVER_FIELDS_PER_PAGE;
-const FEM3D_REGION_ORDER_BYTES: usize = std::mem::size_of::<Option<usize>>() * MAXIMUM_REGIONS;
-const FEM3D_ELEMENT_ORDER_BYTES: usize = std::mem::size_of::<Option<usize>>() * MAXIMUM_ELEMENTS;
+const FEM3D_SOLVER_SCALAR_PAGE_BYTES: usize = size_of::<Fem3dSolverScalar>() * FEM3D_SOLVER_FIELDS_PER_PAGE;
+const FEM3D_SOLVER_INITIALIZED_PAGE_BYTES: usize = size_of::<bool>() * FEM3D_SOLVER_FIELDS_PER_PAGE;
+const FEM3D_REGION_ORDER_BYTES: usize = size_of::<Option<usize>>() * MAXIMUM_REGIONS;
+const FEM3D_ELEMENT_ORDER_BYTES: usize = size_of::<Option<usize>>() * MAXIMUM_ELEMENTS;
 const FEM3D_PROCESS_BACKING_ITEMS: usize = FEM3D_SOLVER_PAGE_COUNT * 2 + 2;
 const FEM3D_PROCESS_BACKING_BYTES: usize = FEM3D_SOLVER_PAGE_COUNT * (FEM3D_SOLVER_SCALAR_PAGE_BYTES + FEM3D_SOLVER_INITIALIZED_PAGE_BYTES) + FEM3D_REGION_ORDER_BYTES + FEM3D_ELEMENT_ORDER_BYTES;
 
@@ -480,7 +480,7 @@ struct Fem3dNumericalChild {
     modal_build: Option<ModalInputConstruction>,
     ldlt: Option<LdltJob>,
     subspace: Option<SubspaceIterationJob>,
-    modal_mass: Option<crate::sparse::Csr>,
+    modal_mass: Option<Csr>,
     scalar_axis: usize,
     scalar: Fem3dSolverScalar,
     equations: [[Option<usize>; 6]; MAXIMUM_FIELDS],
@@ -2084,7 +2084,7 @@ fn close_recovered_fem3d_backing(maximum_bytes: usize) -> Option<(usize, usize)>
 
 impl<const N: usize> FixedOrder<N> {
     fn new(backing: &mut Fem3dBackingCredit) -> Result<Self, ()> {
-        let bytes = std::mem::size_of::<Option<usize>>() * N;
+        let bytes = size_of::<Option<usize>>() * N;
         if !backing.claim(bytes) {
             return Err(());
         }
@@ -2688,10 +2688,10 @@ impl Fem3dPageVisualJob {
             }
         }
         if self.region_order.take().is_some() {
-            return (false, 1, std::mem::size_of::<Option<usize>>() * MAXIMUM_REGIONS);
+            return (false, 1, size_of::<Option<usize>>() * MAXIMUM_REGIONS);
         }
         if self.element_order.take().is_some() {
-            return (false, 1, std::mem::size_of::<Option<usize>>() * MAXIMUM_ELEMENTS);
+            return (false, 1, size_of::<Option<usize>>() * MAXIMUM_ELEMENTS);
         }
         (true, 0, 0)
     }
@@ -3046,13 +3046,13 @@ impl MountedState {
                         return PluginCloseStep::Blocked { reason: "FEM3D snapshot already returned" };
                     };
                     self.snapshot_return = Some(witness);
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<store::SnapshotRead<Fem3dSnapshot>>() };
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<store::SnapshotRead<Fem3dSnapshot>>() };
                 }
                 if self.snapshot_return.as_ref().is_some_and(|witness| !witness.terminal_is_empty()) {
                     return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
                 }
                 if self.snapshot_return.take().is_some() {
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<store::SnapshotReadReturn>() };
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<store::SnapshotReadReturn>() };
                 }
                 self.close_lane = 6;
                 PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }

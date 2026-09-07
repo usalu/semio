@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "demotion-before-command",
+      "revocation": "demote",
+      "events": ["authorize", "revoke", "fence"],
+      "status": 403,
+      "appended": 0
+    },
+    {
+      "id": "removal-before-command",
+      "revocation": "remove",
+      "events": ["authorize", "revoke", "fence"],
+      "status": 403,
+      "appended": 0
+    },
+    {
+      "id": "session-before-command",
+      "revocation": "session",
+      "events": ["authorize", "revoke", "fence"],
+      "status": 401,
+      "appended": 0
+    },
+    {
+      "id": "command-before-demotion",
+      "revocation": "demote",
+      "events": ["authorize", "fence", "revoke"],
+      "status": 202,
+      "appended": 1
+    }
+  ],
+  "bindings": [
+    {
+      "id": "document-author",
+      "audience": "document",
+      "user": "author",
+      "space": "changed",
+      "invalidated": true
+    },
+    {
+      "id": "directory-author",
+      "audience": "scoped",
+      "user": "author",
+      "space": "changed",
+      "invalidated": true
+    },
+    {
+      "id": "global-author",
+      "audience": "global",
+      "user": "author",
+      "space": "changed",
+      "invalidated": false
+    },
+    {
+      "id": "other-space",
+      "audience": "document",
+      "user": "author",
+      "space": "other",
+      "invalidated": false
+    },
+    {
+      "id": "other-user",
+      "audience": "document",
+      "user": "owner",
+      "space": "changed",
+      "invalidated": false
+    }
+  ],
+  "capacity": {
+    "subjects": 65,
+    "subjectLimit": 64,
+    "ledgerLimit": 4096,
+    "accepted": 65
+  },
+  "inviteScopes": [
+    {
+      "id": "foreign-invite",
+      "commandSpace": "owned",
+      "inviteSpace": "foreign",
+      "accepted": false,
+      "status": 404,
+      "revoked": false
+    },
+    {
+      "id": "foreign-accepted-invite",
+      "commandSpace": "owned",
+      "inviteSpace": "foreign",
+      "accepted": true,
+      "status": 404,
+      "revoked": false
+    },
+    {
+      "id": "owned-invite",
+      "commandSpace": "foreign",
+      "inviteSpace": "foreign",
+      "accepted": false,
+      "status": 202,
+      "revoked": true
+    },
+    {
+      "id": "owned-accepted-invite",
+      "commandSpace": "foreign",
+      "inviteSpace": "foreign",
+      "accepted": true,
+      "status": 409,
+      "revoked": false
+    }
+  ]
+}

@@ -241,7 +241,7 @@ impl Retirement {
 }
 //#endregion 🧹️Retirement
 
-impl store::ErasedSnapshotRetirement for Retirement {
+impl ErasedSnapshotRetirement for Retirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
         Ok(match self.step(maximum_items, maximum_bytes) {
             semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => store::SnapshotRetirementStep::Pending { released_items, released_bytes },

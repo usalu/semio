@@ -1,6 +1,6 @@
 //! 🔁️ Fem3d mutation — `ReplaceElement` payload + `MutationKind` impl.
 
-use crate::artifacts::fem3d::{Fem3dSnapshot, FemElement, element_id};
+use crate::artifacts::fem3d::{Fem3dSnapshot, FemElement};
 use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dElementsDelta, Fem3dElementsPatchEntry};
 use crate::artifacts::fem3d::mutations::Fem3dMutation;
 use protocol::{MutationKind, SemanticDescriptor};

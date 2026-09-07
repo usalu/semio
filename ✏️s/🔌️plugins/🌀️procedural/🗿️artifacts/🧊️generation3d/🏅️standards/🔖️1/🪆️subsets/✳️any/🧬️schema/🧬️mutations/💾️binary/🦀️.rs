@@ -299,7 +299,7 @@ struct Generation3dPublicationLease {
 
 impl semio_framework_job::FixedOperationOwner for Generation3dPublicationLease {
     fn retained_bytes(&self) -> usize {
-        std::mem::size_of::<Self>()
+        size_of::<Self>()
     }
 
     fn cancel(&mut self) {
@@ -311,12 +311,12 @@ impl semio_framework_job::FixedOperationOwner for Generation3dPublicationLease {
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 || maximum_bytes < std::mem::size_of::<Self>() {
+        if !self.closing || maximum_items == 0 || maximum_bytes < size_of::<Self>() {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
         if !self.terminal {
             self.terminal = true;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<Self>() };
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: size_of::<Self>() };
         }
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
@@ -330,7 +330,7 @@ type Generation3dPublicationRegistry = semio_framework_job::FixedOperationRegist
 
 fn generation3d_publication_leases() -> &'static std::sync::Mutex<Generation3dPublicationRegistry> {
     static LEASES: std::sync::OnceLock<std::sync::Mutex<semio_framework_job::FixedOperationRegistry<Generation3dPublicationLease, GENERATION3D_PUBLICATION_SLOTS>>> = std::sync::OnceLock::new();
-    LEASES.get_or_init(|| std::sync::Mutex::new(Generation3dPublicationRegistry::new(GENERATION3D_PUBLICATION_SLOTS * std::mem::size_of::<Generation3dPublicationLease>())))
+    LEASES.get_or_init(|| std::sync::Mutex::new(Generation3dPublicationRegistry::new(GENERATION3D_PUBLICATION_SLOTS * size_of::<Generation3dPublicationLease>())))
 }
 
 fn generation3d_publication_key(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::FixedOperationKey {
@@ -595,7 +595,7 @@ struct Generation3dReplayRetirement {
     domain: flow::retained::FlowRetirement,
 }
 
-impl store::ErasedSnapshotRetirement for Generation3dReplayRetirement {
+impl ErasedSnapshotRetirement for Generation3dReplayRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
         if !self.domain.is_empty() { return self.domain.close_step(maximum_items, maximum_bytes); }
         if maximum_items == 0 || maximum_bytes < GENERATION3D_OWNER_BYTES {
@@ -627,13 +627,13 @@ impl Drop for Generation3dReplayRetirement {
     }
 }
 
-fn generation3d_retire_displaced(value: Generation3dReplayDisplaced) -> Option<Box<dyn store::ErasedSnapshotRetirement>> {
+fn generation3d_retire_displaced(value: Generation3dReplayDisplaced) -> Option<Box<dyn ErasedSnapshotRetirement>> {
     Some(Box::new(Generation3dReplayRetirement { value: std::mem::ManuallyDrop::new(Some(value)), domain: flow::retained::FlowRetirement::default() }))
 }
 
 /// 🔁️ Direct semantic replay table. It consumes the retained mutation and writes only the
 /// addressed field or collection; no VCS diff/apply or whole-snapshot replacement is reachable.
-fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapshot, mutation: &Generation3dMutation) -> Result<Option<Box<dyn store::ErasedSnapshotRetirement>>, &'static str> {
+fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapshot, mutation: &Generation3dMutation) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, &'static str> {
     let retired = match mutation {
         Generation3dMutation::CreateWidget(payload) => {
             if snapshot.fixture.widgets.iter().any(|entry| crate::artifacts::generation3d::widget_id(entry) == crate::artifacts::generation3d::widget_id(&payload.widget)) {
@@ -733,10 +733,10 @@ const GENERATION3D_ENVELOPE_SNAPSHOT_PACK_BYTES: usize = store::ARTIFACT_ENVELOP
 struct Generation3dRetainedSnapshotRetirement {
     value: std::mem::ManuallyDrop<Option<Generation3dSnapshot>>,
     flow: flow::retained::FlowRetirement,
-    generation: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    generation: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
 }
 
-impl store::ErasedSnapshotRetirement for Generation3dRetainedSnapshotRetirement {
+impl ErasedSnapshotRetirement for Generation3dRetainedSnapshotRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
         if maximum_items == 0 || maximum_bytes == 0 {
             return Ok(store::SnapshotRetirementStep::Blocked);
@@ -764,18 +764,18 @@ impl store::ErasedSnapshotRetirement for Generation3dRetainedSnapshotRetirement 
 
 impl Drop for Generation3dRetainedSnapshotRetirement {
     fn drop(&mut self) {
-        if !std::thread::panicking() { assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self), "Generation3d snapshot reached Drop before typed retirement"); }
+        if !std::thread::panicking() { assert!(ErasedSnapshotRetirement::terminal_is_empty(self), "Generation3d snapshot reached Drop before typed retirement"); }
     }
 }
 
 struct Generation3dRetainedSnapshotRetirementFactory;
 
-pub(crate) fn generation3d_retire_owned_snapshot(value: Generation3dSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
+pub(crate) fn generation3d_retire_owned_snapshot(value: Generation3dSnapshot) -> Box<dyn ErasedSnapshotRetirement> {
     Box::new(Generation3dRetainedSnapshotRetirement { value: std::mem::ManuallyDrop::new(Some(value)), flow: Default::default(), generation: std::mem::ManuallyDrop::new(None) })
 }
 
 impl store::ArtifactOwnedValueRetirementFactory<Generation3dSnapshot> for Generation3dRetainedSnapshotRetirementFactory {
-    fn retire_owned(&self, value: Generation3dSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
+    fn retire_owned(&self, value: Generation3dSnapshot) -> Box<dyn ErasedSnapshotRetirement> {
         generation3d_retire_owned_snapshot(value)
     }
 }
@@ -785,7 +785,7 @@ struct Generation3dRetainedSnapshotArcRetirement {
     owned: Generation3dRetainedSnapshotRetirement,
 }
 
-impl store::ErasedSnapshotRetirement for Generation3dRetainedSnapshotArcRetirement {
+impl ErasedSnapshotRetirement for Generation3dRetainedSnapshotArcRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
         if maximum_items == 0 || maximum_bytes == 0 {
             return Ok(store::SnapshotRetirementStep::Blocked);
@@ -804,12 +804,12 @@ impl store::ErasedSnapshotRetirement for Generation3dRetainedSnapshotArcRetireme
 
 impl Drop for Generation3dRetainedSnapshotArcRetirement {
     fn drop(&mut self) {
-        if !std::thread::panicking() { assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self), "Generation3d Arc snapshot reached Drop before retained close"); }
+        if !std::thread::panicking() { assert!(ErasedSnapshotRetirement::terminal_is_empty(self), "Generation3d Arc snapshot reached Drop before retained close"); }
     }
 }
 
 impl store::SnapshotRetirementFactory<Generation3dSnapshot> for Generation3dRetainedSnapshotRetirementFactory {
-    fn retire(&self, snapshot: std::sync::Arc<Generation3dSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
+    fn retire(&self, snapshot: std::sync::Arc<Generation3dSnapshot>) -> Box<dyn ErasedSnapshotRetirement> {
         Box::new(Generation3dRetainedSnapshotArcRetirement {
             value: std::mem::ManuallyDrop::new(Some(snapshot)),
             owned: Generation3dRetainedSnapshotRetirement { value: std::mem::ManuallyDrop::new(None), flow: Default::default(), generation: std::mem::ManuallyDrop::new(None) },
@@ -830,7 +830,7 @@ struct Generation3dRetainedMutationRetirement {
     value: std::mem::ManuallyDrop<Option<Generation3dMutation>>,
 }
 
-impl store::ErasedSnapshotRetirement for Generation3dRetainedMutationRetirement {
+impl ErasedSnapshotRetirement for Generation3dRetainedMutationRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
         if self.value.is_none() {
             return Ok(store::SnapshotRetirementStep::Complete);
@@ -856,7 +856,7 @@ impl Drop for Generation3dRetainedMutationRetirement {
 struct Generation3dRetainedMutationRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<Generation3dMutation> for Generation3dRetainedMutationRetirementFactory {
-    fn retire_owned(&self, value: Generation3dMutation) -> Box<dyn store::ErasedSnapshotRetirement> {
+    fn retire_owned(&self, value: Generation3dMutation) -> Box<dyn ErasedSnapshotRetirement> {
         Box::new(Generation3dRetainedMutationRetirement { value: std::mem::ManuallyDrop::new(Some(value)) })
     }
 }
@@ -1917,7 +1917,7 @@ struct Generation3dPackSnapshotAuthority {
     high: Option<u8>,
     session: std::mem::ManuallyDrop<Option<crate::artifacts::generation3d::snapshot::binary::Generation3dMountedPackSession>>,
     value: std::mem::ManuallyDrop<Option<Generation3dSnapshot>>,
-    retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    retirement: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
 }
 
 impl Generation3dPackSnapshotAuthority {
@@ -2123,7 +2123,7 @@ struct Generation3dMutationDecodeAuthority {
     drive_ingress: bool,
     session: std::mem::ManuallyDrop<Option<Generation3dMutationSession>>,
     value: std::mem::ManuallyDrop<Option<Generation3dMutation>>,
-    retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    retirement: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
 }
 
 impl Generation3dMutationDecodeAuthority {
@@ -2929,10 +2929,10 @@ struct Generation3dStoreInitializationAuthority {
     copy: std::mem::ManuallyDrop<Option<Generation3dSnapshotCopyCursor>>,
     runtime: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationRuntime<Generation3dSnapshot>>>,
     candidate: std::mem::ManuallyDrop<Option<store::ArtifactStore<Generation3dSnapshot, Generation3dMutation>>>,
-    active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     active_terminal: bool,
     candidate_disposer: std::mem::ManuallyDrop<Option<semio_framework_plugin::ArtifactDocumentStoreDisposer<Generation3dSnapshot, Generation3dMutation>>>,
-    envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     initial_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
     edit_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
     phase: Generation3dStoreInitializationPhase,

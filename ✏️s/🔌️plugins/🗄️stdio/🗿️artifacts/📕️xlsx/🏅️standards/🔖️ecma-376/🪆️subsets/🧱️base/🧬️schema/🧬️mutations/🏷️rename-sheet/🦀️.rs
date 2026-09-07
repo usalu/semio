@@ -15,7 +15,7 @@ pub struct RenameSheet {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RenameSheet {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "sheet", kind: "rename-sheet", record: "RenameSheet" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxMutation as protocol::Mutation<XlsxSnapshot>>::Diff> {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxMutation as Mutation<XlsxSnapshot>>::Diff> {
         agg_diff(&XlsxMutation::RenameSheet(self.clone()), base)
     }
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxMutation> {

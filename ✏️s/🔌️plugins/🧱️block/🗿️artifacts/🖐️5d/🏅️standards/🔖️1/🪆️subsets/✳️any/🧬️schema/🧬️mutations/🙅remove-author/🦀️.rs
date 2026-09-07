@@ -1,7 +1,7 @@
 //! 🙅 Block5d mutation — `RemoveAuthor`: a credited author.
 
 use crate::artifacts::block5d::Block5dSnapshot;
-use crate::artifacts::block5d::diff::{Block5dAuthorList, Block5dDiff};
+use crate::artifacts::block5d::diff::Block5dDiff;
 use crate::artifacts::block5d::mutations::Block5dMutation;
 
 //#region 🔖️Mutation

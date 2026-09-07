@@ -69,9 +69,9 @@ mod tests {
         let deck = default_presentation_snapshot();
         let (source, _) = crate::artifacts::presentation::presentation_working_scene(&deck);
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
-        let seeded = round_trip(&deck, &PresentationMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: tiles })).await;
+        let seeded = round_trip(&deck, &PresentationMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: tiles })).await;
         assert_eq!(crate::artifacts::presentation::presentation_working_scene(&seeded).1.len(), 4);
-        let cleared = round_trip(&seeded, &PresentationMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: Vec::new() })).await;
+        let cleared = round_trip(&seeded, &PresentationMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: Vec::new() })).await;
         assert!(crate::artifacts::presentation::presentation_working_scene(&cleared).1.is_empty());
     }
 
@@ -79,13 +79,13 @@ mod tests {
     async fn tile_create_rename_resize_delete_round_trip() {
         let deck = default_presentation_snapshot();
         let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
-        let added = round_trip(&deck, &PresentationMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile })).await;
+        let added = round_trip(&deck, &PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile })).await;
         assert_eq!(crate::artifacts::presentation::presentation_working_scene(&added).1.len(), 1);
-        let renamed = round_trip(&added, &PresentationMutation::RenameTile(rename_tile::mutation::RenameTile { id: "t1".into(), new_name: "Renamed".into() })).await;
+        let renamed = round_trip(&added, &PresentationMutation::RenameTile(rename_tile::RenameTile { id: "t1".into(), new_name: "Renamed".into() })).await;
         assert_eq!(crate::artifacts::presentation::presentation_working_scene(&renamed).1[0].name, "Renamed");
-        let recropped = round_trip(&renamed, &PresentationMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } })).await;
+        let recropped = round_trip(&renamed, &PresentationMutation::ResizeTileCrop(resize_tile_crop::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } })).await;
         assert_eq!(crate::artifacts::presentation::presentation_working_scene(&recropped).1[0].crop.width, 0.4);
-        let removed = round_trip(&recropped, &PresentationMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "t1".into() })).await;
+        let removed = round_trip(&recropped, &PresentationMutation::DeleteTile(delete_tile::DeleteTile { id: "t1".into() })).await;
         assert!(crate::artifacts::presentation::presentation_working_scene(&removed).1.is_empty());
     }
 
@@ -93,50 +93,50 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_create_tile() {
         let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
-        test_support::assert_op_line_round_trip(&PresentationMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile }));
+        test_support::assert_op_line_round_trip(&PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_delete_tile() {
-        test_support::assert_op_line_round_trip(&PresentationMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "t1".into() }));
+        test_support::assert_op_line_round_trip(&PresentationMutation::DeleteTile(delete_tile::DeleteTile { id: "t1".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_delete_tiles() {
-        test_support::assert_op_line_round_trip(&PresentationMutation::DeleteTiles(delete_tiles::mutation::DeleteTiles { ids: vec!["t1".into(), "t2".into()] }));
+        test_support::assert_op_line_round_trip(&PresentationMutation::DeleteTiles(delete_tiles::DeleteTiles { ids: vec!["t1".into(), "t2".into()] }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_reorder_tiles() {
-        test_support::assert_op_line_round_trip(&PresentationMutation::ReorderTiles(reorder_tiles::mutation::ReorderTiles { id: "t1".into(), to_index: 2 }));
+        test_support::assert_op_line_round_trip(&PresentationMutation::ReorderTiles(reorder_tiles::ReorderTiles { id: "t1".into(), to_index: 2 }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_rename_tile() {
-        test_support::assert_op_line_round_trip(&PresentationMutation::RenameTile(rename_tile::mutation::RenameTile { id: "t1".into(), new_name: "Renamed".into() }));
+        test_support::assert_op_line_round_trip(&PresentationMutation::RenameTile(rename_tile::RenameTile { id: "t1".into(), new_name: "Renamed".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_resize_tile_crop() {
         let new_crop = FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 };
-        test_support::assert_op_line_round_trip(&PresentationMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "t1".into(), new_crop }));
+        test_support::assert_op_line_round_trip(&PresentationMutation::ResizeTileCrop(resize_tile_crop::ResizeTileCrop { id: "t1".into(), new_crop }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_replace_source() {
-        test_support::assert_op_line_round_trip(&PresentationMutation::ReplaceSource(replace_source::mutation::ReplaceSource { new_source: default_figure_tile_source() }));
+        test_support::assert_op_line_round_trip(&PresentationMutation::ReplaceSource(replace_source::ReplaceSource { new_source: default_figure_tile_source() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_resize_source_frame() {
-        test_support::assert_op_line_round_trip(&PresentationMutation::ResizeSourceFrame(resize_source_frame::mutation::ResizeSourceFrame { new_frame: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } }));
+        test_support::assert_op_line_round_trip(&PresentationMutation::ResizeSourceFrame(resize_source_frame::ResizeSourceFrame { new_frame: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_replace_tiles() {
         let source = default_figure_tile_source();
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
-        test_support::assert_op_line_round_trip(&PresentationMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: tiles }));
+        test_support::assert_op_line_round_trip(&PresentationMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: tiles }));
     }
     //#endregion 🔖️OpTextTests
 }

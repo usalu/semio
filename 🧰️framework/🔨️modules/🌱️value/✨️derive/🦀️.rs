@@ -272,7 +272,7 @@ fn parse_value_meta(attrs: &[syn::Attribute]) -> syn::Result<Vec<(String, Option
             continue;
         }
         attr.parse_nested_meta(|meta| {
-            let key = meta.path.get_ident().map(std::string::ToString::to_string).ok_or_else(|| meta.error("expected a #[value(...)] identifier"))?;
+            let key = meta.path.get_ident().map(ToString::to_string).ok_or_else(|| meta.error("expected a #[value(...)] identifier"))?;
             if meta.input.peek(syn::Token![=]) {
                 let value: syn::LitStr = meta.value()?.parse()?;
                 out.push((key, Some(value.value())));
@@ -381,7 +381,7 @@ fn type_is_option(ty: &syn::Type) -> bool {
 }
 
 fn named_fields(fields: &Fields, container: &ContainerAttrs) -> syn::Result<Vec<NamedField>> {
-    let syn::Fields::Named(named) = fields else {
+    let Fields::Named(named) = fields else {
         return Err(syn::Error::new_spanned(fields, "#[derive(ToValue, FromValue)] supports named-field structs (and #[value(tag = \"…\")] enums), not tuple/unit structs"));
     };
     let out: Vec<NamedField> = named
@@ -860,14 +860,14 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                 let variant_ident = &variant.ident;
                 let variant_attrs = parse_field_attrs(&variant.attrs).unwrap_or_default();
                 let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
-                quote! { #wire_variant => Self::#variant_ident, }
+                quote! { #wire_variant => Ok(Self::#variant_ident), }
             });
             quote! {
                 let __s = match value { #value_crate::DslValue::String(s) => s, other => return Err(#value_crate::ValueError::new(format!("expected a string, found {other:?}"))) };
-                Ok(match __s.as_str() {
+                match __s.as_str() {
                     #(#arms)*
-                    other => return Err(#value_crate::ValueError::new(format!("unknown variant `{other}`"))),
-                })
+                    other => Err(#value_crate::ValueError::new(format!("unknown variant `{other}`"))),
+                }
             }
         }
         Data::Enum(data) if container.tag.is_none() => {

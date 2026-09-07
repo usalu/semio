@@ -514,7 +514,7 @@ impl VcsBoundedCommandJobFactory {
     }
 }
 
-impl semio_framework::ToolJobFactory for VcsBoundedCommandJobFactory {
+impl ToolJobFactory for VcsBoundedCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<VcsPlayApp>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<VcsPlayApp>>;
 
@@ -526,8 +526,8 @@ impl semio_framework::ToolJobFactory for VcsBoundedCommandJobFactory {
         VCS_BOUNDED_PAYLOAD_SCHEMA
     }
 
-    fn classification(&self) -> semio_framework::InteractiveJobClassification {
-        semio_framework::InteractiveJobClassification::Migrated
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
     }
 
     fn execution_contract(&self) -> ToolExecutionContract {
@@ -553,7 +553,7 @@ impl semio_framework::ToolJobFactory for VcsBoundedCommandJobFactory {
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for VcsBoundedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<VcsPlayApp>;
+    type Owner = EditorApp<VcsPlayApp>;
     const TOOL_IDS: &'static [&'static str] = VCS_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = VCS_BOUNDED_PUBLICATION_CONTRACTS;
@@ -569,7 +569,7 @@ impl VcsResumableCommandJobFactory {
     }
 }
 
-impl semio_framework::ToolJobFactory for VcsResumableCommandJobFactory {
+impl ToolJobFactory for VcsResumableCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<VcsPlayApp>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<VcsPlayApp>>;
 
@@ -581,8 +581,8 @@ impl semio_framework::ToolJobFactory for VcsResumableCommandJobFactory {
         VCS_BOUNDED_PAYLOAD_SCHEMA
     }
 
-    fn classification(&self) -> semio_framework::InteractiveJobClassification {
-        semio_framework::InteractiveJobClassification::Migrated
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
     }
 
     fn execution_contract(&self) -> ToolExecutionContract {
@@ -611,7 +611,7 @@ impl semio_framework::ToolJobFactory for VcsResumableCommandJobFactory {
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for VcsResumableCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<VcsPlayApp>;
+    type Owner = EditorApp<VcsPlayApp>;
     const TOOL_IDS: &'static [&'static str] = VCS_RESUMABLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = VCS_RESUMABLE_PUBLICATION_CONTRACTS;
@@ -722,21 +722,21 @@ where
 struct VcsBoundedProofs;
 impl VcsBoundedProofs {
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<VcsPlayApp>,
+        owner: EditorApp<VcsPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.vcs.vcs@1/*#editor",
         document_schema: "vcs.vcs",
         factory: "VcsBoundedCommandJobFactory",
         factory_type: VcsBoundedCommandJobFactory,
         tools: {
-            "incrementCounter" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "patchSnapshot" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setLocale" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "noMutation" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "canvasPointerDown" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "canvasPointerMove" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "canvasPointerUp" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "canvasWheel" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "incrementCounter" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "patchSnapshot" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setLocale" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "noMutation" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "canvasPointerDown" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "canvasPointerMove" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "canvasPointerUp" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "canvasWheel" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
         }
     }
 }
@@ -744,15 +744,15 @@ impl VcsBoundedProofs {
 struct VcsResumableProofs;
 impl VcsResumableProofs {
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<VcsPlayApp>,
+        owner: EditorApp<VcsPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.vcs.vcs@1/*#editor",
         document_schema: "vcs.vcs",
         factory: "VcsResumableCommandJobFactory",
         factory_type: VcsResumableCommandJobFactory,
         tools: {
-            "textEdit" => semio_framework::ToolExecutionContract::resumable(8_192, 16_400, 1, 16_384, 7_500, 1, 1),
-            "edit" => semio_framework::ToolExecutionContract::resumable(8_192, 16_400, 1, 16_384, 7_500, 1, 1),
+            "textEdit" => ToolExecutionContract::resumable(8_192, 16_400, 1, 16_384, 7_500, 1, 1),
+            "edit" => ToolExecutionContract::resumable(8_192, 16_400, 1, 16_384, 7_500, 1, 1),
         }
     }
 }

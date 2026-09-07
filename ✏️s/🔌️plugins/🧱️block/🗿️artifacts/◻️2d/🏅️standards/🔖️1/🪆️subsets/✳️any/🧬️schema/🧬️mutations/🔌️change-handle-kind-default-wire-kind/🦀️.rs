@@ -1,7 +1,7 @@
 //! 🔌️ Block2d mutation — `ChangeHandleKindDefaultWireKind`: a handle-kind catalog row's `defaultWireKind`.
 
-use crate::artifacts::block2d::{Block2dHandleKind, Block2dSnapshot};
-use crate::artifacts::block2d::diff::{Block2dDiff, Block2dHandleKindsDelta, Block2dHandleKindsPatch, Block2dHandleKindsPatchEntry};
+use crate::artifacts::block2d::Block2dSnapshot;
+use crate::artifacts::block2d::diff::Block2dDiff;
 use crate::artifacts::block2d::mutations::Block2dMutation;
 
 //#region 🔖️Mutation

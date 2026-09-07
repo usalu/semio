@@ -12,13 +12,13 @@ impl SetTransactionCountAndNotify {
     const TAG: u8 = 0x64;
 }
 impl OpText for SetTransactionCountAndNotify {
-    fn parse_op(line: &str) -> Result<Self, crate::store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(Self {
             value: line
                 .strip_prefix("set-transaction-count-and-notify ")
-                .ok_or_else(|| crate::store::TextError::new("expected set-transaction-count-and-notify", crate::store::TextSpan::at(1, 1)))?
+                .ok_or_else(|| store::TextError::new("expected set-transaction-count-and-notify", store::TextSpan::at(1, 1)))?
                 .parse()
-                .map_err(|_| crate::store::TextError::new("transaction count must be i32", crate::store::TextSpan::at(1, 1)))?,
+                .map_err(|_| store::TextError::new("transaction count must be i32", store::TextSpan::at(1, 1)))?,
         })
     }
     fn print_op(&self) -> String {

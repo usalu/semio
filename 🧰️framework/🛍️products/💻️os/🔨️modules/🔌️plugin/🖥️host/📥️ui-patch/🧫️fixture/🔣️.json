@@ -1,0 +1,21 @@
+{
+  "schema": "semio.os.native-ui-patch-marshalling.v1",
+  "expectedInstance": 7,
+  "maximumWireBytes": 2097152,
+  "operationKinds": ["upsert", "setComponent", "setLayout", "setActivity", "setChildren", "setStyle", "setAccessibility", "setBindings", "setMenu", "remove", "setRoot"],
+  "componentCases": [
+    { "id": "returned", "config": { "profile": "ui" }, "first": "accepted", "second": "accepted", "root": 201, "channel": "returned" },
+    { "id": "imported", "config": { "profile": "ui", "uiImportSink": true }, "first": "accepted", "second": "accepted", "root": 101, "channel": "emitted" },
+    { "id": "both-channels", "config": { "profile": "ui", "uiImportSink": true, "uiReturnWithImport": true }, "first": "rejected", "second": "rejected", "root": null, "channel": "both" },
+    { "id": "malformed-then-recovered", "config": { "profile": "ui", "uiImportSink": true, "uiMalformedFirst": true }, "first": "rejected", "second": "accepted", "root": 302, "channel": "emitted" }
+  ],
+  "cases": [
+    { "id": "returned", "emitted": 0, "returned": 1, "receipt": true, "expected": "accepted" },
+    { "id": "emitted", "emitted": 1, "returned": 0, "receipt": true, "expected": "accepted" },
+    { "id": "drained", "emitted": 0, "returned": 0, "receipt": false, "expected": "accepted" },
+    { "id": "both-channels", "emitted": 1, "returned": 1, "receipt": true, "expected": "rejected" },
+    { "id": "receipt-without-patch", "emitted": 0, "returned": 0, "receipt": true, "expected": "rejected" },
+    { "id": "patch-without-receipt", "emitted": 0, "returned": 1, "receipt": false, "expected": "rejected" },
+    { "id": "maximum-plus-one", "emitted": 0, "returned": 2, "receipt": true, "expected": "rejected" }
+  ]
+}

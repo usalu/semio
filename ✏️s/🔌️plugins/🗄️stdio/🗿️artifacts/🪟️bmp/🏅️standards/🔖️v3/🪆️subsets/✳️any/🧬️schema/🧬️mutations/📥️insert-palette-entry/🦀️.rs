@@ -1,5 +1,5 @@
 //! 🧬️ Authoritative insert-palette-entry mutation.
-use crate::artifacts::bmp::schema::diff::{self, *};
+use crate::artifacts::bmp::schema::diff::*;
 use crate::artifacts::bmp::schema::mutations::BmpMutation;
 use crate::artifacts::bmp::schema::snapshot::*;
 
@@ -23,12 +23,12 @@ pub mod text;
 //#region Semantics
 impl protocol::MutationKind<BmpSnapshot, BmpMutation> for InsertPaletteEntryMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "palette-entry", kind: "insert-palette-entry", record: "InsertPaletteEntry" };
-    fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<BmpDiff> {
+    fn diff(&self, _base: &BmpSnapshot) -> protocol::MutationOutcome<BmpDiff> {
         let Self { index, entry } = self;
         protocol::MutationOutcome::new(BmpDiff { palette: Some(BmpPaletteDiff { removed: Vec::new(), modified: Vec::new(), added: vec![BmpPaletteAdded { index: *index, entry: entry.clone() }] }), ..Default::default() })
     }
     fn inverse(&self, base: &BmpSnapshot) -> Vec<BmpMutation> {
-        let Self { index, entry } = self;
+        let Self { index, .. } = self;
         let outcome = <Self as protocol::MutationKind<BmpSnapshot, BmpMutation>>::diff(self, base);
         if <BmpDiff as protocol::DiffAlgebra<BmpSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();

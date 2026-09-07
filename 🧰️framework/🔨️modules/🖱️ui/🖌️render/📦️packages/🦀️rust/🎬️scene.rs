@@ -10,6 +10,7 @@
 use crate::resource::{MeshId, ResourceOp, ResourceRegistry, TextureId};
 use crate::tessellate;
 use bytemuck::{Pod, Zeroable};
+#[cfg(test)]
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Scene
@@ -172,6 +173,7 @@ impl QuadInstance {
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+#[cfg(test)]
 fn is_animated_kind(kind: f32) -> bool {
     kind == KIND_LOADING_BORDER || kind == KIND_WAITING_BORDER || kind == KIND_INTRODUCING_BORDER
 }
@@ -358,6 +360,7 @@ pub struct SceneLayer {
     pub overlay_vector_vertices: Vec<VectorVertex>,
 }
 
+#[cfg(test)]
 impl SceneLayer {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn is_empty(&self) -> bool {
@@ -707,6 +710,7 @@ impl Scene {
 //#region Validate
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+#[cfg(test)]
 fn validate(builder: &SceneBuilder) -> Result<(), SceneError> {
     if !builder.scissor_stack.is_empty() {
         return Err(SceneError::UnbalancedScissorStack);
@@ -740,6 +744,7 @@ fn validate(builder: &SceneBuilder) -> Result<(), SceneError> {
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+#[cfg(test)]
 fn validate_quad(quad: &QuadInstance) -> Result<(), SceneError> {
     let finite = quad.rect.iter().chain(quad.color.iter()).chain(quad.params.iter()).chain(quad.uv_rect.iter()).all(|value| value.is_finite());
     if !finite {
@@ -760,6 +765,7 @@ fn validate_quad(quad: &QuadInstance) -> Result<(), SceneError> {
 /// deterministic: two builders with the same logical geometry snap to the exact same physical rects
 /// at a given `dpr`, regardless of what produced the fractional logical values upstream.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+#[cfg(test)]
 fn snap(mut builder: SceneBuilder, dpr: f32) -> SceneBuilder {
     for layer in &mut builder.layers {
         for quad in layer.quad_instances.iter_mut().chain(layer.overlay_quad_instances.iter_mut()).chain(layer.raster_instances.iter_mut().map(|(_, quad)| quad)) {
@@ -790,6 +796,7 @@ fn snap(mut builder: SceneBuilder, dpr: f32) -> SceneBuilder {
 /// `vector_watermark` point into; `scene_passes` has its `layer_index` remapped to the anchor's new
 /// position afterward.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+#[cfg(test)]
 fn order(layers: Vec<SceneLayer>, scene_passes: &mut [SurfacePass]) -> Vec<SceneLayer> {
     let anchors: HashSet<usize> = scene_passes.iter().map(|pass| pass.layer_index).collect();
     let survivors: Vec<(usize, SceneLayer)> = layers.into_iter().enumerate().filter(|(old_index, layer)| anchors.contains(old_index) || !layer.is_empty()).collect();
@@ -824,6 +831,7 @@ fn order(layers: Vec<SceneLayer>, scene_passes: &mut [SurfacePass]) -> Vec<Scene
 
 //#region Batch
 
+#[cfg(test)]
 struct LayerSpan {
     scissor: Option<ScissorRect>,
     clip: Option<ClipRegion>,
@@ -839,6 +847,7 @@ struct LayerSpan {
 /// generalized to also chunk `raster_instances` into contiguous same-[`TextureId`] runs (each run
 /// needs its own batch — a backend binds one texture at a time).
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+#[cfg(test)]
 fn collect_spans<'a>(layers: impl Iterator<Item = &'a SceneLayer>, overlay: bool, quad_instances: &mut Vec<QuadInstance>, vector_vertices: &mut Vec<VectorVertex>) -> Vec<LayerSpan> {
     let mut spans = Vec::new();
     for layer in layers {
@@ -882,6 +891,7 @@ fn collect_spans<'a>(layers: impl Iterator<Item = &'a SceneLayer>, overlay: bool
 /// so a backend replays `mask_range` with [`StencilPolicy::WriteMask`] and needs no mask geometry of
 /// its own.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+#[cfg(test)]
 fn batch(layers: &[SceneLayer], glass_regions: &[GlassRegion], viewport: [f32; 2]) -> (Vec<QuadInstance>, Vec<VectorVertex>, Vec<GlassInstance>, Vec<DrawBatch>) {
     let mut quad_instances = Vec::new();
     let mut vector_vertices = Vec::new();
@@ -930,6 +940,7 @@ fn batch(layers: &[SceneLayer], glass_regions: &[GlassRegion], viewport: [f32; 2
 //#region Hash
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+#[cfg(test)]
 fn fnv1a64(bytes: &[u8], mut state: u64) -> u64 {
     for &byte in bytes {
         state ^= u64::from(byte);
@@ -941,6 +952,7 @@ fn fnv1a64(bytes: &[u8], mut state: u64) -> u64 {
 /// 🔢️ A 64-bit content hash over packed instance bytes plus the batch list, so a host can compare two
 /// packets' `content_hash` and skip submission entirely when they match.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+#[cfg(test)]
 fn content_hash(quad_instances: &[QuadInstance], vector_vertices: &[VectorVertex], glass_instances: &[GlassInstance], batches: &[DrawBatch]) -> u64 {
     let mut state = 0xcbf2_9ce4_8422_2325u64;
     state = fnv1a64(bytemuck::cast_slice(quad_instances), state);

@@ -1,7 +1,7 @@
 //! 📐 `change-envelope-area-m2` — sets the DIN 4108 `envelope_area_m2` scalar.
 
 
-use crate::artifacts::din4108::{Din4108Diff, Din4108Mutation, Din4108Snapshot};
+use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

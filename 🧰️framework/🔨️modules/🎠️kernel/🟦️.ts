@@ -305,8 +305,11 @@ export function expandPluginRegistry(plugins: readonly PluginRegistryEntry[], pr
   const consumes = new Set(primaryEntries.flatMap((entry) => entry.consumes ?? []));
   const contributorEntries = plugins.filter((entry) => entry.pluginId !== primaryPluginId && (entry.contributes ?? []).some((tag) => consumes.has(tag)));
   // 🔗️ Transitive `dependencies` closure of primary + contribution matches — `consumes`/`contributes`
-  // alone never pulls Cargo/`dependsOn` plugins (stdio, flow, cad, …), which left every demonstrator
-  // pane boot with "needs X which is not installed" and an empty usable load order.
+  // alone never pulls a DECLARED runtime dependency (demonstrator → cad/gis/…), which left every
+  // demonstrator pane boot with "needs X which is not installed" and an empty usable load order.
+  // These edges are declared (`[package.metadata.semio].depends-on` / the builder's `.depends_on`),
+  // never derived from Cargo library links: a crate that merely links `stdio`'s codecs in-process
+  // does not belong in this load set and must not be blocked when `stdio`'s own actor is unavailable.
   const selected = new Map<string, PluginRegistryEntry>();
   const queue: PluginRegistryEntry[] = [...primaryEntries, ...contributorEntries];
   for (const entry of queue) selected.set(entry.pluginId, entry);
@@ -374,11 +377,12 @@ export type PluginRegistryEntry = {
   readonly dependencies?: readonly PluginDependency[];
 };
 
-/** 🔗️ Widens a {@link PluginCatalogTarget.dependsOn} plugin-id list (no version info, build-time
- * Cargo ground truth) into `PluginRegistryEntry.dependencies` — each id gets the always-satisfied `*`
- * requirement so {@link resolvePluginLoadOrder}/{@link validatePluginDependencyGraph} can still
- * validate presence and detect cycles today, ahead of any plugin adopting the runtime
- * `.depends_on(id, VersionReq)` API. */
+/** 🔗️ Widens a {@link PluginCatalogTarget.dependsOn} plugin-id list (the crate's declared runtime
+ * dependencies, carried without version info) into `PluginRegistryEntry.dependencies` — each id gets
+ * the always-satisfied `*` requirement so {@link resolvePluginLoadOrder}/
+ * {@link validatePluginDependencyGraph} can validate presence and detect cycles from the registry's
+ * pre-build view, which has no `VersionReq` to read; the real requirement travels on the loaded
+ * manifest's own `dependencies` once the plugin's descriptor is available. */
 function dependsOnToPluginDependencies(dependsOn: readonly string[] | undefined): readonly PluginDependency[] | undefined {
   return dependsOn?.map((pluginId) => ({ pluginId, version: "*" }));
 }
@@ -1141,13 +1145,15 @@ export type PluginCatalogTarget = {
   readonly role: "plugin" | "extension";
   readonly contributes: readonly string[];
   readonly consumes: readonly string[];
-  /** 🔗️ Direct plugin dependency ids, Cargo-ground-truth (`semio-s-plugin-<id>` crate deps, `extends`
-   * target first for an extension) — mirrors the generated `PluginBuildTarget.dependsOn` 2-C's
-   * registry lane added (ticket 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS
-   * §W2-C report). No `VersionReq` travels with these yet (the registry's build-time view has none to
-   * derive it from) — `resolvePlaygroundBoot` maps each id to a `"*"` requirement, which is enough for
-   * {@link PluginGraph} to validate presence/cycles and compute load order even before a plugin
-   * adopts the runtime `.depends_on(id, VersionReq)` API. */
+  /** 🔗️ Direct RUNTIME plugin dependency ids — the sibling plugins whose own actor this one needs
+   * loaded beside it, declared in `[package.metadata.semio].depends-on` (`extends` target first for an
+   * extension) and mirrored by the builder's `.depends_on(id, VersionReq)`. A Cargo `[dependencies]`
+   * link on another plugin crate is a build-time rlib link and is NOT one of these. Mirrors the
+   * generated `PluginBuildTarget.dependsOn` (ticket
+   * 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS §W2-C report). No
+   * `VersionReq` travels with these (the registry's pre-build view has none to derive it from) —
+   * `resolvePlaygroundBoot` maps each id to a `"*"` requirement, which is enough for
+   * {@link PluginGraph} to validate presence/cycles and compute load order. */
   readonly dependsOn?: readonly string[];
 };
 

@@ -28,7 +28,9 @@
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::{mutations::SemioAnimationMutation, snapshot::SemioAnimationSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::base::schema::diff::SemioDiff;
 use crate::artifacts::semio::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::audio::schema::{mutations::{set_sample_rate, SemioAudioMutation}, snapshot::SemioAudioSnapshot};
+use crate::artifacts::semio::standards::v1::subsets::audio::schema::{mutations::{SemioAudioMutation}, snapshot::SemioAudioSnapshot};
+#[cfg(test)]
+use crate::artifacts::semio::standards::v1::subsets::audio::schema::mutations::set_sample_rate;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::{mutations::SemioBrepMutation, snapshot::SemioBrepSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::{mutations::SemioCadMutation, snapshot::SemioCadSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::document::schema::{mutations::SemioDocumentMutation, snapshot::SemioDocumentSnapshot};

@@ -4,7 +4,7 @@
 
 use crate::artifacts::remodeling::diff::RemodelingDiff;
 use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use crate::artifacts::remodeling::{remodeling_asset, RemodelingSnapshot};
+use crate::artifacts::remodeling::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 

@@ -1,7 +1,7 @@
 //! 🪓️ `delete-object` — removes the entry matching `child_id` from `objects` (BASE-state
 //! addressing). Idempotent no-op if absent; the inverse escrows the removed handle from BASE.
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{SemioKitMutation, create_object};
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload

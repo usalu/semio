@@ -8,7 +8,17 @@ import { spawn, type ChildProcess } from "node:child_process";
 import type { Duplex } from "node:stream";
 import Ajv from "ajv";
 import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
-import { decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame, type ArtifactPresencePeer, type WireFrontierSummary, type WireMutationEnvelope } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
+import {
+  decodeClientFrame,
+  decodePresencePeer,
+  decodeServerFrame,
+  encodeClientFrame,
+  encodePresencePeer,
+  encodeServerFrame,
+  type ArtifactPresencePeer,
+  type WireFrontierSummary,
+  type WireMutationEnvelope,
+} from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
 import { decodeBackboneWorkerResponse, decodePackValue, encodeBackboneWorkerRequest, encodePackValue, packValueToExactJson, parseSocketGrantReceiptV1, socketGrantProtocolsV1 } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
 import type { PackValue } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
 import {
@@ -1164,7 +1174,10 @@ function checkpointPublicationProcessFixture(): { readonly root: string; readonl
   const spr = readPayload("spr");
   const diff = readPayload("diff");
   const inverse = readPayload("inverse");
-  for (const [name, bytes, record] of [["pack", pack, fixture.payload.pack], ["spr", spr, fixture.payload.spr]] as const) {
+  for (const [name, bytes, record] of [
+    ["pack", pack, fixture.payload.pack],
+    ["spr", spr, fixture.payload.spr],
+  ] as const) {
     if (bytes.byteLength !== record.byteLength || createHash("sha256").update(bytes).digest("hex") !== record.sha256) throw new Error(`checkpoint publication ${name} fixture bytes differ from their native receipt`);
   }
   if (pack.byteLength + spr.byteLength > CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES) throw new Error("checkpoint publication process fixture pair exceeds the public command bound");
@@ -1253,12 +1266,7 @@ async function commitCheckpointPublicationProcessMutation(
     });
     if (socket.protocol !== "semio.socket.v1") throw new Error("checkpoint publication socket did not negotiate its exact protocol");
     const packSchemaHash = Buffer.from(fixture.artifact.packSchemaHash, "hex");
-    socket.send(
-      encodeClientFrame(
-        { SocketHelloV1: { wire_version: 1, protocol_version: 1, schema: fixture.artifact.schema, pack_schema_hash: Array.from(packSchemaHash), resume_token: null, frontier: null } },
-        "command",
-      ),
-    );
+    socket.send(encodeClientFrame({ SocketHelloV1: { wire_version: 1, protocol_version: 1, schema: fixture.artifact.schema, pack_schema_hash: Array.from(packSchemaHash), resume_token: null, frontier: null } }, "command"));
     await waitForCheckpointSocketFrame(socket, frames, (frame) => ("Welcome" in frame ? frame.Welcome : undefined), "Welcome");
     await waitForCheckpointSocketFrame(socket, frames, (frame) => ("Session" in frame && frame.Session.actor === grant.actorId ? frame.Session : undefined), "verified Session actor");
     if (socketError) throw socketError;
@@ -1275,7 +1283,8 @@ async function commitCheckpointPublicationProcessMutation(
     socket.send(encodeClientFrame({ Commands: { batch_id: 1, envelopes: [envelope] } }, "command"));
     const ack = await waitForCheckpointSocketFrame(socket, frames, (frame) => ("Ack" in frame && frame.Ack.batch_id === 1 ? frame.Ack : undefined), "persisted command acknowledgement");
     const accepted = ack.stages.some((stage: any) => stage === "Persisted") && ack.stages.some((stage: any) => stage?.Applied?.outcome === "Accepted");
-    if (!accepted || ack.frontier.head_edit_id !== fixture.mutationId || ack.frontier.head_edit_ordinal !== 1 || ack.frontier.last_commit_seq !== 1) throw new Error("checkpoint publication process mutation was not durably accepted at its exact first frontier");
+    if (!accepted || ack.frontier.head_edit_id !== fixture.mutationId || ack.frontier.head_edit_ordinal !== 1 || ack.frontier.last_commit_seq !== 1)
+      throw new Error("checkpoint publication process mutation was not durably accepted at its exact first frontier");
     return { plan, frontier: ack.frontier as WireFrontierSummary };
   } finally {
     if (socket.readyState < WebSocket.CLOSING) socket.close(1000, "checkpoint published from durable frontier");
@@ -1475,7 +1484,10 @@ async function proveCheckpointPublicationMcpProcess(repoRoot: string, root: stri
     const { plan, frontier } = await commitCheckpointPublicationProcessMutation(run, author.capability, spaceId, fixture, diff, inverse);
     const chainSha256 = Buffer.from(frontier.chain_hash).toString("hex");
     if (!/^[0-9a-f]{64}$/u.test(chainSha256)) throw new Error("checkpoint publication process actor returned an invalid chain hash");
-    for (const [bytes, record] of [[pack, fixture.payload.pack], [spr, fixture.payload.spr]] as const) {
+    for (const [bytes, record] of [
+      [pack, fixture.payload.pack],
+      [spr, fixture.payload.spr],
+    ] as const) {
       const response = await fetch(`http://127.0.0.1:${run.port}/spaces/${encodeURIComponent(spaceId)}/blobs/${record.sha256}`, {
         method: "PUT",
         headers: { authorization: `Bearer ${author.capability}`, "content-type": "application/octet-stream" },
@@ -1543,13 +1555,16 @@ async function proveCheckpointPublicationMcpProcess(repoRoot: string, root: stri
 
     const mcpEnvelope = await issueLocalCredential(run, profile.profileId, "mcp", 2);
     const protectedValues = ["poison-user", "poison-session", "poison-token", "poison-origin", "poison-auth", "poison-cookie"];
-    child = await startMcpBoundWorkspaceChild(
-      repoRoot,
-      run,
-      mcpEnvelope,
-      spaceId,
-      { ...process.env, [DIRECT_CHILD_BENIGN_ENV_KEY]: DIRECT_CHILD_BENIGN_ENV_VALUE, S_USER: protectedValues[0], S_SESSION: protectedValues[1], NPM_TOKEN: protectedValues[2], S_HUB_URL: protectedValues[3], AUTHORIZATION: protectedValues[4], COOKIE: protectedValues[5] },
-    );
+    child = await startMcpBoundWorkspaceChild(repoRoot, run, mcpEnvelope, spaceId, {
+      ...process.env,
+      [DIRECT_CHILD_BENIGN_ENV_KEY]: DIRECT_CHILD_BENIGN_ENV_VALUE,
+      S_USER: protectedValues[0],
+      S_SESSION: protectedValues[1],
+      NPM_TOKEN: protectedValues[2],
+      S_HUB_URL: protectedValues[3],
+      AUTHORIZATION: protectedValues[4],
+      COOKIE: protectedValues[5],
+    });
     const stdout: Buffer[] = [];
     const stderr: Buffer[] = [];
     let stdoutBytes = 0;
@@ -1628,7 +1643,15 @@ async function proveCheckpointPublicationMcpProcess(repoRoot: string, root: stri
       await waitForChildExit(child, 5_000);
       const output = Buffer.concat(stdout);
       const diagnostics = Buffer.concat(stderr).toString("utf8");
-      if (child.exitCode !== 0 || stdoutBytes !== output.byteLength || stdoutBytes > 32_768 || stderrBytes > 16_384 || output.includes(Buffer.from(mcpEnvelope.capability)) || diagnostics.includes(mcpEnvelope.capability) || protectedValues.some((value) => output.includes(Buffer.from(value)) || diagnostics.includes(value))) {
+      if (
+        child.exitCode !== 0 ||
+        stdoutBytes !== output.byteLength ||
+        stdoutBytes > 32_768 ||
+        stderrBytes > 16_384 ||
+        output.includes(Buffer.from(mcpEnvelope.capability)) ||
+        diagnostics.includes(mcpEnvelope.capability) ||
+        protectedValues.some((value) => output.includes(Buffer.from(value)) || diagnostics.includes(value))
+      ) {
         throw new Error(`checkpoint publication MCP process byte-clean law failed: exit=${child.exitCode} stdout=${stdoutBytes} stderr=${stderrBytes}`);
       }
     } finally {
@@ -5035,6 +5058,104 @@ class BrowserActorChildWorkerContainmentCheckScript extends BundleScript {
   }
 }
 
+/** 🧳️ Retains the exact qualified GIS component/descriptor/actor evidence after scratch retirement. */
+function retainBrowserActorGisEvidenceV1(
+  artifactRoot: string,
+  stageRoot: string,
+  receipt: Pick<FreshComponentReceiptV1, "component" | "descriptor">,
+  actor: Pick<ClosedBrowserActorArtifactV1, "bytes" | "byteLength" | "sha256">,
+  descriptor: Uint8Array,
+): string {
+  const qualifiedRoot = join(artifactRoot, "qualified-gis-actors");
+  mkdirSync(qualifiedRoot, { recursive: true, mode: 0o700 });
+  const qualifiedInfo = lstatSync(qualifiedRoot);
+  if (qualifiedInfo.isSymbolicLink() || !qualifiedInfo.isDirectory()) throw new Error("GIS qualified evidence root is not a regular directory");
+  const destination = join(qualifiedRoot, actor.sha256);
+  const files = [
+    { name: "component.wasm", bytes: undefined as Uint8Array | undefined, byteLength: receipt.component.byteLength, sha256: receipt.component.sha256, maximum: DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES },
+    { name: "descriptor.semio", bytes: descriptor, byteLength: receipt.descriptor.byteLength, sha256: receipt.descriptor.sha256, maximum: DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES },
+    { name: "closed-actor.mjs", bytes: actor.bytes, byteLength: actor.byteLength, sha256: actor.sha256, maximum: DOCUMENT_BROWSER_ACTOR_MAX_BYTES },
+  ];
+  const verify = (root: string): void => {
+    const info = lstatSync(root);
+    if (info.isSymbolicLink() || !info.isDirectory() || JSON.stringify(readdirSync(root).sort()) !== JSON.stringify(files.map((file) => file.name).sort())) throw new Error("GIS qualified evidence closure differs");
+    for (const file of files) {
+      const bytes = trustedBootstrapReadRegular(join(root, file.name), file.maximum, `GIS qualified ${file.name}`, () => {});
+      try {
+        if (bytes.byteLength !== file.byteLength || createHash("sha256").update(bytes).digest("hex") !== file.sha256) throw new Error(`GIS qualified ${file.name} receipt mismatch`);
+      } finally {
+        bytes.fill(0);
+      }
+    }
+  };
+  if (existsSync(destination)) {
+    verify(destination);
+    return destination;
+  }
+  const temporary = join(qualifiedRoot, `.staging-${randomBytes(16).toString("hex")}`);
+  mkdirSync(temporary, { mode: 0o700 });
+  const component = trustedBootstrapReadRegular(join(stageRoot, receipt.component.relativePath), DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, "GIS qualified component source", () => {});
+  try {
+    if (component.byteLength !== receipt.component.byteLength || createHash("sha256").update(component).digest("hex") !== receipt.component.sha256) throw new Error("GIS qualified component source receipt mismatch");
+    files[0]!.bytes = component;
+    for (const file of files) trustedBootstrapWriteNew(join(temporary, file.name), file.bytes!, () => {});
+    trustedBootstrapFsyncDirectory(temporary);
+    verify(temporary);
+    renameSync(temporary, destination);
+    trustedBootstrapFsyncDirectory(qualifiedRoot);
+    verify(destination);
+    return destination;
+  } finally {
+    component.fill(0);
+    files[0]!.bytes = undefined;
+    rmSync(temporary, { recursive: true, force: true });
+  }
+}
+
+/** 🧪️ Proves exact retained-byte identity and replacement rejection with WebCrypto. */
+async function proveBrowserActorGisEvidenceV1(artifactRoot: string): Promise<void> {
+  const { default: assert } = await import("node:assert/strict");
+  const { writeFileSync } = await import("node:fs");
+  const root = mkdtempSync(join(artifactRoot, "gis-qualified-evidence-law-"));
+  const stage = join(root, "stage");
+  mkdirSync(stage);
+  const component = Uint8Array.from([0, 97, 115, 109, 1]),
+    descriptor = Uint8Array.from([0x92, 0xa3, 0x67, 0x69, 0x73]),
+    actorBytes = Uint8Array.from([0x65, 0x78, 0x70, 0x6f, 0x72, 0x74]);
+  const identity = async (bytes: Uint8Array) => ({ byteLength: bytes.byteLength, sha256: Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex") });
+  const componentIdentity = await identity(component),
+    descriptorIdentity = await identity(descriptor),
+    actorIdentity = await identity(actorBytes);
+  writeFileSync(join(stage, "component.wasm"), component);
+  try {
+    const retained = retainBrowserActorGisEvidenceV1(
+      root,
+      stage,
+      { component: { ...componentIdentity, relativePath: "component.wasm", blake3: "00" }, descriptor: { ...descriptorIdentity, relativePath: "descriptor.semio" } },
+      { bytes: actorBytes, ...actorIdentity },
+      descriptor,
+    );
+    assert.equal(Buffer.from(await crypto.subtle.digest("SHA-256", readFileSync(join(retained, "closed-actor.mjs")))).toString("hex"), actorIdentity.sha256);
+    writeFileSync(join(retained, "closed-actor.mjs"), "replaced");
+    assert.throws(
+      () =>
+        retainBrowserActorGisEvidenceV1(
+          root,
+          stage,
+          { component: { ...componentIdentity, relativePath: "component.wasm", blake3: "00" }, descriptor: { ...descriptorIdentity, relativePath: "descriptor.semio" } },
+          { bytes: actorBytes, ...actorIdentity },
+          descriptor,
+        ),
+      /receipt mismatch/,
+    );
+  } finally {
+    component.fill(0);
+    descriptor.fill(0);
+    actorBytes.fill(0);
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
 class BrowserActorGisDescribeCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments[0] !== undefined && segments[0] !== "--source" && segments[0] !== "--native")) throw new Error("usage: browser-actor-gis-describe-check [--source|--native]");
@@ -5083,14 +5204,15 @@ class BrowserActorGisDescribeCheckScript extends BundleScript {
       const oracle = row.name !== "capacity-over" && row.name !== "trailing-byte" && !row.name.startsWith("staged-") && deepEqual(row.name === "raw-staged" ? fixture.descriptor : value, expected);
       if (accepted !== row.accepted || accepted !== oracle) throw new Error("GIS describe law: " + row.name);
     }
-    await testFreshComponentProcessV1(this.repoRoot);
-    console.log("browser-actor-gis-describe: AJV=1 TypeScript=1 fast-deep-equal=9 normalization=9 source passed; real guest execution requires --native");
-    if (segments[0] !== "--native") return;
     const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
     const ticketsRoot = resolve(this.repoRoot, ".🧬semio", "🦑️repo", "🎫️tickets");
     const relativeRoot = artifactRoot ? relative(ticketsRoot, resolve(artifactRoot)) : "";
     if (!artifactRoot || !isAbsolute(artifactRoot) || relativeRoot === "" || relativeRoot.startsWith("..") || isAbsolute(relativeRoot)) throw new Error("GIS child gate requires ticket-owned SEMIO_TEST_ARTIFACT_DIR");
     mkdirSync(artifactRoot, { recursive: true, mode: 0o700 });
+    await proveBrowserActorGisEvidenceV1(artifactRoot);
+    await testFreshComponentProcessV1(this.repoRoot);
+    console.log("browser-actor-gis-describe: AJV=1 TypeScript=1 fast-deep-equal=9 normalization=9 source passed; real guest execution requires --native");
+    if (segments[0] !== "--native") return;
     const work = mkdtempSync(join(artifactRoot, "gis-child-real-"));
     const target = join(work, "target"),
       stage = join(work, "stage");
@@ -5238,6 +5360,7 @@ class BrowserActorGisDescribeCheckScript extends BundleScript {
           result.guest.fill(0);
         }
         if (diagnostics.some((value) => value.startsWith("pageerror:"))) throw new Error("real GIS page error");
+        const retainedRoot = retainBrowserActorGisEvidenceV1(artifactRoot, stage, produced.receipt, actor, descriptor);
         console.log(
           "browser-actor-gis-describe-native: " +
             JSON.stringify({
@@ -5249,6 +5372,7 @@ class BrowserActorGisDescribeCheckScript extends BundleScript {
               sourceDetached: result.sourceDetached,
               resultTransfers: result.transferCount,
               capacity: result.capacity,
+              retainedRoot,
             }) +
             " passed; no Hub session, renderer, Map mutation or collaboration claim",
         );
@@ -5449,28 +5573,33 @@ async function proveInferenceWalProofFixture(repoRoot: string): Promise<void> {
     const records = trace.flushed === false ? [] : trace.records;
     let active: { id: number; count: number; matches: number } | undefined;
     let matches = 0;
+    let targetRecords = 0;
+    const receiptTransactionId = trace.receiptTransactionId ?? 1;
     for (let index = 0; index < records.length; index++) {
       if (trace.cancelAfterRecords === index) return "cancelled";
-      if (index >= (trace.maximumRecords ?? fixture.maximumRecords)) return "bounds";
       const record = records[index];
       if (record.kind === "begin") {
         if (active) return "invalid";
         active = { id: record.txId, count: 0, matches: 0 };
+        if (active.id === receiptTransactionId && ++targetRecords > (trace.maximumRecords ?? fixture.maximumRecords)) return "bounds";
       } else if (record.kind === "command") {
         if (!active) return "invalid";
         active.count++;
+        if (active.id === receiptTransactionId && ++targetRecords > (trace.maximumRecords ?? fixture.maximumRecords)) return "bounds";
         const bytes = Buffer.from(canonical);
         if (record.bytes === "different") bytes[1] ^= 1;
         if (record.bytes === "altered-target") bytes[bytes.length - 1] ^= 1;
         if (createHash("sha256").update(bytes).digest("hex") === fixture.commandHash) active.matches++;
       } else {
         if (!active || active.id !== record.txId) return "invalid";
+        if (active.id === receiptTransactionId && ++targetRecords > (trace.maximumRecords ?? fixture.maximumRecords)) return "bounds";
         if (record.kind === "commit") {
           if (active.count !== record.recordCount) return "invalid";
-          matches += active.matches;
-          if (matches > 1) return "invalid";
+          if (active.id === receiptTransactionId) matches = active.matches;
         }
+        const receiptFinished = active.id === receiptTransactionId;
         active = undefined;
+        if (receiptFinished) break;
       }
     }
     if (trace.cancelAfterRecords === records.length) return "cancelled";
@@ -5736,6 +5865,12 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
     { ...fixture, binding: { ...fixture.binding, parentDialect: { ...fixture.binding.parentDialect, subset: "lite" } } },
     { ...fixture, lifecycle: fixture.lifecycle.slice(1) },
     { ...fixture, visibility: fixture.visibility.slice(1) },
+    { ...fixture, committer: { ...fixture.committer, publicationOrder: ["committed-wal-event", "actor-frontier", "ledger-applied", "public-checkpoint"] } },
+    { ...fixture, committer: { ...fixture.committer, beforePublicAck: { ...fixture.committer.beforePublicAck, ledgerApplied: true } } },
+    { ...fixture, committer: { ...fixture.committer, publicationFailure: { ...fixture.committer.publicationFailure, documentWrite: "released" } } },
+    { ...fixture, committer: { ...fixture.committer, ingressAuthority: { ...fixture.committer.ingressAuthority, documentWrite: "hub-outer-acquired" } } },
+    { ...fixture, committer: { ...fixture.committer, abandonedRequest: { ...fixture.committer.abandonedRequest, commitCutover: "journal-complete" } } },
+    { ...fixture, committer: { ...fixture.committer, documentFence: "request-generation" } },
     { ...fixture, nonclaims: ["no-external-model-provider", "no-external-model-provider", "no-wgpu-rendering", "no-auto-apply"] },
   ];
   for (const [index, candidate] of hostile.entries()) if (validate(candidate)) throw new Error(`GIS Map proposal fixture accepted hostile mutation ${index}`);
@@ -5816,9 +5951,24 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
     committer.capacity !== fixture.limits.documentGateCapacity ||
     JSON.stringify(committer.roles) !== JSON.stringify(["map", "drawing", "value"]) ||
     JSON.stringify(committer.children) !== JSON.stringify(["gismap-drawing", "gismap-value"]) ||
-    JSON.stringify(committer.phases) !== JSON.stringify(["ready", "assembly", "journal", "verification", "committed", "closing"]) ||
+    JSON.stringify(committer.phases) !== JSON.stringify(["ready", "assembly", "journal", "verification", "publishing", "published", "closing"]) ||
     committer.witnessSource !== "sole-committed-wal-event" ||
-    committer.retryOwner !== "same-document-three-store-host"
+    committer.retryOwner !== "same-document-three-store-host" ||
+    JSON.stringify(committer.publicationOrder) !== JSON.stringify(["committed-wal-event", "actor-frontier", "public-checkpoint", "ledger-applied"]) ||
+    JSON.stringify(committer.beforePublicAck) !== JSON.stringify({ ledgerApplied: false, documentWrite: "retained", state: "publishing" }) ||
+    JSON.stringify(committer.publicationFailure) !== JSON.stringify({ ledgerApplied: false, documentWrite: "retained", retry: "same-event-same-owner" }) ||
+    JSON.stringify(committer.ingressAuthority) !==
+      JSON.stringify({
+        owner: "hub-private-sorted-binding-guards",
+        bindings: ["user", "session", "space-authority", "membership"],
+        documentWrite: "runtime-acquired",
+        cutover: "durable-wal-receipt",
+        delivery: "fresh-revalidation-under-same-guards",
+        recovery: "committed-wal-provenance",
+      }) ||
+    JSON.stringify(committer.abandonedRequest) !==
+      JSON.stringify({ owner: "runtime-document-maintenance", abortPhases: ["ready", "preflight", "assembly", "journal-no-receipt"], commitCutover: "awaiting-ack", postCutover: ["verification", "public-checkpoint", "ledger-applied"] }) ||
+    committer.documentFence !== "mounted-actor-generation"
   )
     throw new Error("retained fixed-three committer contract drifted");
   const runtime = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "🏃️runtime", "🦀️.rs"), "utf8");
@@ -5828,12 +5978,41 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
     "DurableOwnedThreeStoreMapAssemblyV1",
     "durable_group_journal_sink",
     "InferenceWalVerifierV1",
+    "GisMapApprovalCheckpointPublisherV1",
+    "GisMapApprovalIngressAuthorityV1",
+    "GisMapApprovalRequestOwnerV1",
+    "drive_abandoned_request",
+    "owners.fence.clone()",
+    "RetainedGisMapDocumentStateV1::Publishing",
     "gis_map_parent_stamped_one_item_preparation_factory",
     "sole committed WAL event",
   ])
     if (!runtime.includes(symbol)) throw new Error(`retained GIS Map committer source is missing ${symbol}`);
   const retainedCommitter = runtime.slice(runtime.indexOf("pub struct RetainedGisMapApprovalCommitterV1"), runtime.indexOf("/// 🗺️ The server-materialized Map base"));
-  if (!runtime.includes('const GIS_MAP_COMMITTER_CAPACITY: usize = 64;') || retainedCommitter.includes("ArtifactHandle::submit")) throw new Error("retained GIS Map committer capacity or typed journal boundary drifted");
+  const publishCall = retainedCommitter.indexOf("self.publish_checkpoint(");
+  const reconcileCall = retainedCommitter.indexOf(".reconcile_committed_approval(");
+  if (
+    !runtime.includes("const GIS_MAP_COMMITTER_CAPACITY: usize = 64;") ||
+    retainedCommitter.includes("ArtifactHandle::submit") ||
+    publishCall < 0 ||
+    reconcileCall <= publishCall ||
+    !retainedCommitter.includes("document_write: GisMapDocumentWriteLeaseV1")
+  )
+    throw new Error("retained GIS Map committer capacity, write authority, typed journal, or publication-before-apply boundary drifted");
+  const hubBin = readFileSync(join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "🚀️bin.rs"), "utf8");
+  for (const symbol of [
+    "HubGisMapApprovalIngressAuthorityV1",
+    "acquire_gis_map_approval_ingress",
+    "revalidate_gis_map_approval_delivery",
+    "InferenceApprovalRouteContextV1",
+    "gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_document_write",
+    "inference_runtime.close().await",
+  ])
+    if (!hubBin.includes(symbol)) throw new Error(`Hub GIS Map approval ingress source is missing ${symbol}`);
+  if (hubBin.includes("SocketBindingKeyV1::DocumentWrite(scope.clone()),\n            SocketBindingKeyV1::User")) throw new Error("Hub approval ingress outer-locks DocumentWrite before the retained runtime");
+  const inferenceRegistration = hubBin.slice(hubBin.indexOf("let inference_runtime = match gis_map_binding.as_ref()"), hubBin.indexOf("let inference_ready = inference_runtime.is_some()"));
+  if (!inferenceRegistration.includes("RetainedGisMapApprovalCommitterV1::new") || !inferenceRegistration.includes("GisMapApprovalCheckpointPublisherV1Impl") || inferenceRegistration.includes("UnavailableGisMapApprovalCommitterV1"))
+    throw new Error("production GIS Map approval did not register its retained three-Store checkpoint committer");
   const frozen = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🧊️gis-map-frozen-binding-v1", "🔣️.json"), "utf8"));
   const ledger = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🗺️gis-inference-job-v1", "🔣️.json"), "utf8"));
   if (
@@ -7953,9 +8132,12 @@ class GisMapProposalCheckScript extends BundleScript {
         "gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancellation",
         "gis_map_proposal_is_private_to_its_original_author_owner",
         "gis_map_approval_fails_closed_without_a_composition_transaction_and_never_auto_applies",
+        "gis_map_approval_committed_event_reaches_actor_frontier_and_public_checkpoint_before_ledger_apply",
+        "gis_map_abandoned_pre_witness_request_returns_exact_stores_and_document_writer",
         "gis_map_proposal_fixture_pins_the_exact_frozen_comparison_limits_and_error_vocabulary",
       ];
       const routeLaws = [
+        "gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_document_write",
         "gis_map_proposal_routes_fail_closed_without_a_trusted_map_binding",
         "gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancellation",
         "gis_map_proposal_is_private_to_every_peer_spectator_and_stale_caller",
@@ -7967,8 +8149,8 @@ class GisMapProposalCheckScript extends BundleScript {
         cwd: this.root,
         ...exactCargoStageEnvironments(),
         groups: [
-          { package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite"], laws: libraryLaws },
-          { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite,test-support"], laws: routeLaws },
+          { package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite,native-artifact-execution"], laws: libraryLaws },
+          { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite,test-support,native-artifact-execution"], laws: routeLaws },
         ],
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
         buildBudgetMs: buildBudgetMs(),
@@ -8426,6 +8608,18 @@ class AdminLiveJourneyCheckScript extends BundleScript {
 
 type InviteRedemptionFixture = {
   readonly schema: "semio.hub.invite-redemption-transaction/v1";
+  readonly receiptRelease: readonly { readonly name: string; readonly outcome: "rejected-before-commit" | "appended" | "uncertain"; readonly disposition: "pending" | "completed"; readonly digest: "exact" | "different"; readonly release: boolean }[];
+  readonly backendOrders: readonly { readonly name: string; readonly first: "archive" | "member"; readonly between: "invite" | "archive"; readonly accepted: boolean; readonly appended: number }[];
+  readonly authorityRaces: readonly { readonly name: string; readonly revocation: "session" | "archive" | "delete"; readonly order: readonly ("hint" | "revoke" | "fence")[]; readonly status: number; readonly appended: number }[];
+  readonly spaceStates: readonly {
+    readonly name: string;
+    readonly spaceState: "writable" | "archived" | "deleted";
+    readonly inviteRole: "author" | "spectator";
+    readonly accepted: "none" | "same" | "other";
+    readonly status: number;
+    readonly appended: number;
+    readonly membershipRole: "none" | "author" | "spectator";
+  }[];
   readonly vectors: readonly {
     readonly name: string;
     readonly initial: "fresh" | "accepted-same" | "accepted-other" | "revoked" | "expired" | "missing" | "missing-user" | "missing-space" | "corrupt-marker" | "corrupt-event";
@@ -8448,7 +8642,7 @@ type InviteRedemptionFixture = {
       readonly revoked: boolean;
     };
   }[];
-  readonly hostiles: readonly { readonly name: string; readonly mutation: "raw-capability" | "client-space" | "client-role" | "client-event-id" | "unknown-field" | "oversized-identifier" }[];
+  readonly hostiles: readonly { readonly name: string; readonly mutation: "raw-capability" | "client-space" | "client-space-state" | "client-role" | "client-event-id" | "unknown-field" | "oversized-identifier" }[];
 };
 
 type PresenceLeaseOperation =
@@ -9944,31 +10138,150 @@ async function proveDirectoryCommandReceiptV1(repoRoot: string): Promise<number>
   return checks;
 }
 
+/** 🛡️ Cross-checks neutral command/revocation order with an independent collection oracle. */
+async function proveDirectoryCommandAuthorityV1(repoRoot: string): Promise<number> {
+  const root = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🛡️command-authority-v1");
+  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+  if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
+  const findIndex = (await import("lodash-es/findIndex.js")).default;
+  for (const row of fixture.cases) {
+    let revoked = false,
+      status = 0;
+    for (const event of row.events) {
+      if (event === "revoke") revoked = true;
+      if (event === "fence") status = revoked ? (row.revocation === "session" ? 401 : 403) : 202;
+    }
+    const revokedFirst = findIndex(row.events, (event: string) => event === "revoke") < findIndex(row.events, (event: string) => event === "fence");
+    const expected = revokedFirst ? (row.revocation === "session" ? 401 : 403) : 202;
+    if (status !== expected || status !== row.status || Number(status === 202) !== row.appended) throw new Error("directory authority trace: " + row.id);
+  }
+  const every = (await import("lodash-es/every.js")).default;
+  for (const row of fixture.bindings) {
+    const invalidated = row.user === "author" && row.space === "changed" && row.audience !== "global";
+    const expected = every([row.user === "author", row.space === "changed", row.audience !== "global"], Boolean);
+    if (invalidated !== expected || invalidated !== row.invalidated) throw new Error("directory binding trace: " + row.id);
+  }
+  const expectedCases = ["command-before-demotion", "demotion-before-command", "removal-before-command", "session-before-command"];
+  const expectedBindings = ["directory-author", "document-author", "global-author", "other-space", "other-user"];
+  if (JSON.stringify(fixture.cases.map((row: { id: string }) => row.id).sort()) !== JSON.stringify(expectedCases) || JSON.stringify(fixture.bindings.map((row: { id: string }) => row.id).sort()) !== JSON.stringify(expectedBindings))
+    throw new Error("directory authority corpus is incomplete");
+  const sum = (await import("lodash-es/sum.js")).default;
+  const admissions = Array.from({ length: fixture.capacity.subjects }, () => 1);
+  if (!admissions.every((count) => count <= fixture.capacity.subjectLimit) || sum(admissions) > fixture.capacity.ledgerLimit || sum(admissions) !== fixture.capacity.accepted) throw new Error("directory authority shared-space capacity");
+  const expectedInvites = ["foreign-accepted-invite", "foreign-invite", "owned-accepted-invite", "owned-invite"];
+  if (JSON.stringify(fixture.inviteScopes.map((row: { id: string }) => row.id).sort()) !== JSON.stringify(expectedInvites)) throw new Error("directory invite corpus is incomplete");
+  for (const row of fixture.inviteScopes) {
+    const exact = row.commandSpace === row.inviteSpace;
+    const expected = every([row.commandSpace === row.inviteSpace, !row.accepted], Boolean);
+    if (row.revoked !== expected || row.status !== (exact ? (row.accepted ? 409 : 202) : 404)) throw new Error("directory invite scope trace: " + row.id);
+  }
+
+  const backend = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🪶️sqlite/🦀️.rs"), "utf8");
+  const revoke = backend.slice(backend.indexOf("    async fn revoke_invite_as("), backend.indexOf("    async fn list_invites("));
+  const update = /tx\.execute\("([^"]+)",\s*rusqlite::params!\[([^\]]+)\]/.exec(revoke);
+  if (!update || !update[1].startsWith("UPDATE hub_space_invite ")) throw new Error("directory invite revoke query is unavailable");
+  const lookup = /tx\.query_row\("([^"]+)",\s*rusqlite::params!\[([^\]]+)\]/.exec(revoke);
+  if (!lookup || !lookup[1].startsWith("SELECT accepted_at ")) throw new Error("directory invite accepted lookup is unavailable");
+  const { Database } = await import("bun:sqlite");
+  const database = new Database(":memory:");
+  try {
+    database.exec("CREATE TABLE hub_space_invite (id TEXT PRIMARY KEY, space_id TEXT NOT NULL, revoked_at INTEGER, revoked_reason TEXT, accepted_at INTEGER)");
+    for (const row of fixture.inviteScopes) {
+      database.query("DELETE FROM hub_space_invite").run();
+      database.query("INSERT INTO hub_space_invite (id, space_id, accepted_at) VALUES (?, ?, ?)").run("invite-foreign", "foreign", row.accepted ? 7 : null);
+      const values: Record<string, string | number> = { invite_id: "invite-foreign", space_id: row.commandSpace, revoked_at: 42, reason: "contract-test" };
+      const params = (names: string) =>
+        names.split(",").map((name) => {
+          const value = values[name.trim()];
+          if (value === undefined) throw new Error("directory invite query has an unqualified parameter");
+          return value;
+        });
+      const result = database.query(update[1]).run(...params(update[2]));
+      const stored = database.query("SELECT revoked_at FROM hub_space_invite WHERE id = ?").get("invite-foreign") as { revoked_at: number | null };
+      if (result.changes !== Number(row.revoked) || (stored.revoked_at !== null) !== row.revoked) throw new Error("production SQLite invite scope: " + row.id);
+      const accepted = database.query(lookup[1]).get(...params(lookup[2])) as { accepted_at: number | null } | null;
+      const status = result.changes === 1 ? 202 : accepted?.accepted_at != null ? 409 : 404;
+      if (status !== row.status) throw new Error("production SQLite accepted-invite scope: " + row.id);
+      console.log(`[DEBUG] directory-invite-sqlite case=${row.id} changed=${result.changes} revoked=${stored.revoked_at !== null}`);
+    }
+  } finally {
+    database.close();
+  }
+
+  for (const kind of ["🐘️postgres", "🌐️neo4j"]) {
+    const source = readFileSync(join(repoRoot, "🌎️hub/📇️directory", kind, "🦀️.rs"), "utf8");
+    const method = source.slice(source.indexOf("    async fn revoke_invite_as("), source.indexOf("    async fn list_invites("));
+    if (kind === "🐘️postgres") {
+      const parameters = Array.from(method.matchAll(/\.bind\((\w+)\)/g), (match) => match[1]);
+      if (
+        !method.includes("WHERE space_id = $4 AND id = $1 AND revoked_at IS NULL AND accepted_at IS NULL") ||
+        !method.includes("WHERE space_id = $2 AND id = $1") ||
+        JSON.stringify(parameters) !== JSON.stringify(["invite_id", "revoked_at", "reason", "space_id", "invite_id", "space_id"])
+      )
+        throw new Error("PostgreSQL invite scope predicates or bindings drifted");
+    } else {
+      if (method.split("MATCH (i:SpaceInvite {spaceId: $space_id, id: $id})").length !== 3 || method.split('.param("space_id", space_id)').length !== 3) throw new Error("Neo4j invite scope predicates or bindings drifted");
+    }
+  }
+  return fixture.cases.length + fixture.bindings.length + fixture.inviteScopes.length * 3 + 3;
+}
+
 class DirectoryCommandReceiptCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const phase = segments[0] ?? "source";
-    if (segments.length > 1 || !["source", "native", "process"].includes(phase)) throw new Error("directory-command-receipt-check accepts source, native, or process");
-    const checks = await proveDirectoryCommandReceiptV1(this.repoRoot);
-    if (phase === "native" || phase === "process") {
+    if (segments.length > 1 || !["source", "authority", "invites", "native", "process"].includes(phase)) throw new Error("directory-command-receipt-check accepts source, authority, invites, native, or process");
+    const checks = (await proveDirectoryCommandReceiptV1(this.repoRoot)) + (await proveDirectoryCommandAuthorityV1(this.repoRoot)) + (await proveInviteRedemptionTransaction(this.repoRoot));
+    if (phase === "authority" || phase === "invites" || phase === "native" || phase === "process") {
       const laws = [
+        "directory_command_authority_revalidates_after_durable_revocation_before_fence",
+        "directory_command_authority_holds_admitted_command_until_receipt_before_demotion",
+        "directory_command_authority_demotion_invalidates_only_affected_scope_once",
+        "directory_command_authority_invite_revocation_requires_the_exact_owned_space",
+        "directory_invite_redemption_obeys_current_space_state_and_readonly_replay",
+        "directory_invite_redemption_revalidates_after_hint_before_fence",
+        "directory_invite_redemption_admitted_fence_precedes_archive",
+        "directory_invite_redemption_scope_hint_is_capability_bound",
         "directory_command_receipt_v1_route_is_request_idempotent_for_concurrent_identical_ids",
         "directory_command_receipt_v1_route_denies_cross_user_spectator_and_digest_substitution",
         "directory_command_receipt_v1_route_bounds_request_and_receipt_bytes",
         "directory_command_receipt_v1_store_resolves_a_lost_reply_and_survives_restart",
       ];
-      const receipts = await runExactCargoLaws({
-        cwd: this.root,
-        ...exactCargoStageEnvironments(),
-        groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--all-features"], laws }],
-        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
-        buildBudgetMs: buildBudgetMs(),
-        listBudgetMs: 60_000,
-        lawBudgetMs: 120_000,
-        progress(event) {
-          console.log(`directory-command-receipt-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
-        },
-      });
-      for (const receipt of receipts) console.log(`directory-command-receipt-${phase}-receipt: ${JSON.stringify(receipt)}`);
+      for (const group of [
+        { package: "semio-hub", target: { kind: "bin" as const, name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite,postgres,neo4j"], laws: phase === "invites" ? laws.slice(4, 8) : laws.slice(0, 8) },
+        ...(phase === "invites"
+          ? [
+              {
+                package: "semio-hub",
+                target: { kind: "lib" as const },
+                cargoArgs: ["--no-default-features", "--features", "sqlite,postgres,neo4j"],
+                laws: [
+                  "directory::tests::invite_redemption_sqlite_claim_is_exactly_once_across_concurrency_restart_and_rebuild",
+                  "directory::tests::invite_redemption_projection_failure_rolls_back_claim_event_and_membership",
+                  "directory::tests::invite_redemption_commit_and_publication_precede_the_next_directory_command",
+                  "directory::tests::invite_archive_projection_serializes_independent_service_decisions",
+                  "directory::tests::directory_command_uncertain_commit_retains_claim_and_never_reexecutes",
+                ],
+              },
+            ]
+          : []),
+        ...(["authority", "invites"].includes(phase) ? [] : [{ package: "semio-hub", target: { kind: "bin" as const, name: "os-hub" }, cargoArgs: ["--all-features"], laws: laws.slice(8) }]),
+      ]) {
+        const receipts = await runExactCargoLaws({
+          cwd: this.root,
+          ...exactCargoStageEnvironments(),
+          groups: [group],
+          artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+          buildBudgetMs: buildBudgetMs(),
+          listBudgetMs: 60_000,
+          lawBudgetMs: 120_000,
+          progress(event) {
+            console.log(`directory-command-receipt-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
+          },
+        });
+        for (const receipt of receipts) console.log(`directory-command-receipt-${phase}-receipt: ${JSON.stringify(receipt)}`);
+      }
       if (phase === "process") {
         runCmd("cargo", ["build", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], { cwd: this.root, budgetMs: buildBudgetMs() });
         await proveDirectoryCommandReceiptV1Process(this.repoRoot, this.root);
@@ -10861,12 +11174,60 @@ class PresenceLeaseCheckScript extends BundleScript {
 /** 🎟️ Evaluates the neutral one-transaction invite state machine independently of every backend. */
 async function proveInviteRedemptionTransaction(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🎟️invite-redemption-transaction-v1");
+  const client = await import(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts"));
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as InviteRedemptionFixture;
   const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
   if (!validate(fixture)) throw new Error(`invite redemption transaction fixture: ${JSON.stringify(validate.errors)}`);
   if (new Set(fixture.vectors.map(({ name }) => name)).size !== fixture.vectors.length) throw new Error("invite redemption fixture names are not unique");
+
+  const { Database } = await import("bun:sqlite");
+  const oracle = new Database(":memory:");
+  try {
+    for (const row of fixture.spaceStates) {
+      const expectedStatus = row.spaceState === "deleted" ? 401 : row.accepted === "same" ? 200 : row.accepted === "other" ? 409 : row.spaceState === "archived" && row.inviteRole === "author" ? 401 : 200;
+      const appended = expectedStatus === 200 && row.accepted === "none" ? 1 : 0;
+      const membershipRole = row.spaceState === "deleted" || (row.accepted !== "same" && appended === 0) ? "none" : row.spaceState === "archived" ? "spectator" : row.inviteRole;
+      const sql = oracle
+        .query("SELECT CASE WHEN ?1 = 'deleted' THEN 401 WHEN ?2 = 'same' THEN 200 WHEN ?2 = 'other' THEN 409 WHEN ?1 = 'archived' AND ?3 = 'author' THEN 401 ELSE 200 END AS status")
+        .get(row.spaceState, row.accepted, row.inviteRole) as { status: number };
+      if (sql.status !== expectedStatus || row.status !== expectedStatus || row.appended !== appended || row.membershipRole !== membershipRole) throw new Error(`invite state oracle differs for ${row.name}`);
+    }
+
+    for (const row of fixture.receiptRelease) {
+      const release = row.outcome === "rejected-before-commit" && row.disposition === "pending" && row.digest === "exact";
+      const sql = oracle.query("SELECT CASE WHEN ?1='rejected-before-commit' AND ?2='pending' AND ?3='exact' THEN 1 ELSE 0 END AS release").get(row.outcome, row.disposition, row.digest) as { release: number };
+      if (release !== row.release || Boolean(sql.release) !== release) throw new Error(`receipt release oracle differs for ${row.name}`);
+    }
+    for (const row of fixture.backendOrders) {
+      const accepted = row.first === "archive";
+      const sql = oracle.query("SELECT CASE WHEN ?1 = 'archive' THEN 1 ELSE 0 END AS accepted").get(row.first) as { accepted: number };
+      if (row.accepted !== accepted || sql.accepted !== Number(accepted) || row.appended !== Number(accepted) || (row.between === "invite") !== accepted) throw new Error(`invite backend order oracle differs for ${row.name}`);
+      const event = (seq: number, body: unknown) => ({ seq, id: `archive-event-${seq}`, hlc: { physicalMs: seq, logical: 0 }, actor: { kind: "system", id: "archive-oracle" }, recordedAtMs: seq, body });
+      const before = client.foldAll(client.emptyDirectoryReadModel(), [
+        event(1, { kind: "space.created", spaceId: "archive-space", name: "Archive", spaceKind: "studio", visibility: "private", ownerUserId: "owner" }),
+        event(2, { kind: "member.upserted", spaceId: "archive-space", userId: "owner", role: "author" }),
+        event(3, { kind: row.between === "invite" ? "invite.redeemed" : "member.upserted", spaceId: "archive-space", userId: "member", inviteId: "archive-invite", role: row.between === "invite" ? "author" : "spectator" }),
+      ]);
+      before.spaces.get("archive-space").view.role = "author";
+      const archived = client.fold(before, event(4, { kind: "space.archived", spaceId: "archive-space" })).spaces.get("archive-space");
+      oracle.exec("CREATE TABLE IF NOT EXISTS archive_members(user_id TEXT PRIMARY KEY, role TEXT); DELETE FROM archive_members; INSERT INTO archive_members VALUES ('owner','author'),('member','author'); UPDATE archive_members SET role='spectator' WHERE role='author'");
+      const expected = oracle.query("SELECT role FROM archive_members ORDER BY user_id").all() as { role: string }[];
+      if (archived.view.kind !== "archive" || archived.view.role !== "spectator" || JSON.stringify(archived.members.map((member: { role: string }) => member.role)) !== JSON.stringify(expected.map(({ role }) => role)) || before.spaces.get("archive-space").view.role !== "author") throw new Error(`archive client fold differs from SQLite oracle for ${row.name}`);
+      console.log(`[DEBUG] directory-archive-fold case=${row.name} members=2 role=spectator immutable=1`);
+    }
+
+    for (const row of fixture.authorityRaces) {
+      const revoke = row.order.indexOf("revoke");
+      const fence = row.order.indexOf("fence");
+      const status = revoke < fence ? 401 : 200;
+      const sql = oracle.query("SELECT CASE WHEN ?1 < ?2 THEN 401 ELSE 200 END AS status").get(revoke, fence) as { status: number };
+      if (row.order[0] !== "hint" || row.status !== status || sql.status !== status || row.appended !== Number(status === 200)) throw new Error(`invite authority race oracle differs for ${row.name}`);
+    }
+  } finally {
+    oracle.close();
+  }
   for (const vector of fixture.vectors) {
     const accepted = vector.initial === "accepted-same" || vector.initial === "accepted-other" || vector.initial === "corrupt-marker" || vector.initial === "corrupt-event";
     let acceptedAt: number | null = accepted ? 100 : null;
@@ -10960,6 +11321,7 @@ async function proveInviteRedemptionTransaction(repoRoot: string): Promise<numbe
     const call = candidate.vectors[0]!.calls[0]! as unknown as Record<string, unknown>;
     if (hostile.mutation === "raw-capability") call.rawCapability = "forbidden";
     else if (hostile.mutation === "client-space") call.spaceId = "client-space";
+    else if (hostile.mutation === "client-space-state") call.spaceState = "writable";
     else if (hostile.mutation === "client-role") call.role = "author";
     else if (hostile.mutation === "client-event-id") call.eventId = "client-event";
     else if (hostile.mutation === "unknown-field") candidate.unknown = true;
@@ -10989,9 +11351,8 @@ async function proveInviteRedemptionTransaction(repoRoot: string): Promise<numbe
     return (
       shared.includes("pub accepted_event_id: Option<String>") &&
       shared.includes("InviteRedemptionCommit::AlreadyCommitted") &&
-      ordered(service, ["let mut clock = self.write.lock().await", "let hlc = clock.tick()", "self.dir.redeem_invite_atomic", "InviteRedemptionCommit::NewlyCommitted"]) &&
-      service.includes("InviteRedemptionCommit::AlreadyCommitted { event } => Ok(vec![event])") &&
-      !service.slice(service.indexOf("InviteRedemptionCommit::AlreadyCommitted")).includes("publish_persisted_locked") &&
+      ordered(service, ["let mut clock = self.write.lock().await", "let hlc = clock.tick()", "self.dir.redeem_invite_atomic", "if let InviteRedemptionCommit::NewlyCommitted { event } = &committed", "publish_persisted_locked", "Ok(committed)"]) &&
+      !service.includes("InviteRedemptionCommit::AlreadyCommitted") &&
       sq.includes("CHECK ((accepted_at IS NULL) = (accepted_event_id IS NULL))") &&
       sqliteClaim.includes("TransactionBehavior::Immediate") &&
       ordered(sqliteClaim.slice(sqliteClaim.indexOf("SET accepted_at = ?2")), ["SET accepted_at = ?2, accepted_event_id = ?3", "persist_event_with_identity", "self.project(&tx", "tx.commit()"]) &&
@@ -11011,7 +11372,7 @@ async function proveInviteRedemptionTransaction(repoRoot: string): Promise<numbe
   if (!sourceClosed(directory, sqlite, postgres, neo4j)) throw new Error("invite redemption production transaction fence is incomplete");
   const sourceHostiles = [
     [directory.replace("pub accepted_event_id: Option<String>", ""), sqlite, postgres, neo4j],
-    [directory.replace("InviteRedemptionCommit::AlreadyCommitted { event } => Ok(vec![event])", "InviteRedemptionCommit::AlreadyCommitted { event } => Ok(self.publish_persisted_locked(&clock, vec![event]))"), sqlite, postgres, neo4j],
+    [directory.replace("if let InviteRedemptionCommit::NewlyCommitted { event } = &committed", "if let InviteRedemptionCommit::AlreadyCommitted { event } = &committed"), sqlite, postgres, neo4j],
     [
       directory,
       sqlite.replace(
@@ -11028,7 +11389,51 @@ async function proveInviteRedemptionTransaction(repoRoot: string): Promise<numbe
   sourceHostiles.forEach((hostile, index) => {
     if (sourceClosed(hostile[0]!, hostile[1]!, hostile[2]!, hostile[3]!)) throw new Error(`invite redemption source oracle admitted removed transaction fence ${index}`);
   });
-  const checks = fixture.vectors.length + fixture.hostiles.length + sourceHostiles.length;
+
+  const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const stateAuthorityClosed = (shared: string, sq: string, pg: string, neo: string, server: string): boolean => {
+    const preflight = body(shared, "pub(crate) fn invite_redemption_preflight(");
+    const hint = body(shared, "pub(crate) fn verify_invite_redemption_scope_hint(");
+    const route = body(server, "async fn post_redeem_invite(");
+    return (
+      ordered(preflight, ["space_state == InviteRedemptionSpaceStateV1::Missing", "record.accepted_at.is_some()", "space_state == InviteRedemptionSpaceStateV1::Archived && record.role == SpaceRole::Author"]) &&
+      hint.includes("actor_user_id(actor).ok() != Some(user_id)") &&
+      hint.includes("!constant_time_digest_eq(&record.secret_digest, &capability.secret_digest())") &&
+      body(sq, "async fn redeem_invite_atomic(").includes("SELECT kind FROM hub_space WHERE id = ?1") &&
+      body(pg, "async fn redeem_invite_atomic(").includes("SELECT kind FROM hub_space WHERE id = $1") &&
+      body(neo, "async fn redeem_invite_atomic(").includes("RETURN s.kind AS kind") &&
+      [sq, pg, neo].every((source) => body(source, "async fn redeem_invite_atomic(").includes("InviteRedemptionSpaceStateV1::from_kind")) &&
+      [sq, pg, neo].every((source) => body(source, "async fn invite_redemption_scope_hint(").includes("verify_invite_redemption_scope_hint(record.as_ref(), capability, actor, user_id)")) &&
+      ordered(route, [
+        "state.directory.invite_redemption_scope_hint",
+        "false).await",
+        "state.socket_binding_gates.acquire_bindings",
+        "revalidate_directory_caller",
+        "state.directory_service.redeem_invite",
+        "InviteRedemptionCommit::NewlyCommitted",
+        "invalidate_directory_event_authority",
+        "Ok(DirectoryJson",
+      ]) &&
+      ["SocketBindingKeyV1::User(user.user_id.clone())", "SocketBindingKeyV1::Session(user.session_id.clone())", "SocketBindingKeyV1::DirectorySpaceAuthority", "SocketBindingKeyV1::Membership"].every((key) => route.includes(key)) &&
+      route.split("revalidate_directory_caller(&state, &user)").length === 3 &&
+      !route.includes("drop(_authority)") &&
+      !route.includes("get_role")
+    );
+  };
+  if (!stateAuthorityClosed(directory, sqlite, postgres, neo4j, hub)) throw new Error("invite state or ingress authority topology is incomplete");
+  const route = body(hub, "async fn post_redeem_invite(");
+  const stateHostiles = [
+    [directory.replace("space_state == InviteRedemptionSpaceStateV1::Archived && record.role == SpaceRole::Author", "false"), sqlite, postgres, neo4j, hub],
+    [directory, sqlite.replaceAll("SELECT kind FROM hub_space WHERE id = ?1", "SELECT id FROM hub_space WHERE id = ?1"), postgres, neo4j, hub],
+    [directory, sqlite, postgres.replaceAll("SELECT kind FROM hub_space WHERE id = $1", "SELECT id FROM hub_space WHERE id = $1"), neo4j, hub],
+    [directory, sqlite, postgres, neo4j.replaceAll("RETURN s.kind AS kind", "RETURN s.id AS kind"), hub],
+    [directory.replace("!constant_time_digest_eq(&record.secret_digest, &capability.secret_digest())", "false"), sqlite, postgres, neo4j, hub],
+    [directory, sqlite, postgres, neo4j, hub.replace(route, route.replace("SocketBindingKeyV1::User(user.user_id.clone())", "SocketBindingKeyV1::User(String::new())"))],
+  ];
+  for (const [index, candidate] of stateHostiles.entries()) {
+    if (stateAuthorityClosed(candidate[0]!, candidate[1]!, candidate[2]!, candidate[3]!, candidate[4]!)) throw new Error(`invite state authority oracle admitted removed fence ${index}`);
+  }
+  const checks = fixture.vectors.length + fixture.spaceStates.length + fixture.authorityRaces.length + fixture.backendOrders.length + fixture.receiptRelease.length + fixture.hostiles.length + sourceHostiles.length + stateHostiles.length;
   console.log(`invite-redemption-transaction-oracle: AJV=1 vectors=${fixture.vectors.length} hostiles=${fixture.hostiles.length} source-hostiles=${sourceHostiles.length}`);
   return checks;
 }
@@ -11052,6 +11457,7 @@ class InviteRedemptionTransactionCheckScript extends BundleScript {
                     "directory::tests::invite_redemption_sqlite_claim_is_exactly_once_across_concurrency_restart_and_rebuild",
                     "directory::tests::invite_redemption_projection_failure_rolls_back_claim_event_and_membership",
                     "directory::tests::invite_redemption_commit_and_publication_precede_the_next_directory_command",
+                    "directory::tests::invite_archive_projection_serializes_independent_service_decisions",
                   ],
                 },
               ]

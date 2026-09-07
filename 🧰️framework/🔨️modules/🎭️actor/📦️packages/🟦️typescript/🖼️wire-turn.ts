@@ -14,6 +14,7 @@
 
 // #region 🔌️Imports
 import type { Effect } from "../../../🎠️kernel/🟦️.ts";
+import { parseWitColdPairIngressStatus, type ColdPairIngressStatus } from "../../📥️cold-pair/🟦️.ts";
 // #endregion 🔌️Imports
 
 //#region 🔖️WireBytes
@@ -59,6 +60,7 @@ export type WireTurnResult = {
   readonly effects: readonly WireVariant[];
   readonly nextWake: number | null;
   readonly commandIngress?: WireVariant;
+  readonly coldPairIngress: ColdPairIngressStatus;
 };
 
 /** 📥️ Defensive parse of `ShardClient.turn()`'s opaque `unknown` return into the fields a caller
@@ -69,7 +71,8 @@ export function coerceTurnResult(raw: unknown): WireTurnResult {
   const effects = Array.isArray(record.effects) ? (record.effects as WireVariant[]) : [];
   const nextWake = typeof record.nextWake === "number" ? record.nextWake : null;
   const commandIngress = record.commandIngress && typeof record.commandIngress === "object" ? (record.commandIngress as WireVariant) : undefined;
-  return { uiPatches, effects, nextWake, commandIngress };
+  const coldPairIngress = parseWitColdPairIngressStatus(record.coldPairIngress);
+  return { uiPatches, effects, nextWake, commandIngress, coldPairIngress };
 }
 
 /** 🔀️ `Effect::SendMessage{target: Shell{instance}}` → the raw `AppFrame` bytes it wraps —
@@ -128,7 +131,10 @@ export type RetainedSurface = { readonly revision: number; readonly node: unknow
  * else, or a `baseRevision` that doesn't match `previous.revision` on a non-full-replace patch, is an
  * honest desync — `previous` is kept rather than an unverified partial walk applied.
  */
-export function applyUiPatchToRetained(previous: RetainedSurface | null, patch: { readonly revision: number; readonly baseRevision: number; readonly ops: readonly PatchOp[] }): { readonly surface: RetainedSurface | null; readonly desynced: boolean } {
+export function applyUiPatchToRetained(
+  previous: RetainedSurface | null,
+  patch: { readonly revision: number; readonly baseRevision: number; readonly ops: readonly PatchOp[] },
+): { readonly surface: RetainedSurface | null; readonly desynced: boolean } {
   let node: unknown = previous?.node ?? null;
   let sawFullReplace = false;
   for (const op of patch.ops) {
@@ -186,7 +192,9 @@ export function wireEffectToFriendly(effect: WireVariant, decodePackValue: (byte
     case "close-window":
       return { closeWindow: { window: num("window") } };
     case "spawn-plugin-instance":
-      return { spawnPluginInstance: { req: num("req"), pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId as string | undefined, label: val.label as string | undefined, documentJson: val.documentJson as string | undefined } };
+      return {
+        spawnPluginInstance: { req: num("req"), pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId as string | undefined, label: val.label as string | undefined, documentJson: val.documentJson as string | undefined },
+      };
     case "open-plugin-instance":
       return { openPluginInstance: { pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId as string | undefined } };
     default:

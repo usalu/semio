@@ -15,7 +15,7 @@ use crate::editor::en1995::modes::edit::windows::{inputs, results};
 use crate::editor::en1995::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use semio_framework_plugin::{NoPresence, NoPresenceMutation};
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{AppIo, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, LocalizedLabel, Media, MediaError, NoDraft, NoDraftMutation, UiNode};
+use semio_framework_plugin::{AppIo, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, LocalizedLabel, Media, MediaError, NoDraft, NoDraftMutation};
 use semio_framework_plugin::InteractiveJobClassification;
 // 🚧️ SDK GAP: `Dialect` is not in `semio_framework_plugin`'s curated crate-root re-export list
 // (only `ArtifactEditor`/`ArtifactViewer`/`Editor`/`Viewer`/`EditorApp`/`ViewerApp`/`ViewEmit` are,

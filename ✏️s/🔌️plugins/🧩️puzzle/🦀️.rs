@@ -9,12 +9,12 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the Puzzle 2D, 3D, and 5D surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum PuzzleApps: PluginApp {
-        Puzzle2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>),
-        Puzzle2dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
-        Puzzle3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),
-        Puzzle3dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),
-        Puzzle5dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>),
-        Puzzle5dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>),
+        Puzzle2dEditor(VcsArtifactApp<EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>),
+        Puzzle2dViewer(VcsArtifactApp<ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
+        Puzzle3dEditor(VcsArtifactApp<EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),
+        Puzzle3dViewer(VcsArtifactApp<ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),
+        Puzzle5dEditor(VcsArtifactApp<EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>),
+        Puzzle5dViewer(VcsArtifactApp<ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -51,7 +51,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// the OS bridge's own live consumer — the OS-level export/import dispatch this file does not own —
 /// was not traced this pass) — deleting on inference alone risks silently breaking real export/import
 /// UI functionality, which this ticket's "get everything working" rule forbids doing speculatively.
-pub fn plugin() -> Result<Plugin<PuzzleApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
     Plugin::<PuzzleApps>::builder("puzzle")
         .label("Puzzle")
         .version("0.1.0")

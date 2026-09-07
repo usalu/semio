@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `CreateGrip`.
 
-use crate::artifacts::block5d::{Block5dGripTemplate, Block5dSnapshot};
+use crate::artifacts::block5d::Block5dSnapshot;
 use crate::artifacts::block5d::diff::{Block5dDiff, Block5dGripsDelta};
 
 //#region 🔖️Diff

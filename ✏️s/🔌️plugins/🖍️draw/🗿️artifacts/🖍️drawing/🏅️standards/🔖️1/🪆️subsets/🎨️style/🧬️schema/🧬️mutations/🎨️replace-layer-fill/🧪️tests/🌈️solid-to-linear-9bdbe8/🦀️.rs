@@ -106,8 +106,8 @@ async fn produces_committed_diff() {
     let delta = outcome.diff().layers.clone().expect("replace-layer-fill pins a layers delta");
     let patch = &delta.patched[0].patch;
     let blob = patch.fill_json.as_deref().expect("the fill lane is populated");
-    let fill: Option<crate::artifacts::drawing::FillStyle> = serde_json::from_str(blob).expect("the fill blob is itself valid JSON");
-    assert!(matches!(fill, Some(crate::artifacts::drawing::FillStyle::LinearGradient { .. })), "the blob carries the tagged gradient variant, not a bare colour");
+    let fill: Option<FillStyle> = serde_json::from_str(blob).expect("the fill blob is itself valid JSON");
+    assert!(matches!(fill, Some(FillStyle::LinearGradient { .. })), "the blob carries the tagged gradient variant, not a bare colour");
     assert!(patch.stroke_json.is_none(), "a fill swap must leave the stroke lane empty");
 }
 

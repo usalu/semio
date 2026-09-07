@@ -26,7 +26,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let active_id = resolve_active_object_id(view.snapshot, view.config);
     let mut items = UiFixedList::<BuiltNode>::default();
     for (object_index, object) in view.snapshot.objects.iter().enumerate() {

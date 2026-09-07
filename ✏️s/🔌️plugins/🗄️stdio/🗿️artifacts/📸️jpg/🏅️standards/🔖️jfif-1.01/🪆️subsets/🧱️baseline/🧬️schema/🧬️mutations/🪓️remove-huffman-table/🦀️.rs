@@ -14,7 +14,7 @@ pub struct RemoveHuffmanTable {
 impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for RemoveHuffmanTable {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "huffman-table", kind: "remove-huffman-table", record: "RemoveHuffmanTable" };
 
-    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<<JpgBaselineMutation as protocol::Mutation<JpgSnapshot>>::Diff> {
+    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<<JpgBaselineMutation as Mutation<JpgSnapshot>>::Diff> {
         agg_diff(&JpgBaselineMutation::RemoveHuffmanTable(self.clone()), base)
     }
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {

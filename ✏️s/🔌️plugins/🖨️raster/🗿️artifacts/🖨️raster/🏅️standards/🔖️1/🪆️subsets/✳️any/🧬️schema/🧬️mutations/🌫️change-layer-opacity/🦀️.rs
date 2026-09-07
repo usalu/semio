@@ -1,10 +1,9 @@
 //! 🌫️ `change-layer-opacity` — sets an id-addressed layer's `opacity` scalar.
 
 pub mod mutation {
-use crate::artifacts::raster::diff::{diff_patch_layer, RasterDiff};
+use crate::artifacts::raster::diff::RasterDiff;
 use crate::artifacts::raster::mutations::RasterMutation;
-use crate::artifacts::raster::schema::{find_layer, layer_opacity};
-use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
+use crate::artifacts::raster::RasterSnapshot;
 
 //#region 🔖️ChangeLayerOpacity
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]

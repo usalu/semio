@@ -14,7 +14,7 @@ pub struct SetHasHeader {
 impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetHasHeader {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "has-header", kind: "set-has-header", record: "SetHasHeader" };
 
-    fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as protocol::Mutation<CsvSnapshot>>::Diff> {
+    fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
         agg_diff(&CsvMutation::SetHasHeader(self.clone()), base)
     }
     fn inverse(&self, base: &CsvSnapshot) -> Vec<CsvMutation> {

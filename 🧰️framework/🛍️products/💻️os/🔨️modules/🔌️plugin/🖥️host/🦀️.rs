@@ -2,6 +2,10 @@
 
 #[path = "🧵️shard/🦀️.rs"]
 pub mod shard;
+
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "🎠️activation/🦀️.rs"]
+pub mod activation;
 // 🚚️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (P1-process-shards): `ProcessTransport`/
 // `StdioTransport` — see that file's own module doc for why they live here and not in `🎭️actor`.
 #[path = "🧵️shard/🚚️process-transport/🦀️.rs"]
@@ -18,6 +22,11 @@ pub mod effects;
 // (above) as the real backends it awaits directly — see that module's own doc for the routing rule.
 #[path = "📥️imports/🦀️.rs"]
 pub mod imports;
+#[path = "📥️ui-patch/🦀️.rs"]
+mod ui_patch;
+#[cfg(test)]
+#[path = "📥️ui-patch/🧪️component/🦀️.rs"]
+mod ui_patch_component_tests;
 // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-runtime-rewrite): `WasmtimeAsyncRuntime` — one
 // pooled `tokio::spawn`ed task per actor, driving `📥️imports/🦀️.rs`'s host-async import layer against a
 // real `Store<AsyncActorHostState>` under `component-model-async`. See that module's own doc.
@@ -25,8 +34,8 @@ pub mod imports;
 pub mod runtime;
 
 use semio_framework::{
-    kernel::{ArtifactHandle, BrokerCapabilityGrant, Budget, CapabilityId, CapabilityRequest, Effect, Event, JobPlacement, MessageEndpoint, RequestId, RequestOutcome, TurnResult, TurnStatus, WindowHandle, WindowKindId},
     DslValue, PluginManifest,
+    kernel::{ArtifactHandle, BrokerCapabilityGrant, Budget, CapabilityId, CapabilityRequest, Effect, Event, JobPlacement, MessageEndpoint, RequestId, RequestOutcome, TurnResult, TurnStatus, WindowHandle, WindowKindId},
 };
 use semio_framework_actor::ActorId as RuntimeActorId;
 // 🌉️ `pub use`, not a plain `use` — `PackageRef`'s own fields are `PackageId`/`PackageHash`
@@ -37,6 +46,7 @@ use semio_framework_actor::ActorId as RuntimeActorId;
 use crate::interpreter::{CoreStepOutcome, HostCall, OwnedSemioArtifact, OwnedSemioExport, OwnedSemioInstance, StepControl, Value};
 pub use semio_framework_actor::{PackageHash, PackageId};
 use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
+use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use std::collections::VecDeque;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -46,7 +56,6 @@ use std::sync::{Arc, Mutex};
 use wasmtime::component::{Component, Linker, ResourceTable};
 use wasmtime::{Config, Engine, InstanceAllocationStrategy, PoolingAllocationConfig, ResourceLimiter, Store};
 use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
-use semio_framework_value_derive::{FromValue, ToValue};
 
 // 🗑️ `PLUGIN_FUEL_BUDGET` is gone — `design-runtime.md` §1's `Budget.fuel`/`⚖️LaneDefaults` (per-lane,
 // per-turn, threaded through every `GuestRuntime::execute_turn`/`step_job` call) replaces the single
@@ -447,7 +456,7 @@ mod shared_wasmtime_engine_tests {
         let ticker = EpochTicker::start(&engine, &pool);
         std::thread::sleep(std::time::Duration::from_millis(10));
         drop(ticker);
-        pool.shutdown();
+        pool.shutdown().expect("worker shutdown");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -630,18 +639,19 @@ impl std::error::Error for TurnFault {
     }
 }
 
-
 const GUEST_FAULT_MAXIMUM_BYTES: usize = 65_536;
 
 fn decode_guest_fault_bytes(bytes: &[u8]) -> TurnFault {
     if bytes.len() > GUEST_FAULT_MAXIMUM_BYTES {
         return TurnFault::Host(PluginHostError::Plugin("guest fault exceeds bounded wire capacity".into()));
     }
-    TurnFault::Guest(crate::dsl::decode_fault_bytes(bytes))
+    TurnFault::Guest(dsl::decode_fault_bytes(bytes))
 }
 
 fn decode_guest_plugin_error(error: wit_types::PluginError) -> TurnFault {
-    match error { wit_types::PluginError::Fault(bytes) => decode_guest_fault_bytes(&bytes) }
+    match error {
+        wit_types::PluginError::Fault(bytes) => decode_guest_fault_bytes(&bytes),
+    }
 }
 
 fn retryable_lifecycle_turn(fault: &TurnFault, events: &[Event]) -> bool {
@@ -653,6 +663,10 @@ fn retryable_lifecycle_turn(fault: &TurnFault, events: &[Event]) -> bool {
 #[cfg(test)]
 #[path = "🔁️lifecycle/🧪️tests/🦀️.rs"]
 mod guest_fault_tests;
+
+#[path = "📥️cold-pair/🦀️.rs"]
+mod cold_pair;
+use cold_pair::{kernel_cold_page_to_wit, validate_cold_page, wit_cold_ingress_to_kernel};
 
 impl From<PluginHostError> for TurnFault {
     fn from(error: PluginHostError) -> Self {
@@ -772,6 +786,9 @@ impl MockJobStepGate {
 /// of passing by accident.
 #[cfg(test)]
 pub struct MockGuestRuntime {
+    fail_instantiate: AtomicBool,
+    instantiate_admissions: std::sync::atomic::AtomicUsize,
+    drop_admissions: std::sync::atomic::AtomicUsize,
     now_ms: std::sync::atomic::AtomicI64,
     scripts: Mutex<HashMap<u64, VecDeque<ScriptedOutcome>>>,
     start_admissions: std::sync::atomic::AtomicUsize,
@@ -798,6 +815,9 @@ pub struct MockGuestRuntime {
 impl Default for MockGuestRuntime {
     fn default() -> Self {
         Self {
+            fail_instantiate: AtomicBool::new(false),
+            instantiate_admissions: std::sync::atomic::AtomicUsize::new(0),
+            drop_admissions: std::sync::atomic::AtomicUsize::new(0),
             now_ms: std::sync::atomic::AtomicI64::new(0),
             scripts: Mutex::new(HashMap::new()),
             start_admissions: std::sync::atomic::AtomicUsize::new(0),
@@ -931,7 +951,18 @@ impl MockGuestRuntime {
     /// 🏁️ A plain `Idle`, no-effects, no-patches turn result — convenience for tests that only
     /// care about scheduling/backpressure, not turn content.
     pub async fn idle_turn() -> TurnResult {
-        TurnResult { ui_patches: semio_framework::kernel::UiTurnPatches::default(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: TurnStatus::Idle, fuel_used: 0, lifecycle_receipt: None, ui_patch_receipt: None, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle }
+        TurnResult {
+            ui_patches: semio_framework::kernel::UiTurnPatches::default(),
+            effects: Vec::new(),
+            presence: Vec::new(),
+            next_wake: None,
+            status: TurnStatus::Idle,
+            fuel_used: 0,
+            lifecycle_receipt: None,
+            ui_patch_receipt: None,
+            command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            cold_pair_ingress: semio_framework::kernel::ColdPairIngressStatus::Idle,
+        }
     }
 
     /// 📼️ Every `events` slice `execute_turn` has been called with for `actor`, flattened across
@@ -948,6 +979,10 @@ impl GuestRuntime for MockGuestRuntime {
     }
 
     async fn instantiate(&self, _compiled: &CompiledHandle, actor: RuntimeActorId, _caps: &[BrokerCapabilityGrant], _budget: &Budget) -> Result<GuestInstance, PluginHostError> {
+        self.instantiate_admissions.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        if self.fail_instantiate.swap(false, std::sync::atomic::Ordering::AcqRel) {
+            return Err(PluginHostError::Plugin("scripted instance creation failure".into()));
+        }
         drop(self.queue_for(actor));
         Ok(GuestInstance { actor, state: GuestInstanceState::Mock(MockInstanceState::default()) })
     }
@@ -1038,6 +1073,7 @@ impl GuestRuntime for MockGuestRuntime {
     }
 
     async fn drop_instance(&self, inst: GuestInstance) {
+        self.drop_admissions.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
         self.scripts.lock().map(|mut scripts| scripts.remove(&inst.actor.0)).ok();
     }
 }
@@ -1203,6 +1239,7 @@ struct OwnedInstanceState {
 struct OwnedPollInput<'a> {
     events: &'a [Event],
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
+    cold_pair_page: Option<&'a semio_framework::kernel::ColdDocumentPairPage>,
     budget: Budget,
 }
 
@@ -1268,16 +1305,24 @@ impl OwnedRuntime {
         let state = owned_state_mut(inst)?;
         let mut ordinary_events = Vec::with_capacity(events.len());
         let mut command_page = None;
+        let mut cold_pair_page = None;
         for event in events {
             match event {
                 Event::CommandIngressPage { cursor, bytes } if command_page.is_none() && bytes.len() <= semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES && (!bytes.is_empty() || (cursor.kind == 28 && cursor.item_count == 0)) => {
                     command_page = Some((cursor.clone(), bytes.clone()));
                 }
                 Event::CommandIngressPage { .. } => return Err(TurnFault::Trapped("turn carries more than one command page or an invalid page size".to_string())),
+                Event::ColdDocumentPairPage(page) => {
+                    if cold_pair_page.is_some() {
+                        return Err(TurnFault::Trapped("turn carries duplicate cold-pair page".into()));
+                    }
+                    validate_cold_page(page)?;
+                    cold_pair_page = Some(page);
+                }
                 event => ordinary_events.push(event.clone()),
             }
         }
-        let input = serde_json::to_vec(&OwnedPollInput { events: &ordinary_events, command_page, budget }).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let input = serde_json::to_vec(&OwnedPollInput { events: &ordinary_events, command_page, cold_pair_page, budget }).map_err(|error| PluginHostError::Json(error.to_string()))?;
         begin_owned_operation(state, OwnedOperation::Poll, Some(input))?;
         let invocation = resume_owned_operation(state, OwnedOperation::Poll, budget.fuel, budget.deadline_ms)?;
         let mut result: TurnResult = decode_owned_result(&invocation.output)?;
@@ -1431,13 +1476,7 @@ fn resume_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperat
     resume_owned_operation_observed(state, operation, fuel, deadline_ms, |_, _| {})
 }
 
-fn resume_owned_operation_observed(
-    state: &mut OwnedInstanceState,
-    operation: OwnedOperation,
-    fuel: u64,
-    deadline_ms: u32,
-    mut progress: impl FnMut(u64, std::time::Duration),
-) -> Result<OwnedInvocation, TurnFault> {
+fn resume_owned_operation_observed(state: &mut OwnedInstanceState, operation: OwnedOperation, fuel: u64, deadline_ms: u32, mut progress: impl FnMut(u64, std::time::Duration)) -> Result<OwnedInvocation, TurnFault> {
     let started = std::time::Instant::now();
     let mut remaining = fuel;
     let mut next_progress_fuel = 25_000_000;
@@ -2085,24 +2124,13 @@ impl GuestRuntime for WasmtimeRuntime {
         let wit_budget = wit_reactor::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
         // 🚫️async: R10 residue shape 1 — `kernel_event_to_wit` is async, hoisted out of the sync
         // `Iterator::map` closure via a plain loop.
-        let mut wit_events: Vec<wit_events::Event> = Vec::with_capacity(events.len());
-        let mut wit_command_page = None;
-        for event in events {
-            if let Event::CommandIngressPage { cursor, bytes } = event {
-                if wit_command_page.is_some() || bytes.len() > semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES || (bytes.is_empty() && !(cursor.kind == 28 && cursor.item_count == 0)) {
-                    return Err(TurnFault::Trapped("turn carries more than one command page or an invalid page size".to_string()));
-                }
-                wit_command_page = Some(kernel_command_page_to_wit(cursor, bytes));
-            } else {
-                wit_events.push(kernel_event_to_wit(event, *instance_id).await);
-            }
-        }
+        let (wit_events, wit_command_page, wit_cold_pair_page) = kernel_turn_inputs_to_wit(events, *instance_id).await?;
         // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `poll` is `async func`
         // now, so it is driven through `Store::run_concurrent`'s `Accessor` rather than called
         // directly against `&mut Store` — that is the ONLY shape wasmtime offers for an async-lifted
         // export, and it is what lets the guest suspend on a `host-async` import mid-turn without
         // unwinding the call. Args are owned (moved into the concurrent task), not borrowed.
-        let call_result = store.run_concurrent(async |accessor| bindings.semio_framework_reactor().call_poll(accessor, wit_events, wit_command_page, wit_budget).await).await.and_then(|inner| inner);
+        let call_result = store.run_concurrent(async |accessor| bindings.semio_framework_reactor().call_poll(accessor, wit_events, wit_command_page, wit_cold_pair_page, wit_budget).await).await.and_then(|inner| inner);
         let poll_result = match call_result {
             Ok(inner) => inner,
             Err(trap) => {
@@ -2122,23 +2150,16 @@ impl GuestRuntime for WasmtimeRuntime {
         // turn is delivered on the same `turn-result` as the effects it returned — one merged list,
         // emitted-first (they happened earlier in the turn, by construction).
         let emitted: Vec<wit_effects::Effect> = std::mem::take(&mut store.data_mut().emit_sink);
-        // 🚧️ `emit_patch_sink` is drained and DISCARDED, deliberately and visibly: this runtime's
-        // `ui_patches` is `Vec::new()` unconditionally (see the note on that field below — the
-        // WIT `patch-op` ↔ kernel `PatchOp` path/node encoding is still unagreed), so an emitted
-        // patch has nowhere correct to go yet. Draining rather than accumulating keeps a long-lived
-        // actor from growing an unbounded sink; the moment `ui_patches` is real, both halves get
-        // marshaled together here.
-        let _emitted_patches: Vec<wit_ui::UiPatch> = std::mem::take(&mut store.data_mut().emit_patch_sink);
+        let emitted_patches: Vec<wit_ui::UiPatch> = std::mem::take(&mut store.data_mut().emit_patch_sink);
         let mut effects = Vec::with_capacity(emitted.len() + wit_turn_result.effects.len());
         for effect in emitted.into_iter().chain(wit_turn_result.effects) {
             effects.push(wit_effect_to_kernel(effect).await.map_err(TurnFault::Host)?);
         }
+        let ui_patch_receipt = wit_turn_result.ui_patch_receipt.map(wit_patch_receipt_to_kernel);
+        let ui_patches = ui_patch::wit_ui_patches_to_kernel(*instance_id, budget.max_patch_bytes, emitted_patches, wit_turn_result.ui_patches, ui_patch_receipt)
+            .map_err(|error| TurnFault::Host(PluginHostError::Plugin(error)))?;
         Ok(TurnResult {
-            // 🚧️ UI patch marshaling (WIT `patch-op`'s `path: list<u32>` + `node: pack` vs kernel
-            // `PatchOp`'s `path: String` + `node: UiNode`) is NOT implemented — a real path/node
-            // encoding convention needs to be agreed with A2/A3 first (`📓️terra-B1-host-native-
-            // report.md`'s `## blocked-on` — tracked there, not silently dropped).
-            ui_patches: semio_framework::kernel::UiTurnPatches::default(),
+            ui_patches,
             effects,
             // 👥️ M2 render-plane presence (sol's ruling, 26/08/20): `presence-update.update` is a
             // pack-encoded `ui_contract::PresenceUpdate`, NOT the replication `PresencePeer` the
@@ -2164,8 +2185,9 @@ impl GuestRuntime for WasmtimeRuntime {
             status: wit_turn_status_to_kernel(wit_turn_result.status).await,
             fuel_used: wit_turn_result.fuel_used,
             command_ingress: wit_command_ingress_to_kernel(wit_turn_result.command_ingress),
+            cold_pair_ingress: wit_cold_ingress_to_kernel(wit_turn_result.cold_pair_ingress)?,
             lifecycle_receipt: wit_turn_result.lifecycle_receipt.map(wit_lifecycle_receipt_to_kernel),
-            ui_patch_receipt: wit_turn_result.ui_patch_receipt.map(wit_patch_receipt_to_kernel),
+            ui_patch_receipt,
         })
     }
 
@@ -2779,6 +2801,30 @@ fn wit_lifecycle_receipt_to_kernel(value: wit_lifetime::Receipt) -> semio_framew
     }
 }
 
+async fn kernel_turn_inputs_to_wit(events: &[Event], instance_id: u32) -> Result<(Vec<wit_events::Event>, Option<wit_reactor::CommandIngressPage>, Option<wit_reactor::ColdDocumentPairPage>), TurnFault> {
+    let mut ordinary = Vec::with_capacity(events.len());
+    let mut command = None;
+    let mut cold = None;
+    for event in events {
+        match event {
+            Event::CommandIngressPage { cursor, bytes } => {
+                if command.is_some() || bytes.len() > semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES || (bytes.is_empty() && !(cursor.kind == 28 && cursor.item_count == 0)) {
+                    return Err(TurnFault::Trapped("turn carries duplicate or invalid command page".into()));
+                }
+                command = Some(kernel_command_page_to_wit(cursor, bytes));
+            }
+            Event::ColdDocumentPairPage(page) => {
+                if cold.is_some() {
+                    return Err(TurnFault::Trapped("turn carries duplicate cold-pair page".into()));
+                }
+                cold = Some(kernel_cold_page_to_wit(page)?);
+            }
+            event => ordinary.push(kernel_event_to_wit(event, instance_id).await),
+        }
+    }
+    Ok((ordinary, command, cold))
+}
+
 async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Event {
     match event {
         Event::InstanceOpen { request, app_id, actor, config, assets, capabilities, quotas } => {
@@ -2806,13 +2852,16 @@ async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Eve
         Event::SuspendRequest => wit_events::Event::SuspendRequest(wit_events::SuspendRequestEvent { instance: instance_id }),
         Event::CapabilityChanged { change } => wit_events::Event::CapabilityChanged(wit_events::CapabilityChangedEvent { instance: instance_id, change: kernel_capability_change_to_wit(change).await }),
         Event::QuotaChanged { quotas } => wit_events::Event::QuotaChanged(wit_events::QuotaChangedEvent { instance: instance_id, quotas: encode_json(quotas).await }),
+        Event::ColdDocumentPairPage(_) => unreachable!("cold pages use the dedicated poll input"),
         Event::CommandIngressPage { .. } => unreachable!("command pages are lifted through reactor.poll's dedicated page argument"),
         Event::UiIntent { instance, intent } => wit_events::Event::UiIntent(wit_events::UiIntentEvent { instance: instance.0.parse().unwrap_or(instance_id), intent: intent.clone() }),
         Event::SurfaceVisible { surface } => wit_events::Event::SurfaceVisible(wit_events::SurfaceVisibleEvent { surface: wit_surface_ref(instance_id, surface).await }),
         Event::SurfaceHidden { surface } => wit_events::Event::SurfaceHidden(wit_events::SurfaceHiddenEvent { surface: wit_surface_ref(instance_id, surface).await }),
         Event::SurfaceResized { surface, width, height } => wit_events::Event::SurfaceResized(wit_events::SurfaceResizedEvent { surface: wit_surface_ref(instance_id, surface).await, width: *width, height: *height }),
         Event::PatchAck { receipt, surface, revision } => wit_events::Event::PatchAck(wit_events::PatchAckEvent { receipt: kernel_patch_receipt_to_wit(*receipt), surface: wit_surface_ref(instance_id, surface).await, revision: *revision }),
-        Event::PatchRejected { receipt, surface, revision, reason } => wit_events::Event::PatchRejected(wit_events::PatchRejectedEvent { receipt: kernel_patch_receipt_to_wit(*receipt), surface: wit_surface_ref(instance_id, surface).await, revision: *revision, reason: reason.clone() }),
+        Event::PatchRejected { receipt, surface, revision, reason } => {
+            wit_events::Event::PatchRejected(wit_events::PatchRejectedEvent { receipt: kernel_patch_receipt_to_wit(*receipt), surface: wit_surface_ref(instance_id, surface).await, revision: *revision, reason: reason.clone() })
+        }
         Event::Completed { req, result } => wit_events::Event::Completed(wit_events::CompletedEvent { req: req.0, outcome: kernel_request_outcome_to_wit(result).await }),
         Event::HttpChunk { req, bytes, done } => wit_events::Event::HttpChunk(wit_events::HttpChunkEvent { req: req.0, params: wit_events::HttpChunkParams { bytes: bytes.clone(), done: *done } }),
         Event::JobProgress { job, progress } => wit_events::Event::JobProgress(wit_events::JobProgressEvent { job: *job, progress: progress.clone().unwrap_or_default() }),
@@ -2930,7 +2979,8 @@ impl GuestRelayPoolFuture {
     }
 
     fn spawn_inner(pool: WorkerPool, lane: Lane, future: impl std::future::Future<Output = ()> + Send + 'static, failure_handler: Box<dyn FnOnce(GuestRelayPoolFailure) + Send + 'static>) {
-        let task = Arc::new(Self { pool, lane, future: Mutex::new(Some(Box::pin(future))), failure_handler: Mutex::new(Some(failure_handler)), scheduled: AtomicBool::new(false), wake_requested: AtomicBool::new(false), complete: AtomicBool::new(false) });
+        let task =
+            Arc::new(Self { pool, lane, future: Mutex::new(Some(Box::pin(future))), failure_handler: Mutex::new(Some(failure_handler)), scheduled: AtomicBool::new(false), wake_requested: AtomicBool::new(false), complete: AtomicBool::new(false) });
         task.schedule();
     }
 
@@ -3381,11 +3431,7 @@ async fn run_guest_relay_request(
         GuestRelayRequest::Cancel => b"plugin instance quarantined after cancel-job panic".to_vec(),
         GuestRelayRequest::Start { .. } | GuestRelayRequest::Step => b"plugin instance cleanup pending after guest relay panic".to_vec(),
     };
-    let mut guest = match if matches!(&request, GuestRelayRequest::Cancel) {
-        GuestInstanceLease::acquire_cleanup(Arc::clone(&instance))
-    } else {
-        GuestInstanceLease::acquire(Arc::clone(&instance), unwind_detail)
-    } {
+    let mut guest = match if matches!(&request, GuestRelayRequest::Cancel) { GuestInstanceLease::acquire_cleanup(Arc::clone(&instance)) } else { GuestInstanceLease::acquire(Arc::clone(&instance), unwind_detail) } {
         Ok(guest) => guest,
         Err(error) => {
             sender.send(GuestRelayCompletion::Rejected(GuestRelayOwnedBytes::new(error)));
@@ -3489,11 +3535,7 @@ fn recover_guest_relay_failure(
         mark_guest_cleanup_pending(&instance, b"plugin instance cleanup pending after guest relay panic".to_vec());
         b"plugin guest relay panicked after acquiring its instance".to_vec()
     };
-    sender.send(if matches!(request, GuestRelayRequestKind::Cancel) {
-        GuestRelayCompletion::TerminalFault(GuestRelayOwnedBytes::new(detail))
-    } else {
-        GuestRelayCompletion::Fault(GuestRelayOwnedBytes::new(detail))
-    });
+    sender.send(if matches!(request, GuestRelayRequestKind::Cancel) { GuestRelayCompletion::TerminalFault(GuestRelayOwnedBytes::new(detail)) } else { GuestRelayCompletion::Fault(GuestRelayOwnedBytes::new(detail)) });
 }
 
 #[derive(Clone, Copy)]
@@ -3920,13 +3962,8 @@ struct GuestRelayLifecycleProbeJob {
 impl semio_framework_job::InteractiveJob for GuestRelayLifecycleProbeJob {
     fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         let Some(output) = self.terminal_output.take() else { return semio_framework_job::StepOutcome::Yield };
-        let output = context
-            .payload_from_bytes(semio_framework_job::JobPayloadStream::CommitOutput, &output)
-            .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput));
-        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-            output,
-        })
+        let output = context.payload_from_bytes(semio_framework_job::JobPayloadStream::CommitOutput, &output).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput));
+        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState), output })
     }
 
     fn begin_close(&mut self) {
@@ -3943,13 +3980,7 @@ impl semio_framework_job::InteractiveJob for GuestRelayLifecycleProbeJob {
         if self.remaining == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Complete;
         }
-        if maximum_items == 0
-            || self
-                .control
-                .release_permits
-                .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |permits| permits.checked_sub(1))
-                .is_err()
-        {
+        if maximum_items == 0 || self.control.release_permits.try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |permits| permits.checked_sub(1)).is_err() {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
         self.remaining -= 1;
@@ -3958,10 +3989,7 @@ impl semio_framework_job::InteractiveJob for GuestRelayLifecycleProbeJob {
     }
 
     fn register_close_wake(&self, waker: &std::task::Waker) -> bool {
-        let ready = || {
-            self.control.awake.load(std::sync::atomic::Ordering::Acquire)
-                && (self.remaining == 0 || self.control.release_permits.load(std::sync::atomic::Ordering::Acquire) > 0)
-        };
+        let ready = || self.control.awake.load(std::sync::atomic::Ordering::Acquire) && (self.remaining == 0 || self.control.release_permits.load(std::sync::atomic::Ordering::Acquire) > 0);
         if ready() {
             waker.wake_by_ref();
             return true;
@@ -4107,7 +4135,7 @@ impl GuestRelayMountedRegistry {
             if matches!(*slot, GuestRelayMountedSlot::Empty) {
                 let generation = self
                     .next_generation
-                    .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |generation| match generation {
+                    .try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |generation| match generation {
                         0 => None,
                         u64::MAX => Some(0),
                         generation => Some(generation + 1),
@@ -4139,7 +4167,8 @@ impl GuestRelayMountedRegistry {
             drop(owner);
             return;
         }
-        *slot = GuestRelayMountedSlot::Mounted(GuestRelayMountedSession { generation, owner, checked_out: None, lifecycle_probe_checked_out: None, outcome: None, outcome_page: 0, output, terminal: None, lifecycle: GuestRelayMountedLifecycle::Running });
+        *slot =
+            GuestRelayMountedSlot::Mounted(GuestRelayMountedSession { generation, owner, checked_out: None, lifecycle_probe_checked_out: None, outcome: None, outcome_page: 0, output, terminal: None, lifecycle: GuestRelayMountedLifecycle::Running });
     }
 
     fn detach(self: &Arc<Self>, index: usize, generation: u64) {
@@ -4183,21 +4212,16 @@ impl GuestRelayMountedRegistry {
         }
         let registry = Arc::clone(self);
         let recovery = Arc::clone(self);
-        GuestRelayPoolFuture::spawn_recoverable(
-            self.pool.clone(),
-            Lane::Maintenance,
-            GuestRelayMountedReaper { registry },
-            move |failure| {
-                recovery.reaper_active.store(false, std::sync::atomic::Ordering::Release);
-                match failure {
-                    GuestRelayPoolFailure::FuturePanicked => recovery.ensure_reaper(),
-                    GuestRelayPoolFailure::Admission(_) => {
-                        recovery.reaper_failed.store(true, std::sync::atomic::Ordering::Release);
-                        recovery.fail_detached();
-                    }
+        GuestRelayPoolFuture::spawn_recoverable(self.pool.clone(), Lane::Maintenance, GuestRelayMountedReaper { registry }, move |failure| {
+            recovery.reaper_active.store(false, std::sync::atomic::Ordering::Release);
+            match failure {
+                GuestRelayPoolFailure::FuturePanicked => recovery.ensure_reaper(),
+                GuestRelayPoolFailure::Admission(_) => {
+                    recovery.reaper_failed.store(true, std::sync::atomic::Ordering::Release);
+                    recovery.fail_detached();
                 }
-            },
-        );
+            }
+        });
     }
 
     fn fail_detached(&self) {
@@ -4637,12 +4661,7 @@ fn guest_relay_lifecycle_wait(pool: &WorkerPool, mut ready: impl FnMut() -> bool
     Err(detail.to_string())
 }
 
-fn guest_relay_lifecycle_probe_session(
-    control: Arc<GuestRelayLifecycleProbeControl>,
-    generation: u64,
-    terminal_output: Option<Vec<u8>>,
-    remaining: usize,
-) -> Result<semio_framework_job::WorkerJobSession<GuestRelayLifecycleProbeJob>, String> {
+fn guest_relay_lifecycle_probe_session(control: Arc<GuestRelayLifecycleProbeControl>, generation: u64, terminal_output: Option<Vec<u8>>, remaining: usize) -> Result<semio_framework_job::WorkerJobSession<GuestRelayLifecycleProbeJob>, String> {
     let job = GuestRelayLifecycleProbeJob { control: Arc::clone(&control), remaining, terminal_output, closing: false };
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::OperationId(generation),
@@ -4689,33 +4708,17 @@ fn exercise_abandoned_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) ->
                     first_reason.get_or_insert_with(|| "detached".to_string());
                 }
             } else if event == "blocked" {
-                guest_relay_lifecycle_wait(
-                    &pool,
-                    || control.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(),
-                    "relay lifecycle reaper did not park on the exact close wake",
-                )?;
+                guest_relay_lifecycle_wait(&pool, || control.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(), "relay lifecycle reaper did not park on the exact close wake")?;
             } else if event == "wake" {
                 control.wake();
-                guest_relay_lifecycle_wait(
-                    &pool,
-                    || control.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(),
-                    "relay lifecycle reaper did not park for its first release",
-                )?;
+                guest_relay_lifecycle_wait(&pool, || control.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(), "relay lifecycle reaper did not park for its first release")?;
             } else if event == "release" {
                 let released = control.releases.load(std::sync::atomic::Ordering::Acquire);
                 control.release_one();
-                guest_relay_lifecycle_wait(
-                    &pool,
-                    || control.releases.load(std::sync::atomic::Ordering::Acquire) > released,
-                    "relay lifecycle reaper did not consume its admitted release",
-                )?;
+                guest_relay_lifecycle_wait(&pool, || control.releases.load(std::sync::atomic::Ordering::Acquire) > released, "relay lifecycle reaper did not consume its admitted release")?;
             }
         }
-        guest_relay_lifecycle_wait(
-            &pool,
-            || matches!(&*registry.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner), GuestRelayMountedSlot::Empty),
-            "relay lifecycle reaper did not reach Empty",
-        )?;
+        guest_relay_lifecycle_wait(&pool, || matches!(&*registry.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner), GuestRelayMountedSlot::Empty), "relay lifecycle reaper did not reach Empty")?;
         Ok(GuestRelayLifecycleProjection {
             state: "Empty".to_string(),
             first_reason,
@@ -4724,8 +4727,8 @@ fn exercise_abandoned_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) ->
             caller_output: None,
         })
     })();
-    pool.shutdown();
-    result
+    let shutdown = pool.shutdown().map_err(|error| format!("worker shutdown failed: {error:?}"));
+    result.and_then(|projection| shutdown.map(|()| projection))
 }
 
 fn exercise_live_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Result<GuestRelayLifecycleProjection, String> {
@@ -4761,19 +4764,11 @@ fn exercise_live_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Resu
                 let session = guest_relay_lifecycle_probe_session(Arc::clone(&control), other_generation, None, 2)?;
                 registry.mount(other_index, other_generation, GuestRelayMountedOwner::LifecycleProbe(session));
                 registry.detach(other_index, other_generation);
-                guest_relay_lifecycle_wait(
-                    &pool,
-                    || control.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(),
-                    "relay lifecycle competing reaper did not park",
-                )?;
+                guest_relay_lifecycle_wait(&pool, || control.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(), "relay lifecycle competing reaper did not park")?;
                 control.wake();
                 control.release_one();
                 control.release_one();
-                guest_relay_lifecycle_wait(
-                    &pool,
-                    || matches!(&*registry.slots[other_index].lock().unwrap_or_else(std::sync::PoisonError::into_inner), GuestRelayMountedSlot::Empty),
-                    "relay lifecycle competing detached owner was not reclaimed",
-                )?;
+                guest_relay_lifecycle_wait(&pool, || matches!(&*registry.slots[other_index].lock().unwrap_or_else(std::sync::PoisonError::into_inner), GuestRelayMountedSlot::Empty), "relay lifecycle competing detached owner was not reclaimed")?;
                 let slot = registry.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
                 if !matches!(&*slot, GuestRelayMountedSlot::Mounted(session) if session.lifecycle == GuestRelayMountedLifecycle::DrainingForCaller) {
                     return Err("relay lifecycle reaper stole the live caller's exact owner".to_string());
@@ -4798,8 +4793,8 @@ fn exercise_live_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Resu
         let state = if matches!(&*registry.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner), GuestRelayMountedSlot::Empty) { "Empty" } else { "DrainingForCaller" };
         Ok(GuestRelayLifecycleProjection { state: state.to_string(), first_reason, cancel_admissions: 0, release_opportunities: releases, caller_output })
     })();
-    pool.shutdown();
-    result
+    let shutdown = pool.shutdown().map_err(|error| format!("worker shutdown failed: {error:?}"));
+    result.and_then(|projection| shutdown.map(|()| projection))
 }
 
 fn exercise_stale_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Result<GuestRelayLifecycleProjection, String> {
@@ -4825,8 +4820,8 @@ fn exercise_stale_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Res
         *registry.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner) = GuestRelayMountedSlot::Empty;
         Ok(GuestRelayLifecycleProjection { state: state.to_string(), first_reason: None, cancel_admissions: 0, release_opportunities: 0, caller_output: None })
     })();
-    pool.shutdown();
-    result
+    let shutdown = pool.shutdown().map_err(|error| format!("worker shutdown failed: {error:?}"));
+    result.and_then(|projection| shutdown.map(|()| projection))
 }
 
 fn exercise_capacity_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Result<GuestRelayLifecycleProjection, String> {
@@ -4850,7 +4845,7 @@ fn exercise_capacity_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> 
     for (index, _) in reserved {
         *registry.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner) = GuestRelayMountedSlot::Empty;
     }
-    pool.shutdown();
+    pool.shutdown().map_err(|error| format!("worker shutdown failed: {error:?}"))?;
     Ok(GuestRelayLifecycleProjection { state: state.to_string(), first_reason: None, cancel_admissions: 0, release_opportunities: 0, caller_output: None })
 }
 
@@ -4861,13 +4856,7 @@ pub fn exercise_relay_lifecycle_trace(trace_json: &str) -> Result<String, String
     let projection = match (trace.id.as_str(), trace.machine.as_str(), trace.initial.as_str()) {
         ("replay-first-fault-wins", "replay", "CaptureKind") => {
             let actual = shard::exercise_replay_lifecycle_trace(&trace.events)?;
-            GuestRelayLifecycleProjection {
-                state: actual.state.to_string(),
-                first_reason: actual.first_reason,
-                cancel_admissions: 0,
-                release_opportunities: actual.release_opportunities,
-                caller_output: None,
-            }
+            GuestRelayLifecycleProjection { state: actual.state.to_string(), first_reason: actual.first_reason, cancel_admissions: 0, release_opportunities: actual.release_opportunities, caller_output: None }
         }
         ("relay-abandoned-blocked-wake", "relay", "Running") => exercise_abandoned_relay_lifecycle_trace(&trace)?,
         ("relay-live-terminal-caller-output", "relay", "Running") => exercise_live_relay_lifecycle_trace(&trace)?,
@@ -5096,7 +5085,7 @@ mod guest_cold_relay_tests {
         release_sender.send(()).expect("release saturated worker");
         assert_eq!(completion_receiver.await.expect("retained future completion after saturation"), b"retried");
         assert_eq!(failures.load(std::sync::atomic::Ordering::SeqCst), 0);
-        pool.shutdown();
+        pool.shutdown().expect("worker shutdown");
 
         let ran = Arc::new(AtomicBool::new(false));
         let future_ran = Arc::clone(&ran);
@@ -5111,10 +5100,7 @@ mod guest_cold_relay_tests {
                 let _ = failure_sender.send(failure);
             },
         );
-        assert!(matches!(
-            failure_receiver.await.expect("shutdown terminal failure"),
-            GuestRelayPoolFailure::Admission(semio_framework_async::WorkerSubmitErrorKind::Shutdown)
-        ));
+        assert!(matches!(failure_receiver.await.expect("shutdown terminal failure"), GuestRelayPoolFailure::Admission(semio_framework_async::WorkerSubmitErrorKind::Shutdown)));
         assert!(!ran.load(std::sync::atomic::Ordering::SeqCst));
         let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool));
         let (index, generation) = registry.reserve().expect("pre-failure mounted slot");
@@ -5142,10 +5128,7 @@ mod guest_cold_relay_tests {
         );
         maximum_rejected_job.begin_close();
         for _ in 0..semio_framework_job::JOB_PAYLOAD_OPERATION_PAGES.saturating_add(3) {
-            if matches!(
-                maximum_rejected_job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES),
-                semio_framework_job::InteractiveJobCloseStep::Complete
-            ) {
+            if matches!(maximum_rejected_job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
                 break;
             }
         }
@@ -5163,8 +5146,8 @@ mod guest_cold_relay_tests {
         assert_eq!(registry["capacity"].as_u64(), Some(GUEST_RELAY_MOUNTED_SLOTS as u64));
         assert_eq!(registry["storage"], "heap");
         assert_eq!(GuestRelayMountedRegistry::new().slots.len(), GUEST_RELAY_MOUNTED_SLOTS);
-        assert!(std::mem::size_of::<GuestRelayMountedSlot>() <= maximum);
-        assert!(std::mem::size_of::<GuestRelayMountedRegistry>() <= maximum);
+        assert!(size_of::<GuestRelayMountedSlot>() <= maximum);
+        assert!(size_of::<GuestRelayMountedRegistry>() <= maximum);
     }
 
     #[derive(Debug, PartialEq, Eq)]
@@ -5303,7 +5286,7 @@ mod guest_cold_relay_tests {
         assert!(matches!(&*slot, GuestRelayMountedSlot::Mounted(session) if session.generation == generation && session.lifecycle == GuestRelayMountedLifecycle::Running));
         drop(slot);
         *registry.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner) = GuestRelayMountedSlot::Empty;
-        pool.shutdown();
+        pool.shutdown().expect("worker shutdown");
     }
 
     #[test]
@@ -5321,7 +5304,7 @@ mod guest_cold_relay_tests {
         assert!(matches!(&*registry.slots[detached_index].lock().unwrap_or_else(std::sync::PoisonError::into_inner), GuestRelayMountedSlot::Empty));
         assert!(matches!(&*registry.slots[live_index].lock().unwrap_or_else(std::sync::PoisonError::into_inner), GuestRelayMountedSlot::Mounted(session) if session.lifecycle == GuestRelayMountedLifecycle::DrainingForCaller));
         assert!(matches!(registry.pump(live_index, live_generation, std::task::Waker::noop()), std::task::Poll::Ready(Ok(bytes)) if bytes == expected.as_bytes()));
-        pool.shutdown();
+        pool.shutdown().expect("worker shutdown");
     }
 
     #[test]
@@ -5511,9 +5494,13 @@ mod guest_cold_relay_tests {
 
     async fn pool_timer_barrier(pool: &WorkerPool) {
         let (sender, receiver) = semio_framework_async::oneshot::channel();
-        pool.submit_at(pool.now_ms().saturating_add(1), Lane::Maintenance, Box::new(move || {
-            let _ = sender.send(());
-        }));
+        pool.submit_at(
+            pool.now_ms().saturating_add(1),
+            Lane::Maintenance,
+            Box::new(move || {
+                let _ = sender.send(());
+            }),
+        );
         receiver.await.expect("maintenance timer barrier");
     }
 
@@ -5576,7 +5563,7 @@ mod guest_cold_relay_tests {
         assert!(cancel.is_cancelled_now());
         assert_eq!(mock.cancel_admissions(), expected_cancels as usize);
         assert_eq!(mock.step_admissions(), 1);
-        pool.shutdown();
+        pool.shutdown().expect("worker shutdown");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -5597,7 +5584,7 @@ mod guest_cold_relay_tests {
         }
         assert!(!registry.reaper_timer_pending.load(std::sync::atomic::Ordering::Acquire), "the bounded fallback relinquishes its pending ownership");
         assert_eq!(registry.reaper_timers.load(std::sync::atomic::Ordering::SeqCst), 1, "the fallback never duplicates itself while coalesced");
-        pool.shutdown();
+        pool.shutdown().expect("worker shutdown");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -5633,7 +5620,7 @@ mod guest_cold_relay_tests {
         assert_eq!(terminal, TestRelayOutcome::Complete(b"done".to_vec()));
         assert_eq!(test_relay_step(&session, &pool).await, TestRelayOutcome::Yield);
         assert_eq!(mock.step_admissions(), 1, "neither pending polls nor terminal replay may duplicate guest admission");
-        pool.shutdown();
+        pool.shutdown().expect("worker shutdown");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -5657,7 +5644,7 @@ mod guest_cold_relay_tests {
         wait_for_cancel_admission(&pool, &mock).await;
         assert_eq!(mock.step_admissions(), 1);
         assert_eq!(mock.cancel_admissions(), 1, "the completion/cancellation race must admit guest cancellation exactly once");
-        pool.shutdown();
+        pool.shutdown().expect("worker shutdown");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -5673,7 +5660,7 @@ mod guest_cold_relay_tests {
         assert!(cancel.is_cancelled_now(), "dropping an admitted nonterminal relay must cancel its owned scope before scheduling guest cleanup");
         assert_eq!(mock.step_admissions(), 1);
         assert_eq!(mock.cancel_admissions(), 1, "the pending-step and Drop cleanup paths share one cancellation admission bit");
-        pool.shutdown();
+        pool.shutdown().expect("worker shutdown");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -5753,7 +5740,7 @@ mod guest_cold_relay_tests {
             }),
         );
         receiver.await.expect("the sole worker and semaphore permit must survive cancel panic");
-        pool.shutdown();
+        pool.shutdown().expect("worker shutdown");
         let next = handle.infer(b"next-route").await.expect_err("a mounted route must reject rather than reuse a quarantined guest");
         assert!(next.to_string().contains("quarantined after cancel-job panic"));
         assert_eq!(mock.cancel_admissions(), 1);
@@ -5812,7 +5799,7 @@ mod guest_cold_relay_tests {
             }),
         );
         assert_eq!(receiver.await.expect("one-worker competitor after cancel failure"), b"worker-survived");
-        pool.shutdown();
+        pool.shutdown().expect("worker shutdown");
 
         let start_admissions = mock.start_admissions();
         let next = handle.infer(b"next-route").await.expect_err("quarantined mounted route must reject without entering the guest");
@@ -5843,7 +5830,7 @@ mod guest_cold_relay_tests {
             }),
         );
         receiver.await.expect("one-worker permit and worker survive Drop cleanup failure");
-        pool.shutdown();
+        pool.shutdown().expect("worker shutdown");
 
         let start_admissions = mock.start_admissions();
         let next = handle.infer(b"next-route").await.expect_err("stored Drop cleanup quarantine must reject promptly");
@@ -6078,7 +6065,7 @@ mod runtime_metrics_publisher_tests {
     }
 
     async fn ok_turn() -> TurnResult {
-        TurnResult { ui_patches: vec![], effects: vec![], lifecycle_receipt: None, ui_patch_receipt: None, command_ingress: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 10, wall_us: 5, memory_bytes: 512 } }
+        TurnResult { ui_patches: vec![], effects: vec![], lifecycle_receipt: None, ui_patch_receipt: None, command_ingress: vec![], cold_pair_ingress: semio_framework_actor::cold_pair::ColdPairIngressStatus::Idle, next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 10, wall_us: 5, memory_bytes: 512 } }
     }
 
     /// 📈️ Drives a real `Kernel` (not a fake) through one turn, confirms the 2Hz gate (500ms), and
@@ -6200,8 +6187,17 @@ mod runtime_metrics_publisher_tests {
         let crash_actor = crash_profile_actor.expect("fixture has at least one \"crash\" profile record");
         kernel.submit(&env(crash_actor, Lane::UserVisible, 1).await).await;
         kernel.tick(1).await;
-        let faulted =
-            TurnResult { ui_patches: vec![], effects: vec![], lifecycle_receipt: None, ui_patch_receipt: None, command_ingress: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"scale-fixture crash profile".to_vec() }, usage: Usage { fuel: 5, wall_us: 3, memory_bytes: 256 } };
+        let faulted = TurnResult {
+            ui_patches: vec![],
+            effects: vec![],
+            lifecycle_receipt: None,
+            ui_patch_receipt: None,
+            command_ingress: vec![],
+            cold_pair_ingress: semio_framework_actor::cold_pair::ColdPairIngressStatus::Idle,
+            next_wake: None,
+            status: TurnStatus::Faulted { detail: b"scale-fixture crash profile".to_vec() },
+            usage: Usage { fuel: 5, wall_us: 3, memory_bytes: 256 },
+        };
         kernel.complete(crash_actor, &faulted, 2).await.unwrap();
 
         let mut publisher = RuntimeMetricsPublisher::new();
@@ -8024,16 +8020,23 @@ mod microsecond_clock_tests {
             let duration = std::time::Duration::new((nanoseconds / 1_000_000_000) as u64, (nanoseconds % 1_000_000_000) as u32);
             let result = owned_wasi_nanoseconds(duration);
             assert_eq!(result.is_ok(), law["accepted"].as_bool().unwrap());
-            if let Ok(actual) = result { assert_eq!(u128::from(actual), nanoseconds); }
+            if let Ok(actual) = result {
+                assert_eq!(u128::from(actual), nanoseconds);
+            }
         }
-        let read = || match owned_wasi_monotonic_clock().unwrap() { Value::I64(value) => u64::from_ne_bytes(value.to_ne_bytes()), _ => panic!("WASI clock primitive") };
+        let read = || match owned_wasi_monotonic_clock().unwrap() {
+            Value::I64(value) => u64::from_ne_bytes(value.to_ne_bytes()),
+            _ => panic!("WASI clock primitive"),
+        };
         let start = read();
         let mut last = start;
         for _ in 0..10_000 {
             let next = read();
             assert!(next >= last);
             last = next;
-            if last > start { break; }
+            if last > start {
+                break;
+            }
         }
         assert!(last > start, "owned WASI host must not return a frozen zero clock");
         eprintln!("[DEBUG] owned WASI real monotonic nanoseconds start={start} last={last}");

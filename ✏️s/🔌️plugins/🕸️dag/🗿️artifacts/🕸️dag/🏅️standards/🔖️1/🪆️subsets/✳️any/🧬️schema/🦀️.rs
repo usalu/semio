@@ -5,17 +5,13 @@ use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::{DagCamera, DagContentChild, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, DagSnapshot, IoPortSpec};
 use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle};
 use schema::ArtifactSchema;
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Artifact
 /// 🧬️ Full DAG artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.dag.dag")]
 pub struct DagArtifact {
     #[state(artifact)]
@@ -25,7 +21,6 @@ pub struct DagArtifact {
     pub content: DagContentChild,
     #[state(presence)]
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub selected_node_ids: Vec<String>,
     #[state(config)]
     pub camera: DagCamera,

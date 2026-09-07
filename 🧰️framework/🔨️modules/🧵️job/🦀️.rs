@@ -38,8 +38,9 @@
 use std::future::Future;
 use std::mem::{ManuallyDrop, MaybeUninit};
 use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU8, AtomicU32, AtomicU64, AtomicUsize, Ordering};
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 use std::task::{Context, Poll, Waker};
+#[cfg(test)]
 use std::time::Instant;
 
 use semio_framework_async::ChannelPolicy;

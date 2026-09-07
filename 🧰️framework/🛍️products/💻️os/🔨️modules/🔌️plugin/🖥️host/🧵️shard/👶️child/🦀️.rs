@@ -64,8 +64,12 @@ fn main() {
     });
 
     let transport = semio_framework_async::block_on(StdioTransport::new(200));
-    let mut shard = semio_framework_async::block_on(ShardLoop::new(runtime, ShardTransports::Stdio(transport)));
-    shard.register(ActorId(actor_id), instance);
+    let mut shard = semio_framework_async::block_on(ShardLoop::new(Arc::clone(&runtime), ShardTransports::Stdio(transport)));
+    if let Err(rejected) = shard.register(ActorId(actor_id), instance) {
+        semio_framework_async::block_on(runtime.drop_instance(rejected.instance));
+        eprintln!("[semio-shard] registration refused: {:?}", rejected.reason);
+        std::process::exit(1);
+    }
     eprintln!("[semio-shard] pid={} package={package_id} actor={actor_id} ready", std::process::id());
 
     // 🌀️ `ShardLoop::pump` only drains what is ALREADY buffered and never blocks (its own doc

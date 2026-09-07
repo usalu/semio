@@ -16,7 +16,7 @@ pub struct DrawingIntoDwg;
 impl Serializer<DrawingSnapshot> for DrawingIntoDwg {
     const INTO: Dialect = DWG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn serialize(_from: &DrawingSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(_from: &DrawingSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "DrawingIntoDwg: DWG export is not yet implemented (no stdio drawing<->dwg bridge)".to_string(), diagnostics: Vec::new() })
     }
 }

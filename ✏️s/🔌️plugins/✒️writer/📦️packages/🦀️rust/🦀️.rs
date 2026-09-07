@@ -95,7 +95,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-writer/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-writer/🧪️tests/🏷️renames-the-document-to-mission-brief/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-writer/🧪️tests/🏷️renames-the-2b6f2b/🦀️.rs"]
                                     mod tests_renames_the_document_to_mission_brief;
                                     #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-writer/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -112,7 +112,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-uri/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-uri/🧪️tests/🔗️republishes-the-brief-under-a-new-uri/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-uri/🧪️tests/🔗️republishes-the-brief-c9f110/🦀️.rs"]
                                     mod tests_republishes_the_brief_under_a_new_uri;
                                     #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-uri/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -129,7 +129,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-language/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-language/🧪️tests/🔤️switches-the-brief-from-plaintext-to-markdown/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-language/🧪️tests/🔤️switches-the-brief-87836c/🦀️.rs"]
                                     mod tests_switches_the_brief_from_plaintext_to_markdown;
                                     #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-language/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -146,7 +146,7 @@ pub mod artifacts {
                                     #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/🧪️tests/⚠️warns-that-the-brief-body-is-unchanged/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/🧪️tests/⚠️warns-that-the-brief-body-9d11d2/🦀️.rs"]
                                     mod tests_warns_that_the_brief_body_is_unchanged;
                                     #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/📝️text/🦀️.rs"]
                                     pub mod text;

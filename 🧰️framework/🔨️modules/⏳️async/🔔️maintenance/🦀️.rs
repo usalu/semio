@@ -97,7 +97,7 @@ impl PoolWork {
 
 impl WorkerMaintenanceRegistry {
     pub(super) fn new() -> Self {
-        let identity = NEXT_POOL_ID.fetch_update(Ordering::Relaxed, Ordering::Relaxed, |value| value.checked_add(1)).expect("WorkerPool maintenance identity exhausted");
+        let identity = NEXT_POOL_ID.try_update(Ordering::Relaxed, Ordering::Relaxed, |value| value.checked_add(1)).expect("WorkerPool maintenance identity exhausted");
         Self { identity, state: Mutex::new(State { next_generation: 1, closed: false, entries: [None; WORKER_MAINTENANCE_CAPACITY], cursor: [0; LANE_COUNT], hook_first: [false; LANE_COUNT] }) }
     }
 

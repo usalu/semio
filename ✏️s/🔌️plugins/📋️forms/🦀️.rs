@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the forms editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum FormsApps: PluginApp {
-        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::forms::FormsPlayApp>>),
-        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::forms::FormsViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::forms::FormsPlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::forms::FormsViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -31,7 +31,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// actor runs `Isolated` (no cross-plugin extension attachment, no `.handler(...)` — the SDK
 /// default holds), and it asks the broker for document write access because `FormsPlayApp`
 /// persists question/field edits back to the open document.
-pub fn plugin() -> Result<Plugin<FormsApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<FormsApps>, PluginAssemblyError> {
     Plugin::<FormsApps>::builder("forms")
         .label("Forms")
         .version("0.1.0")

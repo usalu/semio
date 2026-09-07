@@ -1,7 +1,7 @@
 //! 📜 Block5d mutation — `ChangeRepresentationDescription`: a representation's `description`.
 
 use crate::artifacts::block5d::Block5dSnapshot;
-use crate::artifacts::block5d::diff::{Block5dDiff, Block5dRepresentationsDelta, Block5dRepresentationsPatch, Block5dRepresentationsPatchEntry};
+use crate::artifacts::block5d::diff::Block5dDiff;
 use crate::artifacts::block5d::mutations::Block5dMutation;
 
 //#region 🔖️Mutation

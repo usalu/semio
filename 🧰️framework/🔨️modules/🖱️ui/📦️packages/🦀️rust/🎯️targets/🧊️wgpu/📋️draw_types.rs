@@ -141,6 +141,7 @@ impl ClipRegion {
     // 🧩️ `pub(crate)`, not private: `draw.rs`'s retained GPU pipeline (a sibling module now that
     // `ClipRegion` moved here — ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS)
     // calls this directly to resolve a node's effective scissor rect against its GPU render pass.
+    #[cfg(test)]
     pub(crate) fn effective_scissors(&self, scissor: Option<ScissorRect>, width: f32, height: f32) -> Vec<ScissorRect> {
         let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
         self.scissors.iter().map(|clip| clip.intersect(&viewport)).map(|clip| scissor.map_or(clip, |parent| clip.intersect(&parent))).filter(|clip| clip.w > 0 && clip.h > 0).collect()
@@ -205,28 +206,28 @@ impl Default for DrawList {
 
 fn prepared_scene_pass_usage(pass: &ScenePass3d) -> Option<(usize, usize)> {
     let mut items = 1usize;
-    let mut bytes = std::mem::size_of::<ScenePass3d>();
+    let mut bytes = size_of::<ScenePass3d>();
     let mut include = |next_items: usize, next_bytes: usize| {
         items = items.checked_add(next_items)?;
         bytes = bytes.checked_add(next_bytes)?;
         Some(())
     };
-    include(pass.draws.len(), pass.draws.capacity().checked_mul(std::mem::size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>())?)?;
-    include(pass.translucent_draws.len(), pass.translucent_draws.capacity().checked_mul(std::mem::size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>())?)?;
+    include(pass.draws.len(), pass.draws.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>())?)?;
+    include(pass.translucent_draws.len(), pass.translucent_draws.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>())?)?;
     for draw in pass.draws.iter().chain(pass.translucent_draws.iter()) {
         include(draw.mesh_key.len(), draw.mesh_key.capacity())?;
-        include(draw.instances.len(), draw.instances.capacity().checked_mul(std::mem::size_of::<crate::wgpu::kernel_3d_scene::Instance3d>())?)?;
+        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::Instance3d>())?)?;
         for instance in &draw.instances {
             include(instance.id.len(), instance.id.capacity())?;
         }
     }
-    include(pass.line_draws.len(), pass.line_draws.capacity().checked_mul(std::mem::size_of::<crate::wgpu::kernel_3d_scene::LineDraw3d>())?)?;
+    include(pass.line_draws.len(), pass.line_draws.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::LineDraw3d>())?)?;
     for draw in &pass.line_draws {
-        include(draw.vertices.len(), draw.vertices.capacity().checked_mul(std::mem::size_of::<crate::wgpu::kernel_3d_scene::LineVertex3d>())?)?;
+        include(draw.vertices.len(), draw.vertices.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::LineVertex3d>())?)?;
     }
-    include(pass.textured_draws.len(), pass.textured_draws.capacity().checked_mul(std::mem::size_of::<crate::wgpu::kernel_3d_scene::TexturedDraw3d>())?)?;
+    include(pass.textured_draws.len(), pass.textured_draws.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::TexturedDraw3d>())?)?;
     for draw in &pass.textured_draws {
-        include(draw.instances.len(), draw.instances.capacity().checked_mul(std::mem::size_of::<crate::wgpu::kernel_3d_scene::TexturedInstance3d>())?)?;
+        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::TexturedInstance3d>())?)?;
         for instance in &draw.instances {
             include(instance.texture_key.len(), instance.texture_key.capacity())?;
         }
@@ -560,7 +561,7 @@ impl DrawList {
     }
 
     pub fn push_scissor(&mut self, rect: crate::wgpu::geometry::Rect) {
-        if !self.claim_retained_output(1, std::mem::size_of::<DrawLayer>()) {
+        if !self.claim_retained_output(1, size_of::<DrawLayer>()) {
             return;
         }
         let mut scissor = ScissorRect::from_rect(rect, self.screen_h);
@@ -572,7 +573,7 @@ impl DrawList {
     }
 
     pub fn pop_scissor(&mut self) {
-        if !self.claim_retained_output(1, std::mem::size_of::<DrawLayer>()) {
+        if !self.claim_retained_output(1, size_of::<DrawLayer>()) {
             return;
         }
         self.scissor_stack.pop();
@@ -586,7 +587,7 @@ impl DrawList {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
         };
-        let Some(bytes) = rects.len().checked_mul(std::mem::size_of::<ScissorRect>()).and_then(|bytes| bytes.checked_add(std::mem::size_of::<DrawLayer>())) else {
+        let Some(bytes) = rects.len().checked_mul(size_of::<ScissorRect>()).and_then(|bytes| bytes.checked_add(size_of::<DrawLayer>())) else {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
         };
@@ -602,7 +603,7 @@ impl DrawList {
     }
 
     pub fn end_silhouette_clip(&mut self) {
-        if !self.claim_retained_output(1, std::mem::size_of::<DrawLayer>()) {
+        if !self.claim_retained_output(1, size_of::<DrawLayer>()) {
             return;
         }
         self.clip_stack.pop();
@@ -629,14 +630,14 @@ impl DrawList {
     }
 
     pub fn push_solid(&mut self, rect: [f32; 4], color: Rgba) {
-        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+        if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
         self.active_layer().ui_instances.push(UiInstance::solid(rect, color));
     }
 
     pub fn push_rounded(&mut self, rect: [f32; 4], color: Rgba, radius: f32) {
-        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+        if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
         self.active_layer().ui_instances.push(UiInstance::rounded(rect, color, radius, 0.0, color));
@@ -644,7 +645,7 @@ impl DrawList {
 
     /// 🌀️ Clockwise spinning + pulsing loading ring around `rect`, in `color` (gray `theme.border_normal` at rest, `theme.selected` when the node is selected/active).
     pub fn push_loading_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
-        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+        if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
         self.active_layer().ui_instances.push(UiInstance::loading_border(rect, color, radius, stroke));
@@ -652,7 +653,7 @@ impl DrawList {
 
     /// 🌀️ Dashed, slow-spinning + gently pulsing waiting ring around `rect`, in `color` (gray `theme.border_normal` at rest, `theme.selected` when the node is selected/active).
     pub fn push_waiting_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
-        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+        if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
         self.active_layer().ui_instances.push(UiInstance::waiting_border(rect, color, radius, stroke));
@@ -660,7 +661,7 @@ impl DrawList {
 
     /// ✅️ Solid, static at-bounds ring around `rect`, in `color` — `UiStatus::Finished`.
     pub fn push_finished_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
-        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+        if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
         self.active_layer().ui_instances.push(UiInstance::finished_border(rect, color, radius, stroke));
@@ -668,7 +669,7 @@ impl DrawList {
 
     /// 💫️ Raised-cosine breathing pulse ring around `rect`, in `color` — `UiState::Introducing`.
     pub fn push_introducing_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
-        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+        if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
         self.active_layer().ui_instances.push(UiInstance::introducing_border(rect, color, radius, stroke));
@@ -679,7 +680,7 @@ impl DrawList {
     /// `.🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`) rather than this method
     /// picking a per-tier lookup.
     pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, style: GlassStyle) -> usize {
-        if !self.claim_retained_output(1, std::mem::size_of::<GlassRegion>()) {
+        if !self.claim_retained_output(1, size_of::<GlassRegion>()) {
             return usize::MAX;
         }
         let index = self.glass_regions.len();
@@ -688,7 +689,7 @@ impl DrawList {
     }
 
     pub fn begin_glass_content(&mut self, region: usize) {
-        if !self.claim_retained_output(1, std::mem::size_of::<DrawLayer>()) {
+        if !self.claim_retained_output(1, size_of::<DrawLayer>()) {
             return;
         }
         self.glass_content_stack.push(region);
@@ -696,7 +697,7 @@ impl DrawList {
     }
 
     pub fn end_glass_content(&mut self) {
-        if !self.claim_retained_output(1, std::mem::size_of::<DrawLayer>()) {
+        if !self.claim_retained_output(1, size_of::<DrawLayer>()) {
             return;
         }
         self.glass_content_stack.pop();
@@ -704,35 +705,35 @@ impl DrawList {
     }
 
     pub fn push_glyph(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {
-        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+        if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
         self.active_layer().ui_instances.push(UiInstance::glyph(rect, color, uv_rect));
     }
 
     pub fn push_glyph_overlay(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {
-        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+        if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
         self.active_layer().overlay_ui_instances.push(UiInstance::glyph(rect, color, uv_rect));
     }
 
     pub fn push_solid_overlay(&mut self, rect: [f32; 4], color: Rgba) {
-        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+        if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
         self.active_layer().overlay_ui_instances.push(UiInstance::solid(rect, color));
     }
 
     pub fn push_textured(&mut self, rect: [f32; 4], uv_rect: [f32; 4], color: Rgba) {
-        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+        if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
         self.active_layer().ui_instances.push(UiInstance::textured(rect, uv_rect, color));
     }
 
     pub fn push_raster_quad(&mut self, key: &str, rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) {
-        let Some(bytes) = key.len().checked_add(std::mem::size_of::<UiInstance>()) else {
+        let Some(bytes) = key.len().checked_add(size_of::<UiInstance>()) else {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
         };
@@ -743,7 +744,7 @@ impl DrawList {
     }
 
     pub fn push_line(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
-        if !self.claim_retained_output(1, 6 * std::mem::size_of::<VectorVertex>()) {
+        if !self.claim_retained_output(1, 6 * size_of::<VectorVertex>()) {
             return;
         }
         let dx = x1 - x0;
@@ -764,7 +765,7 @@ impl DrawList {
     }
 
     pub fn push_line_overlay(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
-        if !self.claim_retained_output(1, 6 * std::mem::size_of::<VectorVertex>()) {
+        if !self.claim_retained_output(1, 6 * size_of::<VectorVertex>()) {
             return;
         }
         let dx = x1 - x0;
@@ -792,7 +793,7 @@ impl DrawList {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
         };
-        let Some(bytes) = vertices.checked_mul(std::mem::size_of::<VectorVertex>()) else {
+        let Some(bytes) = vertices.checked_mul(size_of::<VectorVertex>()) else {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
         };
@@ -816,7 +817,7 @@ impl DrawList {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
         };
-        let Some(bytes) = vertices.checked_mul(std::mem::size_of::<VectorVertex>()) else {
+        let Some(bytes) = vertices.checked_mul(size_of::<VectorVertex>()) else {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
         };

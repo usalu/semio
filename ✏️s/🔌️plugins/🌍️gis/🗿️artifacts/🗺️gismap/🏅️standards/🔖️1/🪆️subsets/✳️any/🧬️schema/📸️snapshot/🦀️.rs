@@ -114,10 +114,10 @@ pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>
 /// 🧾️ `positions`/`routes`/`regions` are structured (`Vec<MapFeature>`, already
 /// `Serialize`/`Deserialize`): serialize to JSON, then hex-encode the JSON bytes — same convention
 /// every other text field in this file already uses (`📐️cad`'s `enc_json`/`dec_json`).
-fn enc_json<T: dsl::ToValue>(value: &T) -> String {
+fn enc_json<T: ToValue>(value: &T) -> String {
     enc_str(&dsl::os_pack::json::to_json_string(value))
 }
-fn dec_json<T: dsl::FromValue>(s: &str) -> Result<T, String> {
+fn dec_json<T: FromValue>(s: &str) -> Result<T, String> {
     dsl::os_pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️CodecPrimitives

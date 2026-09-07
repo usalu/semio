@@ -1265,7 +1265,7 @@ pub fn begin_ui_document_opportunity(consumed: bool) {
     DOCUMENT_PAGE_OPPORTUNITY_CONSUMED.store(consumed, Ordering::Release);
 }
 
-pub fn render_ui_document_step(
+pub(crate) fn render_ui_document_step(
     cursor: &mut UiDocumentFrameCursor,
     document: &UiDocumentLease,
     bounds: Rect,
@@ -1452,7 +1452,7 @@ mod ui_command_wiring_tests {
     }
 
     fn stack_with(id: &str, drop_action: Option<ActionDescriptor>, children: Vec<UiNode>) -> UiNode {
-        UiNode::Stack(ui_wgpu::wgpu::UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(id.into()), presence: ui_wgpu::wgpu::UiPresence::default(), activate: None, drop_action, drop_overlay: None, children, menu: None })
+        UiNode::Stack(ui_wgpu::wgpu::UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(id.into()), presence: UiPresence::default(), activate: None, drop_action, drop_overlay: None, children, menu: None })
     }
 
     //#region 🔖️DropCommittedTests
@@ -1572,7 +1572,7 @@ mod ui_command_wiring_tests {
             step: None,
             accept: None,
             on_change: action("onChange", None),
-            presence: ui_wgpu::wgpu::UiPresence::default(),
+            presence: UiPresence::default(),
             menu: None,
         });
         UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![input_node])));

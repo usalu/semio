@@ -42,6 +42,7 @@ semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
 
 [dev-dependencies]
+semio-framework-async-macros = { workspace = true }
 # 🌀️ async-first rewrite (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet
 # terra-directory-and-run) — `AppChannelHost::exchange`/`SpaceRunner::run` are `async fn`; this
 # crate's own `#[cfg(test)] mod tests` drives them with a plain single-poll executor (R4 clause 5: a

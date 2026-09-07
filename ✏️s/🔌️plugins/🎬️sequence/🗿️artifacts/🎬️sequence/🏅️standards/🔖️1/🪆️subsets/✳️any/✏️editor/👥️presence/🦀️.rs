@@ -2,6 +2,7 @@
 
 use crate::artifacts::sequence::SequenceCamera;
 use protocol::Mutation;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
@@ -10,8 +11,11 @@ use store::ArtifactPack;
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: peer selection no longer lives here — it
 /// broadcasts automatically via the framework's typed `PresenceInteraction` (assembled from the
 /// "steps" domain's `InteractionState`, zero app code).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, dsl::DslArtifact)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[derive(dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "sequence.presence")]
 #[dsl(layout = "lines")]
 pub struct SequencePresence {
@@ -82,8 +86,11 @@ impl ArtifactPack for SequencePresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[derive(dsl::ToValue, dsl::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[value(rename_all = "camelCase")]
 pub enum SequencePresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

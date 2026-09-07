@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🗣️change-locale",
+  "semanticKind": "change-locale",
+  "displayName": "Change Locale",
+  "emoji": "🗣️",
+  "aggregateVariant": "ChangeLocale",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-locale",
+  "binaryTag": 2,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema"
+  ]
+}

@@ -20,6 +20,7 @@ pub use infinite_canvas::{self as canvas, *};
 pub use std::sync::Arc;
 
 use canvas::lod::{Lod, LodScale};
+use std::cell::RefCell;
 // 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize`, for ticket
 // 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 use dsl::{FromValue, ToValue};
@@ -1890,9 +1891,9 @@ struct MapTileLedger {
     tile_images: std::collections::BTreeMap<String, Arc<RasterImage>>,
     vector_tiles: std::collections::BTreeMap<String, vector_tiles::VectorTile>,
     /// 🕰️ Last-touched tick per raster tile key ("touched" = uploaded or drawn) — drives LRU eviction.
-    raster_touch: std::cell::RefCell<std::collections::BTreeMap<String, u64>>,
+    raster_touch: RefCell<std::collections::BTreeMap<String, u64>>,
     /// 🕰️ Same as `raster_touch`, for the vector tile cache.
-    vector_touch: std::cell::RefCell<std::collections::BTreeMap<String, u64>>,
+    vector_touch: RefCell<std::collections::BTreeMap<String, u64>>,
     touch_clock: std::cell::Cell<u64>,
 }
 
@@ -1908,7 +1909,7 @@ impl MapTileLedger {
     /// 🕰️ Stamps `key` with the next tick. The already-present branch writes through `get_mut` so the
     /// per-drawn-tile call in `append_tiles`/`append_vector_tiles` allocates nothing on a hot frame —
     /// only a genuinely new key pays for the `String`.
-    fn touch_in(clock: &std::cell::Cell<u64>, ledger: &std::cell::RefCell<std::collections::BTreeMap<String, u64>>, key: &str) {
+    fn touch_in(clock: &std::cell::Cell<u64>, ledger: &RefCell<std::collections::BTreeMap<String, u64>>, key: &str) {
         let next = clock.get().wrapping_add(1);
         clock.set(next);
         let mut map = ledger.borrow_mut();
@@ -1963,7 +1964,7 @@ pub struct MapHost {
     interaction_revision: u64,
     /// 🧊️ (d) ephemeral frame-cache — last built vector-tile-layer `Scene`, reused via a screen-space
     /// translate on a pure pan; any other camera/style/data change invalidates via `vector_scene_cache_key`.
-    vector_scene_cache: std::cell::RefCell<Option<CachedVectorScene>>,
+    vector_scene_cache: RefCell<Option<CachedVectorScene>>,
     /// 🔢️ (d) diagnostics — bumps once per real vector-scene rebuild (cache miss); tests assert on it.
     vector_scene_rebuild_count: std::cell::Cell<u64>,
 }
@@ -2256,7 +2257,7 @@ impl Default for MapHost {
             hovered_kind: None,
             hovered_id: None,
             interaction_revision: 0,
-            vector_scene_cache: std::cell::RefCell::new(None),
+            vector_scene_cache: RefCell::new(None),
             vector_scene_rebuild_count: std::cell::Cell::new(0),
         }
     }
@@ -3932,8 +3933,6 @@ impl canvas_content::CanvasContent for MapHost {
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use semio_framework_async::browser::future_to_promise;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use std::cell::RefCell;
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use std::rc::Rc;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use wasm_bindgen::prelude::*;
@@ -3943,7 +3942,7 @@ use web_sys::HtmlCanvasElement;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 struct MapSessionInner {
     host: MapHost,
-    gpu: canvas::gpu_session::CanvasGpuSession,
+    gpu: gpu_session::CanvasGpuSession,
 }
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
@@ -3956,7 +3955,7 @@ impl MapSessionInner {
     fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
         self.host.prepare_visible_tiles();
         let scene = self.host.build_render_scene();
-        self.gpu.render_frame(&scene, canvas::canvas_content::CanvasContent::clear_color(&self.host))
+        self.gpu.render_frame(&scene, canvas_content::CanvasContent::clear_color(&self.host))
     }
 }
 
@@ -3971,7 +3970,7 @@ pub struct MapSession {
 impl MapSession {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: canvas::gpu_session::CanvasGpuSession::default() })) }
+        Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: gpu_session::CanvasGpuSession::default() })) }
     }
 
     #[wasm_bindgen(js_name = gpuReady)]
@@ -3992,7 +3991,7 @@ impl MapSession {
         let ph = ((lh as f64 * dpr).round() as u32).max(1);
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+            let (render_ctx, renderer, surface) = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
             let mut g = inner.borrow_mut();
             if g.gpu.gpu_ready() {
                 return Err(JsValue::from_str("canvas surface already attached"));

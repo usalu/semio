@@ -160,6 +160,7 @@ fn set_outer_pcurves(body: &mut Body, face: FaceId, pcurves: &[(Curve2Id, (f64, 
 /// below to exclude poles from the edge count (see `w1e-primitives.md` §sphere for why the naive
 /// `V−E+F` would otherwise read 0, not 2, for the sphere).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+#[cfg(test)]
 pub(crate) fn is_degenerate_edge(edge: &Edge, curve: &Curve3) -> bool {
     edge.v0 == edge.v1 && matches!(curve, Curve3::Line { dir, .. } if dir.norm() < 1e-12)
 }
@@ -229,7 +230,7 @@ pub fn make_box(body: &mut Body, w: f64, d: f64, h: f64, rec: &mut OpRecorder) -
 /// 🧱 Sphere centered at the origin: ONE analytic [`Surface::Sphere`] face, bounded by a single
 /// seam edge (the u=0 half-meridian great circle from south to north pole, curve domain
 /// `[-π/2, π/2]`) used twice — once at u=0, once at u=2π — plus two degenerate edges (3D curve
-/// collapsed to the pole point, see [`is_degenerate_edge`]) that close the (u,v) parameter
+/// collapsed to the pole point, equal endpoint ids and a zero-length line) that close the (u,v) parameter
 /// rectangle along `v=±π/2`. This is the standard OCCT-style sphere topology (chosen over the old
 /// two-hemisphere-plus-equator split so there is exactly one seam, matching cylinder/cone/torus'
 /// own single-seam convention) — see `w1e-primitives.md` for the coordinate-with-W1-F note.
@@ -819,7 +820,7 @@ mod tests {
         (vertex_ids.len(), edge_ids.len(), faces.len())
     }
 
-    /// 🧱 `(V, E_real, F, χ)` with degenerate edges (see [`is_degenerate_edge`]) excluded from the
+    /// 🧱 `(V, E_real, F, χ)` with degenerate edges (equal endpoint ids and a zero-length line) excluded from the
     /// edge count — the "count degenerate edges consistently" convention the ticket asks for, so
     /// a pole-bearing sphere reads χ=2 like every other genus-0 solid instead of 0.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -77,7 +77,7 @@ export function ensurePreview2ShimVendorAt(preview2VendorDir: string, repoRoot: 
  * 🚧 See `🧵️shard-client.ts`'s header doc for the one open gap this generated worker inherits: `turn`
  * events/results here are the interim JSON `ShardEventEnvelope[]`/plain-object shape, not the real
  * hand-rolled `Envelope`/`TurnResult` pack encoding (no TS mirror of that codec exists yet — tracked
- * against A1's `🤖️generated/🟦️actor.ts`). The WIT-level `poll(events, commandPage, budget)` call this worker makes
+ * against A1's `🤖️generated/🟦️actor.ts`). The WIT-level `poll(events, commandPage, coldPairPage, budget)` call this worker makes
  * against the guest's own jco bindings is unaffected either way (jco marshals those to/from the wasm
  * component boundary itself); only the Kernel↔Shard wire between this worker and `ShardClient` is
  * interim JSON rather than pack bytes.
@@ -388,7 +388,7 @@ self.addEventListener("message", async (event) => {
         faultPhase = (actor.turns ?? 0) === 0 ? "first-step" : "turn";
         actor.turns = (actor.turns ?? 0) + 1;
         try {
-          reply(requestId, await actor.api.poll(spliceInstanceOpenAssets(actor, msg.events), msg.commandPage, msg.budget));
+          reply(requestId, await actor.api.poll(spliceInstanceOpenAssets(actor, msg.events), msg.commandPage, undefined, msg.budget));
         } finally {
           inFlightTurnActors.delete(actorId);
         }
@@ -416,6 +416,7 @@ self.addEventListener("message", async (event) => {
         reply(requestId, undefined);
         break;
       case "frame": {
+        if (actor.activationGeneration !== msg.activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
         const result = interpretFrame(msg.frame, actorId);
         if (result.action === "register") {
           reply(requestId, undefined);
@@ -574,8 +575,8 @@ export async function createActorApi(actorId, activationGeneration) {
   const hostShim = await import(hostUrl.href);
   const { reactor, jobs, checkpoint, describe } = await import(componentUrl.href);
   return {
-    poll: async (events, commandPage, budget) => {
-      const result = await reactor.poll(events.map(({ kind, payload }) => lifecycleEvent(kind, payload, activationGeneration)), commandPage, { fuel: BigInt(budget.fuel), deadlineMs: budget.wallMs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: 8 });
+    poll: async (events, commandPage, coldPairPage, budget) => {
+      const result = await reactor.poll(events.map(({ kind, payload }) => lifecycleEvent(kind, payload, activationGeneration)), commandPage, coldPairPage, { fuel: BigInt(budget.fuel), deadlineMs: budget.wallMs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: 8 });
       return { ...result, nextWake: unwrapOption(result.nextWake) ?? null, lifecycleReceipt: lifecycleReceipt(result.lifecycleReceipt, activationGeneration), uiPatchReceipt: uiPatchReceipt(result, activationGeneration), commandIngress: normalizeCommandIngress(result.commandIngress) };
     },
     startJob: async (job, kind, input) => jobs.startJob(job, kind, input),

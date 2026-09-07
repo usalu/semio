@@ -310,7 +310,7 @@ impl PartialEq<DslValue> for serde_json::Value {
 /// is infallible. See
 /// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
 /// 🔍️research/📓️dsl-value-bridge-conversion.md`.
-pub fn to_dsl_value<T: ToValue>(value: &T) -> Result<DslValue, String> {
+pub fn to_dsl_value<T: ToValue + ?Sized>(value: &T) -> Result<DslValue, String> {
     Ok(value.to_value())
 }
 

@@ -685,13 +685,13 @@ impl ArtifactEditor for RasterPlayApp {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<RasterPlayApp>,
+        owner: EditorApp<RasterPlayApp>,
         owner_file: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.raster.raster@1/*#editor",
         document_schema: "raster.document",
         factory: "RasterRetainedCommandJobFactory",
         factory_type: RasterRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
         tools: [
             "addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer",
             "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveUtility", "setLocale",
@@ -1073,32 +1073,33 @@ pub(crate) mod testkit {
         App { definition: create_raster_app(), examples: Vec::new() }
     }
 
-    pub fn app() -> RasterApp {
-        framework_testkit::new_app::<EditorApp<RasterPlayApp>>()
+    pub async fn app() -> RasterApp {
+        framework_testkit::new_app::<EditorApp<RasterPlayApp>>().await
     }
 
-    pub fn app_with_registry() -> RasterApp {
-        framework_testkit::new_app_with_registry::<EditorApp<RasterPlayApp>>(raster_app_manifest_for_testkit)
+    pub async fn app_with_registry() -> RasterApp {
+        framework_testkit::new_app_with_registry::<EditorApp<RasterPlayApp>>(raster_app_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut RasterApp, command: RasterCommand) -> InvocationResult {
-        app.dispatch_typed(command, &framework_testkit::meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut RasterApp, command: RasterCommand) -> InvocationResult {
+        app.dispatch_typed(command, &framework_testkit::meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut RasterApp, body_key: &str) -> String {
-        dsl::os_pack::json::to_json_string(&app.render(body_key, None, &ViewModel::default()).expect("render"))
+    pub async fn render(app: &mut RasterApp, body_key: &str) -> String {
+        let tree = app.render(body_key, None, &ViewModel::default()).await.expect("render");
+        framework_testkit::project_and_retire_fixture_tree(tree).expect("rendered fixture observation and retirement")
     }
 
-    pub fn main_window_measures(app: &mut RasterApp) -> Vec<WindowMeasure> {
-        app.window_measures().remove(composite::RASTER_PLAY_WINDOW_COMPOSITE).unwrap_or_default()
+    pub async fn main_window_measures(app: &mut RasterApp) -> Vec<WindowMeasure> {
+        app.window_measures().await.remove(composite::RASTER_PLAY_WINDOW_COMPOSITE).unwrap_or_default()
     }
 
-    pub fn semio_app() -> RasterApp {
-        let mut app = framework_testkit::new_app::<EditorApp<RasterPlayApp>>();
+    pub async fn semio_app() -> RasterApp {
+        let mut app = framework_testkit::new_app::<EditorApp<RasterPlayApp>>().await;
         let document = crate::artifacts::raster::schema::semio_example_document();
         let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", document, None);
-        let files = store::print_document_pack(&envelope).expect("print document pack");
-        app.load_document_pack(&files).expect("load semio");
+        let files = store::print_document_pack(&envelope).await.expect("print document pack");
+        app.load_document_pack(&files).await.expect("load semio");
         app
     }
 }
@@ -1124,12 +1125,12 @@ mod tests {
         let snapshot_pack = snapshot.encode_pack();
         let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
         let wire = dsl::json::to_string(&dsl::json::object([
-            ("schema".to_string(), dsl::json::Value::String(RASTER_DOCUMENT_SCHEMA.to_string())),
-            ("id".to_string(), dsl::json::Value::String("raster-live-load".to_string())),
+            ("schema".to_string(), Value::String(RASTER_DOCUMENT_SCHEMA.to_string())),
+            ("id".to_string(), Value::String("raster-live-load".to_string())),
             (
                 "vcs".to_string(),
                 dsl::json::object([
-                    ("initialSnapshot".to_string(), dsl::json::Value::String(snapshot_hex)),
+                    ("initialSnapshot".to_string(), Value::String(snapshot_hex)),
                     ("edits".to_string(), dsl::json::array([])),
                     ("changes".to_string(), dsl::json::array([])),
                     ("checkpoints".to_string(), dsl::json::array([])),
@@ -1168,7 +1169,7 @@ mod tests {
             let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
             bytes[..chunk.len()].copy_from_slice(chunk);
             let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Raster live envelope page");
-            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Raster live envelope page admission failed: {fault}"));
+            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Raster live envelope page admission failed: {}: {}", fault.code.0, fault.message));
         }
         assert!(app.seal_artifact_envelope_ingress(handle).expect("Raster live envelope seal/submit"));
         handle
@@ -1190,7 +1191,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn raster_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed() {
-        let mut app = app();
+        let mut app = app().await;
         let base_generation = app.artifact_generation_now();
         let handle = admit_raster_envelope(&mut app, &raster_envelope_wire());
         assert_eq!(handle.generation, base_generation);
@@ -1202,7 +1203,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn raster_live_envelope_cancel_closes_retained_pages_without_publication() {
-        let mut app = app();
+        let mut app = app().await;
         let base_generation = app.artifact_generation_now();
         let wire = raster_envelope_wire();
         let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
@@ -1211,7 +1212,7 @@ mod tests {
         let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
         bytes[..first.len()].copy_from_slice(first);
         let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Raster first page");
-        app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Raster page admission failed: {fault}"));
+        app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Raster page admission failed: {}: {}", fault.code.0, fault.message));
         app.cancel_artifact_envelope_load(handle).expect("cancel exact Raster ingress");
         assert_eq!(drive_raster_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
         assert_eq!(app.artifact_generation_now(), base_generation);
@@ -1232,32 +1233,32 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn raster_composite_media_exports_structured_2d_image_payload() {
-        let document = crate::artifacts::raster::schema::empty_raster_document();
+        let document = empty_raster_document();
         let media = raster_composite_media(&document).expect("export image:out");
-        let semio_framework::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
+        let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "2d.image");
         assert!(!json.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn window_measures_expose_brush_and_eraser_option_groups() {
-        let mut app = app();
-        let measures = main_window_measures(&mut app);
+        let mut app = app().await;
+        let measures = main_window_measures(&mut app).await;
         assert_eq!(measures.len(), 2);
         assert!(measures.iter().any(|m| matches!(m, WindowMeasure::Group { id, .. } if id == "raster-utility-options-paintBrush")));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn renders_raster_scene() {
-        let mut app = app();
-        let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE);
+        let mut app = app().await;
+        let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await;
         assert!(json.contains("raster"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn renders_navigator_scene() {
-        let mut app = app();
-        let json = render(&mut app, navigator::RASTER_PLAY_BODY_NAVIGATOR);
+        let mut app = app().await;
+        let json = render(&mut app, navigator::RASTER_PLAY_BODY_NAVIGATOR).await;
         assert!(json.contains("\"componentKind\":\"paint-2d\""));
         assert!(json.contains("\"viewMode\":\"navigator\""));
     }
@@ -1279,27 +1280,27 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_layers_tree() {
-        let mut app = semio_app();
-        let json = render(&mut app, document::RASTER_PLAY_BODY_LAYERS);
+        let mut app = semio_app().await;
+        let json = render(&mut app, document::RASTER_PLAY_BODY_LAYERS).await;
         assert!(json.contains("\"type\":\"tree\""));
         assert!(json.contains("Backdrop"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn raster_labels_resolve_native_english_by_default() {
-        let mut app = app();
-        let layers_json = render(&mut app, document::RASTER_PLAY_BODY_LAYERS);
+        let mut app = app().await;
+        let layers_json = render(&mut app, document::RASTER_PLAY_BODY_LAYERS).await;
         assert!(layers_json.contains("Add Pixel"));
         assert!(layers_json.contains("Add Group"));
-        let masks_json = render(&mut app, masks::RASTER_PLAY_BODY_MASKS);
+        let masks_json = render(&mut app, masks::RASTER_PLAY_BODY_MASKS).await;
         assert!(masks_json.contains("Masks"));
         assert!(masks_json.contains("No masks"));
-        let catalogue_json = render(&mut app, catalogue::RASTER_PLAY_BODY_CATALOGUE);
+        let catalogue_json = render(&mut app, catalogue::RASTER_PLAY_BODY_CATALOGUE).await;
         assert!(catalogue_json.contains("Layer kinds"));
         assert!(catalogue_json.contains("raster-catalogue.pixel"));
         assert!(catalogue_json.contains("raster-catalogue.group"));
         assert!(catalogue_json.contains("raster-catalogue.adjustment"));
-        let properties_json = render(&mut app, inspection::RASTER_PLAY_BODY_PROPERTIES);
+        let properties_json = render(&mut app, inspection::RASTER_PLAY_BODY_PROPERTIES).await;
         assert!(properties_json.contains("raster-play-inspector.schema"));
         assert!(properties_json.contains(RASTER_DOCUMENT_SCHEMA));
         assert!(properties_json.contains("raster-play-inspector.brush"));
@@ -1307,22 +1308,22 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn raster_labels_resolve_german_locale() {
-        let mut app = app();
-        dispatch(&mut app, RasterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));
-        let layers_json = render(&mut app, document::RASTER_PLAY_BODY_LAYERS);
+        let mut app = app().await;
+        dispatch(&mut app, RasterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() })).await;
+        let layers_json = render(&mut app, document::RASTER_PLAY_BODY_LAYERS).await;
         assert!(layers_json.contains("Pixel hinzufügen"));
         assert!(layers_json.contains("Gruppe hinzufügen"));
-        let masks_json = render(&mut app, masks::RASTER_PLAY_BODY_MASKS);
+        let masks_json = render(&mut app, masks::RASTER_PLAY_BODY_MASKS).await;
         assert!(masks_json.contains("Masken"));
         assert!(masks_json.contains("Keine Masken"));
-        let catalogue_json = render(&mut app, catalogue::RASTER_PLAY_BODY_CATALOGUE);
+        let catalogue_json = render(&mut app, catalogue::RASTER_PLAY_BODY_CATALOGUE).await;
         assert!(catalogue_json.contains("Ebenenarten"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn composite_scene_syncs_document_and_assets() {
-        let mut app = semio_app();
-        let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE);
+        let mut app = semio_app().await;
+        let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await;
         assert!(json.contains("\"componentKind\":\"paint-2d\""));
         assert!(json.contains("\"viewMode\":\"composite\""));
         assert!(!json.contains("\"assetsJson\":\"{}\""), "semio fixture has embedded assets");
@@ -1353,16 +1354,16 @@ mod tests {
     /// this app's contribution is declaring the domain and binding the tree to it.
     #[semio_framework_async_macros::async_test]
     async fn document_tree_binds_the_layers_interaction_domain() {
-        let mut app = semio_app();
-        let json = render(&mut app, document::RASTER_PLAY_BODY_LAYERS);
+        let mut app = semio_app().await;
+        let json = render(&mut app, document::RASTER_PLAY_BODY_LAYERS).await;
         assert!(json.contains("\"interactionDomain\":\"layers\""), "layer tree must bind the framework-owned layers domain: {json}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_composite_viewport_feeds_navigator_scene() {
-        let mut app = app();
-        dispatch(&mut app, RasterCommand::SetCompositeViewport(set_composite_viewport::SetCompositeViewport { width: 640.0, height: 480.0 }));
-        let json = render(&mut app, navigator::RASTER_PLAY_BODY_NAVIGATOR);
+        let mut app = app().await;
+        dispatch(&mut app, RasterCommand::SetCompositeViewport(set_composite_viewport::SetCompositeViewport { width: 640.0, height: 480.0 })).await;
+        let json = render(&mut app, navigator::RASTER_PLAY_BODY_NAVIGATOR).await;
         assert!(json.contains("compositeViewportJson"));
         assert!(json.contains(r#"\"width\":640.0"#));
         assert!(json.contains(r#"\"height\":480.0"#));
@@ -1370,55 +1371,55 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_camera_mutates_runtime_and_emits_no_operations() {
-        let mut app = app();
+        let mut app = app().await;
         let before = app.snapshot().expect("snapshot");
-        let result = dispatch(&mut app, RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::raster::RasterCamera { x: 4.0, y: 5.0, zoom: 2.0 } }));
+        let result = dispatch(&mut app, RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::raster::RasterCamera { x: 4.0, y: 5.0, zoom: 2.0 } })).await;
         assert!(result.mutations.is_empty(), "camera is a view action and emits no operations");
         assert_eq!(app.snapshot().expect("snapshot"), before, "camera never mutates the document");
-        let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE);
+        let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await;
         assert!(json.contains(r#"\"zoom\":2.0"#), "composite scene camera reflects runtime state: {json}");
         assert!(json.contains(r#"\"x\":4.0"#), "composite scene camera reflects runtime state: {json}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
-        let mut app = app();
-        dispatch(&mut app, RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::raster::RasterCamera { x: 4.0, y: 5.0, zoom: 1.0 } }));
-        let result = dispatch(&mut app, RasterCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { zoom: 3.0 }));
+        let mut app = app().await;
+        dispatch(&mut app, RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::raster::RasterCamera { x: 4.0, y: 5.0, zoom: 1.0 } })).await;
+        let result = dispatch(&mut app, RasterCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { zoom: 3.0 })).await;
         assert!(result.mutations.is_empty(), "camera zoom is a view action and emits no operations");
-        let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE);
+        let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await;
         assert!(json.contains(r#"\"zoom\":3.0"#), "zoom updated: {json}");
         assert!(json.contains(r#"\"x\":4.0"#), "pan preserved across zoom-only update: {json}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn add_layer_action_appends_and_undo_removes() {
-        let mut app = app();
+        let mut app = app().await;
         let before = app.snapshot().expect("snapshot").layers.len();
-        dispatch(&mut app, RasterCommand::AddLayer(add_layer::AddLayer { kind: "group".into() }));
+        dispatch(&mut app, RasterCommand::AddLayer(add_layer::AddLayer { kind: "group".into() })).await;
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.layers.len(), before + 1);
         assert!(matches!(projection.layers.last().unwrap(), RasterLayerNode::Group { .. }));
-        app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &testkit::meta("local")).await.expect("undo");
         assert_eq!(app.snapshot().expect("snapshot").layers.len(), before);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn patch_layer_renames_and_toggles_visibility_round_trip() {
-        let mut app = app();
+        let mut app = app().await;
         let layer_id = crate::artifacts::raster::schema::layer_node_id(&app.snapshot().expect("snapshot").layers[0]).to_string();
-        dispatch(&mut app, RasterCommand::PatchLayer(patch_layer::PatchLayer { layer_id: layer_id.clone(), field: "name".into(), value: "Renamed".into() }));
+        dispatch(&mut app, RasterCommand::PatchLayer(patch_layer::PatchLayer { layer_id: layer_id.clone(), field: "name".into(), value: "Renamed".into() })).await;
         assert_eq!(layer_name(&app.snapshot().expect("snapshot").layers[0]), "Renamed");
-        dispatch(&mut app, RasterCommand::ToggleLayerVisible(toggle_layer_visible::ToggleLayerVisible { layer_id }));
+        dispatch(&mut app, RasterCommand::ToggleLayerVisible(toggle_layer_visible::ToggleLayerVisible { layer_id })).await;
         assert!(!layer_visible(&app.snapshot().expect("snapshot").layers[0]));
-        app.handle_action("undo", None, &testkit::meta("local")).expect("undo toggle");
+        app.handle_action("undo", None, &testkit::meta("local")).await.expect("undo toggle");
         assert!(layer_visible(&app.snapshot().expect("snapshot").layers[0]));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn move_layer_into_group() {
-        let mut app = app();
-        dispatch(&mut app, RasterCommand::AddLayer(add_layer::AddLayer { kind: "group".into() }));
+        let mut app = app().await;
+        dispatch(&mut app, RasterCommand::AddLayer(add_layer::AddLayer { kind: "group".into() })).await;
         let (group_id, pixel_id) = {
             let projection = app.snapshot().expect("snapshot");
             let group = projection.layers.iter().find(|layer| matches!(layer, RasterLayerNode::Group { .. })).unwrap();
@@ -1426,7 +1427,7 @@ mod tests {
             (crate::artifacts::raster::schema::layer_node_id(group).to_string(), crate::artifacts::raster::schema::layer_node_id(pixel).to_string())
         };
         let target_row = format!("{RASTER_TREE_PREFIX}.group.{group_id}");
-        dispatch(&mut app, RasterCommand::MoveLayer(move_layer::MoveLayer { layer_id: pixel_id.clone(), target_row_id: target_row, drop_position: "after".into() }));
+        dispatch(&mut app, RasterCommand::MoveLayer(move_layer::MoveLayer { layer_id: pixel_id.clone(), target_row_id: target_row, drop_position: "after".into() })).await;
         let projection = app.snapshot().expect("snapshot");
         let RasterLayerNode::Group { children, .. } = projection.layers.iter().find(|layer| crate::artifacts::raster::schema::layer_node_id(layer) == group_id).unwrap() else {
             panic!("expected group");
@@ -1439,8 +1440,8 @@ mod tests {
     /// tree edits on one backbone that must both survive on both instances.
     #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
-        let mut instance_a = app();
-        let mut instance_b = app();
+        let mut instance_a = app().await;
+        let mut instance_b = app().await;
         // Seed both from an identical base projection (a background layer with a fixed id) so B's
         // rename targets the same layer A holds — per-instance `initial_snapshot` mints fresh ids.
         let mut base = crate::artifacts::raster::schema::empty_raster_snapshot();
@@ -1457,19 +1458,19 @@ mod tests {
             image_key: None,
         }];
         let base_envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", base, None);
-        let base_files = store::print_document_pack(&base_envelope).expect("print document pack");
-        instance_a.load_document_pack(&base_files).expect("load a");
-        instance_b.load_document_pack(&base_files).expect("load b");
+        let base_files = store::print_document_pack(&base_envelope).await.expect("print document pack");
+        instance_a.load_document_pack(&base_files).await.expect("load a");
+        instance_b.load_document_pack(&base_files).await.expect("load b");
         let background_id = "bg".to_string();
-        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://raster-convergence", "mem://raster-convergence");
-        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://raster-convergence", "mem://raster-convergence").await;
+        instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
+        instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
 
-        dispatch(&mut instance_a, RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() }));
-        dispatch(&mut instance_b, RasterCommand::PatchLayer(patch_layer::PatchLayer { layer_id: background_id, field: "name".into(), value: "Renamed By B".into() }));
+        dispatch(&mut instance_a, RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() })).await;
+        dispatch(&mut instance_b, RasterCommand::PatchLayer(patch_layer::PatchLayer { layer_id: background_id, field: "name".into(), value: "Renamed By B".into() })).await;
 
-        instance_a.handle_action("commitCheckpoint", None, &testkit::meta("actor-a")).expect("pump a");
-        instance_b.handle_action("commitCheckpoint", None, &testkit::meta("actor-b")).expect("pump b");
+        instance_a.handle_action("commitCheckpoint", None, &testkit::meta("actor-a")).await.expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &testkit::meta("actor-b")).await.expect("pump b");
 
         let projection_a = instance_a.snapshot().expect("projection a");
         let projection_b = instance_b.snapshot().expect("projection b");
@@ -1481,19 +1482,19 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent() {
-        testkit::assert_ingest_idempotent::<RasterPlayApp, usize>(RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() }), |app| app.snapshot().unwrap().layers.len());
+        testkit::assert_ingest_idempotent::<EditorApp<RasterPlayApp>, usize>(RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() }), |app| app.snapshot().unwrap().layers.len()).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_active_utility_switch_emits_no_ops_and_persists_in_config() {
-        let mut app = app_with_registry();
+        let mut app = app_with_registry().await;
         let before = app.snapshot().expect("snapshot");
         // Switching utilities is the framework View action: no document operations, nothing to sync/undo.
-        let result = dispatch(&mut app, RasterCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "paintBrush".into() }));
+        let result = dispatch(&mut app, RasterCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "paintBrush".into() })).await;
         assert!(result.mutations.is_empty(), "utility switching never emits document operations");
         assert_eq!(app.snapshot().expect("snapshot"), before, "utility switching does not mutate the document");
         // The composite scene reads the host-owned active utility from config, not view state.
-        let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE);
+        let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await;
         assert!(json.contains("\"activeUtility\":\"paintBrush\""), "scene reflects host-owned active utility: {json}");
     }
 
@@ -1517,21 +1518,20 @@ mod tests {
         let projection = empty_raster_document();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);
-        let app = RasterPlayApp;
-        let image_out = semio_framework_plugin::resolve_ready(RasterPlayApp::export_media("image:out", &doc)).expect("image:out");
+        let image_out = RasterPlayApp::export_media("image:out", &doc).expect("image:out");
         let MediaPayload::Structured { schema, json } = image_out.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "2d.image");
         assert!(!json.is_empty());
-        assert!(semio_framework_plugin::resolve_ready(RasterPlayApp::export_media("document:out", &doc)).is_ok());
-        assert!(matches!(semio_framework_plugin::resolve_ready(RasterPlayApp::export_media("unknown:out", &doc)), Err(MediaError::NotImplemented)));
+        assert!(RasterPlayApp::export_media("document:out", &doc).is_ok());
+        assert!(matches!(RasterPlayApp::export_media("unknown:out", &doc), Err(MediaError::NotImplemented)));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn raster_import_media_appends_layer_from_incoming_image() {
-        let mut app = app();
+        let mut app = app().await;
         let before = app.snapshot().expect("snapshot").layers.len();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: "aGVsbG8=".into() } };
-        let result = app.import_media("image:in", &media, &testkit::meta("local")).expect("import image:in");
+        let result = app.import_media("image:in", media, &testkit::meta("local")).await.expect("import image:in");
         assert!(!result.mutations.is_empty(), "image:in import must emit a real document operation");
         assert_eq!(app.snapshot().expect("snapshot").layers.len(), before + 1);
     }

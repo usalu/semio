@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "cases": [
+    { "id": "missing-record", "stage": "record", "actorRetained": false, "instantiations": 0, "drops": 0, "admitted": false },
+    { "id": "quarantined-record", "stage": "quarantine", "actorRetained": false, "instantiations": 0, "drops": 0, "admitted": false },
+    { "id": "missing-shard", "stage": "shard", "actorRetained": false, "instantiations": 0, "drops": 0, "admitted": false },
+    { "id": "instantiate-fault", "stage": "instantiate", "actorRetained": false, "instantiations": 1, "drops": 0, "admitted": false },
+    { "id": "stopped-shard", "stage": "register", "actorRetained": false, "instantiations": 1, "drops": 1, "admitted": false },
+    { "id": "admitted", "stage": "complete", "actorRetained": true, "instantiations": 1, "drops": 0, "admitted": true }
+  ]
+}

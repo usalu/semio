@@ -44,7 +44,7 @@ use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, Job
 use semio_framework_os_services::{
     CompletionSink, ComputeError, ComputePool, EventRouter, HttpPool, HttpPoolError, HttpRequest as ServiceHttpRequest, HttpResponse as ServiceHttpResponse, PublishOutcome, StorageError, StorageScheduler, TimerError, TimerWheel, Topic,
 };
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value_derive::ToValue;
 
 //#region 🆔️TraceIdAllocator
 /// 🆔️ Monotonic `TraceId` source, one per host — every dispatched operation gets a fresh id from

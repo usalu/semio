@@ -137,6 +137,12 @@ fn target(fixture: &serde_json::Value, trace: &serde_json::Value, durable: &Dura
         command_hash: durable.command_hash.clone(),
         actor: fixture["command"]["actor"].as_str().unwrap().into(),
         maximum_records: trace["maximumRecords"].as_u64().unwrap_or(fixture["maximumRecords"].as_u64().unwrap()),
+        receipt: directory::os_store::durable_group::DurableOwnedGroupJournalReceiptV1 {
+            anchor_sha256: durable.record.anchor_sha256().to_string(),
+            decision_sha256: durable.record.decision_sha256().to_string(),
+            transaction_id: trace["receiptTransactionId"].as_u64().unwrap_or(1),
+            segment_index: 0,
+        },
     }
 }
 
@@ -169,7 +175,7 @@ async fn storage_with_event(fixture: &serde_json::Value, trace: &serde_json::Val
                     bytes.extend_from_slice(&(record["recordCount"].as_u64().unwrap() as u32).to_le_bytes());
                     (db::wal::WAL_TX_COMMIT, bytes)
                 }
-                "event" => {
+                "command" => {
                     let mut bytes = durable.record.canonical_pack().to_vec();
                     match record["bytes"].as_str().unwrap() {
                         "different" => bytes = b"different non-Pack durable event".to_vec(),

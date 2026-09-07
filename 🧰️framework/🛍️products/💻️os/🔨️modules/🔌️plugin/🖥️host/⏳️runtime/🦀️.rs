@@ -273,18 +273,18 @@ pub enum AsyncActorCommand {
 /// `emitted` is prepended (it happened earlier in the turn, via `host-async.emit`, than anything
 /// `poll` itself returns) — same ordering `WasmtimeRuntime::execute_turn` uses for its own
 /// `emit_sink.chain(wit_turn_result.effects)`.
-async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Effect>) -> Result<KernelTurnResult, TurnFault> {
+async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Effect>, patches: Vec<super::wit_ui::UiPatch>, instance_id: u32, max_patch_bytes: u32) -> Result<KernelTurnResult, TurnFault> {
     for effect in turn.effects {
         match super::wit_effect_to_kernel(effect).await {
             Ok(kernel_effect) => effects.push(kernel_effect),
             Err(error) => return Err(TurnFault::Host(error)),
         }
     }
+    let ui_patch_receipt = turn.ui_patch_receipt.map(super::wit_patch_receipt_to_kernel);
+    let ui_patches = super::ui_patch::wit_ui_patches_to_kernel(instance_id, max_patch_bytes, patches, turn.ui_patches, ui_patch_receipt)
+        .map_err(|error| TurnFault::Host(PluginHostError::Plugin(error)))?;
     Ok(KernelTurnResult {
-        // 🚧️ Same open gap `component.rs`'s own `execute_turn` and `imports.rs`'s own `patch_sink`
-        // doc already carry: WIT `patch-op`'s `path: list<u32>` + `node: pack` vs kernel `PatchOp`'s
-        // `path: String` + `node: UiNode` has no agreed conversion yet.
-        ui_patches: semio_framework::kernel::UiTurnPatches::default(),
+        ui_patches,
         effects,
         // 👥️ terra-shard-lane: same wire-shape mismatch as `component.rs`'s `execute_turn` —
         // `turn.presence` is real guest-emitted data (WIT `presence-update{peer: pack}`, a
@@ -299,8 +299,9 @@ async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Ef
         status: super::wit_turn_status_to_kernel(turn.status).await,
         fuel_used: turn.fuel_used,
         command_ingress: super::wit_command_ingress_to_kernel(turn.command_ingress),
+        cold_pair_ingress: super::wit_cold_ingress_to_kernel(turn.cold_pair_ingress)?,
         lifecycle_receipt: turn.lifecycle_receipt.map(super::wit_lifecycle_receipt_to_kernel),
-        ui_patch_receipt: turn.ui_patch_receipt.map(super::wit_patch_receipt_to_kernel),
+        ui_patch_receipt,
     })
 }
 //#endregion 🐛️Poll result conversion
@@ -363,21 +364,28 @@ impl AsyncActorTask {
                                 accessor.with(|mut access| {
                                     let _ = access.as_context_mut().set_fuel(budget.fuel);
                                 });
-                                let mut wit_events_vec: Vec<wit_events::Event> = Vec::with_capacity(events.len());
-                                for event in &events {
-                                    wit_events_vec.push(super::kernel_event_to_wit(event, instance_id).await);
-                                }
+                                let (wit_events_vec, command_page, cold_pair_page) = match super::kernel_turn_inputs_to_wit(&events, instance_id).await {
+                                    Ok(inputs) => inputs,
+                                    Err(fault) => {
+                                        let _ = reply.send(Err(fault));
+                                        continue;
+                                    }
+                                };
                                 let wit_budget = wit_reactor::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
 
                                 struct PollTask {
                                     instance: Arc<actor_bindings::Actor>,
+                                    instance_id: u32,
                                     events: Vec<wit_events::Event>,
+                                    command_page: Option<wit_reactor::CommandIngressPage>,
+                                    cold_pair_page: Option<wit_reactor::ColdDocumentPairPage>,
                                     budget: wit_reactor::Budget,
+                                    max_patch_bytes: u32,
                                     reply: tokio::sync::oneshot::Sender<Result<KernelTurnResult, TurnFault>>,
                                 }
                                 impl AccessorTask<AsyncActorHostState> for PollTask {
                                     async fn run(self, accessor: &Accessor<AsyncActorHostState>) -> wasmtime::Result<()> {
-                                        let outcome = self.instance.semio_framework_reactor().call_poll(accessor, self.events, None, self.budget).await;
+                                        let outcome = self.instance.semio_framework_reactor().call_poll(accessor, self.events, self.command_page, self.cold_pair_page, self.budget).await;
                                         let mapped = match outcome {
                                             Ok(Ok(turn)) => {
                                                 // 🚫️async: E5 executor bridge. `AsyncActorHostState::take_effects`/`take_patches`
@@ -387,11 +395,11 @@ impl AsyncActorTask {
                                                 // `snapshot_call` precedent: every async follow-up happens OUTSIDE `.with()`, on plain
                                                 // owned data extracted synchronously), so `block_on` is the sound bridge here, not a
                                                 // shortcut around it.
-                                                let (emitted, _patches) = accessor.with(|mut access| {
+                                                let (emitted, patches) = accessor.with(|mut access| {
                                                     let state = access.get();
                                                     (semio_framework_async::block_on(state.take_effects()), semio_framework_async::block_on(state.take_patches()))
                                                 });
-                                                convert_poll_success(turn, emitted).await
+                                                convert_poll_success(turn, emitted, patches, self.instance_id, self.max_patch_bytes).await
                                             }
                                             Ok(Err(fault)) => Err(super::decode_guest_plugin_error(fault)),
                                             Err(trap) => Err(TurnFault::Trapped(trap.to_string())),
@@ -400,7 +408,7 @@ impl AsyncActorTask {
                                         Ok(())
                                     }
                                 }
-                                let _ = accessor.spawn(PollTask { instance: instance.clone(), events: wit_events_vec, budget: wit_budget, reply });
+                                let _ = accessor.spawn(PollTask { instance: instance.clone(), instance_id, events: wit_events_vec, command_page, cold_pair_page, budget: wit_budget, max_patch_bytes: budget.max_patch_bytes, reply });
                             }
                             Some(AsyncActorCommand::StartJob { job, kind, input, reply }) => {
                                 struct StartJobTask {

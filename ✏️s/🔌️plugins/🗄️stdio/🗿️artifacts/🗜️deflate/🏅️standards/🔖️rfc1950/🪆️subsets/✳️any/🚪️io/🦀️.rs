@@ -595,7 +595,7 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
 }
 
 fn retire_deflate_vec_step<T>(values: &mut Vec<T>, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
-    let item_bytes = std::mem::size_of::<T>();
+    let item_bytes = size_of::<T>();
     if !values.is_empty() {
         if maximum_items == 0 || maximum_bytes < item_bytes {
             return Some((0, 0));

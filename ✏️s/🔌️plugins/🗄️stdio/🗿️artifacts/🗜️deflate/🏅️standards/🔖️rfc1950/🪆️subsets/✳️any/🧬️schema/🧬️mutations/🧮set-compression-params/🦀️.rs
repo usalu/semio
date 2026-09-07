@@ -23,7 +23,7 @@ pub struct SetCompressionParams {
 impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetCompressionParams {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "compression-params", kind: "set-compression-params", record: "SetCompressionParams" };
 
-    fn diff(&self, base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as protocol::Mutation<DeflateSnapshot>>::Diff> {
+    fn diff(&self, base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as Mutation<DeflateSnapshot>>::Diff> {
         agg_diff(&DeflateMutation::SetCompressionParams(self.clone()), base)
     }
     fn inverse(&self, base: &DeflateSnapshot) -> Vec<DeflateMutation> {

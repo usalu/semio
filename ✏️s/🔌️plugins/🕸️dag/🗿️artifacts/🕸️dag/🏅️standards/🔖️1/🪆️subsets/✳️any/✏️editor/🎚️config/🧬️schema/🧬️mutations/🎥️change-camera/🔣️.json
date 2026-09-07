@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🎥️change-camera",
+  "semanticKind": "change-camera",
+  "displayName": "Change Camera",
+  "emoji": "🎥️",
+  "aggregateVariant": "ChangeCamera",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "change-camera",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema"
+  ]
+}

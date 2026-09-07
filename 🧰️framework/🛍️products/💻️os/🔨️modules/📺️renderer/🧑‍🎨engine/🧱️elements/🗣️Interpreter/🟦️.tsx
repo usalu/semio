@@ -1065,7 +1065,7 @@ function treeItemToTreeData(state: UiDocumentState, node: TreeWalkNode, context:
     items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(state, child, context, overlay)) : undefined,
     onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : undefined,
     onPointerEnter: hoverBinding ? () => dispatchTrigger(context, record, "hoverPreview") : undefined,
-    actions: props.rowActions.length > 0 ? props.rowActions.map((action) => ({ kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label ? wireLabel(action.label) : undefined, placement: action.placement ?? "row", onClick: () => context.onIntent(context.store.buildIntent(record, action.action)) })) : undefined,
+    actions: (props.rowActions ?? []).length > 0 ? (props.rowActions ?? []).map((action) => ({ kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label ? wireLabel(action.label) : undefined, placement: action.placement ?? "row", onClick: () => context.onIntent(context.store.buildIntent(record, action.action)) })) : undefined,
   };
 }
 

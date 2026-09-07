@@ -106,7 +106,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/🪚️accepts-a-rip-cut-step-and-inserts-it/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/🪚️accepts-a-rip-f93d45/🦀️.rs"]
                                     mod tests_accepts_a_rip_cut_step_and_changes_nothing;
                                 }
                                 #[path = "."]
@@ -119,7 +119,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🚫️accepts-a-step-id-and-removes-it/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🚫️accepts-a-step-e6cfa8/🦀️.rs"]
                                     mod tests_accepts_a_step_id_and_changes_nothing;
                                 }
                                 #[path = "."]
@@ -132,7 +132,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/🧪️tests/🔤️accepts-a-new-label-and-applies-it/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/🧪️tests/🔤️accepts-a-new-7492c5/🦀️.rs"]
                                     mod tests_accepts_a_new_label_and_changes_nothing;
                                 }
                                 #[path = "."]
@@ -145,7 +145,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/🧪️tests/⏸️accepts-a-disable-flag-and-applies-it/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/🧪️tests/⏸️accepts-a-disable-e2f494/🦀️.rs"]
                                     mod tests_accepts_a_disable_flag_and_changes_nothing;
                                 }
                                 #[path = "."]
@@ -158,7 +158,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/🧪️tests/🏭️accepts-a-machine-provenance-and-applies-it/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/🧪️tests/🏭️accepts-a-2b8ada/🦀️.rs"]
                                     mod tests_accepts_a_machine_provenance_and_changes_nothing;
                                 }
                                 #[path = "."]
@@ -171,7 +171,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/🧪️tests/🕳️accepts-a-bore-measure-and-replaces-it/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/🧪️tests/🕳️accepts-a-bore-e4ce0f/🦀️.rs"]
                                     mod tests_accepts_a_bore_measure_and_changes_nothing;
                                 }
                                 #[path = "."]
@@ -184,7 +184,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/🔀️accepts-a-target-index-and-reorders-them/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/🔀️accepts-a-target-f657e1/🦀️.rs"]
                                     mod tests_accepts_a_target_index_and_changes_nothing;
                                 }
                                 #[path = "."]
@@ -197,7 +197,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/🧪️tests/🪛️adds-a-drill-press-to-the-workshop/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/🧪️tests/🪛️adds-a-drill-724e18/🦀️.rs"]
                                     mod tests_adds_a_drill_press_to_the_workshop;
                                 }
                                 #[path = "."]
@@ -210,7 +210,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/🧪️tests/➖️empties-the-workshop-of-the-saw/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/🧪️tests/➖️empties-the-796a2e/🦀️.rs"]
                                     mod tests_empties_the_workshop_of_the_saw;
                                 }
                                 #[path = "."]
@@ -236,7 +236,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/🧪️tests/🪚️swaps-the-saw-icon/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/🧪️tests/🪚️swaps-the-saw-9debd1/🦀️.rs"]
                                     mod tests_swaps_the_saw_icon;
                                 }
                                 #[path = "."]
@@ -249,7 +249,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine-capabilities/🧪️tests/🕳️trades-the-blade-cut-for-a-gated-pocket-cut/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine-capabilities/🧪️tests/t009/🦀️.rs"]
                                     mod tests_trades_the_blade_cut_for_a_gated_pocket_cut;
                                 }
                                 #[path = "."]
@@ -275,7 +275,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/🧪️tests/🔤️relabels-the-oak-beam-as-planed/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/🧪️tests/🔤️relabels-the-oak-2adb5b/🦀️.rs"]
                                     mod tests_relabels_the_oak_beam_as_planed;
                                 }
                                 #[path = "."]
@@ -288,7 +288,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🧪️tests/🧊️reissues-the-stock-brep-child-handle/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🧪️tests/🧊️reissues-the-d10326/🦀️.rs"]
                                     mod tests_reissues_the_stock_brep_child_handle;
                                 }
                                 #[path = "."]
@@ -301,7 +301,7 @@ pub mod artifacts {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/🧪️tests/⏯️pins-the-replay-cursor-to-two-steps/🦀️.rs"]
+                                    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-cursor/🧪️tests/⏯️pins-the-replay-7c60ce/🦀️.rs"]
                                     mod tests_pins_the_replay_cursor_to_two_steps;
                                 }
                             }

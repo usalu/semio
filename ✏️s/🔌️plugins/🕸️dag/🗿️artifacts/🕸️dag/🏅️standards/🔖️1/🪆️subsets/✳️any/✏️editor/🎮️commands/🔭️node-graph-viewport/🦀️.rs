@@ -14,5 +14,5 @@ pub struct NodeGraphViewport {
 }
 
 pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-    Ok(Emit::config(vec![DagConfigMutation::SetCamera { x: payload.x, y: payload.y, zoom: payload.zoom }]))
+    Ok(Emit::config(vec![DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { x: payload.x, y: payload.y, zoom: payload.zoom })]))
 }

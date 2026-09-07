@@ -52,7 +52,7 @@ fn input_writer_native_one_byte_validation_copy_and_seal_are_separate() {
     let allocations = allocations_end();
     assert_eq!(sealed.kind, InputWriteKind::Sealed);
     assert_eq!(sealed.work_bytes, seal_bytes);
-    assert_eq!(seal_bytes, fixture["work"]["descriptorTransfers"].as_u64().unwrap() as usize * std::mem::size_of::<Vec<u8>>());
+    assert_eq!(seal_bytes, fixture["work"]["descriptorTransfers"].as_u64().unwrap() as usize * size_of::<Vec<u8>>());
     assert_eq!(turns as u64, fixture["work"]["oneByteValidationAndCopyTurns"].as_u64().unwrap());
     assert_eq!(allocations, 0);
     assert_eq!(buffer.text().unwrap(), source);

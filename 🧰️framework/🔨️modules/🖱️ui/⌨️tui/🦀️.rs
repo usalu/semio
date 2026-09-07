@@ -4376,7 +4376,7 @@ pub mod backend {
             let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 1)));
             let mut clipboard = HostClipboard::new(std::sync::Arc::clone(&pool));
             clipboard.submit(|| {
-                std::thread::sleep(std::time::Duration::from_millis(80));
+                std::thread::sleep(Duration::from_millis(80));
                 ClipboardResult::Copied
             });
             let mut samples = Vec::with_capacity(4096);
@@ -4387,7 +4387,7 @@ pub mod backend {
             }
             samples.sort_unstable();
             let p99 = samples[samples.len() * 99 / 100];
-            assert!(p99 < std::time::Duration::from_millis(2), "clipboard poll callback p99 was {p99:?}");
+            assert!(p99 < Duration::from_millis(2), "clipboard poll callback p99 was {p99:?}");
             pool.shutdown();
         }
     }
@@ -5716,7 +5716,7 @@ mod tests {
         next.put(3, 0, Cell { ch: 'x', ..blank });
         let runs = diff(&prev, &next);
         assert_eq!(runs.len(), 1);
-        assert_eq!(runs[0], crate::tui::cell::DiffRun { y: 0, x: 3, len: 1 });
+        assert_eq!(runs[0], DiffRun { y: 0, x: 3, len: 1 });
     }
 
     #[test]
@@ -5776,7 +5776,7 @@ mod tests {
         parser.feed(b"\x1b", &mut events);
         assert!(events.is_empty());
         parser.flush_escape(&mut events);
-        assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Esc, mods: 0 })]);
+        assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Esc, mods: 0 })]);
     }
 
     #[test]

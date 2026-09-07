@@ -3,7 +3,7 @@
 use crate::artifacts::presentation::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use crate::editor::animate::terminology::AnimatePresentationLabels;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
-use semio_framework_ui_contract::{column, field, section, text, Buildable, BuiltNode, HasBase, HasChildren, Label};
+use semio_framework_ui_contract::{column, field, section, text, BuiltNode, Label};
 
 //#region 🔖️Constants
 pub const PRESENTATION_PLAY_BODY_DETAILS: &str = "animate.presentation.play.details";

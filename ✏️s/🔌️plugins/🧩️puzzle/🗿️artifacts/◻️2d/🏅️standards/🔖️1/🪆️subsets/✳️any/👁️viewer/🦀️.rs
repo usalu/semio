@@ -7,7 +7,7 @@
 use crate::artifacts::puzzle2d::{Puzzle2dSnapshot, PUZZLE2D_DIALECT, PUZZLE_2D_SCHEMA};
 use crate::viewer::puzzle2d::modes::view;
 use crate::viewer::puzzle2d::modes::view::windows::board;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 // 🕹️ `InteractionView` — see `✏️editor/🦀️.rs`'s identical import comment (missing top-level
 // re-export from `semio_framework_plugin`, flagged to the coordinator, not fixed here).
 use semio_framework_plugin::app::InteractionView;

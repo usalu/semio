@@ -4,7 +4,9 @@
 use super::kernel_3d_scene::{Mat4Math, ScenePass3d};
 use crate::wgpu::prepared::PreparedRasterPages;
 use crate::wgpu::shaders::{BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER};
-use crate::wgpu::theme::{GlassStyle, Rgba, Theme};
+#[cfg(test)]
+use crate::wgpu::theme::Rgba;
+use crate::wgpu::theme::Theme;
 use bytemuck::{Pod, Zeroable};
 use wgpu::util::DeviceExt;
 
@@ -407,8 +409,8 @@ impl MeshGpuTable {
             }
             let key = MeshGpuKey::new(key)?;
             let schema = lease.schema().map_err(|_| "mesh upload lease was stale")?;
-            let vertex_bytes = u64::from(schema.vertices).checked_mul(std::mem::size_of::<World3dVertex>() as u64).ok_or("mesh upload vertex byte credits overflowed")?;
-            let index_bytes = u64::from(schema.indices).checked_mul(std::mem::size_of::<u32>() as u64).ok_or("mesh upload index byte credits overflowed")?;
+            let vertex_bytes = u64::from(schema.vertices).checked_mul(size_of::<World3dVertex>() as u64).ok_or("mesh upload vertex byte credits overflowed")?;
+            let index_bytes = u64::from(schema.indices).checked_mul(size_of::<u32>() as u64).ok_or("mesh upload index byte credits overflowed")?;
             if vertex_bytes == 0 || index_bytes == 0 {
                 return Err("mesh upload schema was empty");
             }
@@ -424,13 +426,13 @@ impl MeshGpuTable {
             let position = cursor.lease.vec3(crate::wgpu::kernel_3d_scene::Mesh3dField::Positions, cursor.vertex).map_err(|_| "mesh upload position lease was stale")?;
             let normal = cursor.lease.vec3(crate::wgpu::kernel_3d_scene::Mesh3dField::Normals, cursor.vertex).unwrap_or([0.0, 1.0, 0.0]);
             let vertex = World3dVertex { position, normal };
-            queue.write_buffer(cursor.vertex_buffer.as_ref().ok_or("mesh upload vertex buffer was retired")?, u64::from(cursor.vertex) * std::mem::size_of::<World3dVertex>() as u64, bytemuck::bytes_of(&vertex));
+            queue.write_buffer(cursor.vertex_buffer.as_ref().ok_or("mesh upload vertex buffer was retired")?, u64::from(cursor.vertex) * size_of::<World3dVertex>() as u64, bytemuck::bytes_of(&vertex));
             cursor.vertex += 1;
             return Ok(false);
         }
         if cursor.index < cursor.schema.indices {
             let value = cursor.lease.u32(crate::wgpu::kernel_3d_scene::Mesh3dField::Indices, cursor.index).map_err(|_| "mesh upload index lease was stale")?;
-            queue.write_buffer(cursor.index_buffer.as_ref().ok_or("mesh upload index buffer was retired")?, u64::from(cursor.index) * std::mem::size_of::<u32>() as u64, &value.to_le_bytes());
+            queue.write_buffer(cursor.index_buffer.as_ref().ok_or("mesh upload index buffer was retired")?, u64::from(cursor.index) * size_of::<u32>() as u64, &value.to_le_bytes());
             cursor.index += 1;
             return Ok(false);
         }
@@ -592,6 +594,7 @@ struct WorldLineGpuVertex {
     color: [f32; 4],
 }
 
+#[cfg(test)]
 struct WorldDrawRange {
     mesh_key: String,
     mesh_version: u64,
@@ -599,6 +602,7 @@ struct WorldDrawRange {
     instance_count: u32,
 }
 
+#[cfg(test)]
 struct PreparedWorldPass {
     globals: World3dGlobals,
     viewport: [f32; 4],
@@ -750,10 +754,6 @@ impl RasterTextureKey {
             hash = hash.wrapping_mul(0x100000001b3);
         }
         Ok(Self { bytes, len: key.len() as u16, hash })
-    }
-
-    fn matches(self, key: &str) -> bool {
-        usize::from(self.len) == key.len() && &self.bytes[..usize::from(self.len)] == key.as_bytes()
     }
 
     fn as_str(&self) -> &str {
@@ -1156,6 +1156,7 @@ struct RasterTextureUploadCursor {
 }
 
 pub(crate) enum RasterUploadPixels<'a> {
+    #[cfg(test)]
     Contiguous(&'a [u8]),
     Pages(&'a PreparedRasterPages),
 }
@@ -1163,6 +1164,7 @@ pub(crate) enum RasterUploadPixels<'a> {
 impl RasterUploadPixels<'_> {
     fn len(&self) -> usize {
         match self {
+            #[cfg(test)]
             Self::Contiguous(pixels) => pixels.len(),
             Self::Pages(pixels) => pixels.byte_len(),
         }
@@ -1170,14 +1172,16 @@ impl RasterUploadPixels<'_> {
 
     fn dimensions_match(&self, width: u32, height: u32) -> bool {
         match self {
+            #[cfg(test)]
             Self::Contiguous(_) => true,
             Self::Pages(pixels) => pixels.width() == width && pixels.height() == height,
         }
     }
 
-    fn rows(&self, row: u32, start: usize, end: usize, rows: u32) -> Option<(&[u8], u32)> {
+    fn rows(&self, row: u32, _start: usize, _end: usize, _rows: u32) -> Option<(&[u8], u32)> {
         match self {
-            Self::Contiguous(pixels) => pixels.get(start..end).map(|page| (page, rows)),
+            #[cfg(test)]
+            Self::Contiguous(pixels) => pixels.get(_start.._end).map(|page| (page, _rows)),
             Self::Pages(pixels) => pixels.page_for_row(row),
         }
     }
@@ -1471,7 +1475,7 @@ impl RasterTextureTable {
         if self.staged.get(key.as_str()).is_some() {
             return Err("raster staged generation was duplicated");
         }
-        self.live.locate(key)?;
+        let _ = self.live.locate(key)?;
         let staged_index = match self.staged.locate(key)? {
             Ok(index) | Err(index) => index,
         };
@@ -1562,7 +1566,7 @@ impl RasterTextureTable {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
-    pub fn ensure_raster_step(
+    pub(crate) fn ensure_raster_step(
         &mut self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
@@ -1925,6 +1929,7 @@ impl RasterTextureTable {
 }
 
 pub(crate) struct UiPipelines {
+    #[cfg(test)]
     mask_pipeline: wgpu::RenderPipeline,
     ui_pipeline: wgpu::RenderPipeline,
     vector_pipeline: wgpu::RenderPipeline,
@@ -1949,6 +1954,7 @@ pub(crate) struct UiPipelines {
     bind_group_layout: wgpu::BindGroupLayout,
 }
 
+#[cfg(test)]
 struct LayerBatch {
     layer_index: usize,
     scissor: Option<ScissorRect>,
@@ -1959,19 +1965,23 @@ struct LayerBatch {
     vec_count: u32,
 }
 
+#[cfg(test)]
 enum LayerBatchFilter {
     Backdrop,
     Foreground,
 }
 
+#[cfg(test)]
 impl Copy for LayerBatchFilter {}
 
+#[cfg(test)]
 impl Clone for LayerBatchFilter {
     fn clone(&self) -> Self {
         *self
     }
 }
 
+#[cfg(test)]
 fn layer_matches_filter(layer: &DrawLayer, filter: LayerBatchFilter) -> bool {
     match filter {
         LayerBatchFilter::Backdrop => layer.foreground_of.is_none(),
@@ -1979,6 +1989,7 @@ fn layer_matches_filter(layer: &DrawLayer, filter: LayerBatchFilter) -> bool {
     }
 }
 
+#[cfg(test)]
 fn build_layer_batches(draw: &DrawList, filter: LayerBatchFilter) -> (Vec<UiInstance>, Vec<VectorVertex>, Vec<LayerBatch>) {
     let mut all_ui = Vec::new();
     let mut all_vec = Vec::new();
@@ -2000,6 +2011,7 @@ fn build_layer_batches(draw: &DrawList, filter: LayerBatchFilter) -> (Vec<UiInst
     (all_ui, all_vec, batches)
 }
 
+#[cfg(test)]
 fn build_overlay_layer_batches(draw: &DrawList, filter: LayerBatchFilter) -> (Vec<UiInstance>, Vec<VectorVertex>, Vec<LayerBatch>) {
     let mut all_ui = Vec::new();
     let mut all_vec = Vec::new();
@@ -2028,6 +2040,7 @@ fn set_pass_scissor(pass: &mut wgpu::RenderPass<'_>, scissor: Option<ScissorRect
     }
 }
 
+#[cfg(test)]
 fn layer_scissors(scissor: Option<ScissorRect>, clip: Option<&ClipRegion>, width: f32, height: f32) -> Vec<Option<ScissorRect>> {
     if let Some(clip) = clip {
         return clip.effective_scissors(scissor, width, height).into_iter().map(Some).collect();
@@ -2045,6 +2058,7 @@ fn content_stencil_state() -> wgpu::StencilState {
     wgpu::StencilState { front: face, back: face, read_mask: 0xff, write_mask: 0x00 }
 }
 
+#[cfg(test)]
 fn mask_stencil_state() -> wgpu::StencilState {
     let face = wgpu::StencilFaceState { compare: wgpu::CompareFunction::Always, fail_op: wgpu::StencilOperation::Replace, depth_fail_op: wgpu::StencilOperation::Replace, pass_op: wgpu::StencilOperation::Replace };
     wgpu::StencilState { front: face, back: face, read_mask: 0xff, write_mask: 0xff }
@@ -2054,6 +2068,7 @@ fn stencil_attachment<'a>(view: &'a wgpu::TextureView, depth_load: wgpu::LoadOp<
     wgpu::RenderPassDepthStencilAttachment { view, depth_ops: Some(wgpu::Operations { load: depth_load, store: wgpu::StoreOp::Store }), stencil_ops: Some(wgpu::Operations { load: stencil_load, store: wgpu::StoreOp::Store }) }
 }
 
+#[cfg(test)]
 fn union_scissors(scissors: &[ScissorRect]) -> Option<ScissorRect> {
     let first = *scissors.first()?;
     let (mut x0, mut y0, mut x1, mut y1) = (first.x, first.y, first.x + first.w, first.y + first.h);
@@ -2066,6 +2081,7 @@ fn union_scissors(scissors: &[ScissorRect]) -> Option<ScissorRect> {
     Some(ScissorRect { x: x0, y: y0, w: x1 - x0, h: y1 - y0 })
 }
 
+#[cfg(test)]
 fn merge_scissor_bounds(a: Option<ScissorRect>, b: Option<ScissorRect>) -> Option<ScissorRect> {
     match (a, b) {
         (Some(a), Some(b)) => union_scissors(&[a, b]),
@@ -2074,6 +2090,7 @@ fn merge_scissor_bounds(a: Option<ScissorRect>, b: Option<ScissorRect>) -> Optio
     }
 }
 
+#[cfg(test)]
 fn mask_instances(scissor: Option<ScissorRect>, clip: Option<&ClipRegion>, previous_bounds: Option<ScissorRect>, width: f32, height: f32) -> (Vec<UiInstance>, Option<ScissorRect>) {
     let white = Rgba::new(1.0, 1.0, 1.0, 1.0);
     let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
@@ -2087,6 +2104,7 @@ fn mask_instances(scissor: Option<ScissorRect>, clip: Option<&ClipRegion>, previ
     (instances, current_bounds)
 }
 
+#[cfg(test)]
 fn build_batch_masks(batches: &[LayerBatch], width: f32, height: f32) -> (Vec<UiInstance>, Vec<(u32, u32)>) {
     let mut instances = Vec::new();
     let mut ranges = Vec::with_capacity(batches.len());
@@ -2188,6 +2206,7 @@ impl UiPipelines {
             ],
         });
         let ui_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("ui_pipeline_layout"), bind_group_layouts: &[&globals_bind_group_layout], push_constant_ranges: &[] });
+        #[cfg(test)]
         let mask_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("silhouette_mask_pipeline"),
             layout: Some(&ui_pipeline_layout),
@@ -2520,6 +2539,7 @@ impl UiPipelines {
 
         let _ = queue;
         Self {
+            #[cfg(test)]
             mask_pipeline,
             ui_pipeline,
             vector_pipeline,
@@ -2573,6 +2593,7 @@ impl UiPipelines {
         wgpu::TextureFormat::Depth24PlusStencil8
     }
 
+    #[cfg(test)]
     fn prepare_world_passes(draw: &DrawList, filter: LayerBatchFilter) -> (Vec<PreparedWorldPass>, Vec<World3dGpuInstance>, Vec<WorldLineGpuVertex>, Vec<Option<usize>>) {
         let mut prepared = Vec::new();
         let mut all_instances = Vec::new();
@@ -2626,6 +2647,7 @@ impl UiPipelines {
         (prepared, all_instances, all_lines, pass_index_map)
     }
 
+    #[cfg(test)]
     fn upload_world_passes(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, draw: &DrawList, frame_buffers: &mut FrameBuffers, filter: LayerBatchFilter) -> Option<(Vec<PreparedWorldPass>, Vec<Option<usize>>)> {
         if draw.scene_passes.is_empty() {
             return None;
@@ -2650,6 +2672,7 @@ impl UiPipelines {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
+    #[cfg(test)]
     fn draw_world_pass_at<'a>(
         &'a self,
         pass: &mut wgpu::RenderPass<'a>,
@@ -2703,6 +2726,7 @@ impl UiPipelines {
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);
     }
 
+    #[cfg(test)]
     fn draw_world_range<'a>(pass: &mut wgpu::RenderPass<'a>, mesh_store: &MeshGpuTable, draw_call: &WorldDrawRange, instance_buffer: wgpu::BufferSlice<'a>, instance_stride: u64) {
         let Some(mesh) = mesh_store.get_versioned(&draw_call.mesh_key, draw_call.mesh_version) else {
             return;
@@ -2714,6 +2738,7 @@ impl UiPipelines {
         pass.draw_indexed(0..mesh.index_count, 0, 0..draw_call.instance_count);
     }
 
+    #[cfg(test)]
     fn draw_ui_instances<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, instance_buffer: &wgpu::BufferSlice<'a>, start: u32, count: u32) {
         if count == 0 {
             return;
@@ -2725,6 +2750,7 @@ impl UiPipelines {
         pass.draw(0..6, start..start + count);
     }
 
+    #[cfg(test)]
     fn draw_silhouette_mask<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, mask_buffer: &wgpu::BufferSlice<'a>, start: u32, count: u32, width: f32, height: f32) {
         if count == 0 {
             pass.set_stencil_reference(1);
@@ -2745,6 +2771,7 @@ impl UiPipelines {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
+    #[cfg(test)]
     fn draw_raster_layers<'a>(
         &'a self,
         pass: &mut wgpu::RenderPass<'a>,
@@ -2810,6 +2837,7 @@ impl UiPipelines {
         pass.set_scissor_rect(0, 0, width as u32, height as u32);
     }
 
+    #[cfg(test)]
     fn draw_vector_vertices<'a>(&'a self, pass: &mut wgpu::RenderPass<'a>, vector_buffer: &wgpu::BufferSlice<'a>, start: u32, count: u32) {
         if count == 0 {
             return;
@@ -2821,6 +2849,7 @@ impl UiPipelines {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
+    #[cfg(test)]
     fn render_interleaved_layers<'a>(
         &'a self,
         pass: &mut wgpu::RenderPass<'a>,
@@ -3318,6 +3347,7 @@ impl UiPipelines {
         }
     }
 
+    #[cfg(test)]
     fn has_glass_foreground(draw: &DrawList) -> bool {
         let layer_content = draw.layers.iter().any(|layer| layer.foreground_of.is_some() && (!layer.ui_instances.is_empty() || !layer.vector_vertices.is_empty() || !layer.raster_instances.is_empty()));
         let scene_content = draw.scene_passes.iter().any(|pass| layer_matches_filter(&draw.layers[pass.layer_index], LayerBatchFilter::Foreground));
@@ -3325,6 +3355,7 @@ impl UiPipelines {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
+    #[cfg(test)]
     fn render_glass_foreground<'a>(
         &'a mut self,
         device: &wgpu::Device,
@@ -3552,6 +3583,7 @@ impl UiPipelines {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
+    #[cfg(test)]
     fn composite_glass_regions(
         &self,
         device: &wgpu::Device,
@@ -3598,6 +3630,7 @@ impl UiPipelines {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
+    #[cfg(test)]
     pub fn render_overlay<'a>(&'a self, device: &wgpu::Device, queue: &wgpu::Queue, pass: &mut wgpu::RenderPass<'a>, overlay: &DrawList, frame_buffers: &'a mut FrameBuffers, width: f32, height: f32) {
         pass.set_pipeline(&self.ui_pipeline);
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);

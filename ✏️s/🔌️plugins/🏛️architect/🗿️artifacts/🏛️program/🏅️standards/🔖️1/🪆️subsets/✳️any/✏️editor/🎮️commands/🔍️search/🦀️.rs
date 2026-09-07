@@ -26,7 +26,7 @@ pub mod query {
         let mut next = base_config.clone();
         next.search_query = payload.query.clone();
         next.search_history_json = dsl::json::to_json_string(&history);
-        next.last_result_json = dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(&hits)));
+        next.last_result_json = dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&ToValue::to_value(&hits)));
         Ok(Emit::config(snapshot(next)))
     }
 }

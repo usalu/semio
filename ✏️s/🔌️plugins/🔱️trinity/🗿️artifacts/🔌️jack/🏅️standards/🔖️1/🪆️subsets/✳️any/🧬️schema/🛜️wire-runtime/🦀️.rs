@@ -77,7 +77,7 @@ enum TrinityGraphOperationDsl {
         kind: String,
         source: String,
         target: String,
-        properties: crate::artifacts::jack::PropertyBag,
+        properties: PropertyBag,
     },
     DeleteEdge {
         id: String,
@@ -155,7 +155,7 @@ fn trinity_graph_operation_to_dsl(operation: &TrinityGraphMutation) -> TrinityGr
 fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -> TrinityGraphMutation {
     match operation {
         TrinityGraphOperationDsl::CreateNode { id, kind, name, x, y, width, height, ports } => {
-            create_node(Node { id, kind, name, x, y, width, height, properties: crate::artifacts::jack::PropertyBag::new(), ports: ports.into_iter().map(port_dsl_to_port).collect() })
+            create_node(Node { id, kind, name, x, y, width, height, properties: PropertyBag::new(), ports: ports.into_iter().map(port_dsl_to_port).collect() })
         }
         TrinityGraphOperationDsl::DeleteNode { id } => delete_node(id),
         TrinityGraphOperationDsl::CreateEdge { id, kind, source, target, properties } => create_edge(Edge { id, kind, source, target, properties }),

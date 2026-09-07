@@ -47,12 +47,14 @@ export type PluginRegistryEntry = {
   readonly capabilities: readonly string[];
   readonly contributes: readonly string[];
   readonly consumes: readonly string[];
-  /** 🔗️ Every sibling `semio-s-plugin-<id>` Cargo dependency this crate declares, derived straight
-   * from its manifest — the ground-truth dependency edge set (contract freeze §4 rule 2) ahead of
-   * the runtime `.depends_on(...)` API's rollout (ticket 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-
-   * CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS). For an extension, `extends` is always `dependsOn[0]`
-   * (contract freeze §4 rule 1). Consumed by `resolveRegistryPluginIdsForFilter` to close a dev
-   * session's plugin set transitively. */
+  /** 🔗️ The RUNTIME actor dependencies this crate declares in `[package.metadata.semio].depends-on`
+   * — sibling plugins whose own actor must be loaded beside this one (it embeds their surfaces,
+   * contributes onto their artifacts, or exchanges messages with them), mirroring the same set the
+   * crate's builder declares through `.depends_on(id, VersionReq)`. A Cargo `[dependencies]` entry on
+   * `semio-s-plugin-<id>` is a BUILD-TIME rlib link (codecs, schema types, shared geometry) and is
+   * deliberately never read here — see {@link parseSemioDependsOnIds}. For an extension, `extends` is
+   * always `dependsOn[0]` (contract freeze §4 rule 1). Consumed by
+   * `resolveRegistryPluginIdsForFilter` to close a dev session's plugin set transitively. */
   readonly dependsOn: readonly string[];
   readonly host?: PluginHostMetadata;
   /** 🎬️ `kernel::ActivationEvent` rows, flattened to `📓️design-abi.md` §2's canonical dash-separated
@@ -281,9 +283,9 @@ function parsePluginCargo(manifestPath: string, repoRoot: string, view?: Registr
   const landingAppId = hostBlock?.match(/landing\s*=\s*"([^"]+)"/)?.[1];
   const hostAppId = hostBlock?.match(/shell\s*=\s*"([^"]+)"/)?.[1];
   const host = landingAppId && hostAppId ? { landingAppId, hostAppId } : undefined;
-  const cargoDependsOnIds = parseCargoPluginDependencyIds(text, pluginId);
+  const declaredDependsOnIds = parseSemioDependsOnIds(semioText, pluginId, manifestPath);
   // 🔗️ contract freeze §4 rule 1: for an extension, `extends` is always dependsOn[0].
-  const dependsOn = extendsHost ? [extendsHost, ...cargoDependsOnIds.filter((id) => id !== extendsHost)] : cargoDependsOnIds;
+  const dependsOn = extendsHost ? [extendsHost, ...declaredDependsOnIds.filter((id) => id !== extendsHost)] : declaredDependsOnIds;
 
   const descriptor = ownerDescriptors === "required" ? readDescriptorJson(repoRoot, cratePath, view) : undefined;
   let capabilities: string[];
@@ -396,32 +398,30 @@ function parseTomlInlineNumberArray(text: string, key: string): number[] {
   return [...match[1].matchAll(/\d+/g)].map((m) => Number(m[0]));
 }
 
-/** @emoji 🔗️ Every `semio-s-plugin-<id>` entry in one crate's own Cargo manifest text, both the
- * `key = { …, package = "semio-s-plugin-x" }` renamed-dependency shape and the plain
- * `semio-s-plugin-x = { … }` shape — mirrors the root policy script's
- * `policyCargoPluginDependencyIds` (`📜️script.ts:7562`) so the derived catalog and the
- * `plugin-dependency/parity` gate can never read two different dependency sets from the same file.
- * `ownId` (this crate's own `[package.metadata.component]` plugin id) is excluded so a crate can
- * never be listed as depending on itself. */
-function parseCargoPluginDependencyIds(manifestText: string, ownId: string): string[] {
-  const ids = new Set<string>();
-  for (const match of manifestText.matchAll(/(?:^|\n)\s*(?:[\w-]+\s*=\s*\{[^}]*?)?package\s*=\s*"semio-s-plugin-([a-z0-9-]+)"/g)) {
-    ids.add(match[1]!);
+/**
+ * @emoji 🔗️ The runtime actor dependencies one crate DECLARES, read from
+ * `[package.metadata.semio].depends-on` — the same plugin-id set its builder passes to
+ * `.depends_on(id, VersionReq)` (`🔌️plugin/🦀️.rs`), kept in the Cargo manifest as well because the
+ * registry is generated BEFORE any wasm build and therefore cannot read the descriptor a build
+ * emits. Mirrors the root policy script's `policySemioMetadataDependsOnIds` so the derived catalog
+ * and the `plugin-dependency/parity` gate can never read two different dependency sets.
+ *
+ * A Cargo `[dependencies]` line on `semio-s-plugin-<id>` is deliberately NOT a source here: it is a
+ * build-time rlib link (codecs, schema types, shared geometry called in-process) and says nothing
+ * about needing that plugin's own actor loaded. Deriving the load graph from it made every crate
+ * that links `stdio`'s codecs pull `stdio` into the browser's load set — and cascade-fail with it —
+ * and minted phantom ids for linked sub-crates that are not plugins at all (`draw-fsm`,
+ * `imperative-control`). `extends` supplies an extension's host edge and is prepended by
+ * {@link parsePluginCargo}, so an extension never repeats its host here.
+ */
+function parseSemioDependsOnIds(semioText: string, ownId: string, manifestPath: string): string[] {
+  const ids = parseTomlStringArray(semioText, "depends-on");
+  for (const id of ids) {
+    if (!CATALOG_ID.test(id)) throw new Error(`${manifestPath} metadata.semio.depends-on holds the malformed plugin id ${JSON.stringify(id)}`);
+    if (id === ownId) throw new Error(`${manifestPath} metadata.semio.depends-on names its own plugin id`);
   }
-  for (const match of manifestText.matchAll(/(?:^|\n)\s*semio-s-plugin-([a-z0-9-]+)\s*=/g)) {
-    ids.add(match[1]!);
-  }
-  ids.delete(ownId);
-  return [...ids].sort();
-}
-
-/** 📦️ Reads exact Cargo package identities so the strict gate never equates package and plugin ids. */
-function parseCargoPluginDependencyPackageNames(manifestText: string, ownPackageName: string): string[] {
-  const names = new Set<string>();
-  for (const match of manifestText.matchAll(/(?:^|\n)\s*(?:[\w-]+\s*=\s*\{[^}]*?)?package\s*=\s*"(semio-s-plugin-[a-z0-9-]+)"/g)) names.add(match[1]!);
-  for (const match of manifestText.matchAll(/(?:^|\n)\s*(semio-s-plugin-[a-z0-9-]+)\s*=/g)) names.add(match[1]!);
-  names.delete(ownPackageName);
-  return [...names].sort();
+  if (new Set(ids).size !== ids.length) throw new Error(`${manifestPath} metadata.semio.depends-on repeats a plugin id`);
+  return ids;
 }
 
 function parsePlaygroundBlock(block: string, pluginId: string, cratePath: string): PlaygroundEntry | undefined {
@@ -623,11 +623,12 @@ export function isHostPluginFilter(pluginFilter?: string, repoRoot = getWorkspac
  * `consumes` (per `[package.metadata.semio]` in each crate Cargo.toml — no more registry-id
  * indirection through framework/core/js), plus the FULL TRANSITIVE `dependsOn` closure of everything
  * gathered so far (contract freeze §4/§5's dependency graph — a dev session for one plugin must also
- * load every plugin/extension it depends on, however many hops deep, not just its direct Cargo
- * dependencies). The two membership rules are additive, not a replacement of one by the other: some
- * topic-based consumption (e.g. `demonstrator` consuming `forms.questionKind`) is not backed by a
- * Cargo dependency edge at all, so dropping the topic scan would silently shrink existing dev
- * sessions.
+ * build every plugin/extension whose ACTOR it needs beside it, however many hops deep). The two
+ * membership rules are additive, not a replacement of one by the other: some topic-based consumption
+ * (e.g. `demonstrator` consuming `forms.questionKind`) is not a declared runtime dependency at all,
+ * so dropping the topic scan would silently shrink existing dev sessions. A crate this one merely
+ * LINKS (its Cargo `[dependencies]`) is not in this closure and needs no session of its own — Cargo
+ * compiles it into the dependent's own component.
  */
 export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string, allEntries: readonly PluginRegistryEntry[] = generatePluginRegistry(getWorkspaceRoot()), playgrounds: readonly PlaygroundEntry[] = generatePlaygroundRegistry(getWorkspaceRoot())): readonly string[] {
   const variantRow = playgrounds.find((p) => p.variant === filterPlaygroundPlugin || p.aliases.includes(filterPlaygroundPlugin));
@@ -749,8 +750,9 @@ export type PluginBuildTarget = {
 \treadonly capabilities: readonly string[];
 \treadonly contributes: readonly string[];
 \treadonly consumes: readonly string[];
-\t/** @emoji 🔗️ Every sibling \`semio-s-plugin-<id>\` Cargo dependency this crate declares (extension's
-\t * \`extends\` target always first) — see \`PluginRegistryEntry.dependsOn\` in
+\t/** @emoji 🔗️ The runtime actor dependencies this crate declares in
+\t * \`[package.metadata.semio].depends-on\` (extension's \`extends\` target always first) — never its
+\t * build-time Cargo library links; see \`PluginRegistryEntry.dependsOn\` in
 \t * \`📇️registry/📜️script.ts\`. */
 \treadonly dependsOn: readonly string[];
 \treadonly host?: PluginHostMetadata;
@@ -2633,8 +2635,6 @@ export function auditPluginCatalogSources(repoRoot = getWorkspaceRoot(), control
   const issues: CatalogSourceIssue[] = [];
   const byPlugin = new Map<string, string>();
   const byPackage = new Map<string, string>();
-  const pluginByPackage = new Map<string, string>();
-  const manifestByPlugin = new Map<string, string>();
   for (let index = 0; index < manifestPaths.length; index++) {
     const manifestPath = manifestPaths[index]!;
     if (control?.cancelled?.()) throw new Error("catalog source audit cancelled");
@@ -2657,8 +2657,6 @@ export function auditPluginCatalogSources(repoRoot = getWorkspaceRoot(), control
       } else {
         byPlugin.set(entry.pluginId, manifestPath);
         byPackage.set(entry.packageName, manifestPath);
-        pluginByPackage.set(entry.packageName, entry.pluginId);
-        manifestByPlugin.set(entry.pluginId, manifestText);
         entries.push(entry);
       }
     } catch (error) {
@@ -2683,26 +2681,25 @@ export function auditPluginCatalogSources(repoRoot = getWorkspaceRoot(), control
     }
     control?.progress?.(index + 1, manifestPaths.length, relative(repoRoot, manifestPath));
   }
-  const canonicalEntries = entries.map((entry) => {
-    const cargoPackages = parseCargoPluginDependencyPackageNames(manifestByPlugin.get(entry.pluginId) ?? "", entry.packageName);
-    const mapped: string[] = [];
-    for (const packageName of cargoPackages) {
-      const pluginId = pluginByPackage.get(packageName);
-      if (pluginId) mapped.push(pluginId);
+  // 🔗️ A declared runtime dependency names a PLUGIN ID, so it either resolves against the discovered
+  // catalog or it is an authoring defect — never silently dropped, the way the previous Cargo-package
+  // derivation had to drop linked sub-crates (`draw-fsm`, `imperative-control`) that are not plugins.
+  for (const entry of entries) {
+    for (const dependencyId of entry.dependsOn) {
+      if (byPlugin.has(dependencyId)) continue;
+      issues.push({ code: "dependency-invalid", path: relative(repoRoot, byPlugin.get(entry.pluginId) ?? "Cargo.toml"), pluginId: entry.pluginId, diagnostic: boundedCatalogDiagnostic(`metadata.semio.depends-on names "${dependencyId}", which no discovered crate provides`) });
     }
-    const dependsOn = entry.extends ? [entry.extends, ...mapped.filter((pluginId) => pluginId !== entry.extends)] : mapped;
-    return { ...entry, dependsOn: [...new Set(dependsOn)] };
-  });
-  const canonicalById = new Map(canonicalEntries.map((entry) => [entry.pluginId, entry]));
-  sources = sources.map((source) => ({ ...source, entry: canonicalById.get(source.entry.pluginId) ?? source.entry }));
+  }
+  const entryById = new Map(entries.map((entry) => [entry.pluginId, entry]));
+  sources = sources.map((source) => ({ ...source, entry: entryById.get(source.entry.pluginId) ?? source.entry }));
   let order: string[] = [];
   try {
-    order = orderCatalogNodes(canonicalEntries).map(({ pluginId }) => pluginId);
+    order = orderCatalogNodes(entries).map(({ pluginId }) => pluginId);
   } catch (error) {
     issues.push({ code: "dependency-invalid", path: "Cargo.toml", diagnostic: boundedCatalogDiagnostic(error) });
   }
   issues.sort((left, right) => `${left.pluginId ?? ""}:${left.code}:${left.path}`.localeCompare(`${right.pluginId ?? ""}:${right.code}:${right.path}`));
-  return { manifestCount: manifestPaths.length, entries: canonicalEntries, sources, order, issues };
+  return { manifestCount: manifestPaths.length, entries, sources, order, issues };
 }
 
 /** #️⃣ Hashes one bounded build artifact in chunks with containment, progress and cancellation checks. */

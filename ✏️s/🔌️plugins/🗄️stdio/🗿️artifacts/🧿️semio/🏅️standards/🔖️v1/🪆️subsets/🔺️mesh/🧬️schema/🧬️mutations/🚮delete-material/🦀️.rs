@@ -1,6 +1,6 @@
 //! 🚮 `delete-material` — removes an id-keyed material. Does NOT cascade to clear `material_id` references on primitives that pointed at it — `material_id` is a soft `Option<String>` reference with no membership-cascade verb (same category of honest gap brep's own `loop.edges` exclusion documents), and this matches the PRE-EXISTING behaviour of the old `RemoveMaterial` variant exactly, not a new gap introduced by this wave.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::{SemioMeshMutation, create_material};
+use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Payload

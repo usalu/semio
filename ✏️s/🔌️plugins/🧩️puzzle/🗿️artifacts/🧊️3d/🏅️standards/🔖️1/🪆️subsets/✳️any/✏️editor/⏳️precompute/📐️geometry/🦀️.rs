@@ -31,7 +31,7 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
     }
 
     pub(crate) const fn page_bytes() -> usize {
-        std::mem::size_of::<[MaybeUninit<T>; N]>()
+        size_of::<[MaybeUninit<T>; N]>()
     }
 
     pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
@@ -128,7 +128,7 @@ impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
     }
 
     pub(crate) const fn page_bytes() -> usize {
-        std::mem::size_of::<[Option<(K, V)>; N]>()
+        size_of::<[Option<(K, V)>; N]>()
     }
 
     pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
@@ -460,8 +460,8 @@ pub(crate) struct CollisionShape {
 impl CollisionShape {
     pub(crate) fn from_triangle_mesh(vertices: &[Point3d], indices: Vec<[u32; 3]>) -> Self {
         let verts: Vec<rigid::Point3> = vertices.iter().map(|p| p.0).collect();
-        let vertex_bytes = verts.capacity().saturating_mul(std::mem::size_of::<rigid::Point3>());
-        let index_bytes = indices.capacity().saturating_mul(std::mem::size_of::<[u32; 3]>());
+        let vertex_bytes = verts.capacity().saturating_mul(size_of::<rigid::Point3>());
+        let index_bytes = indices.capacity().saturating_mul(size_of::<[u32; 3]>());
         let retained_items = usize::from(vertex_bytes != 0) + usize::from(index_bytes != 0);
         let retained_bytes = vertex_bytes.saturating_add(index_bytes);
         let page_bounded = vertex_bytes <= 16 * 1024 && index_bytes <= 16 * 1024;
@@ -615,7 +615,7 @@ pub(crate) struct CollisionBody {
 
 impl CollisionBody {
     pub(crate) fn retained_parts_backing_credit(&self) -> Option<(usize, usize)> {
-        let bytes = self.parts.capacity().checked_mul(std::mem::size_of::<CollisionMeshPart>())?;
+        let bytes = self.parts.capacity().checked_mul(size_of::<CollisionMeshPart>())?;
         (self.parts.capacity() <= 32 && bytes <= 16 * 1024).then_some((usize::from(bytes != 0), bytes))
     }
 

@@ -2,7 +2,7 @@
 //! `representations` pool (FINAL-state addressing). `role` joins this link to the
 //! `SemioKitType.id` it represents (module doc comment on `📸️snapshot/🦀️.rs`).
 
-use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{SemioKitMutation, unbind_representation};
+use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload
