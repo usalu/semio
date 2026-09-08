@@ -3,8 +3,7 @@ name = "semio-s-plugin-puzzle"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Puzzle plugin - one crate for the puzzle2d/puzzle3d/puzzle5d artifacts (diff/op/dsl/pack/spr/engine) and their three play apps (commands/modes/windows/panels)"
-build = "build.rs"
+description = "Puzzle plugin composition for independently packaged 2D, 3D, and 5D artifacts"
 
 [lints]
 workspace = true
@@ -63,10 +62,7 @@ root = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "🦀️.rs"
-
-[build-dependencies]
-serde_json.workspace = true
+path = "../../🦀️.rs"
 
 [features]
 # 🔌️ The WASM component entry point (`plugin_exports!` → `#[no_mangle]`
@@ -78,6 +74,9 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-s-artifact-puzzle-2d = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-puzzle-3d = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-puzzle-5d = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }

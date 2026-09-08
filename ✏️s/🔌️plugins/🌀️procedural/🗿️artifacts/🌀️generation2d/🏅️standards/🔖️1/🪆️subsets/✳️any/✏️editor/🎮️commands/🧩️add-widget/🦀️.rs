@@ -1,7 +1,7 @@
 //! 🧩️ 🧩️ Generation2d play app commands command — `add-widget`.
 
-use crate::op::{generation2d_fixture_operations, Generation2dMutation};
-use crate::schema::host_from_fixture;
+use crate::standards::v1::subsets::any::schema::mutations::text::{generation2d_fixture_operations, Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::host_from_fixture;
 use crate::Generation2dSnapshot;
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use semio_framework_os_flow::FlowEvalSession;
@@ -39,17 +39,6 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation2dSnapshot>,
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::generation2d::testkit::{app, dispatch};
-    use crate::editor::generation2d::Generation2dCommand;
-
-    #[semio_framework_async_macros::async_test]
-    async fn add_widget_emits_op_and_grows_document() {
-        let mut app = app().await;
-        let before = app.snapshot().expect("snapshot").fixture.widgets.len();
-        dispatch(&mut app, Generation2dCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None })).await;
-        assert_eq!(app.snapshot().expect("snapshot").fixture.widgets.len(), before + 1);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

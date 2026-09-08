@@ -6,7 +6,7 @@
 //! here instead, see `$T/📓️w1-e-report.md` scope note).
 
 use crate::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, SpaceArtifactRow};
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the S Space index artifact; persistent entries apply via

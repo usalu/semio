@@ -11,12 +11,116 @@
 // #endregion Header
 
 import { type ChildProcessByStdio, spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { createServer } from "node:net";
 import { join } from "node:path";
 import type { Readable } from "node:stream";
+import Ajv from "ajv";
 
 export { getWorkspaceRoot } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
+//#region 🧬️Scope-owned schema resolution
+
+/** 📚️ The generated scope catalog: the only authority for scope id → module file and dependencies. */
+const SCHEMA_CATALOG_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json";
+
+type SchemaCatalogScope = { readonly path: string; readonly formats: Readonly<Record<string, string>>; readonly dependsOn: readonly string[] };
+
+let schemaCatalogScopes: Readonly<Record<string, SchemaCatalogScope>> | undefined;
+
+/** 🌎️ Every `🧬️schema` module directory the hub partition owns, as the catalog must spell it. */
+function hubSchemaModuleDirectories(repoRoot: string): readonly string[] {
+  const found: string[] = [];
+  const pending = ["🌎️hub"];
+  while (pending.length > 0) {
+    const relative = pending.pop()!;
+    for (const entry of readdirSync(join(repoRoot, relative), { withFileTypes: true })) {
+      if (!entry.isDirectory() || entry.name === "node_modules" || entry.name === "target") continue;
+      if (entry.name === "🧬️schema") found.push(`${relative}/${entry.name}`);
+      else pending.push(`${relative}/${entry.name}`);
+    }
+  }
+  return found.sort();
+}
+
+/** 📇️ Reads the generated catalog once and proves every hub module is registered in it. */
+function schemaCatalog(repoRoot: string): Readonly<Record<string, SchemaCatalogScope>> {
+  if (schemaCatalogScopes) return schemaCatalogScopes;
+  const scopes = (JSON.parse(readFileSync(join(repoRoot, SCHEMA_CATALOG_PATH), "utf8")) as { readonly scopes: Record<string, SchemaCatalogScope> }).scopes;
+  const catalogued = new Set(Object.values(scopes).map((scope) => scope.path));
+  for (const module of hubSchemaModuleDirectories(repoRoot)) {
+    if (!catalogued.has(module)) throw new Error(`hub schema module ${module} is absent from ${SCHEMA_CATALOG_PATH}; regenerate it with \`bun ./📜️script.ts schema generate\``);
+  }
+  schemaCatalogScopes = scopes;
+  return scopes;
+}
+
+/** 🗂️ Module file of one scope id, taken from the catalog with no nearest-parent or glob search. */
+function schemaModulePath(repoRoot: string, scope: string): string {
+  const entry = schemaCatalog(repoRoot)[scope];
+  if (entry === undefined) throw new Error(`scope ${scope} is absent from ${SCHEMA_CATALOG_PATH}`);
+  const file = entry.formats["🔣️jsonschema"];
+  if (file === undefined) throw new Error(`scope ${scope} provides no JSON Schema format`);
+  return `${entry.path}/${file}`;
+}
+
+// 🏷️Execution contract §B: an export that is only ever validated declares the formats it truly
+// exists in. It is an annotation, never a constraint, so the strict validator is taught the keyword
+// rather than being loosened — an unknown keyword must still be an error everywhere else.
+const schemaAjv = new Ajv({ strict: true, allErrors: true }).addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", minItems: 1, items: { type: "string" } } });
+const schemaModuleIds = new Map<string, string>();
+
+const SCHEMA_ID_PREFIX = "https://semio.tech/schema/";
+
+/** 🧬️ Scope id of a document `$id`, per the `<scope path>/<facet>.json` grammar of the contract. */
+function schemaScopeOfId(id: string): string {
+  const segments = id.slice(SCHEMA_ID_PREFIX.length).split("/");
+  return segments.slice(0, -1).join(".");
+}
+
+/** 🔎️ Every foreign scope one module `$ref`s, so a cross-scope reference names its own dependency. */
+function schemaReferencedScopes(document: unknown, own: string): readonly string[] {
+  const scopes = new Set<string>();
+  const walk = (node: unknown): void => {
+    if (Array.isArray(node)) return node.forEach(walk);
+    if (node === null || typeof node !== "object") return;
+    for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+      if (key === "$ref" && typeof value === "string" && value.startsWith(SCHEMA_ID_PREFIX)) {
+        const scope = schemaScopeOfId(value.split("#", 1)[0]!);
+        if (scope !== own) scopes.add(scope);
+      } else walk(value);
+    }
+  };
+  walk(document);
+  return [...scopes].sort();
+}
+
+/** 🔗️ Loads one scope module and every scope it depends on into the one shared draft-07 validator,
+ * so a `$ref` from one scope into another resolves instead of being restated. */
+function schemaModuleId(repoRoot: string, scope: string): string {
+  const cached = schemaModuleIds.get(scope);
+  if (cached !== undefined) return cached;
+  const document = JSON.parse(readFileSync(join(repoRoot, schemaModulePath(repoRoot, scope)), "utf8")) as { $schema?: string; $id?: string };
+  if (document.$schema !== "http://json-schema.org/draft-07/schema#") throw new Error(`${scope} module must declare the draft-07 dialect`);
+  if (typeof document.$id !== "string" || !document.$id.startsWith(SCHEMA_ID_PREFIX)) throw new Error(`${scope} module must declare a semio.tech $id`);
+  if (scope.startsWith("hub.") && !document.$id.startsWith(`${SCHEMA_ID_PREFIX}hub/`)) throw new Error(`${scope} module must declare a hub $id`);
+  schemaModuleIds.set(scope, document.$id);
+  for (const dependency of new Set([...(schemaCatalog(repoRoot)[scope]?.dependsOn ?? []), ...schemaReferencedScopes(document, scope)])) schemaModuleId(repoRoot, dependency);
+  schemaAjv.addSchema(document);
+  return document.$id;
+}
+
+/** 🔗️ Resolves `schema://<scope id>/<ExportId>` to the owning module's compiled export validator. */
+export function hubSchemaExport(repoRoot: string, uri: string): (value: unknown) => boolean {
+  const match = /^schema:\/\/([a-z0-9.-]+)\/([A-Z][A-Za-z0-9]*)$/.exec(uri);
+  if (!match) throw new Error(`malformed schema export uri ${uri}`);
+  const [, scope, exportId] = match;
+  const id = schemaModuleId(repoRoot, scope!);
+  const validate = schemaAjv.getSchema(`${id}#/$defs/${exportId}`);
+  if (!validate) throw new Error(`${scope} exports no ${exportId}`);
+  return (value: unknown): boolean => validate(value) as boolean;
+}
+//#endregion 🧬️Scope-owned schema resolution
 
 //#region 🔖️Port
 /** 🔌️ Binds an ephemeral port (`:0`), reads back what the OS assigned, then releases it — the

@@ -1,6 +1,6 @@
 //! Puzzle3d mutation — `EditObjectLabel`: replaces an object's authored display label.
-use crate::diff::Puzzle3dDiff;
-use crate::mutations::Puzzle3dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation

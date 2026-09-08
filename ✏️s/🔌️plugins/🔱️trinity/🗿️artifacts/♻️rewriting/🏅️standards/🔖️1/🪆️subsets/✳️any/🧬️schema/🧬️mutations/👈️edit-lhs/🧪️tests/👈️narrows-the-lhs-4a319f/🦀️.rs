@@ -15,8 +15,8 @@
 //! annotation on its snapshot field, but on the mutation lane the two behave identically: a
 //! whole-body string replacement with a single `mutation.no-op` guard and no addressable target.
 
-use crate::diff::RewritingDiff;
-use crate::mutations::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
 

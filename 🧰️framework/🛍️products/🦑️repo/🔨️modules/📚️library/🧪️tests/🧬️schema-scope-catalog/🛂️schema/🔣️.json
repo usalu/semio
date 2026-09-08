@@ -4,59 +4,139 @@
   "title": "SchemaScopeCatalogCases",
   "type": "object",
   "additionalProperties": false,
-  "required": ["contract", "cases"],
+  "required": [
+    "contract",
+    "cases"
+  ],
   "properties": {
-    "contract": { "const": "schema-scope-catalog-cases-v1" },
+    "contract": {
+      "const": "schema-scope-catalog-cases-v1"
+    },
     "cases": {
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/$defs/Case" }
+      "items": {
+        "$ref": "#/$defs/Case"
+      }
     }
   },
   "$defs": {
     "Case": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "reason", "files", "expected"],
+      "required": [
+        "id",
+        "reason",
+        "files",
+        "expected"
+      ],
       "properties": {
-        "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
-        "reason": { "type": "string", "minLength": 16 },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 16
+        },
         "files": {
           "type": "object",
           "minProperties": 1,
-          "additionalProperties": { "oneOf": [{ "type": "object" }, { "type": "string" }] }
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
         },
-        "expected": { "$ref": "#/$defs/Expectation" }
+        "expected": {
+          "$ref": "#/$defs/Expectation"
+        }
       }
     },
     "Expectation": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["scopes", "diagnosticCodes", "placementPaths"],
+      "required": [
+        "scopes",
+        "diagnosticCodes",
+        "placementPaths"
+      ],
       "properties": {
         "scopes": {
           "type": "object",
-          "additionalProperties": { "$ref": "#/$defs/Scope" }
+          "additionalProperties": {
+            "$ref": "#/$defs/Scope"
+          }
         },
         "diagnosticCodes": {
           "type": "array",
-          "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+          }
         },
         "placementPaths": {
           "type": "array",
-          "items": { "type": "string", "minLength": 1 }
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
     "Scope": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "level", "exports", "dependsOn"],
+      "required": [
+        "path",
+        "level",
+        "exports",
+        "dependsOn"
+      ],
       "properties": {
-        "path": { "type": "string", "minLength": 1 },
-        "level": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
-        "exports": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9]*$" } },
-        "dependsOn": { "type": "array", "items": { "type": "string" } }
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "level": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "exports": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[A-Z][A-Za-z0-9]*$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "file",
+              "facet"
+            ],
+            "properties": {
+              "file": {
+                "type": "string",
+                "minLength": 1
+              },
+              "facet": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     }
   }

@@ -15,7 +15,7 @@
 //! `io_mechanism` channel pending that file's own migration. See
 //! `📓️terra-fleet-trinity-recipe-report.md`'s lease-request.
 
-use crate::op::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema;
 use crate::{RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
 use crate::editor::rewriting as editor;
@@ -52,13 +52,13 @@ fn io_declaration() -> IoDeclaration {
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset() -> SubsetDeclaration<crate::TrinityApps> {
+pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
     SubsetDeclaration {
         dialect: TRINITY_REWRITING_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::rewriting_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io_declaration(),
-        viewer: viewer_surface::<viewer::TrinityRewritingViewer, crate::TrinityApps>(viewer::create_trinity_rewriting_viewer()),
-        editor: editor_surface::<editor::TrinityRewritingPlayApp, crate::TrinityApps>(editor::create_rewriting_app()),
+        viewer: viewer_surface::<viewer::TrinityRewritingViewer, PA>(viewer::create_trinity_rewriting_viewer()),
+        editor: editor_surface::<editor::TrinityRewritingPlayApp, PA>(editor::create_rewriting_app()),
         examples: examples(),
     }
 }

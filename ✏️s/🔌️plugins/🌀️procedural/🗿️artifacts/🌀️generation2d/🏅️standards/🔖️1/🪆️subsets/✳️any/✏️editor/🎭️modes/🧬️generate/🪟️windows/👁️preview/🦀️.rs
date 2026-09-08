@@ -1,6 +1,6 @@
 //! 👁️ Generation2d play app — the generation output-preview window (generate mode).
 
-use crate::schema::generation_preview_layers;
+use crate::standards::v1::subsets::any::schema::generation_preview_layers;
 use crate::editor::generation2d::config::Generation2dConfig;
 use crate::editor::generation2d::terminology::Generation2dLabels;
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
@@ -55,14 +55,6 @@ pub fn render(config: &Generation2dConfig, labels: &Generation2dLabels) -> semio
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::generation2d::testkit::{app, render as render_body};
-
-    #[semio_framework_async_macros::async_test]
-    async fn generate_preview_hints_without_evaluated_output() {
-        let mut app = app().await;
-        assert!(render_body(&mut app, GENERATION2D_PLAY_BODY_GENERATE_PREVIEW).await.contains("evaluate a generation"));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

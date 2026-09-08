@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/en1994/diff/text.json",
   "title": "En1994DiffText",
   "type": "object"

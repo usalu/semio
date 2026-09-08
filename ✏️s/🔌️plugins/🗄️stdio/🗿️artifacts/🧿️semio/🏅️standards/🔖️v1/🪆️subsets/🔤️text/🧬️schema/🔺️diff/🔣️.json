@@ -1,13 +1,24 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.text/diff.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/text/diff.json",
   "title": "SemioTextDiff",
   "description": "Sparse per-field diff over SemioTextSnapshot — a single optional whole-list-replace slot for `runs`.",
   "type": "object",
   "properties": {
     "runs": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "x-semio-state": "artifact",
-      "properties": { "values": { "type": "array", "items": { "type": "object" } } }
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
     }
   }
 }

@@ -1,17 +1,15 @@
 //! 📄️ Flow document: widgets, fixture, and DAG snapshot helpers.
 
-use crate::infinite::board::ports::directed_dag as dag;
 use neural_engine as neural;
 
-use std::collections::HashMap;
 use crate::{OrderedMap, OrderedSet};
+use std::collections::HashMap;
 
-use dag::{computation_node_height, computation_node_width, image_widget_size, io_widget_height, io_widget_width, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width};
-use semio_framework_artifact_infinite_dag::{normalize_node_display, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec};
 use graph::manifest::{PropertyBag, PropertyValue};
 use neural::{cluster_operator_info, Atom, ChannelSpec, Dictionary, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
-use serde::{Deserialize, Serialize};
+use semio_framework_artifact_infinite_dag::{normalize_node_display, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 use crate::widget_id_for;
 
@@ -329,7 +327,9 @@ pub fn tree_from_fixture(fixture: &FlowFixture, kind_infos: &HashMap<String, Ope
                 }
                 Some(Neuron { id: id.clone(), kind: neuron_kind.clone(), params, tree: None })
             }
-            Widget::InputSlider { id, label, value, .. } => Some(Neuron { id: id.clone(), kind: "core.number".into(), params: Dictionary::new().insert("label", NeuralValue::Atom(Atom::String(label.clone()))).insert("value", NeuralValue::Atom(Atom::Decimal(*value))), tree: None }),
+            Widget::InputSlider { id, label, value, .. } => {
+                Some(Neuron { id: id.clone(), kind: "core.number".into(), params: Dictionary::new().insert("label", NeuralValue::Atom(Atom::String(label.clone()))).insert("value", NeuralValue::Atom(Atom::Decimal(*value))), tree: None })
+            }
             Widget::InputNote { id, text } => Some(Neuron { id: id.clone(), kind: "core.text".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::String(text.clone()))), tree: None }),
             Widget::InputImage { id, src } => Some(Neuron { id: id.clone(), kind: "core.image".into(), params: Dictionary::new().insert("dataUrl", NeuralValue::Atom(Atom::String(src.clone()))), tree: None }),
             Widget::Variable { id, name, schema } => {
@@ -378,7 +378,7 @@ impl Default for FlowArtifact {
     }
 }
 
-fn widget_label(widget: &Widget) -> String {
+pub fn widget_label(widget: &Widget) -> String {
     match widget {
         Widget::Neuron { neuron_kind, .. } => neuron_kind.clone(),
         Widget::InputSlider { label, .. } => label.clone(),
@@ -398,12 +398,15 @@ fn widget_label(widget: &Widget) -> String {
     }
 }
 
-fn widget_display_meta(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> (String, String, String) {
+pub fn widget_display_meta(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> (String, String, String) {
     match widget {
-        Widget::Neuron { neuron_kind, .. } => kind_infos.get(neuron_kind).map_or_else(|| {
-            let (name, abbreviation) = normalize_node_display(neuron_kind, neuron_kind);
-            (name, abbreviation, String::new())
-        }, |info| (info.name.clone(), info.abbreviation.clone(), info.icon.clone())),
+        Widget::Neuron { neuron_kind, .. } => kind_infos.get(neuron_kind).map_or_else(
+            || {
+                let (name, abbreviation) = normalize_node_display(neuron_kind, neuron_kind);
+                (name, abbreviation, String::new())
+            },
+            |info| (info.name.clone(), info.abbreviation.clone(), info.icon.clone()),
+        ),
         Widget::InputSlider { label, .. } => (label.clone(), label.clone(), "emoji:🎚️".into()),
         Widget::InputNote { .. } => ("Note".into(), "Note".into(), "emoji:📝️".into()),
         Widget::InputImage { .. } => ("Image".into(), "Image".into(), "emoji:🖼️".into()),
@@ -440,7 +443,7 @@ pub fn variable_io_ports(name: &str, schema: &str) -> (Vec<IoPortSpec>, Vec<IoPo
     (vec![input], vec![output])
 }
 
-fn cluster_io_layout(cluster_id: &str, name: &str, tree: &Tree, synapses: &[SynapseSpec]) -> (Vec<IoPortSpec>, Vec<IoPortSpec>) {
+pub fn cluster_io_layout(cluster_id: &str, name: &str, tree: &Tree, synapses: &[SynapseSpec]) -> (Vec<IoPortSpec>, Vec<IoPortSpec>) {
     let info = cluster_operator_info(cluster_id, name, tree);
     let inputs = info.inputs.iter().map(|spec| input_spec_to_port(spec, &Dictionary::new(), is_port_connected(synapses, cluster_id, &spec.name))).collect();
     let outputs = info.outputs.iter().map(channel_spec_to_output_port).collect();
@@ -549,7 +552,15 @@ fn neuron_output_ports(neuron_kind: &str, output_ports: &[String], kind_infos: &
     (outputs, has_variadic_output)
 }
 
-fn neuron_io_layout(neuron_id: &str, neuron_kind: &str, input_ports: &[String], output_ports: &[String], params: &Dictionary, synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> (Vec<IoPortSpec>, Vec<IoPortSpec>, bool, bool) {
+pub fn neuron_io_layout(
+    neuron_id: &str,
+    neuron_kind: &str,
+    input_ports: &[String],
+    output_ports: &[String],
+    params: &Dictionary,
+    synapses: &[SynapseSpec],
+    kind_infos: &HashMap<String, OperatorInfo>,
+) -> (Vec<IoPortSpec>, Vec<IoPortSpec>, bool, bool) {
     let info = kind_infos.get(neuron_kind);
     let (outputs, has_variadic_output) = neuron_output_ports(neuron_kind, output_ports, kind_infos);
     if let Some(_spec) = info.and_then(|entry| entry.variadic_input.as_ref()) {
@@ -601,38 +612,6 @@ pub fn widget_io_ports(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &H
         Widget::Cluster { id, name, tree, .. } => {
             let (inputs, outputs) = cluster_io_layout(id, name, tree, synapses);
             (inputs, outputs, false, false)
-        }
-    }
-}
-
-fn widget_node_size(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> (f64, f64) {
-    let label = widget_label(widget);
-    match widget {
-        Widget::InputSlider { .. } => {
-            let output = IoPortSpec::named("N", "Num", "number", "Number");
-            (slider_widget_width(&label, &output), slider_widget_height())
-        }
-        Widget::InputNote { text, .. } => note_widget_size(text),
-        Widget::OutputAction { .. } | Widget::OutputExport { .. } => (io_widget_width(&label), io_widget_height(&label)),
-        Widget::InputImage { src, .. } => image_widget_size(src),
-        Widget::Variable { name, schema, .. } => {
-            let (inputs, outputs) = variable_io_ports(name, schema);
-            let (display_name, abbreviation, _) = widget_display_meta(widget, kind_infos);
-            let (normalized_name, _) = normalize_node_display(&display_name, &abbreviation);
-            (computation_node_width(&normalized_name, &inputs, &outputs), computation_node_height(1, 1, false, false))
-        }
-        Widget::OutputPreview { preview, expanded, .. } => preview_widget_size(&dag_preview_content_from_dict(preview), &expanded.iter().cloned().collect()),
-        Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, .. } => {
-            let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(id, neuron_kind, input_ports, output_ports, params, synapses, kind_infos);
-            let (display_name, abbreviation, _) = widget_display_meta(widget, kind_infos);
-            let (normalized_name, _) = normalize_node_display(&display_name, &abbreviation);
-            (computation_node_width(&normalized_name, &inputs, &outputs), computation_node_height(inputs.len(), outputs.len(), variadic_inputs, variadic_outputs))
-        }
-        Widget::Cluster { id, name, tree, .. } => {
-            let (inputs, outputs) = cluster_io_layout(id, name, tree, synapses);
-            let (display_name, abbreviation, _) = widget_display_meta(widget, kind_infos);
-            let (normalized_name, _) = normalize_node_display(&display_name, &abbreviation);
-            (computation_node_width(&normalized_name, &inputs, &outputs), computation_node_height(inputs.len(), outputs.len(), false, false))
         }
     }
 }
@@ -711,7 +690,7 @@ fn widget_properties(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>
     }
 }
 
-pub fn widget_to_dag_node(widget: &Widget, index: usize, layout: &OrderedMap<WidgetLayout>, synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> DagNodeSpec {
+pub fn widget_to_dag_node(widget: &Widget, index: usize, layout: &OrderedMap<WidgetLayout>, synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>, size: (f64, f64)) -> DagNodeSpec {
     let id = match widget {
         Widget::Neuron { id, .. }
         | Widget::InputSlider { id, .. }
@@ -723,7 +702,7 @@ pub fn widget_to_dag_node(widget: &Widget, index: usize, layout: &OrderedMap<Wid
         | Widget::OutputExport { id, .. }
         | Widget::Cluster { id, .. } => id.clone(),
     };
-    let (width, height) = widget_node_size(widget, synapses, kind_infos);
+    let (width, height) = size;
     let (x, y) = layout.get(&id).map_or(((index as f64) * 200.0, 0.0), |p| (p.x, p.y));
     let (name, abbreviation, icon) = widget_display_meta(widget, kind_infos);
     let mut node = match widget {
@@ -863,10 +842,17 @@ pub fn sensible_slider_range(value: f64) -> (f64, f64, f64) {
 /// 🎚️ Updates only a selected slider's fixed numeric fields, preserving its exact identity and label.
 pub fn set_widget_slider_value(widget: &mut Widget, value: f64) -> bool {
     let Widget::InputSlider { value: current, min, max, step, .. } = widget else { return false };
-    if !value.is_finite() || !min.is_finite() || !max.is_finite() || *min > *max { return false; }
+    if !value.is_finite() || !min.is_finite() || !max.is_finite() || *min > *max {
+        return false;
+    }
     let (next_min, next_max, next_step) = if value < *min || value > *max { sensible_slider_range(value) } else { (*min, *max, *step) };
-    if !next_min.is_finite() || !next_max.is_finite() || !next_step.is_finite() { return false; }
-    *min = next_min; *max = next_max; *step = next_step; *current = value.clamp(next_min, next_max);
+    if !next_min.is_finite() || !next_max.is_finite() || !next_step.is_finite() {
+        return false;
+    }
+    *min = next_min;
+    *max = next_max;
+    *step = next_step;
+    *current = value.clamp(next_min, next_max);
     true
 }
 
@@ -1101,29 +1087,6 @@ pub fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_in
 
 //#region 🧪️AuthoredSliderLabels
 #[cfg(test)]
-mod slider_label_tests {
-    use super::*;
-
-    #[test]
-    fn authored_slider_labels_survive_json_dag_and_chrome() {
-        let fixture = crate::os_pack::json::parse(include_str!("../../../../../../../../../✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🏷️slider-labels.json")).unwrap();
-        for row in fixture.get("cases").and_then(crate::os_pack::json::Value::as_array).unwrap() {
-            let widget_value = row.get("widget").cloned().expect("fixture widget");
-            let widget: Widget = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(&widget_value)).unwrap();
-            let label = row.get("expectedDagName").and_then(crate::os_pack::json::Value::as_str).unwrap();
-            assert_eq!(widget_to_dag_node(&widget, 0, &OrderedMap::new(), &[], &HashMap::new()).name, label);
-            assert_eq!(widget_label(&widget), label);
-            let widget_encoded = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&widget));
-            assert_eq!(widget_encoded.get("label").and_then(crate::os_pack::json::Value::as_str), Some(label));
-            let chrome_encoded = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&widget_chrome(&widget)));
-            assert_eq!(chrome_encoded.get("label").and_then(crate::os_pack::json::Value::as_str), Some(label));
-            let descriptor: WidgetDescriptor = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(&widget_value)).unwrap();
-            let widget_id = widget_value.get("id").and_then(crate::os_pack::json::Value::as_str).unwrap();
-            assert_eq!(widget_from_descriptor(&descriptor, widget_id.into(), &HashMap::new()), widget);
-            let missing = crate::os_pack::json::object(widget_value.as_object().unwrap().iter().filter(|(key, _)| *key != "label").map(|(key, value)| (key.to_string(), value.clone())));
-            assert!(<Widget as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&missing)).is_err());
-            assert!(<WidgetDescriptor as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&missing)).is_err());
-        }
-    }
-}
+#[path = "🧪️tests/🔬️slider-label/🦀️.rs"]
+mod slider_label_tests;
 //#endregion 🧪️AuthoredSliderLabels

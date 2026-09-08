@@ -15,7 +15,7 @@
 //! dependency-free `parse_json`.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
-use semio_s_plugin_gis::editor::gis3d::config::gis3d_config_mutation_report_json;
+use crate::editor::gis3d::config::gis3d_config_mutation_report_json;
 
 //#region 🔖️Kinds
 const KINDS: &[&str] = &["set-camera", "set-locale"];

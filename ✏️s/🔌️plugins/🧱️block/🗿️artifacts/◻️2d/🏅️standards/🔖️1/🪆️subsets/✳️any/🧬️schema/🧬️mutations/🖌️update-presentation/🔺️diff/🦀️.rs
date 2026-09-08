@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `UpdatePresentation`.
 
 use crate::{Block2dPresentation, Block2dSnapshot};
-use crate::diff::Block2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::UpdatePresentation, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {

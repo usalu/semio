@@ -1,60 +1,125 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.stl/diff.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/stl/ascii/any/diff.json",
   "title": "StlDiff",
   "$defs": {
     "StlTriangle": {
       "type": "object",
-      "required": ["normal", "vertices"],
+      "required": [
+        "normal",
+        "vertices"
+      ],
       "properties": {
-        "normal": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "normal": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
         "vertices": {
           "type": "array",
           "minItems": 3,
           "maxItems": 3,
-          "items": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
         }
       }
     },
     "StlTriangleDiff": {
       "type": "object",
       "properties": {
-        "normal": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "normal": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
         "vertices": {
           "type": "array",
           "minItems": 3,
           "maxItems": 3,
-          "items": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
         }
       }
     },
     "StlTriangleModified": {
       "type": "object",
-      "required": ["index", "diff"],
+      "required": [
+        "index",
+        "diff"
+      ],
       "properties": {
-        "index": { "type": "integer" },
-        "diff": { "$ref": "#/$defs/StlTriangleDiff" }
+        "index": {
+          "type": "integer"
+        },
+        "diff": {
+          "$ref": "#/$defs/StlTriangleDiff"
+        }
       }
     },
     "StlTriangleAdded": {
       "type": "object",
-      "required": ["index", "triangle"],
+      "required": [
+        "index",
+        "triangle"
+      ],
       "properties": {
-        "index": { "type": "integer" },
-        "triangle": { "$ref": "#/$defs/StlTriangle" }
+        "index": {
+          "type": "integer"
+        },
+        "triangle": {
+          "$ref": "#/$defs/StlTriangle"
+        }
       }
     },
     "StlTrianglesDiff": {
       "type": "object",
       "properties": {
-        "removed": { "type": "array", "items": { "type": "integer" } },
-        "modified": { "type": "array", "items": { "$ref": "#/$defs/StlTriangleModified" } },
-        "added": { "type": "array", "items": { "$ref": "#/$defs/StlTriangleAdded" } }
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StlTriangleModified"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StlTriangleAdded"
+          }
+        }
       }
     }
   },
   "type": "object",
   "properties": {
-    "solidName": { "type": "string" },
-    "triangles": { "$ref": "#/$defs/StlTrianglesDiff" }
+    "solidName": {
+      "type": "string"
+    },
+    "triangles": {
+      "$ref": "#/$defs/StlTrianglesDiff"
+    }
   }
 }

@@ -181,8 +181,8 @@ fn canonical(text: &str) -> Json {
 mod subject {
     use super::{canonical, vector, COLLECTIONS, DERIVED_ASSET, DSL_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::mutations::gis_map_mutation_report_json;
-    use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::snapshot::gis_map_identity_report_json;
+    use crate::standards::v1::subsets::any::schema::mutations::gis_map_mutation_report_json;
+    use crate::standards::v1::subsets::any::schema::snapshot::gis_map_identity_report_json;
     use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️Report

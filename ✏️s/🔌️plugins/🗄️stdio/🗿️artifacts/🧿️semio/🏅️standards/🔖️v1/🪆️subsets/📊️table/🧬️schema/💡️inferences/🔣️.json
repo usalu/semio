@@ -1,26 +1,65 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/semio/table/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/table/inference.json",
   "title": "SemioTableInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["shape"],
+  "required": [
+    "shape"
+  ],
   "properties": {
-    "shape": { "$ref": "#/$defs/SemioTableShape", "x-semio-derived": true }
+    "shape": {
+      "$ref": "#/$defs/SemioTableShape",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "SemioTableShape": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["columnCount", "rowCount", "nullColumnCount", "boolColumnCount", "intColumnCount", "floatColumnCount", "strColumnCount", "bytesColumnCount"],
+      "required": [
+        "columnCount",
+        "rowCount",
+        "nullColumnCount",
+        "boolColumnCount",
+        "intColumnCount",
+        "floatColumnCount",
+        "strColumnCount",
+        "bytesColumnCount"
+      ],
       "properties": {
-        "columnCount": { "type": "integer", "minimum": 0 },
-        "rowCount": { "type": "integer", "minimum": 0 },
-        "nullColumnCount": { "type": "integer", "minimum": 0 },
-        "boolColumnCount": { "type": "integer", "minimum": 0 },
-        "intColumnCount": { "type": "integer", "minimum": 0 },
-        "floatColumnCount": { "type": "integer", "minimum": 0 },
-        "strColumnCount": { "type": "integer", "minimum": 0 },
-        "bytesColumnCount": { "type": "integer", "minimum": 0 }
+        "columnCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rowCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nullColumnCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "boolColumnCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "intColumnCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "floatColumnCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "strColumnCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytesColumnCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

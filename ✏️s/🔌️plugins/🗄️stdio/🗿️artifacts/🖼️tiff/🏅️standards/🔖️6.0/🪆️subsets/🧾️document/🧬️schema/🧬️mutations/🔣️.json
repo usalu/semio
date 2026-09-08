@@ -16,7 +16,7 @@
           "const": "change-byte-order"
         },
         "payload": {
-          "$ref": "./🧭️change-byte-order/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/mutation/change-byte-order/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "insert-ifd"
         },
         "payload": {
-          "$ref": "./📥️insert-ifd/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/mutation/insert-ifd/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "remove-ifd"
         },
         "payload": {
-          "$ref": "./📤️remove-ifd/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/mutation/remove-ifd/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "remove-tag"
         },
         "payload": {
-          "$ref": "./🗑️remove-tag/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/mutation/remove-tag/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "replace-pixels"
         },
         "payload": {
-          "$ref": "./🔲️replace-pixels/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/mutation/replace-pixels/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
           "const": "replace-tag"
         },
         "payload": {
-          "$ref": "./🏷️replace-tag/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/mutation/replace-tag/schema.json"
         }
       }
     }

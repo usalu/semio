@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➕insert-node/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/html/5/any/mutation/insert-node/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➖remove-node/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/html/5/any/mutation/remove-node/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔖set-attribute/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/html/5/any/mutation/set-attribute/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./💬set-comment/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/html/5/any/mutation/set-comment/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📜set-doctype/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/html/5/any/mutation/set-doctype/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏷️set-element-name/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/html/5/any/mutation/set-element-name/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./⌨️set-raw-text/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/html/5/any/mutation/set-raw-text/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/html/5/any/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "./✍️set-text/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/html/5/any/mutation/set-text/schema.json"
         },
         {
           "type": "object",

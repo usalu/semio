@@ -1,0 +1,11 @@
+
+use super::*;
+use crate::editor::flow::FlowCommand;
+use crate::editor::flow::testkit::{dispatch, flow_app};
+
+#[semio_framework_async_macros::async_test]
+async fn disconnecting_an_unknown_synapse_is_a_no_operation() {
+    let mut app = flow_app().await;
+    let result = dispatch(&mut app, FlowCommand::Disconnect(Disconnect { synapse_id: "nope".into() })).await;
+    assert!(result.mutations.is_empty());
+}

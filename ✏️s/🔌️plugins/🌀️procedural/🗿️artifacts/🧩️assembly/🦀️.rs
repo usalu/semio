@@ -9,13 +9,15 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_schema as schema;
 #[cfg(test)]
 extern crate semio_framework_geometry as geometry;
 #[cfg(test)]
 extern crate semio_framework_graph as graph_core;
 
 pub use crate::schema::snapshot::ASSEMBLY_DOCUMENT_SCHEMA;
+
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🦀️.rs"]
+pub(crate) mod wfc_engine;
 
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 

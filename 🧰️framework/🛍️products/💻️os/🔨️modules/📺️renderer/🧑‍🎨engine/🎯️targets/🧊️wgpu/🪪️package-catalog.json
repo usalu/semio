@@ -1,5 +1,5 @@
 {
-  "$schema": "./🧬️package-catalog.schema.json",
+  "$schema": "https://semio.tech/schema/os/renderer/component.json#/$defs/RendererPackageCatalogV1",
   "schemaVersion": 1,
   "kind": "canonical-wgpu-package",
   "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu",

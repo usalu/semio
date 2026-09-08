@@ -651,3 +651,407 @@ worker send nor a guest turn; and (d) dispose waits for port/attachment
 retirement before a same-URI successor may emit. A native twin must prove that
 the VCS channel is nonempty for (a), because source-only direct
 `applyMutations` does not prove a mounted guest can publish.
+
+## P0 Design Packet: Canonical Actor Backbone Port V1
+
+### The current TypeScript codec is not the Store codec
+
+The TypeScript `encodeBackboneMessage` writes a hand-rolled leading tag
+(`0` snapshot, `1` mutations, `2` acknowledgement), then its own byte/vector
+format ([`OS TypeScript:347-386`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:347>)). The Store's declared channel contract is instead `OpBinary`:
+`format=1 | variant-ordinal uLEB128 | canonical Pack record body`
+([`Store:16956-17058`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:16956>)). Thus a current TS snapshot starts with `00`, which Rust rejects as an unsupported format, and the current TS mutations type is additionally wrong: Rust carries the opaque result of `encode_envelopes`, not a TypeScript `WireMutationEnvelope[]` ([`Store:16960-16965`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:16960>)).
+
+The shared encoder must therefore replace—not wrap—the raw-tag codec. It must
+emit one canonical `BackboneMessage::encode_op` byte string and type mutation
+payload as opaque `Uint8Array` until a separately qualified exact twin of
+`encode_envelopes` exists. The current handwritten Rust `BackboneMessage`
+decoder also differs from the generic `op_rt` decoder: it uses
+`decode_record_body`, does not demand terminal bytes, and does not re-encode
+to establish canonicality ([`Store:17055-17066`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:17055>)). The new port must use the generic exact behaviour (or make this
+specialized impl equally exact) on **both** ingress directions; otherwise TS
+strictness cannot protect a native path that accepts trailing or alternate
+record encodings.
+
+The derivation is deterministic: declaration order supplies variant ordinals
+([`Dsl derive:1741-1830`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs:1741>)), and field declaration position is its
+u16 id ([`Dsl derive:1176-1210`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs:1176>)). The exact V1 layout is:
+
+| Variant | Ordinal | Record fields |
+| --- | ---: | --- |
+| `Snapshot` | 0 | `0: Bytes64 pack`, `1: Bytes64 spr` |
+| `Mutations` | 1 | `0: Bytes64 envelopes` |
+| `Ack` | 2 | `0: List<Text> op_ids` |
+
+Record bodies are `symbolCount uLEB128`, sorted UTF-8 symbols, then sorted
+`fieldCount` / `fieldId` / tagged fields ([`Pack:2187-2222`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs:2187>)). The relevant tags are `Bytes64=08`,
+`List=0c`, interned text `06`, and inline text `07`
+([`Pack:23-35`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs:23>)). Strings at most 128 bytes are symbolized and symbols are lexicographically sorted
+([`Pack:185-207`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs:185>)).
+
+The following small hex vectors are source-derived from that grammar and are
+independently calculable; they are **not native-executed evidence** yet:
+
+| Value | Canonical bytes (hex) |
+| --- | --- |
+| `Snapshot { pack: aa, spr: bb cc }` | `01000002000801aa010802bbcc` |
+| `Mutations { envelopes: dd }` | `01010001000801dd` |
+| `Ack { op_ids: [] }` | `01020001000c00` |
+| `Ack { op_ids: ["a"] }` | `010201016101000c010600` |
+
+The decoder law must reject empty input, format other than `01`, an ordinal
+outside `0..=2`, overlong/nonminimal uLEB128, invalid UTF-8 symbols,
+duplicate/unknown/missing fields, a tag inconsistent with the fixed field
+shape, trailing bytes, and bytes that decode but fail canonical re-encoding.
+The existing TS Pack helpers (`packBuildSymbols` and string helpers near
+[`OS TypeScript:1453`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:1453>)) are appropriate primitives; the old `readBytes`/`writeVecEnvelope`
+backbone codec is not.
+
+### Agreed control envelope and acknowledgement rules
+
+The agreed minimal schema-first control plane is sound if it remains separate
+from both retired AppChannel attach commands and instance lifecycle receipts:
+
+```
+Event::Message {
+  source: Shell(instance),
+  payload: strict Pack semio.plugin.document-backbone-binding.v1 {
+    operation: bind | retire,
+    instanceId: PackUInt(u32),
+    bindingGeneration: PackUInt(u64),
+    uri: UTF-8 string <= 1280 bytes
+  }
+}
+
+Effect::SendMessage {
+  target: Shell(instance),
+  payload: strict Pack semio.plugin.document-backbone-binding-receipt.v1 {
+    operation: bound | retired | refused,
+    instanceId, bindingGeneration, uri,
+    code?: bounded closed refusal code
+  }
+}
+```
+
+The complete raw control Pack, including its schema envelope, must be at most
+4096 bytes, reject unknown/duplicate/trailing fields, and use only integral
+`PackUInt` values—no numeric coercion. This is consistent with the existing
+fixed-page control boundary (`ACTOR_BYTE_PAGE_BYTES=4096`)
+([`actor page:2-44`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📃️page/🦀️.rs:2>)). `Event::Message` is suitable for control because the control is
+processed by the actor; it is not sufficient by itself as a binding authority.
+
+The host must retain, privately, the exact `ShardInstanceLifecycleLease`
+(`actor id`, activation generation, instance id, captured guest lifetime),
+runtime key, client instance id, and local-or-Hub document scope. The guest
+does not need those secret host fields. On every bind or receipt, the host
+compares the command/receipt triple against the retained owner and also
+revalidates that the worker open receipt, selected document, and current Shell
+session still equal that private owner. `captureInstanceLifecycle` already
+provides the correct immutable activation/lifetime source
+([`ShardClient:1484-1532`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:1484>)); its existing `captured/accepted/retired` receipt state must not be
+overloaded with this independent port protocol.
+
+Admission and retirement need these exact fences:
+
+1. Root's `loadPluginModule.bindDocumentPort(instanceId, binding)` captures the
+   live lease **after** worker document open and cold-pair application are
+   confirmed. It installs a private `BindingPending` owner, but forwards no
+   Backbone effect or inbound worker bytes.
+2. Guest accepts `bind` only when `source == Shell(instanceId)`, the actor's
+   currently live instance equals `instanceId`, and its generation is newer
+   than any retained active/terminal binding. It constructs the concrete
+   per-instance Store channel then returns `bound`; an equal duplicate bind may
+   resend the retained `bound` receipt, while a different or stale triple is
+   `refused` and cannot replace an active channel.
+3. The host activates forwarding only after an exact `bound` receipt and a
+   second local owner-current check. A guest `backbone(uri)` effect before that
+   point, from another URI, or after retirement starts is dropped fail-closed.
+   The current reactor deliberately ignores non-Shell messages
+   ([`reactor turn:299-306`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs:299>)), so Home must make the new
+   command handler and Store channel insertion explicit.
+4. Host retirement first closes outbound/inbound admission under the same
+   private owner, then sends exact `retire`. Guest stops new Store sends and
+   drains/retains its exact channel owner until terminal before `retired`.
+   Only that exact receipt lets the host await worker attachment retirement and
+   close/reuse the app/lifecycle. A late bound/retired/refused receipt, old
+   generation, replacement client/scope, or duplicate URI cannot revive the
+   port. Keep an exact terminal-receipt ledger for duplicate retire delivery
+   until the instance lifetime itself closes.
+
+This uses the WIT message vocabulary already present
+([`plugin WIT:24-38`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit:24>), [`plugin WIT:755-804`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit:755>)) without inventing a legacy host API. It deliberately avoids the
+existing lifecycle receipt because that receipt enforces a different close
+state machine ([`ShardClient:1819-1872`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:1819>)).
+
+### Data-plane bound and snapshot distinction
+
+`message-event.payload` is currently an unconstrained WIT `list<u8>`
+([`plugin WIT:755-770`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit:755>)). Control's 4096-byte cap does not bound
+`BackboneMessage` bytes. Do not make the new port silently unbounded.
+
+For the smallest safe first slice, hot-port `Mutations` and `Ack` must be
+bounded to the existing Store envelope ceiling, 262,144 bytes / 64 × 4096-byte
+pages ([`Store:7772-7774`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:7772>)). The current WIT message has no cursor/page
+field, so this is a total-byte admission limit, not a claim that it has already
+been paged. A future fragmentation protocol must add one owned cursor and
+acknowledgement; it must not split bytes ad hoc.
+
+`Snapshot` is different: current Store `attach_backbone` immediately sends
+one ([`Store:25090-25099`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:25090>)), while the real cold-pair ingress is the existing
+bounded snapshot transport (64 × 64 KiB = 4 MiB)
+([`cold pair:2-44`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📥️cold-pair/🦀️.rs:2>)). Consequently the initial binding must attach an
+already-cold-pair-materialized Store **without** emitting a second raw
+Snapshot, or it must use the existing cold-pair route for a resync. It must
+not truncate a Snapshot to the hot-port 256 KiB limit or pass up to 4 MiB as
+an unbounded `message` list. The OpBinary codec still needs Snapshot vectors
+because Store channel semantics retain that variant, but the first hot-port
+law should refuse it and require cold-pair resynchronization.
+
+### Reusable implementations and qualification
+
+`EffectBackbone` is not a transport to wrap: it is unconnected to
+`PluginRuntime`/`ShellHost` and allocates a synthetic document/client. Reuse
+only the ownership pattern of its subscription teardown. The Store's
+`BackboneChannelPort` is the correct domain seam, but `BackboneChannelPorts`
+is intentionally uninhabited today ([`Store:17164-17221`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:17164>)); Home should add a
+bounded, per-instance concrete channel owned by the binding—not a process
+global port. Existing Store channel laws already prove attach, incoming
+mutation, acknowledgement, and detach locally
+([`Store:25090-25135`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:25090>)), but do not prove WIT ownership.
+
+Add a neutral `document-backbone-binding-v1` fixture alongside the plugin WIT
+contract with bind/bound, stale instance/generation, URI mismatch, duplicate
+bind, worker/client/scope replacement, inbound-before-bound,
+post-retire outbound, terminal duplicate retire, and successor-after-retire
+rows. Add companion `op-binary` golden and hostile rows above. Qualification
+requires (1) strict TS and Rust codec goldens, (2) a TS `ShardClient` owner
+law covering every private-owner mismatch, and (3) a native Store/reactor/WIT
+law proving one real local mutation crosses the active port, one inbound
+mutation is ingested and acknowledged, and retirement leaves neither channel
+nor stale delivery owner. This packet is source-only; no new port or runtime
+law has been run.
+
+## P0 Source Boundary: Envelope Batches Must Stay Opaque Across the Actor Port
+
+The current Rust batch grammar is positional, not Pack-record based:
+
+```
+batch = envelope_count:uLEB128 | envelope*
+envelope = mutation_id:str | document_id:str | actor:str |
+           dependency_count:uLEB128 | dependency_id:str* |
+           diff_schema:str | diff_payload:bytes |
+           inverse_schema:str | inverse_payload:bytes |
+           hlc_actor:uLEB128 | hlc_physical_ms:uLEB128 | hlc_logical:uLEB128
+```
+
+This is exactly what [`encode_envelopes`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs:883>) emits and what the Rust Store consumes from `BackboneMessage::Mutations` ([`Store pump`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:16702>)). It has **no field ids, bools, or option tags**. Those belong to surrounding frame/Pack grammars and must not be invented in this byte blob. Rust's `read_bool` also intentionally accepts every nonzero byte as true ([`wire:552-560`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:552>)); it is not relevant to the batch itself.
+
+The following are source-derived, not Rust-executed, exact batch vectors:
+
+| Batch | Canonical hex |
+| --- | --- |
+| no envelopes | `00` |
+| one: `m,d,a,[],s,[aa],i,[bb cc],HLC(3,4,5)` | `01016d0164016100017301aa016902bbcc030405` |
+| one: `m,d,a,[p],s,[01],i,[02],HLC(3,4,5)` | `01016d016401610101700173010101690102030405` |
+| maximal `u64` HLC limb | `ffffffffffffffffff01` |
+| first non-precise JS integer, `2^53` | `8080808080808010` |
+
+The last two vectors establish why a `number` is not an exact TS representation of a Rust `u64`—all three HLC limbs are `u64` in Rust ([`causal:815-825`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs:815>)), but `WireMutationEnvelope.timestamp` exposes `number` ([`replication TS:149-157`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🟦️.ts:149>)). The current generic TS reader also permits precision loss, accepts a tenth LEB byte payload above Rust's permitted `1`, does not require minimal encodings, and uses replacement UTF-8 ([`replication TS:256-313`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🟦️.ts:256>)). In contrast, Rust rejects the tenth-byte overflow and invalid UTF-8 ([`varint`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs:106>), [`string`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:513>)).
+
+More importantly, the current `decode_envelopes` allocates `Vec::with_capacity(count as usize)` and each dependency vector from untrusted counts, then returns without terminal-byte or canonical validation ([`causal:845-903`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs:845>)). The TS counterpart likewise does not terminal-check and maps into a lossy application shape ([`replication TS:781-789`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🟦️.ts:781>)). The byte-vector-to-DSL worker bridge itself copies every supplied item before decoding and has no byte ceiling ([`sync envelope serde:47-76`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:47>)). Therefore the new 262,144-byte **outer** message cap is necessary but not sufficient for bounded native batch materialization.
+
+The corrected `BinaryBackboneMessage` public shape should remain `{ kind: "mutations", envelopes: Uint8Array }`, as now defined ([`OS:347-354`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:347>)). It must not expose `MutationEnvelope[]` at the plugin/Shell port. That application type omits HLC and other wire facts; the generic adapters fabricate HLCs (`0,0,index`) on encode and derive inverse/base values on decode ([`replication TS:42-73`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🟦️.ts:42>), [`replication TS:781-789`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🟦️.ts:781>)). Re-encoding a guest-originated batch through that shape changes causal identity.
+
+There are two live examples of that loss today:
+
+1. Shell sends a remote event to the plugin after rebuilding it through `encodeCausalEnvelopeBatch` ([`ShellHost:2329-2347`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2329>)).
+2. Plugin outbound bytes are decoded to `MutationEnvelope[]` and then sent through the worker's actor-domain request ([`ShellHost:3461-3485`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:3461>)). The browser fallback then creates fresh causal timestamps when it emits hub `Commands` ([`backbone worker:2401-2406`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2401>)).
+
+The smallest coherent port is consequently: admit a `Uint8Array` only after one strict, bounded batch validation; retain and forward the exact bytes unchanged through `BinaryBackboneMessage`; decode once at the Store/actor’s owned ingress; and use a separate, clearly named local-command construction path for UI-originated mutations that is allowed to mint an HLC. Do not make the plugin port call `mutationEnvelopeFromWire`/`mutationEnvelopeToWire`, `ReplicationPackCodec`, or the `applyMutations` convenience pack wrapper. The current Rust worker bridge already describes `LocalMutations`/`RemoteMutations` as `encode_envelopes` bytes ([`sync envelope serde:51-75`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:51>)); the direct port should carry that same byte witness rather than reconstruct a domain envelope in Shell.
+
+Add a replication-owner `decode_envelopes_exact_with_limits` for this port rather than altering unrelated broad wire consumers: reject raw batches above 262,144 bytes before parsing; use `BigInt` in the TS twin for the three `u64` HLC limbs; reject nonminimal/overflow varints, invalid UTF-8, count/identifier/dependency excess, and trailing bytes; debit each copied string/payload/container before allocation; then canonical-reencode and compare exact bytes. Existing causal constraints support a maximum of 8,192 DAG entries and 256-byte mutation/dependency ids ([`causal:178-179`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs:178>)); schema/payload limits still need an explicitly owned port limit. The native Store must call this exact bounded decoder, not the present `decode_envelopes`, at its WIT/worker boundary.
+
+## Current OpBinary and Binding-Schema Review
+
+The newly landed TS outer OpBinary codec has the right public data model and does enforce format `01`, variant ordinal `0..2`, prescribed field count/order/id/tag, terminal position, and canonical re-encoding ([`OS:356-462`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:356>)). Its `packReadVarintBigInt` correctly enforces Rust's ten-byte/u64 overflow rule ([`OS:1487-1505`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:1487>)); every decoded count is reduced below the 4 MiB/256 KiB caps before conversion back to `number`. The schema U64 regex is also an exact decimal partition of `0..=18446744073709551615`: the `1[0-7]…` through `…5161[0-4]` alternatives partition each lexicographic 20-digit prefix and the final literal admits only the maximum ([`binding schema:6-8`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🧬️schema/🔣️.json:6>)). No acceptance hole was found. Pin acceptance of `0`, `9999999999999999999`, `10000000000000000000`, and `18446744073709551615`, and refusal of `00`, `+1`, `-1`, `18446744073709551616`, and a JSON number.
+
+Two remaining concrete points need closure:
+
+1. Native `BackboneMessage::decode_op` still calls permissive `decode_record_body`, not `decode_record_body_exact`, and does not terminal-check or canonical-reencode itself ([`Store:17020-17035`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:17020>), [`Pack exact API`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs:2222>)). TS strictness therefore does not prove strict host admission. Make the Rust OpBinary use exact record decoding and compare `encode_op()` with input before exposing the port.
+2. TS obtains `symbolCount` and materializes every symbol before it knows that Snapshot/Mutations must have no symbols ([`OS:428-432`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:428>)). A 4 MiB Snapshot can request millions of empty symbol records and allocate a disproportionate JS string array before canonical rejection. Reject a nonzero symbol count immediately for variants 0/1; for Ack apply an explicit symbol/item ceiling before `symbols.push`, not merely a raw-byte ceiling.
+
+No build or runtime law was run during this audit.
+
+## P0 Implementation Packet: First-Class Raw Document-Backbone Worker Frames
+
+The raw port cannot be repaired only at `ShellHost`.  The current worker
+contract deliberately makes `send` carry an `ArtifactActorMsg` and makes
+`event` carry an `ArtifactEvent` ([`OS worker types:647-692`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:647>), [`worker request/response:1039-1120`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:1039>)).  Its only special conversion is
+`localMutations`/`remoteMutations`, which converts a domain envelope array to
+and from a byte list ([`OS worker bridge:1197-1222`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:1197>)).  Reusing that generic `send` branch for the new port would make the raw
+packet another unbounded, permissively cast actor message.  It also obscures
+which messages must use strict OpBinary validation.
+
+The minimal authoritative owner is therefore the existing **OS backbone-worker
+wire** (`products/os/🟦️.ts` plus Rust
+`store/sync::backbone_worker_wire`), not the WIT binding-control schema.  The
+control schema only decides whether a given Shell/instance/generation/URI owns
+the data port.  Add two dedicated, schema-first worker-frame variants there:
+
+```
+DocumentBackboneSendV1 {
+  kind: "document-backbone-send",
+  documentId, spaceId?: string, clientInstanceId,
+  message: Uint8Array // one canonical hot BackboneMessage
+}
+DocumentBackboneReceiveV1 {
+  kind: "document-backbone-receive",
+  documentId, scope?: DocumentScope, clientInstanceId,
+  message: Uint8Array // one canonical hot BackboneMessage
+}
+```
+
+`spaceId`/`scope` and `clientInstanceId` deliberately mirror the current
+`send`/`event` shapes: `dispatchBackboneWorkerRequest` already resolves their
+complete runtime key and rejects a non-current client
+([`worker dispatch:202-244`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:202>)).  Plugin instance, binding generation, URI, activation, and capability
+remain private to the Shell's successful WIT bind receipt; duplicating them in
+a worker packet would create a second authority source.  `message` is always
+the existing outer `BackboneMessage` OpBinary, whose `Mutations.envelopes` is
+the raw `encode_envelopes` batch.  The existing outer exact decoder and hot
+cap are reusable ([`Store:17024-17056`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:17024>)).
+
+For this first slice, **only `Mutations` is admitted or emitted**.  `Snapshot`
+is already a cold-pair responsibility, and `Ack` currently has no actor
+completion semantics—`relay_one_backbone` explicitly drops it
+([`sync actor:1768-1778`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:1768>)).  Accepting an Ack at the new port would falsely acknowledge an
+operation.  Thus the new frame parser must reject both variants even though
+the general `decode_hot_backbone_message_exact` currently refuses only
+Snapshot.  A later Ack feature needs its own retained completion owner and
+law; it must not be smuggled into this mutation-preservation patch.
+
+### Required simultaneous changes
+
+1. **OS TypeScript wire owner.** Extend `BackboneWorkerRequest` and
+   `BackboneWorkerResponse`, then give the two new kinds dedicated exact
+   encode/decode branches in `encode/decodeBackboneWorker{Request,Response}`
+   ([`OS:707-847`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:707>)).  The parser must require the exact field set, validate every packed
+   byte before copying it, reject raw input over 262,144 bytes before inner
+   decoding, require `decode_hot_backbone_message_exact`-equivalent outer
+   canonicality, require `Mutations`, and call the new bounded canonical
+   `decode_envelopes_exact_with_limits`.  Do not use the current final
+   `return parsed as BackboneWorker{Request,Response}` for this variant.
+
+2. **Router and both worker implementations.** Include
+   `document-backbone-send` in the current `send|close` owner-routing branch
+   in `backbone-worker.ts`; otherwise a Hub-bound document can accidentally
+   select the wrong execution owner.  In the Rust worker, add matching
+   `backbone_worker_wire::{Request,Response}` variants and handle the send by
+   strict-decoding the outer message and its envelope batch at the actor
+   ingress before forwarding the resulting owned envelopes to the existing
+   actor command.  The wasm worker currently forwards every `Send` as a boxed
+   `ArtifactActorMsg` and wraps every subscription event uniformly
+   ([`worker:43-88`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🦀️.rs:43>)); the new distinct packet consequently needs its own two
+   match arms, not an unchecked new `ArtifactActorMsg` variant.
+
+   In the TypeScript fallback, add the same `handleTsRequest` branch and
+   decode its raw packet once before it reaches `handleLocalMsg`.  Hub-bound
+   documents deliberately select this fallback even when a Rust worker is
+   available ([`worker dispatch:224-228`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:224>)), so a Rust-only change is not a usable
+   browser implementation.
+
+3. **Receive at the canonical source, not by rehydrating in Shell.** The Rust
+   worker should derive a `document-backbone-receive` packet from each actor
+   `RemoteMutations` event with `encode_envelopes(envelopes)` before it posts
+   to JS.  The actor already creates that canonical raw batch when it delivers
+   remote operations ([`sync actor:2501-2509`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:2501>)); the worker must use the same causal
+   codec, wrap it once with `BackboneMessage::Mutations.encode_op`, and never
+   pass through `MutationEnvelope[]` at the Shell boundary.
+
+   The TypeScript fallback must create the equivalent raw receive frame in
+   `handleHubFrame`'s `Commands` branch *before* `fromWireEnvelope`
+   ([`worker:2878-2897`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2878>)).  This requires the causal TS twin to retain all three HLC limbs as
+   `bigint` and to use the strict batch encoder; its current `number` model
+   cannot reproduce Rust `u64` timestamps.  Continue emitting the existing
+   domain event only for host projections/non-bound consumers.  When the
+   exact document binding is active, Shell must forward the raw receive frame
+   and **not** also call `plugin.applyMutations` for that same mutation,
+   otherwise the guest applies it twice.
+
+4. **Shell data edge.** Replace the two lossy calls at
+   `ShellHost:2329-2347` and `ShellHost:3461-3485`: a bound port forwards the
+   `document-backbone-receive.message` directly to
+   `postPluginBackboneInbound`, and plugin outbound bytes become one
+   `document-backbone-send` frame after an outer exact validation.  It must
+   not call `encode/decodeCausalEnvelopeBatch`,
+   `mutationEnvelopeToWire`, `mutationEnvelopeFromWire`, or
+   `applyMutations` on that bound data path.  Shell rejects the packet unless
+   its runtime key, client, and separately retained bound WIT owner are all
+   current; retirement closes that admission before the WIT retire request.
+
+5. **Honest authority boundary.** Exact bytes can be proved from plugin →
+   Shell → worker → actor ingress and from remote actor delivery → worker →
+   Shell → plugin.  They cannot presently be claimed identical from a local
+   plugin submission through the Hub: both the Rust actor
+   ([`sync actor:2444-2494`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs:2444>) and TS fallback
+   ([`worker:2385-2406`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2385>)) assign the authenticated actor and fresh HLC when creating
+   a `ClientFrame::Commands`.  That is an intentional host-authority
+   transition, not a byte transport.  Preserve raw bytes until the actor has
+   validated/decoded them; then make this stamping boundary explicit in the
+   law.  Do not weaken it merely to assert equality across a semantic rewrite.
+
+### Qualification packet
+
+- Extend the existing plugin binding fixture with data-admission rows:
+  before-bound, stale/replaced client, stale binding generation, after-retire,
+  oversized, Snapshot, and Ack all refuse; one current `Mutations` frame
+  reaches exactly one bound owner.  Keep causal byte goldens/hostiles in the
+  replication-owned fixture rather than duplicating its grammar in the binding
+  fixture.
+- Extend [`backbone-envelope-io`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts) and the renderer
+  `actor-backbone` test with the raw worker send/receive round trip, canonical
+  mismatch, wrong field set, raw limit, and no Shell envelope conversion
+  assertion.
+- Add one TS-fallback worker law using a Hub `Commands` frame with a HLC limb
+  above `Number.MAX_SAFE_INTEGER`; the receive message must equal the strict
+  causal batch/outer OpBinary and reach the active port once.
+- Add one native wasm-worker/actor law: open current client, submit a raw
+  mutation frame, observe one actor admission; inject a remote mutation and
+  observe the exact canonical raw receive frame; then close/retire and prove
+  neither a late send nor a late receive reaches the successor.  Include
+  malformed/noncanonical/trailing/oversized inner batch rows.  No such runtime
+  law was run in this audit.
+
+### Implementation-shape correction: use the dedicated actor fields
+
+The active ownership split selects the narrower representation within the
+existing worker `send`/`event` envelopes, rather than new top-level worker
+kinds.  The same data contract is therefore represented as these two new
+fields:
+
+```
+ArtifactActorMsg::DocumentBackbone { message: Vec<u8> }
+ArtifactEvent::DocumentBackbone { message: Vec<u8> }
+// TypeScript: { kind: "documentBackbone", message: Uint8Array }
+```
+
+This keeps the current `send` request's runtime-key/client admission and the
+wasm worker's generic subscription ownership, while making the raw lane
+unambiguous in both request and event schemas.  It is safe only if the fields
+use a dedicated strict byte-vector serializer/parser in
+`wireArtifactActorMsg`/`parseArtifactActorMsg` and
+`wireArtifactEvent`/`parseArtifactEvent`; they must not take the current
+permissive cast branch.  Add the raw message length to
+`artifact_actor_message_bytes`, enforce the 262,144-byte hot cap before an
+inner decode, and update both native and wasm `handle_cmd`/remote-delivery
+matches.  The `send|close` owner router then needs no new top-level variant,
+but both TypeScript and Rust worker serializers still change together because
+the nested actor/event discriminants are part of their Pack wire shape.
+
+The same non-duplication and authority rules above remain: `DocumentBackbone`
+is the bound plugin's sole mutation ingress/egress; `RemoteMutations` may stay
+only for explicitly non-port host consumers, never as a second plugin delivery
+for the same active binding.  This correction supersedes the illustrative
+top-level `document-backbone-send`/`receive` shapes above; their exact field
+set remains the ownership model carried by the existing surrounding
+`send`/`event` envelopes.

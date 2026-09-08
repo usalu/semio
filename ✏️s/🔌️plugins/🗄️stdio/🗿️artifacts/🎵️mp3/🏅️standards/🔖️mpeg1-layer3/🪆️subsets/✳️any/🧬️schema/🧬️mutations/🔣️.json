@@ -12,7 +12,7 @@
       ],
       "properties": {
         "SetFrames": {
-          "$ref": "./🎼️set-frames/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/mp3/mpeg1-layer3/any/mutation/set-frames/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "SetId3v1": {
-          "$ref": "./🔖️set-id3v1/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/mp3/mpeg1-layer3/any/mutation/set-id3v1/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "SetId3v2": {
-          "$ref": "./🏷️set-id3v2/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/mp3/mpeg1-layer3/any/mutation/set-id3v2/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "SetSnapshot": {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/mp3/mpeg1-layer3/any/mutation/set-snapshot/schema.json"
         }
       }
     }

@@ -44,15 +44,6 @@ pub fn plugin() -> Result<Plugin<SequenceApps>, PluginAssemblyError> {
 /// 🧪️ Contract §2.5's canonical surface testkit — landed by the ticket's W0-F SDK-gap-closure lane
 /// (`📓️w0-f-report.md`), used directly rather than a local stand-in.
 #[cfg(test)]
-mod surface_tests {
-    #[semio_framework_async_macros::async_test]
-    async fn sequence_viewer_never_mutates() {
-        semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::sequence::SequenceViewer>().await;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn sequence_editor_and_viewer_share_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::sequence::SequencePlayApp, crate::viewer::sequence::SequenceViewer>().await;
-    }
-}
+#[path = "🧪️tests/🔬️surface/🦀️.rs"]
+mod surface_tests;
 //#endregion 🧪️SurfaceTests

@@ -63,7 +63,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     }
                   }
@@ -83,7 +83,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "HostOnly"
+                        "host-only"
                       ]
                     }
                   }
@@ -103,7 +103,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "Config"
+                        "config"
                       ]
                     }
                   }
@@ -137,7 +137,7 @@
                     },
                     "publicationLanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "execution": {
@@ -163,7 +163,7 @@
                     },
                     "publicationLanes": {
                       "const": [
-                        "HostOnly"
+                        "host-only"
                       ]
                     },
                     "execution": {
@@ -191,7 +191,7 @@
                     },
                     "publicationLanes": {
                       "const": [
-                        "Config"
+                        "config"
                       ]
                     },
                     "execution": {
@@ -599,13 +599,13 @@
           "minItems": 1,
           "items": {
             "enum": [
-              "HostOnly",
-              "Artifact",
-              "Config",
-              "Draft",
-              "Presence",
-              "Transient",
-              "Child"
+              "host-only",
+              "artifact",
+              "config",
+              "draft",
+              "presence",
+              "transient",
+              "child"
             ]
           },
           "uniqueItems": true
@@ -648,13 +648,13 @@
           "minItems": 1,
           "items": {
             "enum": [
-              "HostOnly",
-              "Artifact",
-              "Config",
-              "Draft",
-              "Presence",
-              "Transient",
-              "Child"
+              "host-only",
+              "artifact",
+              "config",
+              "draft",
+              "presence",
+              "transient",
+              "child"
             ]
           },
           "uniqueItems": true
@@ -894,6 +894,148 @@
           }
         }
       }
+    },
+    "NormArtifactPackageDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "definition_version",
+        "id",
+        "artifact",
+        "directory",
+        "rust_package",
+        "nx_project",
+        "dependencies"
+      ],
+      "properties": {
+        "definition_version": {
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^s\\.norm\\.[a-z0-9]+$"
+        },
+        "artifact": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+$"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rust_package": {
+          "type": "string",
+          "pattern": "^semio-s-artifact-norm-[a-z0-9]+$"
+        },
+        "nx_project": {
+          "type": "string",
+          "pattern": "^@semio-tech/norm-[a-z0-9]+-rs$"
+        },
+        "dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "title": "NormArtifactPackageDefinition",
+      "description": "📕️ One norm artifact package definition row: its scope id, artifact slug, directory, Rust package, nx project and declared dependencies."
+    },
+    "NormMutationLeafTaxonomy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractId",
+        "rows",
+        "schemaVersion"
+      ],
+      "properties": {
+        "contractId": {
+          "const": "semio.norm.mutation-leaf-taxonomy/v1"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 392,
+          "maxItems": 392,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "aggregateVariant",
+              "artifact",
+              "entity",
+              "kind",
+              "module",
+              "physicalLayout",
+              "record",
+              "source",
+              "standard",
+              "subset",
+              "type",
+              "verb"
+            ],
+            "properties": {
+              "aggregateVariant": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Za-z0-9_]*$"
+              },
+              "artifact": {
+                "type": "string",
+                "minLength": 1
+              },
+              "entity": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "module": {
+                "type": "string",
+                "minLength": 1
+              },
+              "physicalLayout": {
+                "enum": [
+                  "direct",
+                  "split"
+                ]
+              },
+              "record": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source": {
+                "type": "string",
+                "pattern": "🧬️mutations/.+/🦀️\\.rs$"
+              },
+              "standard": {
+                "type": "string",
+                "minLength": 1
+              },
+              "subset": {
+                "type": "string",
+                "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Za-z0-9_]*$"
+              },
+              "verb": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      },
+      "title": "NormMutationLeafTaxonomy",
+      "description": "📕️ The 392-row mutation-leaf taxonomy census every norm artifact declares."
     }
   }
 }

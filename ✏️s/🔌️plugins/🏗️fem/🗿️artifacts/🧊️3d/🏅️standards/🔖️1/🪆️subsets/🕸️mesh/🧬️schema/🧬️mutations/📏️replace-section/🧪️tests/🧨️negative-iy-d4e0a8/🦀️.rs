@@ -13,8 +13,8 @@
 //! A negative second moment of area is not a slender section, it is an unphysical one — the bending stiffness
 //! would come out negative and the tie rod would push the roof up.
 
-use crate::mutations::Fem3dMutation;
-use crate::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -48,7 +48,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 #[test]
 fn the_refusal_is_the_declared_diagnostic() {
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &crate::diff::Fem3dDiff::default(), "replace-section/negative-iy-d4e0a8: a refused mutation must carry the empty diff");
+    assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "replace-section/negative-iy-d4e0a8: a refused mutation must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "replace-section/negative-iy-d4e0a8: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.invariant", "replace-section/negative-iy-d4e0a8: the refusal is reported as mutation.invariant");

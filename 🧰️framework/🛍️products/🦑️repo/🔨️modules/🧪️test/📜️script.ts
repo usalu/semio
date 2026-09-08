@@ -98,6 +98,7 @@ import {
   renderJUnit,
   summarizeRun,
   testCacheDir,
+  testLayoutBreaches,
   testTaxonomy,
   validateAllContracts,
 } from "./📦️packages/🟦️typescript/🟦️.ts";
@@ -841,9 +842,9 @@ class DiscoverScript extends Script {
 
 /** 🧾️ The contract phase — everything provable without executing a test. */
 class ContractScript extends Script {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const cases = selectCases(this.repoRoot, segments);
-    const breaches: BreachRecord[] = validateAllContracts(this.repoRoot, cases);
+    const breaches: BreachRecord[] = [...validateAllContracts(this.repoRoot, cases), ...await testLayoutBreaches(this.repoRoot)];
     const cachePath = join(getRepoMetaDir(this.repoRoot), "⚡️cache", "breaches", "testing.json");
     mkdirSync(join(getRepoMetaDir(this.repoRoot), "⚡️cache", "breaches"), { recursive: true });
     writeFileSync(cachePath, `${JSON.stringify(breaches, null, 2)}\n`);
@@ -875,9 +876,9 @@ class ParityScript extends Script {
 
 /** ▶️ The default phase chain for a level: contract, then full parity. */
 class RunScript extends Script {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const cases = selectCases(this.repoRoot, segments);
-    const breaches = validateAllContracts(this.repoRoot, cases);
+    const breaches = [...validateAllContracts(this.repoRoot, cases), ...await testLayoutBreaches(this.repoRoot)];
     if (breaches.length > 0) {
       console.error(formatBreachReport(breaches, "(not cached — contract phase failed inside run)"));
       process.exit(1);

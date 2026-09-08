@@ -9,10 +9,13 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_schema as schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "../../🫀️core/🦀️.rs"]
+pub mod space_core;
 
 pub use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
@@ -79,8 +82,8 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 #[cfg(feature = "component-app-assembly")]
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::standards::v1::subsets::any::schema::sspace_index_schema_descriptor())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::space_index::SpaceIndexEditor>>()
+        .schema(standards::v1::subsets::any::schema::sspace_index_schema_descriptor())
+        .document_codec::<semio_framework_plugin::EditorApp<editor::space_index::SpaceIndexEditor>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

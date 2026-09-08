@@ -1,6 +1,6 @@
 //! Puzzle5d mutation — `MovePart2d`: absolute reposition of a part's 2D-projection anchor point.
-use crate::diff::Puzzle5dDiff;
-use crate::mutations::Puzzle5dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation

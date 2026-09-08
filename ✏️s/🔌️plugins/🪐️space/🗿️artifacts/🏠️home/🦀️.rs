@@ -4,18 +4,20 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_schema as schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::schema::mutations::SHomeMutation;
+#[cfg(feature = "component-app-assembly")]
+pub(crate) use semio_s_artifact_space_space::space_core::*;
 
-pub use crate::schema::diff::SHomeDiff;
+pub use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
+
+pub use crate::standards::v1::subsets::any::schema::diff::SHomeDiff;
 
 pub const S_HOME_DOCUMENT_SCHEMA: &str = "s.home";
-pub use crate::schema::SHomeArtifact;
-pub use crate::snapshot::schema::SHomeSnapshot;
+pub use crate::standards::v1::subsets::any::schema::SHomeArtifact;
+pub use crate::standards::v1::subsets::any::schema::snapshot::SHomeSnapshot;
 
 //#region 🔖️Dialect
 /// 🪪️ Lives at the ARTIFACT level (not under `editor`/`viewer`) so a viewer file can read it without
@@ -108,10 +110,10 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 #[cfg(feature = "component-app-assembly")]
 pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::schema::home_artifact_schema_descriptor())
-        .inferences([crate::standards::v1::subsets::any::schema::inferences::home_artifact_inference_descriptor()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::home::HomeApp>>()
+        .schema(standards::v1::subsets::any::schema::home_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::home_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
+        .document_codec::<semio_framework_plugin::EditorApp<editor::home::HomeApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration
@@ -345,69 +347,7 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
             }
         }
 
-        // ---- Shims: keep pre-migration module paths resolving for external callers ----
-        pub mod schema {
-            pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod io {
-            pub use super::standards::v1::subsets::any::io::*;
-        }
-        pub mod op {
-            pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-        }
-        pub mod dsl {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-        }
-        pub mod spr {
-            pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-        }
-        pub mod diff {
-            pub use crate::standards::v1::subsets::any::schema::diff::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::diff::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::diff::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-            }
-        }
-        pub mod mutations {
-            pub use crate::standards::v1::subsets::any::schema::mutations::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::mutations::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-            }
-        }
-        pub mod snapshot {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-            }
-        }
-
-        #[path = "."]
+                #[path = "."]
         pub mod examples {
             #[path = "."]
             pub mod demo {
@@ -425,6 +365,19 @@ pub mod editor {
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod examples {
+            #[path = "."]
+            pub mod demo_session {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+        }
 
         #[path = "."]
         pub mod config {

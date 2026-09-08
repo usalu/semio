@@ -82,16 +82,7 @@ pub mod derived_construction {
     //#endregion 🔖️Builder
 
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn pass_through_build_never_fails_on_conformance_grounds() {
-            let snapshot = PdfXBuilderConstruction::empty().build().expect("no hard check exists at this schema; build must succeed");
-            assert_eq!(snapshot.pages.len(), 1, "an empty PDF 1.4 document is one blank page, never a document with no page tree");
-            assert_eq!(snapshot.first_page().expect("page 1").width, 612.0);
-        }
-    }
+    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
 }
 pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
@@ -161,33 +152,7 @@ pub mod derived_analysis {
     //#endregion 🔖️Analyzer
 
     #[cfg(test)]
-    mod tests {
-        use super::*;
-        use crate::standards::v1_4::subsets::base::schema::snapshot::PageDoc;
-
-        #[semio_framework_async_macros::async_test]
-        async fn schema_gap_diagnostic_always_fires() {
-            let snapshot = PdfSnapshot { pages: vec![PageDoc { width: 612.0, height: 792.0, text: "hello".into() }, PageDoc { width: 612.0, height: 792.0, text: "a later page this check never reads".into() }], ..PdfSnapshot::default() };
-            let diagnostics = check_pdf_x_conformance(&snapshot);
-            assert!(diagnostics.iter().any(|d| d.code.0 == CODE_SCHEMA_GAP && d.severity == Severity::Warning), "got {diagnostics:?}");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn degenerate_page_size_is_flagged_soft() {
-            let snapshot = PdfSnapshot { pages: vec![PageDoc { width: 0.0, height: 792.0, text: "x".into() }, PageDoc { width: 612.0, height: 792.0, text: "a later page this check never reads".into() }], ..PdfSnapshot::default() };
-            let diagnostics = check_pdf_x_conformance(&snapshot);
-            assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DEGENERATE_PAGE_SIZE && d.severity == Severity::Warning), "got {diagnostics:?}");
-            assert_eq!(diagnostics.len(), 2, "expected degenerate-page-size + schema-gap, got {diagnostics:?}");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn positive_dimensions_skip_the_page_size_check() {
-            let snapshot = PdfSnapshot { pages: vec![PageDoc { width: 612.0, height: 792.0, text: "x".into() }, PageDoc { width: 612.0, height: 792.0, text: "a later page this check never reads".into() }], ..PdfSnapshot::default() };
-            let diagnostics = check_pdf_x_conformance(&snapshot);
-            assert!(diagnostics.iter().all(|d| d.code.0 != CODE_DEGENERATE_PAGE_SIZE), "got {diagnostics:?}");
-            assert_eq!(diagnostics.len(), 1, "expected only schema-gap, got {diagnostics:?}");
-        }
-    }
+    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
 }
 pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis

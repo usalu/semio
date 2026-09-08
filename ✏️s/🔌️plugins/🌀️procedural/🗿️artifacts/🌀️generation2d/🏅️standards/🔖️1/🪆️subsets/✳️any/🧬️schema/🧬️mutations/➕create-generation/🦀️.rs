@@ -1,6 +1,6 @@
 //! 🦠️ `➕create-generation` payload and its `MutationKind` impl; diff/inverse delegate to the sibling leaves.
-use crate::diff::Generation2dDiff;
-use crate::mutations::Generation2dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::Generation2dSnapshot;
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 use protocol::{MutationKind, SemanticDescriptor};

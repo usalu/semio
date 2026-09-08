@@ -364,7 +364,78 @@ class ColdDocumentPairIngressCheckScript extends BundleScript {
   }
 }
 
+function documentBackboneBindingOracle(repoRoot: string): number {
+  const fixture = JSON.parse(readFileSync(new URL("../../📡️backbone/🔗️binding/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
+  const schema = JSON.parse(readFileSync(new URL("../../📡️backbone/🔗️binding/🧬️schema/🔣️.json", import.meta.url), "utf8"));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  assert(validate(fixture), JSON.stringify(validate.errors));
+  const reduce = (row: any) => {
+    const generation = BigInt(row.initial.generation),
+      commandGeneration = BigInt(row.command.bindingGeneration),
+      currentUri = row.initial.uri,
+      operation = row.command.operation;
+    if (operation === "bind") {
+      if (currentUri !== null && generation === commandGeneration && currentUri === row.command.uri) return { operation: "bound", code: undefined, generation, uri: currentUri };
+      if (currentUri !== null && generation === commandGeneration) return { operation: "refused", code: "plugin.document-backbone.binding-collision", generation, uri: currentUri };
+      if (currentUri !== null && commandGeneration > generation) return { operation: "refused", code: "plugin.document-backbone.binding-live", generation, uri: currentUri };
+      if (currentUri === null && commandGeneration > generation) return { operation: "bound", code: undefined, generation: commandGeneration, uri: row.command.uri };
+      return { operation: "refused", code: "plugin.document-backbone.stale-generation", generation, uri: currentUri };
+    }
+    if (currentUri !== null && generation === commandGeneration && currentUri === row.command.uri) return { operation: "retired", code: undefined, generation, uri: null };
+    if (currentUri !== null && generation === commandGeneration) return { operation: "refused", code: "plugin.document-backbone.binding-collision", generation, uri: currentUri };
+    return { operation: "refused", code: "plugin.document-backbone.stale-generation", generation, uri: currentUri };
+  };
+  for (const row of fixture.cases) {
+    const outcome = reduce(row);
+    assert.equal(outcome.operation, row.receipt.operation, row.id);
+    assert.equal(outcome.code, row.receipt.code, row.id);
+    assert.equal(outcome.generation.toString(), row.final.generation, row.id);
+    assert.equal(outcome.uri, row.final.uri, row.id);
+  }
+  for (const row of fixture.hostile) assert.equal(validate({ ...fixture, cases: [{ ...fixture.cases[0], command: row.value }] }), false, row.id);
+  const binding = readFileSync(new URL("../../📡️backbone/🔗️binding/🦀️.rs", import.meta.url), "utf8");
+  const store = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
+  const component = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
+  const reactor = readFileSync(new URL("../../⚛️reactor/🔄️turn/🦀️.rs", import.meta.url), "utf8");
+  for (const marker of ["DocumentBackboneBindingStateV1", "binding-noncanonical", "binding-live", "stale-generation"]) assert(binding.includes(marker), marker);
+  for (const marker of ["ActorBackboneChannelOwner", "attach_hot_backbone", "decode_hot_backbone_message_exact", "hot backbone transport refuses snapshots"]) assert(store.includes(marker), marker);
+  for (const marker of ["plugin_handle_document_backbone_binding", "plugin_receive_document_backbone", "plugin_drain_document_backbones"]) assert(reactor.includes(marker), marker);
+  const retireBranch = component.slice(component.indexOf("DocumentBackboneBindingDecisionV1::Retire(receipt)"), component.indexOf("pub async fn plugin_receive_document_backbone"));
+  assert(retireBranch.indexOf("owner.begin_retire()") < retireBranch.indexOf("plugin_detach_backbone(runtime, command.instance_id).await"), "retire must synchronously close ingress before detach awaits");
+  assert.deepEqual(fixture.dataLimits, { hotMessageBytes: 262144, snapshotMessageBytes: 4194304, pendingBytes: 4194304, pendingMessages: 64, snapshotTransport: "cold-pair" });
+  return fixture.cases.length + fixture.codec.golden.length + fixture.codec.hostile.length + fixture.hostile.length;
+}
+
+class DocumentBackboneBindingCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    assert(segments.every((segment) => segment === "--native"), "document-backbone-binding-check accepts only --native");
+    const rows = documentBackboneBindingOracle(this.repoRoot);
+    console.log(`document-backbone-binding-oracle: ajv=1 rows=${rows} hot=256KiB snapshot=4MiB queue=64/4MiB`);
+    if (!segments.includes("--native")) return;
+    const receipts = await runExactCargoLaws({
+      cwd: this.root,
+      env: { ...process.env, RUST_MIN_STACK: "33554432", CARGO_BUILD_JOBS: "1" },
+      nativeEnv: { RUST_MIN_STACK: "268435456", CARGO_BUILD_RUSTFLAGS: "-Z threads=1" },
+      groups: [
+        {
+          package: "semio-framework-plugin",
+          target: { kind: "lib" },
+          laws: [
+            "component::document_backbone_binding::tests::document_backbone_op_binary_is_exact_canonical_and_bounded",
+            "component::document_backbone_binding::tests::document_backbone_binding_reducer_preserves_generation_and_live_owner",
+          ],
+        },
+      ],
+      buildBudgetMs: 86_400_000,
+      lawBudgetMs: 60_000,
+      progress(event) { console.log(`document-backbone-binding ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+    });
+    console.log(`document-backbone-binding-receipts: ${JSON.stringify(receipts)}`);
+  }
+}
+
 const router = new ScriptRouter(import.meta.dir)
+  .register("document-backbone-binding-check", DocumentBackboneBindingCheckScript)
   .register("cold-document-pair-ingress-check", ColdDocumentPairIngressCheckScript)
   .register("guest-lifecycle-check", GuestLifecycleCheckScript)
   .register("check", CheckScript)

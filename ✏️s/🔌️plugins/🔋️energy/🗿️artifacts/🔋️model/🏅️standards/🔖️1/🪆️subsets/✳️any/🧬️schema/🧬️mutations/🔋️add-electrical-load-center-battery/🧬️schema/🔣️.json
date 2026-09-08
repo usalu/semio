@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/add-electrical-load-center-battery/schema.json",
+  "$id": "https://semio.tech/schema/s/energy/model/mutation/add-electrical-load-center-battery/schema.json",
   "title": "AddElectricalLoadCenterBattery",
   "type": "object",
   "additionalProperties": false,

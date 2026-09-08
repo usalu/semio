@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `RemoveLoad` — clones the target case, drops the load, patches it.
 use super::RemoveLoad;
-use crate::diff::{Fem2dDiff, Fem2dLoadCasesDelta, Fem2dLoadCasesPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasesDelta, Fem2dLoadCasesPatchEntry};
 use crate::{load_id, Fem2dSnapshot};
 
 //#region 🔖️Diff

@@ -1,7 +1,7 @@
 //! 🗑️ Fem3d mutation — `DeleteNode` payload + `MutationKind` impl.
 
 use crate::Fem3dSnapshot;
-use crate::mutations::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,7 +19,7 @@ pub struct DeleteNode {
 impl MutationKind<Fem3dSnapshot, Fem3dMutation> for DeleteNode {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "node", kind: "delete-node", record: "DeletedNode" };
 
-    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::diff::Fem3dDiff> {
+    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

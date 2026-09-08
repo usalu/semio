@@ -35,7 +35,7 @@ function readOwned(path: string): Buffer {
 
 const ownerRelative = relative(root, import.meta.dir).split("\\").join("/");
 const vector = JSON.parse(readOwned(ownerRelative + "../🗺️testing-readme-coordinates/🔣️.json").toString("utf8"));
-const schema = JSON.parse(readOwned(ownerRelative + "../🗺️testing-readme-coordinates/🧬️schema/🔣️.json").toString("utf8"));
+const schema = JSON.parse(readOwned(ownerRelative + "../🗺️testing-readme-coordinates/🛂️schema/🔣️.json").toString("utf8"));
 const content = (): string => readOwned(vector.documents.readme).toString("utf8");
 const squash = (value: string): string => value.replace(/\s+/gu, " ").trim();
 const nodeText = (node: any): string => typeof node.value === "string" ? node.value : (node.children ?? []).map(nodeText).join("");
@@ -124,7 +124,7 @@ test("registry JSON parsers agree and its schema link names the current regular 
   const schemaBytes = readOwned(target), schemaErrors: ParseError[] = [];
   expect(parseJson(schemaBytes.toString("utf8"), schemaErrors, { disallowComments: true, allowTrailingComma: false })).toEqual(JSON.parse(schemaBytes.toString("utf8")));
   expect(schemaErrors).toEqual([]);
-  expect(JSON.parse(schemaBytes.toString("utf8")).$id).toBe("https://semio-tech.com/schema/repo/test/v2");
+  expect(JSON.parse(schemaBytes.toString("utf8")).$id).toBe("https://semio.tech/schema/repo/test/schema.json");
 });
 
 test("documentation correction leaves the original forty-row authority and baseline preimage immutable", () => {

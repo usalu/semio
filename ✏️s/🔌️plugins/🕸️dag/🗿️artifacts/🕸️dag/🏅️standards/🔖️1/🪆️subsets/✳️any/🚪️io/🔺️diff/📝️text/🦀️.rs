@@ -86,38 +86,10 @@ impl MutationDiff<DagSnapshot> for DagDiff {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::default_snapshot;
-    use crate::schema::mutations::delete_node;
-    use protocol::Mutation;
-
-    #[semio_framework_async_macros::async_test]
-    async fn dag_diff_default_has_no_pending_writes() {
-        let diff = DagDiff::default();
-        assert!(diff.content.is_none());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn delete_node_diff_removes_the_node() {
-        let base = default_snapshot();
-        let id = base.nodes().first().expect("fixture has a node").id.clone();
-        let mutation = delete_node(id.clone());
-        let outcome = mutation.diff(&base);
-        assert!(outcome.diff().apply(&base).expect("valid mutation diff").nodes().iter().all(|node| node.id != id));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-mod semio_grammar_conformance {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn component_grammar_semio_is_grammar_dialect() {
-        let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
-        assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);
-        assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());
-        let _ = COMPONENT_GRAMMAR_PATH;
-    }
-}
+#[path = "🧪️tests/🔬️semio-grammar-conformance/🦀️.rs"]
+mod semio_grammar_conformance;

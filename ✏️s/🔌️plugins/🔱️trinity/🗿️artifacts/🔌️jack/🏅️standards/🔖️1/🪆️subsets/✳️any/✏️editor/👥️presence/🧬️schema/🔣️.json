@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/app/trinity/jack/presence.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/trinity/jack/presence/schema.json",
   "title": "JackPresence",
   "type": "object",
   "additionalProperties": false,
@@ -24,7 +25,9 @@
     },
     "lodModeByWindow": {
       "type": "object",
-      "additionalProperties": { "type": "string" },
+      "additionalProperties": {
+        "type": "string"
+      },
       "x-semio-state": "presence"
     }
   },
@@ -33,11 +36,24 @@
       "title": "Camera",
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y", "zoom"],
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
       "properties": {
-        "x": { "type": "number", "format": "double" },
-        "y": { "type": "number", "format": "double" },
-        "zoom": { "type": "number", "format": "double" }
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
       }
     }
   }

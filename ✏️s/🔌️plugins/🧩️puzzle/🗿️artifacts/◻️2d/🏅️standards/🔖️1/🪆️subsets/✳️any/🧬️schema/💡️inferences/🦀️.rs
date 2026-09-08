@@ -10,7 +10,7 @@
 //! needed, matching both siblings' own "simple whole-snapshot scalars" rationale).
 
 use crate::Puzzle2dSnapshot;
-use artifact_schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::flat_position::{compute_flat_position, Puzzle2dFlatPosition};
@@ -58,10 +58,10 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Puzzle2dBu
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.puzzle.puzzle2d.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `puzzle2d_artifact_schema_descriptor`'s registration.
-pub fn puzzle2d_artifact_inference_descriptor() -> artifact_schema::ArtifactInferenceDescriptor {
-    artifact_schema::ArtifactInferenceDescriptor {
+pub fn puzzle2d_artifact_inference_descriptor() -> ::semio_framework_schema::ArtifactInferenceDescriptor {
+    ::semio_framework_schema::ArtifactInferenceDescriptor {
         id: "s.puzzle.puzzle2d.inference",
-        inference: artifact_schema::FacetLeaves {
+        inference: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -74,41 +74,8 @@ pub fn puzzle2d_artifact_inference_descriptor() -> artifact_schema::ArtifactInfe
 
 #[cfg(test)]
 //#region 🧪️Tests
-mod tests {
-    use super::*;
-    use crate::{Puzzle2dEdge, Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
-    use protocol::Inference;
-
-    //#region 🧸️Fixtures
-    fn parent_child_snapshot() -> Puzzle2dSnapshot {
-        // p (Fixed, off-origin) --e-- c (Derived): edge x/y offsets place c relative to p.
-        let p = Puzzle2dNode { id: "p".into(), x: 5.0, y: 7.0, anchor: Puzzle2dNodeAnchor::Fixed, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }], ..Default::default() };
-        let c = Puzzle2dNode { id: "c".into(), anchor: Puzzle2dNodeAnchor::Derived, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }], ..Default::default() };
-        let e = Puzzle2dEdge { id: "e".into(), source: "p:h".into(), target: "c:h".into(), x: 3.0, y: -2.0, ..Default::default() };
-        Puzzle2dSnapshot { schema: crate::PUZZLE_2D_SCHEMA.to_string(), camera: Default::default(), nodes: vec![p, c], edges: vec![e], meta: Default::default() }
-    }
-    //#endregion 🧸️Fixtures
-
-    //#region 🧪️InferenceLaws
-    #[test]
-    fn inference_determinism_law() {
-        let snapshot = parent_child_snapshot();
-        assert_eq!(Puzzle2dInference::infer(&snapshot), Puzzle2dInference::infer(&snapshot));
-    }
-
-    #[test]
-    fn inference_default_law() {
-        assert_eq!(Puzzle2dInference::infer(&Puzzle2dSnapshot::default()), Puzzle2dInference::default());
-    }
-
-    #[test]
-    fn inference_matches_compute_flat_position_directly() {
-        let snapshot = parent_child_snapshot();
-        let inferred = Puzzle2dInference::infer(&snapshot);
-        assert_eq!(inferred.flat_position, compute_flat_position(&snapshot));
-    }
-    //#endregion 🧪️InferenceLaws
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️FastenedLayout
@@ -118,7 +85,7 @@ use crate::{Puzzle2dNode, Puzzle2dNodeAnchor};
 /// compute over a `Puzzle2dSnapshot` — sole consumer is `🎛️flat-position`'s own `compute_flat_position`
 /// (see that file's own `use super::fastened_layout_snapshot;`), so it lives at the inference family
 /// root rather than being duplicated into the slug dir.
-use semio_s_artifact_puzzle_3d::schema::inferences::flatten::{DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS};
+use semio_s_artifact_puzzle_3d::{DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 fn round_f(v: f64) -> f64 {
@@ -214,77 +181,6 @@ pub fn fastened_layout_snapshot(snapshot: &mut Puzzle2dSnapshot) {
 }
 
 #[cfg(test)]
-mod fastened_tests {
-    use super::*;
-    use crate::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dNodeAnchor, Puzzle2dSnapshot};
-
-    #[test]
-    fn fastened_layout_places_child_from_origin_parent_by_handle_angle() {
-        let mut snapshot = Puzzle2dSnapshot {
-            schema: "puzzle.2d".into(),
-            camera: Puzzle2dCamera { x: 0.0, y: 0.0, zoom: 1.0 },
-            nodes: vec![
-                Puzzle2dNode {
-                    id: "p".into(),
-                    node_kind: None,
-                    shape: None,
-                    x: 0.0,
-                    y: 0.0,
-                    radius: None,
-                    width: None,
-                    height: None,
-                    text: None,
-                    icon_kind: None,
-                    root: None,
-                    scale: None,
-                    visible: None,
-                    locked: None,
-                    anchor: Puzzle2dNodeAnchor::Fixed,
-                    handles: vec![crate::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }],
-                },
-                Puzzle2dNode {
-                    id: "c".into(),
-                    node_kind: None,
-                    shape: None,
-                    x: 0.0,
-                    y: 0.0,
-                    radius: None,
-                    width: None,
-                    height: None,
-                    text: None,
-                    icon_kind: None,
-                    root: None,
-                    scale: None,
-                    visible: None,
-                    locked: None,
-                    anchor: Puzzle2dNodeAnchor::Derived,
-                    handles: vec![crate::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }],
-                },
-            ],
-            edges: vec![Puzzle2dEdge {
-                id: "e".into(),
-                source: "p:h".into(),
-                target: "c:h".into(),
-                edge_kind: None,
-                source_tip: None,
-                target_tip: None,
-                visible: None,
-                locked: None,
-                gap: 0.0,
-                shift: 0.0,
-                rise: 0.0,
-                rotation: 0.0,
-                turn: 0.0,
-                tilt: 0.0,
-                x: 0.0,
-                y: 0.0,
-            }],
-            meta: Puzzle2dMeta::default(),
-        };
-        fastened_layout_snapshot(&mut snapshot);
-        let child = snapshot.nodes.iter().find(|node| node.id == "c").expect("c");
-        assert_eq!(child.x, 0.0);
-        assert_eq!(child.y, DIAGRAM_RADIUS);
-    }
-}
+#[path = "🧪️tests/🔬️fastened/🦀️.rs"]
+mod fastened_tests;
 //#endregion 🔖️FastenedLayout

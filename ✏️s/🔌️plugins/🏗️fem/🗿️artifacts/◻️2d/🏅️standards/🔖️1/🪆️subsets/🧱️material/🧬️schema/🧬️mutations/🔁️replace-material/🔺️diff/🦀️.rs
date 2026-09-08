@@ -4,8 +4,8 @@
 //! `mutation.id-mismatch` (Fatal) when the replacement renames it, the SAME elasticity bounds
 //! `create-material` runs (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceMaterial;
-use crate::diff::{Fem2dDiff, Fem2dMaterialsDelta, Fem2dMaterialsPatchEntry};
-use crate::mutations::guards;
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dMaterialsDelta, Fem2dMaterialsPatchEntry};
+use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff

@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🎙️insert-channel/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/audio/mutation/insert-channel/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏷️insert-tag/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/audio/mutation/insert-tag/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔇remove-channel/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/audio/mutation/remove-channel/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./✂️remove-tag/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/audio/mutation/remove-tag/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🌊set-channel-samples/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/audio/mutation/set-channel-samples/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./💽set-format/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/audio/mutation/set-format/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🎚️set-sample-rate/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/audio/mutation/set-sample-rate/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/audio/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "./💬set-tag-value/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/audio/mutation/set-tag-value/schema.json"
         },
         {
           "type": "object",

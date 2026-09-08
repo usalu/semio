@@ -1,6 +1,6 @@
 //! ➖️ Block 5D play app command — `remove-grip`.
 
-use crate::op::Block5dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Block5dMutation;
 use crate::Block5dSnapshot;
 use crate::editor::block5d::config::{Block5dConfig, Block5dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -13,5 +13,5 @@ pub struct RemoveGrip {
 }
 
 pub fn handle(payload: &RemoveGrip, _doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
-    Ok(Emit::mutations(vec![crate::mutations::delete_grip(payload.id.clone())]))
+    Ok(Emit::mutations(vec![crate::standards::v1::subsets::any::schema::mutations::delete_grip(payload.id.clone())]))
 }

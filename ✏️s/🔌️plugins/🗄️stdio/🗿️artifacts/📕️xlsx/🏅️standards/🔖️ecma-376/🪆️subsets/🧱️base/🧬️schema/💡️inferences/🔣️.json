@@ -1,21 +1,40 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/xlsx/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/base/inference.json",
   "title": "XlsxInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["outline"],
+  "required": [
+    "outline"
+  ],
   "properties": {
-    "outline": { "$ref": "#/$defs/XlsxOutline", "x-semio-derived": true }
+    "outline": {
+      "$ref": "#/$defs/XlsxOutline",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "XlsxOutline": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sheetNames", "sheetCount", "cellCount"],
+      "required": [
+        "sheetNames",
+        "sheetCount",
+        "cellCount"
+      ],
       "properties": {
-        "sheetNames": { "type": "array", "items": { "type": "string" } },
-        "sheetCount": { "type": "integer" },
-        "cellCount": { "type": "integer" }
+        "sheetNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sheetCount": {
+          "type": "integer"
+        },
+        "cellCount": {
+          "type": "integer"
+        }
       }
     }
   }

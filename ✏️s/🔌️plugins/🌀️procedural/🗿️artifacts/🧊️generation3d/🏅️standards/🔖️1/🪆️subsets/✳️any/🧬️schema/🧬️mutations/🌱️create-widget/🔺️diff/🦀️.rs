@@ -1,10 +1,10 @@
 //! 🔺️ `create-widget` sparse diff construction — a single `WidgetsDiff.set` entry, never a
 //! snapshot clone.
 
-use crate::diff::Generation3dDiff;
-use crate::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::mutations::create_widget::CreateWidget;
-use crate::mutations::widget_index;
+use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
+use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::mutations::create_widget::CreateWidget;
+use crate::standards::v1::subsets::any::schema::mutations::widget_index;
 use crate::{widget_id, Generation3dSnapshot};
 
 /// 🏗️ Builds the sparse fixture delta for one `create-widget` payload.

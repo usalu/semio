@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/gis/gismap/artifact.json",
   "title": "GisMapArtifact",
   "type": "object",
@@ -177,7 +178,10 @@
           "type": "null"
         }
       },
-      "title": "GisMapCreateRegionGroupMembership"
+      "title": "GisMapCreateRegionGroupMembership",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "GisMapCreateRegionGroupFeature": {
       "type": "object",
@@ -196,7 +200,10 @@
           "type": "object"
         }
       },
-      "title": "GisMapCreateRegionGroupFeature"
+      "title": "GisMapCreateRegionGroupFeature",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "GisMapCreateRegionGroup": {
       "type": "object",
@@ -431,7 +438,10 @@
           }
         }
       },
-      "title": "GisMapCreateRegionGroup"
+      "title": "GisMapCreateRegionGroup",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

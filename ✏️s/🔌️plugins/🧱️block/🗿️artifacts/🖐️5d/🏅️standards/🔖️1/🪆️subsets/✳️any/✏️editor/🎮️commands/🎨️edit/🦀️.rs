@@ -9,7 +9,7 @@ pub const BLOCK5D_EXAMPLE_CAPSULE: &str = "nakagin-capsule";
 /// ✏️ Emits the minimal ordered batch of semantic mutations that carries `current` to `next` — the
 /// whole-document-load replacement for a document-wide replace mutation (banned outright).
 fn replace_document_operations(current: &Block5dSnapshot, next: &Block5dSnapshot) -> Vec<Block5dMutation> {
-    use crate::mutations as m;
+    use crate::standards::v1::subsets::any::schema::mutations as m;
     let mut ops = Vec::new();
 
     if next.part_kind.name != current.part_kind.name {
@@ -206,7 +206,7 @@ fn replace_document_operations(current: &Block5dSnapshot, next: &Block5dSnapshot
 }
 //#endregion 🔖️ReplaceDocument
 
-use crate::op::Block5dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Block5dMutation;
 use crate::Block5dSnapshot;
 use crate::editor::block5d::config::{Block5dConfig, Block5dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

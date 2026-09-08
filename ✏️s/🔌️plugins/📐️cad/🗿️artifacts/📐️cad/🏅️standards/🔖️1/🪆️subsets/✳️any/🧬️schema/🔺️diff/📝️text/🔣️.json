@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/cad/diff/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/cad/cad/diff/text.json",
   "title": "CadDiffText",
   "type": "object"
 }

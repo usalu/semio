@@ -1,8 +1,8 @@
 //! 🔺️ Block 3D artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::schema::diff::*;
+use crate::standards::v1::subsets::any::schema::diff::*;
 
-use crate::schema::Block3dArtifact;
+use crate::standards::v1::subsets::any::schema::Block3dArtifact;
 use crate::{Block3dSnapshot, Block3dVortexKind, Block3dVortexTemplate};
 use crate::{BlockAttribute, BlockCompatibilityRule, BlockRepresentation};
 use protocol::MutationDiff;

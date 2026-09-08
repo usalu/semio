@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/process/process3d/1/any/mutation/replace-step-measure/schema.json",
+  "$id": "https://semio.tech/schema/s/process/process3d/mutation/replace-step-measure/schema.json",
   "title": "ReplaceStepMeasure",
   "type": "object",
   "additionalProperties": false,

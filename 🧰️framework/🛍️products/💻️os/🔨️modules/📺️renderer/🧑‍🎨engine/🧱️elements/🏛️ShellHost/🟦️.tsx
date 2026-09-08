@@ -84,10 +84,8 @@ import {
   type PluginSource,
   type PluginSourceEvent,
   type PluginUiRefreshSectionResponse,
-  postPluginBackboneInbound,
   type ProgramHotSwapEvent,
   RECORD_TUTORIAL_ACTION_ID,
-  registerPluginBackboneRoute,
   resolveExternalSlots,
   resolveLayoutForMode,
   resolveModeTools,
@@ -144,8 +142,8 @@ import {
   decodeBackboneMessage,
   decodeBackboneWorkerResponse,
   decodePackValue,
-  type ArtifactActorMsg,
-  encodeBackboneMessage,
+  BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
+  BACKBONE_SNAPSHOT_MAXIMUM_BYTES,
   encodeBackboneWorkerRequest,
   encodeMutationEnvelopesPack,
   encodePackValue,
@@ -172,10 +170,9 @@ import {
  * package itself, not re-exported by `@semio-tech/framework-os` — same source
  * `🧰️framework/🛍️products/💻️os/🟦️.ts` (that package's own root) imports them from for its
  * own `encode`/`decodeMutationEnvelopesPack` helpers above. */
-import { mutationEnvelopeFromWire, mutationEnvelopeToWire, type LocalInteractionState, type MutationEnvelope } from "@semio-tech/framework-replication";
+import { type LocalInteractionState, type MutationEnvelope } from "@semio-tech/framework-replication";
 import { scopedPresencePeersV1 } from "./👥️presence-scope/🟦️.ts";
 
-const shellReplicationPackCodec = { encode: encodePackValue, decode: decodePackValue };
 
 function scopeRuntimeKey(message: { readonly documentId: string; readonly scope?: DocumentScope }): string | null {
   const scope = message.scope;
@@ -581,6 +578,7 @@ import {
   useNamedLayoutHost,
 } from "../📌️ChromePanels/🟦️.tsx";
 import { PluginBootShardLostError, type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
+import { type ActorDocumentMessagePortV1 } from "../🔌️PluginRuntime/📡️backbone/🟦️.ts";
 import { isShardLostError } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { type WindowFault, type WindowFaultClass, windowFaultFromError } from "./🩺️fault/🟦️.ts";
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
@@ -1867,6 +1865,20 @@ function FrameworkOsShellInner({
    * after each real declaration, read only from inside a later callback body, never from a deps array. */
   type OpenDocumentSessionTarget = DocumentOpeningTarget<ActiveSession, PluginWasmHandle> & { readonly background?: boolean };
   type PreparedArtifactOpeningTarget = OpenDocumentSessionTarget & Readonly<{ dialect: ArtifactDialect; role: AppRole }>;
+  type OpenDocumentSession = {
+    session: ActiveSession;
+    plugin: PluginWasmHandle;
+    documentId: string;
+    clientInstanceId: string;
+    scope?: DocumentScope;
+    port: ActorDocumentMessagePortV1 | null;
+    pending: Uint8Array[];
+    pendingBytes: number;
+    replacing: boolean;
+    ready: Promise<void>;
+    resolveReady(): void;
+    rejectReady(error: Error): void;
+  };
   type BackgroundSpaceIndexSession = {
     readonly plugin: PluginWasmHandle;
     readonly session: ActiveSession;
@@ -1879,12 +1891,18 @@ function FrameworkOsShellInner({
   const openDocumentRef = useRef<(ref: DocumentOpeningReference, bindings?: readonly PersistenceBinding[], target?: OpenDocumentSessionTarget) => Promise<DocumentOpeningReceiptV1 | null>>(async () => null);
   const closeDocumentRef = useRef<(runtimeKey: string, clientInstanceId?: string) => void>(() => {});
   const documentAttachmentLanesRef = useRef(new WeakMap<PluginWasmHandle, Map<number, DocumentAttachmentLaneV1>>());
+  const documentPortsRef = useRef(new WeakMap<PluginWasmHandle, Map<number, ActorDocumentMessagePortV1>>());
   const documentAttachmentLane = useCallback((plugin: PluginWasmHandle, instanceId: number): DocumentAttachmentLaneV1 => {
     let lanes = documentAttachmentLanesRef.current.get(plugin);
     if (lanes === undefined) { lanes = new Map(); documentAttachmentLanesRef.current.set(plugin, lanes); }
     let lane = lanes.get(instanceId);
     if (lane === undefined) {
-      lane = new DocumentAttachmentLaneV1(async () => { await plugin.detachBackbone?.(instanceId); });
+      lane = new DocumentAttachmentLaneV1(async () => {
+        const ports = documentPortsRef.current.get(plugin);
+        const port = ports?.get(instanceId);
+        await port?.retire();
+        if (port !== undefined && ports?.get(instanceId) === port) ports.delete(instanceId);
+      });
       lanes.set(instanceId, lane);
     }
     return lane;
@@ -1972,7 +1990,81 @@ function FrameworkOsShellInner({
   const segmentedDownloadAbortRef = useRef(new AbortController());
   /** 🗂️ Which session/plugin owns each exact document runtime, so equal document ids in different
    * spaces cannot share socket, bootstrap, presence or plugin-routing state. */
-  const openDocumentSessionsRef = useRef<Map<string, { session: ActiveSession; plugin: PluginWasmHandle; documentId: string; clientInstanceId: string; scope?: DocumentScope }>>(new Map());
+  const openDocumentSessionsRef = useRef<Map<string, OpenDocumentSession>>(new Map());
+  const failDocumentBackbone = useCallback((runtimeKey: string, entry: OpenDocumentSession, failure: unknown) => {
+    if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
+    const error = failure instanceof Error ? failure : new Error(String(failure));
+    entry.rejectReady(error);
+    console.error("[DEBUG] document backbone failed", error);
+    closeDocumentRef.current(runtimeKey, entry.clientInstanceId);
+  }, []);
+  const receiveDocumentBackbone = useCallback((runtimeKey: string, entry: OpenDocumentSession, message: Uint8Array) => {
+    if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
+    try {
+      if (!(message instanceof Uint8Array) || message.length === 0 || message.length > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES || decodeBackboneMessage(message).kind !== "mutations") throw new Error("document-backbone.invalid-message");
+      if (entry.port === null) {
+        if (entry.pending.length >= 64 || message.length > 4 * 1024 * 1024 - entry.pendingBytes) throw new Error("document-backbone.pending-capacity");
+        entry.pending.push(message.slice());
+        entry.pendingBytes += message.length;
+      } else void entry.port.receive({ runtimeKey, clientInstanceId: entry.clientInstanceId, scope: entry.scope ?? null }, message).catch(error => failDocumentBackbone(runtimeKey, entry, error));
+    } catch (error) { failDocumentBackbone(runtimeKey, entry, error); }
+  }, [failDocumentBackbone]);
+  const bindDocumentBackbone = useCallback(async (runtimeKey: string, entry: OpenDocumentSession): Promise<void> => {
+    const current = () => openDocumentSessionsRef.current.get(runtimeKey) === entry;
+    if (!current()) return;
+    if (!entry.plugin.bindDocumentPort) throw new Error("document-backbone.binding-unavailable");
+    const worker = backboneWorkerRef.current;
+    if (worker === null) throw new Error("document-backbone.worker-unavailable");
+    await entry.plugin.bindDocumentPort(entry.session.instanceId, {
+      runtimeKey, clientInstanceId: entry.clientInstanceId, scope: entry.scope ?? null, current,
+      send: message => {
+        if (!current() || backboneWorkerRef.current !== worker) return;
+        if (decodeBackboneMessage(message).kind !== "mutations") return;
+        worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: { kind: "documentBackbone", message } }) });
+      },
+      merge: (conflicts, report) => { if (current()) applyRemoteMergeRef.current(conflicts, report); },
+      prepared: port => {
+        entry.port = port;
+        let ports = documentPortsRef.current.get(entry.plugin);
+        if (ports === undefined) { ports = new Map(); documentPortsRef.current.set(entry.plugin, ports); }
+        ports.set(entry.session.instanceId, port);
+        const pending = entry.pending;
+        entry.pending = [];
+        entry.pendingBytes = 0;
+        for (const bytes of pending) receiveDocumentBackbone(runtimeKey, entry, bytes);
+      },
+    });
+    if (current()) entry.resolveReady();
+  }, [receiveDocumentBackbone]);
+  const loadDocumentPair = useCallback(async (plugin: PluginWasmHandle, instanceId: number, pack: Uint8Array, spr: Uint8Array, current: () => boolean): Promise<void> => {
+    if (pack.length + spr.length > BACKBONE_SNAPSHOT_MAXIMUM_BYTES) throw new Error("document-backbone.snapshot-capacity");
+    if (!plugin.loadAppDocumentPack) throw new Error("document-backbone.loader-unavailable");
+    const load = plugin.loadAppDocumentPack;
+    const owned = [...openDocumentSessionsRef.current].find(([, entry]) => entry.plugin === plugin && entry.session.instanceId === instanceId);
+    const lane = documentAttachmentLane(plugin, instanceId);
+    if (owned === undefined) {
+      const owner = `cold:${crypto.randomUUID()}`;
+      const unbound = () => current() && ![...openDocumentSessionsRef.current.values()].some(entry => entry.plugin === plugin && entry.session.instanceId === instanceId);
+      try { await lane.replace(owner, unbound, async () => { if (unbound()) await load(instanceId, pack, spr); }); }
+      finally { await lane.close(owner); }
+      return;
+    }
+    const [runtimeKey, entry] = owned;
+    if (entry.replacing) throw new Error("document-backbone.snapshot-overlap");
+    const exact = () => current() && openDocumentSessionsRef.current.get(runtimeKey) === entry;
+    entry.replacing = true;
+    const retirement = entry.port?.retire();
+    void retirement?.catch(() => {});
+    entry.port = null;
+    try {
+      await lane.replace(entry.clientInstanceId, exact, async () => {
+        await retirement;
+        if (!exact()) return;
+        await load(instanceId, pack, spr);
+        if (exact()) await bindDocumentBackbone(runtimeKey, entry);
+      });
+    } finally { entry.replacing = false; }
+  }, [bindDocumentBackbone, documentAttachmentLane]);
   const captureDialogOrigin = useCallback((target: ActiveSession | null): ShellDialogOriginV1 | null =>
     shellDialogOriginV1(target, [...openDocumentSessionsRef.current].map(([runtimeKey, entry]) => ({ runtimeKey, ...entry }))), []);
   const isCurrentDialogOrigin = useCallback((origin: ShellDialogOriginV1 | null): boolean =>
@@ -2009,9 +2101,6 @@ function FrameworkOsShellInner({
   const [executionTargetUiByDocument, setExecutionTargetUiByDocument] = useState<ExecutionTargetUiState>({});
   const [presencePeersByRuntimeKey, setPresencePeersByRuntimeKey] = useState<Readonly<Record<string, readonly PresencePeer[]>>>({});
   const rebootstrapDiscardedSessionsRef = useRef<Map<string, ActiveSession>>(new Map());
-  /** 🐚️ Unregisters this shell's `registerPluginBackboneRoute` entry for each open document id — called
-   * from `closeDocument` and (for whatever is still open) on shell unmount. */
-  const pluginBackboneRouteUnregistersRef = useRef<Map<string, () => void>>(new Map());
   /** 🐚️ Mirrors `loadedPlugins` for the unmount-cleanup effect below, which needs the latest value at
    * teardown time without depending on it (a dependency would tear down and re-run on every reload). */
   const loadedPluginsRef = useRef<readonly LoadedProgramState[]>([]);
@@ -2203,8 +2292,7 @@ function FrameworkOsShellInner({
         setSpaceArtifactCreationCatalog((catalog) => catalog?.spaceId === message.scope.spaceId ? null : catalog);
         setSpaceArtifactCreationCatalogUi((status) => status?.spaceId === message.scope.spaceId ? null : status);
         const entry = openDocumentSessionsRef.current.get(key);
-        if (entry?.plugin.detachBackbone) void entry.plugin.detachBackbone(entry.session.instanceId);
-        openDocumentSessionsRef.current.delete(key);
+        if (entry !== undefined) closeDocumentRef.current(key, entry.clientInstanceId);
         if (browserActorUiByRuntimeKeyRef.current.delete(key)) setBrowserActorUiVersion((current) => current + 1);
         rebootstrapDiscardedSessionsRef.current.delete(key);
         setInferenceHistoryByRuntimeKey((current) => {
@@ -2221,9 +2309,6 @@ function FrameworkOsShellInner({
         });
         setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, { kind: "detached", documentId: message.scope.documentId, scope: message.scope }));
         setExecutionTargetUiByDocument((current) => reduceExecutionTargetUiState(current, { kind: "execution-target-cleared", documentId: message.scope.documentId, scope: message.scope }));
-        pluginBackboneRouteUnregistersRef.current.get(key)?.();
-        pluginBackboneRouteUnregistersRef.current.delete(key);
-        if (entry !== undefined) worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId: message.scope.documentId, spaceId: message.scope.spaceId, clientInstanceId: entry.clientInstanceId }) });
         return;
       }
       if (message.kind === "directory-status") {
@@ -2280,7 +2365,20 @@ function FrameworkOsShellInner({
         const entry = openDocumentSessionsRef.current.get(runtimeKey);
         if (!entry || entry.clientInstanceId !== message.clientInstanceId) return;
         setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, message));
+        if (message.kind === "artifact-bootstrap-failed") {
+          entry.rejectReady(new Error(message.message));
+          const retirement = entry.port?.retire();
+          void retirement?.catch(error => failDocumentBackbone(runtimeKey, entry, error));
+          entry.port = null;
+          entry.pending = [];
+          entry.pendingBytes = 0;
+        }
         if (message.kind === "artifact-rebootstrap-required") {
+          const retirement = entry.port?.retire();
+          void retirement?.catch(error => failDocumentBackbone(runtimeKey, entry, error));
+          entry.port = null;
+          entry.pending = [];
+          entry.pendingBytes = 0;
           cancelSpaceArtifactCreationsForRuntime(runtimeKey, worker);
           if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);
           const active = sessionRef.current;
@@ -2326,38 +2424,19 @@ function FrameworkOsShellInner({
           if (current[runtimeKey] === peers) return current;
           return { ...current, [runtimeKey]: peers };
         });
-      } else if (event.kind === "remoteMutations" && entry.plugin.applyMutations) {
-        // ⚖️ `AppCommand::ApplyEnvelopes`'s reply to THIS remote ingest batches `MergeReport`/
-        // `Conflicts` frames alongside it (contract freeze §C6/§C9 "pushed unsolicited after every
-        // ingest") — routed through `applyRemoteMergeRef` (see its declaration doc) so a peer's
-        // quarantined/degraded merge reaches the Conflicts panel / a transient notice without the
-        // user asking for it, instead of being dropped after the (still-present) error check.
-        void entry.plugin
-          .applyMutations(entry.session.instanceId, encodeMutationEnvelopesPack(event.envelopes))
-          .then((result) => {
-            if (openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId === message.clientInstanceId) applyRemoteMergeRef.current(result.conflicts, result.mergeReport);
-          })
-          .catch((commandError) => console.error("[DEBUG] applyMutations failed", commandError));
-        const actorUri = `actor://${runtimeKey}`;
-        postPluginBackboneInbound(entry.session.pluginId, actorUri, [
-          encodeBackboneMessage({
-            kind: "mutations",
-            envelopes: event.envelopes.map((envelope, index) =>
-              mutationEnvelopeToWire(envelope, { actor: 0, physical_ms: Date.now(), logical: index + 1 }, shellReplicationPackCodec),
-            ),
-          }),
-        ]);
+      } else if (event.kind === "documentBackbone") {
+        receiveDocumentBackbone(runtimeKey, entry, event.message);
       } else if (event.kind === "snapshotReplaced") {
+        if (event.pack.length + event.spr.length > BACKBONE_SNAPSHOT_MAXIMUM_BYTES) {
+          failDocumentBackbone(runtimeKey, entry, new Error("document-backbone.snapshot-capacity"));
+          return;
+        }
         const packBytes = new Uint8Array(event.pack);
         const sprBytes = new Uint8Array(event.spr);
-        const actorUri = `actor://${runtimeKey}`;
         void (async () => {
           try {
-            if (entry.plugin.loadAppDocumentPack) await entry.plugin.loadAppDocumentPack(entry.session.instanceId, packBytes, sprBytes);
-            if (openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId !== message.clientInstanceId) return;
-            postPluginBackboneInbound(entry.session.pluginId, actorUri, [
-              encodeBackboneMessage({ kind: "snapshot", pack: packBytes, spr: sprBytes }),
-            ]);
+            await loadDocumentPair(entry.plugin, entry.session.instanceId, packBytes, sprBytes, () => openDocumentSessionsRef.current.get(runtimeKey) === entry);
+            if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
             const discarded = rebootstrapDiscardedSessionsRef.current.get(runtimeKey);
             if (discarded) {
               rebootstrapDiscardedSessionsRef.current.delete(runtimeKey);
@@ -2366,6 +2445,7 @@ function FrameworkOsShellInner({
             setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, { kind: "snapshot-replaced", documentId: message.documentId, ...(message.scope === undefined ? {} : { scope: message.scope }) }));
           } catch (replacementError) {
             if (openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId !== message.clientInstanceId) return;
+            entry.rejectReady(replacementError instanceof Error ? replacementError : new Error(String(replacementError)));
             setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, {
               kind: "artifact-bootstrap-failed",
               documentId: message.documentId,
@@ -2391,7 +2471,7 @@ function FrameworkOsShellInner({
     };
     backboneWorkerRef.current = worker;
     return worker;
-  }, [cancelSpaceArtifactCreationsForRuntime, hubEnv]);
+  }, [cancelSpaceArtifactCreationsForRuntime, failDocumentBackbone, hubEnv, loadDocumentPair, receiveDocumentBackbone]);
 
   handleDirectoryEventPageRef.current = (message) => {
     const owner = directoryHomeOwnerRef.current;
@@ -3455,38 +3535,6 @@ function FrameworkOsShellInner({
     dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
   }, [panel?.activeSpawnedId, session, hostMode]);
 
-  /** 🐚️ The relay a document's `registerPluginBackboneRoute` entry uses — forwards a plugin's outbound
-   * backbone bytes into THIS shell's own backbone worker. Registered per open document (in
-   * `openDocument`/`closeDocument` below) rather than once for the whole shell: the old single
-   * page-global relay slot (`setPluginBackboneOutboundRelay`) meant a second mounted shell silently
-   * stole every document's outbound routing, then severed it entirely on that shell's unmount. */
-  const relayPluginBackboneMessage = useCallback((uri: string, messageBytes: Uint8Array) => {
-    const runtimeKey = uri.startsWith("actor://") ? uri.slice("actor://".length) : null;
-    if (!runtimeKey) return;
-    const entry = openDocumentSessionsRef.current.get(runtimeKey);
-    if (!entry) return;
-    const worker = backboneWorkerRef.current;
-    if (!worker) return;
-    let actorMessage: ArtifactActorMsg;
-    try {
-      const parsed = decodeBackboneMessage(messageBytes);
-      if (parsed.kind === "mutations") {
-        actorMessage = {
-          kind: "localMutations",
-          envelopes: parsed.envelopes.map((envelope) => mutationEnvelopeFromWire(envelope, shellReplicationPackCodec)),
-        };
-      } else if (parsed.kind === "snapshot") {
-        actorMessage = { kind: "localSnapshot", pack: Array.from(parsed.pack), spr: Array.from(parsed.spr) };
-      } else {
-        return;
-      }
-    } catch {
-      return;
-    }
-    const request: BackboneWorkerRequest = { kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: actorMessage };
-    worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
-  }, []);
-
   useEffect(() => {
     return () => {
       const worker = backboneWorkerRef.current;
@@ -3508,8 +3556,6 @@ function FrameworkOsShellInner({
       segmentedDownloadAbortRef.current.abort(new Error("segmented-download-shell-unmounted"));
       localBrowserBrokerRef.current?.close();
       localBrowserBrokerRef.current = null;
-      for (const unregister of pluginBackboneRouteUnregistersRef.current.values()) unregister();
-      pluginBackboneRouteUnregistersRef.current.clear();
       const retirements: Promise<unknown>[] = [];
       retirements.push(backgroundSpaceIndexSessionsRef.current.close());
       const destroyDetachedApp = async (plugin: PluginWasmHandle, instanceId: number) => {
@@ -4158,7 +4204,7 @@ function FrameworkOsShellInner({
             const packBytes = coerceWireBytes(payload.pack);
             const sprBytes = coerceWireBytes(payload.spr);
             console.log("[DEBUG] loadDocument pack/spr for instance", baseSession.instanceId, "pack", packBytes.length, "spr", sprBytes.length);
-            await pluginEntry.handle.loadAppDocumentPack(baseSession.instanceId, packBytes, sprBytes);
+            await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner));
           } else {
             // 🚧️ `Effect::LoadDocument` is pack+spr bytes only now (no JSON-text fallback exists on the
             // wire anymore — see this variant's own doc comment on `@semio-tech/framework`'s `Effect`
@@ -4452,7 +4498,7 @@ function FrameworkOsShellInner({
         await refreshUi(nextSession, uiScope);
       }
     },
-    [captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, session, setActiveUtilityForWindow, hostMode],
+    [captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, session, setActiveUtilityForWindow, hostMode],
   );
 
   const applyShellUri = useCallback(
@@ -4594,11 +4640,11 @@ function FrameworkOsShellInner({
       const { clientInstanceId } = openingAttempt;
       if (!admitDocumentOpeningV1({ runtimeKey, plugin, instanceId: targetSession.instanceId, background: target?.background === true }, openDocumentSessionsRef.current, closeDocumentRef.current)) return null;
       if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);
-      openDocumentSessionsRef.current.set(runtimeKey, { session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }) });
-      // 🐚️ Registers THIS shell as the route for this document's outbound backbone bytes before the
-      // plugin can possibly emit any (attachBackbone below) — see `relayPluginBackboneMessage`'s doc.
-      pluginBackboneRouteUnregistersRef.current.get(runtimeKey)?.();
-      pluginBackboneRouteUnregistersRef.current.set(runtimeKey, registerPluginBackboneRoute(runtimeKey, relayPluginBackboneMessage));
+      let resolveReady!: () => void, rejectReady!: (error: Error) => void;
+      const ready = new Promise<void>((resolve, reject) => { resolveReady = resolve; rejectReady = reject; });
+      void ready.catch(() => {});
+      const entry: OpenDocumentSession = { session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }), port: null, pending: [], pendingBytes: 0, replacing: false, ready, resolveReady, rejectReady };
+      openDocumentSessionsRef.current.set(runtimeKey, entry);
       const request: BackboneWorkerRequest = {
         kind: "open",
         clientInstanceId,
@@ -4616,7 +4662,7 @@ function FrameworkOsShellInner({
       const uri = `actor://${runtimeKey}`;
       const committed = await runDocumentOpeningAttemptV1({
         deadlineMs: 10_000,
-        current: () => openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId === clientInstanceId,
+        current: () => openDocumentSessionsRef.current.get(runtimeKey) === entry,
         socket: async () => {
           worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
           await socketActor;
@@ -4637,8 +4683,9 @@ function FrameworkOsShellInner({
               worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-creation-catalog-open", clientInstanceId, spaceId: scope.spaceId }) });
             }
           }
-          await documentAttachmentLane(plugin, targetSession.instanceId).attach(clientInstanceId, () => openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId === clientInstanceId, async () => {
-            if (plugin.attachBackbone) await plugin.attachBackbone(targetSession.instanceId, uri);
+          if (hubBinding || entry.replacing) await entry.ready;
+          else await documentAttachmentLane(plugin, targetSession.instanceId).attach(clientInstanceId, () => openDocumentSessionsRef.current.get(runtimeKey) === entry, async () => {
+            if (entry.port === null || entry.port.closing) await bindDocumentBackbone(runtimeKey, entry);
           });
         },
         commit: () => {
@@ -4649,7 +4696,7 @@ function FrameworkOsShellInner({
       });
       return committed ? { committed: true, runtimeKey, clientInstanceId } : null;
     },
-    [loadedPlugins, relayPluginBackboneMessage, resolveSyncTargetSession, hubEnv],
+    [bindDocumentBackbone, documentAttachmentLane, ensureBackboneWorker, loadedPlugins, resolveSyncTargetSession, hubEnv, retireDocumentAttachment],
   );
   openDocumentRef.current = openDocument;
 
@@ -4657,6 +4704,12 @@ function FrameworkOsShellInner({
     const entry = openDocumentSessionsRef.current.get(runtimeKey);
     if (!entry) return;
     if (clientInstanceId !== undefined && entry.clientInstanceId !== clientInstanceId) return;
+    entry.rejectReady(new Error("document closed"));
+    const retirement = entry.port?.retire();
+    void retirement?.catch(error => console.error("[DEBUG] document backbone retirement failed", error));
+    entry.port = null;
+    entry.pending = [];
+    entry.pendingBytes = 0;
     cancelSpaceArtifactCreationsForRuntime(runtimeKey, backboneWorkerRef.current);
     if (entry.scope?.documentId === S_SPACE_INDEX_DOCUMENT_ID) {
       void backgroundSpaceIndexSessionsRef.current.retire(entry.scope.spaceId, owned => owned.clientInstanceId === entry.clientInstanceId).catch(error => console.error("[DEBUG] background document retirement failed", error));
@@ -4704,8 +4757,6 @@ function FrameworkOsShellInner({
     });
     setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, { kind: "detached", documentId: entry.documentId, ...(entry.scope === undefined ? {} : { scope: entry.scope }) }));
     setExecutionTargetUiByDocument((current) => reduceExecutionTargetUiState(current, { kind: "execution-target-cleared", documentId: entry.documentId, ...(entry.scope === undefined ? {} : { scope: entry.scope }) }));
-    pluginBackboneRouteUnregistersRef.current.get(runtimeKey)?.();
-    pluginBackboneRouteUnregistersRef.current.delete(runtimeKey);
     if (entry.scope !== undefined && directoryScopedOwnersRef.current.delete(runtimeKey)) {
       backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-scope-close", scope: entry.scope }) });
     }
@@ -5452,7 +5503,7 @@ function FrameworkOsShellInner({
           drain: () => tutorialDrivenRef.current.drain(),
           restore: async (snapshot) => {
             if (!isCurrentEffectOwner(owner)) return;
-            if (plugin.loadAppDocumentPack) await plugin.loadAppDocumentPack(session.instanceId, snapshot.pack, snapshot.spr);
+            await loadDocumentPair(plugin, session.instanceId, snapshot.pack, snapshot.spr, () => isCurrentEffectOwner(owner));
             if (isCurrentEffectOwner(owner)) await refreshUi(session, { kind: "full" });
           },
         });
@@ -5461,7 +5512,7 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_TUTORIAL", value: tutorialId });
       })().catch((error) => console.error("[DEBUG] tutorial transition failed", error));
     },
-    [activeTutorials, session, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, tutorialClock, refreshUi],
+    [activeTutorials, session, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, loadDocumentPair, tutorialClock, refreshUi],
   );
   const stopTutorial = useCallback(() => {
     tutorialTransitionEpochRef.current += 1;

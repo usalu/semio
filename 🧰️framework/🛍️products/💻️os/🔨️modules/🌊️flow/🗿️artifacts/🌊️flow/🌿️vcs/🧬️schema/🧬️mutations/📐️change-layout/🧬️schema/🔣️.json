@@ -1,15 +1,15 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/os/flow/flow/vcs/mutation/change-layout/schema.json",
+  "$id": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/mutation/change-layout/schema.json",
   "title": "ChangeLayout",
   "$defs": {
-    "payload": {
+    "Payload": {
       "type": "object",
       "properties": {
         "entries": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/layoutEntry"
+            "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/LayoutEntry"
           }
         }
       },
@@ -20,7 +20,7 @@
   },
   "allOf": [
     {
-      "$ref": "#/$defs/payload"
+      "$ref": "#/$defs/Payload"
     }
   ],
   "propertyNames": {

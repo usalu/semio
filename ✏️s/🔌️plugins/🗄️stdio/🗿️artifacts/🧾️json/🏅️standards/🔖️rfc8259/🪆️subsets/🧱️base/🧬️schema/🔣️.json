@@ -1,10 +1,20 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.json/artifact.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/base/artifact.json",
   "title": "JsonArtifact",
   "type": "object",
-  "required": ["schema", "value"],
+  "required": [
+    "schema",
+    "value"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "value": { "$ref": "📸️snapshot/🔣️.json#/$defs/JsonValue", "x-semio-state": "artifact" }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "value": {
+      "$ref": "📸️snapshot/🔣️.json#/$defs/JsonValue",
+      "x-semio-state": "artifact"
+    }
   }
 }

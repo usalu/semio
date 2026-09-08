@@ -54,12 +54,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteCameraM
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod direct_leaf_tests {
-    use super::*;
-
-    #[test]
-    fn semantic_identity_matches_the_language_neutral_descriptor() {
-        assert_eq!(<DeleteCameraMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "delete-camera");
-    }
-}
+#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
+mod direct_leaf_tests;
 //#endregion 🧪️Tests

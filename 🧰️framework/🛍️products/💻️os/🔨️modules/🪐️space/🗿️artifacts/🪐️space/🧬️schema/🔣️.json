@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/space/artifacts/space/component.json",
+  "title": "Space",
+  "$defs": {
+    "SpaceArtifactDefinitionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "definition_version",
+        "id",
+        "artifact",
+        "directory",
+        "rust_package",
+        "nx_project",
+        "dependencies"
+      ],
+      "properties": {
+        "definition_version": {
+          "const": 1
+        },
+        "id": {
+          "const": "os.space"
+        },
+        "artifact": {
+          "const": "space"
+        },
+        "directory": {
+          "const": "🪐️space"
+        },
+        "rust_package": {
+          "const": "semio-framework-artifact-space-space"
+        },
+        "nx_project": {
+          "const": "@semio-tech/framework-space-space-rs"
+        },
+        "dependencies": {
+          "type": "array",
+          "maxItems": 0
+        }
+      }
+    }
+  }
+}

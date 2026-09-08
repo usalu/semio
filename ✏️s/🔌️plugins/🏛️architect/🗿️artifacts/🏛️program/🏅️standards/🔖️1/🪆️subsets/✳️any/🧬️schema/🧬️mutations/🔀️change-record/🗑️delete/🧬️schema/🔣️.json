@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/delete-change-record/schema.json",
+  "$id": "https://semio.tech/schema/s/architect/program/mutation/delete-change-record/schema.json",
   "title": "DeleteChangeRecord",
   "type": "object",
   "additionalProperties": false,

@@ -3,8 +3,8 @@
 //! Guards, in the order they run: `mutation.duplicate-id` (Fatal), then the shared
 //! `guards::node_geometry` finiteness bound (`mutation.invariant`, Fatal).
 use super::CreateNode;
-use crate::diff::{Fem2dDiff, Fem2dNodesDelta};
-use crate::mutations::guards;
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dNodesDelta};
+use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff

@@ -13,10 +13,13 @@ const MODULE_SCHEMAS = {
   presence: "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧬️schema/🔣️.json",
 } as const;
 
+/** 🧬️ A draft-07 validator that treats the annotation-only `discriminator` keyword as data. */
+const ownedAjv = (): Ajv => new Ajv({ strict: true, allErrors: true }).addKeyword("discriminator").addKeyword("x-semio-note");
+
 /** 🧬️ Compiles one named `$defs` export of an owning `🧬️schema/` module against its draft-07 `$id`. */
 function ownedExport(repoRoot: string, scope: keyof typeof MODULE_SCHEMAS, exportId: string): ValidateFunction {
   const doc = JSON.parse(readFileSync(join(repoRoot, MODULE_SCHEMAS[scope]), "utf8")) as { $id: string };
-  const compiled = new Ajv({ strict: true, allErrors: true }).addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
+  const compiled = ownedAjv().addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
   if (!compiled) throw new Error(`${scope} schema module publishes no export ${exportId}`);
   return compiled as ValidateFunction;
 }
@@ -61,7 +64,7 @@ class TutorialInteractionCheckScript extends BundleScript {
     runVitest(
       this.root,
       [
-        "../../../../🧪️tests/🔬️index/🟦️.ts",
+        "../../../../🧪️tests/🔬️engine-contract/🟦️.ts",
         "--silent=false",
         "--reporter=verbose",
         "--testNamePattern=interaction recording|decodes the bounded actor interaction capture|captures the observed typed interaction|plays full and sparse typed selections|projects tutorial selection playback|records comma-bearing selection|APPLY_TUTORIAL_UI_SNAPSHOT restores",
@@ -79,7 +82,7 @@ class FlowBrowserRuntimeCheckScript extends BundleScript {
     runVitest(
       this.root,
       [
-        "../../../../🧪️tests/🔬️index/🟦️.ts",
+        "../../../../🧪️tests/🔬️engine-contract/🟦️.ts",
         "--silent=false",
         "--reporter=verbose",
         "--testNamePattern=retains one shared Flow browser runtime|retires a graph host unmounted before its open reply",
@@ -115,6 +118,7 @@ export function directoryHomeBootstrapOracle(repoRoot: string): number {
     receipt: Readonly<Record<string, unknown>>;
     identities: Readonly<Record<"a" | "b", Readonly<{ userId: string; displayName: string }>>>;
     hostile: readonly { readonly id: string; readonly patch: Readonly<Record<string, unknown>> }[];
+    lifecycle: readonly { readonly id: string; readonly action: string; readonly expected: string }[];
     labels: Readonly<Record<"en" | "de", readonly string[]>>;
   };
   const receiptExport = ownedExport(repoRoot, "directory", "DirectoryProjectionReceiptV1");

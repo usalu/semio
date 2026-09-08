@@ -31,11 +31,5 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for DisconnectEd
 //#endregion ⚙️Semantics
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::MutationLeaf;
-    #[test]
-    fn metadata_has_the_canonical_identity() {
-        assert_eq!(<DisconnectEdge as MutationLeaf>::DESCRIPTOR.semantic_kind, "disconnect-edge");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeCatalogGeneration` — a real single-field delta, built
 //! directly from the payload (never apply-then-capture).
-use crate::diff::SHomeDiff;
+use crate::standards::v1::subsets::any::schema::diff::SHomeDiff;
 use crate::SHomeSnapshot;
 
 //#region 🔖️Diff

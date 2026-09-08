@@ -3,19 +3,6 @@
   "$id": "https://semio.tech/schema/framework/actor/return/schema.json",
   "title": "Actor Return Schema Module",
   "definitions": {
-    "u64": {
-      "type": "string",
-      "allOf": [
-        {
-          "$ref": "https://semio.tech/schema/framework/actor/lifetime/schema.json#/definitions/u64"
-        },
-        {
-          "not": {
-            "pattern": "[^0-9]"
-          }
-        }
-      ]
-    },
     "origin": {
       "description": "The exact dispatched transport poll's checked request id rN supplies N, not the separate Open/Close semantic requestSequence, AppCommand sequence or Event RequestId.",
       "type": "object",
@@ -26,7 +13,7 @@
       ],
       "properties": {
         "activationGeneration": {
-          "$ref": "#/definitions/u64"
+          "$ref": "#/$defs/U64"
         },
         "requestSequence": {
           "type": "integer",
@@ -47,54 +34,9 @@
           "$ref": "#/definitions/origin"
         },
         "returnSequence": {
-          "$ref": "#/definitions/u64"
+          "$ref": "#/$defs/U64"
         }
       }
-    },
-    "pageReceipt": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "identity",
-        "pageSequence",
-        "length",
-        "final"
-      ],
-      "properties": {
-        "identity": {
-          "$ref": "#/definitions/identity"
-        },
-        "pageSequence": {
-          "$ref": "#/definitions/u64"
-        },
-        "length": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4096
-        },
-        "final": {
-          "type": "boolean"
-        }
-      },
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "final": {
-                "const": false
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "length": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          }
-        }
-      ]
     },
     "poll": {
       "type": "object",
@@ -124,7 +66,7 @@
           "const": "inputAck"
         },
         "receipt": {
-          "$ref": "#/definitions/pageReceipt"
+          "$ref": "#/$defs/PageReceipt"
         }
       }
     },
@@ -301,7 +243,7 @@
           "const": "page"
         },
         "receipt": {
-          "$ref": "#/definitions/pageReceipt"
+          "$ref": "#/$defs/PageReceipt"
         },
         "page": {
           "$ref": "https://semio.tech/schema/framework/actor/page/schema.json#/$defs/Page"
@@ -433,28 +375,6 @@
           ]
         }
       }
-    },
-    "result": {
-      "oneOf": [
-        {
-          "$ref": "#/definitions/refused"
-        },
-        {
-          "$ref": "#/definitions/pending"
-        },
-        {
-          "$ref": "#/definitions/page"
-        },
-        {
-          "$ref": "#/definitions/retired"
-        },
-        {
-          "$ref": "#/definitions/controlResult"
-        },
-        {
-          "$ref": "#/definitions/protocolFault"
-        }
-      ]
     }
   },
   "$defs": {
@@ -575,13 +495,13 @@
           }
         },
         "origin": {
-          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/definitions/origin"
+          "$ref": "#/definitions/origin"
         },
         "identity": {
-          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/definitions/identity"
+          "$ref": "#/definitions/identity"
         },
         "receipt": {
-          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/definitions/pageReceipt"
+          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/PageReceipt"
         },
         "originBinding": {
           "const": {
@@ -604,7 +524,7 @@
             ],
             "properties": {
               "value": {
-                "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/definitions/drive"
+                "$ref": "#/definitions/drive"
               },
               "hex": {
                 "type": "string",
@@ -638,7 +558,7 @@
             ],
             "properties": {
               "value": {
-                "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/definitions/result"
+                "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/Result"
               },
               "hex": {
                 "type": "string",
@@ -664,7 +584,7 @@
             ],
             "properties": {
               "receipt": {
-                "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/definitions/pageReceipt"
+                "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/PageReceipt"
               },
               "pageLength": {
                 "type": "integer",
@@ -697,7 +617,7 @@
           "items": {
             "type": "object",
             "not": {
-              "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/definitions/result"
+              "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/Result"
             }
           }
         },
@@ -824,7 +744,87 @@
           "$ref": "#/definitions/drive"
         },
         {
-          "$ref": "#/definitions/result"
+          "$ref": "#/$defs/Result"
+        }
+      ]
+    },
+    "U64": {
+      "type": "string",
+      "allOf": [
+        {
+          "$ref": "https://semio.tech/schema/framework/actor/lifetime/schema.json#/$defs/U64"
+        },
+        {
+          "not": {
+            "pattern": "[^0-9]"
+          }
+        }
+      ]
+    },
+    "PageReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "pageSequence",
+        "length",
+        "final"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/definitions/identity"
+        },
+        "pageSequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "final": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "final": {
+                "const": false
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "length": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Result": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/refused"
+        },
+        {
+          "$ref": "#/definitions/pending"
+        },
+        {
+          "$ref": "#/definitions/page"
+        },
+        {
+          "$ref": "#/definitions/retired"
+        },
+        {
+          "$ref": "#/definitions/controlResult"
+        },
+        {
+          "$ref": "#/definitions/protocolFault"
         }
       ]
     }

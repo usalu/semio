@@ -12,7 +12,7 @@
       ],
       "properties": {
         "ChangeMaterialBaseColor": {
-          "$ref": "./🌈change-material-base-color/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/change-material-base-color/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "ChangeMaterialMetallic": {
-          "$ref": "./⚙️change-material-metallic/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/change-material-metallic/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "ChangeMaterialRoughness": {
-          "$ref": "./🧱change-material-roughness/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/change-material-roughness/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "ChangeTextureMime": {
-          "$ref": "./🏷️change-texture-mime/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/change-texture-mime/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "CreateMaterial": {
-          "$ref": "./🎨create-material/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/create-material/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "CreateMesh": {
-          "$ref": "./🕸️create-mesh/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/create-mesh/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "CreatePrimitive": {
-          "$ref": "./🔺create-primitive/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/create-primitive/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "CreateTexture": {
-          "$ref": "./🖼️create-texture/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/create-texture/schema.json"
         }
       }
     },
@@ -108,7 +108,7 @@
       ],
       "properties": {
         "DeleteMaterial": {
-          "$ref": "./🚮delete-material/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/delete-material/schema.json"
         }
       }
     },
@@ -120,7 +120,7 @@
       ],
       "properties": {
         "DeleteMesh": {
-          "$ref": "./🗑️delete-mesh/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/delete-mesh/schema.json"
         }
       }
     },
@@ -132,7 +132,7 @@
       ],
       "properties": {
         "DeletePrimitive": {
-          "$ref": "./✂️delete-primitive/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/delete-primitive/schema.json"
         }
       }
     },
@@ -144,7 +144,7 @@
       ],
       "properties": {
         "DeleteTexture": {
-          "$ref": "./🕳️delete-texture/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/delete-texture/schema.json"
         }
       }
     },
@@ -156,7 +156,7 @@
       ],
       "properties": {
         "MoveVertex": {
-          "$ref": "./📍move-vertex/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/move-vertex/schema.json"
         }
       }
     },
@@ -168,7 +168,7 @@
       ],
       "properties": {
         "ReplacePrimitiveGeometry": {
-          "$ref": "./📐replace-primitive-geometry/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/replace-primitive-geometry/schema.json"
         }
       }
     },
@@ -180,7 +180,7 @@
       ],
       "properties": {
         "ReplaceTextureBytes": {
-          "$ref": "./📀replace-texture-bytes/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/replace-texture-bytes/schema.json"
         }
       }
     },
@@ -192,7 +192,7 @@
       ],
       "properties": {
         "SetPrimitiveMaterial": {
-          "$ref": "./🧲️set-primitive-material/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/set-primitive-material/schema.json"
         }
       }
     },
@@ -204,7 +204,7 @@
       ],
       "properties": {
         "SetPrimitiveTopology": {
-          "$ref": "./🔀set-primitive-topology/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/set-primitive-topology/schema.json"
         }
       }
     }

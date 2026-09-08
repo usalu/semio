@@ -1,6 +1,6 @@
 //! Puzzle5d mutation — `EditPart2dText`: replaces a part's 2D-projection authored display text.
-use crate::diff::Puzzle5dDiff;
-use crate::mutations::Puzzle5dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation

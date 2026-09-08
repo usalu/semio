@@ -13,8 +13,8 @@
 //! This is finding 3 of W11's report turned into a refusal: `replace-material { id: "c24", newMaterial: { id:
 //! "c24_v2" } }` used to rename the grade and orphan every purlin pointing at `c24`.
 
-use crate::mutations::Fem3dMutation;
-use crate::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -48,7 +48,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 #[test]
 fn the_refusal_is_the_declared_diagnostic() {
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &crate::diff::Fem3dDiff::default(), "replace-material/renames-c24-b60696: a refused mutation must carry the empty diff");
+    assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "replace-material/renames-c24-b60696: a refused mutation must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "replace-material/renames-c24-b60696: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.id-mismatch", "replace-material/renames-c24-b60696: the refusal is reported as mutation.id-mismatch");

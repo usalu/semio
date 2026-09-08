@@ -18,6 +18,8 @@
     },
     "build": {
       "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": ["{projectRoot}/dist/build"],
       "dependsOn": [
         {
           "target": "build",
@@ -27,8 +29,8 @@
         }
       ],
       "options": {
-        "cwd": "🌎️hub/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build"
+        "cwd": ".",
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo build --manifest \"🌎️hub/📦️packages/🦀️rust/Cargo.toml\" --release --bin os-hub"
       }
     },
     "test": {

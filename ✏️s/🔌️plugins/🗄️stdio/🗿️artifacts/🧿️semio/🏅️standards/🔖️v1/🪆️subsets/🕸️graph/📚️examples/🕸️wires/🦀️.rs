@@ -27,11 +27,5 @@ pub fn source() -> ExampleSource {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[semio_framework_async_macros::async_test]
-    async fn wires_source_nonempty() {
-        assert!(!PRIMARY_TEXT.is_empty());
-        let _ = source();
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

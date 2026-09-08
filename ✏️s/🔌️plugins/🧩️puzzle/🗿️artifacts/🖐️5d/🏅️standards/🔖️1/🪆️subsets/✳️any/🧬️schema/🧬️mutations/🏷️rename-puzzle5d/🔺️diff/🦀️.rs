@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `RenamePuzzle5d` — patches the document `label`.
-use crate::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

@@ -9,7 +9,7 @@ import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../.
 
 const STDIO_ROOT = import.meta.dir;
 const REGISTRY_PATH = join(STDIO_ROOT, "📇️registry/🔣️.json");
-const PACKAGE_SCHEMA_PATH = join(STDIO_ROOT, "🧬️schema/📦️artifact-package/🧬️.schema.json");
+const PACKAGE_SCHEMA_MODULE_PATH = join(STDIO_ROOT, "🧬️schema/🔣️.json");
 const PACKAGE_FIXTURE_PATH = join(STDIO_ROOT, "🧪️fixtures/📦️artifact-package/🔣️.json");
 const CARGO_CONTRACT_NAME = "semio-s-artifact-stdio-contract";
 const CARGO_COMPOSITION_NAME = "semio-s-plugin-stdio";
@@ -270,7 +270,7 @@ async function assertSourceContract(repoRoot: string, contract: { schemaVersion:
     assert.equal(typescript.scripts?.test, `bun nx run ${names.typescript}:test`);
     for (const dependency of Object.keys(typescript.dependencies ?? {})) assert(catalogTypeScriptNames.has(dependency), `${names.typescript} has unknown artifact dependency ${dependency}`);
     assertScriptTargets(readJson(join(typescriptRoot, "📋️project.json")), names.typescript);
-    assert(readFileSync(join(typescriptRoot, "📜️script.ts"), "utf8").includes("runStdioTypeScriptArtifactPackageMain"), `${names.typescript} does not use its TypeScript artifact router`);
+    assert(readFileSync(join(typescriptRoot, "📜️script.ts"), "utf8").includes("runArtifactTypeScriptPackageMain"), `${names.typescript} does not use the domain-neutral TypeScript artifact router`);
     assertDeclarationOnly(rustRoot, ["Cargo.toml", "📋️project.json", "📜️script.ts"]);
     assertDeclarationOnly(typescriptRoot, ["package.json", "📋️project.json", "📜️script.ts"]);
   }
@@ -292,8 +292,11 @@ async function assertSourceContract(repoRoot: string, contract: { schemaVersion:
 }
 
 async function assertSchemaOracle(contract: { schemaVersion: 1; packages: PackageRecord[] }): Promise<void> {
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(readJson(PACKAGE_SCHEMA_PATH));
+  const { default: Ajv } = await import("ajv");
+  const module = readJson(PACKAGE_SCHEMA_MODULE_PATH);
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(module);
+  const validate = ajv.compile({ $ref: `${module.$id}#/$defs/StdioArtifactPackage` });
   const fixture = readJson(PACKAGE_FIXTURE_PATH);
   for (const value of fixture.accepted) assert(validate(value), JSON.stringify(validate.errors));
   for (const row of fixture.rejected) assert(!validate(row.value), `negative package fixture ${row.id} was accepted`);

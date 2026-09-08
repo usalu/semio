@@ -1,44 +1,86 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.pdf/diff.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.4/base/diff.json",
   "title": "PdfDiff",
   "$defs": {
     "PdfPageDiff": {
       "description": "Sparse per-field patch for one PageDoc.",
       "type": "object",
       "properties": {
-        "width": { "type": "number" },
-        "height": { "type": "number" },
-        "text": { "type": "string" }
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "text": {
+          "type": "string"
+        }
       }
     },
     "PdfPageModified": {
       "type": "object",
-      "required": ["index", "diff"],
+      "required": [
+        "index",
+        "diff"
+      ],
       "properties": {
-        "index": { "type": "integer", "minimum": 0 },
-        "diff": { "$ref": "#/$defs/PdfPageDiff" }
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "diff": {
+          "$ref": "#/$defs/PdfPageDiff"
+        }
       }
     },
     "PdfPageAdded": {
       "type": "object",
-      "required": ["index", "page"],
+      "required": [
+        "index",
+        "page"
+      ],
       "properties": {
-        "index": { "type": "integer", "minimum": 0 },
-        "page": { "$ref": "snapshot.json#/$defs/PageDoc" }
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "page": {
+          "$ref": "snapshot.json#/$defs/PageDoc"
+        }
       }
     },
     "PdfPagesDiff": {
       "description": "Index-keyed collection triple over the document's pages. removed/modified indices address the BASE state, added indices the FINAL state.",
       "type": "object",
       "properties": {
-        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
-        "modified": { "type": "array", "items": { "$ref": "#/$defs/PdfPageModified" } },
-        "added": { "type": "array", "items": { "$ref": "#/$defs/PdfPageAdded" } }
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfPageModified"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PdfPageAdded"
+          }
+        }
       }
     }
   },
   "type": "object",
   "properties": {
-    "pages": { "$ref": "#/$defs/PdfPagesDiff", "x-semio-state": "artifact" }
+    "pages": {
+      "$ref": "#/$defs/PdfPagesDiff",
+      "x-semio-state": "artifact"
+    }
   }
 }

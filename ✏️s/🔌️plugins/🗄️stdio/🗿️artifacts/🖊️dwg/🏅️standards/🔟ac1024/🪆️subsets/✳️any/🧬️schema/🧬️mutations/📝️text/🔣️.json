@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.dwg/mutations/text.json",
-  "title": "DwgMutationsText",
-  "type": "object"
-}

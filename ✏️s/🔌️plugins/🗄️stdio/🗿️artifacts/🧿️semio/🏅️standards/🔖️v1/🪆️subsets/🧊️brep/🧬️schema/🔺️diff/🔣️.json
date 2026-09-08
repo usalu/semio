@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.brep/diff.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/brep/diff.json",
   "title": "SemioBrepDiff",
   "description": "Handcrafted sparse diff — one NamedTripleDiff{removed,modified,added} per collection. See the sibling 🦀️.rs for the real source of truth.",
   "type": "object",
@@ -7,18 +8,53 @@
     "namedTriple": {
       "type": "object",
       "properties": {
-        "removed": { "type": "array", "items": { "type": "string" } },
-        "modified": { "type": "array", "items": { "type": "object", "properties": { "key": { "type": "string" }, "diff": {} }, "required": ["key", "diff"] } },
-        "added": { "type": "array", "items": {} }
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "diff": {}
+            },
+            "required": [
+              "key",
+              "diff"
+            ]
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {}
+        }
       }
     }
   },
   "properties": {
-    "vertices": { "$ref": "#/$defs/namedTriple" },
-    "edges": { "$ref": "#/$defs/namedTriple" },
-    "loops": { "$ref": "#/$defs/namedTriple" },
-    "faces": { "$ref": "#/$defs/namedTriple" },
-    "shells": { "$ref": "#/$defs/namedTriple" },
-    "solids": { "$ref": "#/$defs/namedTriple" }
+    "vertices": {
+      "$ref": "#/$defs/namedTriple"
+    },
+    "edges": {
+      "$ref": "#/$defs/namedTriple"
+    },
+    "loops": {
+      "$ref": "#/$defs/namedTriple"
+    },
+    "faces": {
+      "$ref": "#/$defs/namedTriple"
+    },
+    "shells": {
+      "$ref": "#/$defs/namedTriple"
+    },
+    "solids": {
+      "$ref": "#/$defs/namedTriple"
+    }
   }
 }

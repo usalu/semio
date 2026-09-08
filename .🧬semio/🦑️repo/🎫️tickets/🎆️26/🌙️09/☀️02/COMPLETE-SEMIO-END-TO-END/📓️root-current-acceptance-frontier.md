@@ -1,5 +1,119 @@
 # Current End-to-End Acceptance Frontier
 
+## 2026-09-08 18:48 UTC Actor Binding and Shell Composition
+
+Root's actual PluginRuntime factory test76757 passed its controlled guest exchange:
+Bind receipt, raw document ingress/outbound, then exact Retire before disposal.
+Pure binding/port tests99640 passed7, including bounded early input waiting for
+Bound. New fixture tests84704 first failed missing atomic cold replacement and
+unnecessary Retire after verified Refused. Production repair67958 passed all15
+binding/opening tests. The binding now distinguishes unsent, verified refused,
+possibly bound, bound and retired remote state, parses receipts before checking
+presentation currency, and retains uncertain ownership if retirement fails.
+Teardown still uses the captured actor activation; it never acquires a successor
+capability to send stale control.
+
+ShellHost now owns each document port and a bounded pre-bind buffer. The global
+route and duplicate semantic ApplyEnvelopes ingress are removed. Initial Hub
+openings await cold load and Bound instead of treating socket Hello as readiness.
+Rebootstrap, LoadDocument effects and tutorial restore use the same serialized
+Retire → cold pair load → Bind path. These composition edits are not yet runtime
+qualified. Fresh full renderer74732 and type22562 are running.
+
+Home owns native80189 in the existing ticket target; no second fleet Cargo is
+running. Its source62963 passed29 binding laws after closing admission before
+the asynchronous guest detach. WGPU is finishing exact raw mutation-batch
+preservation through worker/Rust actor protocols. Terra continues read-only
+lifetime and cold-load audits. Disk pressure is substantial; unrelated agents'
+work and artifacts are untouched. No genuine current component, two mounted
+authenticated peers, real MCP approval/cancel, durable Undo or restart acceptance
+is claimed from these tests. Repo ticket/goal MCP tools remain unavailable; no
+ticket lifecycle transition is fabricated. The goal remains active.
+
+## 2026-09-08 18:02 UTC Binding and Codec Progress
+
+Root49796 passed all five focused actor-backbone tests. The TS OpBinary encoder
+now matches all four native literal vectors; bounded exact decoding rejects nine
+shared hostile rows plus length/count/symbol cases. Mutation batches remain opaque
+at this framing boundary. Binding controls preserve unsigned u64 and u32 ownership,
+check all eight neutral controls/refusals, exact receipt fields, overposts, UTF-8
+byte limits and terminal bytes. A byte-content normalization corrected the test
+oracle's typed-array identity/prototype comparison; it did not change production
+encoding. Earlier29343/60061 therefore remained test RED, not new codec evidence.
+
+The renderer's original opening/engine-schema/Playwright-discovery defects are
+repaired by WGPU; focused86410 passed five laws. Its full24748 still failed the
+then-current actor assertions and three concurrent root-script import faults
+(`join` accessed before initialization), with629 tests passing. Root's former
+`📜️script.ts nx` command has been removed by concurrent work;61769 failed before
+Vitest. Direct Bun execution of Nx97735 also failed to require the async repo
+plugin. Current registered runs use `bun x --no-install nx` with explicit private
+workspace/cache paths; no unrelated script changes were reverted.
+
+Root is adding the actual Bound-before-forward/Retired-before-release lifetime
+tests and production composition. Terra is tracing mutation metadata preservation
+through the existing worker protocol: reconstructing domain envelopes on either
+side of the new opaque framing would still lose native causal fields. Home owns
+the guest implementation and its bounded native qualification. Mounted end-to-end
+acceptance remains unqualified.
+
+## 2026-09-08 17:43 UTC Fresh Process and Protocol Qualification
+
+The environment restarted after the prior continuation. Former renderer49304 and
+repo11418 process handles no longer exist; neither receives an inferred terminal
+pass. Existing agent identities were resumed with their retained execution/audit
+settings and the four-slot fleet is active.
+
+The pure actor-owned document port passed three controlled tests in3626 before
+restart: exact owner/source fences, immediate admission retirement with queued
+drain, and byte/count reservation release after failed delivery. It is not yet
+connected to the mounted PluginRuntime and does not prove peer collaboration.
+
+Fresh renderer type41516 and full40035 both terminated exit1. Full tests passed624
+and failed2, with4 failed/12 passed files; focused failures are moved opening
+schema resolution, accidental Playwright discovery, and two strict engine schema
+references. Typechecking also exposes concurrent extracted-test typing failures
+throughout the dependency graph. WGPU owns the focused renderer failures while
+root owns PluginRuntime/ShellHost and the actual Store OpBinary TS twin.
+
+Terra found the TS backbone raw-tag codec incompatible with Rust's versioned
+OpBinary record. Home authored a shared closed binding contract, four canonical
+native byte vectors and nine hostile records. Root's new fixture-driven codec
+test is running against the old implementation first. Home owns guest binding,
+exact native decoding and the first bounded native slot; WGPU waits before
+regenerating the genuine component. Directory source67856 passed its Plan/Lease
+closure, browser actor and catalog gates; this remains a source result.
+
+The genuine cold Map, two mounted authenticated Shell peers, actual MCP progress
+and cancellation, Shell-owned approval, durable Undo and same-root Hub restart
+remain unqualified. No goal or ticket completion is justified.
+
+## 2026-09-08 16:02 UTC First-Class Actor Backbone Repair
+
+Window-fault73550 passed7 tests against the canonical lifetime definition and
+hostile cases. Prior70987 found no files because its filter was repo-relative
+while Vitest ran in the package; it is explicitly not a pass. Renderer56413
+reached tsc and exposed relocated test/barrel/Flow/DAG imports and two directory
+bootstrap imports; root repaired those and synchronous schema-validator typing.
+Home retains UiDocumentStore/PluginRuntime schema repair ownership.
+
+Terra's current concrete factory audit found a genuine mounted collaboration
+blocker: optional attach/detach are literal undefined, the guest Store port is
+uninhabited, and non-Shell actor messages are dropped. Root owns the new exact
+actor-activation/instance/document/client browser port, Home the Store/plugin/
+reactor guest half, and Terra the read-only wire/ownership audit. Eight neutral
+ownership rows plus bounded admission/retirement tests are authored;69767 is the
+first RED run with no implementation yet. No global route revival is intended.
+
+The existing TS backbone payload is also not a Rust OpBinary twin: TS starts at
+the variant tag while Rust expects format1 followed by ordinal and canonical
+record body. Both directions need shared literal vectors and actual native/TS
+qualification before production port integration. No bytes are routed by the
+new port yet. WGPU is repairing strict Directory Plan/Lease closure lost in the
+draft7 schema move, preserving hostile private-field rejection before resuming
+the trusted warm producer.49859 was compile RED before any native/browser law.
+The complete acceptance journey remains open, not qualified by these unit gates.
+
 ## 2026-09-08 15:40 UTC Actual Nx Isolation and Current Failed Gates
 
 Root verified with lsof that earlier caller-supplied ticket graph directories were

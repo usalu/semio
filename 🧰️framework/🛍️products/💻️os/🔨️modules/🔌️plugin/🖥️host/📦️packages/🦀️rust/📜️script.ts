@@ -184,7 +184,7 @@ function activationOwnershipOracle(): number {
 
 /** 🎟️ Validates reservation event traces against a separate collection-based transition model. */
 function kernelReservationOracle(): number {
-  const root = join(import.meta.dir, "..", "..", "..", "..", "..", "..", "..", "🔨️modules", "🎭️actor", "🎠️activation");
+  const root = join(import.meta.dir, "..", "..", "..", "..", "..", "..", "..", "🔨️modules", "🎭️actor", "🎠️activation-reservation");
   const fixture = JSON.parse(readFileSync(join(root, "🧫️fixture", "🔣️.json"), "utf8"));
   const validate = moduleExportValidator(new Ajv({ strict: true, allErrors: true }), join(root, "🧬️schema", "🔣️.json"), "ActivationReservation");
   assert(validate(fixture), JSON.stringify(validate.errors));

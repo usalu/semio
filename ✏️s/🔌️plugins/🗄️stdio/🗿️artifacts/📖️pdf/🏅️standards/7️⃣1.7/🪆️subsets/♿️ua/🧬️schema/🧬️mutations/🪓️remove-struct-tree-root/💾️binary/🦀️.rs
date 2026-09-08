@@ -22,13 +22,6 @@ pub fn decode(bytes: &[u8]) -> Result<RemoveStructTreeRoot, String> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn owned_payload_round_trips() {
-        let payload = RemoveStructTreeRoot {  };
-        assert_eq!(decode(&encode(&payload).unwrap()).unwrap(), payload);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -7,7 +7,7 @@ import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBund
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runVitest(this.root, rest, "🧪️tests/🟦️.ts");
+    await runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 
@@ -157,13 +157,29 @@ function oracleApprovalHistory(row: ApprovalHistoryFixtureRow): ApprovalHistoryF
   return { phase: current, canUndo: current === "available", retained: true, oldOwnerRetired: false };
 }
 
+//#region 🧬️OwnedSchemaExports
+const OWNED_SCHEMA_MODULES = {
+  os: "🧰️framework/🛍️products/💻️os/🧬️schema/🔣️.json",
+  directory: "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json",
+  renderer: "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
+} as const;
+
+/** 🧬️ Compiles one named `$defs` export of an owning `🧬️schema/` module against its draft-07 `$id`. */
+async function ownedExport(repoRoot: string, scope: keyof typeof OWNED_SCHEMA_MODULES, exportId: string) {
+  const Ajv = (await import("ajv")).default;
+  const doc = JSON.parse(readFileSync(join(repoRoot, OWNED_SCHEMA_MODULES[scope]), "utf8")) as { $id: string };
+  const compiled = new Ajv({ strict: true, allErrors: true }).addKeyword("discriminator").addKeyword("x-semio-note").addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
+  if (!compiled) throw new Error(`${scope} schema module publishes no export ${exportId}`);
+  return compiled;
+}
+//#endregion 🧬️OwnedSchemaExports
+
 /** 🧪️ Validates the private approval-history contract against AJV, an independent reducer, the
  * Shell arbitration function, and source hostiles for authority retirement and reissue. */
 async function proveGisMapApprovalHistory(repoRoot: string): Promise<Record<string, number>> {
   const root = join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧫️fixtures", "↩️gis-map-approval-history-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as Readonly<{ cases: readonly ApprovalHistoryFixtureRow[]; ordinaryHistory: Readonly<Record<string, string>> }>;
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+  const validate = await ownedExport(repoRoot, "os", "GisMapApprovalHistoryV1");
   if (!validate(fixture)) throw new Error(`invalid GIS Map approval history corpus: ${JSON.stringify(validate.errors)}`);
   if (validate({ ...fixture, cases: fixture.cases.slice(1) })) throw new Error("approval history schema admitted a missing lifecycle law");
   const deepEqual = (await import("fast-deep-equal")).default;
@@ -216,9 +232,7 @@ async function proveGisMapApprovalHistory(repoRoot: string): Promise<Record<stri
 async function proveGisMapInferencePortFixture(repoRoot: string): Promise<Record<string, number>> {
   const root = join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧫️fixtures", "💡️gis-map-inference-port-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as OracleCorpus;
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const ajv = new Ajv2020({ strict: true, allErrors: true });
-  const validate = ajv.compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+  const validate = await ownedExport(repoRoot, "os", "GisMapInferencePortV1");
   if (!validate(fixture)) throw new Error(`invalid GIS Map inference port corpus: ${JSON.stringify(validate.errors)}`);
   const hostileCorpora: readonly unknown[] = [
     { ...fixture, phases: fixture.phases.slice(1) },
@@ -372,7 +386,7 @@ class GisMapInferencePortCheckScript extends BundleScript {
         .map(([key, value]) => `${key}=${value}`)
         .join(" ")}`,
     );
-    if (browser) await runVitest(this.root, ["--testNamePattern", "gis map inference port", ...rest], "🧪️tests/🟦️.ts");
+    if (browser) await runVitest(this.root, ["--testNamePattern", "gis map inference port", ...rest], "vitest.config.ts");
     console.log("gis-map-inference-port-check: no WGPU map rendering, no external model provider and no two-user process journey is run or claimed here.");
   }
 }
@@ -383,8 +397,7 @@ class GisMapInferencePortCheckScript extends BundleScript {
 async function proveDocumentOpeningAttempt(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory");
   const fixture = JSON.parse(readFileSync(join(root, "🧵️document-opening-attempt-v1.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️document-opening-attempt-v1.schema.json"), "utf8")));
+  const validate = await ownedExport(repoRoot, "directory", "DocumentOpeningAttemptV1");
   if (!validate(fixture)) throw new Error(`invalid document opening attempt fixture: ${JSON.stringify(validate.errors)}`);
   const deepEqual = (await import("fast-deep-equal")).default;
   const observed = fixture.cases.map((row: Record<string, unknown>) => {
@@ -466,7 +479,7 @@ class DocumentOpeningAttemptCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("document-opening-attempt-check accepts no arguments");
     const checks = await proveDocumentOpeningAttempt(this.repoRoot);
-    await runVitest(this.root, ["--testNamePattern", "document opening attempt"], "🧪️tests/🟦️.ts");
+    await runVitest(this.root, ["--testNamePattern", "document opening attempt"], "vitest.config.ts");
     console.log(`document-opening-attempt-check: checks=${checks}`);
   }
 }
@@ -476,8 +489,7 @@ class DocumentOpeningAttemptCheckScript extends BundleScript {
 async function proveGisMapPeerRebootstrap(repoRoot: string): Promise<number> {
   const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+  const validate = await ownedExport(repoRoot, "os", "GisMapPeerRebootstrapV1");
   if (!validate(fixture)) throw new Error(`invalid GIS Map peer rebootstrap fixture: ${JSON.stringify(validate.errors)}`);
   const deepEqual = (await import("fast-deep-equal")).default;
   const observed = fixture.clients.map((client: { clientInstanceId: string }) => {
@@ -537,9 +549,10 @@ async function proveGisMapPeerRebootstrap(repoRoot: string): Promise<number> {
 async function proveMountedGisMapProbe(repoRoot: string): Promise<number> {
   const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧪️fixtures/🔬️mounted-gis-map-probe-v1");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid mounted GIS Map probe fixture: ${JSON.stringify(validate.errors)}`);
+  const validateSource = await ownedExport(repoRoot, "renderer", "MountedGisMapProbeSourceV1");
+  const validateProbe = await ownedExport(repoRoot, "renderer", "MountedGisMapProbeV1");
+  if (!validateSource(fixture.source)) throw new Error(`invalid mounted GIS Map probe source: ${JSON.stringify(validateSource.errors)}`);
+  if (!validateProbe(fixture.expected)) throw new Error(`invalid mounted GIS Map probe projection: ${JSON.stringify(validateProbe.errors)}`);
   const deepEqual = (await import("fast-deep-equal")).default;
   const observed = {
     scope: fixture.source.scope,
@@ -589,7 +602,7 @@ class ColdDocumentPairBrowserCheckScript extends BundleScript {
     await runVitest(
       this.root,
       ["--testNamePattern", "(?:mounted GIS map probe|browser document first open (?:verifies server assets without a prior installed target|rejects hostile assets and retired owners before socket authority)|browser document actor (?:reservation activates only after an exact current socket Session|transfers one verified cold pair only after lifecycle ACK and exact page receipts)|browser document peers refetch the same exact pair after scoped rebootstrap|browser actor patch handoff validates the neutral schema)", ...rest],
-      "🧪️tests/🟦️.ts",
+      "vitest.config.ts",
     );
     console.log(`cold-document-pair-browser-check: peer-checks=${checks}`);
   }

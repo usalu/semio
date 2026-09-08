@@ -29,36 +29,10 @@ pub fn decode_op(bytes: &[u8]) -> Result<DagMutation, protocol::ProtocolError> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = crate::mutations::delete_node("node-1".into());
-        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
-        let bytes = encode_op(&operation).expect("encode");
-        assert_eq!(decode_op(&bytes).expect("decode"), operation);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-mod semio_protocol_conformance {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn component_protocol_semio_is_protocol_dialect() {
-        let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
-        assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
-        assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
-        let _ = COMPONENT_PROTOCOL_PATH;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn verify_protocol_bytes_against_encoded_spr() {
-        let operation = crate::mutations::delete_node("node-1".into());
-        let bytes = encode_op(&operation).expect("encode op");
-        let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
-        ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes spr bytes");
-    }
-}
+#[path = "🧪️tests/🔬️semio-protocol-conformance/🦀️.rs"]
+mod semio_protocol_conformance;

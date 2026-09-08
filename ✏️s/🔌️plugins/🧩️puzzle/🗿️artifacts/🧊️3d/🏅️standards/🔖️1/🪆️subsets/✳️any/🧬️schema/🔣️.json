@@ -702,12 +702,18 @@
         "fillBuildPreview"
       ],
       "title": "Puzzle3dFillPreviewJson",
-      "description": "The retained fill-preview JSON page of `s.puzzle3d`'s ⏳️precompute/🪣️fill builder: one encoded page never exceeds `x-semio-maxEncodedUtf8Bytes`, and every diagnostic integer, colour and status label carries the builder's own byte and index ceilings."
+      "description": "The retained fill-preview JSON page of `s.puzzle3d`'s ⏳️precompute/🪣️fill builder: one encoded page never exceeds `x-semio-maxEncodedUtf8Bytes`, and every diagnostic integer, colour and status label carries the builder's own byte and index ceilings.",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "Puzzle3dFillPreviewNullableString": {
       "type": [
         "string",
         "null"
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
       ]
     },
     "Puzzle3dFillPreviewVector3": {
@@ -716,7 +722,10 @@
         "type": "number"
       },
       "minItems": 3,
-      "maxItems": 3
+      "maxItems": 3,
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "Puzzle3dFillPreviewQuaternion": {
       "type": "array",
@@ -724,7 +733,10 @@
         "type": "number"
       },
       "minItems": 4,
-      "maxItems": 4
+      "maxItems": 4,
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "Puzzle3dFillPreviewGhost": {
       "type": "object",
@@ -758,6 +770,9 @@
         "meshUrl",
         "origin",
         "orientation"
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
       ]
     },
     "Puzzle3dFillPreviewDiagnostic": {
@@ -912,6 +927,9 @@
         "totalCount",
         "searchCount",
         "rejectedCount"
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
       ]
     }
   }

@@ -8,7 +8,7 @@
   ],
   "properties": {
     "AddValue": {
-      "$ref": "./➕️add-value/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/framework/os/plugin/reactor/jobs/mutation-plan/tests/job-test-mutations/mutation/add-value/schema.json"
     }
   }
 }

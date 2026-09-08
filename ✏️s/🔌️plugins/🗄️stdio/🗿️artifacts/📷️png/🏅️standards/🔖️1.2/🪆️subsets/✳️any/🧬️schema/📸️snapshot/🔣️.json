@@ -1,122 +1,428 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.png/snapshot.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json",
   "title": "PngSnapshot",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "width", "height", "bitDepth", "colorType", "interlace", "textChunks", "pixels", "chunkOrder", "unknownChunks"],
+  "required": [
+    "schema",
+    "width",
+    "height",
+    "bitDepth",
+    "colorType",
+    "interlace",
+    "textChunks",
+    "pixels",
+    "chunkOrder",
+    "unknownChunks"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "width": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
-    "height": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
-    "bitDepth": { "type": "integer", "minimum": 0, "maximum": 16, "x-semio-state": "artifact" },
-    "colorType": { "$ref": "#/$defs/PngColorType", "x-semio-state": "artifact" },
-    "interlace": { "type": "boolean", "x-semio-state": "artifact" },
-    "plte": { "type": "array", "items": { "$ref": "#/$defs/PngRgb" }, "x-semio-state": "artifact" },
-    "trns": { "$ref": "#/$defs/PngTransparency", "x-semio-state": "artifact" },
-    "gama": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
-    "chrm": { "$ref": "#/$defs/PngChromaticities", "x-semio-state": "artifact" },
-    "srgb": { "$ref": "#/$defs/PngSrgbIntent", "x-semio-state": "artifact" },
-    "phys": { "$ref": "#/$defs/PngPhysicalDims", "x-semio-state": "artifact" },
-    "time": { "$ref": "#/$defs/PngTimestamp", "x-semio-state": "artifact" },
-    "bkgd": { "$ref": "#/$defs/PngBackground", "x-semio-state": "artifact" },
-    "textChunks": { "type": "array", "items": { "$ref": "#/$defs/PngTextChunk" }, "x-semio-state": "artifact" },
-    "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "x-semio-state": "artifact" },
-    "chunkOrder": { "type": "array", "items": { "$ref": "#/$defs/PngChunkMarker" }, "x-semio-state": "artifact" },
-    "unknownChunks": { "type": "array", "items": { "$ref": "#/$defs/PngChunk" }, "x-semio-state": "artifact" }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "bitDepth": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16,
+      "x-semio-state": "artifact"
+    },
+    "colorType": {
+      "$ref": "#/$defs/PngColorType",
+      "x-semio-state": "artifact"
+    },
+    "interlace": {
+      "type": "boolean",
+      "x-semio-state": "artifact"
+    },
+    "plte": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PngRgb"
+      },
+      "x-semio-state": "artifact"
+    },
+    "trns": {
+      "$ref": "#/$defs/PngTransparency",
+      "x-semio-state": "artifact"
+    },
+    "gama": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "chrm": {
+      "$ref": "#/$defs/PngChromaticities",
+      "x-semio-state": "artifact"
+    },
+    "srgb": {
+      "$ref": "#/$defs/PngSrgbIntent",
+      "x-semio-state": "artifact"
+    },
+    "phys": {
+      "$ref": "#/$defs/PngPhysicalDims",
+      "x-semio-state": "artifact"
+    },
+    "time": {
+      "$ref": "#/$defs/PngTimestamp",
+      "x-semio-state": "artifact"
+    },
+    "bkgd": {
+      "$ref": "#/$defs/PngBackground",
+      "x-semio-state": "artifact"
+    },
+    "textChunks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PngTextChunk"
+      },
+      "x-semio-state": "artifact"
+    },
+    "pixels": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "x-semio-state": "artifact"
+    },
+    "chunkOrder": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PngChunkMarker"
+      },
+      "x-semio-state": "artifact"
+    },
+    "unknownChunks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PngChunk"
+      },
+      "x-semio-state": "artifact"
+    }
   },
   "$defs": {
-    "PngColorType": { "type": "string", "enum": ["grayscale", "rgb", "palette", "grayscaleAlpha", "rgba"] },
+    "PngColorType": {
+      "type": "string",
+      "enum": [
+        "grayscale",
+        "rgb",
+        "palette",
+        "grayscaleAlpha",
+        "rgba"
+      ]
+    },
     "PngRgb": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["r", "g", "b"],
+      "required": [
+        "r",
+        "g",
+        "b"
+      ],
       "properties": {
-        "r": { "type": "integer", "minimum": 0, "maximum": 255 },
-        "g": { "type": "integer", "minimum": 0, "maximum": 255 },
-        "b": { "type": "integer", "minimum": 0, "maximum": 255 }
+        "r": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "g": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "b": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
       }
     },
     "PngTransparency": {
       "type": "object",
-      "required": ["colorType"],
+      "required": [
+        "colorType"
+      ],
       "properties": {
-        "colorType": { "type": "string", "enum": ["indexed", "grayscale", "rgb"] },
-        "alpha": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
-        "gray": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "r": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "g": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "b": { "type": "integer", "minimum": 0, "maximum": 65535 }
+        "colorType": {
+          "type": "string",
+          "enum": [
+            "indexed",
+            "grayscale",
+            "rgb"
+          ]
+        },
+        "alpha": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "gray": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "r": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "g": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "b": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
       }
     },
     "PngChromaticities": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["whiteX", "whiteY", "redX", "redY", "greenX", "greenY", "blueX", "blueY"],
+      "required": [
+        "whiteX",
+        "whiteY",
+        "redX",
+        "redY",
+        "greenX",
+        "greenY",
+        "blueX",
+        "blueY"
+      ],
       "properties": {
-        "whiteX": { "type": "integer" }, "whiteY": { "type": "integer" },
-        "redX": { "type": "integer" }, "redY": { "type": "integer" },
-        "greenX": { "type": "integer" }, "greenY": { "type": "integer" },
-        "blueX": { "type": "integer" }, "blueY": { "type": "integer" }
+        "whiteX": {
+          "type": "integer"
+        },
+        "whiteY": {
+          "type": "integer"
+        },
+        "redX": {
+          "type": "integer"
+        },
+        "redY": {
+          "type": "integer"
+        },
+        "greenX": {
+          "type": "integer"
+        },
+        "greenY": {
+          "type": "integer"
+        },
+        "blueX": {
+          "type": "integer"
+        },
+        "blueY": {
+          "type": "integer"
+        }
       }
     },
-    "PngSrgbIntent": { "type": "string", "enum": ["perceptual", "relativeColorimetric", "saturation", "absoluteColorimetric"] },
+    "PngSrgbIntent": {
+      "type": "string",
+      "enum": [
+        "perceptual",
+        "relativeColorimetric",
+        "saturation",
+        "absoluteColorimetric"
+      ]
+    },
     "PngPhysicalDims": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["ppuX", "ppuY", "unitIsMeter"],
+      "required": [
+        "ppuX",
+        "ppuY",
+        "unitIsMeter"
+      ],
       "properties": {
-        "ppuX": { "type": "integer", "minimum": 0 },
-        "ppuY": { "type": "integer", "minimum": 0 },
-        "unitIsMeter": { "type": "boolean" }
+        "ppuX": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ppuY": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unitIsMeter": {
+          "type": "boolean"
+        }
       }
     },
     "PngTimestamp": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["year", "month", "day", "hour", "minute", "second"],
+      "required": [
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ],
       "properties": {
-        "year": { "type": "integer" }, "month": { "type": "integer" }, "day": { "type": "integer" },
-        "hour": { "type": "integer" }, "minute": { "type": "integer" }, "second": { "type": "integer" }
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "hour": {
+          "type": "integer"
+        },
+        "minute": {
+          "type": "integer"
+        },
+        "second": {
+          "type": "integer"
+        }
       }
     },
     "PngBackground": {
       "type": "object",
-      "required": ["colorType"],
+      "required": [
+        "colorType"
+      ],
       "properties": {
-        "colorType": { "type": "string", "enum": ["grayscale", "rgb", "indexed"] },
-        "gray": { "type": "integer" }, "r": { "type": "integer" }, "g": { "type": "integer" },
-        "b": { "type": "integer" }, "index": { "type": "integer" }
+        "colorType": {
+          "type": "string",
+          "enum": [
+            "grayscale",
+            "rgb",
+            "indexed"
+          ]
+        },
+        "gray": {
+          "type": "integer"
+        },
+        "r": {
+          "type": "integer"
+        },
+        "g": {
+          "type": "integer"
+        },
+        "b": {
+          "type": "integer"
+        },
+        "index": {
+          "type": "integer"
+        }
       }
     },
-    "PngTextKind": { "type": "string", "enum": ["text", "zText", "iText"] },
+    "PngTextKind": {
+      "type": "string",
+      "enum": [
+        "text",
+        "zText",
+        "iText"
+      ]
+    },
     "PngTextChunk": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["keyword", "value", "compressed", "kind", "languageTag", "translatedKeyword"],
+      "required": [
+        "keyword",
+        "value",
+        "compressed",
+        "kind",
+        "languageTag",
+        "translatedKeyword"
+      ],
       "properties": {
-        "keyword": { "type": "string" },
-        "value": { "type": "string" },
-        "compressed": { "type": "boolean" },
-        "kind": { "$ref": "#/$defs/PngTextKind" },
-        "languageTag": { "type": "string" },
-        "translatedKeyword": { "type": "string" }
+        "keyword": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "compressed": {
+          "type": "boolean"
+        },
+        "kind": {
+          "$ref": "#/$defs/PngTextKind"
+        },
+        "languageTag": {
+          "type": "string"
+        },
+        "translatedKeyword": {
+          "type": "string"
+        }
       }
     },
     "PngChunk": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "data"],
+      "required": [
+        "kind",
+        "data"
+      ],
       "properties": {
-        "kind": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
-        "data": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+        "kind": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
       }
     },
     "PngChunkMarker": {
       "type": "object",
-      "required": ["chunk"],
+      "required": [
+        "chunk"
+      ],
       "properties": {
-        "chunk": { "type": "string", "enum": ["ihdr", "plte", "trns", "gama", "chrm", "srgb", "phys", "time", "bkgd", "idat", "iend", "text", "unknown"] },
-        "index": { "type": "integer", "minimum": 0 }
+        "chunk": {
+          "type": "string",
+          "enum": [
+            "ihdr",
+            "plte",
+            "trns",
+            "gama",
+            "chrm",
+            "srgb",
+            "phys",
+            "time",
+            "bkgd",
+            "idat",
+            "iend",
+            "text",
+            "unknown"
+          ]
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

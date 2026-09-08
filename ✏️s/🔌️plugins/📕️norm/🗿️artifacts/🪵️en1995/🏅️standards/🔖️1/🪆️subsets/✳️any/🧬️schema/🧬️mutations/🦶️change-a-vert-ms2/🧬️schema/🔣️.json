@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1995/1/any/mutation/change-a-vert-ms2/schema.json",
+  "$id": "https://semio.tech/schema/s/norm/en1995/mutation/change-a-vert-ms2/schema.json",
   "title": "ChangeAVertMS2",
   "type": "object",
   "additionalProperties": false,

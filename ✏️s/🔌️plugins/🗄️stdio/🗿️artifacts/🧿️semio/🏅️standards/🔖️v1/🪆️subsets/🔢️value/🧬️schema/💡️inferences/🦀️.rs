@@ -88,19 +88,6 @@ pub fn semio_value_artifact_inference_descriptor() -> framework_schema::Artifact
 
 #[cfg(test)]
 //#region 🧪️Tests
-mod tests {
-    use super::*;
-    use protocol::Inference;
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
-        let snapshot = SemioValueSnapshot::default();
-        assert_eq!(SemioValueInference::infer(&snapshot), SemioValueInference::infer(&snapshot));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
-        assert_eq!(SemioValueInference::infer(&SemioValueSnapshot::default()), SemioValueInference::default());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -1,15 +1,26 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.audio/artifact.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/audio/artifact.json",
   "title": "SemioAudioArtifact",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
     "entries": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
         "type": "object",
-        "properties": { "name": { "type": "string" }, "data": { "type": "string" } }
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string"
+          }
+        }
       }
     }
   }

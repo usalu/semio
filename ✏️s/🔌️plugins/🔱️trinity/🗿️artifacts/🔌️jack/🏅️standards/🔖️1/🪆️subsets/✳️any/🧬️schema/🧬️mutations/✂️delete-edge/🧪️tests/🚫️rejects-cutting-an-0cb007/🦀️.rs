@@ -16,7 +16,7 @@
 //! `scene.edges` and never `scene.nodes`, so the reported target is the edge id verbatim and no node
 //! is ever consulted. Unlike its `delete-node` sibling it has no cascade at all.
 
-use crate::mutations::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
 use crate::{jack_working_scene, JackDiff, JackSnapshot};
 

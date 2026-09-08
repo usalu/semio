@@ -4,8 +4,8 @@
 //! `mutation.id-mismatch` (Fatal) when the replacement renames it, the SAME `node_id` resolution
 //! `create-support` runs (`mutation.target-missing`, Error), and finally `mutation.no-op`.
 use super::ReplaceSupport;
-use crate::diff::{Fem2dDiff, Fem2dSupportsDelta, Fem2dSupportsPatchEntry};
-use crate::mutations::guards;
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSupportsDelta, Fem2dSupportsPatchEntry};
+use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff

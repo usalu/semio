@@ -7,7 +7,7 @@ class TestScript extends BundleScript {
     const artifacts = join(this.repoRoot, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts");
     const tests = ["🔌️jack", "♻️rewriting"].flatMap((artifact) => {
       const subset = join(artifacts, artifact, "🏅️standards/🔖️1/🪆️subsets/✳️any");
-      return [join(subset, "📚️examples/🎬️demo/🧪️tests/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️.ts")];
+      return [join(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts")];
     });
     runCmd(process.execPath, ["test", ...tests]);
   }

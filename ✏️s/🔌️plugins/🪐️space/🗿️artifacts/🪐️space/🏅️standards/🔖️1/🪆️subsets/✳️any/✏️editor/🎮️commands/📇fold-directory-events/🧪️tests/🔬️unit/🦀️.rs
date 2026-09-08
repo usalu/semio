@@ -1,0 +1,102 @@
+
+use super::*;
+use semio_framework_os_kernel::os_directory::{ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEventBody, DirectorySpaceKind, DocumentDescriptor, DocumentFrontier, DocumentIndexEntryV1, DocumentOwner, DocumentScope, Hlc};
+use semio_framework_plugin::ArtifactDialect;
+use semio_framework_plugin::{ArtifactView, HistoryView};
+
+fn event(seq: u64, body: DirectoryEventBody, space_id: Option<&str>) -> DirectoryEvent {
+    DirectoryEvent {
+        seq,
+        id: format!("evt-{seq}"),
+        hlc: Hlc { physical_ms: seq as i64, logical: 0 },
+        actor: DirectoryActor { kind: DirectoryActorKind::System, id: "system:test".into() },
+        space_id: space_id.map(Into::into),
+        user_id: None,
+        body,
+        recorded_at_ms: seq as i64,
+    }
+}
+
+fn view_for(space_id: &str) -> SSpaceSnapshot {
+    SSpaceSnapshot { space_id: space_id.into(), ..Default::default() }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn folds_visibility_and_members_for_this_space_into_config() {
+    let snapshot = view_for("space-1");
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(&snapshot, &history);
+    let config_snapshot = SpaceIndexConfig::default();
+    let cfg = ConfigView { snapshot: &config_snapshot };
+    let events = vec![
+        event(1, DirectoryEventBody::UserCreated { user_id: "u-1".into(), email: "a@example.com".into(), display_name: "Alice".into() }, None),
+        event(2, DirectoryEventBody::SpaceCreated { space_id: "space-1".into(), name: "Space 1".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-1")),
+        event(3, DirectoryEventBody::MemberUpserted { space_id: "space-1".into(), user_id: "u-1".into(), role: DirectorySpaceRole::Author }, Some("space-1")),
+    ];
+    let events_json = pack::to_json_string(&events);
+    let result = handle(&FoldDirectoryEvents { events_json }, &doc, &cfg).expect("fold");
+    assert_eq!(result.config_mutations.len(), 1);
+    let SpaceIndexConfigMutation::Snapshot { config } = &result.config_mutations[0];
+    assert_eq!(config.visibility, "public");
+    assert_eq!(config.members.len(), 1);
+    assert_eq!(config.members[0].email, "a@example.com");
+    assert_eq!(config.members[0].role, "author");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn folds_directory_indexed_documents_into_read_only_space_rows() {
+    let snapshot = view_for("space-1");
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(&snapshot, &history);
+    let config_snapshot = SpaceIndexConfig::default();
+    let cfg = ConfigView { snapshot: &config_snapshot };
+    let descriptor = DocumentDescriptor {
+        space_id: "space-1".into(),
+        document_id: "artifact-0123456789abcdef0123456789abcdef".into(),
+        artifact_kind: "s.gis.map".into(),
+        artifact_schema: "s.gis.map".into(),
+        owner: DocumentOwner { plugin_id: "gis".into(), package_id: "gis-map".into(), version: "1".into(), package_hash: "a".repeat(64) },
+        pack_schema_hash: "b".repeat(64),
+        bootstrap_version: 1,
+        bootstrap_frontier: DocumentFrontier { head_seq: 1, commit_seq: 1, epoch: 1 },
+        bootstrap_snapshot_hash: "c".repeat(64),
+    };
+    let mut indexed = event(
+        4,
+        DirectoryEventBody::DocumentIndexed {
+            scope: DocumentScope { space_id: "space-1".into(), document_id: descriptor.document_id.clone() },
+            descriptor_digest_v1: ArtifactHash([7; 32]),
+            entry: DocumentIndexEntryV1 { name: "Shared Map".into(), dialect: ArtifactDialect { artifact_kind: "s.gis.map".into(), standard: "1".into(), subset: "*".into() } },
+        },
+        Some("space-1"),
+    );
+    indexed.user_id = Some("u-1".into());
+    let events = vec![
+        event(1, DirectoryEventBody::SpaceCreated { space_id: "space-1".into(), name: "Space 1".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-1")),
+        event(2, DirectoryEventBody::DocumentAnnounced { descriptor: descriptor.clone() }, Some("space-1")),
+        indexed,
+    ];
+    let result = handle(&FoldDirectoryEvents { events_json: pack::to_json_string(&events) }, &doc, &cfg).expect("fold indexed document");
+    let SpaceIndexConfigMutation::Snapshot { config } = &result.config_mutations[0];
+    assert_eq!(config.indexed_artifacts.len(), 1);
+    assert_eq!(config.indexed_artifacts[0].id, descriptor.document_id);
+    assert_eq!(config.indexed_artifacts[0].name, "Shared Map");
+    assert_eq!(config.indexed_artifacts[0].dialect.artifact_kind, "s.gis.map");
+    assert_eq!(config.indexed_artifacts[0].created_by, "u-1");
+    assert!(snapshot.artifacts.is_empty(), "Directory rows never mutate the legacy whole-vector snapshot");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn folding_events_for_a_different_space_is_a_no_op() {
+    let snapshot = view_for("space-1");
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(&snapshot, &history);
+    let config_snapshot = SpaceIndexConfig::default();
+    let cfg = ConfigView { snapshot: &config_snapshot };
+    let events =
+        vec![event(1, DirectoryEventBody::SpaceCreated { space_id: "space-2".into(), name: "Other".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-2"))];
+    let events_json = pack::to_json_string(&events);
+    let result = handle(&FoldDirectoryEvents { events_json }, &doc, &cfg).expect("fold");
+    assert!(result.config_mutations.is_empty(), "unrelated-space events never touch this space's config");
+    assert!(result.artifact_mutations.is_empty());
+}

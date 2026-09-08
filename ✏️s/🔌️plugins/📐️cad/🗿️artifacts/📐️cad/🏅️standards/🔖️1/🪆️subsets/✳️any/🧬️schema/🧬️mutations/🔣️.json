@@ -1,89 +1,67 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/cad/cad/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/cad/cad/mutations.json",
   "title": "CadMutation",
   "oneOf": [
     {
-      "$ref": "./🎯change-active-model-definition/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/change-active-model-definition/schema.json"
     },
     {
-      "$ref": "./👁️change-reference-hidden/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/change-reference-hidden/schema.json"
     },
     {
-      "$ref": "./🔒change-reference-locked/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/change-reference-locked/schema.json"
     },
     {
-      "$ref": "./📏change-reference-width/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/change-reference-width/schema.json"
     },
     {
-      "$ref": "./🏢create-building-model/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/create-building-model/schema.json"
     },
     {
-      "$ref": "./📐️create-drawing/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/create-drawing/schema.json"
     },
     {
-      "$ref": "./⚡create-energy-model/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/create-energy-model/schema.json"
     },
     {
-      "$ref": "./➕create-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/create-node/schema.json"
     },
     {
-      "$ref": "./🧱create-shape-model/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/create-shape-model/schema.json"
     },
     {
-      "$ref": "./🏛️create-structure-classic-model/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/create-structure-classic-model/schema.json"
     },
     {
-      "$ref": "./💥delete-building-model/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/delete-building-model/schema.json"
     },
     {
-      "$ref": "./🧹delete-drawing/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/delete-drawing/schema.json"
     },
     {
-      "$ref": "./🔌delete-energy-model/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/delete-energy-model/schema.json"
     },
     {
-      "$ref": "./🗑️delete-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/delete-node/schema.json"
     },
     {
-      "$ref": "./🧨delete-shape-model/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/delete-shape-model/schema.json"
     },
     {
-      "$ref": "./💣delete-structure-classic-model/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/delete-structure-classic-model/schema.json"
     },
     {
-      "$ref": "./📍move-reference/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/move-reference/schema.json"
     },
     {
-      "$ref": "./🏷️rename-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/rename-node/schema.json"
     },
     {
-      "$ref": "./🖇️replace-reference-media/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/replace-reference-media/schema.json"
     },
     {
-      "$ref": "./📎replace-references/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/replace-references/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-active-model-definition",
-    "change-reference-hidden",
-    "change-reference-locked",
-    "change-reference-width",
-    "create-building-model",
-    "create-drawing",
-    "create-energy-model",
-    "create-node",
-    "create-shape-model",
-    "create-structure-classic-model",
-    "delete-building-model",
-    "delete-drawing",
-    "delete-energy-model",
-    "delete-node",
-    "delete-shape-model",
-    "delete-structure-classic-model",
-    "move-reference",
-    "rename-node",
-    "replace-reference-media",
-    "replace-references"
   ]
 }

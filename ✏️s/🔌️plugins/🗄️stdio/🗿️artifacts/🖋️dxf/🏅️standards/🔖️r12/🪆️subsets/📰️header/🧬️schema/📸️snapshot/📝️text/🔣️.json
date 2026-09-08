@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/stdio.dxf/snapshot/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/dxf/r12/header/snapshot/text.json",
   "title": "DxfSnapshotText",
   "type": "object"
 }

@@ -7,7 +7,6 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
 extern crate infinite_canvas as infinite_board_port_directed_dag;
-extern crate self as semio_s_artifact_sequence_sequence;
 
 use neural_engine::{Dictionary, Value};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
@@ -316,38 +315,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn default_snapshot_has_steps() {
-        assert_eq!(default_snapshot().to_fixture().steps.len(), 2);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn step_content_round_trips_through_the_composed_child_snapshot() {
-        let fixture = default_snapshot().to_fixture();
-        let content = sequence_content_snapshot_from_working(&fixture.steps, &fixture.edges);
-        let (steps, edges) = working_from_sequence_content_snapshot(&content);
-        assert_eq!(steps, fixture.steps);
-        assert_eq!(edges, fixture.edges);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn fixture_projection_rejects_a_wire_only_parent_instead_of_defaulting_empty() {
-        let snapshot = default_snapshot();
-        assert!(!snapshot.try_to_fixture().expect("owned scene projects").steps.is_empty());
-        let bytes = <SequenceSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-        let decoded = <SequenceSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("parent wire decodes");
-        assert_eq!(decoded.try_to_fixture(), Err(store::ArtifactChildMaterializationError::Absent));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn artifact_kind_keeps_the_media_schema_consistent_with_the_store_schema() {
-        assert_eq!(artifact_kind().schema, "sequence.sequence");
-        assert_eq!(SEQUENCE_DOCUMENT_SCHEMA, "sequence.sequence");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 //#region 🔖️Declaration
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
@@ -404,11 +373,27 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `ArtifactCapability` rows above (kept per debt D1, deleted repo-wide only in W6); wiring them
 /// into this field too is real follow-up work, not required for the tree to register or for any
 /// law to hold (mirrors the stdio pilot's own documented deviation, `📓️w2-p-report.md`).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::plugin::SequenceApps> {
+pub fn artifact<A: SequenceApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.sequence.sequence").expect("canonical sequence.sequence kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
 }
+
+/// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
+pub trait SequenceApplication:
+    semio_framework_plugin::PluginApp
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::sequence::SequencePlayApp>>>
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::sequence::SequenceViewer>>>
+{
+}
+
+impl<A> SequenceApplication for A where
+    A: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::sequence::SequencePlayApp>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::sequence::SequenceViewer>>>
+{
+}
+
 //#endregion 🔖️ArtifactDeclaration
 
 #[path = "."]

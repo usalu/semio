@@ -137,40 +137,7 @@ pub mod cache {
     }
 
     #[cfg(test)]
-    mod tests {
-        use super::*;
-        use std::time::{SystemTime, UNIX_EPOCH};
-
-        #[semio_framework_async_macros::async_test]
-        async fn segment_hash_is_stable() {
-            let a = PartialMovieLut::segment_hash("abc", 0, 10);
-            let b = PartialMovieLut::segment_hash("abc", 0, 10);
-            assert_eq!(a, b);
-            assert_ne!(a, PartialMovieLut::segment_hash("abc", 0, 11));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn lru_evicts_oldest_entry() {
-            let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
-            let root = std::env::temp_dir().join(format!("animate_cache_lru_{stamp}"));
-            let _ = fs::remove_dir_all(&root);
-            let mut cache = PartialMovieLut::open_with_limit(&root, 2).expect("open");
-            let first = root.join("first.mp4");
-            let second = root.join("second.mp4");
-            let third = root.join("third.mp4");
-            fs::write(&first, b"a").expect("first");
-            fs::write(&second, b"b").expect("second");
-            fs::write(&third, b"c").expect("third");
-            cache.insert("first".into(), first).expect("insert first");
-            cache.insert("second".into(), second).expect("insert second");
-            cache.get("first");
-            cache.insert("third".into(), third).expect("insert third");
-            assert!(!cache.entries.contains_key("second"));
-            assert!(cache.entries.contains_key("first"));
-            assert!(cache.entries.contains_key("third"));
-            let _ = fs::remove_dir_all(&root);
-        }
-    }
+    include!("🧪️tests/🔬️cache-unit/🦀️.rs");
 }
 
 pub mod preview {
@@ -321,69 +288,7 @@ pub mod preview {
     }
 
     #[cfg(test)]
-    mod tests {
-        use super::*;
-        use crate::editor::animate::engine::camera::camera::Camera;
-        use crate::editor::animate::engine::scene::scene::{BasicStage, Scene};
-        use crate::editor::animate::engine::scene::section::SectionList;
-        use crate::editor::animate::engine::scene::sobject::{Sobjects, VSobject};
-        use std::collections::HashMap;
-
-        struct DemoScene {
-            base: BasicStage,
-        }
-
-        impl DemoScene {
-            fn new(config: AnimateConfig) -> Self {
-                Self { base: BasicStage::new(config) }
-            }
-        }
-
-        impl Scene for DemoScene {
-            fn construct(&mut self) {
-                self.add(VSobject::new().into());
-                self.wait(0.05);
-            }
-            fn config(&self) -> &AnimateConfig {
-                self.base.config()
-            }
-            fn config_mut(&mut self) -> &mut AnimateConfig {
-                self.base.config_mut()
-            }
-            fn camera(&self) -> &Camera {
-                self.base.camera()
-            }
-            fn camera_mut(&mut self) -> &mut Camera {
-                self.base.camera_mut()
-            }
-            fn mobjects(&self) -> &HashMap<u64, Sobjects> {
-                self.base.mobjects()
-            }
-            fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
-                self.base.mobjects_mut()
-            }
-            fn sections(&self) -> &SectionList {
-                self.base.sections()
-            }
-            fn sections_mut(&mut self) -> &mut SectionList {
-                self.base.sections_mut()
-            }
-            fn scene_time(&self) -> f64 {
-                self.base.scene_time()
-            }
-            fn set_scene_time(&mut self, time: f64) {
-                self.base.set_scene_time(time);
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn preview_scene_window_metadata_runs() {
-            let config = AnimateConfig::default().with_resolution(64, 64).with_frame_rate(30.0);
-            let scene = DemoScene::new(config.clone());
-            let outcome = preview_scene_headless(scene, &config, Some(2)).await.expect("preview");
-            assert_eq!(outcome, PreviewOutcome::MetadataOnly);
-        }
-    }
+    include!("🧪️tests/🔬️preview-unit/🦀️.rs");
 }
 
 pub mod render {
@@ -587,70 +492,7 @@ pub mod render {
     /// 🧪️ Native/host-only: `render_scene` calls the real `VelloRenderer` transitively, which
     /// always reports "no adapter" on `wasm32-wasip2` by design — see `renderer::VelloRenderer`.
     #[cfg(all(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
-    mod tests {
-        use super::*;
-        use crate::editor::animate::engine::scene::scene::{BasicStage, Scene};
-        use crate::editor::animate::engine::scene::sobject::VSobject;
-        use std::time::{SystemTime, UNIX_EPOCH};
-
-        struct DemoScene {
-            base: BasicStage,
-        }
-
-        impl DemoScene {
-            fn new(config: AnimateConfig) -> Self {
-                Self { base: BasicStage::new(config) }
-            }
-        }
-
-        impl Scene for DemoScene {
-            fn construct(&mut self) {
-                self.add(VSobject::new().into());
-                self.wait(0.1);
-            }
-            fn config(&self) -> &AnimateConfig {
-                self.base.config()
-            }
-            fn config_mut(&mut self) -> &mut AnimateConfig {
-                self.base.config_mut()
-            }
-            fn camera(&self) -> &Camera {
-                self.base.camera()
-            }
-            fn camera_mut(&mut self) -> &mut Camera {
-                self.base.camera_mut()
-            }
-            fn mobjects(&self) -> &HashMap<u64, Sobjects> {
-                self.base.mobjects()
-            }
-            fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
-                self.base.mobjects_mut()
-            }
-            fn sections(&self) -> &SectionList {
-                self.base.sections()
-            }
-            fn sections_mut(&mut self) -> &mut SectionList {
-                self.base.sections_mut()
-            }
-            fn scene_time(&self) -> f64 {
-                self.base.scene_time()
-            }
-            fn set_scene_time(&mut self, time: f64) {
-                self.base.set_scene_time(time);
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn render_scene_writes_last_frame() {
-            let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
-            let dir = std::env::temp_dir().join(format!("animate_render_test_{stamp}"));
-            let config = AnimateConfig::default().with_resolution(64, 64).with_frame_rate(15.0).with_output_dir(&dir).with_media_dir(dir.join("media"));
-            let scene = DemoScene::new(config.clone());
-            let outputs = render_scene(scene, &config, &[OutputFormat::LastFrame]).await.expect("render");
-            let last = outputs.last_frame.expect("last frame path");
-            assert!(last.exists());
-        }
-    }
+    include!("🧪️tests/🔬️render-unit/🦀️.rs");
 }
 
 pub mod renderer {
@@ -820,23 +662,7 @@ pub mod renderer {
     /// 🧪️ Native/host-only: asserts real GPU pixel output, meaningless against the
     /// `wasm32-wasip2` `VelloRenderer` above, which always reports "no adapter" by design.
     #[cfg(all(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
-    mod tests {
-        use super::*;
-        use crate::editor::animate::engine::scene::sobject::VSobject;
-
-        #[semio_framework_async_macros::async_test]
-        async fn vello_renderer_produces_rgba_buffer() {
-            let config = AnimateConfig::default().with_resolution(64, 64);
-            let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
-            let mut capture = CapturedFrame { time: 0.0, mobjects: vec![VSobject::new().into()] };
-            let mut renderer = VelloRenderer::new(config.width, config.height).await.expect("renderer");
-            let pixels = renderer.render_capture(&capture, &camera, &config).expect("frame");
-            assert_eq!(pixels.len(), 64 * 64 * 4);
-            capture.mobjects.clear();
-            let empty = renderer.render_capture(&capture, &camera, &config).expect("empty");
-            assert_eq!(empty.len(), 64 * 64 * 4);
-        }
-    }
+    include!("🧪️tests/🔬️renderer-unit/🦀️.rs");
 }
 
 pub mod scenes {
@@ -907,18 +733,7 @@ pub mod scenes {
     }
 
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn scene_for_hash_constructs() {
-            let config = AnimateConfig::default().with_resolution(32, 32).with_frame_rate(15.0);
-            let mut scene = scene_for_hash(config.clone(), "abc123");
-            scene.setup(&config);
-            scene.construct();
-            assert!(!scene.mobjects().is_empty());
-        }
-    }
+    include!("🧪️tests/🔬️scenes-unit/🦀️.rs");
 }
 
 pub mod writer {
@@ -1200,108 +1015,7 @@ pub mod writer {
     }
 
     #[cfg(test)]
-    mod tests {
-        use super::*;
-        use crate::editor::animate::engine::video::render::OutputFormat;
-        use std::time::{SystemTime, UNIX_EPOCH};
-
-        fn temp_config() -> AnimateConfig {
-            let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
-            let dir = std::env::temp_dir().join(format!("animate_video_test_{stamp}"));
-            AnimateConfig::default().with_resolution(16, 16).with_output_dir(&dir).with_media_dir(dir.join("media"))
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn writer_writes_srt_from_sections() {
-            let config = temp_config();
-            let sections = SectionList::default();
-            let path = config.output_dir.join("scene.srt");
-            write_sections_srt(&sections, &path).expect("srt");
-            assert!(path.exists());
-        }
-
-        /// 🌉️ Scenario (c) — animate's e2e acceptance scenario: animate → semio/video → real mp4,
-        /// "playable" operationalized as "decodes clean via the real codec we wrote" per the master
-        /// plan's own framing. `decode_mp4` succeeding on real written bytes IS the box-walk proof
-        /// (ISO-BMFF is a nested box tree — a truncated/malformed box tree is a hard decode error,
-        /// never a silent partial result, per stdio's own mp4 engine); the assertions below add the
-        /// explicit track/duration invariants (real `ftyp` header, sample-accurate total track
-        /// duration in timescale ticks, byte-exact frame payload) on top of that.
-        #[semio_framework_async_macros::async_test]
-        async fn writer_buffers_frame_and_finalizes_a_real_decodable_mp4() {
-            let config = temp_config();
-            let mut writer = SceneFileWriter::new(&config, &[OutputFormat::Mp4]).expect("writer");
-            let partial = writer.begin_partial("hash", 0).expect("partial");
-            let pixels = vec![255u8; 16 * 16 * 4];
-            writer.push_frame(&pixels, 0).expect("frame");
-            writer.push_frame(&pixels, 1).expect("frame");
-            let encoded = writer.finalize_partial(&partial).expect("finalize");
-            assert!(encoded.exists());
-            let bytes = fs::read(&encoded).expect("read partial mp4");
-            // 🌉️ `decode_mp4` walks the real nested ISO-BMFF box tree (ftyp/moov/trak/mdat/...) to
-            // produce this snapshot -- a bogus or truncated box tree is a hard `Err` here, never a
-            // silently-partial result, so this `expect` succeeding IS the box-walk assertion.
-            let snapshot = decode_mp4(&bytes).expect("decode real mp4 bytes: box-walk must succeed clean");
-            assert!(!snapshot.ftyp.major_brand.is_empty(), "real ftyp box must have survived the box-walk with a non-empty major_brand");
-            assert_eq!(snapshot.tracks.len(), 1, "track-count invariant: exactly one video track");
-            let track = &snapshot.tracks[0];
-            assert!(track.timescale > 0, "timescale invariant: a real track always carries a positive timescale");
-            assert_eq!(track.samples.len(), 2, "sample-count invariant: exactly the 2 pushed frames");
-            let total_duration_ticks: u64 = track.samples.iter().map(|sample| sample.duration as u64).sum();
-            assert_eq!(total_duration_ticks, 2, "duration invariant: 2 frames * 1 tick/frame == 2 total timescale ticks");
-            assert!((total_duration_ticks as f64 / track.timescale as f64) > 0.0, "duration invariant: real-world track duration (ticks / timescale) must be positive");
-            assert_eq!(track.samples[0].data, pixels, "byte-exact frame payload must survive the real mp4 round trip");
-            assert_eq!(track.samples[1].data, pixels);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn writer_writes_png_sequence_frame() {
-            let config = temp_config();
-            let mut writer = SceneFileWriter::new(&config, &[OutputFormat::PngSequence]).expect("writer");
-            let pixels = vec![255u8; 16 * 16 * 4];
-            writer.push_frame(&pixels, 0).expect("frame");
-            let frames_dir = config.output_dir.join("frames");
-            assert!(frames_dir.join("000000.png").exists());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn concat_raw_partials_merges_sample_counts_and_stays_decodable() {
-            let config = temp_config();
-            let mut writer = SceneFileWriter::new(&config, &[OutputFormat::Mp4]).expect("writer");
-            let pixels = vec![128u8; 16 * 16 * 4];
-            let first_partial = writer.begin_partial("a", 0).expect("partial a");
-            writer.push_frame(&pixels, 0).expect("frame");
-            writer.finalize_partial(&first_partial).expect("finalize a");
-            let second_partial = writer.begin_partial("b", 1).expect("partial b");
-            writer.push_frame(&pixels, 1).expect("frame");
-            writer.finalize_partial(&second_partial).expect("finalize b");
-            let output = config.output_dir.join("scene.mp4");
-            let frames = concat_raw_partials(&writer.partial_paths, &output, config.width, config.height, 16).expect("concat");
-            assert_eq!(frames.len(), 2);
-            let bytes = fs::read(&output).expect("read merged mp4");
-            let snapshot = decode_mp4(&bytes).expect("decode merged mp4");
-            assert_eq!(snapshot.tracks[0].samples.len(), 2);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_gif_snapshot_quantizes_and_downscales() {
-            let frames = vec![[255u8, 0, 0, 255].repeat(64 * 64)];
-            let snapshot = build_gif_snapshot(64, 64, 15.0, &frames).expect("gif snapshot");
-            assert_eq!(snapshot.frames.len(), 1);
-            assert_eq!(snapshot.width, 64);
-            assert_eq!(snapshot.frames[0].indices.len(), (snapshot.width * snapshot.height) as usize);
-            assert_eq!(snapshot.gct.as_ref().map(|t| t.colors.len()), Some(256));
-            let bytes = encode_gif(&snapshot).expect("real gif encode");
-            assert!(!bytes.is_empty());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn nearest_neighbor_scale_downsizes_dimensions() {
-            let src = vec![7u8; (8 * 8 * 4) as usize];
-            let scaled = nearest_neighbor_scale(&src, 8, 8, 4, 4);
-            assert_eq!(scaled.len(), 4 * 4 * 4);
-        }
-    }
+    include!("🧪️tests/🔬️writer-unit/🦀️.rs");
 }
 
 pub use cache::PartialMovieLut;

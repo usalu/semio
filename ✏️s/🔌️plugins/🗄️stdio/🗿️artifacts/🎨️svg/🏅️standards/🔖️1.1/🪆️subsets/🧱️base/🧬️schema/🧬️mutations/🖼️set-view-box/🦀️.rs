@@ -44,8 +44,5 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetViewBoxMutat
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn semantic_identity_matches_descriptor() { assert_eq!(<SetViewBoxMutation as protocol::MutationKind<SvgSnapshot, super::super::SvgMutation>>::SEMANTICS.kind, "set-view-box"); }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

@@ -7,9 +7,9 @@
 //! `bytes` argument entirely and return `Ok(Block3dSnapshot::default())` — silent, total data loss on
 //! every import.
 
-use crate::io::export::serializers::artifacts::zip::v2_0::any::{ZIP_DSL_ENTRY, ZIP_JSON_ENTRY};
-use crate::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
-use crate::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::zip::v2_0::any::{ZIP_DSL_ENTRY, ZIP_JSON_ENTRY};
+use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
+use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
 use crate::Block3dSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};

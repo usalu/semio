@@ -9,7 +9,7 @@ pub const BLOCK3D_EXAMPLE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-lef
 /// ✏️ Emits the minimal ordered batch of semantic mutations that carries `current` to `next` — the
 /// whole-document-load replacement for a document-wide replace mutation (banned outright).
 fn replace_document_operations(current: &Block3dSnapshot, next: &Block3dSnapshot) -> Vec<Block3dMutation> {
-    use crate::mutations as m;
+    use crate::standards::v1::subsets::any::schema::mutations as m;
     let mut ops = Vec::new();
 
     if next.object_kind.name != current.object_kind.name {
@@ -195,7 +195,7 @@ fn replace_document_operations(current: &Block3dSnapshot, next: &Block3dSnapshot
 }
 //#endregion 🔖️ReplaceDocument
 
-use crate::op::Block3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Block3dMutation;
 use crate::Block3dSnapshot;
 use crate::editor::block3d::config::{Block3dConfig, Block3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -209,8 +209,8 @@ pub struct SetActiveExample {
 
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     let example = match payload.id.as_str() {
-        BLOCK3D_EXAMPLE_CAPSULE => crate::dsl::parse_dsl(crate::dsl::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).ok(),
-        BLOCK3D_EXAMPLE_FOREST_LEFT => crate::dsl::parse_dsl(crate::dsl::BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
+        BLOCK3D_EXAMPLE_CAPSULE => crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).ok(),
+        BLOCK3D_EXAMPLE_FOREST_LEFT => crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
         _ => None,
     };
     match example {

@@ -16,7 +16,7 @@
           "const": "insert-line"
         },
         "payload": {
-          "$ref": "./📥️insert-line/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/txt/utf-8/any/mutation/insert-line/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "remove-line"
         },
         "payload": {
-          "$ref": "./🗑️remove-line/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/txt/utf-8/any/mutation/remove-line/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "set-line"
         },
         "payload": {
-          "$ref": "./✏️set-line/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/txt/utf-8/any/mutation/set-line/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "set-line-ending"
         },
         "payload": {
-          "$ref": "./🔚️set-line-ending/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/txt/utf-8/any/mutation/set-line-ending/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "set-trailing-newline"
         },
         "payload": {
-          "$ref": "./↩️set-trailing-newline/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/txt/utf-8/any/mutation/set-trailing-newline/schema.json"
         }
       }
     }

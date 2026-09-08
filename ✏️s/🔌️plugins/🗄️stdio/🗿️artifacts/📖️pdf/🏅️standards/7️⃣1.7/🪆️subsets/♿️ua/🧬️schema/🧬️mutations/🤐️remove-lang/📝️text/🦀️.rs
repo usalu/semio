@@ -21,13 +21,6 @@ pub fn parse(text: &str) -> Result<RemoveLang, String> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn owned_payload_round_trips() {
-        let payload = RemoveLang {  };
-        assert_eq!(parse(&print(&payload).unwrap()).unwrap(), payload);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

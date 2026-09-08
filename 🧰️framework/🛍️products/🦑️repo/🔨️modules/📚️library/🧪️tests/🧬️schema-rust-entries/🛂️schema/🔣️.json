@@ -4,56 +4,150 @@
   "title": "SchemaRustEntryCases",
   "type": "object",
   "additionalProperties": false,
-  "required": ["contract", "cases"],
+  "required": [
+    "contract",
+    "cases"
+  ],
   "properties": {
-    "contract": { "const": "schema-rust-entry-cases-v1" },
+    "contract": {
+      "const": "schema-rust-entry-cases-v1"
+    },
     "cases": {
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/$defs/Case" }
+      "items": {
+        "$ref": "#/$defs/Case"
+      }
     }
   },
   "$defs": {
     "Case": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "reason", "scopes", "dump", "complete", "expectedCodes"],
+      "required": [
+        "id",
+        "reason",
+        "scopes",
+        "dump",
+        "complete",
+        "expectedCodes"
+      ],
       "properties": {
-        "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
-        "reason": { "type": "string", "minLength": 16 },
-        "scopes": { "type": "object", "additionalProperties": { "$ref": "#/$defs/Scope" } },
-        "dump": { "$ref": "#/$defs/Dump" },
-        "complete": { "type": "boolean" },
-        "expectedCodes": { "type": "array", "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" } }
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 16
+        },
+        "scopes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Scope"
+          }
+        },
+        "dump": {
+          "$ref": "#/$defs/Dump"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "expectedCodes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+          }
+        }
       }
     },
     "Scope": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "formats", "exports"],
+      "required": [
+        "path",
+        "formats",
+        "exports"
+      ],
       "properties": {
-        "path": { "type": "string", "minLength": 1 },
-        "formats": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } },
-        "exports": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9]*$" } }
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "formats": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "exports": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[A-Z][A-Za-z0-9]*$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "file",
+              "facet"
+            ],
+            "properties": {
+              "file": {
+                "type": "string",
+                "minLength": 1
+              },
+              "facet": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
       }
     },
     "Dump": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["contractId", "generator", "entries"],
+      "required": [
+        "contractId",
+        "generator",
+        "entries"
+      ],
       "properties": {
-        "contractId": { "type": "string", "minLength": 1 },
-        "generator": { "type": "string", "minLength": 1 },
+        "contractId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generator": {
+          "type": "string",
+          "minLength": 1
+        },
         "entries": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["scope", "export", "format"],
+            "required": [
+              "scope",
+              "export",
+              "format"
+            ],
             "properties": {
-              "scope": { "type": "string", "minLength": 1 },
-              "export": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9]*$" },
-              "format": { "type": "string", "minLength": 1 }
+              "scope": {
+                "type": "string",
+                "minLength": 1
+              },
+              "export": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Za-z0-9]*$"
+              },
+              "format": {
+                "type": "string",
+                "minLength": 1
+              }
             }
           }
         }

@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.zip/artifact.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/zip/2.0/base/artifact.json",
   "title": "ZipArtifact",
   "type": "object",
   "properties": {

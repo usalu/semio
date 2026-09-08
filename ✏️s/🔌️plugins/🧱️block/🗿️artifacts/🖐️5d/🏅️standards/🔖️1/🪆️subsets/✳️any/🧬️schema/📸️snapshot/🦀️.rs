@@ -2,7 +2,7 @@
 
 use crate::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, BLOCK_5D_SCHEMA};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted block5d document snapshot (persistent fields of the artifact).

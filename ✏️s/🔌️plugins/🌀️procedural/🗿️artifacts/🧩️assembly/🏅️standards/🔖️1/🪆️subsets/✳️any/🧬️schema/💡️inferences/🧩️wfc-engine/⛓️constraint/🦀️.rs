@@ -14,9 +14,9 @@ use crate::wfc_engine::constraints_card::CardinalityConstraint;
 use crate::wfc_engine::constraints_conn::{ConnectivityConstraint, ReachabilityConstraint};
 use crate::wfc_engine::domain::DomainStore;
 use crate::wfc_engine::error::ConstraintError;
-use crate::wfc_engine::semio_framework_os_flow::FlowConstraint;
 use crate::wfc_engine::ids::{NodeId, PatternId, RegionId};
 use crate::wfc_engine::model::CompiledModel;
+use crate::wfc_engine::flow::FlowConstraint;
 use crate::wfc_engine::weights::WeightTable;
 // 🚦️ De-dyn (O1/R11 closed-set case): every `impl Constraint` lives in this same crate (4 total,
 // imported above), so the closed-set mechanism applies — `dyn_enum_close!` below generates
@@ -177,15 +177,6 @@ pub(crate) struct ConstraintSet<'a> {
 
 // #region 🔖️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn adjacency_view_exposes_neighbors_and_regions() {
-        let view = AdjacencyView::new(vec![vec![NodeId(1)], vec![NodeId(0), NodeId(2)], vec![NodeId(1)]], vec![RegionId(0), RegionId(1), RegionId(0)]);
-        assert_eq!(view.node_count(), 3);
-        assert_eq!(view.neighbors(NodeId(1)), &[NodeId(0), NodeId(2)]);
-        assert_eq!(view.region_of(NodeId(1)), RegionId(1));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 // #endregion 🔖️Tests

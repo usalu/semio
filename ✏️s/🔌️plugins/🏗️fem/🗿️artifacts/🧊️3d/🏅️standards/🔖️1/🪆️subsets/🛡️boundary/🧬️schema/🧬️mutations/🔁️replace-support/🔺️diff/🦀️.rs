@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceSupport`.
 use super::ReplaceSupport;
-use crate::diff::{Fem3dDiff, Fem3dSupportsDelta, Fem3dSupportsPatchEntry};
-use crate::mutations::id_mismatch;
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSupportsDelta, Fem3dSupportsPatchEntry};
+use crate::standards::v1::subsets::any::schema::mutations::id_mismatch;
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff

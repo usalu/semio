@@ -1,6 +1,6 @@
 //! 🗑️ Block 2D play app command — `remove-handle-kind`.
 
-use crate::op::Block2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Block2dMutation;
 use crate::Block2dSnapshot;
 use crate::editor::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -13,5 +13,5 @@ pub struct RemoveHandleKind {
 }
 
 pub fn handle(payload: &RemoveHandleKind, _doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
-    Ok(Emit::mutations(vec![crate::mutations::delete_handle_kind(payload.id.clone())]))
+    Ok(Emit::mutations(vec![crate::standards::v1::subsets::any::schema::mutations::delete_handle_kind(payload.id.clone())]))
 }

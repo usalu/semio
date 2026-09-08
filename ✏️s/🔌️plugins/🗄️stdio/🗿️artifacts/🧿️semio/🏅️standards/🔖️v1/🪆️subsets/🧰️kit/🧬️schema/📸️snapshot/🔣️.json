@@ -1,16 +1,70 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.kit/snapshot.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/snapshot.json",
   "title": "SemioKitSnapshot",
   "description": "Semio's type/design domain: types with representation links, designs of pieces and connections. Second COMPOSITE subset.",
   "type": "object",
-  "required": ["schema"],
+  "required": [
+    "schema"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "types": { "type": "array", "x-semio-state": "artifact", "items": { "type": "object", "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "category": { "type": "string" } } } },
-    "designs": { "type": "array", "x-semio-state": "artifact", "items": { "type": "object" } },
-    "objects": { "type": "array", "x-semio-state": "artifact", "x-semio-child": "s.stdio.semio.object", "items": { "type": "object" } },
-    "models": { "type": "array", "x-semio-state": "artifact", "x-semio-child": "s.stdio.semio.model", "items": { "type": "object" } },
-    "properties": { "type": "object", "x-semio-state": "artifact", "x-semio-child": "s.stdio.semio.value" },
-    "representations": { "type": "array", "x-semio-state": "artifact", "x-semio-link": "representation", "items": { "type": "object" } }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "types": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "designs": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object"
+      }
+    },
+    "objects": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "x-semio-child": "s.stdio.semio.object",
+      "items": {
+        "type": "object"
+      }
+    },
+    "models": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "x-semio-child": "s.stdio.semio.model",
+      "items": {
+        "type": "object"
+      }
+    },
+    "properties": {
+      "type": "object",
+      "x-semio-state": "artifact",
+      "x-semio-child": "s.stdio.semio.value"
+    },
+    "representations": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "x-semio-link": "representation",
+      "items": {
+        "type": "object"
+      }
+    }
   }
 }

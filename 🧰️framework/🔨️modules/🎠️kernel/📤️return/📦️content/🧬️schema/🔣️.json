@@ -4,7 +4,7 @@
   "title": "Kernel Return Content Schema Module",
   "definitions": {
     "u64": {
-      "$ref": "https://semio.tech/schema/framework/actor/page/schema.json#/definitions/word"
+      "$ref": "https://semio.tech/schema/framework/actor/page/schema.json#/$defs/Word"
     },
     "hex": {
       "type": "string",

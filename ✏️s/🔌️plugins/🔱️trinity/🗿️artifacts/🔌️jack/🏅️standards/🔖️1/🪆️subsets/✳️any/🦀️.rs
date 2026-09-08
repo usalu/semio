@@ -22,7 +22,7 @@
 //! (verbatim rename), add the typed leaves, and swap this file's `io: io_declaration()` back to
 //! `io: io::io()` to match the template exactly.
 
-use crate::op::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
 use crate::standards::v1::subsets::any::schema;
 use crate::{JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use crate::editor::jack as editor;
@@ -59,13 +59,13 @@ fn io_declaration() -> IoDeclaration {
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset() -> SubsetDeclaration<crate::TrinityApps> {
+pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
     SubsetDeclaration {
         dialect: TRINITY_JACK_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::jack_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io_declaration(),
-        viewer: viewer_surface::<viewer::TrinityJackViewer, crate::TrinityApps>(viewer::create_trinity_jack_viewer()),
-        editor: editor_surface::<editor::TrinityJackPlayApp, crate::TrinityApps>(editor::create_trinity_jack_app()),
+        viewer: viewer_surface::<viewer::TrinityJackViewer, PA>(viewer::create_trinity_jack_viewer()),
+        editor: editor_surface::<editor::TrinityJackPlayApp, PA>(editor::create_trinity_jack_app()),
         examples: examples(),
     }
 }

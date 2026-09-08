@@ -5,7 +5,7 @@
 // #region 🔌️Adapters
 import { Mode, createEvenWindowLayout, reactHostPort, uiDataLabel } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { contentThroughGlassPlay, maximizeStackPlay, quadLayoutPlay } from "../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧪️tests/🎭️storybook-interaction/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // `Mode` mounts each `windows[].children` inside a `mode-dock-stack-body` (level="base") wrapping
@@ -89,15 +89,7 @@ export const QuadLayout: Story = {
       </div>
     );
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText("Overview")).toBeTruthy();
-    expect(canvas.getByText("Context")).toBeTruthy();
-    await userEvent.click(canvas.getByText("Context"));
-    expect(canvasElement.querySelector('[data-slot="window"][data-active="true"]')).toBeTruthy();
-    expect(canvasElement.querySelector('[data-slot="mode-dock-tab"][data-window-id="context"][data-active="true"]')).toBeTruthy();
-    expect(canvasElement.querySelector('[data-slot="mode-dock-tab"][data-window-id="overview"][data-active="true"]')).toBeNull();
-  },
+  play: quadLayoutPlay,
 };
 
 export const TabStack: Story = {
@@ -147,13 +139,7 @@ export const MaximizeStack: Story = {
       />
     </div>
   ),
-  play: async ({ canvasElement }) => {
-    const maximize = canvasElement.querySelector('[data-slot="mode-dock-tab-focus"]');
-    expect(maximize).toBeTruthy();
-    await userEvent.click(maximize!);
-    expect(within(canvasElement).getByText("Alpha")).toBeTruthy();
-    expect(within(canvasElement).queryByText("Beta")).toBeNull();
-  },
+  play: maximizeStackPlay,
 };
 
 export const EvenSplit: Story = {
@@ -204,9 +190,5 @@ export const ContentThroughGlass: Story = {
       </div>
     );
   },
-  play: async ({ canvasElement }) => {
-    expect(canvasElement.querySelector('[data-testid="silhouette-visual-content"]')).toBeTruthy();
-    expect(canvasElement.querySelectorAll("[data-window-silhouette-chip]").length).toBeGreaterThan(1);
-    expect(canvasElement.querySelector("[data-window-silhouette-gap]")).toBeTruthy();
-  },
+  play: contentThroughGlassPlay,
 };

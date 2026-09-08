@@ -1,7 +1,7 @@
 //! 🏋️ 🏋️ FEM 3D app commands command — `add-area-load`.
 
-use crate::mutations::{add_load, create_load_case};
-use crate::op::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{add_load, create_load_case};
+use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
 use crate::{Fem3dSnapshot, FemLoad, FemLoadCase};
 use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

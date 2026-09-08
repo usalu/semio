@@ -211,10 +211,10 @@
       "kind": "inputSlider",
       "id": "slider",
       "label": "N",
-      "value": 3,
-      "min": 0,
-      "max": 10,
-      "step": 1
+      "value": 3.0,
+      "min": 0.0,
+      "max": 10.0,
+      "step": 1.0
     },
     {
       "kind": "inputNote",
@@ -275,15 +275,15 @@
       },
       "flow": {
         "camera": {
-          "x": 1,
-          "y": 2,
-          "zoom": 1
+          "x": 1.0,
+          "y": 2.0,
+          "zoom": 1.0
         },
         "nodes": {
           "inner": {
             "layout": {
-              "x": 0,
-              "y": 0
+              "x": 0.0,
+              "y": 0.0
             },
             "chrome": {
               "kind": "plain",
@@ -623,4 +623,3 @@
     }
   ]
 }
-

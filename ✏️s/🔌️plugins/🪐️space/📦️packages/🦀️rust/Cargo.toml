@@ -23,9 +23,15 @@ user_ports = { react = [6072, 6073], wgpu = [6067, 6068] }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
+
+[features]
+default = ["plugin-entry"]
+plugin-entry = []
 
 [dependencies]
+semio-s-artifact-space-home = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-space-space = { workspace = true, features = ["component-app-assembly"] }
 semio-framework-artifact-infinite-dag = { workspace = true }
 semio-framework-artifact-space-space = { workspace = true }
 semio-framework-artifact-space-collection = { workspace = true }

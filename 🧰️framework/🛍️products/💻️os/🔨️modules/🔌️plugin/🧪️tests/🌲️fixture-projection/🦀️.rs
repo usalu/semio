@@ -1,6 +1,6 @@
 //! 🧪️ Exact fixture ownership remains retained across observation success, rejection and panic.
 
-use semio_framework_ui_contract::{BuiltNode, BuiltTreeRetirement, Component, TextProps, UI_BUILT_CHILD_RETIRE_SLOTS, UiValue, UiValueRetirement};
+use semio_framework_ui_contract::{BuiltNode, BuiltTreeRetirement, Component, TextProps, UiValue, UiValueRetirement, UI_BUILT_CHILD_RETIRE_SLOTS};
 
 fn node() -> BuiltNode {
     BuiltNode::try_new("K", Component::Text(TextProps { value: "V".try_into().unwrap(), emphasize: None, data_attributes: None })).unwrap()

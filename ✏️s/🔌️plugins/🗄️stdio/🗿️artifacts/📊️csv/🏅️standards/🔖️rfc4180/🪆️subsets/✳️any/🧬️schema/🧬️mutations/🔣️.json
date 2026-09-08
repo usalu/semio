@@ -12,7 +12,7 @@
       ],
       "properties": {
         "InsertRecord": {
-          "$ref": "./📥insert-record/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/csv/rfc4180/any/mutation/insert-record/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "RemoveRecord": {
-          "$ref": "./📤remove-record/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/csv/rfc4180/any/mutation/remove-record/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "SetField": {
-          "$ref": "./✏️set-field/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/csv/rfc4180/any/mutation/set-field/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "SetHasHeader": {
-          "$ref": "./🧾set-has-header/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/csv/rfc4180/any/mutation/set-has-header/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "SetSnapshot": {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/csv/rfc4180/any/mutation/set-snapshot/schema.json"
         }
       }
     }

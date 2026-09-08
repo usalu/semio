@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/document-backbone-binding.json",
+  "title": "Semio Plugin Document Backbone Binding",
+  "$defs": {
+    "U64": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-4]|18446744073709551615)$"
+    },
+    "InstanceId": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "Uri": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1280
+    },
+    "DocumentBackboneBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "operation", "instanceId", "bindingGeneration", "uri"],
+      "properties": {
+        "schema": { "const": "semio.plugin.document-backbone-binding.v1" },
+        "operation": { "enum": ["bind", "retire"] },
+        "instanceId": { "$ref": "#/$defs/InstanceId" },
+        "bindingGeneration": { "$ref": "#/$defs/U64" },
+        "uri": { "$ref": "#/$defs/Uri" }
+      }
+    },
+    "DocumentBackboneBindingReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "operation", "instanceId", "bindingGeneration", "uri"],
+      "properties": {
+        "schema": { "const": "semio.plugin.document-backbone-binding-receipt.v1" },
+        "operation": { "enum": ["bound", "retired", "refused"] },
+        "instanceId": { "$ref": "#/$defs/InstanceId" },
+        "bindingGeneration": { "$ref": "#/$defs/U64" },
+        "uri": { "$ref": "#/$defs/Uri" },
+        "code": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[a-z][a-z0-9.-]*$" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "operation": { "const": "refused" } }, "required": ["operation"] },
+          "then": { "properties": { "code": { "type": "string" } }, "required": ["code"] },
+          "else": { "not": { "required": ["code"] } }
+        }
+      ]
+    },
+    "DocumentBackboneBindingCaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "initial", "command", "receipt", "final"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "initial": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["generation", "uri"],
+          "properties": {
+            "generation": { "$ref": "#/$defs/U64" },
+            "uri": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Uri" }] }
+          }
+        },
+        "command": { "$ref": "#/$defs/DocumentBackboneBindingV1" },
+        "receipt": { "$ref": "#/$defs/DocumentBackboneBindingReceiptV1" },
+        "final": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["generation", "uri"],
+          "properties": {
+            "generation": { "$ref": "#/$defs/U64" },
+            "uri": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Uri" }] }
+          }
+        }
+      }
+    },
+    "DocumentBackboneBindingFixtureV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["limits", "dataLimits", "cases", "codec", "hostile"],
+      "properties": {
+        "limits": {
+          "const": { "controlBytes": 4096, "uriBytes": 1280, "codeBytes": 256 }
+        },
+        "dataLimits": {
+          "const": { "hotMessageBytes": 262144, "snapshotMessageBytes": 4194304, "pendingBytes": 4194304, "pendingMessages": 64, "snapshotTransport": "cold-pair" }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": { "$ref": "#/$defs/DocumentBackboneBindingCaseV1" }
+        },
+        "codec": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["golden", "hostile"],
+          "properties": {
+            "golden": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "value", "hex", "hotPort"],
+                "properties": {
+                  "id": { "enum": ["snapshot", "mutations", "ack-empty", "ack-one"] },
+                  "value": { "type": "object" },
+                  "hex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
+                  "hotPort": { "type": "boolean" }
+                }
+              }
+            },
+            "hostile": {
+              "type": "array",
+              "minItems": 9,
+              "maxItems": 9,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "hex"],
+                "properties": {
+                  "id": { "type": "string", "minLength": 1 },
+                  "hex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})*$" }
+                }
+              }
+            }
+          }
+        },
+        "hostile": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "value"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "value": {}
+            }
+          }
+        }
+      }
+    }
+  },
+  "$ref": "#/$defs/DocumentBackboneBindingFixtureV1"
+}

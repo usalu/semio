@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `AddPartGrip` — patches the owner part's `grips` list. No-op when the
 //! grip id already exists on that part.
-use crate::diff::{Puzzle5dDiff, Puzzle5dPartPatch, Puzzle5dPartPatchEntry, Puzzle5dPartsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dPartPatch, Puzzle5dPartPatchEntry, Puzzle5dPartsDelta};
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/layout/layout/1/any/editor/config/mutation/set-active-page/schema.json",
+  "$id": "https://semio.tech/schema/app/layout/layout/config/mutation/set-active-page/schema.json",
   "title": "SetActivePage",
   "type": "object",
   "properties": {

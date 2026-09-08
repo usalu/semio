@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/fem/fem2d/snapshot.json",
   "title": "Fem2dSnapshot",
   "description": "A fem2d structural document: eight id-keyed collections and one inseparable analysis-settings facet. Every record `$def` below carries the fields the Rust struct declares AND, where the vocabulary enforces one, the bound that makes the value admissible — annotated with the `mutations::guards` function that raises it, so a reader can get from the document invariant to the code that keeps it.",

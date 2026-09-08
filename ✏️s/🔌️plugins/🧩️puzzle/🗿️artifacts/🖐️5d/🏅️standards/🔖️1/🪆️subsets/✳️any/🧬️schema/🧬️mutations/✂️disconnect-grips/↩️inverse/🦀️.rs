@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DisconnectGrips` — reconstructs a `connect-grips` of the captured BASE fastener.
 //! Missing target ⇒ `Vec::new()`.
-use crate::mutations::Puzzle5dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
@@ -8,7 +8,7 @@ pub fn inverse(payload: &super::DisconnectGrips, base: &Puzzle5dSnapshot) -> Vec
     let Some(fastener) = base.fasteners.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
-    vec![crate::mutations::connect_grips::connect_grips(
+    vec![crate::standards::v1::subsets::any::schema::mutations::connect_grips::connect_grips(
         fastener.id.clone(),
         fastener.source.clone(),
         fastener.target.clone(),

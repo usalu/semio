@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 class TestScript extends BundleScript {
   run(): void {
-    runCmd(process.execPath, ["test", resolve(this.repoRoot, "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🟦️.ts")]);
+    runCmd(process.execPath, ["test", resolve(this.repoRoot, "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts")]);
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);

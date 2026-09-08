@@ -4,7 +4,7 @@
 //! `kind_catalogs` handle + `kind_catalogs_extra` overflow the snapshot actually carries, minting a
 //! fresh content-addressed handle and seeding the working-scene cache so the diff is resolvable
 //! immediately (see `🗿️artifacts/🖐️5d/🦀️.rs`'s `🔖️KindCatalogComposition` region).
-use crate::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::split_and_seed_kind_catalogs;
 use crate::Puzzle5dSnapshot;
 

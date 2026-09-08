@@ -1,6 +1,6 @@
 //! 🗣️ 🗣️ Generation2d play app commands command — `set-locale`.
 
-use crate::op::Generation2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
 use crate::Generation2dSnapshot;
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use semio_framework_os_flow::FlowEvalSession;
@@ -19,15 +19,6 @@ pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, Generation2dSnapshot>
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::generation2d::testkit::{app, dispatch};
-    use crate::editor::generation2d::Generation2dCommand;
-
-    #[semio_framework_async_macros::async_test]
-    async fn set_locale_updates_config_locale() {
-        let mut app = app().await;
-        dispatch(&mut app, Generation2dCommand::SetLocale(SetLocale { value: "de-DE".into() })).await;
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

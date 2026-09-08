@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ChangeEdgeLocked` — restores the BASE field value on the addressed edge. Missing
 //! target ⇒ `Vec::new()`.
-use crate::mutations::Puzzle2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Inverse
@@ -8,6 +8,6 @@ pub fn inverse(payload: &super::ChangeEdgeLocked, base: &Puzzle2dSnapshot) -> Ve
     let Some(edge) = base.edges.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
-    vec![crate::mutations::change_edge_locked::change_edge_locked(edge.id.clone(), edge.locked)]
+    vec![crate::standards::v1::subsets::any::schema::mutations::change_edge_locked::change_edge_locked(edge.id.clone(), edge.locked)]
 }
 //#endregion 🔖️Inverse

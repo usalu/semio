@@ -347,7 +347,7 @@
           "const": 1
         },
         "charge": {
-          "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+          "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
         },
         "bootstrap": {
           "const": "exact-consumer-prepare-read-claim"

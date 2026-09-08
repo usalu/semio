@@ -776,56 +776,8 @@ fn allocate_readback_texture(device: &Device, width: u32, height: u32, format: M
 //#region Tests
 
 #[cfg(test)]
-mod drawable_size_tests {
-    use super::*;
-    use std::mem::{align_of, offset_of, size_of};
-
-    #[test]
-    fn inferred_drawable_size_matches_recorded_typed_oracle() {
-        let layer = MetalLayer::new();
-        set_drawable_size(&layer, 4096, 2160);
-        let actual = layer.drawable_size();
-        assert_eq!((actual.width, actual.height), (4096.0, 2160.0));
-    }
-
-    #[test]
-    fn owned_size_abi_and_boundary_cases_match_the_language_neutral_fixture() {
-        assert_eq!(size_of::<CoreGraphicsSize>(), 16);
-        assert_eq!(align_of::<CoreGraphicsSize>(), 8);
-        assert_eq!(offset_of!(CoreGraphicsSize, width), 0);
-        assert_eq!(offset_of!(CoreGraphicsSize, height), 8);
-        assert_eq!(CoreGraphicsSize::OBJECTIVE_C_ENCODING, "{CGSize=dd}");
-
-        let layer = MetalLayer::new();
-        for (width, height) in [(0, 0), (1, 1), (4096, 2160), (16384, 16384)] {
-            set_drawable_size(&layer, width, height);
-            let actual = layer.drawable_size();
-            assert_eq!((actual.width, actual.height), (width as f64, height as f64));
-        }
-        for hostile in [16385, u32::MAX] {
-            set_drawable_size(&layer, hostile, hostile);
-            let actual = layer.drawable_size();
-            assert_eq!((actual.width, actual.height), (16384.0, 16384.0));
-        }
-    }
-
-    #[test]
-    fn owned_layer_retains_exactly_one_owner_and_accepts_nullable_device() {
-        let layer = MetalLayer::new();
-        layer.set_pixel_format(SURFACE_FORMAT);
-        layer.set_framebuffer_only(true);
-        let before = retain_count(&*layer);
-        let retained = layer.clone();
-        let during = retain_count(&*layer);
-        drop(retained);
-        let after = retain_count(&*layer);
-        assert_eq!(during, before + 1);
-        assert_eq!(after, before);
-        layer.set_device(None);
-        assert!(layer.next_drawable().is_none());
-        println!("abi=16/8/{{CGSize=dd}} dimensions=6 maxPlusOne=clamped retainDelta=1 restored=true nullDevice=true nextDrawable=nil");
-    }
-}
+#[path = "../../../../🧪️tests/🔬️metal-packages-rust-backend-drawable-size/🦀️.rs"]
+mod drawable_size_tests;
 
 /// 🧪️ Every test here needs a live Metal device — `MetalBackend::new_headless` itself reports
 /// `BackendError::DeviceLost` when `MTLCreateSystemDefaultDevice` finds none (a genuinely possible
@@ -833,112 +785,8 @@ mod drawable_size_tests {
 /// no separate availability probe is needed. `backend-testing` gates the whole module (`new_headless`/
 /// `debug_force_device_loss`/`recover`/`read_back` are all feature-gated on the trait itself).
 #[cfg(all(test, feature = "backend-testing"))]
-mod tests {
-    use super::*;
-    use ui_render::{FinishParams, ResourceRegistry, Scene, SceneBuilder};
-
-    /// 🧵️ Drives an `async fn` that structurally never suspends (Metal's device/queue/layer creation
-    /// is synchronous — see `MetalBackend::new`'s docstring) to completion without pulling in an
-    /// executor crate. Panics if the future ever actually returns `Pending`, which would mean this
-    /// backend grew a real suspension point somewhere and this helper is no longer valid.
-    fn block_on<F: std::future::Future>(future: F) -> F::Output {
-        use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
-        const VTABLE: RawWakerVTable = RawWakerVTable::new(|_| RAW_WAKER, |_| {}, |_| {}, |_| {});
-        const RAW_WAKER: RawWaker = RawWaker::new(std::ptr::null(), &VTABLE);
-        let waker = unsafe { Waker::from_raw(RAW_WAKER) };
-        let mut context = Context::from_waker(&waker);
-        let mut future = Box::pin(future);
-        match future.as_mut().poll(&mut context) {
-            Poll::Ready(value) => value,
-            Poll::Pending => panic!("metal backend: a construction future that should never suspend returned Pending"),
-        }
-    }
-
-    fn finish_params(viewport: [f32; 2]) -> FinishParams {
-        FinishParams { viewport, dpr: 1.0, time_seconds_origin: 0.0, resource_ops: Vec::new() }
-    }
-
-    #[test]
-    fn constructing_a_headless_backend_succeeds_or_skips_cleanly() {
-        let Ok(mut backend) = block_on(MetalBackend::new_headless(PhysicalSize::new(64, 64), 1.0)) else {
-            eprintln!("skipping: no Metal device available on this machine");
-            return;
-        };
-        assert_eq!(GraphicsBackend::name(&backend), "metal");
-        assert!(GraphicsBackend::capabilities(&backend).max_texture_dimension > 0);
-        assert_eq!(GraphicsBackend::device_status(&backend), DeviceStatus::Healthy);
-        let _ = GraphicsBackend::resize(&mut backend, PhysicalSize::new(64, 64), 1.0);
-    }
-
-    #[test]
-    fn zero_size_resize_parks_and_restores() {
-        let Ok(mut backend) = block_on(MetalBackend::new_headless(PhysicalSize::new(64, 64), 1.0)) else {
-            eprintln!("skipping: no Metal device available on this machine");
-            return;
-        };
-        GraphicsBackend::resize(&mut backend, PhysicalSize::ZERO, 1.0).expect("resize to zero");
-        let packet = Scene::finish(SceneBuilder::default(), finish_params([0.0, 0.0])).expect("finish");
-        assert!(matches!(GraphicsBackend::render(&mut backend, &packet, 0.0), Ok(RenderReport::SkippedZeroSize)));
-
-        GraphicsBackend::resize(&mut backend, PhysicalSize::new(64, 64), 1.0).expect("resize back");
-        let mut builder = SceneBuilder::default();
-        builder.push_solid([0.0, 0.0, 10.0, 10.0], [1.0, 0.0, 0.0, 1.0]);
-        let packet = Scene::finish(builder, finish_params([64.0, 64.0])).expect("finish");
-        let report = GraphicsBackend::render(&mut backend, &packet, 0.0).expect("render after restoring a nonzero size");
-        assert!(matches!(report, RenderReport::Presented { .. } | RenderReport::SkippedOutOfDate));
-    }
-
-    #[test]
-    fn apply_resources_before_render_succeeds_and_an_unapplied_id_errors_cleanly() {
-        let Ok(mut backend) = block_on(MetalBackend::new_headless(PhysicalSize::new(64, 64), 1.0)) else {
-            eprintln!("skipping: no Metal device available on this machine");
-            return;
-        };
-        let mut registry = ResourceRegistry::default();
-        registry.request_texture_upload("known", 4, 4, vec![0; 64]);
-        let mut applied_builder = SceneBuilder::default();
-        applied_builder.push_raster_quad(&mut registry, "known", [0.0, 0.0, 10.0, 10.0], [0.0, 0.0, 1.0, 1.0], 1.0);
-        GraphicsBackend::apply_resources(&mut backend, &registry.drain_ops()).expect("apply_resources");
-        let applied_packet = Scene::finish(applied_builder, finish_params([64.0, 64.0])).expect("finish");
-        let report = GraphicsBackend::render(&mut backend, &applied_packet, 0.0).expect("render with an applied texture");
-        assert!(matches!(report, RenderReport::Presented { .. } | RenderReport::SkippedOutOfDate));
-
-        let mut unapplied_builder = SceneBuilder::default();
-        unapplied_builder.push_raster_quad(&mut registry, "unknown", [0.0, 0.0, 10.0, 10.0], [0.0, 0.0, 1.0, 1.0], 1.0);
-        let unapplied_packet = Scene::finish(unapplied_builder, finish_params([64.0, 64.0])).expect("finish");
-        let result = GraphicsBackend::render(&mut backend, &unapplied_packet, 0.0);
-        assert!(matches!(result, Err(BackendError::UnknownResource(ResourceKind::Texture))));
-    }
-
-    #[test]
-    fn forced_device_loss_reports_lost_and_recover_names_the_dead_generation() {
-        let Ok(mut backend) = block_on(MetalBackend::new_headless(PhysicalSize::new(64, 64), 1.0)) else {
-            eprintln!("skipping: no Metal device available on this machine");
-            return;
-        };
-        let mut registry = ResourceRegistry::default();
-        let texture = registry.request_texture_upload("icon", 4, 4, vec![0; 64]);
-        GraphicsBackend::apply_resources(&mut backend, &registry.drain_ops()).expect("apply_resources");
-
-        GraphicsBackend::debug_force_device_loss(&mut backend);
-        assert!(matches!(GraphicsBackend::device_status(&backend), DeviceStatus::Lost(_)));
-        let packet = Scene::finish(SceneBuilder::default(), finish_params([64.0, 64.0])).expect("finish");
-        assert!(matches!(GraphicsBackend::render(&mut backend, &packet, 0.0), Err(BackendError::DeviceLost(_))));
-
-        let recovered = GraphicsBackend::recover(&mut backend).expect("recover");
-        assert_eq!(recovered.lost_textures, vec![texture]);
-        assert_eq!(GraphicsBackend::device_status(&backend), DeviceStatus::Healthy);
-    }
-
-    #[test]
-    fn read_back_reports_zero_size_cleanly_before_any_frame_is_presented() {
-        let Ok(mut backend) = block_on(MetalBackend::new_headless(PhysicalSize::ZERO, 1.0)) else {
-            eprintln!("skipping: no Metal device available on this machine");
-            return;
-        };
-        assert!(matches!(GraphicsBackend::read_back(&mut backend), Err(BackendError::ZeroSizeSurface)));
-    }
-}
+#[path = "../../../../🧪️tests/🔬️metal-packages-rust-backend-unit/🦀️.rs"]
+mod tests;
 
 //#endregion Tests
 

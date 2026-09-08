@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ChangeDescription` — patches the document `meta.description`.
-use crate::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::{Puzzle5dMeta, Puzzle5dSnapshot};
 
 //#region 🔖️Diff

@@ -230,28 +230,8 @@ fn separation_incompatible(left: &[SeparationKind], right: &[SeparationKind]) ->
 
 #[cfg(test)]
 //#region 🧪️AdjacencyTests
-mod tests_adjacency {
-    use super::*;
-    use crate::sample_plugin;
-
-    #[semio_framework_async_macros::async_test]
-    async fn sample_plugin_matrix_has_one_cell() {
-        let program = sample_plugin();
-        let matrix = adjacency_matrix(&program);
-        assert_eq!(matrix.element_ids.len(), 2);
-        let populated: usize = matrix.cells.iter().flat_map(|row| row.iter()).filter(|cell| cell.is_some()).count();
-        assert_eq!(populated, 1);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn detects_distance_min_max_violation() {
-        let mut program = sample_plugin();
-        program.adjacencies[0].distance_min_m = Some(10.0);
-        program.adjacencies[0].distance_max_m = Some(5.0);
-        let conflicts = detect_adjacency_conflicts(&program);
-        assert!(conflicts.iter().any(|c| c.message.contains("distance_min")));
-    }
-}
+#[path = "🧪️tests/🔬️tests-adjacency/🦀️.rs"]
+mod tests_adjacency;
 //#endregion 🧪️AdjacencyTests
 
 //#region ✅️Validate
@@ -674,88 +654,8 @@ pub fn validate_plugin(program: &ProgramSnapshot) -> Vec<ProgramDiagnostic> {
 
 #[cfg(test)]
 //#region 🧪️ValidateTests
-mod tests_validate {
-    use super::*;
-    use crate::kernel::EntityHeader;
-    use crate::registers::Requirement;
-    use crate::{empty_plugin, sample_plugin};
-
-    #[semio_framework_async_macros::async_test]
-    async fn sample_plugin_passes_validation() {
-        let diagnostics = validate_plugin(&sample_plugin());
-        assert!(diagnostics.iter().all(|d| d.severity != DiagnosticSeverity::Error));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn empty_plugin_warns_on_title() {
-        let diagnostics = validate_plugin(&empty_plugin());
-        assert!(diagnostics.iter().any(|d| d.code == "meta.empty_title"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn detects_orphan_requirement() {
-        let mut program = sample_plugin();
-        program.requirements.push(Requirement {
-            header: EntityHeader::new(EntityId::new_serial("requirement", "Orphan"), "Orphan"),
-            code: "OR-1".into(),
-            kind: crate::registers::RequirementKind::Functional,
-            statement: crate::kernel::TextField::plain("orphan req"),
-            rationale: None,
-            source: None,
-            stakeholder_ids: Vec::new(),
-            element_ids: Vec::new(),
-            function_ids: Vec::new(),
-            parent_requirement_id: None,
-            child_requirement_ids: Vec::new(),
-            acceptance_criteria: Vec::new(),
-            verification_method: None,
-            validation_status: ValidationStatus::Pending,
-            conflict_ids: Vec::new(),
-            risk_ids: Vec::new(),
-            cost_estimate: None,
-            schedule_constraint: None,
-            regulatory_refs: Vec::new(),
-            trace_links: Vec::new(),
-            superseded_by: None,
-        });
-        let diagnostics = validate_plugin(&program);
-        assert!(diagnostics.iter().any(|d| d.code == "requirement.orphan"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn detects_broken_relationship_target() {
-        let mut program = sample_plugin();
-        program.relationships.push(crate::registers::Relationship {
-            header: EntityHeader::new(EntityId::new_serial("relationship", "broken"), "broken"),
-            source_id: program.elements[0].header.id.clone(),
-            target_id: EntityId("missing-target".into()),
-            kind: RelationshipKind::DependsOn,
-            strength: Some(1.0),
-            directional: true,
-            rationale: None,
-            constraints: Vec::new(),
-            conditions: Vec::new(),
-            relationship_priority: Priority::Preferred,
-            valid_from: None,
-            valid_until: None,
-            evidence: Vec::new(),
-            conflict_ids: Vec::new(),
-            trace_links: Vec::new(),
-            bidirectional: false,
-            distance_constraint_m: None,
-            capacity_constraint: None,
-            regulatory_basis: Vec::new(),
-            review_cycle: None,
-            owner_id: None,
-            proximity_requirement: None,
-            compatibility_requirement: None,
-            incompatibility_requirement: None,
-            separation_requirements: Vec::new(),
-        });
-        let diagnostics = validate_plugin(&program);
-        assert!(diagnostics.iter().any(|d| d.code == "relationship.missing_target"));
-    }
-}
+#[path = "🧪️tests/🔬️tests-validate/🦀️.rs"]
+mod tests_validate;
 //#endregion 🧪️ValidateTests
 
 //#region 🎁️Outputs
@@ -947,22 +847,8 @@ fn program_reports(program: &ProgramSnapshot) -> ProgramOutput {
 
 #[cfg(test)]
 //#region 🧪️OutputsTests
-mod tests_outputs {
-    use super::*;
-    use crate::sample_plugin;
-
-    #[semio_framework_async_macros::async_test]
-    async fn requirement_lists_output_nonempty_for_sample() {
-        let output = build_output(&sample_plugin(), OutputKind::RequirementLists);
-        assert_eq!(output.kind, OutputKind::RequirementLists);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn adjacency_matrices_output_uses_matrix_cells() {
-        let output = build_output(&sample_plugin(), OutputKind::AdjacencyMatrices);
-        assert!(!output.lines.is_empty());
-    }
-}
+#[path = "🧪️tests/🔬️tests-outputs/🦀️.rs"]
+mod tests_outputs;
 //#endregion 🧪️OutputsTests
 
 //#region 📄️Report
@@ -1298,24 +1184,8 @@ fn scenario_summary(program: &ProgramSnapshot) -> ProgramReport {
 
 #[cfg(test)]
 //#region 🧪️ReportTests
-mod tests_report {
-    use super::*;
-    use crate::sample_plugin;
-
-    #[semio_framework_async_macros::async_test]
-    async fn executive_summary_includes_counts() {
-        let report = build_report(&sample_plugin(), ReportKind::ExecutiveSummary);
-        assert_eq!(report.kind, ReportKind::ExecutiveSummary);
-        assert!(!report.sections.is_empty());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn requirements_matrix_has_grid_rows() {
-        let report = build_report(&sample_plugin(), ReportKind::RequirementsMatrix);
-        assert!(!report.sections[0].bullets.is_empty());
-        assert!(report.sections[0].bullets[0].contains('\t'));
-    }
-}
+#[path = "🧪️tests/🔬️tests-report/🦀️.rs"]
+mod tests_report;
 //#endregion 🧪️ReportTests
 
 //#region 📊️StatusSummary
@@ -1479,26 +1349,8 @@ pub fn status_summary(program: &ProgramSnapshot) -> StatusSummary {
 
 #[cfg(test)]
 //#region 🧪️StatusSummaryTests
-mod tests_status_summary {
-    use super::*;
-    use crate::sample_plugin;
-
-    #[semio_framework_async_macros::async_test]
-    async fn sample_plugin_status_summary_counts_elements() {
-        let summary = status_summary(&sample_plugin());
-        assert!(summary.total_entities >= 2);
-        let elements = summary.by_register.iter().find(|r| r.register == "elements").expect("elements");
-        assert_eq!(elements.count, 2);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn status_summary_includes_all_major_registers() {
-        let summary = status_summary(&sample_plugin());
-        for register in ["elements", "stakeholders", "adjacencies", "status_records"] {
-            assert!(summary.by_register.iter().any(|r| r.register == register));
-        }
-    }
-}
+#[path = "🧪️tests/🔬️tests-status-summary/🦀️.rs"]
+mod tests_status_summary;
 //#endregion 🧪️StatusSummaryTests
 
 //#region 🔍️Search
@@ -1700,30 +1552,8 @@ fn push_if_match(hits: &mut Vec<SearchHit>, register: &str, header: &EntityHeade
 
 #[cfg(test)]
 //#region 🧪️SearchTests
-mod tests_search {
-    use super::*;
-    use crate::sample_plugin;
-
-    #[semio_framework_async_macros::async_test]
-    async fn search_finds_reception_element() {
-        let hits = search_plugin(&sample_plugin(), &SearchQuery { keywords: vec!["Reception".into()], ..Default::default() }, None, None);
-        assert!(hits.iter().any(|h| h.name == "Reception"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn search_history_records_query() {
-        let mut history = Vec::new();
-        search_plugin(&sample_plugin(), &SearchQuery { keywords: vec!["Waiting".into()], ..Default::default() }, None, Some(&mut history));
-        assert_eq!(history.len(), 1);
-        assert_eq!(history[0].keywords, vec!["Waiting".to_string()]);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn entity_kind_filter_limits_registers() {
-        let hits = search_plugin(&sample_plugin(), &SearchQuery { entity_kinds: vec!["elements".into()], ..Default::default() }, None, None);
-        assert!(hits.iter().all(|h| h.register == "elements"));
-    }
-}
+#[path = "🧪️tests/🔬️tests-search/🦀️.rs"]
+mod tests_search;
 //#endregion 🧪️SearchTests
 
 //#region 🔬️Analyze
@@ -2138,30 +1968,8 @@ fn analyze_relationship(program: &ProgramSnapshot) -> AnalysisResult {
 
 #[cfg(test)]
 //#region 🧪️AnalyzeTests
-mod tests_analyze {
-    use super::*;
-    use crate::sample_plugin;
-
-    #[semio_framework_async_macros::async_test]
-    async fn gap_analysis_on_sample_plugin() {
-        let result = run_analysis(&sample_plugin(), AnalysisKind::Gap);
-        assert_eq!(result.kind, AnalysisKind::Gap);
-        assert!(!result.findings.is_empty());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn capacity_analysis_sums_area() {
-        let result = run_analysis(&sample_plugin(), AnalysisKind::Capacity);
-        assert!(result.metrics.iter().any(|m| m.name == "total_target_area"));
-        assert!(result.metrics.iter().any(|m| m.value > 0.0));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn requirement_clustering_produces_clusters() {
-        let result = run_analysis(&sample_plugin(), AnalysisKind::RequirementClustering);
-        assert_eq!(result.kind, AnalysisKind::RequirementClustering);
-    }
-}
+#[path = "🧪️tests/🔬️tests-analyze/🦀️.rs"]
+mod tests_analyze;
 //#endregion 🧪️AnalyzeTests
 
 //#region 📤️ExchangeReads
@@ -2331,27 +2139,8 @@ fn header_row(register: &str, header: &EntityHeader, source: Option<String>) -> 
 
 #[cfg(test)]
 //#region 🧪️ExchangeReadsTests
-mod tests_exchange {
-    use super::*;
-    use crate::sample_plugin;
-
-    #[semio_framework_async_macros::async_test]
-    async fn json_round_trip() {
-        let program = sample_plugin();
-        let json = export_json(&program).expect("export");
-        let imported = import_json(&json).expect("import");
-        assert_eq!(imported.elements.len(), program.elements.len());
-        assert_eq!(imported.adjacencies.len(), program.adjacencies.len());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn relationships_csv_round_trips_via_stdio_codec() {
-        let program = sample_plugin();
-        let csv = export_relationships_csv(&program).expect("relationships csv export");
-        let snapshot = stdio_csv::schema::snapshot::decode_csv_with(&csv, true);
-        assert_eq!(snapshot.records.len(), program.relationships.len() + 1, "header + one row per relationship");
-    }
-}
+#[path = "🧪️tests/🔬️tests-exchange/🦀️.rs"]
+mod tests_exchange;
 //#endregion 🧪️ExchangeReadsTests
 
 //#region 🧭️TraceReads
@@ -2391,77 +2180,12 @@ pub fn resolve_supersedes(program: &ProgramSnapshot, requirement_id: &EntityId) 
 
 #[cfg(test)]
 //#region 🧪️TraceReadsTests
-mod tests_trace {
-    use super::*;
-    use crate::sample_plugin;
-
-    #[semio_framework_async_macros::async_test]
-    async fn audit_trail_sorted_newest_first() {
-        let mut program = sample_plugin();
-        program.audit_events.push(AuditEvent {
-            header: EntityHeader::new(EntityId::new_serial("audit", "older"), "older"),
-            action: crate::registers::AuditAction::Created,
-            actor_id: None,
-            subject_id: program.elements[0].header.id.clone(),
-            subject_kind: "element".into(),
-            timestamp: "2020-01-01T00:00:00Z".into(),
-            details: crate::kernel::TextField::plain("old"),
-            before_state: None,
-            after_state: None,
-            ip_address: None,
-            client: None,
-            session_id: None,
-            change_record_id: None,
-            trace_link: None,
-            success: true,
-            error_message: None,
-            correlation_id: None,
-            compliance_tags: Vec::new(),
-            retention_until: None,
-        });
-        program.audit_events.push(AuditEvent {
-            header: EntityHeader::new(EntityId::new_serial("audit", "newer"), "newer"),
-            action: crate::registers::AuditAction::Updated,
-            actor_id: None,
-            subject_id: program.elements[0].header.id.clone(),
-            subject_kind: "element".into(),
-            timestamp: "2025-01-01T00:00:00Z".into(),
-            details: crate::kernel::TextField::plain("new"),
-            before_state: None,
-            after_state: None,
-            ip_address: None,
-            client: None,
-            session_id: None,
-            change_record_id: None,
-            trace_link: None,
-            success: true,
-            error_message: None,
-            correlation_id: None,
-            compliance_tags: Vec::new(),
-            retention_until: None,
-        });
-        let trail = audit_trail(&program, None);
-        assert!(trail.events[0].timestamp > trail.events[1].timestamp);
-    }
-}
+#[path = "🧪️tests/🔬️tests-trace/🦀️.rs"]
+mod tests_trace;
 //#endregion 🧪️TraceReadsTests
 
 #[cfg(test)]
 //#region 🧪️Tests
-mod tests {
-    use super::*;
-
-    //#region 🧪️InferenceLaws
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
-        let snapshot = ProgramSnapshot::default();
-        assert_eq!(ProgramInference::infer(&snapshot), ProgramInference::infer(&snapshot));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
-        assert_eq!(ProgramInference::infer(&ProgramSnapshot::default()), ProgramInference::default());
-    }
-    //#endregion 🧪️InferenceLaws
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

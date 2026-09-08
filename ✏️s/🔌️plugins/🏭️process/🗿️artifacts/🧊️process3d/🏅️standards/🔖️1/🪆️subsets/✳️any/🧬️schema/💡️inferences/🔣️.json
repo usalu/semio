@@ -1,21 +1,49 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/process/process3d/inference.json",
   "title": "Process3dInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["stockBounds", "stepCount"],
+  "required": [
+    "stockBounds",
+    "stepCount"
+  ],
   "properties": {
-    "stockBounds": { "$ref": "#/$defs/BoundingBox", "x-semio-derived": true },
-    "stepCount": { "type": "integer", "minimum": 0, "x-semio-derived": true }
+    "stockBounds": {
+      "$ref": "#/$defs/BoundingBox",
+      "x-semio-derived": true
+    },
+    "stepCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "BoundingBox": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["min", "max"],
+      "required": [
+        "min",
+        "max"
+      ],
       "properties": {
-        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+        "min": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "max": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
       }
     }
   }

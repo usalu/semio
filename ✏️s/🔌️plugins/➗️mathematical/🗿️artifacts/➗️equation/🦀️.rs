@@ -5,6 +5,10 @@ extern crate semio_framework_number as number;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+mod art_equation_demo_tests;
 extern crate semio_framework_schema as framework_schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<EquationMutation, EquationConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
@@ -34,7 +38,6 @@ extern crate semio_framework_schema as framework_schema;
 pub mod cas;
 #[path = "../../🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📈️polynomial-internals/🦀️.rs"]
 pub mod polynomial;
-extern crate self as semio_s_artifact_mathematical_equation;
 
 #[cfg(test)]
 use semio_framework_os_kernel::{FromValue, ToValue};
@@ -342,7 +345,7 @@ pub struct EquationWorkingScene {
 
 fn equation_scene_id(graph: &EquationGraph, geometry: &EquationGeometry) -> String {
     use std::hash::{Hash, Hasher};
-    let content_json = pack::json::to_json_string(&(graph.clone(), geometry.clone()));
+    let content_json = dsl::os_pack::json::to_json_string(&(graph.clone(), geometry.clone()));
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     format!("equation-scene-{:016x}", hasher.finish())
@@ -452,8 +455,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "equation.document",
                     extension: Some("equation"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::document_dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::document_dsl::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("equation.document"),
@@ -462,8 +465,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "equation.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("equation.op"),
@@ -472,8 +475,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "equation.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::io::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::io::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(io::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("equation.diff"),
@@ -561,129 +564,33 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// deleted repo-wide only in W6); wiring them into this field too is real follow-up work, not
 /// required for the tree to register or for any law to hold (mirrors `🎬️sequence`'s and the stdio
 /// pilot's own documented deviation).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::MathematicalApps> {
+pub fn artifact<A: EquationApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.mathematical.equation").expect("canonical mathematical.equation kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.mathematical.equation").expect("canonical mathematical.equation kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
+
+/// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
+pub trait EquationApplication:
+    semio_framework_plugin::PluginApp
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::equation::EquationPlayApp>>>
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::equation::EquationViewer>>>
+{
+}
+
+impl<A> EquationApplication for A where
+    A: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::equation::EquationPlayApp>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::equation::EquationViewer>>>
+{
+}
+
 //#endregion 🔖️Declaration
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn scene(directed: bool) -> EquationWorkingScene {
-        let mut graph = EquationGraph::default();
-        graph.directed = directed;
-        EquationWorkingScene { graph, geometry: EquationGeometry::default() }
-    }
-
-    fn owned_snapshot(directed: bool) -> EquationSnapshot {
-        let scene = scene(directed);
-        equation_snapshot_with_state(scene.graph, scene.geometry)
-    }
-
-    fn replace_scene_owner(snapshot: &mut EquationSnapshot, scene: Arc<EquationWorkingScene>) {
-        snapshot.notation.set_local_owner(scene.clone());
-        snapshot.results.set_local_owner(scene.clone());
-        snapshot.computed.set_local_owner(scene);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
-        assert_eq!(artifact_kind().schema, "computation.equation");
-        assert_eq!(MATH_DOCUMENT_SCHEMA, "semio.equation/v1");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn default_graph_has_nodes_and_edges() {
-        let graph = EquationGraph::default();
-        assert!(!graph.nodes.is_empty());
-        assert!(!graph.edges.is_empty());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn default_geometry_has_points() {
-        assert!(!EquationGeometry::default().points.is_empty());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn carrier_fixture_contains_child_state_and_rejects_a_wire_only_parent() {
-        let snapshot = owned_snapshot(true);
-        let fixture = equation_fixture(&snapshot).expect("owned scene projects");
-        assert_eq!(fixture.graph, equation_scene_owner(&snapshot).unwrap().graph);
-        assert_eq!(fixture.geometry, EquationGeometry::default());
-
-        let wire = snapshot.to_value();
-        let decoded = EquationSnapshot::from_value(wire).expect("parent wire decodes");
-        assert_eq!(equation_fixture(&decoded), Err(store::ArtifactChildMaterializationError::Absent));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn scene_owner_fixture_proves_identity_isolation_aba_wire_omission_and_bounded_close() {
-        let fixture: pack::json::Value = pack::json::parse(include_str!("🧪️fixtures/👑️equation-scene-owner-law.json")).expect("language-neutral equation scene fixture");
-        let cases = fixture["cases"].as_array().expect("fixture cases");
-        assert_eq!(fixture["schemaVersion"], 1);
-        assert_eq!(fixture["ownedSlots"], 3);
-        assert_eq!(cases.len(), fixture["maximumCases"].as_u64().expect("bounded maximum") as usize);
-        assert_eq!(cases.len(), 5);
-
-        for case in cases {
-            let law = case["law"].as_str().expect("law");
-            let left_directed = case["leftDirected"].as_bool().expect("leftDirected");
-            let right_directed = case["rightDirected"].as_bool().expect("rightDirected");
-            match law {
-                "tripleIdentity" => {
-                    let snapshot = owned_snapshot(left_directed);
-                    let notation = snapshot.notation.local_owner::<EquationWorkingScene>().expect("notation owner");
-                    let results = snapshot.results.local_owner::<EquationWorkingScene>().expect("results owner");
-                    let computed = snapshot.computed.local_owner::<EquationWorkingScene>().expect("computed owner");
-                    assert!(Arc::ptr_eq(&notation, &results) && Arc::ptr_eq(&results, &computed));
-                    assert_eq!(Arc::strong_count(&notation), 6);
-                }
-                "instanceIsolation" => {
-                    let left = owned_snapshot(left_directed);
-                    let mut right = left.clone();
-                    replace_scene_owner(&mut right, Arc::new(scene(right_directed)));
-                    assert_eq!(left.results.child_id, right.results.child_id, "hostile identity collision is deliberate");
-                    assert_eq!(equation_graph(&left).directed, left_directed);
-                    assert_eq!(equation_graph(&right).directed, right_directed);
-                }
-                "abaIsolation" => {
-                    let stale_a = owned_snapshot(left_directed);
-                    let mut reused_identity_b = stale_a.clone();
-                    replace_scene_owner(&mut reused_identity_b, Arc::new(scene(right_directed)));
-                    assert_eq!(stale_a.computed.child_id, reused_identity_b.computed.child_id);
-                    assert_eq!(equation_graph(&reused_identity_b).directed, right_directed);
-                    drop(reused_identity_b);
-                    assert_eq!(equation_graph(&stale_a).directed, left_directed);
-                }
-                "wireOmission" => {
-                    let left = owned_snapshot(left_directed);
-                    let mut right = left.clone();
-                    replace_scene_owner(&mut right, Arc::new(scene(right_directed)));
-                    let left_wire = left.to_value();
-                    let right_wire = right.to_value();
-                    assert_eq!(left_wire, right_wire, "local owners never alter the durable wire");
-                    let decoded = EquationSnapshot::from_value(left_wire).expect("first-party codec decodes snapshot");
-                    assert!(decoded.results.local_owner::<EquationWorkingScene>().is_none());
-                }
-                "boundedClose" => {
-                    let snapshot = owned_snapshot(left_directed);
-                    let retained = snapshot.results.local_owner::<EquationWorkingScene>().expect("retained owner");
-                    let weak = Arc::downgrade(&retained);
-                    assert_eq!(Arc::strong_count(&retained), fixture["ownedSlots"].as_u64().expect("owned slots") as usize + 1);
-                    drop(snapshot);
-                    assert_eq!(Arc::strong_count(&retained), 1);
-                    drop(retained);
-                    assert!(weak.upgrade().is_none());
-                }
-                other => panic!("unexpected equation scene law {other}"),
-            }
-        }
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[path = "."]
@@ -934,7 +841,7 @@ mod tests {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/🧪️tests/t004/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/🧪️tests/🔬️t004/🦀️.rs"]
                                     mod tests_restates_the_unset_algorithm_and_its_absent_seed;
                                 }
                                 #[path = "."]
@@ -999,7 +906,7 @@ mod tests {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏷️change-node-label/🧪️tests/t003/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏷️change-node-label/🧪️tests/🔬️t003/🦀️.rs"]
                                     mod tests_rejects_relabelling_a_node_that_is_not_in_the_graph;
                                 }
                                 #[path = "."]
@@ -1038,7 +945,7 @@ mod tests {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/t002/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🔬️t002/🦀️.rs"]
                                     mod tests_rejects_severing_an_edge_that_is_not_in_the_graph;
                                 }
                             }
@@ -1121,7 +1028,7 @@ mod tests {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/➗️equation/🧬️schema/🧬️mutations/🎚️change-coefficient/🧪️tests/t001/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/➗️equation/🧬️schema/🧬️mutations/🎚️change-coefficient/🧪️tests/🔬️t001/🦀️.rs"]
                                     mod tests_raises_the_leading_coefficient_to_three_halves;
                                 }
                             }

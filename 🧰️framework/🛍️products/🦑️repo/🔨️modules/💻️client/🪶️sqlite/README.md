@@ -13,7 +13,7 @@ Scope `repo.client.sqlite` (`https://semio.tech/schema/repo/client/sqlite/schema
   `x-semio-persistence: local-only`.
 
 Column names and nullability of both files are kept identical by
-`📦️packages/🟦️typescript/🔬️schema.test.ts`.
+`🧪️tests/🔬️schema/🟦️.ts`.
 
 The exported entity set is the one the client materializes in `ExportResult`
 (`⌨️cli/📤️event_export.go`): technologies, bundles, folders, files, sections and definitions, rooted in

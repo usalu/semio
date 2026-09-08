@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧩add-app-extension/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/add-app-extension/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./💬insert-comment/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/insert-comment/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🖼️insert-frame/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/insert-frame/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔀move-frame/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/move-frame/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➖remove-app-extension/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/remove-app-extension/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🚫remove-comment/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/remove-comment/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🗑️remove-frame/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/remove-frame/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🖌️set-background-color-index/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-background-color-index/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "./⏱️set-frame-delay/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-frame-delay/schema.json"
         },
         {
           "type": "object",
@@ -169,7 +169,7 @@
     {
       "allOf": [
         {
-          "$ref": "./♻️set-frame-disposal/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-frame-disposal/schema.json"
         },
         {
           "type": "object",
@@ -187,7 +187,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📍set-frame-geometry/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-frame-geometry/schema.json"
         },
         {
           "type": "object",
@@ -205,7 +205,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🪜set-frame-interlace/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-frame-interlace/schema.json"
         },
         {
           "type": "object",
@@ -223,7 +223,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🎞️set-frame-pixels/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-frame-pixels/schema.json"
         },
         {
           "type": "object",
@@ -241,7 +241,7 @@
     {
       "allOf": [
         {
-          "$ref": "./👻set-frame-transparency/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-frame-transparency/schema.json"
         },
         {
           "type": "object",
@@ -259,7 +259,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🕹️set-frame-user-input/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-frame-user-input/schema.json"
         },
         {
           "type": "object",
@@ -277,7 +277,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🎨set-global-color-table/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-global-color-table/schema.json"
         },
         {
           "type": "object",
@@ -295,7 +295,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔁set-loop-count/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-loop-count/schema.json"
         },
         {
           "type": "object",
@@ -313,7 +313,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📏set-pixel-aspect-ratio/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-pixel-aspect-ratio/schema.json"
         },
         {
           "type": "object",
@@ -331,7 +331,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📐set-screen-size/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-screen-size/schema.json"
         },
         {
           "type": "object",
@@ -349,7 +349,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",

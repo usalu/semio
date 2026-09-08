@@ -1,5 +1,8 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
@@ -9,10 +12,10 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for both Trinity artifact surfaces.
     pub enum TrinityApps: PluginApp {
-        JackEditor(VcsArtifactApp<EditorApp<crate::editor::jack::TrinityJackPlayApp>>),
-        JackViewer(VcsArtifactApp<ViewerApp<crate::viewer::jack::TrinityJackViewer>>),
-        RewritingEditor(VcsArtifactApp<EditorApp<crate::editor::rewriting::TrinityRewritingPlayApp>>),
-        RewritingViewer(VcsArtifactApp<ViewerApp<crate::viewer::rewriting::TrinityRewritingViewer>>),
+        JackEditor(VcsArtifactApp<EditorApp<semio_s_artifact_trinity_jack::editor::jack::TrinityJackPlayApp>>),
+        JackViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_trinity_jack::viewer::jack::TrinityJackViewer>>),
+        RewritingEditor(VcsArtifactApp<EditorApp<semio_s_artifact_trinity_rewriting::editor::rewriting::TrinityRewritingPlayApp>>),
+        RewritingViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_trinity_rewriting::viewer::rewriting::TrinityRewritingViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -34,14 +37,14 @@ pub fn plugin() -> Result<Plugin<TrinityApps>, PluginAssemblyError> {
         .label("Trinity")
         .version("0.1.0")
         .package_id("semio:trinity")
-        .declare_artifact(crate::artifacts::jack::artifact())
-        .declare_artifact(crate::artifacts::rewriting::artifact())
-        .editor_mutation_roster::<crate::editor::jack::TrinityJackPlayApp>()
-        .viewer_mutation_roster::<crate::viewer::jack::TrinityJackViewer>()
-        .editor_mutation_roster::<crate::editor::rewriting::TrinityRewritingPlayApp>()
-        .viewer_mutation_roster::<crate::viewer::rewriting::TrinityRewritingViewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::jack::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::rewriting::artifact_kind().id })
+        .declare_artifact(semio_s_artifact_trinity_jack::artifact::<TrinityApps>())
+        .declare_artifact(semio_s_artifact_trinity_rewriting::artifact::<TrinityApps>())
+        .editor_mutation_roster::<semio_s_artifact_trinity_jack::editor::jack::TrinityJackPlayApp>()
+        .viewer_mutation_roster::<semio_s_artifact_trinity_jack::viewer::jack::TrinityJackViewer>()
+        .editor_mutation_roster::<semio_s_artifact_trinity_rewriting::editor::rewriting::TrinityRewritingPlayApp>()
+        .viewer_mutation_roster::<semio_s_artifact_trinity_rewriting::viewer::rewriting::TrinityRewritingViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_trinity_jack::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_trinity_rewriting::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist trinity jack/rewriting edits to the open document".into(), optional: false })
         .try_build()
@@ -49,27 +52,9 @@ pub fn plugin() -> Result<Plugin<TrinityApps>, PluginAssemblyError> {
 
 //#region 🧪️SurfaceTests
 #[cfg(test)]
-mod surface_tests {
-    use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
-
-    #[semio_framework_async_macros::async_test]
-    async fn trinity_jack_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::jack::TrinityJackViewer>().await;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn trinity_jack_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::jack::TrinityJackPlayApp, crate::viewer::jack::TrinityJackViewer>().await;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn trinity_rewriting_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::rewriting::TrinityRewritingViewer>().await;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn trinity_rewriting_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::rewriting::TrinityRewritingPlayApp, crate::viewer::rewriting::TrinityRewritingViewer>().await;
-    }
-}
+#[path = "🧪️tests/🔬️surface/🦀️.rs"]
+mod surface_tests;
 //#endregion 🧪️SurfaceTests
+
+#[cfg(feature = "plugin-entry")]
+semio_framework_plugin::plugin_exports!(plugin, TrinityApps);

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/delete-wayfinding-requirement/schema.json",
+  "$id": "https://semio.tech/schema/s/architect/program/mutation/delete-wayfinding-requirement/schema.json",
   "title": "DeleteWayfindingRequirement",
   "type": "object",
   "additionalProperties": false,

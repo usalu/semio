@@ -1,4 +1,4 @@
 #!/usr/bin/env bun
 /** 📦️ ply TypeScript artifact package router. */
-import { runStdioTypeScriptArtifactPackageMain } from "../../../../📜️script.ts";
-await runStdioTypeScriptArtifactPackageMain(import.meta.dir, import.meta.url);
+import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
+await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-ply");

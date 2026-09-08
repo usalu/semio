@@ -1,40 +1,85 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/trinity/jack/inference.json",
   "title": "JackInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["topology", "flatPosition"],
+  "required": [
+    "topology",
+    "flatPosition"
+  ],
   "properties": {
-    "topology": { "$ref": "#/$defs/JackTopology", "x-semio-derived": true },
-    "flatPosition": { "$ref": "#/$defs/JackFlatPosition", "x-semio-derived": true }
+    "topology": {
+      "$ref": "#/$defs/JackTopology",
+      "x-semio-derived": true
+    },
+    "flatPosition": {
+      "$ref": "#/$defs/JackFlatPosition",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "JackTopology": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["topoOrder", "depth", "cycleFree", "nodeCount"],
+      "required": [
+        "topoOrder",
+        "depth",
+        "cycleFree",
+        "nodeCount"
+      ],
       "properties": {
-        "topoOrder": { "type": "array", "items": { "type": "string" } },
-        "depth": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
-        "cycleFree": { "type": "boolean" },
-        "nodeCount": { "type": "integer", "minimum": 0 }
+        "topoOrder": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "depth": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "cycleFree": {
+          "type": "boolean"
+        },
+        "nodeCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "JackFlatPosition": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["positions"],
+      "required": [
+        "positions"
+      ],
       "properties": {
-        "positions": { "type": "object", "additionalProperties": { "$ref": "#/$defs/JackFlatPositionUv" } }
+        "positions": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/JackFlatPositionUv"
+          }
+        }
       }
     },
     "JackFlatPositionUv": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["u", "v"],
+      "required": [
+        "u",
+        "v"
+      ],
       "properties": {
-        "u": { "type": "number" },
-        "v": { "type": "number" }
+        "u": {
+          "type": "number"
+        },
+        "v": {
+          "type": "number"
+        }
       }
     }
   }

@@ -1,31 +1,58 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/semio/model/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/model/inference.json",
   "title": "SemioModelInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["bounds"],
+  "required": [
+    "bounds"
+  ],
   "properties": {
-    "bounds": { "$ref": "#/$defs/SemioModelBounds", "x-semio-derived": true }
+    "bounds": {
+      "$ref": "#/$defs/SemioModelBounds",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "SemioModelBounds": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["min", "max", "entityCount"],
+      "required": [
+        "min",
+        "max",
+        "entityCount"
+      ],
       "properties": {
-        "min": { "$ref": "#/$defs/SemioPoint3" },
-        "max": { "$ref": "#/$defs/SemioPoint3" },
-        "entityCount": { "type": "integer", "minimum": 0 }
+        "min": {
+          "$ref": "#/$defs/SemioPoint3"
+        },
+        "max": {
+          "$ref": "#/$defs/SemioPoint3"
+        },
+        "entityCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "SemioPoint3": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "z": { "type": "number" }
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
       }
     }
   }

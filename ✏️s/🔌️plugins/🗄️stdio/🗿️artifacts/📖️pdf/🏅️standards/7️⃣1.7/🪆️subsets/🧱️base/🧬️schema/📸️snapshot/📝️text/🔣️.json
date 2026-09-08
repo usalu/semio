@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/stdio.pdf/snapshot/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/snapshot/text.json",
   "title": "PdfSnapshotText",
   "type": "object"
 }

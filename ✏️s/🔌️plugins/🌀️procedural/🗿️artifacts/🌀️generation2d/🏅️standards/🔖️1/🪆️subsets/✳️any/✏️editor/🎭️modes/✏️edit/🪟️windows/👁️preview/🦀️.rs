@@ -1,6 +1,6 @@
 //! 👁️ Generation2d play app — the preview window: the evaluated 2D canvas.
 
-use crate::schema::{collect_drawing_handles_from_eval, scene_layers_from_drawing_handle};
+use crate::standards::v1::subsets::any::schema::{collect_drawing_handles_from_eval, scene_layers_from_drawing_handle};
 use crate::Generation2dSnapshot;
 use crate::editor::generation2d::config::Generation2dConfig;
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
@@ -84,14 +84,6 @@ pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, sess
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::generation2d::testkit::{app, render as render_body};
-
-    #[semio_framework_async_macros::async_test]
-    async fn renders_preview_canvas_scene() {
-        let mut app = app().await;
-        assert!(render_body(&mut app, GENERATION2D_PLAY_BODY_PREVIEW).await.contains("canvas-2d"));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

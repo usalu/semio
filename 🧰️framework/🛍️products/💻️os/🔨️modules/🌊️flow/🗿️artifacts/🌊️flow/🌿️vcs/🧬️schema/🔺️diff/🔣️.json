@@ -1,51 +1,124 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.dev/schema/os/flow-vcs/diff",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/diff.json",
   "title": "Ordered Flow Structural Diff",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["deltas"],
-  "properties": { "deltas": { "type": "array", "items": { "$ref": "#/$defs/delta" } } },
+  "$ref": "#/$defs/Diff",
   "$defs": {
-    "identities": { "type": "array", "items": { "type": "string" } },
-    "widgetCollection": {
-      "type": "object", "additionalProperties": false,
-      "required": ["removed", "inserted", "replaced"],
+    "Diff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deltas"
+      ],
       "properties": {
-        "removed": { "$ref": "#/$defs/identities" },
+        "deltas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/delta"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "identities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "widgetCollection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "replaced"
+      ],
+      "properties": {
+        "removed": {
+          "$ref": "#/definitions/identities"
+        },
         "inserted": {
           "type": "array",
           "items": {
-            "type": "array", "minItems": 2, "maxItems": 2, "items": false,
-            "prefixItems": [{ "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/index" }, { "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/widget" }]
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": [
+              {
+                "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Index"
+              },
+              {
+                "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Widget"
+              }
+            ],
+            "additionalItems": false
           }
         },
         "replaced": {
           "type": "array",
           "items": {
-            "type": "array", "minItems": 2, "maxItems": 2, "items": false,
-            "prefixItems": [{ "type": "string" }, { "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/widget" }]
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Widget"
+              }
+            ],
+            "additionalItems": false
           }
         }
       }
     },
     "synapseCollection": {
-      "type": "object", "additionalProperties": false,
-      "required": ["removed", "inserted", "replaced"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "replaced"
+      ],
       "properties": {
-        "removed": { "$ref": "#/$defs/identities" },
+        "removed": {
+          "$ref": "#/definitions/identities"
+        },
         "inserted": {
           "type": "array",
           "items": {
-            "type": "array", "minItems": 2, "maxItems": 2, "items": false,
-            "prefixItems": [{ "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/index" }, { "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/synapse" }]
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": [
+              {
+                "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Index"
+              },
+              {
+                "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Synapse"
+              }
+            ],
+            "additionalItems": false
           }
         },
         "replaced": {
           "type": "array",
           "items": {
-            "type": "array", "minItems": 2, "maxItems": 2, "items": false,
-            "prefixItems": [{ "type": "string" }, { "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/synapse" }]
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Synapse"
+              }
+            ],
+            "additionalItems": false
           }
         }
       }
@@ -53,20 +126,71 @@
     "delta": {
       "oneOf": [
         {
-          "type": "object", "additionalProperties": false, "required": ["delta", "value"],
-          "properties": { "delta": { "const": "widgets" }, "value": { "$ref": "#/$defs/widgetCollection" } }
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "delta",
+            "value"
+          ],
+          "properties": {
+            "delta": {
+              "const": "widgets"
+            },
+            "value": {
+              "$ref": "#/definitions/widgetCollection"
+            }
+          }
         },
         {
-          "type": "object", "additionalProperties": false, "required": ["delta", "value"],
-          "properties": { "delta": { "const": "synapses" }, "value": { "$ref": "#/$defs/synapseCollection" } }
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "delta",
+            "value"
+          ],
+          "properties": {
+            "delta": {
+              "const": "synapses"
+            },
+            "value": {
+              "$ref": "#/definitions/synapseCollection"
+            }
+          }
         },
         {
-          "type": "object", "additionalProperties": false, "required": ["delta", "value"],
-          "properties": { "delta": { "const": "layout" }, "value": { "type": "array", "items": { "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/layoutEntry" } } }
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "delta",
+            "value"
+          ],
+          "properties": {
+            "delta": {
+              "const": "layout"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/LayoutEntry"
+              }
+            }
+          }
         },
         {
-          "type": "object", "additionalProperties": false, "required": ["delta", "value"],
-          "properties": { "delta": { "const": "fixture" }, "value": { "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot" } }
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "delta",
+            "value"
+          ],
+          "properties": {
+            "delta": {
+              "const": "fixture"
+            },
+            "value": {
+              "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json"
+            }
+          }
         }
       ]
     }

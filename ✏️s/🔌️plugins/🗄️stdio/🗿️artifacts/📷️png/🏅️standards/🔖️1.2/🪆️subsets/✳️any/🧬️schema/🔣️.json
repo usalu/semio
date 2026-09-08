@@ -1,27 +1,114 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.png/artifact.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/png/1.2/any/artifact.json",
   "title": "PngArtifact",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "width", "height", "bitDepth", "colorType", "interlace", "textChunks", "pixels", "chunkOrder", "unknownChunks"],
+  "required": [
+    "schema",
+    "width",
+    "height",
+    "bitDepth",
+    "colorType",
+    "interlace",
+    "textChunks",
+    "pixels",
+    "chunkOrder",
+    "unknownChunks"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "width": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
-    "height": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
-    "bitDepth": { "type": "integer", "minimum": 0, "maximum": 16, "x-semio-state": "artifact" },
-    "colorType": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngColorType", "x-semio-state": "artifact" },
-    "interlace": { "type": "boolean", "x-semio-state": "artifact" },
-    "plte": { "type": "array", "items": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngRgb" }, "x-semio-state": "artifact" },
-    "trns": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngTransparency", "x-semio-state": "artifact" },
-    "gama": { "type": "integer", "x-semio-state": "artifact" },
-    "chrm": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngChromaticities", "x-semio-state": "artifact" },
-    "srgb": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngSrgbIntent", "x-semio-state": "artifact" },
-    "phys": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngPhysicalDims", "x-semio-state": "artifact" },
-    "time": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngTimestamp", "x-semio-state": "artifact" },
-    "bkgd": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngBackground", "x-semio-state": "artifact" },
-    "textChunks": { "type": "array", "items": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngTextChunk" }, "x-semio-state": "artifact" },
-    "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "x-semio-state": "artifact" },
-    "chunkOrder": { "type": "array", "items": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngChunkMarker" }, "x-semio-state": "artifact" },
-    "unknownChunks": { "type": "array", "items": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngChunk" }, "x-semio-state": "artifact" }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "bitDepth": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16,
+      "x-semio-state": "artifact"
+    },
+    "colorType": {
+      "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngColorType",
+      "x-semio-state": "artifact"
+    },
+    "interlace": {
+      "type": "boolean",
+      "x-semio-state": "artifact"
+    },
+    "plte": {
+      "type": "array",
+      "items": {
+        "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngRgb"
+      },
+      "x-semio-state": "artifact"
+    },
+    "trns": {
+      "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTransparency",
+      "x-semio-state": "artifact"
+    },
+    "gama": {
+      "type": "integer",
+      "x-semio-state": "artifact"
+    },
+    "chrm": {
+      "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChromaticities",
+      "x-semio-state": "artifact"
+    },
+    "srgb": {
+      "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngSrgbIntent",
+      "x-semio-state": "artifact"
+    },
+    "phys": {
+      "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngPhysicalDims",
+      "x-semio-state": "artifact"
+    },
+    "time": {
+      "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTimestamp",
+      "x-semio-state": "artifact"
+    },
+    "bkgd": {
+      "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngBackground",
+      "x-semio-state": "artifact"
+    },
+    "textChunks": {
+      "type": "array",
+      "items": {
+        "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTextChunk"
+      },
+      "x-semio-state": "artifact"
+    },
+    "pixels": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "x-semio-state": "artifact"
+    },
+    "chunkOrder": {
+      "type": "array",
+      "items": {
+        "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChunkMarker"
+      },
+      "x-semio-state": "artifact"
+    },
+    "unknownChunks": {
+      "type": "array",
+      "items": {
+        "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChunk"
+      },
+      "x-semio-state": "artifact"
+    }
   }
 }

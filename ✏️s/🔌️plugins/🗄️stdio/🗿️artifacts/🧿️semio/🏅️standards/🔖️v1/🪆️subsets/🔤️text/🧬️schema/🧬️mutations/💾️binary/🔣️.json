@@ -1,11 +1,19 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.text.mutations/binary.json",
-  "title": "SemioTextMutationOpFrameHeader",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/text/mutations/binary.json",
+  "title": "SemioTextMutationBinary",
   "description": "Op pack-binary-encoding header mirror — see ../🔣️.json for the canonical facet schema.",
   "type": "object",
   "properties": {
-    "format": { "type": "integer" },
-    "tag": { "type": "integer" },
-    "payload": { "type": "string", "contentEncoding": "hex" }
+    "format": {
+      "type": "integer"
+    },
+    "tag": {
+      "type": "integer"
+    },
+    "payload": {
+      "type": "string",
+      "contentEncoding": "hex"
+    }
   }
 }

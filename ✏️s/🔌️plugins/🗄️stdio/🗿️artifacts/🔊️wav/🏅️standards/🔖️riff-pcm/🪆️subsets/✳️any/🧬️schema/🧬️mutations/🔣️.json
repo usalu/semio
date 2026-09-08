@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔊️set-data/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/wav/riff-pcm/any/mutation/set-data/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🎚️set-fmt/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/wav/riff-pcm/any/mutation/set-fmt/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📎️set-other-chunks/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/wav/riff-pcm/any/mutation/set-other-chunks/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/wav/riff-pcm/any/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",

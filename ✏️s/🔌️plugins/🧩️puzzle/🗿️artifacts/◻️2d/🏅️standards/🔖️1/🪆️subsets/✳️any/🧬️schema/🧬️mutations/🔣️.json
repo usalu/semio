@@ -1,114 +1,86 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/puzzle/2d/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/mutations.json",
   "title": "Puzzle2dMutation",
   "description": "One real per-mutation record per semantic kind — 26 kinds, matching the Rust `Puzzle2dMutation` dispatch enum and the `🟦️.ts` union 1:1, internally tagged on `mutation` with the camelCase variant name; supersedes the pre-migration whole-snapshot-shaped generic schema.",
   "oneOf": [
     {
-      "$ref": "./➕add-node-handle/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/add-node-handle/schema.json"
     },
     {
-      "$ref": "./🏷️change-edge-kind/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/change-edge-kind/schema.json"
     },
     {
-      "$ref": "./🔐change-edge-locked/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/change-edge-locked/schema.json"
     },
     {
-      "$ref": "./🖇️change-edge-tips/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/change-edge-tips/schema.json"
     },
     {
-      "$ref": "./👀change-edge-visible/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/change-edge-visible/schema.json"
     },
     {
-      "$ref": "./🆔change-manifest-id/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/change-manifest-id/schema.json"
     },
     {
-      "$ref": "./⚓change-node-anchor/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/change-node-anchor/schema.json"
     },
     {
-      "$ref": "./🎨change-node-icon/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/change-node-icon/schema.json"
     },
     {
-      "$ref": "./🏗️change-node-kind/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/change-node-kind/schema.json"
     },
     {
-      "$ref": "./🔒change-node-locked/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/change-node-locked/schema.json"
     },
     {
-      "$ref": "./🌟change-node-root/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/change-node-root/schema.json"
     },
     {
-      "$ref": "./👁️change-node-visible/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/change-node-visible/schema.json"
     },
     {
-      "$ref": "./🪢️connect-handles/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/connect-handles/schema.json"
     },
     {
-      "$ref": "./🤝connect-kind-compatibility/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/connect-kind-compatibility/schema.json"
     },
     {
-      "$ref": "./🌱create-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/create-node/schema.json"
     },
     {
-      "$ref": "./🗑️delete-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/delete-node/schema.json"
     },
     {
-      "$ref": "./✂️disconnect-handles/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/disconnect-handles/schema.json"
     },
     {
-      "$ref": "./💔disconnect-kind-compatibility/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/disconnect-kind-compatibility/schema.json"
     },
     {
-      "$ref": "./✏️edit-node-text/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/edit-node-text/schema.json"
     },
     {
-      "$ref": "./📍move-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/move-node/schema.json"
     },
     {
-      "$ref": "./➖remove-node-handle/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/remove-node-handle/schema.json"
     },
     {
-      "$ref": "./🧮replace-edge-geometry/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/replace-edge-geometry/schema.json"
     },
     {
-      "$ref": "./📚replace-kind-catalogs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/replace-kind-catalogs/schema.json"
     },
     {
-      "$ref": "./🧊replace-node-geometry/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/replace-node-geometry/schema.json"
     },
     {
-      "$ref": "./🔌replace-node-handle/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/replace-node-handle/schema.json"
     },
     {
-      "$ref": "./📏scale-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/mutation/scale-node/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "add-node-handle",
-    "change-edge-kind",
-    "change-edge-locked",
-    "change-edge-tips",
-    "change-edge-visible",
-    "change-manifest-id",
-    "change-node-anchor",
-    "change-node-icon",
-    "change-node-kind",
-    "change-node-locked",
-    "change-node-root",
-    "change-node-visible",
-    "connect-handles",
-    "connect-kind-compatibility",
-    "create-node",
-    "delete-node",
-    "disconnect-handles",
-    "disconnect-kind-compatibility",
-    "edit-node-text",
-    "move-node",
-    "remove-node-handle",
-    "replace-edge-geometry",
-    "replace-kind-catalogs",
-    "replace-node-geometry",
-    "replace-node-handle",
-    "scale-node"
   ]
 }

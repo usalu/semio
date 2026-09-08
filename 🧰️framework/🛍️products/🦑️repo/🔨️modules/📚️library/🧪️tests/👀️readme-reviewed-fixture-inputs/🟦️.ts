@@ -9,7 +9,7 @@ import ts from "typescript";
 
 const library = resolve(import.meta.dir, "../.."), root = resolve(library, "../../../../..");
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../👀️readme-reviewed-fixture-inputs/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(import.meta.dir, "../👀️readme-reviewed-fixture-inputs/🧬️schema/🔣️.json"), "utf8"));
+const schema = JSON.parse(readFileSync(join(import.meta.dir, "../👀️readme-reviewed-fixture-inputs/🛂️schema/🔣️.json"), "utf8"));
 const sha = (bytes: Uint8Array | string): string => createHash("sha256").update(bytes).digest("hex");
 const observations = new Map<string, { bytes: Buffer; sha256: string; size: number; mode: number }>(), outcomes: any[] = [];
 let owner: string | undefined;
@@ -56,7 +56,7 @@ function capture(path: string, records = observations) {
 }
 
 const manifestInput = capture(vector.fixtureAuthority), manifest = JSON.parse(manifestInput.bytes.toString("utf8"));
-const manifestSchemaPath = posix.dirname(vector.fixtureAuthority) + "../👀️readme-reviewed-fixture-inputs/🧬️schema/🔣️.json";
+const manifestSchemaPath = posix.dirname(vector.fixtureAuthority) + "../👀️readme-reviewed-fixture-inputs/🛂️schema/🔣️.json";
 const manifestSchema = JSON.parse(capture(manifestSchemaPath).bytes.toString("utf8"));
 const catalogInput = capture(manifest.catalog.path), catalog = JSON.parse(catalogInput.bytes.toString("utf8"));
 const revisionVector = JSON.parse(capture(manifest.revision.path).bytes.toString("utf8")), revision = revisionVector.revisions[manifest.revision.id];

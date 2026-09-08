@@ -1,6 +1,6 @@
 //! Puzzle5d mutation — `EditPart3dLabel`: replaces a part's 3D-projection authored display label.
-use crate::diff::Puzzle5dDiff;
-use crate::mutations::Puzzle5dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation

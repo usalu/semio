@@ -7,8 +7,8 @@
 //!
 //! A combination is a pure superposition rule: dropping it must leave both referenced load cases in place.
 
-use crate::mutations::Fem3dMutation;
-use crate::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -83,7 +83,7 @@ fn declared_outcome_holds() {
         "applied" => assert!(!refused, "delete-combination/removes-the-182f7b: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
             assert!(refused, "delete-combination/removes-the-182f7b: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
-            assert_eq!(produced.diff(), &crate::diff::Fem3dDiff::default(), "delete-combination/removes-the-182f7b: a refused mutation must carry the empty diff");
+            assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "delete-combination/removes-the-182f7b: a refused mutation must carry the empty diff");
             assert_eq!(snapshot, before(), "delete-combination/removes-the-182f7b: a refused mutation must leave the snapshot untouched");
         }
         other => panic!("delete-combination/removes-the-182f7b: unknown outcome status {other:?}"),
@@ -105,7 +105,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-combination/removes-the-182f7b: committed diff JSON is not canonical");
@@ -114,7 +114,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed `combinations.removed` id on `before` must leave the two cases untouched.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::standards::v1::subsets::any::schema::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-combination/removes-the-182f7b: committed diff did not carry before to after");
 }

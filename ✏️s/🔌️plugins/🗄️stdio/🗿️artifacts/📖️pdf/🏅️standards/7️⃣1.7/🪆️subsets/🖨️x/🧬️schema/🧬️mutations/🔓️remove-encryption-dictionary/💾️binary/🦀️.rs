@@ -22,13 +22,6 @@ pub fn decode(bytes: &[u8]) -> Result<RemoveEncryptionDictionary, String> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn owned_payload_round_trips() {
-        let payload = RemoveEncryptionDictionary { version: 0, revision: 0 };
-        assert_eq!(decode(&encode(&payload).unwrap()).unwrap(), payload);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

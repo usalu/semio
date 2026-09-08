@@ -1,7 +1,7 @@
 //! 🔺️ Puzzle 3d artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::schema::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff, Puzzle3dObjectsDelta, Puzzle3dReferencesDelta, Puzzle3dTargetVolumesDelta};
-use crate::schema::Puzzle3dArtifact;
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff, Puzzle3dObjectsDelta, Puzzle3dReferencesDelta, Puzzle3dTargetVolumesDelta};
+use crate::standards::v1::subsets::any::schema::Puzzle3dArtifact;
 use crate::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dReference, Puzzle3dSnapshot, Puzzle3dTargetVolume};
 use protocol::MutationDiff;
 

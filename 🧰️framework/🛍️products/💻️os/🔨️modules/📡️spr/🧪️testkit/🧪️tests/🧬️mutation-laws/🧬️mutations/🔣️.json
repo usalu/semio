@@ -9,7 +9,7 @@
           "const": "addCounter"
         },
         "payload": {
-          "$ref": "➕️add-counter/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/framework/os/spr/testkit/tests/mutation-laws/mutation/add-counter/schema.json"
         }
       },
       "required": [
@@ -25,7 +25,7 @@
           "const": "addMissingCounter"
         },
         "payload": {
-          "$ref": "🚫️add-missing-counter/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/framework/os/spr/testkit/tests/mutation-laws/mutation/add-missing-counter/schema.json"
         }
       },
       "required": [
@@ -41,7 +41,7 @@
           "const": "addUncheckedCounter"
         },
         "payload": {
-          "$ref": "🐛️add-unchecked-counter/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/framework/os/spr/testkit/tests/mutation-laws/mutation/add-unchecked-counter/schema.json"
         }
       },
       "required": [
@@ -57,7 +57,7 @@
           "const": "addObservedCounter"
         },
         "payload": {
-          "$ref": "👁️add-observed-counter/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/framework/os/spr/testkit/tests/mutation-laws/mutation/add-observed-counter/schema.json"
         }
       },
       "required": [
@@ -73,7 +73,7 @@
           "const": "addRejectedCounter"
         },
         "payload": {
-          "$ref": "⛔️add-rejected-counter/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/framework/os/spr/testkit/tests/mutation-laws/mutation/add-rejected-counter/schema.json"
         }
       },
       "required": [

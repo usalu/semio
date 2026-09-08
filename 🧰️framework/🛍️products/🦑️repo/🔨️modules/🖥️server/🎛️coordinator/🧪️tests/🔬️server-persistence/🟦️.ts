@@ -14,7 +14,8 @@ const document = JSON.parse(readFileSync(join(serverRoot, "🧬️schema/🔣️
   $defs: Record<string, { type?: string; required?: string[]; properties?: Record<string, Record<string, unknown>> }>;
 };
 
-const TABLE_CONSTRAINTS = ["PRIMARY KEY", "UNIQUE", "FOREIGN KEY", "CHECK", "CONSTRAINT", "EXCLUDE"];
+/** 🚧️ Leading keywords of a table constraint clause, anchored on a word boundary so a column named `checkpoint`, `uniqueness` or `constraints` is not read as a constraint. */
+const TABLE_CONSTRAINT = /^(?:PRIMARY KEY|UNIQUE|FOREIGN KEY|CHECK|CONSTRAINT|EXCLUDE)\b/i;
 
 /** ✂️ Splits a `CREATE TABLE` body on its top-level commas. */
 function splitClauses(body: string): string[] {
@@ -39,13 +40,13 @@ function splitClauses(body: string): string[] {
 function sqlTables(): Map<string, Map<string, boolean>> {
   const stripped = sql
     .split("\n")
-    .filter((line) => !line.trim().startsWith("--"))
+    .map((line) => line.replace(/--.*$/, ""))
     .join("\n");
   const tables = new Map<string, Map<string, boolean>>();
   for (const match of stripped.matchAll(/CREATE TABLE IF NOT EXISTS\s+(\w+)\s*\(([\s\S]*?)\n\);/g)) {
     const columns = new Map<string, boolean>();
     for (const clause of splitClauses(match[2])) {
-      if (TABLE_CONSTRAINTS.some((constraint) => clause.toUpperCase().startsWith(constraint))) continue;
+      if (TABLE_CONSTRAINT.test(clause)) continue;
       const column = /^(\w+)\s+(.*)$/s.exec(clause);
       expect(column, clause).not.toBeNull();
       const rest = column![2].replace(/\s+/g, " ");

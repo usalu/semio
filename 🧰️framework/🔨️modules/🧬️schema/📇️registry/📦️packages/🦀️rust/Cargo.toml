@@ -1,0 +1,23 @@
+[package]
+name = "semio-framework-schema-registry"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The (scope id, export id, format id) schema resolution contract: formats, named exports, the process-wide registry and its resolver — dependency-free so every scope crate, including os-kernel-free ones, registers its own exports"
+build = false
+
+[package.metadata.semio]
+role = "framework"
+id = "schema-registry"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[[test]]
+name = "schema-registry-catalog"
+path = "../../🧪️tests/📇️catalog/🦀️.rs"
+
+[dependencies]

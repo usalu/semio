@@ -7,15 +7,34 @@
     "shared": true
   },
   "publicationContracts": [
-    { "toolId": "setSnapshot", "lanes": ["Artifact"] },
-    { "toolId": "evaluate", "lanes": ["HostOnly"] },
-    { "toolId": "setSelectedCheckIndex", "lanes": ["Config"] }
+    {
+      "toolId": "setSnapshot",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "evaluate",
+      "lanes": [
+        "host-only"
+      ]
+    },
+    {
+      "toolId": "setSelectedCheckIndex",
+      "lanes": [
+        "config"
+      ]
+    }
   ],
   "routes": [
     {
       "id": "setSnapshot",
-      "emittedLanes": ["artifact"],
-      "publicationLanes": ["Artifact"],
+      "emittedLanes": [
+        "artifact"
+      ],
+      "publicationLanes": [
+        "artifact"
+      ],
       "execution": "bounded",
       "admission": "migrated",
       "reducer": "🎮️commands/📤️set-snapshot — XMutation::from_snapshot bundled as one described edit"
@@ -23,36 +42,102 @@
     {
       "id": "evaluate",
       "emittedLanes": [],
-      "publicationLanes": ["HostOnly"],
+      "publicationLanes": [
+        "host-only"
+      ],
       "execution": "bounded",
       "admission": "migrated",
       "reducer": "🎮️commands/🧮️evaluate — the report is derived on every read, so the reducer emits nothing"
     },
     {
       "id": "setSelectedCheckIndex",
-      "emittedLanes": ["config"],
-      "publicationLanes": ["Config"],
+      "emittedLanes": [
+        "config"
+      ],
+      "publicationLanes": [
+        "config"
+      ],
       "execution": "bounded",
       "admission": "migrated",
       "reducer": "🎮️commands/☑️selected-check — NormConfigMutation::ChangeSelectedCheckIndex"
     }
   ],
   "apps": [
-    { "variant": "din4108", "controller": "s.norm.din4108@1/*#editor", "documentSchema": "semio.norm.din4108/v1" },
-    { "variant": "din16798", "controller": "s.norm.din16798@1/*#editor", "documentSchema": "semio.norm.din16798/v1" },
-    { "variant": "din18599", "controller": "s.norm.din18599@1/*#editor", "documentSchema": "semio.norm.din18599/v1" },
-    { "variant": "en1990", "controller": "s.norm.en1990@1/*#editor", "documentSchema": "semio.norm.en1990/v1" },
-    { "variant": "en1991", "controller": "s.norm.en1991@1/*#editor", "documentSchema": "semio.norm.en1991/v1" },
-    { "variant": "en1992", "controller": "s.norm.en1992@1/*#editor", "documentSchema": "semio.norm.en1992/v1" },
-    { "variant": "en1993", "controller": "s.norm.en1993@1/*#editor", "documentSchema": "semio.norm.en1993/v1" },
-    { "variant": "en1994", "controller": "s.norm.en1994@1/*#editor", "documentSchema": "semio.norm.en1994/v1" },
-    { "variant": "en1995", "controller": "s.norm.en1995@1/*#editor", "documentSchema": "semio.norm.en1995/v1" },
-    { "variant": "en1996", "controller": "s.norm.en1996@1/*#editor", "documentSchema": "semio.norm.en1996/v1" },
-    { "variant": "en1997", "controller": "s.norm.en1997@1/*#editor", "documentSchema": "semio.norm.en1997/v1" },
-    { "variant": "en1998", "controller": "s.norm.en1998@1/*#editor", "documentSchema": "semio.norm.en1998/v1" },
-    { "variant": "en1999", "controller": "s.norm.en1999@1/*#editor", "documentSchema": "semio.norm.en1999/v1" },
-    { "variant": "iso16757", "controller": "s.norm.iso16757@1/*#editor", "documentSchema": "semio.norm.iso16757/v1" },
-    { "variant": "vdi3805", "controller": "s.norm.vdi3805@1/*#editor", "documentSchema": "semio.norm.vdi3805/v1" }
+    {
+      "variant": "din4108",
+      "controller": "s.norm.din4108@1/*#editor",
+      "documentSchema": "semio.norm.din4108/v1"
+    },
+    {
+      "variant": "din16798",
+      "controller": "s.norm.din16798@1/*#editor",
+      "documentSchema": "semio.norm.din16798/v1"
+    },
+    {
+      "variant": "din18599",
+      "controller": "s.norm.din18599@1/*#editor",
+      "documentSchema": "semio.norm.din18599/v1"
+    },
+    {
+      "variant": "en1990",
+      "controller": "s.norm.en1990@1/*#editor",
+      "documentSchema": "semio.norm.en1990/v1"
+    },
+    {
+      "variant": "en1991",
+      "controller": "s.norm.en1991@1/*#editor",
+      "documentSchema": "semio.norm.en1991/v1"
+    },
+    {
+      "variant": "en1992",
+      "controller": "s.norm.en1992@1/*#editor",
+      "documentSchema": "semio.norm.en1992/v1"
+    },
+    {
+      "variant": "en1993",
+      "controller": "s.norm.en1993@1/*#editor",
+      "documentSchema": "semio.norm.en1993/v1"
+    },
+    {
+      "variant": "en1994",
+      "controller": "s.norm.en1994@1/*#editor",
+      "documentSchema": "semio.norm.en1994/v1"
+    },
+    {
+      "variant": "en1995",
+      "controller": "s.norm.en1995@1/*#editor",
+      "documentSchema": "semio.norm.en1995/v1"
+    },
+    {
+      "variant": "en1996",
+      "controller": "s.norm.en1996@1/*#editor",
+      "documentSchema": "semio.norm.en1996/v1"
+    },
+    {
+      "variant": "en1997",
+      "controller": "s.norm.en1997@1/*#editor",
+      "documentSchema": "semio.norm.en1997/v1"
+    },
+    {
+      "variant": "en1998",
+      "controller": "s.norm.en1998@1/*#editor",
+      "documentSchema": "semio.norm.en1998/v1"
+    },
+    {
+      "variant": "en1999",
+      "controller": "s.norm.en1999@1/*#editor",
+      "documentSchema": "semio.norm.en1999/v1"
+    },
+    {
+      "variant": "iso16757",
+      "controller": "s.norm.iso16757@1/*#editor",
+      "documentSchema": "semio.norm.iso16757/v1"
+    },
+    {
+      "variant": "vdi3805",
+      "controller": "s.norm.vdi3805@1/*#editor",
+      "documentSchema": "semio.norm.vdi3805/v1"
+    }
   ],
   "expected": {
     "apps": 15,

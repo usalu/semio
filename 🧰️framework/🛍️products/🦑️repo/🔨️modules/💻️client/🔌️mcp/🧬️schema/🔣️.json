@@ -1,0 +1,2932 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/client/mcp/schema.json",
+  "title": "RepoGraphqlSchema",
+  "description": "🔗️ The `repo.client.mcp` scope: the repo GraphQL surface the CLI executor answers and the VS Code extension queries. The sibling 🔗️.graphql is the normative SDL; this document is the JSON Schema facet of the same exports, so responses and mutation inputs can be validated outside a GraphQL runtime.",
+  "$comment": "The root is one resolved `Query` selection: the `data` payload the CLI executor answers with. Every field is optional because a GraphQL selection chooses them; nullability is carried by each field's own shape.",
+  "$ref": "#/$defs/Query",
+  "$defs": {
+    "DateTime": {
+      "title": "DateTime",
+      "description": "🕰️ The `DateTime` GraphQL scalar: an RFC-3339 instant, the encoding `encoding/json` gives a Go `time.Time`.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "Node": {
+      "title": "Node",
+      "description": "🔌️ The `Node` GraphQL interface: every implementing type carries these fields and adds its own.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "Query": {
+      "title": "Query",
+      "$comment": "Field arguments are declared in the 🔗️.graphql facet; a JSON instance is one already-resolved selection.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "node": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Node"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repo": {
+          "$ref": "#/$defs/Repo"
+        },
+        "bundles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Bundle"
+          }
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Folder"
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/File"
+          }
+        },
+        "contributors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Contributor"
+          }
+        },
+        "todos": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Todo"
+          }
+        },
+        "tickets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Ticket"
+          }
+        },
+        "goals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Goal"
+          }
+        },
+        "interactions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/InteractionResource"
+          }
+        },
+        "policies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Policy"
+          }
+        },
+        "statutes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Statute"
+          }
+        },
+        "breachs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Breach"
+          }
+        },
+        "bundle": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Bundle"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "folder": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Folder"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/File"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Section"
+          }
+        },
+        "definitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Definition"
+          }
+        },
+        "section": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Section"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "definition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Definition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contributor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contributor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ticket": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ticket"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "policy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Policy"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "statute": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Statute"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "analyze": {
+          "$ref": "#/$defs/AnalyzeResult"
+        }
+      }
+    },
+    "Mutation": {
+      "title": "Mutation",
+      "$comment": "Field arguments are declared in the 🔗️.graphql facet; a JSON instance is one already-resolved selection.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fix": {
+          "$ref": "#/$defs/FixResult"
+        },
+        "goalCreate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Goal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "goalChange": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Goal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "todoCreate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Todo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "todoChange": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Todo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "todoDelete": {
+          "type": "boolean"
+        },
+        "ticketOpen": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ticket"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ticketChange": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ticket"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ticketClose": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ticket"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ticketReopen": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ticket"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contributorAdd": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contributor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contributorRemove": {
+          "type": "boolean"
+        },
+        "folderCreate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Folder"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "folderMove": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Folder"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "folderDelete": {
+          "type": "boolean"
+        },
+        "fileCreate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/File"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fileMove": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/File"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fileDelete": {
+          "type": "boolean"
+        },
+        "sectionCreate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Section"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sectionMove": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Section"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sectionDelete": {
+          "type": "boolean"
+        },
+        "integrate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/File"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extract": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/File"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TodoCreateInput": {
+      "title": "TodoCreateInput",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parentId",
+        "name"
+      ],
+      "properties": {
+        "parentId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TodoChangeInput": {
+      "title": "TodoChangeInput",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GoalCreateInput": {
+      "title": "GoalCreateInput",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "description",
+        "prompt",
+        "dueDate",
+        "client",
+        "llm"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "dueDate": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "noGithub": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GoalChangeInput": {
+      "title": "GoalChangeInput",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dueDate": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "llm": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "noGithub": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TicketOpenInput": {
+      "title": "TicketOpenInput",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "prompt",
+        "llm",
+        "client",
+        "goal"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "client": {
+          "$ref": "#/$defs/TicketClient"
+        },
+        "noIssue": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "planPath": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "goal": {
+          "type": "string"
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "draft": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TicketChangeInput": {
+      "title": "TicketChangeInput",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "goal": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "llm": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TicketCloseInput": {
+      "title": "TicketCloseInput",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "year",
+        "month",
+        "day",
+        "slug",
+        "summary",
+        "files"
+      ],
+      "properties": {
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TicketReopenInput": {
+      "title": "TicketReopenInput",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "year",
+        "month",
+        "day",
+        "slug",
+        "prompt",
+        "llm"
+      ],
+      "properties": {
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "llm": {
+          "type": "string"
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "planPath": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ContributorAddInput": {
+      "title": "ContributorAddInput",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "github"
+      ],
+      "properties": {
+        "github": {
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "names": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "emails": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fingerprint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fingerprints": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "FilterInput": {
+      "title": "FilterInput",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "filter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "regex": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "matchCase": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "matchWholeWord": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "showIgnored": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "showGenerated": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excludeKinds": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FileKind"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "includeKinds": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FileKind"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excludeBundleKinds": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/BundleKind"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "includeBundleKinds": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/BundleKind"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excludeFolderKinds": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FolderKind"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "includeFolderKinds": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FolderKind"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excludeDefinitionKinds": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DefinitionKind"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "includeDefinitionKinds": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DefinitionKind"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excludeYears": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "includeYears": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excludeMonths": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "includeMonths": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excludeDays": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "includeDays": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excludeContributors": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "includeContributors": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excludePolicies": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "includePolicies": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excludeBreachs": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "includeBreachs": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "FileKind": {
+      "title": "FileKind",
+      "type": "string",
+      "enum": [
+        "CODE",
+        "SCRIPT",
+        "CONFIG",
+        "TEST",
+        "DOCS",
+        "RESOURCE",
+        "TEMPLATE",
+        "LICENSE"
+      ]
+    },
+    "BundleKind": {
+      "title": "BundleKind",
+      "type": "string",
+      "enum": [
+        "LIBRARY",
+        "SCHEMA",
+        "BINARY",
+        "UI",
+        "SITE",
+        "ASSETS"
+      ]
+    },
+    "FolderKind": {
+      "title": "FolderKind",
+      "type": "string",
+      "enum": [
+        "ORGANIZATION",
+        "REQUIRED"
+      ]
+    },
+    "DefinitionKind": {
+      "title": "DefinitionKind",
+      "type": "string",
+      "enum": [
+        "IMPLEMENTATION",
+        "INTERFACE",
+        "CONSTANT"
+      ]
+    },
+    "Location": {
+      "title": "Location",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "filePath": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "line": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "column": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Todo": {
+      "title": "Todo",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parentId": {
+          "type": "string"
+        },
+        "location": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Location"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Repo": {
+      "title": "Repo",
+      "$comment": "Field arguments are declared in the 🔗️.graphql facet; a JSON instance is one already-resolved selection.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "technologies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Technology"
+          }
+        },
+        "checkpoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Checkpoint"
+          }
+        },
+        "bundles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Bundle"
+          }
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Folder"
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/File"
+          }
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Section"
+          }
+        },
+        "definitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Definition"
+          }
+        },
+        "contributors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Contributor"
+          }
+        },
+        "todos": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Todo"
+          }
+        },
+        "goals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Goal"
+          }
+        },
+        "tickets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Ticket"
+          }
+        },
+        "policies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Policy"
+          }
+        },
+        "statutes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Statute"
+          }
+        },
+        "breachs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Breach"
+          }
+        }
+      }
+    },
+    "Technology": {
+      "title": "Technology",
+      "$comment": "Field arguments are declared in the 🔗️.graphql facet; a JSON instance is one already-resolved selection.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/TechnologyKind"
+        },
+        "root": {
+          "type": "string"
+        },
+        "bundles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Bundle"
+          }
+        }
+      }
+    },
+    "TechnologyKind": {
+      "title": "TechnologyKind",
+      "type": "string",
+      "enum": [
+        "USER",
+        "INFRASTRUCTURE",
+        "RESEARCH"
+      ]
+    },
+    "Bundle": {
+      "title": "Bundle",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "root": {
+          "type": "string"
+        },
+        "sourceRoot": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "projectType": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "kind": {
+          "$ref": "#/$defs/BundleKind"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Folder"
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/File"
+          }
+        },
+        "contributors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Contributor"
+          }
+        },
+        "tickets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Ticket"
+          }
+        },
+        "breachs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Breach"
+          }
+        }
+      }
+    },
+    "Folder": {
+      "title": "Folder",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/FolderKind"
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Folder"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Folder"
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/File"
+          }
+        },
+        "bundle": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Bundle"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "breachs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Breach"
+          }
+        }
+      }
+    },
+    "File": {
+      "title": "File",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "extension": {
+          "type": "string"
+        },
+        "folder": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Folder"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bundle": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Bundle"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Section"
+          }
+        },
+        "definitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Definition"
+          }
+        },
+        "breachs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Breach"
+          }
+        },
+        "contributors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Contributor"
+          }
+        },
+        "content": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Section": {
+      "title": "Section",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "file": {
+          "$ref": "#/$defs/File"
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Section"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Section"
+          }
+        },
+        "definitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Definition"
+          }
+        },
+        "breachs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Breach"
+          }
+        },
+        "range": {
+          "$ref": "#/$defs/Range"
+        }
+      }
+    },
+    "Definition": {
+      "title": "Definition",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/DefinitionKind"
+        },
+        "file": {
+          "$ref": "#/$defs/File"
+        },
+        "section": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Section"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "breachs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Breach"
+          }
+        },
+        "range": {
+          "$ref": "#/$defs/Range"
+        }
+      }
+    },
+    "Range": {
+      "title": "Range",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "type": "integer"
+        },
+        "end": {
+          "type": "integer"
+        }
+      }
+    },
+    "Contributor": {
+      "title": "Contributor",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "github": {
+          "type": "string"
+        },
+        "emoji": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "email": {
+          "type": "string"
+        },
+        "emails": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContributorLink"
+          }
+        },
+        "fingerprint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fingerprints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "icons": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContributorIcons"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bundles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Bundle"
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/File"
+          }
+        },
+        "tickets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Ticket"
+          }
+        },
+        "checkpoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Checkpoint"
+          }
+        },
+        "contributions": {
+          "$ref": "#/$defs/ContributorContributions"
+        }
+      }
+    },
+    "ContributorLink": {
+      "title": "ContributorLink",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "ContributorIcons": {
+      "title": "ContributorIcons",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "avatar": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "avatarRound": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "github": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ContributorContributions": {
+      "title": "ContributorContributions",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "checkpoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Checkpoint"
+          }
+        },
+        "tickets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TicketYear"
+          }
+        },
+        "bundles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContributorBundle"
+          }
+        }
+      }
+    },
+    "TicketYear": {
+      "title": "TicketYear",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "year": {
+          "type": "integer"
+        },
+        "months": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TicketMonth"
+          }
+        }
+      }
+    },
+    "TicketMonth": {
+      "title": "TicketMonth",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "month": {
+          "type": "integer"
+        },
+        "days": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TicketDay"
+          }
+        }
+      }
+    },
+    "TicketDay": {
+      "title": "TicketDay",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "day": {
+          "type": "integer"
+        },
+        "tickets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Ticket"
+          }
+        }
+      }
+    },
+    "ContributorBundle": {
+      "title": "ContributorBundle",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContributorFolder"
+          }
+        }
+      }
+    },
+    "ContributorFolder": {
+      "title": "ContributorFolder",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContributorFile"
+          }
+        }
+      }
+    },
+    "ContributorFile": {
+      "title": "ContributorFile",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContributorSection"
+          }
+        }
+      }
+    },
+    "ContributorSection": {
+      "title": "ContributorSection",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "definitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContributorDefinition"
+          }
+        }
+      }
+    },
+    "ContributorDefinition": {
+      "title": "ContributorDefinition",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "LineMetrics": {
+      "title": "LineMetrics",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "added": {
+          "type": "integer"
+        },
+        "removed": {
+          "type": "integer"
+        }
+      }
+    },
+    "Checkpoint": {
+      "title": "Checkpoint",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sha": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "author": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contributor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "date": {
+          "$ref": "#/$defs/DateTime"
+        },
+        "bundles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Bundle"
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/File"
+          }
+        }
+      }
+    },
+    "Goal": {
+      "title": "Goal",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dueDate": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "createdAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "client": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "llm": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "milestone": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "issue": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "interactions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Interaction"
+          }
+        }
+      }
+    },
+    "Ticket": {
+      "title": "Ticket",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "emoji": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/TicketStatus"
+        },
+        "author": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Contributor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "llm": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "client": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TicketClient"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checkpoint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "goal": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dates": {
+          "$ref": "#/$defs/TicketDate"
+        },
+        "interactions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Interaction"
+          }
+        },
+        "bundles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Bundle"
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/File"
+          }
+        }
+      }
+    },
+    "Interaction": {
+      "title": "Interaction",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "system": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "checkpoint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "llm": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "InteractionResource": {
+      "title": "InteractionResource",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "system": {
+          "type": "string"
+        },
+        "client": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "checkpoint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "llm": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sourceKind": {
+          "type": "string"
+        },
+        "sourceId": {
+          "type": "string"
+        },
+        "goalId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ticketId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TicketStatus": {
+      "title": "TicketStatus",
+      "type": "string",
+      "enum": [
+        "OPEN",
+        "CLOSED"
+      ]
+    },
+    "TicketClient": {
+      "title": "TicketClient",
+      "type": "string",
+      "enum": [
+        "COPILOT_CHAT",
+        "ANTIGRAVITY",
+        "CURSOR",
+        "CLAUDE_CODE",
+        "CODEX",
+        "DROID"
+      ]
+    },
+    "TicketDate": {
+      "title": "TicketDate",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "started": {
+          "$ref": "#/$defs/DateTime"
+        },
+        "finished": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TicketBundleContrib": {
+      "title": "TicketBundleContrib",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bundle": {
+          "$ref": "#/$defs/Bundle"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TicketFileContrib"
+          }
+        }
+      }
+    },
+    "TicketFileContrib": {
+      "title": "TicketFileContrib",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/File"
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TicketSectionContrib"
+          }
+        }
+      }
+    },
+    "TicketSectionContrib": {
+      "title": "TicketSectionContrib",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "section": {
+          "$ref": "#/$defs/Section"
+        },
+        "definitions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "metrics": {
+          "$ref": "#/$defs/LineMetrics"
+        }
+      }
+    },
+    "Policy": {
+      "title": "Policy",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Territory"
+          }
+        },
+        "statutes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Statute"
+          }
+        }
+      }
+    },
+    "Territory": {
+      "title": "Territory",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Territory"
+          }
+        },
+        "kinds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Statute"
+          }
+        }
+      }
+    },
+    "Statute": {
+      "title": "Statute",
+      "$comment": "Field arguments are declared in the 🔗️.graphql facet; a JSON instance is one already-resolved selection.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "policy": {
+          "$ref": "#/$defs/Policy"
+        },
+        "priority": {
+          "$ref": "#/$defs/BreachPriority"
+        },
+        "autofixable": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "solution": {
+          "type": "string"
+        },
+        "breachs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Breach"
+          }
+        }
+      }
+    },
+    "BreachPriority": {
+      "title": "BreachPriority",
+      "type": "string",
+      "enum": [
+        "HIGH",
+        "MEDIUM",
+        "LOW"
+      ]
+    },
+    "Breach": {
+      "title": "Breach",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/Statute"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/File"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "folder": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Folder"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "line": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "column": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excerpt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "summary": {
+          "type": "string"
+        },
+        "priority": {
+          "$ref": "#/$defs/BreachPriority"
+        },
+        "autofixable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "AnalyzeResult": {
+      "title": "AnalyzeResult",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "breachs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Breach"
+          }
+        },
+        "metrics": {
+          "$ref": "#/$defs/AnalyzeMetrics"
+        }
+      }
+    },
+    "AnalyzeMetrics": {
+      "title": "AnalyzeMetrics",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "total": {
+          "type": "integer"
+        },
+        "byPriority": {
+          "$ref": "#/$defs/PriorityCount"
+        },
+        "autofixable": {
+          "type": "integer"
+        }
+      }
+    },
+    "PriorityCount": {
+      "title": "PriorityCount",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "high": {
+          "type": "integer"
+        },
+        "medium": {
+          "type": "integer"
+        },
+        "low": {
+          "type": "integer"
+        }
+      }
+    },
+    "FixResult": {
+      "title": "FixResult",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fixed": {
+          "type": "integer"
+        },
+        "remaining": {
+          "type": "integer"
+        },
+        "breachs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Breach"
+          }
+        }
+      }
+    }
+  }
+}

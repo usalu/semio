@@ -16,7 +16,7 @@
           "const": "createAnimation"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎞️animation/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-animation/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "deleteAnimation"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎞️animation/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-animation/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "moveAnimation"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎞️animation/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-animation/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "reorderAnimations"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎞️animation/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-animations/schema.json"
         }
       }
     }

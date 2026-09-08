@@ -1,21 +1,40 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/mp3/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/mp3/mpeg1-layer3/any/inference.json",
   "title": "Mp3Inference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["duration"],
+  "required": [
+    "duration"
+  ],
   "properties": {
-    "duration": { "$ref": "#/$defs/Mp3Duration", "x-semio-derived": true }
+    "duration": {
+      "$ref": "#/$defs/Mp3Duration",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "Mp3Duration": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["durationSeconds", "frameCount", "channelCount"],
+      "required": [
+        "durationSeconds",
+        "frameCount",
+        "channelCount"
+      ],
       "properties": {
-        "durationSeconds": { "type": "number", "minimum": 0 },
-        "frameCount": { "type": "integer", "minimum": 0 },
-        "channelCount": { "type": "integer", "minimum": 0 }
+        "durationSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "frameCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "channelCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

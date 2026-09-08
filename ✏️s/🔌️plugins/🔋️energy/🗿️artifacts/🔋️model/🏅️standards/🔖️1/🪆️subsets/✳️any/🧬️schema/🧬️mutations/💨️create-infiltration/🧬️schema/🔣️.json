@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/create-infiltration/schema.json",
+  "$id": "https://semio.tech/schema/s/energy/model/mutation/create-infiltration/schema.json",
   "title": "CreateInfiltration",
   "type": "object",
   "additionalProperties": false,

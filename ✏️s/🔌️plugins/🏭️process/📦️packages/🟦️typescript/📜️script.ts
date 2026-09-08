@@ -6,8 +6,11 @@ import { BundleScript, ScriptRouter, runCmd, runBundleScriptMain } from "../../.
 
 //#region 🔖️RetainedRouteAudit
 //#region 🔖️Model
-type Lane = "Artifact" | "Config" | "Draft" | "Presence" | "Transient" | "Child" | "HostOnly";
-type Group = { status: "Migrated"; execution: "bounded" | "resumable"; lanes: Lane[]; routes: string[] };
+/** 🔤️ The Rust variant name of one kebab lane/disposition from `framework.ui`'s shared vocabulary. */
+const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
+
+type Lane = "artifact" | "config" | "draft" | "presence" | "transient" | "child" | "host-only";
+type Group = { status: "migrated"; execution: "bounded" | "resumable"; lanes: Lane[]; routes: string[] };
 type Fixture = {
   schema: string;
   source: string;
@@ -74,7 +77,7 @@ function fixtureOracle(fixture: Fixture): boolean {
   return migrated.length === fixture.migratedCount
     && fixture.migratedCount === fixture.routeCount
     && new Set(migrated).size === fixture.routeCount
-    && fixture.groups.every((group) => group.status === "Migrated" && group.routes.length > 0 && group.lanes.length > 0 && new Set(group.lanes).size === group.lanes.length && (!group.lanes.includes("HostOnly") || group.lanes.length === 1))
+    && fixture.groups.every((group) => group.status === "migrated" && group.routes.length > 0 && group.lanes.length > 0 && new Set(group.lanes).size === group.lanes.length && (!group.lanes.includes("host-only") || group.lanes.length === 1))
     && fixture.oracleCases.every((test) => expectedExtent(test.bytes) === test.expectedExtent)
     && Object.entries(fixture.laws).every(([law, value]) => law === "scanThenMonolithRoutes" ? Array.isArray(value) && value.length === 0 : value === true);
 }
@@ -100,7 +103,7 @@ function sourceOracle(fixture: Fixture, source: string): boolean {
     && exact(constantRoutes(source, "PROCESS3D_RESUMABLE_TOOL_IDS"), resumable)
     && exact(proofRows(source), migrated)
     && exact(publications.map((row) => row.route), migrated)
-    && fixture.groups.every((group) => group.routes.every((route) => exact(publicationMap.get(route) ?? [], group.lanes)))
+    && fixture.groups.every((group) => group.routes.every((route) => exact(publicationMap.get(route) ?? [], group.lanes.map(variant))))
     && source.includes("struct Process3dResumableCommandWork")
     && source.includes("stage: \"process3d-config-prepare\"")
     && source.includes("fn checkpoint(&self")
@@ -124,7 +127,7 @@ function sourceOracle(fixture: Fixture, source: string): boolean {
 //#region 🔖️Command
 class TestScript extends BundleScript {
   async run(): Promise<void> {
-    runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️.ts","✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
+    runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
 
     const pluginRoot = resolve(this.root, "../..");
     const fixture = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧪️tests/⚖️retained-route-laws.json")).json() as Fixture;
@@ -136,7 +139,7 @@ class TestScript extends BundleScript {
     if (!fixtureOracle(fixture)) throw new Error("Process3d retained route fixture failed its independent extent/partition oracle");
     const source = await Bun.file(resolve(pluginRoot, fixture.source)).text();
     if (!sourceOracle(fixture, source)) throw new Error("Process3d retained route source diverged from the strict fixture");
-    const firstArtifact = fixture.groups.find((group) => group.lanes.includes("Artifact"))!.routes[0]!;
+    const firstArtifact = fixture.groups.find((group) => group.lanes.includes("artifact"))!.routes[0]!;
     const hostileDeactivation = source.includes(".interactive_jobs(InteractiveJobClassification::Migrated)")
       ? source.replace(".interactive_jobs(InteractiveJobClassification::Migrated)", ".interactive_jobs(InteractiveJobClassification::BatchOnlyPendingRewrite)")
       : source.replace(new RegExp(`(\\.action_interactive_job\\("${firstArtifact}",\\s*InteractiveJobClassification::)Migrated`), "$1BatchOnlyPendingRewrite");

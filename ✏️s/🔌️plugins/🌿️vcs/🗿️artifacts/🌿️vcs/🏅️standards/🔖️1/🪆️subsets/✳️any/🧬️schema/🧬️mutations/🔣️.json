@@ -1,33 +1,25 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/vcs/vcs/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/vcs/vcs/mutations.json",
   "title": "VcsMutation",
   "oneOf": [
     {
-      "$ref": "./🏷️add-tag/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/add-tag/schema.json"
     },
     {
-      "$ref": "./🔢change-counter/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/change-counter/schema.json"
     },
     {
-      "$ref": "./📝change-notes/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/change-notes/schema.json"
     },
     {
-      "$ref": "./🚦change-status/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/change-status/schema.json"
     },
     {
-      "$ref": "./🗑️remove-tag/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/remove-tag/schema.json"
     },
     {
-      "$ref": "./✏️rename-vcs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/rename-vcs/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "add-tag",
-    "change-counter",
-    "change-notes",
-    "change-status",
-    "remove-tag",
-    "rename-vcs"
   ]
 }

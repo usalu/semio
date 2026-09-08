@@ -1,5 +1,6 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/schema.json",
   "title": "Dag Snapshot",
   "description": "Known fields and input defaults of DagSnapshot and its intrinsic values. Owner serde ignores unknown nested fields. DagNodeKind.Select.selected is u64. AppInstance uses appIcon independently of the common DagNodeSpec icon.",
   "$ref": "#/$defs/DagSnapshot",
@@ -7,7 +8,7 @@
     "U64": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 18446744073709551615
+      "maximum": 18446744073709552000
     },
     "PropertyValue": {
       "oneOf": [
@@ -570,6 +571,136 @@
           "items": {
             "$ref": "#/$defs/DagFixtureEdge"
           }
+        }
+      }
+    },
+    "SliderOverlay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases",
+        "keyboard"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.dag.slider-overlay.v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/SliderOverlayCase"
+          }
+        },
+        "keyboard": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/SliderOverlayKeyboardStep"
+          }
+        }
+      }
+    },
+    "SliderOverlayCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "locale",
+        "scopeId",
+        "row"
+      ],
+      "properties": {
+        "locale": {
+          "enum": [
+            "en",
+            "de"
+          ]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "row": {
+          "$ref": "#/$defs/SliderOverlayRow"
+        }
+      }
+    },
+    "SliderOverlayRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "widgetId",
+        "label",
+        "value",
+        "min",
+        "max",
+        "step",
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
+      "properties": {
+        "widgetId": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "value": {
+          "type": "number"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "step": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "h": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "SliderOverlayKeyboardStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "expected"
+      ],
+      "properties": {
+        "key": {
+          "enum": [
+            "ArrowRight",
+            "ArrowLeft",
+            "Home",
+            "End"
+          ]
+        },
+        "expected": {
+          "type": "number"
         }
       }
     }

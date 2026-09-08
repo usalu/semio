@@ -4,7 +4,7 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::op::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
 use crate::{empty_trinity_graph_fixture, JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use crate::viewer::jack::modes::view;
 use crate::viewer::jack::modes::view::windows::graph;
@@ -69,7 +69,7 @@ impl ArtifactViewer for TrinityJackViewer {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            semio_framework_graph::BODY_KEY => semio_framework_graph::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            graph::BODY_KEY => graph::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -83,7 +83,7 @@ pub fn create_trinity_jack_viewer() -> semio_framework_plugin::AppDefinition {
         .icon_id("trinity")
         .mode_def(view::definition())
         .default_mode_id(view::TRINITY_JACK_VIEW_MODE_VIEW)
-        .window_kind_def(semio_framework_graph::definition())
+        .window_kind_def(graph::definition())
         .default_layout(view::layout())
         .build_definition()
 }
@@ -91,19 +91,6 @@ pub fn create_trinity_jack_viewer() -> semio_framework_plugin::AppDefinition {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn create_trinity_jack_viewer_builds_a_definition_for_the_viewer_role() {
-        let def = create_trinity_jack_viewer();
-        assert_eq!(def.role, semio_framework::AppRole::Viewer);
-        assert_eq!(def.dialect, TRINITY_JACK_DIALECT.into());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn viewer_dialect_matches_the_artifact_coordinate() {
-        assert_eq!(<TrinityJackViewer as ArtifactViewer>::DIALECT, TRINITY_JACK_DIALECT);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -27,13 +27,13 @@ fn inference_descriptors() -> &'static [::framework_schema::ArtifactInferenceDes
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::dag_artifact_inference_descriptor()]).as_slice()
 }
 
-pub fn subset() -> SubsetDeclaration<crate::DagApps> {
+pub fn subset<A: crate::DagApplication>() -> SubsetDeclaration<A> {
     SubsetDeclaration {
         dialect: crate::DAG_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::dag_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::DagViewer, crate::DagApps>(viewer::create_dag_viewer()),
-        editor: editor_surface::<editor::DagPlayApp, crate::DagApps>(editor::create_dag_app()),
+        viewer: viewer_surface::<viewer::DagViewer, A>(viewer::create_dag_viewer()),
+        editor: editor_surface::<editor::DagPlayApp, A>(editor::create_dag_app()),
         examples: examples(),
     }
 }

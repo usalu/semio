@@ -2,8 +2,8 @@
 
 use crate::JackSnapshot;
 
-pub use crate::schema::mutations::TrinityGraphMutation;
-pub use crate::schema::operations::{
+pub use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
+pub use crate::standards::v1::subsets::any::schema::operations::{
     apply_trinity_graph_mutation, apply_trinity_graph_mutations, create_trinity_graph_envelope, dispatch_trinity_graph_mutations, inverse_trinity_graph_mutation, validate_trinity_graph_operation, TrinityGraphEnvelope, TrinityGraphStore,
 };
 

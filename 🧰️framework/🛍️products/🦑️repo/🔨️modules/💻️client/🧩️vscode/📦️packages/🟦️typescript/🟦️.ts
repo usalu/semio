@@ -17,6 +17,8 @@ import * as fs from "fs";
 import * as path from "path";
 import { promisify } from "util";
 import * as vscode from "vscode";
+import technologyCatalogDocument from "../../🗂️technologies.json";
+import { parseTechnologyCatalog, type TechnologyCatalog } from "../../🧬️schema/🟦️";
 
 /**
  * execAsync holds the data fields for a execAsync record.
@@ -1251,87 +1253,31 @@ const UI_STRINGS = {
 };
 
 // #region 🌪️Entity Emoji Registry
-// Entity Emoji Registry MUST contain all entity-identifying emojis used in IDs.
+// Entity Emoji Registry MUST be derived from the owned technology catalog, never restated here.
 // This registry drives CodeLens detection, gutter decorations, and ID parsing.
-// It MUST be kept in sync with the CLI AllEntityEmojis() function.
+// The CLI's AllEntityEmojis() reads the same catalog through its generated Go projection.
+
+/**
+ * The `repo.client.vscode` technology catalog this extension owns, parsed through
+ * `🧬️schema/🟦️.ts` so a malformed `🗂️technologies.json` fails at load instead of at first use.
+ **/
+export const TECHNOLOGY_CATALOG: TechnologyCatalog = ((): TechnologyCatalog => {
+  const parsed = parseTechnologyCatalog(technologyCatalogDocument);
+  if (!parsed.success) throw new Error(`🗂️technologies.json violates ${"https://semio.tech/schema/repo/client/vscode/schema.json"}: ${parsed.error.message}`);
+  return parsed.data;
+})();
 
 /**
  * Complete set of entity-identifying emojis that appear as kind prefixes in entity IDs.
- * Each entry maps an emoji (after VS16 normalization) to its entity kind name.
- * This is the single source of truth — regex patterns are derived from it.
+ * Derived from TECHNOLOGY_CATALOG in declaration order; when two kinds share one emoji
+ * (technology-mono/interaction-started, draft/todo) the first declared kind wins.
+ * Regex patterns are derived from it.
  **/
-export const ENTITY_EMOJIS: ReadonlyMap<string, string> = new Map([
-  ["👤️", "technology-user"],
-  ["🧰️", "technology-infrastructure"],
-  ["🔬️", "technology-research"],
-  ["🌱️", "technology-mono"],
-
-  ["📚️", "bundle-library"],
-  ["🛂️", "bundle-schema"],
-  ["⌨️", "bundle-binary"],
-  ["🖱️", "bundle-ui"],
-  ["📔️", "bundle-example"],
-  ["🌐️", "bundle-site"],
-  ["🏪️", "bundle-assets"],
-  ["🪆️", "bundle-repo"],
-
-  ["🗃️", "folder-organization"],
-  ["🛅️", "folder-required"],
-
-  ["💻️", "file-code"],
-  ["🥼️", "file-lab"],
-  ["📜️", "file-script"],
-  ["📃️", "file-docs"],
-  ["⚙️", "file-config"],
-  ["💾️", "file-artifact"],
-  ["📋️", "file-template"],
-  ["⚖️", "file-license"],
-
-  ["📌️", "line"],
-
-  ["🔖️", "section"],
-
-  ["🛠️", "definition-implementation"],
-  ["✂️", "definition-interface"],
-  ["🪨️", "definition-constant"],
-  ["🧪️", "definition-test"],
-
-  ["🎆️", "year"],
-  ["🌙️", "month"],
-  ["☀️", "day"],
-  ["⏰️", "hour"],
-  ["⌚️", "minute"],
-  ["⏱️", "second"],
-
-  ["🎯️", "goal"],
-  ["🎫️", "ticket"],
-  ["📝️", "draft"],
-
-  ["👮️", "policy"],
-  ["🚫️", "breach"],
-  ["🔍️", "breach-scope"],
-
-  ["🧑️‍💻️", "contributor"],
-
-  ["🔀️", "checkpoint"],
-
-  ["✏️", "interaction-edited"],
-  ["✅️", "interaction-finished"],
-  ["🔁️", "interaction-restarted"],
-  ["🗑️", "interaction-deleted"],
-
-  ["⚪️", "session"],
-  ["🟡️", "session-running"],
-  ["🟢️", "session-completed"],
-  ["🔴️", "session-interrupted"],
-
-  ["🖥️", "codebase"],
-  ["🏗️", "technologies"],
-  ["📦️", "bundles"],
-  ["📁️", "folders"],
-  ["📄️", "files"],
-  ["🏷️", "definitions"],
-]);
+export const ENTITY_EMOJIS: ReadonlyMap<string, string> = ((): ReadonlyMap<string, string> => {
+  const index = new Map<string, string>();
+  for (const entry of TECHNOLOGY_CATALOG) if (!index.has(entry.emoji)) index.set(entry.emoji, entry.id);
+  return index;
+})();
 
 /**
  * Escapes a string for safe use inside a regular expression character class or alternation.

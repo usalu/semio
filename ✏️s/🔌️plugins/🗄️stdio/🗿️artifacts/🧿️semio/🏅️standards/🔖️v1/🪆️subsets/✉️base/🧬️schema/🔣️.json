@@ -1,11 +1,21 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio/artifact.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/artifact.json",
   "title": "SemioArtifact",
   "description": "Full artifact state, mirrors SemioSnapshot field for field — see the sibling snapshot.json for the real SemioSubsetSnapshot union shape.",
   "type": "value",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "subset": { "$ref": "https://semio.tech/schema/s.stdio.semio/snapshot.json#/definitions/SemioSubsetSnapshot", "x-semio-state": "artifact" }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "subset": {
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/snapshot.json#/definitions/SemioSubsetSnapshot",
+      "x-semio-state": "artifact"
+    }
   },
-  "required": ["schema", "subset"]
+  "required": [
+    "schema",
+    "subset"
+  ]
 }

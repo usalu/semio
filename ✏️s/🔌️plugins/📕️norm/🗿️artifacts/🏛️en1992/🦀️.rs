@@ -5,6 +5,7 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+#[cfg(test)]
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
@@ -48,7 +49,7 @@ pub mod part_3 {
 //#region 🔖️ArtifactKind
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    crate::app_surface::artifact_kind_spec("en1992", "EN 1992")
+    app_surface::artifact_kind_spec("en1992", "EN 1992")
 }
 //#endregion 🔖️ArtifactKind
 
@@ -92,11 +93,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::document_schema::en1992_artifact_schema_descriptor())
-        .inferences([crate::standards::v1::subsets::any::schema::inferences::en1992_artifact_inference_descriptor()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
+        .schema(document_schema::en1992_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::en1992_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::en1992::En1992PlayApp>>()
+        .document_codec::<semio_framework_plugin::EditorApp<editor::en1992::En1992PlayApp>>()
         .try_build()
 }
 
@@ -112,28 +113,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "en1992.document",
                     extension: Some("en1992"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::document_dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::document_dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1992.document"),
                 },
                 dsl::LanguageSpec {
                     id: "en1992.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1992.op"),
                 },
                 dsl::LanguageSpec {
                     id: "en1992.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("en1992.diff"),
@@ -144,8 +145,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1992.pack"),
                 },
                 dsl::LanguageSpec {
@@ -154,8 +155,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1992.spr"),
                 },
             ]

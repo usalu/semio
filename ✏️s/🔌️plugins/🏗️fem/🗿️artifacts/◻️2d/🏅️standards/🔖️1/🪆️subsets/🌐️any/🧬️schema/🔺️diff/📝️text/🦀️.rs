@@ -1,7 +1,7 @@
 //! 🔺️ Fem2d artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::schema::diff::{Fem2dCombinationsDelta, Fem2dDiff, Fem2dElementsDelta, Fem2dLoadCasesDelta, Fem2dMaterialsDelta, Fem2dNodesDelta, Fem2dRegionsDelta, Fem2dSectionsDelta, Fem2dSupportsDelta};
-use crate::schema::Fem2dArtifact;
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dCombinationsDelta, Fem2dDiff, Fem2dElementsDelta, Fem2dLoadCasesDelta, Fem2dMaterialsDelta, Fem2dNodesDelta, Fem2dRegionsDelta, Fem2dSectionsDelta, Fem2dSupportsDelta};
+use crate::standards::v1::subsets::any::schema::Fem2dArtifact;
 use crate::{element_id, Fem2dSnapshot, FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use protocol::MutationDiff;
 
@@ -329,7 +329,7 @@ impl_merge!(Fem2dCombinationsDelta);
 
 /// 🏗️ Set-node field delta.
 pub fn diff_set_node(index: usize, item: FemNode, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::schema::diff::Fem2dNodesPatchEntry;
+    use crate::standards::v1::subsets::any::schema::diff::Fem2dNodesPatchEntry;
     let id = item.id().to_string();
     let delta = if base.nodes.iter().any(|existing| existing.id() == id) {
         Fem2dNodesDelta { patched: vec![Fem2dNodesPatchEntry { id, item }], ..Default::default() }
@@ -349,7 +349,7 @@ pub fn diff_remove_node(id: String) -> Fem2dDiff {
 
 /// 🏗️ Set-element field delta.
 pub fn diff_set_element(index: usize, item: FemElement, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::schema::diff::Fem2dElementsPatchEntry;
+    use crate::standards::v1::subsets::any::schema::diff::Fem2dElementsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.elements.iter().any(|existing| existing.id() == id) {
         Fem2dElementsDelta { patched: vec![Fem2dElementsPatchEntry { id, item }], ..Default::default() }
@@ -369,7 +369,7 @@ pub fn diff_remove_element(id: String) -> Fem2dDiff {
 
 /// 🏗️ Set-region field delta.
 pub fn diff_set_region(index: usize, item: FemRegion, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::schema::diff::Fem2dRegionsPatchEntry;
+    use crate::standards::v1::subsets::any::schema::diff::Fem2dRegionsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.regions.iter().any(|existing| existing.id() == id) {
         Fem2dRegionsDelta { patched: vec![Fem2dRegionsPatchEntry { id, item }], ..Default::default() }
@@ -389,7 +389,7 @@ pub fn diff_remove_region(id: String) -> Fem2dDiff {
 
 /// 🏗️ Set-material field delta.
 pub fn diff_set_material(index: usize, item: FemMaterial, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::schema::diff::Fem2dMaterialsPatchEntry;
+    use crate::standards::v1::subsets::any::schema::diff::Fem2dMaterialsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.materials.iter().any(|existing| existing.id() == id) {
         Fem2dMaterialsDelta { patched: vec![Fem2dMaterialsPatchEntry { id, item }], ..Default::default() }
@@ -409,7 +409,7 @@ pub fn diff_remove_material(id: String) -> Fem2dDiff {
 
 /// 🏗️ Set-section field delta.
 pub fn diff_set_section(index: usize, item: FemSection, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::schema::diff::Fem2dSectionsPatchEntry;
+    use crate::standards::v1::subsets::any::schema::diff::Fem2dSectionsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.sections.iter().any(|existing| existing.id() == id) {
         Fem2dSectionsDelta { patched: vec![Fem2dSectionsPatchEntry { id, item }], ..Default::default() }
@@ -429,7 +429,7 @@ pub fn diff_remove_section(id: String) -> Fem2dDiff {
 
 /// 🏗️ Set-support field delta.
 pub fn diff_set_support(index: usize, item: FemSupport, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::schema::diff::Fem2dSupportsPatchEntry;
+    use crate::standards::v1::subsets::any::schema::diff::Fem2dSupportsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.supports.iter().any(|existing| existing.id() == id) {
         Fem2dSupportsDelta { patched: vec![Fem2dSupportsPatchEntry { id, item }], ..Default::default() }
@@ -449,7 +449,7 @@ pub fn diff_remove_support(id: String) -> Fem2dDiff {
 
 /// 🏗️ Set-load_case field delta.
 pub fn diff_set_load_case(index: usize, item: FemLoadCase, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::schema::diff::Fem2dLoadCasesPatchEntry;
+    use crate::standards::v1::subsets::any::schema::diff::Fem2dLoadCasesPatchEntry;
     let id = item.id().to_string();
     let delta = if base.load_cases.iter().any(|existing| existing.id() == id) {
         Fem2dLoadCasesDelta { patched: vec![Fem2dLoadCasesPatchEntry { id, item }], ..Default::default() }
@@ -469,7 +469,7 @@ pub fn diff_remove_load_case(id: String) -> Fem2dDiff {
 
 /// 🏗️ Set-combination field delta.
 pub fn diff_set_combination(index: usize, item: FemCombination, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::schema::diff::Fem2dCombinationsPatchEntry;
+    use crate::standards::v1::subsets::any::schema::diff::Fem2dCombinationsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.combinations.iter().any(|existing| existing.id() == id) {
         Fem2dCombinationsDelta { patched: vec![Fem2dCombinationsPatchEntry { id, item }], ..Default::default() }

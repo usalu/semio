@@ -1,0 +1,75 @@
+import { policyReadFileSafe, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE, interactivityPuzzleFillEnvelopeFailures } from "../../../../../📜️script.ts";
+
+/** 🧪️ Executes interactivity puzzle fill envelope policy assertions. */
+export function interactivityPuzzleFillEnvelopeSelfTests(repoRoot: string): void {
+  const precompute = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE);
+  const fill = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE);
+  const geometry = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE);
+  const action = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE);
+  const mutations: [string, string, string, string, string][] = [
+    ["page-cap", precompute.replace("FILL_ENVELOPE_PAGE_BYTES: usize = 16 * 1024", "FILL_ENVELOPE_PAGE_BYTES: usize = 32 * 1024"), fill, geometry, action],
+    ["dynamic-slots", precompute.replace("slots: [Option<FillEnvelopeAuthority>; FILL_ENVELOPE_MAX_OPERATIONS]", "slots: Vec<Option<FillEnvelopeAuthority>>"), fill, geometry, action],
+    ["missing-byte-preflight", precompute.replace("requested_bytes.checked_add(FILL_ENVELOPE_AUTHORITY_BYTES)", "Some(requested_bytes)"), fill, geometry, action],
+    ["clone-before-admission", precompute.replace("let fill = self.engine.fill.take()?", "let fill = self.engine.fill.as_ref()?.clone()"), fill, geometry, action],
+    ["whole-serde", precompute.replace("let job = semio_framework_job::allocate_operation_id().0;", "let _whole = serde_json::to_vec(&self.fill_progress());\n        let job = semio_framework_job::allocate_operation_id().0;"), fill, geometry, action],
+    ["whole-token-decode", precompute.replace("self.field += 1", "self.field = 6"), fill, geometry, action],
+    ["guard-after-decode", precompute.replace("if let Err(error) = admitted_cursor.bind(&admitted_request)", "if false"), fill, geometry, action],
+    ["wrong-context-owner", precompute.replace("request.job != self.context_job", "false"), fill, geometry, action],
+    ["stale-envelope-owner", precompute.replace('return Err("fill worker envelope owner is stale");', "return Ok(());"), fill, geometry, action],
+    ["missing-base-freshness", precompute.replace(" || fill.operation.base_revision.0 != request.base_revision", ""), fill, geometry, action],
+    ["direct-drive-instead-of-mounted", precompute.replace("match worker.pump_one(&fill_worker_pool(), semio_framework_async::Lane::Background)", "match semio_framework_job::drive_step(todo!())"), fill, geometry, action],
+    ["two-mounted-opportunities", precompute.replace("match worker.pump_one(&fill_worker_pool(), semio_framework_async::Lane::Background)", "let _extra = worker.pump_one(&fill_worker_pool(), semio_framework_async::Lane::Background);\n        match worker.pump_one(&fill_worker_pool(), semio_framework_async::Lane::Background)"), fill, geometry, action],
+    ["missing-terminal-take", precompute.replace("pub fn take_terminal_fill_job", "fn hidden_terminal_fill_job"), fill, geometry, action],
+    ["missing-drop-handback", precompute.replace("impl Drop for FillEnvelopeTerminalHandle", "impl FillEnvelopeTerminalHandle"), fill, geometry, action],
+    ["restore-mutable-alias", precompute.replace("self.engine.fill = None;", "self.engine.fill = authority.fill.clone();"), fill, geometry, action],
+    ["restore-cross-generation-clobber", precompute.replace("*current != request && live(current)", "false"), fill, geometry, action],
+    ["post-admission-mutable-alias", precompute.replace("self.fill_job = Some(request.clone());", "self.engine.fill = registry.authority_mut(&request).and_then(|authority| authority.fill.clone());\n            self.fill_job = Some(request.clone());"), fill, geometry, action],
+    ["close-drops-replacement", precompute.replace("let outcome = self.fill_terminal.as_mut().map(FillEnvelopeTerminalHandle::close_step);", "self.engine.fill.take();\n        let outcome = self.fill_terminal.as_mut().map(FillEnvelopeTerminalHandle::close_step);"), fill, geometry, action],
+    ["closing-not-reclaimable", precompute.replace("FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Closed) | FillEnvelopePhase::Closing) && authority.checked_out", "FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Closed)) && authority.checked_out"), fill, geometry, action],
+    ["closing-drop-lost-wake", precompute.replace("request_fill_envelope_terminal(&self.request, FillEnvelopeTerminalReason::Closed);\n        self.checked_out.store(false, Ordering::Release)", "request_fill_envelope_terminal(&self.request, FillEnvelopeTerminalReason::Closed);"), fill, geometry, action],
+    ["wrapping-operation-generation", precompute.replace("self.fill_generation.checked_add(1)?", "self.fill_generation.wrapping_add(1)"), fill, geometry, action],
+    ["wrapping-operation-revision", precompute.replace("self.fill_revision.checked_add(1)?", "self.fill_revision.wrapping_add(1)"), fill, geometry, action],
+    ["zero-operation-generation", precompute.replace("self.request.generation == 0", "false"), fill, geometry, action],
+    ["inexact-credit-release", precompute.replace("registry.aggregate_bytes.checked_sub(authority.reserved_bytes)", "registry.aggregate_bytes.saturating_sub(authority.reserved_bytes)"), fill, geometry, action],
+    ["missing-identity-fixture", precompute.replace("fill_worker_token_reopens_the_exact_retained_owner_and_drives_one_turn", "fill_worker_token_smoke"), fill, geometry, action],
+    ["whole-preview", precompute, fill.replace("StepOutcome::PreviewReady(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview))", "StepOutcome::PreviewReady(semio_framework_job::RetainedJobPayload::from_vec(semio_framework_job::JobPayloadStream::Preview, serde_json::to_vec(&self.preview).unwrap()).unwrap())"), geometry, action],
+    ["lost-ui-caller", precompute, fill, geometry, action.replace("let spawn = precompute.enqueue_fill_job();", "let spawn = None;")],
+    ["literal-max-credit", precompute.replace("registry.finish_measurement(&admission.request, credit.items, credit.bytes)", "registry.finish_measurement(&admission.request, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES)"), fill, geometry, action],
+    ["nested-cap", precompute, fill.replace("FILL_BUILDER_NESTED_ITEMS: usize = 32", "FILL_BUILDER_NESTED_ITEMS: usize = 33"), geometry, action],
+    ["pair-size-backing-heuristic", precompute, fill.replace("(occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit::default())", "(occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit { items: occupied, bytes: occupied * std::mem::size_of::<(String, usize)>() })"), geometry, action],
+    ["decorative-fixed-page", precompute, fill, geometry.replace("page: Option<Box<[Option<(K, V)>; N]>>", "page: Option<Box<[u8; FIXED_OWNER_PAGE_BYTES]>>"), action],
+    ["standard-map-backing", precompute, fill.replace("placed_lookup: FixedOwnerMap<String, usize>", "placed_lookup: BTreeMap<String, usize>"), geometry, action],
+    ["fixed-slot-cap-plus-one", precompute, fill, geometry.replace("FIXED_OWNER_SLOTS: usize = 32", "FIXED_OWNER_SLOTS: usize = 33"), action],
+    ["missing-fixed-backing-census", precompute, fill.replace("fill.placed_lookup.backing_credit()", "None"), geometry, action],
+    ["occupied-input-drop", precompute, fill, geometry.replace("return Ok(FixedOwnerMapInsert::Occupied { input_key: key, input_value: value });", "drop((key, value)); return Ok(FixedOwnerMapInsert::Inserted);"), action],
+    ["value-only-remove", precompute, fill, geometry.replace("pub(crate) fn remove_entry", "pub(crate) fn remove"), action],
+    ["fixed-page-clone", precompute, fill, geometry.replace("#[derive(Debug)]\npub(crate) struct FixedOwnerMap", "#[derive(Clone, Debug)]\npub(crate) struct FixedOwnerMap"), action],
+    ["whole-field-census", precompute, fill.replace("match fill.candidate_seen.iter().nth(self.index) {", "let _whole = fill.candidate_seen.iter().all(|value| !value.is_empty());\n            match fill.candidate_seen.iter().nth(self.index) {"), geometry, action],
+    ["unmounted-terminal-pump", precompute.replace("if self.pump_fill_terminal_step()", "if false"), fill, geometry, action],
+    ["lossy-terminal-lock", precompute.replace("request_fill_envelope_terminal(request, reason);", "let Ok(_registry) = fill_envelope_registry().try_lock() else { return; };"), fill, geometry, action],
+    ["complete-not-closeable", precompute.replace("if !matches!(authority.phase, FillEnvelopePhase::Closing)", "if matches!(authority.phase, FillEnvelopePhase::Admitted)"), fill, geometry, action],
+    ["bulk-preview-drop", precompute, fill.replace("self.current = Some(FillRetiredOwner::PreviewState(value));", "self.current = Some(FillRetiredOwner::String(value.target_vortex_full_id));"), geometry, action],
+    ["missing-terminal-empty-witness", precompute, fill.replace("if !fill.terminal_owners_empty()", "if false"), geometry, action],
+    ["bulk-spatial-bucket-drop", precompute, fill, geometry.replace("self.retiring_bucket = Some(bucket);", "drop(bucket);"), action],
+    ["bulk-fill-backing-drop", precompute, fill.replace("21 => retire_fixed_collection_backing(self)", "21 => { drop(self.placed_lookup.pop_first()); true }"), geometry, action],
+    ["bulk-spatial-backing-drop", precompute, fill, geometry.replace("if self.entries.retire_backing()", "if false"), action],
+    ["missing-fixed-page-fixture", precompute, fill.replace("all_fill_fixed_collections_store_max_entries_in_the_credited_page_and_return_plus_one", "fill_fixed_collection_smoke"), geometry, action],
+    ["missing-occupied-owner-fixture", precompute, fill.replace("occupied_fixed_slot_returns_the_distinct_input_owners_without_replacing_stored_owners", "fill_fixed_occupied_smoke"), geometry, action],
+    ["bulk-builder-drop", precompute.replace("authority.fill_retirement = Some(FillBuilderRetirementCursor::new(fill))", "drop(fill)"), fill, geometry, action],
+    ["missing-admission-drop-fixture", precompute.replace("fill_worker_session_drop_during_measurement_mounts_the_same_terminal_once", "fill_worker_admission_smoke"), fill, geometry, action],
+    ["missing-complete-drop-fixture", precompute.replace("fill_worker_completed_before_session_drop_is_reclassified_and_mounted_once", "fill_worker_complete_smoke"), fill, geometry, action],
+    ["missing-exclusive-supersession-fixture", precompute.replace("fill_worker_admitted_fixed_pages_survive_replan_and_mesh_supersession_until_retained_close", "fill_worker_supersession_smoke"), fill, geometry, action],
+    ["missing-closing-rearm-fixture", precompute.replace("fill_worker_session_drop_during_partial_close_rearms_the_same_cursor_once", "fill_worker_partial_close_smoke"), fill, geometry, action],
+    ["missing-cross-generation-phase-fixture", precompute.replace("fill_worker_cross_generation_restore_rejects_measuring_and_every_live_terminal_phase", "fill_worker_cross_generation_smoke"), fill, geometry, action],
+    ["missing-cross-generation-closing-fixture", precompute.replace("fill_worker_cross_generation_restore_preserves_dropped_closing_handle_and_zero_credit", "fill_worker_cross_generation_closing_smoke"), fill, geometry, action],
+    ["missing-malformed-guard-fixture", precompute.replace("fill_worker_malformed_token_faults_exact_raw_owner_not_wrong_context_owner", "fill_worker_decode_smoke"), fill, geometry, action],
+    ["missing-wrong-context-fixture", precompute.replace("fill_worker_wrong_context_identity_faults_decoded_producer_before_drive", "fill_worker_context_smoke"), fill, geometry, action],
+    ["missing-stale-identity-fixture", precompute.replace("fill_worker_stale_envelope_identity_is_rejected_without_faulting_replacement", "fill_worker_stale_smoke"), fill, geometry, action],
+    ["missing-exhaustion-fixture", precompute.replace("fill_operation_identity_checked_nonzero_exhaustion_permanently_refuses_aba", "fill_worker_exhaustion_smoke"), fill, geometry, action],
+    ["missing-zero-identity-fixture", precompute.replace("fill_worker_zero_semantic_counters_and_exhausted_stale_tokens_never_alias", "fill_worker_zero_identity_smoke"), fill, geometry, action],
+    ["missing-deep-retirement-fixture", precompute.replace("fill_worker_early_fault_guard_terminalizes_and_deep_retirement_is_incremental", "fill_worker_fault_smoke"), fill, geometry, action],
+  ];
+  for (const [name, mutatedPrecompute, mutatedFill, mutatedGeometry, mutatedAction] of mutations) if (interactivityPuzzleFillEnvelopeFailures(mutatedPrecompute, mutatedFill, mutatedGeometry, mutatedAction).length === 0) throw new Error(`[verify interactivity] Puzzle fill envelope self-test ${name} was falsely accepted.`);
+  const failures = interactivityPuzzleFillEnvelopeFailures(precompute, fill, geometry, action);
+  if (failures.length !== 0) throw new Error(`[verify interactivity] Puzzle fill envelope baseline was falsely rejected: ${failures.join("; ")}`);
+}

@@ -4,7 +4,7 @@
 //! cross-node from `crate::fem2d_engine` (the top-level `build_model`/`fem2d_solve_all` entry points)
 //! and from `crate::fem2d_engine::modal_buckling`/`crate::fem2d_engine::mesh_preview`.
 
-use crate::artifacts::fem2d::{Fem2dSnapshot, FemElement};
+use crate::{Fem2dSnapshot, FemElement};
 use crate::fem2d_engine::Fem2dError;
 use crate::model::{Bar2, BeamEb2, Dof, Elements, NodalLoad, Node};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;

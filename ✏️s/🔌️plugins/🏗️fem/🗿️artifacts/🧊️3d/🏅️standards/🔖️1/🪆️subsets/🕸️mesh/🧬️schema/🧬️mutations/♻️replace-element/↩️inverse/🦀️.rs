@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ReplaceElement` — recovers the pre-mutation element from `base`.
 use super::ReplaceElement;
 use crate::element_id;
-use crate::mutations::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse

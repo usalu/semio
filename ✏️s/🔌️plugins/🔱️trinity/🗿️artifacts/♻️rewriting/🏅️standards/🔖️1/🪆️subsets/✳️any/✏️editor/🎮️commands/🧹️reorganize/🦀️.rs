@@ -1,6 +1,6 @@
 //! 👁️ 👁️ Trinity Rewriting app command — `reorganize`.
 
-use crate::op::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
 use crate::editor::rewriting::config::RewritingConfigMutation;
 use semio_framework_plugin::Emit;
 

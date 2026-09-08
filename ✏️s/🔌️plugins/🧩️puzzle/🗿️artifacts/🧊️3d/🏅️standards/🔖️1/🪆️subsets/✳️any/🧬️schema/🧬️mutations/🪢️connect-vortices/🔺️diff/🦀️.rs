@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ConnectVortices` — a real append-only insert. No-op when the id
 //! already exists in `base`.
-use crate::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff};
 use crate::{Puzzle3dAttraction, Puzzle3dSnapshot};
 
 //#region 🔖️Diff

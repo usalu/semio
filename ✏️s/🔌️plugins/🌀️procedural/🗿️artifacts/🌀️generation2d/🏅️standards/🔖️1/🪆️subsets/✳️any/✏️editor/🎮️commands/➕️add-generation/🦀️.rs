@@ -1,12 +1,12 @@
 //! 🧬️ 🧬️ Generation2d play app commands command — `add-generation`.
 
-use crate::op::{generation_mutation_to_generation2d, Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::text::{generation_mutation_to_generation2d, Generation2dMutation};
 use crate::Generation2dSnapshot;
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use semio_framework_os_flow::forms_bridge::flow_fixture_to_form_spec;
 use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, generation_operations, select_generation, GenerationPlayState};
 use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture;
+use semio_framework_artifact_flow_flow::FlowFixture;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -20,7 +20,7 @@ fn refresh_generation_preview(config: &mut Generation2dConfig, fixture: &FlowFix
         config.generation_preview_text = None;
         return;
     };
-    let preview = crate::schema::evaluate_generation_preview(fixture, &selected.values);
+    let preview = crate::standards::v1::subsets::any::schema::evaluate_generation_preview(fixture, &selected.values);
     config.generation_preview_text = Some(preview);
 }
 //#endregion 🔖️PreviewHelper
@@ -92,26 +92,6 @@ pub fn handle(_payload: &AddGeneration, doc: &ArtifactView<'_, Generation2dSnaps
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::generation2d::commands::enter_generate;
-    use crate::editor::generation2d::testkit::{app, dispatch};
-    use crate::editor::generation2d::Generation2dCommand;
-
-    #[semio_framework_async_macros::async_test]
-    async fn add_generation_records_an_undoable_generation_operation() {
-        let mut app = app().await;
-        let before = app.snapshot().expect("snapshot").generation.generations.len();
-        dispatch(&mut app, Generation2dCommand::AddGeneration(AddGeneration {})).await;
-        assert_eq!(app.snapshot().expect("snapshot").generation.generations.len(), before + 1);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn generate_is_a_view_action_with_no_artifact_mutations() {
-        let mut app = app().await;
-        let before = app.snapshot().expect("snapshot");
-        dispatch(&mut app, Generation2dCommand::Generate(enter_generate::Generate {})).await;
-        assert_eq!(app.snapshot().expect("snapshot"), before, "generate must not mutate the document");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

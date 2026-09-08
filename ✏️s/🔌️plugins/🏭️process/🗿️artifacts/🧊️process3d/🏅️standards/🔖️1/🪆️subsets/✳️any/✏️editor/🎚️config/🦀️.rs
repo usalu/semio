@@ -220,12 +220,12 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
     /// triads of its own (every field lives flat in this file), so every entry is a metadata
     /// placeholder to satisfy `protocol::Mutation`, matching `🪵️sourcing`'s own config precedent.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⌨️set-engagement-input", semantic_kind: "set-engagement-input", display_name: "Set Engagement Input", emoji: "⌨️", aggregate_variant: "SetEngagementInput", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎥️set-camera", semantic_kind: "set-camera", display_name: "Set Camera", emoji: "🎥️", aggregate_variant: "SetCamera", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/☀️set-sun", semantic_kind: "set-sun", display_name: "Set Sun", emoji: "☀️", aggregate_variant: "SetSun", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🪛️set-active-utility", semantic_kind: "set-active-utility", display_name: "Set Active Utility", emoji: "🪛️", aggregate_variant: "SetActiveUtility", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🗣️set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "🗣️", aggregate_variant: "SetLocale", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🤝️set-contributions", semantic_kind: "set-contributions", display_name: "Set Contributions", emoji: "🤝️", aggregate_variant: "SetContributions", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⌨️set-engagement-input", semantic_kind: "set-engagement-input", display_name: "Set Engagement Input", emoji: "⌨️", aggregate_variant: "SetEngagementInput", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎥️set-camera", semantic_kind: "set-camera", display_name: "Set Camera", emoji: "🎥️", aggregate_variant: "SetCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/☀️set-sun", semantic_kind: "set-sun", display_name: "Set Sun", emoji: "☀️", aggregate_variant: "SetSun", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🪛️set-active-utility", semantic_kind: "set-active-utility", display_name: "Set Active Utility", emoji: "🪛️", aggregate_variant: "SetActiveUtility", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🗣️set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "🗣️", aggregate_variant: "SetLocale", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🤝️set-contributions", semantic_kind: "set-contributions", display_name: "Set Contributions", emoji: "🤝️", aggregate_variant: "SetContributions", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -284,62 +284,6 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn process3d_config_dsl_and_pack_round_trip() {
-        use store::ArtifactPack;
-        let config = Process3dConfig { sun_enabled: true, active_utility_id: "cut".into(), ..Process3dConfig::default() };
-        store::os_store::test_support::assert_dsl_round_trip(&config);
-        let bytes = config.encode_pack();
-        assert_eq!(Process3dConfig::decode_pack(&bytes).expect("decode"), config);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn process3d_config_operation_backwards_restores_the_same_field_from_base() {
-        let base = Process3dConfig::default();
-        let operation = Process3dConfigMutation::SetLocale { value: "de-DE".into() };
-        let inverse = operation.inverse(&base);
-        assert_eq!(inverse, vec![Process3dConfigMutation::SetLocale { value: base.locale }]);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn process3d_config_operation_diff_applies_expected_fields() {
-        let base = Process3dConfig::default();
-        let next = Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 }.diff(&base).into_parts().0;
-        assert_eq!(next.camera_position, [1.0, 2.0, 3.0]);
-        assert_eq!(next.camera_target, [0.1, 0.2, 0.3]);
-        assert_eq!(next.camera_fov, 60.0);
-
-        let next = Process3dConfigMutation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() }.diff(&base).into_parts().0;
-        assert!(next.sun_enabled);
-        assert_eq!(next.sun_azimuth, 10.0);
-        assert_eq!(next.sun_elevation, 20.0);
-        assert_eq!(next.sun_intensity, 0.5);
-        assert_eq!(next.sun_color, "#123456");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn process3d_config_op_text_round_trips_every_variant() {
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetEngagementInput { value: "cut".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 });
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetActiveUtility { utility_id: "cut".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetLocale { value: "de-DE".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetContributions { json: "[]".into() });
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn process3d_config_default_matches_the_existing_runtime_defaults() {
-        let config = Process3dConfig::default();
-        assert_eq!(config.camera_position, [3.0, -3.0, 2.0]);
-        assert_eq!(config.camera_target, [0.0, 0.0, 0.0]);
-        assert_eq!(config.camera_fov, 45.0);
-        assert!(!config.sun_enabled);
-        assert_eq!(config.active_utility_id, "select");
-        assert_eq!(config.locale, "en-US");
-        assert_eq!(config.active_utility(), "select");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

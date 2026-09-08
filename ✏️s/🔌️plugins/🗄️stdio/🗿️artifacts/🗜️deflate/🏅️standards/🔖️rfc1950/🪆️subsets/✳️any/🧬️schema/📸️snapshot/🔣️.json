@@ -1,8 +1,15 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.deflate/snapshot.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/snapshot.json",
   "title": "DeflateSnapshot",
   "type": "object",
-  "required": ["schema", "compressionMethod", "windowBits", "compressionLevelHint", "payload"],
+  "required": [
+    "schema",
+    "compressionMethod",
+    "windowBits",
+    "compressionLevelHint",
+    "payload"
+  ],
   "properties": {
     "schema": {
       "type": "string",
@@ -24,7 +31,12 @@
     },
     "compressionLevelHint": {
       "type": "string",
-      "enum": ["fastest", "fast", "default", "maximum"],
+      "enum": [
+        "fastest",
+        "fast",
+        "default",
+        "maximum"
+      ],
       "description": "FLG.FLEVEL, informational only",
       "x-semio-state": "artifact"
     },
@@ -37,7 +49,11 @@
     },
     "payload": {
       "type": "array",
-      "items": { "type": "integer", "minimum": 0, "maximum": 255 },
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
       "description": "decompressed payload",
       "x-semio-state": "artifact"
     }

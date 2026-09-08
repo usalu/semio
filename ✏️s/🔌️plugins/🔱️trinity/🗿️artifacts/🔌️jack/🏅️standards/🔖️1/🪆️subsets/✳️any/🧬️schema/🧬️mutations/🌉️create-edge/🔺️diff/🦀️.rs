@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `CreateEdge` — a real append-only insert.
-use crate::diff::{diff_replace_content, JackDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_replace_content, JackDiff};
 use crate::JackSnapshot;
 
 //#region 🔖️Diff

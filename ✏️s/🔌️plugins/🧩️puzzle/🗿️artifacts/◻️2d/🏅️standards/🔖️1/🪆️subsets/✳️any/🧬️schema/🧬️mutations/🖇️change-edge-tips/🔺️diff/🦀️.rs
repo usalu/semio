@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ChangeEdgeTips` — patches the one addressed edge in place.
-use crate::diff::{Puzzle2dDiff, Puzzle2dEdgePatch, Puzzle2dEdgePatchEntry, Puzzle2dEdgesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dEdgePatch, Puzzle2dEdgePatchEntry, Puzzle2dEdgesDelta};
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Diff

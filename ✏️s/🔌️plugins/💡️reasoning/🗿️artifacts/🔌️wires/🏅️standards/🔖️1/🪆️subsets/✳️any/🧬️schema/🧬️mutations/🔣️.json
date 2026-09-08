@@ -1,49 +1,37 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/reasoning/wires/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/reasoning/wires/mutations.json",
   "title": "WiresMutation",
   "oneOf": [
     {
-      "$ref": "./🏷️change-node-kind/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/change-node-kind/schema.json"
     },
     {
-      "$ref": "./🔷change-node-shape/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/change-node-shape/schema.json"
     },
     {
-      "$ref": "./🤝️connect-nodes/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/connect-nodes/schema.json"
     },
     {
-      "$ref": "./🌱create-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/create-node/schema.json"
     },
     {
-      "$ref": "./🗑️delete-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/delete-node/schema.json"
     },
     {
-      "$ref": "./✂️disconnect-nodes/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/disconnect-nodes/schema.json"
     },
     {
-      "$ref": "./✏️edit-node-text/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/edit-node-text/schema.json"
     },
     {
-      "$ref": "./🧭move-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/move-node/schema.json"
     },
     {
-      "$ref": "./📐resize-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/resize-node/schema.json"
     },
     {
-      "$ref": "./🚩set-node-root/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/set-node-root/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-node-kind",
-    "change-node-shape",
-    "connect-nodes",
-    "create-node",
-    "delete-node",
-    "disconnect-nodes",
-    "edit-node-text",
-    "move-node",
-    "resize-node",
-    "set-node-root"
   ]
 }

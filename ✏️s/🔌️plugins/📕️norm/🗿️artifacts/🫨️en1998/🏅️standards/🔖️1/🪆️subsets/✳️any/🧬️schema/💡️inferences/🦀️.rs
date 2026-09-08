@@ -69,21 +69,8 @@ pub fn en1998_artifact_inference_descriptor() -> framework_schema::ArtifactInfer
 
 #[cfg(test)]
 //#region 🧪️Tests
-mod tests {
-    use super::*;
-    use protocol::Inference;
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
-        let snapshot = En1998Snapshot::default();
-        assert_eq!(En1998Inference::infer(&snapshot), En1998Inference::infer(&snapshot));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
-        assert_eq!(En1998Inference::infer(&En1998Snapshot::default()), En1998Inference::default());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
@@ -259,20 +246,6 @@ pub fn evaluate(document: &En1998Snapshot) -> CheckReport {
 
 //#region 🧪️ComplianceReportTests
 #[cfg(test)]
-mod compliance_report_tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn full_seismic_e2e() {
-        let report = check_full_seismic(&En1998Snapshot::default());
-        assert_eq!(report.checks.len(), 12);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn full_seismic_en_annex_e2e() {
-        let document = En1998Snapshot { annex: "en".into(), ..En1998Snapshot::default() };
-        let report = check_full_seismic(&document);
-        assert_eq!(report.checks.len(), 12);
-    }
-}
+#[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
+mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests

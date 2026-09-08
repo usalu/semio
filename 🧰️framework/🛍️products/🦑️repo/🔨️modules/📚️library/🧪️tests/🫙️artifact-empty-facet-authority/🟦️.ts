@@ -7,7 +7,7 @@ import { parse, type ParseError } from "jsonc-parser";
 import * as ts from "typescript";
 import { loadCatalogTaxonomy, semanticArtifactEmptyFacetProjectionAuthority, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
 import optionsFixture from "./☑️options.json";
-import optionsOracle from "./📐️options.schema.json";
+import optionsOracle from "./🛂️schema/☑️options.json";
 
 const libraryRoot = resolve(import.meta.dir, "../..");
 const goldenPath = join(libraryRoot, "📦️packages/🟦️typescript/🧫️fixtures/🫙️artifact-empty-facet-authority/🔣️.json");
@@ -16,7 +16,7 @@ const golden = JSON.parse(goldenBytes.toString()) as Readonly<{
   schemaVersion: number; contractId: string; sourceRoot: string; sourceFilename: string; destinationFilename: string;
   cases: readonly Readonly<{ id: string; owner: string; form: string | null; root?: string; filename?: string; fileKindId?: string }>[];
 }>;
-const oracleBytes = readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8");
+const oracleBytes = readFileSync(join(import.meta.dir, "🛂️schema/🔣️.json"), "utf8");
 const oracle = JSON.parse(oracleBytes);
 const validateOwner = new Ajv({ strict: true, allErrors: true }).compile(oracle);
 const forms = oracle.oneOf.map((branch: { properties: { ownerForm: { const: string } } }) => branch.properties.ownerForm.const) as string[];
@@ -94,7 +94,7 @@ test("keeps exact structural ownership distinct from a basename-only match", () 
 
 test("registers the empty-facet authority through its closed canonical route", async () => {
   const directory = join(import.meta.dir, "../🫙️artifact-empty-facet-authority/🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), vector = JSON.parse(bytes);
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directory, "../🫙️artifact-empty-facet-authority/🧬️schema/🔣️.json"), "utf8")));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directory, "../🫙️artifact-empty-facet-authority/🛂️schema/🔣️.json"), "utf8")));
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
   for (const changed of [{ ...vector, source: "../🫙️artifact-empty-facet-authority/🟦️.ts" }, { ...vector, budget: 120000 }, { ...vector, budgetMs: 120000 }, { ...vector, runner: "other" }, { ...vector, launchOrder: 410.198 }]) expect(validate(changed)).toBe(false);
   const errors: ParseError[] = [];

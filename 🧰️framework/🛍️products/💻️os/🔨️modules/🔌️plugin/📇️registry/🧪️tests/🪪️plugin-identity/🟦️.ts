@@ -1,14 +1,15 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
 import { parseModuleDirectories } from "../../📦️deployment/🟦️.ts";
 import { parseComponentPackageId, type PluginRegistryEntry } from "../../📜️script.ts";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
-/** 🌳️ The repo root, six levels above `🔌️plugin/📇️registry`. */
-const repoRoot = resolve(import.meta.dirname, "..", "..", "..", "..", "..", "..");
-const registry = JSON.parse(readFileSync(join(import.meta.dirname, "🤖️generated/🔌️plugins.json"), "utf8")) as readonly PluginRegistryEntry[];
-const catalog = parseModuleDirectories(JSON.parse(readFileSync(join(import.meta.dirname, "📦️deployment/🗺️catalog.json"), "utf8")));
+const repoRoot = getWorkspaceRoot();
+const registryRoot = resolve(import.meta.dirname, "../..");
+const registry = JSON.parse(readFileSync(join(registryRoot, "🤖️generated/🔌️plugins.json"), "utf8")) as readonly PluginRegistryEntry[];
+const catalog = parseModuleDirectories(JSON.parse(readFileSync(join(registryRoot, "📦️deployment/🗺️catalog.json"), "utf8")));
 
 /** 🔌️ The one identity a plugin root passes to `Plugin::<…>::builder(…)`, as a quoted literal or a
  * `SCREAMING_SNAKE` const. Doc-comment decoys (`builder(…)`, `builder(...)`) can never match. */
@@ -86,7 +87,10 @@ describe("plugin identity is the same in every authority", () => {
       const fixtureDir = resolve(repoRoot, entry.cratePath, "..", "..", "🧪️fixtures", "🧫️plugin-identity");
       if (!existsSync(join(fixtureDir, "🔣️.json"))) continue;
       const fixture = JSON.parse(readFileSync(join(fixtureDir, "🔣️.json"), "utf8")) as Record<string, string>;
-      const validate = ajv.compile(JSON.parse(readFileSync(join(fixtureDir, "🧬️.schema.json"), "utf8")));
+      const schema = JSON.parse(readFileSync(join(fixtureDir, "../../🧬️schema/🔣️.json"), "utf8"));
+      const definitions = Object.entries(schema.$defs).filter(([, value]) => (value as { properties?: { schema?: { const?: string } } }).properties?.schema?.const === fixture.schema);
+      expect(definitions, `${entry.pluginId} identity schema`).toHaveLength(1);
+      const validate = ajv.addSchema(schema).getSchema(`${schema.$id}#/$defs/${definitions[0]![0]}`)!;
       expect(validate(fixture), `${entry.pluginId} fixture: ${ajv.errorsText(validate.errors)}`).toBe(true);
       expect(fixture.pluginId).toBe(entry.pluginId);
       expect(fixture.packageId).toBe(entry.packageId);

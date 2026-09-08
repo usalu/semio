@@ -50,14 +50,6 @@ pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> semio_fra
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::block2d::testkit::{new_app, render as render_body};
-
-    #[semio_framework_async_macros::async_test]
-    async fn renders_document_tree() {
-        let mut app = new_app().await;
-        assert!(render_body(&mut app, BLOCK2D_BODY_DOCUMENT).await.contains("Handle Kinds"));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

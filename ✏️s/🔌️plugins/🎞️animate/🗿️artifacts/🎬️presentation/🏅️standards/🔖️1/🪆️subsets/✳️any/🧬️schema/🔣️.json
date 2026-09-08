@@ -218,7 +218,7 @@
                       "const": "seedGrid"
                     },
                     "disposition": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     },
                     "lanes": {
                       "const": []
@@ -242,7 +242,7 @@
                       "const": "addTile"
                     },
                     "disposition": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     },
                     "lanes": {
                       "const": []
@@ -266,7 +266,7 @@
                       "const": "deleteTile"
                     },
                     "disposition": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     },
                     "lanes": {
                       "const": []
@@ -290,7 +290,7 @@
                       "const": "deleteSelection"
                     },
                     "disposition": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     },
                     "lanes": {
                       "const": []
@@ -314,7 +314,7 @@
                       "const": "renameTiles"
                     },
                     "disposition": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     },
                     "lanes": {
                       "const": []
@@ -338,7 +338,7 @@
                       "const": "patchTileCrops"
                     },
                     "disposition": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     },
                     "lanes": {
                       "const": []
@@ -362,7 +362,7 @@
                       "const": "setSource"
                     },
                     "disposition": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     },
                     "lanes": {
                       "const": []
@@ -386,7 +386,7 @@
                       "const": "setFrame"
                     },
                     "disposition": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     },
                     "lanes": {
                       "const": []
@@ -410,11 +410,11 @@
                       "const": "setActiveExample"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "HostOnly"
+                        "host-only"
                       ]
                     },
                     "blocker": {
@@ -436,7 +436,7 @@
                       "const": "clearTiles"
                     },
                     "disposition": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     },
                     "lanes": {
                       "const": []
@@ -460,7 +460,7 @@
                       "const": "engagementSubmit"
                     },
                     "disposition": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     },
                     "lanes": {
                       "const": []
@@ -484,7 +484,7 @@
                       "const": "resetGrid"
                     },
                     "disposition": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     },
                     "lanes": {
                       "const": []
@@ -508,11 +508,11 @@
                       "const": "engagementInput"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Config"
+                        "config"
                       ]
                     },
                     "blocker": {
@@ -534,7 +534,7 @@
                       "const": "canvasPointerDown"
                     },
                     "disposition": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     },
                     "lanes": {
                       "const": []
@@ -558,11 +558,11 @@
                       "const": "setLocale"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Config"
+                        "config"
                       ]
                     },
                     "blocker": {
@@ -584,11 +584,11 @@
                       "const": "noMutation"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "HostOnly"
+                        "host-only"
                       ]
                     },
                     "blocker": {
@@ -610,7 +610,7 @@
                       "const": "copyPrompt"
                     },
                     "disposition": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     },
                     "lanes": {
                       "const": []
@@ -634,7 +634,7 @@
                       "const": "exportVideoFromDeck"
                     },
                     "disposition": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     },
                     "lanes": {
                       "const": []
@@ -697,6 +697,9 @@
             }
           }
         }
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
       ]
     }
   }

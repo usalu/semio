@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `UpdatePresentation`.
 
 use crate::Block2dSnapshot;
-use crate::mutations::Block2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &super::UpdatePresentation, base: &Block2dSnapshot) -> Vec<Block2dMutation> {

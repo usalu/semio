@@ -28,17 +28,23 @@
             }
           }
         },
-        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\n"
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\n"
       },
       "expected": {
         "scopes": {
           "s.probe.thing": {
             "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
             "level": "artifact-standard-subset",
-            "exports": [
-              "Corner",
-              "ThingArtifact"
-            ],
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
             "dependsOn": []
           }
         },
@@ -91,18 +97,27 @@
           "hub.inference": {
             "path": "🌎️hub/💡️inference/🧬️schema",
             "level": "hub-area-module",
-            "exports": [
-              "InferenceApproval",
-              "Receipt"
-            ],
+            "exports": {
+              "InferenceApproval": {
+                "file": "🔣️.json",
+                "facet": "contract"
+              },
+              "Receipt": {
+                "file": "🔣️.json",
+                "facet": "contract"
+              }
+            },
             "dependsOn": []
           },
           "s.probe.thing": {
             "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
             "level": "artifact-standard-subset",
-            "exports": [
-              "ThingArtifact"
-            ],
+            "exports": {
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
             "dependsOn": [
               "hub.inference"
             ]
@@ -146,15 +161,18 @@
           "hub.inference": {
             "path": "🌎️hub/💡️inference/🧬️schema",
             "level": "hub-area-module",
-            "exports": [
-              "InferenceApproval"
-            ],
+            "exports": {
+              "InferenceApproval": {
+                "file": "🔣️.json",
+                "facet": "contract"
+              }
+            },
             "dependsOn": []
           }
         },
         "diagnosticCodes": [
-          "scope-id-duplicate",
-          "scope-id-duplicate"
+          "schema-scope-ambiguous",
+          "schema-scope-ambiguous"
         ],
         "placementPaths": []
       }
@@ -181,14 +199,17 @@
           "hub.inference": {
             "path": "🌎️hub/💡️inference/🧬️schema",
             "level": "hub-area-module",
-            "exports": [
-              "InferenceApproval"
-            ],
+            "exports": {
+              "InferenceApproval": {
+                "file": "🔣️.json",
+                "facet": "contract"
+              }
+            },
             "dependsOn": []
           }
         },
         "diagnosticCodes": [
-          "ref-unresolved"
+          "schema-ref-unresolved"
         ],
         "placementPaths": []
       }
@@ -215,21 +236,24 @@
           "hub.inference": {
             "path": "🌎️hub/💡️inference/🧬️schema",
             "level": "hub-area-module",
-            "exports": [
-              "InferenceApproval"
-            ],
+            "exports": {
+              "InferenceApproval": {
+                "file": "🔣️.json",
+                "facet": "contract"
+              }
+            },
             "dependsOn": []
           }
         },
         "diagnosticCodes": [
-          "document-dialect-unexpected"
+          "schema-dialect-not-draft-07"
         ],
         "placementPaths": []
       }
     },
     {
-      "id": "fixture-owned-schema",
-      "reason": "A 🧪️/🧫️ tree carries test data and the authority schema of that data: schemaScopeOwnerLevels.fixtureOwnerPathPatterns makes it silent, never a scope and never a retired-placement finding.",
+      "id": "schema-fixture-defines-schema",
+      "reason": "A 🧪️/🧫️ tree is a collection of examples: it is never a scope, and a schema document inside it is a finding together with the retired filename it uses.",
       "files": {
         "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️.schema.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
@@ -238,6 +262,31 @@
         },
         "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🔣️.json": {
           "id": "a"
+        },
+        "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "title": "approvalFixture"
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": [
+          "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️.schema.json"
+        ]
+      }
+    },
+    {
+      "id": "inert-schema-data",
+      "reason": "A schema-shaped parser input stays silent only when the enclosing case names it under inertSchemaData; nothing is exempted by shape or by location.",
+      "files": {
+        "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🔣️.json": {
+          "id": "a",
+          "inertSchemaData": [
+            "🧬️schema/🔣️.json"
+          ]
         },
         "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
@@ -283,7 +332,7 @@
       "expected": {
         "scopes": {},
         "diagnosticCodes": [
-          "module-level-ineligible"
+          "schema-owner-ineligible"
         ],
         "placementPaths": []
       }
@@ -343,9 +392,12 @@
           "s.probe.thing": {
             "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
             "level": "artifact-standard-subset",
-            "exports": [
-              "ThingArtifact"
-            ],
+            "exports": {
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
             "dependsOn": [
               "s.probe.thing.mutation.edit-text"
             ]
@@ -353,9 +405,12 @@
           "s.probe.thing.mutation.edit-text": {
             "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/🧬️schema",
             "level": "mutation-leaf",
-            "exports": [
-              "EditText"
-            ],
+            "exports": {
+              "EditText": {
+                "file": "🔣️.json",
+                "facet": "schema"
+              }
+            },
             "dependsOn": []
           }
         },
@@ -364,7 +419,7 @@
       }
     },
     {
-      "id": "mutation-leaf-id-grammar",
+      "id": "schema-mutation-leaf-id",
       "reason": "A leaf $id that encodes the standard and subset instead of <root scope path>/mutation/<semanticKind>/schema.json names the wrong scope and is reported with the exact expected id.",
       "files": {
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
@@ -421,24 +476,30 @@
           "s.probe.thing": {
             "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
             "level": "artifact-standard-subset",
-            "exports": [
-              "ThingArtifact"
-            ],
+            "exports": {
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
             "dependsOn": []
           },
           "s.probe.thing.1.any.mutation": {
             "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/🧬️schema",
             "level": "mutation-leaf",
-            "exports": [
-              "EditText"
-            ],
+            "exports": {
+              "EditText": {
+                "file": "🔣️.json",
+                "facet": "edit-text"
+              }
+            },
             "dependsOn": []
           }
         },
         "diagnosticCodes": [
-          "mutation-aggregate-kinds-redundant",
-          "mutation-leaf-id-grammar",
-          "ref-unresolved"
+          "schema-mutation-aggregate-kinds-redundant",
+          "schema-mutation-leaf-id",
+          "schema-ref-unresolved"
         ],
         "placementPaths": []
       }
@@ -501,17 +562,117 @@
           "s.probe.thing": {
             "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
             "level": "artifact-standard-subset",
-            "exports": [
-              "ThingArtifact",
-              "ThingDiff",
-              "ThingSnapshot",
-              "ThingSnapshotText"
-            ],
+            "exports": {
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingDiff": {
+                "file": "🔺️diff/🔣️.json",
+                "facet": "diff"
+              },
+              "ThingSnapshot": {
+                "file": "📸️snapshot/🔣️.json",
+                "facet": "snapshot"
+              },
+              "ThingSnapshotText": {
+                "file": "📸️snapshot/📝️text/🔣️.json",
+                "facet": "snapshot/text"
+              }
+            },
             "dependsOn": []
           }
         },
         "diagnosticCodes": [
-          "module-scope-id-inconsistent"
+          "schema-module-id-inconsistent"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "restricted-format-support",
+      "reason": "An export must exist in every format the scope provides unless it declares x-semio-formats; the annotation is the only honest way to narrow support.",
+      "files": {
+        "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/framework/ui/schema.json",
+          "$defs": {
+            "RetainedCommandLaw": {
+              "x-semio-formats": [
+                "🔣️jsonschema"
+              ],
+              "type": "object"
+            },
+            "RetainedCommandRoute": {
+              "type": "object"
+            }
+          }
+        },
+        "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🦀️.rs": "pub struct Unrelated;\n"
+      },
+      "expected": {
+        "scopes": {
+          "framework.ui": {
+            "path": "🧰️framework/🔨️modules/🖱️ui/🧬️schema",
+            "level": "framework-module",
+            "exports": {
+              "RetainedCommandLaw": {
+                "file": "🔣️.json",
+                "facet": "schema"
+              },
+              "RetainedCommandRoute": {
+                "file": "🔣️.json",
+                "facet": "schema"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-export-incomplete"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "module-internal-definitions",
+      "reason": "A module-internal helper lives in definitions and is referenced as #/definitions/<helper>; an internal reference is never a finding, and an empty enum always is.",
+      "files": {
+        "🌎️hub/💡️inference/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/hub/inference/contract.json",
+          "title": "InferenceApproval",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "$ref": "#/definitions/Timestamp"
+            }
+          },
+          "definitions": {
+            "Timestamp": {
+              "type": "string",
+              "enum": []
+            }
+          }
+        }
+      },
+      "expected": {
+        "scopes": {
+          "hub.inference": {
+            "path": "🌎️hub/💡️inference/🧬️schema",
+            "level": "hub-area-module",
+            "exports": {
+              "InferenceApproval": {
+                "file": "🔣️.json",
+                "facet": "contract"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-enum-empty"
         ],
         "placementPaths": []
       }

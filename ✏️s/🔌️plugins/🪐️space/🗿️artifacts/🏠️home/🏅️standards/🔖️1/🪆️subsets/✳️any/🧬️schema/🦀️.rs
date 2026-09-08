@@ -1,6 +1,6 @@
 //! 🧬️ S Home artifact schema — every field of the artifact with its state class.
 
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full S Home launcher artifact state across the artifact and config lanes.
@@ -47,31 +47,31 @@ impl SHomeArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.space.home` — twenty handcrafted schema leaves.
-pub fn home_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn home_artifact_schema_descriptor() -> ::semio_framework_schema::ArtifactSchemaDescriptor {
+    ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.space.home",
-        artifact: schema::FacetLeaves {
+        artifact: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -83,9 +83,9 @@ pub fn home_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::schema::diff::SHomeDiff;
-    use crate::schema::mutations::SHomeMutation;
-    use crate::schema::snapshot::SHomeSnapshot;
+    use crate::standards::v1::subsets::any::schema::diff::SHomeDiff;
+    use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
+    use crate::standards::v1::subsets::any::schema::snapshot::SHomeSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -207,26 +207,12 @@ pub fn empty_shome_snapshot() -> crate::SHomeSnapshot {
 /// 🔎 Returns whether `s.space.home` is present in the process-local schema registry. Relocated from
 /// `⚙️engine` alongside `empty_shome_snapshot` (same rule).
 pub fn artifact_schema_registered() -> bool {
-    ::schema::artifact_schema_descriptor_registered("s.space.home")
+    ::semio_framework_schema::artifact_schema_descriptor_registered("s.space.home")
 }
 //#endregion 🔖️DocumentHelpers
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// 🌱️ Relocated verbatim from `⚙️engine`'s own test module — the sibling
-    /// `engine_apply_updates_catalog_generation` test is NOT carried forward: it exercised
-    /// `SHomeEngine::apply` via `use dsl::ArtifactEngine;`, a trait that has zero implementations and
-    /// zero definitions anywhere in shipped source (`grep -rn "trait ArtifactEngine"` → 0 repo-wide),
-    /// so that test could never have compiled — a pre-existing dead reference to the never-shipped
-    /// trait this whole ticket is repealing, not a surviving assertion. `SHomeEngine` itself had zero
-    /// external references and is deleted outright per the ticket's D5a ruling.
-    #[semio_framework_async_macros::async_test]
-    async fn empty_snapshot_uses_home_schema() {
-        let snapshot = empty_shome_snapshot();
-        assert_eq!(snapshot.schema, crate::S_HOME_DOCUMENT_SCHEMA);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

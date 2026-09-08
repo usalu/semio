@@ -41,9 +41,6 @@ semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::LowpolyApps);
 pub mod examples {
     #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_lowpoly_demo_session;
-    #[cfg(test)]
-    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
-    mod art_lowpoly_demo_tests;
 }
 //#endregion 📚️Examples
 

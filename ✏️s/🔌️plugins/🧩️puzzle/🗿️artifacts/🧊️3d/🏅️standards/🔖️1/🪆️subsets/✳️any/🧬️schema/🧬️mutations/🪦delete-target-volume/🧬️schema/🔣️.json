@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/puzzle/3d/1/any/mutation/delete-target-volume/schema.json",
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/delete-target-volume/schema.json",
   "title": "DeleteTargetVolume",
   "type": "object",
   "additionalProperties": false,

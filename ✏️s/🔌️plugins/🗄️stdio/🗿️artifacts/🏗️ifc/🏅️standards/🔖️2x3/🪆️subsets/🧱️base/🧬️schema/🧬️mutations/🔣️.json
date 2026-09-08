@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🗑️remove-instance/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/ifc/2x3/base/mutation/remove-instance/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📋set-header/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/ifc/2x3/base/mutation/set-header/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/ifc/2x3/base/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧱upsert-instance/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/ifc/2x3/base/mutation/upsert-instance/schema.json"
         },
         {
           "type": "object",

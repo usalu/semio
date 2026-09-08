@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ReplaceObjectVortex` — patches one vortex inside the owner object.
-use crate::diff::{Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta};
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

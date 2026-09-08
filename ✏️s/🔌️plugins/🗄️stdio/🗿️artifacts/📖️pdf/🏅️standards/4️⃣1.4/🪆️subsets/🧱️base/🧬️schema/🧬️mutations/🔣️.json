@@ -16,7 +16,7 @@
           "const": "insert-page"
         },
         "payload": {
-          "$ref": "./📥️insert-page/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.4/base/mutation/insert-page/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "move-page"
         },
         "payload": {
-          "$ref": "./🔀️move-page/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.4/base/mutation/move-page/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "remove-page"
         },
         "payload": {
-          "$ref": "./🗑️remove-page/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.4/base/mutation/remove-page/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "replace-page-text"
         },
         "payload": {
-          "$ref": "./♻️replace-page-text/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.4/base/mutation/replace-page-text/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "resize-page"
         },
         "payload": {
-          "$ref": "./📐️resize-page/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.4/base/mutation/resize-page/schema.json"
         }
       }
     }

@@ -1,25 +1,54 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/las/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/las/1.0/header/inference.json",
   "title": "LasInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["bounds"],
+  "required": [
+    "bounds"
+  ],
   "properties": {
-    "bounds": { "$ref": "#/$defs/LasBounds", "x-semio-derived": true }
+    "bounds": {
+      "$ref": "#/$defs/LasBounds",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "LasBounds": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["minX", "minY", "minZ", "maxX", "maxY", "maxZ", "pointCount"],
+      "required": [
+        "minX",
+        "minY",
+        "minZ",
+        "maxX",
+        "maxY",
+        "maxZ",
+        "pointCount"
+      ],
       "properties": {
-        "minX": { "type": "number" },
-        "minY": { "type": "number" },
-        "minZ": { "type": "number" },
-        "maxX": { "type": "number" },
-        "maxY": { "type": "number" },
-        "maxZ": { "type": "number" },
-        "pointCount": { "type": "integer", "minimum": 0 }
+        "minX": {
+          "type": "number"
+        },
+        "minY": {
+          "type": "number"
+        },
+        "minZ": {
+          "type": "number"
+        },
+        "maxX": {
+          "type": "number"
+        },
+        "maxY": {
+          "type": "number"
+        },
+        "maxZ": {
+          "type": "number"
+        },
+        "pointCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

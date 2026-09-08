@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/demonstrator/playground/1/any/mutations/text.json",
+  "$id": "https://semio.tech/schema/s/demonstrator/playground/mutations/text.json",
   "title": "PlaygroundMutationsText",
   "type": "object"
 }

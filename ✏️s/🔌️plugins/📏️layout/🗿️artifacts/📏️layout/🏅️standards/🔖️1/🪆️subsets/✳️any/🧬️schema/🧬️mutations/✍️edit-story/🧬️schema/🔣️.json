@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/layout/layout/1/any/mutation/edit-story/schema.json",
+  "$id": "https://semio.tech/schema/s/layout/layout/mutation/edit-story/schema.json",
   "title": "EditStory",
   "type": "object",
   "additionalProperties": false,

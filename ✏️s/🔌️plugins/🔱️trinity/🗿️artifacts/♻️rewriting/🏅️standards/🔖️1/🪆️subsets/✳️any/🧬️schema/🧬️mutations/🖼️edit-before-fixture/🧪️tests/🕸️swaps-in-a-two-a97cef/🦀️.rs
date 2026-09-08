@@ -14,8 +14,8 @@
 //! `trinity.graph` fixture — carried as an opaque JSON string. That string is still an ordinary inline
 //! `String` field on `RewritingSnapshot`, not a composed child, so it is fully hand-authorable here.
 
-use crate::diff::RewritingDiff;
-use crate::mutations::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
 

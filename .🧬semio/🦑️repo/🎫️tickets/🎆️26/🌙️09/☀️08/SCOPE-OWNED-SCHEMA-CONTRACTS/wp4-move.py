@@ -81,8 +81,12 @@ def main():
     title = rest[rest.index("--title") + 1] if "--title" in rest else None
     keep = "--keep" in rest
 
+    formats = rest[rest.index("--formats") + 1].split(",") if "--formats" in rest else None
+    description = rest[rest.index("--description") + 1] if "--description" in rest else None
+
     doc = strip_self_schema(to_draft07(load(source)))
     nested = doc.pop("$defs", None)
+    helpers = doc.pop("definitions", None)
     doc.pop("$id", None)
     if title:
         doc["title"] = title
@@ -103,14 +107,32 @@ def main():
         module["$id"] = module_id
     defs = module.setdefault("$defs", OrderedDict())
     if nested:
+        renames = {name: (name if name[:1].isupper() else export + name[:1].upper() + name[1:]) for name in nested}
+        def rename_refs(node):
+            text = json.dumps(node)
+            for name, key in renames.items():
+                text = text.replace('#/$defs/%s"' % name, '#/$defs/%s"' % key)
+            return json.loads(text, object_pairs_hook=OrderedDict)
         for name, value in nested.items():
-            key = name if name[:1].isupper() else export + name[:1].upper() + name[1:]
-            defs[key] = value
-            doc = json.loads(json.dumps(doc).replace('#/$defs/%s"' % name, '#/$defs/%s"' % key))
+            defs[renames[name]] = rename_refs(value)
+        doc = rename_refs(doc)
+    if helpers:
+        shared = module.setdefault("definitions", OrderedDict())
+        stem = export[:1].lower() + export[1:]
+        for name, value in helpers.items():
+            key = stem + name[:1].upper() + name[1:]
+            shared[key] = value
+            doc = json.loads(json.dumps(doc).replace('#/definitions/%s"' % name, '#/definitions/%s"' % key))
+    if description and "description" not in doc:
+        doc["description"] = description
+    if formats:
+        doc["x-semio-formats"] = formats
     defs[export] = doc
-    # keep $defs last
+    # keep definitions before, $defs last
     module["$defs"] = defs
-    ordered = OrderedDict((k, v) for k, v in module.items() if k != "$defs")
+    ordered = OrderedDict((k, v) for k, v in module.items() if k not in ("$defs", "definitions"))
+    if module.get("definitions"):
+        ordered["definitions"] = module["definitions"]
     ordered["$defs"] = defs
     dump(module_path, ordered)
     if not keep:

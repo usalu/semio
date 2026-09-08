@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📦insert-block/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/insert-block/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧩insert-entity/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/insert-entity/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧱insert-layer/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/insert-layer/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧵insert-linetype/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/insert-linetype/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🎨insert-style/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/insert-style/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🪓remove-block/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/remove-block/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🗑️remove-entity/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/remove-entity/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧹remove-header-var/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/remove-header-var/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🪨remove-layer/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/remove-layer/schema.json"
         },
         {
           "type": "object",
@@ -169,7 +169,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🪚remove-linetype/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/remove-linetype/schema.json"
         },
         {
           "type": "object",
@@ -187,7 +187,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧽remove-style/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/remove-style/schema.json"
         },
         {
           "type": "object",
@@ -205,7 +205,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔲set-block/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/set-block/schema.json"
         },
         {
           "type": "object",
@@ -223,7 +223,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔧set-entity/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/set-entity/schema.json"
         },
         {
           "type": "object",
@@ -241,7 +241,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏷️set-header-var/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/set-header-var/schema.json"
         },
         {
           "type": "object",
@@ -259,7 +259,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🎚️set-layer/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/set-layer/schema.json"
         },
         {
           "type": "object",
@@ -277,7 +277,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🪡set-linetype/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/set-linetype/schema.json"
         },
         {
           "type": "object",
@@ -295,7 +295,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",
@@ -313,7 +313,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🖌️set-style/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dxf/r12/header/mutation/set-style/schema.json"
         },
         {
           "type": "object",

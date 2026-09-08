@@ -1,21 +1,37 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/pdf/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.4/base/inference.json",
   "title": "PdfInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["outline"],
+  "required": [
+    "outline"
+  ],
   "properties": {
-    "outline": { "$ref": "#/$defs/PdfOutline", "x-semio-derived": true }
+    "outline": {
+      "$ref": "#/$defs/PdfOutline",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "PdfOutline": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pageCount", "wordCount", "charCount"],
+      "required": [
+        "pageCount",
+        "wordCount",
+        "charCount"
+      ],
       "properties": {
-        "pageCount": { "type": "integer" },
-        "wordCount": { "type": "integer" },
-        "charCount": { "type": "integer" }
+        "pageCount": {
+          "type": "integer"
+        },
+        "wordCount": {
+          "type": "integer"
+        },
+        "charCount": {
+          "type": "integer"
+        }
       }
     }
   }

@@ -1,6 +1,6 @@
 //! 🧮️ 🧮️ Generation3d play app commands command — `flow-eval-tick`.
 
-use crate::op::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use semio_framework_os_flow::{flow_host_with_session, FlowEvalSession};
@@ -33,16 +33,6 @@ pub fn handle(_payload: &FlowEvalTick, doc: &ArtifactView<'_, Generation3dSnapsh
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::generation3d::testkit::{app, dispatch};
-    use crate::editor::generation3d::Generation3dCommand;
-
-    #[semio_framework_async_macros::async_test]
-    async fn flow_eval_tick_does_not_panic_with_nothing_pending() {
-        let _serial = crate::editor::generation3d::test_support::lock();
-        let mut app = app().await;
-        dispatch(&mut app, Generation3dCommand::FlowEvalTick(FlowEvalTick {})).await;
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

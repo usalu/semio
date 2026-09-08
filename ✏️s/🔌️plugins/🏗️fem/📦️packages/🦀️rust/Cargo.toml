@@ -36,7 +36,7 @@ ports = { react = 6087, wgpu = 6187 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [features]
 # 🔌️ The WASM component entry point (`plugin_exports!` → `#[no_mangle]`
@@ -47,6 +47,8 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-s-artifact-fem-2d = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-fem-3d = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-md = { workspace = true }

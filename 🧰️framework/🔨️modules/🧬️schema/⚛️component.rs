@@ -6,6 +6,10 @@ use std::collections::HashMap;
 
 pub use semio_framework_os_kernel::StateClass;
 pub use semio_framework_schema_derive::ArtifactSchema;
+pub use semio_framework_schema_registry::{
+    register_scope_facet_leaves, register_scope_schema_exports, resolve_schema_export, schema_export_catalog_entries, scope_schema_exports_registered, scope_schema_facets_registered, with_schema_export_registry, FacetLeaves, SchemaExport, SchemaExportEntries, SchemaExportEntry, SchemaExportRegistry,
+    SchemaExportRegistryError, SchemaFormat, SchemaResolveError, ScopeSchemaExports, RESERVED_FACET_EXPORT_IDS,
+};
 
 //#region 🔖️Errors
 #[derive(Debug, PartialEq, Eq)]
@@ -28,6 +32,37 @@ impl std::fmt::Display for SchemaError {
 }
 
 impl std::error::Error for SchemaError {}
+
+/// 🩺 One structural validation failure as the owned draft-07 validator renders it: the instance path
+/// the failure is attributed to (`$`, `$.name`, `$.items[0]`) and the reason, joined by `": "` inside
+/// [`SchemaError::Validation`].
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ValidationDiagnostic {
+    pub instance_path: String,
+    pub reason: String,
+}
+
+impl ValidationDiagnostic {
+    /// 🧾 Renders the diagnostic exactly as [`SchemaError::Validation`] carries it.
+    pub fn message(&self) -> String {
+        format!("{}: {}", self.instance_path, self.reason)
+    }
+
+    /// 🧭 The instance path as an RFC 6901 JSON pointer, the spelling third-party validators report.
+    pub fn json_pointer(&self) -> String {
+        self.instance_path.trim_start_matches('$').replace(['.', '['], "/").replace(']', "")
+    }
+
+    /// 🔎 Reads the diagnostic back out of a validation failure; any other error kind carries no path.
+    pub fn from_error(error: &SchemaError) -> Option<Self> {
+        let SchemaError::Validation(message) = error else { return None };
+        let (instance_path, reason) = message.split_once(": ")?;
+        if !instance_path.starts_with('$') {
+            return None;
+        }
+        Some(Self { instance_path: instance_path.to_string(), reason: reason.to_string() })
+    }
+}
 //#endregion 🔖️Errors
 
 //#region 🔖️EntityCatalog
@@ -129,16 +164,6 @@ directive @link(roles: [String!]) on FIELD_DEFINITION\
 //#endregion 🔖️ArtifactCompositionSpec
 
 //#region 🔖️ArtifactSchemaDescriptor
-/// 🍃 Five handcrafted leaf bodies for one facet (`include_str!` at each artifact's registration site).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct FacetLeaves {
-    pub rust: &'static str,
-    pub typescript: &'static str,
-    pub graphql: &'static str,
-    pub json_schema: &'static str,
-    pub proto: &'static str,
-}
-
 /// 🧬️ Stable identity of a canonical JSON Schema leaf.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct SchemaVersion(pub ContentHash);
@@ -186,6 +211,12 @@ impl ArtifactSchemaDescriptor {
 
     pub fn mutations_schema_version(&self) -> Result<SchemaVersion, JsonError> {
         schema_version(self.mutations.json_schema)
+    }
+
+    /// 📇️ The four fixed facets in [`RESERVED_FACET_EXPORT_IDS`] order — the projection the
+    /// dependency-free export registry resolves `(scope id, export id, format id)` over.
+    pub fn facet_leaves(&self) -> [FacetLeaves; 4] {
+        [self.artifact, self.snapshot, self.diff, self.mutations]
     }
 }
 //#endregion 🔖️ArtifactSchemaDescriptor
@@ -318,6 +349,7 @@ fn graphql_leaf_with_preamble(body: &str) -> String {
 /// 📎 Registers one artifact's handcrafted descriptor into the OS-wide catalog (kernel descriptors + normative JSON + GraphQL SDL).
 pub fn register_artifact_schema_descriptor(descriptor: ArtifactSchemaDescriptor) {
     register_kernel_artifact_schema_descriptor(descriptor_to_kernel(&descriptor));
+    let _ = register_scope_facet_leaves(descriptor.id, descriptor.facet_leaves());
 }
 
 /// 🔬️ Verifies artifact schema descriptors against the established catalog without mutation.
@@ -763,125 +795,6 @@ pub async fn state_class_kebab(class: StateClass) -> &'static str {
 //#endregion 🔖️StateClassKebab
 
 //#region 🔖️SchemaExportResolution
-/// 🗂️ One of the five schema formats a scope publishes, mirroring the taxonomy `schemaFormats` keys.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub enum SchemaFormat {
-    Rust,
-    Typescript,
-    Graphql,
-    JsonSchema,
-    Protobuf,
-}
-
-impl SchemaFormat {
-    /// 🧾 Every format, in taxonomy declaration order.
-    pub const ALL: [Self; 5] = [Self::Rust, Self::Typescript, Self::Graphql, Self::JsonSchema, Self::Protobuf];
-
-    /// 🏷️ Ascii format id used by the derived catalog and the `schema://` resolver.
-    pub fn id(self) -> &'static str {
-        match self {
-            Self::Rust => "rust",
-            Self::Typescript => "typescript",
-            Self::Graphql => "graphql",
-            Self::JsonSchema => "jsonschema",
-            Self::Protobuf => "protobuf",
-        }
-    }
-
-    /// 🧩 Taxonomy `schemaFormats` key this format is the twin of.
-    pub fn taxonomy_key(self) -> &'static str {
-        match self {
-            Self::Rust => "🦀️rust",
-            Self::Typescript => "🟦️typescript",
-            Self::Graphql => "🔗️graphql",
-            Self::JsonSchema => "🔣️jsonschema",
-            Self::Protobuf => "🛰️protobuf",
-        }
-    }
-
-    /// 🔎 Parses either the ascii id or the taxonomy key.
-    pub fn parse(id: &str) -> Option<Self> {
-        Self::ALL.into_iter().find(|format| format.id() == id || format.taxonomy_key() == id)
-    }
-
-    /// 🍃 The leaf body this format occupies inside a [`FacetLeaves`].
-    pub fn leaf(self, leaves: &FacetLeaves) -> &'static str {
-        match self {
-            Self::Rust => leaves.rust,
-            Self::Typescript => leaves.typescript,
-            Self::Graphql => leaves.graphql,
-            Self::JsonSchema => leaves.json_schema,
-            Self::Protobuf => leaves.proto,
-        }
-    }
-}
-
-impl std::fmt::Display for SchemaFormat {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(self.id())
-    }
-}
-
-/// 🏷️ One named export of a scope — the `(export id, five format leaves)` pair the resolution key
-/// `(scope id, export id, format id)` needs beyond the four fixed facets.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct SchemaExport {
-    pub id: &'static str,
-    pub leaves: FacetLeaves,
-}
-
-/// 🧬️ A scope's named exports. Sibling to [`ArtifactSchemaDescriptor`]'s four fixed facets for the
-/// same reason [`ArtifactInferenceDescriptor`] is a sibling: the four-facet descriptor is handcrafted
-/// at 235 call sites in 115 files, and a scope declares named exports independently of them.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct ScopeSchemaExports {
-    pub scope: &'static str,
-    pub exports: &'static [SchemaExport],
-}
-
-/// 🔒️ Export ids reserved by the four fixed facets of [`ArtifactSchemaDescriptor`].
-pub const RESERVED_FACET_EXPORT_IDS: [&str; 4] = ["artifact", "snapshot", "diff", "mutations"];
-
-/// ⚠️ Named-export registration rejects a conflicting or internally duplicated declaration.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum SchemaExportRegistryError {
-    ConflictingScope { scope: String },
-    DuplicateExportId { scope: String, export: String },
-}
-
-impl std::fmt::Display for SchemaExportRegistryError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::ConflictingScope { scope } => write!(formatter, "schema-export declaration conflicts for scope {scope}"),
-            Self::DuplicateExportId { scope, export } => write!(formatter, "scope {scope} declares export id {export} twice"),
-        }
-    }
-}
-
-impl std::error::Error for SchemaExportRegistryError {}
-
-/// ⚠️ Why `(scope id, export id, format id)` did not resolve to a leaf body.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum SchemaResolveError {
-    UnknownScope { scope: String },
-    UnknownExport { scope: String, export: String },
-    FormatAbsent { scope: String, export: String, format: SchemaFormat },
-    AmbiguousScope { scope: String, export: String },
-}
-
-impl std::fmt::Display for SchemaResolveError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::UnknownScope { scope } => write!(formatter, "unknown schema scope {scope}"),
-            Self::UnknownExport { scope, export } => write!(formatter, "scope {scope} declares no export {export}"),
-            Self::FormatAbsent { scope, export, format } => write!(formatter, "scope {scope} export {export} has no {format} leaf"),
-            Self::AmbiguousScope { scope, export } => write!(formatter, "scope {scope} resolves export {export} from both a fixed facet and a named export"),
-        }
-    }
-}
-
-impl std::error::Error for SchemaResolveError {}
-
 /// ⚠️ Boundary validation could not be prepared for a `(scope id, export id)` pair.
 #[derive(Debug, PartialEq, Eq)]
 pub enum SchemaBoundaryError {
@@ -900,845 +813,89 @@ impl std::fmt::Display for SchemaBoundaryError {
 
 impl std::error::Error for SchemaBoundaryError {}
 
-/// 📇️ One resolvable `(scope id, export id, format id)` triple with a non-empty leaf body.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct SchemaExportEntry {
-    pub scope: &'static str,
-    pub export: &'static str,
-    pub format: SchemaFormat,
-}
-
-/// 📚 Resolves `(scope id, export id, format id)` over the fixed facets of registered
-/// [`ArtifactSchemaDescriptor`]s plus every scope's [`ScopeSchemaExports`]. Exact resolution only —
-/// no nearest-parent search, no glob, no fixture-local fallback.
-pub struct SchemaExportRegistry {
-    facets: HashMap<&'static str, ArtifactSchemaDescriptor>,
-    named: HashMap<&'static str, &'static [SchemaExport]>,
-}
-
-impl Default for SchemaExportRegistry {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl SchemaExportRegistry {
-    /// 🏗️ Empty registry.
-    pub fn new() -> Self {
-        Self { facets: HashMap::new(), named: HashMap::new() }
-    }
-
-    /// 📎 Adds one descriptor's four fixed facets. Exact duplicates are accepted, conflicts are fatal.
-    pub fn register_descriptor(&mut self, descriptor: ArtifactSchemaDescriptor) -> Result<(), SchemaExportRegistryError> {
-        match self.facets.get(descriptor.id) {
-            Some(established) if *established == descriptor => Ok(()),
-            Some(_) => Err(SchemaExportRegistryError::ConflictingScope { scope: descriptor.id.to_string() }),
-            None => {
-                self.facets.insert(descriptor.id, descriptor);
-                Ok(())
-            }
+/// ✅ Compiles the structural validator for one export's JSON Schema leaf out of a
+/// [`SchemaExportRegistry`] snapshot. Every other JSON Schema leaf in that snapshot is offered as a
+/// sibling document, so a cross-scope `$ref` naming its target's `$id` resolves without a filesystem
+/// read. Lives here rather than on the registry because only this crate owns the draft-07 compiler.
+pub fn structural_validator_in(registry: &SchemaExportRegistry, scope: &str, export: &str) -> Result<crate::OwnedJsonSchemaValidator, SchemaBoundaryError> {
+    let body = registry.resolve(scope, export, SchemaFormat::JsonSchema).map_err(SchemaBoundaryError::Resolve)?;
+    let mut documents: std::collections::BTreeMap<String, &'static str> = std::collections::BTreeMap::new();
+    for entry in registry.entries().filter(|entry| entry.format == SchemaFormat::JsonSchema) {
+        let Ok(sibling) = registry.resolve(entry.scope, entry.export, SchemaFormat::JsonSchema) else { continue };
+        let Some(id) = parse_json(sibling).ok().and_then(|document| document.get("$id").and_then(Value::as_str).map(str::to_string)) else { continue };
+        match documents.insert(id.clone(), sibling) {
+            Some(established) if established != sibling => return Err(SchemaBoundaryError::Schema(SchemaError::Validation(format!("two schema leaves declare `$id` {id}")))),
+            _ => {}
         }
     }
-
-    /// 📎 Adds one scope's named exports. Export ids must be unique inside the scope; exact duplicate
-    /// declarations are accepted, conflicts are fatal.
-    pub fn register_exports(&mut self, declaration: ScopeSchemaExports) -> Result<(), SchemaExportRegistryError> {
-        for (index, export) in declaration.exports.iter().enumerate() {
-            if declaration.exports[..index].iter().any(|previous| previous.id == export.id) {
-                return Err(SchemaExportRegistryError::DuplicateExportId { scope: declaration.scope.to_string(), export: export.id.to_string() });
-            }
-        }
-        match self.named.get(declaration.scope) {
-            Some(established) if *established == declaration.exports => Ok(()),
-            Some(_) => Err(SchemaExportRegistryError::ConflictingScope { scope: declaration.scope.to_string() }),
-            None => {
-                self.named.insert(declaration.scope, declaration.exports);
-                Ok(())
-            }
-        }
-    }
-
-    /// 🚶 Every registered scope id, sorted.
-    pub fn scopes(&self) -> Vec<&'static str> {
-        let mut scopes: Vec<&'static str> = self.facets.keys().chain(self.named.keys()).copied().collect();
-        scopes.sort_unstable();
-        scopes.dedup();
-        scopes
-    }
-
-    /// 🧾 Every export id a scope publishes — the four fixed facets first, then the named exports in
-    /// declaration order.
-    pub fn exports(&self, scope: &str) -> Result<Vec<&'static str>, SchemaResolveError> {
-        let facets = self.facets.get(scope);
-        let named = self.named.get(scope);
-        if facets.is_none() && named.is_none() {
-            return Err(SchemaResolveError::UnknownScope { scope: scope.to_string() });
-        }
-        let mut exports: Vec<&'static str> = facets.map(|_| RESERVED_FACET_EXPORT_IDS.to_vec()).unwrap_or_default();
-        exports.extend(named.into_iter().flat_map(|exports| exports.iter().map(|export| export.id)));
-        Ok(exports)
-    }
-
-    /// 🔎 Resolves one `(scope id, export id, format id)` triple to its handcrafted leaf body.
-    pub fn resolve(&self, scope: &str, export: &str, format: SchemaFormat) -> Result<&'static str, SchemaResolveError> {
-        let leaves = self.leaves(scope, export)?;
-        let body = format.leaf(&leaves);
-        if body.trim().is_empty() {
-            return Err(SchemaResolveError::FormatAbsent { scope: scope.to_string(), export: export.to_string(), format });
-        }
-        Ok(body)
-    }
-
-    /// 🍃 The five format leaves behind one `(scope id, export id)` pair.
-    pub fn leaves(&self, scope: &str, export: &str) -> Result<FacetLeaves, SchemaResolveError> {
-        let descriptor = self.facets.get(scope);
-        let named = self.named.get(scope);
-        if descriptor.is_none() && named.is_none() {
-            return Err(SchemaResolveError::UnknownScope { scope: scope.to_string() });
-        }
-        let facet = descriptor.and_then(|descriptor| match export {
-            "artifact" => Some(descriptor.artifact),
-            "snapshot" => Some(descriptor.snapshot),
-            "diff" => Some(descriptor.diff),
-            "mutations" => Some(descriptor.mutations),
-            _ => None,
-        });
-        let declared = named.and_then(|exports| exports.iter().find(|candidate| candidate.id == export)).map(|candidate| candidate.leaves);
-        match (facet, declared) {
-            (Some(_), Some(_)) => Err(SchemaResolveError::AmbiguousScope { scope: scope.to_string(), export: export.to_string() }),
-            (Some(leaves), None) | (None, Some(leaves)) => Ok(leaves),
-            (None, None) => Err(SchemaResolveError::UnknownExport { scope: scope.to_string(), export: export.to_string() }),
-        }
-    }
-
-    /// ✅ Compiles the structural validator for one export's JSON Schema leaf. Every other
-    /// registered JSON Schema leaf is offered as a sibling document, so a cross-scope `$ref` naming
-    /// its target's `$id` resolves without a filesystem read. This is the entry point application
-    /// boundary code uses to structurally validate serialized input before any domain rule runs.
-    pub fn structural_validator(&self, scope: &str, export: &str) -> Result<crate::OwnedJsonSchemaValidator, SchemaBoundaryError> {
-        let body = self.resolve(scope, export, SchemaFormat::JsonSchema).map_err(SchemaBoundaryError::Resolve)?;
-        let mut documents: std::collections::BTreeMap<String, &'static str> = std::collections::BTreeMap::new();
-        for entry in self.entries().filter(|entry| entry.format == SchemaFormat::JsonSchema) {
-            let Ok(sibling) = self.resolve(entry.scope, entry.export, SchemaFormat::JsonSchema) else { continue };
-            let Some(id) = parse_json(sibling).ok().and_then(|document| document.get("$id").and_then(Value::as_str).map(str::to_string)) else { continue };
-            match documents.insert(id.clone(), sibling) {
-                Some(established) if established != sibling => return Err(SchemaBoundaryError::Schema(SchemaError::Validation(format!("two schema leaves declare `$id` {id}")))),
-                _ => {}
-            }
-        }
-        let bodies: Vec<&str> = documents.values().copied().collect();
-        crate::OwnedJsonSchemaValidator::compile_with_documents(body, &bodies).map_err(SchemaBoundaryError::Schema)
-    }
-
-    /// 🚶 Every resolvable `(scope, export, format)` triple with a non-empty leaf, in deterministic
-    /// order — the cross-check input for the derived schema catalog.
-    pub fn entries(&self) -> impl Iterator<Item = SchemaExportEntry> + '_ {
-        self.scopes().into_iter().flat_map(move |scope| {
-            let exports = self.exports(scope).unwrap_or_default();
-            exports.into_iter().flat_map(move |export| {
-                SchemaFormat::ALL.into_iter().filter_map(move |format| match self.resolve(scope, export, format) {
-                    Ok(_) => Some(SchemaExportEntry { scope, export, format }),
-                    Err(_) => None,
-                })
-            })
-        })
-    }
-}
-
-static SCOPE_SCHEMA_EXPORTS: std::sync::OnceLock<std::sync::Mutex<HashMap<&'static str, &'static [SchemaExport]>>> = std::sync::OnceLock::new();
-
-fn scope_schema_exports() -> &'static std::sync::Mutex<HashMap<&'static str, &'static [SchemaExport]>> {
-    SCOPE_SCHEMA_EXPORTS.get_or_init(|| std::sync::Mutex::new(HashMap::new()))
-}
-
-/// 🔌 Open named-export registry API for scope-owning crates — call [`register_scope_schema_exports`]
-/// from your own init code alongside [`register_artifact_schema_descriptor`], then resolve anywhere
-/// with [`resolve_schema_export`].
-///
-/// 📎 Registers one scope's named exports into the OS-wide catalog. Exact duplicates are accepted so a
-/// scope registered twice by two consumers is not an error; a differing declaration is fatal.
-pub fn register_scope_schema_exports(declaration: ScopeSchemaExports) -> Result<(), SchemaExportRegistryError> {
-    let mut registry = SchemaExportRegistry::new();
-    let established = scope_schema_exports().lock().expect("scope schema export catalog lock").clone();
-    for (scope, exports) in established {
-        registry.register_exports(ScopeSchemaExports { scope, exports })?;
-    }
-    registry.register_exports(declaration)?;
-    scope_schema_exports().lock().expect("scope schema export catalog lock").insert(declaration.scope, declaration.exports);
-    Ok(())
-}
-
-/// 🔎 Whether `scope` has registered named exports in the OS-wide catalog.
-pub fn scope_schema_exports_registered(scope: &str) -> bool {
-    scope_schema_exports().lock().expect("scope schema export catalog lock").contains_key(scope)
-}
-
-/// 📚 Invokes `visit` with a [`SchemaExportRegistry`] snapshot over every registered artifact schema
-/// descriptor and every registered named-export declaration.
-pub fn with_schema_export_registry<R>(visit: impl FnOnce(&SchemaExportRegistry) -> R) -> R {
-    let mut registry = SchemaExportRegistry::new();
-    with_kernel_artifact_schema_catalog(|entries| {
-        for entry in entries {
-            let _ = registry.register_descriptor(descriptor_from_kernel(entry));
-        }
-    });
-    for (scope, exports) in scope_schema_exports().lock().expect("scope schema export catalog lock").iter() {
-        let _ = registry.register_exports(ScopeSchemaExports { scope, exports });
-    }
-    visit(&registry)
-}
-
-/// 🔎 Resolves `(scope id, export id, format id)` against the OS-wide catalog.
-pub fn resolve_schema_export(scope: &str, export: &str, format: SchemaFormat) -> Result<&'static str, SchemaResolveError> {
-    with_schema_export_registry(|registry| registry.resolve(scope, export, format))
-}
-
-/// 🚶 Snapshots every resolvable `(scope, export, format)` triple in the OS-wide catalog.
-pub fn schema_export_catalog_entries() -> Vec<SchemaExportEntry> {
-    with_schema_export_registry(|registry| registry.entries().collect())
+    let bodies: Vec<&str> = documents.values().copied().collect();
+    crate::OwnedJsonSchemaValidator::compile_with_documents(body, &bodies).map_err(SchemaBoundaryError::Schema)
 }
 
 /// ✅ Compiles the OS-wide structural validator for one export — the application boundary entry
 /// point for validating serialized input before domain rules.
 pub fn structural_validator_for(scope: &str, export: &str) -> Result<crate::OwnedJsonSchemaValidator, SchemaBoundaryError> {
-    with_schema_export_registry(|registry| registry.structural_validator(scope, export))
+    with_schema_export_registry(|registry| structural_validator_in(registry, scope, export))
+}
+
+/// 🪪️ Scope id of this module — the `framework.schema` resolution contract every scope speaks.
+pub const FRAMEWORK_SCHEMA_SCOPE: &str = "framework.schema";
+
+/// 🍃 Leaves of the seven exports whose Rust definitions live in the dependency-free registry crate.
+const FRAMEWORK_SCHEMA_REGISTRY_LEAVES: FacetLeaves = FacetLeaves {
+    rust: include_str!("📇️registry/🦀️.rs"),
+    typescript: include_str!("🟦️.ts"),
+    graphql: "",
+    json_schema: include_str!("🔣️.json"),
+    proto: "",
+};
+
+/// 🍃 Leaves of the one export whose Rust definition stays beside the draft-07 validator.
+const FRAMEWORK_SCHEMA_VALIDATION_LEAVES: FacetLeaves = FacetLeaves {
+    rust: include_str!("⚛️component.rs"),
+    typescript: include_str!("🟦️.ts"),
+    graphql: "",
+    json_schema: include_str!("🔣️.json"),
+    proto: "",
+};
+
+/// 🍃 Leaves of the two exports whose Rust definition is the generated entity-catalog projection.
+const FRAMEWORK_SCHEMA_ENTITY_CATALOG_LEAVES: FacetLeaves = FacetLeaves {
+    rust: include_str!("🤖️generated.rs"),
+    typescript: include_str!("🟦️.ts"),
+    graphql: "",
+    json_schema: include_str!("🔣️.json"),
+    proto: "",
+};
+
+/// 📚️ The single instance document of [`FRAMEWORK_SCHEMA_ENTITY_CATALOG_LEAVES`]'s `EntityKindCatalog`
+/// export — the source every projection in `🤖️generated.rs`, `🤖️generated/🟦️entity-kinds.ts` and
+/// `⌨️cli/🐹️entity_kinds.g.go` is emitted from by the `schema-entity-catalog` generator.
+pub const ENTITY_KIND_CATALOG_JSON: &str = include_str!("🔣️entity-kinds.json");
+
+/// 🏷️ The named exports of `framework.schema`, one per `$defs` key of the module's `🔣️.json`.
+pub const FRAMEWORK_SCHEMA_EXPORTS: [SchemaExport; 10] = [
+    SchemaExport { id: "SchemaFormat", leaves: FRAMEWORK_SCHEMA_REGISTRY_LEAVES },
+    SchemaExport { id: "FacetLeaves", leaves: FRAMEWORK_SCHEMA_REGISTRY_LEAVES },
+    SchemaExport { id: "SchemaExport", leaves: FRAMEWORK_SCHEMA_REGISTRY_LEAVES },
+    SchemaExport { id: "ScopeSchemaExports", leaves: FRAMEWORK_SCHEMA_REGISTRY_LEAVES },
+    SchemaExport { id: "SchemaExportEntry", leaves: FRAMEWORK_SCHEMA_REGISTRY_LEAVES },
+    SchemaExport { id: "SchemaExportEntries", leaves: FRAMEWORK_SCHEMA_REGISTRY_LEAVES },
+    SchemaExport { id: "SchemaResolveError", leaves: FRAMEWORK_SCHEMA_REGISTRY_LEAVES },
+    SchemaExport { id: "ValidationDiagnostic", leaves: FRAMEWORK_SCHEMA_VALIDATION_LEAVES },
+    SchemaExport { id: "EntityKind", leaves: FRAMEWORK_SCHEMA_ENTITY_CATALOG_LEAVES },
+    SchemaExport { id: "EntityKindCatalog", leaves: FRAMEWORK_SCHEMA_ENTITY_CATALOG_LEAVES },
+];
+
+/// 📥 Registers this module's own scope into the OS-wide catalog, the way every other scope owner
+/// registers its exports beside [`register_artifact_schema_descriptor`].
+pub fn register_framework_schema_exports() -> Result<(), SchemaExportRegistryError> {
+    register_scope_schema_exports(ScopeSchemaExports { scope: FRAMEWORK_SCHEMA_SCOPE, exports: &FRAMEWORK_SCHEMA_EXPORTS })
 }
 //#endregion 🔖️SchemaExportResolution
 
 #[cfg(test)]
 //#region 🔖️Tests
-mod tests {
-    use super::*;
-
-    //#region 🔖️SyntheticArtifact
-    #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
-    #[artifact_schema(id = "s.wave3.synthetic")]
-    struct SyntheticArtifact {
-        #[state(artifact)]
-        schema: String,
-        #[state(artifact)]
-        label: String,
-        #[state(presence)]
-        active_id: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema)]
-    #[artifact_schema(id = "s.wave3.synthetic")]
-    struct SyntheticSnapshot {
-        #[state(artifact)]
-        schema: String,
-        #[state(artifact)]
-        label: String,
-    }
-
-    const SYNTHETIC_SNAPSHOT_JSON_SCHEMA: &str = r#"{
-  "$id": "https://semio.tech/schema/s/wave3/synthetic/snapshot.json",
-  "title": "SyntheticSnapshot",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["schema", "label"],
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "label": { "type": "string", "x-semio-state": "artifact" }
-  }
-}"#;
-
-    async fn synthetic_descriptor() -> ArtifactSchemaDescriptor {
-        let empty = FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" };
-        ArtifactSchemaDescriptor { id: "s.wave3.synthetic", artifact: empty, snapshot: FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: SYNTHETIC_SNAPSHOT_JSON_SCHEMA, proto: "" }, diff: empty, mutations: empty }
-    }
-
-    async fn expected_snapshot_title(id: &str) -> String {
-        let key = id.rsplit('.').next().unwrap_or(id);
-        let mut chars = key.chars();
-        let titled = match chars.next() {
-            Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-            None => String::new(),
-        };
-        format!("{titled}Snapshot")
-    }
-    //#endregion 🔖️SyntheticArtifact
-
-    //#region 🔖️ArtifactCompositionFixture
-    /// 🧪️ Local stand-ins for `semio-framework-os-kernel`'s store `ArtifactChild<T>` / `ArtifactLink`
-    /// — legitimate here since `#[derive(ArtifactSchema)]`'s composition support matches field types
-    /// SYNTACTICALLY (last path segment), never resolving the real types.
-    struct ArtifactChild<T> {
-        _marker: std::marker::PhantomData<T>,
-    }
-    struct ArtifactLink;
-
-    impl<T> ChildFieldRefs for ArtifactChild<T> {
-        const MANY: bool = false;
-        fn visit_child_field<'a, V: ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error> {
-            visitor.step()?;
-            visitor.child(slot, ChildRefFields { child_id: "child", artifact_id: "child", artifact_kind: "s.stdio.mesh", standard: "v1", subset: "*" })
-        }
-    }
-
-    type AliasedChild = ArtifactChild<()>;
-
-    #[derive(ArtifactSchema)]
-    #[artifact_schema(id = "s.test.aliased-composition")]
-    struct AliasedComposition {
-        #[state(artifact)]
-        #[child(kind = "s.stdio.mesh")]
-        optional_child: Option<Option<AliasedChild>>,
-        #[state(artifact)]
-        #[child(kind = "s.stdio.mesh")]
-        children: Vec<Option<AliasedChild>>,
-    }
-
-    #[expect(dead_code, reason = "the derive test inspects the field declarations without constructing this schema-only fixture")]
-    #[derive(ArtifactSchema)]
-    #[artifact_schema(id = "s.wave3.composite")]
-    struct CompositeArtifact {
-        #[state(artifact)]
-        #[child(kind = "s.stdio.mesh")]
-        primary_mesh: ArtifactChild<()>,
-        #[state(artifact)]
-        #[child(kind = "s.stdio.image")]
-        textures: Vec<ArtifactChild<()>>,
-        #[state(artifact)]
-        #[link_slot(roles("base", "material"))]
-        base_material: ArtifactLink,
-        #[state(artifact)]
-        label: String,
-    }
-    //#endregion 🔖️ArtifactCompositionFixture
-
-    #[semio_framework_async_macros::async_test]
-    async fn artifact_composition_fields_derive_emits_expected_slot_tables() {
-        let children = CompositeArtifact::child_slots();
-        assert_eq!(children.len(), 2, "single child + Vec child must both be captured, plain field must not");
-        assert_eq!(children[0], ChildSlotSpec { name: "primaryMesh", kind: "s.stdio.mesh", many: false });
-        assert_eq!(children[1], ChildSlotSpec { name: "textures", kind: "s.stdio.image", many: true });
-
-        let links = CompositeArtifact::link_slots();
-        assert_eq!(links.len(), 1, "only the ArtifactLink field must be captured");
-        assert_eq!(links[0], LinkSlotSpec { name: "baseMaterial", roles: &["base", "material"], many: false });
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn artifact_composition_fields_default_to_empty_for_leaf_artifacts() {
-        assert!(SyntheticSnapshot::child_slots().is_empty());
-        assert!(SyntheticSnapshot::link_slots().is_empty());
-        assert_eq!(SyntheticSnapshot::artifact_schema_id().await, "s.wave3.synthetic");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn artifact_composition_projection_walks_aliases_nested_options_and_cancels() {
-        struct Visitor { steps: usize, maximum_steps: usize, rows: Vec<(&'static str, &'static str)> }
-        impl<'a> ChildRefVisitor<'a> for Visitor {
-            type Error = ();
-            fn step(&mut self) -> Result<(), ()> {
-                if self.steps == self.maximum_steps { return Err(()); }
-                self.steps += 1;
-                Ok(())
-            }
-            fn child(&mut self, slot: &'static str, fields: ChildRefFields<'a>) -> Result<(), ()> {
-                assert_eq!(fields.child_id, fields.artifact_id);
-                self.rows.push((slot, "child"));
-                Ok(())
-            }
-        }
-        let slots = AliasedComposition::child_slots();
-        assert_eq!(slots, &[ChildSlotSpec { name: "optionalChild", kind: "s.stdio.mesh", many: false }, ChildSlotSpec { name: "children", kind: "s.stdio.mesh", many: true }]);
-        let snapshot = AliasedComposition { optional_child: Some(Some(ArtifactChild { _marker: std::marker::PhantomData })), children: vec![None, Some(ArtifactChild { _marker: std::marker::PhantomData })] };
-        let mut visitor = Visitor { steps: 0, maximum_steps: 16, rows: Vec::new() };
-        snapshot.visit_child_refs(&mut visitor).unwrap();
-        assert_eq!(visitor.rows, [("optionalChild", "child"), ("children", "child")]);
-        assert_eq!(visitor.steps, 7);
-        let mut visitor = Visitor { steps: 0, maximum_steps: 4, rows: Vec::new() };
-        assert!(snapshot.visit_child_refs(&mut visitor).is_err());
-        assert_eq!(visitor.steps, 4);
-        assert_eq!(visitor.rows, [("optionalChild", "child")]);
-        eprintln!("[DEBUG] schema child visitor: alias, nested option, collection and bounded early-stop assertions");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn artifact_composition_projection_real_child_alias_has_fixed_admission_bounds() {
-        use semio_framework_os_kernel::{ArtifactChild, ChildRestoreProjection, ChildRestoreProjectionError};
-        type ChildAlias = ArtifactChild<()>;
-        #[derive(semio_framework_schema::ArtifactSchema)]
-        #[artifact_schema(id = "s.test.parent")]
-        struct DerivedParent {
-            #[state(artifact)]
-            #[child(kind = "s.test.member")]
-            many: Vec<Option<ChildAlias>>,
-        }
-        let child = |id: String| Some(ArtifactChild::new(id.clone(), semio_framework_os_kernel::os_io::ArtifactRef { artifact_id: id, dialect: semio_framework_os_kernel::os_io::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "v1".into(), subset: "first".into() } }));
-        let mut parent = DerivedParent { many: (0..64).map(|index| child(index.to_string())).collect() };
-        assert_eq!(ChildRestoreProjection::from_snapshot(&parent).unwrap().len(), 64);
-        parent.many.push(child("overflow".into()));
-        assert!(matches!(ChildRestoreProjection::from_snapshot(&parent), Err(ChildRestoreProjectionError::ReferenceLimit)));
-        parent.many = (0..257).map(|_| None).collect();
-        assert!(matches!(ChildRestoreProjection::from_snapshot(&parent), Err(ChildRestoreProjectionError::TraversalLimit)));
-        parent.many = vec![child("ä".repeat(128))];
-        assert!(ChildRestoreProjection::from_snapshot(&parent).is_ok());
-        parent.many = vec![child(format!("{}x", "ä".repeat(128)))];
-        assert!(matches!(ChildRestoreProjection::from_snapshot(&parent), Err(ChildRestoreProjectionError::InvalidReference)));
-        eprintln!("[DEBUG] real derived child projection: 64/65 references, sparse traversal and 256/257 UTF-8 byte boundaries");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn registry_descriptors_carry_valid_snapshot_state_and_match_field_states() {
-        let mut registry = ArtifactSchemaRegistry::new();
-        registry.register(synthetic_descriptor().await);
-
-        let mut walked = 0usize;
-        for descriptor in registry.iter() {
-            walked += 1;
-            let schema = parse_json(descriptor.snapshot.json_schema).unwrap_or_else(|error| panic!("{}: snapshot json_schema parse: {error}", descriptor.id));
-            let title = schema.get("title").and_then(Value::as_str).unwrap_or("");
-            assert_eq!(title, expected_snapshot_title(descriptor.id).await, "{}: snapshot title must be XSnapshot for id", descriptor.id);
-
-            let properties = schema.get("properties").and_then(Value::as_object).unwrap_or_else(|| panic!("{}: snapshot properties object required", descriptor.id));
-
-            let mut json_states = Vec::new();
-            for (name, prop) in properties {
-                let raw = prop.get("x-semio-state").and_then(Value::as_str).unwrap_or_else(|| panic!("{}: property `{name}` missing x-semio-state", descriptor.id));
-                let class = parse_state_class_kebab(raw).unwrap_or_else(|| panic!("{}: property `{name}` has invalid x-semio-state `{raw}`", descriptor.id));
-                json_states.push((name.to_string(), class));
-            }
-            json_states.sort_by(|a, b| a.0.cmp(&b.0));
-
-            let mut derived: Vec<(String, StateClass)> = SyntheticSnapshot::field_states().await.iter().map(|(name, class)| ((*name).to_string(), *class)).collect();
-            derived.sort_by(|a, b| a.0.cmp(&b.0));
-            assert_eq!(derived, json_states, "{}: field_states() must agree with snapshot JSON x-semio-state", descriptor.id);
-            assert_eq!(SyntheticSnapshot::artifact_schema_id().await, descriptor.id);
-            assert_eq!(SyntheticArtifact::artifact_schema_id().await, descriptor.id);
-        }
-        assert_eq!(walked, 1, "registry must be walked for the synthetic descriptor");
-        assert!(registry.get("s.wave3.synthetic").is_some());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graphql_state_preamble_matches_normative_sdl() {
-        assert!(GRAPHQL_STATE_PREAMBLE.contains("enum StateClass { ARTIFACT CONFIG PRESENCE TRANSIENT }"));
-        assert!(GRAPHQL_STATE_PREAMBLE.contains("directive @state(class: StateClass!) on FIELD_DEFINITION"));
-        assert!(GRAPHQL_STATE_PREAMBLE.contains("directive @derived on FIELD_DEFINITION"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn state_class_kebab_round_trips_exactly_the_four_lanes() {
-        for class in [StateClass::Artifact, StateClass::Config, StateClass::Presence, StateClass::Transient] {
-            let kebab = state_class_kebab(class).await;
-            assert_eq!(parse_state_class_kebab(kebab), Some(class));
-        }
-        assert_eq!(state_class_kebab(StateClass::Artifact).await, "artifact");
-        assert_eq!(state_class_kebab(StateClass::Config).await, "config");
-        assert_eq!(state_class_kebab(StateClass::Presence).await, "presence");
-        assert_eq!(state_class_kebab(StateClass::Transient).await, "transient");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn retired_state_vocabulary_no_longer_parses() {
-        for retired in ["persistent", "shared-ui", "local-ui", "preview", "effect", "inferred", "identity"] {
-            assert_eq!(parse_state_class_kebab(retired), None, "`{retired}` must not resolve to a state lane");
-        }
-    }
-
-    //#region 🔖️DerivedAxis
-    /// 💡️ Derivation travels on its own axis: `#[derived]` fields carry no [`StateClass`] and are
-    /// reported by `derived_fields()`, never by `field_states()`.
-    #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
-    #[artifact_schema(id = "s.wave3.synthetic.inference")]
-    struct SyntheticInference {
-        #[derived]
-        topology: String,
-        #[derived]
-        depth: u32,
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn derived_fields_leave_the_state_class_axis_entirely() {
-        assert!(SyntheticInference::field_states().await.is_empty(), "a #[derived] field is not state");
-        assert_eq!(SyntheticInference::derived_fields().await, &["topology", "depth"]);
-        assert_eq!(SyntheticInference::artifact_schema_id().await, "s.wave3.synthetic.inference");
-        assert!(SyntheticSnapshot::derived_fields().await.is_empty(), "state-only structs derive an empty derived table");
-        assert_eq!(JSON_SCHEMA_DERIVED_KEY, "x-semio-derived");
-    }
-    //#endregion 🔖️DerivedAxis
-
-    #[semio_framework_async_macros::async_test]
-    async fn schema_catalog_still_registers_json() {
-        let mut catalog = SchemaCatalog::new();
-        catalog.register_json("probe", parse_json(r#"{"type":"object","properties":{"n":{"type":"integer"}}}"#).expect("schema json")).expect("register");
-        catalog.validate("probe", &parse_json(r#"{"n":1}"#).expect("probe json")).expect("validate");
-        assert!(catalog.validate("probe", &parse_json(r#"{"n":1.5}"#).expect("fractional probe json")).is_err());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn owned_validator_preserves_supported_keyword_corpus() {
-        let schema_text = r#"{
-            "type":"object",
-            "additionalProperties":false,
-            "required":["n"],
-            "properties":{
-                "n":{"type":"integer"},
-                "mode":{"enum":["a","b"]},
-                "rank":{"enum":[1,2]},
-                "enabled":{"type":"boolean"},
-                "nested":{"type":"object","additionalProperties":false,"properties":{"label":{"type":"string"}}}
-            }
-        }"#;
-        let mut owned = SchemaCatalog::new();
-        owned.register_json("probe", parse_json(schema_text).expect("owned schema")).expect("owned compile");
-        let corpus = [
-            (r#"{"n":1}"#, true),
-            (r#"{"n":1.0}"#, true),
-            (r#"{"n":-2,"mode":"a","enabled":true}"#, true),
-            (r#"{"n":7,"nested":{"label":"ok"}}"#, true),
-            (r#"{"n":7,"rank":1.0}"#, true),
-            (r#"{}"#, false),
-            (r#"{"n":1.5}"#, false),
-            (r#"{"n":"1"}"#, false),
-            (r#"{"n":1,"mode":"c"}"#, false),
-            (r#"{"n":1,"rank":1.5}"#, false),
-            (r#"{"n":1,"enabled":0}"#, false),
-            (r#"{"n":1,"extra":true}"#, false),
-            (r#"{"n":1,"nested":{"extra":true}}"#, false),
-            (r#"null"#, false),
-            (r#"[]"#, false),
-        ];
-        for (text, expected) in corpus {
-            let owned_value = parse_json(text).expect("owned value");
-            assert_eq!(owned.validate("probe", &owned_value).is_ok(), expected, "unexpected validator outcome for {text}");
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn owned_validator_preserves_every_exercised_keyword_family() {
-        let schemas = [
-            r##"{"$defs":{"name":{"type":"string","minLength":2,"maxLength":4}},"type":"object","properties":{"name":{"$ref":"#/$defs/name"}},"required":["name"],"additionalProperties":{"type":"integer"}}"##,
-            r#"{"type":"array","items":{"type":["string","null"]},"minItems":1,"maxItems":3,"uniqueItems":true}"#,
-            r#"{"allOf":[{"type":"number","minimum":0,"maximum":10},{"multipleOf":0.5}],"not":{"const":3.5}}"#,
-            r#"{"anyOf":[{"const":"automatic"},{"type":"integer","exclusiveMinimum":0,"exclusiveMaximum":4}]}"#,
-            r#"{"oneOf":[{"const":"left"},{"const":"right"}],"title":"side","description":"side choice","default":"left","examples":["right"],"readOnly":false,"writeOnly":false,"deprecated":false,"format":"semio-side","x-semio-kind":"choice"}"#,
-        ];
-        let corpora: [&[&str]; 5] = [
-            &[r#"{"name":"ab"}"#, r#"{"name":"abcd","rank":2}"#, r#"{"name":"a"}"#, r#"{"name":"abcde"}"#, r#"{"name":"ok","rank":"2"}"#, r#"{}"#],
-            &[r#"["a"]"#, r#"[null,"b"]"#, r#"[]"#, r#"["a","b","c","d"]"#, r#"["a","a"]"#, r#"[1]"#],
-            &["0", "2.5", "10", "-0.5", "10.5", "2.25", "3.5", r#""2.5""#],
-            &[r#""automatic""#, "1", "3", "0", "4", r#""manual""#],
-            &[r#""left""#, r#""right""#, r#""center""#, "null"],
-        ];
-        let outcomes: [&[bool]; 5] =
-            [&[true, true, false, false, false, false], &[true, true, false, false, false, false], &[true, true, true, false, false, false, false, false], &[true, true, true, false, false, false], &[true, true, false, false]];
-        for ((schema_text, corpus), expected) in schemas.into_iter().zip(corpora).zip(outcomes) {
-            let owned = crate::OwnedJsonSchemaValidator::compile(schema_text).expect("owned compile");
-            for (text, expected) in corpus.iter().zip(expected) {
-                assert_eq!(owned.is_valid_json(text), *expected, "unexpected validator outcome for schema {schema_text} and value {text}");
-            }
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn owned_validator_diagnostics_progress_and_cancellation_are_deterministic() {
-        let validator = crate::OwnedJsonSchemaValidator::compile(r#"{"type":"object","properties":{"n":{"type":"integer"}},"required":["n"],"additionalProperties":false}"#).expect("compile");
-        assert_eq!(validator.validate_json(r#"{"n":"wrong"}"#), Err(SchemaError::Validation("$.n: expected integer".to_string())));
-        assert_eq!(validator.validate_json("{}"), Err(SchemaError::Validation("$: missing required property `n`".to_string())));
-        assert_eq!(validator.validate_json(r#"{"n":1,"z":2}"#), Err(SchemaError::Validation("$: additional property `z` is not allowed".to_string())));
-
-        let progress = validator.validate_json(r#"{"n":2}"#).expect("valid");
-        assert_eq!(progress.visited_nodes, 2);
-        let limited = crate::ValidationControl::new(1);
-        assert_eq!(validator.validate_json_with_control(r#"{"n":2}"#, &limited), Err(SchemaError::LimitExceeded(1)));
-        let cancelled = crate::ValidationControl::default();
-        cancelled.cancel();
-        assert_eq!(validator.validate_json_with_control(r#"{"n":2}"#, &cancelled), Err(SchemaError::Cancelled));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn schema_versions_ignore_whitespace_and_detect_drift() {
-        let compact = schema_version(r#"{"type":"object","properties":{"n":{"type":"integer"}}}"#).expect("compact");
-        let spaced = schema_version(r#"{ "type": "object", "properties": { "n": { "type": "integer" } } }"#).expect("spaced");
-        let reordered = schema_version(r#"{"properties":{"n":{"type":"integer"}},"type":"object"}"#).expect("reordered");
-        let drifted = schema_version(r#"{"type":"object","required":["n"],"properties":{"n":{"type":"integer"}}}"#).expect("drifted");
-        assert_eq!(compact, spaced);
-        assert_eq!(compact, reordered);
-        assert_ne!(compact, drifted);
-    }
-
-    //#region 🔖️ArtifactInferenceDescriptorParity
-    #[semio_framework_async_macros::async_test]
-    async fn artifact_inference_registry_registers_independently_of_the_snapshot_diff_mutations_descriptor() {
-        let mut registry = ArtifactInferenceRegistry::new();
-        let empty = FacetLeaves { rust: "", typescript: "", graphql: "component { id }", json_schema: "", proto: "" };
-        registry.register(ArtifactInferenceDescriptor { id: "s.wave3.synthetic.inference", inference: empty });
-        assert_eq!(registry.len(), 1);
-        assert!(!registry.is_empty());
-        assert!(registry.get("s.wave3.synthetic.inference").is_some());
-
-        let mut walked = 0usize;
-        for descriptor in registry.iter() {
-            walked += 1;
-            assert_eq!(descriptor.id, "s.wave3.synthetic.inference");
-        }
-        assert_eq!(walked, 1);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn artifact_inference_graphql_sdl_composes_shared_preamble_with_facet_leaf() {
-        register_artifact_inference_descriptor(ArtifactInferenceDescriptor {
-            id: "s.wave3.synthetic.sdl-probe.inference",
-            inference: FacetLeaves { rust: "", typescript: "", graphql: "type SdlProbeInference { flag: Boolean }", json_schema: "", proto: "" },
-        });
-        assert!(artifact_inference_descriptor_registered("s.wave3.synthetic.sdl-probe.inference"));
-        let sdl = artifact_inference_graphql_sdl("s.wave3.synthetic.sdl-probe.inference").await.expect("registered inference sdl");
-        assert!(sdl.contains("TRANSIENT"), "composed SDL must carry the shared @state preamble");
-        assert!(sdl.contains("type SdlProbeInference"));
-        assert!(artifact_inference_graphql_sdl("s.wave3.synthetic.unregistered.inference").await.is_none());
-    }
-    //#endregion 🔖️ArtifactInferenceDescriptorParity
-
-    //#region 🔖️AppSchemaRegistryParity
-
-    async fn empty_app_facet_leaves() -> FacetLeaves {
-        FacetLeaves {
-            rust: "",
-            typescript: "",
-            graphql: "",
-            json_schema: r#"{
-  "$id": "https://semio.tech/schema/app/placeholder/empty/config.json",
-  "title": "EmptyConfig",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {}
-}"#,
-            proto: "",
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn app_schema_registry_accepts_placeholder_owner_for_wave_structure() {
-        let mut registry = AppSchemaRegistry::new();
-        let empty = empty_app_facet_leaves().await;
-        registry.register(AppSchemaDescriptor {
-            id: "s.wave.a3.placeholder",
-            config: empty,
-            presence: FacetLeaves {
-                json_schema: r#"{
-  "$id": "https://semio.tech/schema/app/placeholder/empty/presence.json",
-  "title": "EmptyPresence",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {}
-}"#,
-                ..empty
-            },
-        });
-        assert_eq!(registry.len(), 1);
-        validate_registered_app_descriptor(registry.get("s.wave.a3.placeholder").expect("placeholder")).await;
-        assert!(GRAPHQL_STATE_PREAMBLE.contains("directive @state"));
-    }
-    //#endregion 🔖️AppSchemaRegistryParity
-
-    //#region 🔖️SchemaExportResolution
-    const EXPORT_LEAVES: FacetLeaves = FacetLeaves { rust: "pub struct Thing;", typescript: "export type Thing = {};", graphql: "type Thing { id: String! }", json_schema: r#"{"$id":"https://semio.tech/schema/test/thing.json","type":"object"}"#, proto: "" };
-
-    const NAMED_EXPORTS: [SchemaExport; 2] = [SchemaExport { id: "Thing", leaves: EXPORT_LEAVES }, SchemaExport { id: "Other", leaves: EXPORT_LEAVES }];
-
-    fn facet_descriptor(id: &'static str) -> ArtifactSchemaDescriptor {
-        let empty = FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" };
-        ArtifactSchemaDescriptor { id, artifact: EXPORT_LEAVES, snapshot: empty, diff: empty, mutations: empty }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn schema_format_ids_mirror_the_taxonomy_schema_formats_keys() {
-        assert_eq!(SchemaFormat::ALL.map(|format| format.id()), ["rust", "typescript", "graphql", "jsonschema", "protobuf"]);
-        assert_eq!(SchemaFormat::ALL.map(|format| format.taxonomy_key()), ["🦀️rust", "🟦️typescript", "🔗️graphql", "🔣️jsonschema", "🛰️protobuf"]);
-        for format in SchemaFormat::ALL {
-            assert_eq!(SchemaFormat::parse(format.id()), Some(format));
-            assert_eq!(SchemaFormat::parse(format.taxonomy_key()), Some(format));
-        }
-        assert_eq!(SchemaFormat::parse("📜️wit"), None);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn schema_export_registration_is_duplicate_safe_and_conflict_fatal() {
-        const OTHER: [SchemaExport; 1] = [SchemaExport { id: "Thing", leaves: EXPORT_LEAVES }];
-        let mut registry = SchemaExportRegistry::new();
-        registry.register_descriptor(facet_descriptor("test.scope")).expect("first descriptor");
-        registry.register_descriptor(facet_descriptor("test.scope")).expect("exact duplicate descriptor");
-        registry.register_exports(ScopeSchemaExports { scope: "test.scope", exports: &NAMED_EXPORTS }).expect("first exports");
-        registry.register_exports(ScopeSchemaExports { scope: "test.scope", exports: &NAMED_EXPORTS }).expect("exact duplicate exports");
-        assert_eq!(
-            registry.register_exports(ScopeSchemaExports { scope: "test.scope", exports: &OTHER }),
-            Err(SchemaExportRegistryError::ConflictingScope { scope: "test.scope".to_string() })
-        );
-        let mut conflicting = facet_descriptor("test.scope");
-        conflicting.snapshot = EXPORT_LEAVES;
-        assert_eq!(registry.register_descriptor(conflicting), Err(SchemaExportRegistryError::ConflictingScope { scope: "test.scope".to_string() }));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn schema_export_registration_rejects_a_duplicate_export_id_inside_one_scope() {
-        const DUPLICATED: [SchemaExport; 2] = [SchemaExport { id: "Thing", leaves: EXPORT_LEAVES }, SchemaExport { id: "Thing", leaves: EXPORT_LEAVES }];
-        let mut registry = SchemaExportRegistry::new();
-        assert_eq!(
-            registry.register_exports(ScopeSchemaExports { scope: "test.duplicate", exports: &DUPLICATED }),
-            Err(SchemaExportRegistryError::DuplicateExportId { scope: "test.duplicate".to_string(), export: "Thing".to_string() })
-        );
-        assert!(registry.scopes().is_empty());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn schema_export_resolution_distinguishes_every_failure() {
-        const SHADOWING: [SchemaExport; 1] = [SchemaExport { id: "snapshot", leaves: EXPORT_LEAVES }];
-        let mut registry = SchemaExportRegistry::new();
-        registry.register_descriptor(facet_descriptor("test.resolve")).expect("descriptor");
-        registry.register_exports(ScopeSchemaExports { scope: "test.resolve", exports: &NAMED_EXPORTS }).expect("exports");
-
-        assert_eq!(registry.resolve("test.resolve", "Thing", SchemaFormat::Rust), Ok("pub struct Thing;"));
-        assert_eq!(registry.resolve("test.resolve", "artifact", SchemaFormat::Graphql), Ok("type Thing { id: String! }"));
-        assert_eq!(registry.resolve("test.missing", "Thing", SchemaFormat::Rust), Err(SchemaResolveError::UnknownScope { scope: "test.missing".to_string() }));
-        assert_eq!(
-            registry.resolve("test.resolve", "Absent", SchemaFormat::Rust),
-            Err(SchemaResolveError::UnknownExport { scope: "test.resolve".to_string(), export: "Absent".to_string() })
-        );
-        assert_eq!(
-            registry.resolve("test.resolve", "Thing", SchemaFormat::Protobuf),
-            Err(SchemaResolveError::FormatAbsent { scope: "test.resolve".to_string(), export: "Thing".to_string(), format: SchemaFormat::Protobuf })
-        );
-        assert_eq!(
-            registry.resolve("test.resolve", "snapshot", SchemaFormat::Rust),
-            Err(SchemaResolveError::FormatAbsent { scope: "test.resolve".to_string(), export: "snapshot".to_string(), format: SchemaFormat::Rust })
-        );
-
-        let mut shadowed = SchemaExportRegistry::new();
-        shadowed.register_descriptor(facet_descriptor("test.shadow")).expect("descriptor");
-        shadowed.register_exports(ScopeSchemaExports { scope: "test.shadow", exports: &SHADOWING }).expect("exports");
-        assert_eq!(
-            shadowed.resolve("test.shadow", "snapshot", SchemaFormat::Rust),
-            Err(SchemaResolveError::AmbiguousScope { scope: "test.shadow".to_string(), export: "snapshot".to_string() })
-        );
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn schema_export_registry_reports_every_scope_with_its_exports() {
-        let mut registry = SchemaExportRegistry::new();
-        registry.register_descriptor(facet_descriptor("test.beta")).expect("beta descriptor");
-        registry.register_exports(ScopeSchemaExports { scope: "test.alpha", exports: &NAMED_EXPORTS }).expect("alpha exports");
-        registry.register_exports(ScopeSchemaExports { scope: "test.beta", exports: &NAMED_EXPORTS }).expect("beta exports");
-
-        assert_eq!(registry.scopes(), vec!["test.alpha", "test.beta"]);
-        assert_eq!(registry.exports("test.alpha").expect("alpha exports"), vec!["Thing", "Other"]);
-        assert_eq!(registry.exports("test.beta").expect("beta exports"), vec!["artifact", "snapshot", "diff", "mutations", "Thing", "Other"]);
-        assert_eq!(registry.exports("test.absent"), Err(SchemaResolveError::UnknownScope { scope: "test.absent".to_string() }));
-
-        let entries: Vec<(&str, &str, &str)> = registry.entries().map(|entry| (entry.scope, entry.export, entry.format.id())).collect();
-        assert_eq!(entries.iter().filter(|(scope, _, _)| *scope == "test.alpha").count(), 8);
-        assert!(entries.contains(&("test.beta", "artifact", "jsonschema")));
-        assert!(!entries.iter().any(|(_, _, format)| *format == "protobuf"));
-        assert!(!entries.iter().any(|(scope, export, _)| *scope == "test.beta" && *export == "snapshot"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn structural_validator_resolves_cross_scope_refs_by_document_id() {
-        const SHARED: [SchemaExport; 1] = [SchemaExport {
-            id: "ScopeId",
-            leaves: FacetLeaves {
-                rust: "",
-                typescript: "",
-                graphql: "",
-                json_schema: r#"{"$id":"https://semio.tech/schema/test/shared.json","definitions":{"ScopeId":{"type":"string","pattern":"^[a-z][a-z0-9]*(\\.[a-z][a-z0-9-]*)+$"}}}"#,
-                proto: "",
-            },
-        }];
-        const CONSUMER: [SchemaExport; 1] = [SchemaExport {
-            id: "Binding",
-            leaves: FacetLeaves {
-                rust: "",
-                typescript: "",
-                graphql: "",
-                json_schema: r#"{"$id":"https://semio.tech/schema/test/binding.json","type":"object","required":["scope"],"additionalProperties":false,"properties":{"scope":{"$ref":"https://semio.tech/schema/test/shared.json#/definitions/ScopeId"}}}"#,
-                proto: "",
-            },
-        }];
-        let mut registry = SchemaExportRegistry::new();
-        registry.register_exports(ScopeSchemaExports { scope: "test.shared", exports: &SHARED }).expect("shared");
-        registry.register_exports(ScopeSchemaExports { scope: "test.consumer", exports: &CONSUMER }).expect("consumer");
-
-        let validator = registry.structural_validator("test.consumer", "Binding").expect("cross-scope validator");
-        assert!(validator.is_valid_json(r#"{"scope":"s.trinity.jack"}"#));
-        assert_eq!(validator.validate_json(r#"{"scope":"Trinity"}"#), Err(SchemaError::Validation("$.scope: string does not match pattern".to_string())));
-        assert_eq!(
-            registry.structural_validator("test.consumer", "Absent").err(),
-            Some(SchemaBoundaryError::Resolve(SchemaResolveError::UnknownExport { scope: "test.consumer".to_string(), export: "Absent".to_string() }))
-        );
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn scope_schema_exports_register_into_the_os_wide_catalog() {
-        const GLOBAL: [SchemaExport; 1] = [SchemaExport { id: "Thing", leaves: EXPORT_LEAVES }];
-        register_scope_schema_exports(ScopeSchemaExports { scope: "test.global", exports: &GLOBAL }).expect("register");
-        register_scope_schema_exports(ScopeSchemaExports { scope: "test.global", exports: &GLOBAL }).expect("exact duplicate");
-        assert!(scope_schema_exports_registered("test.global"));
-        assert_eq!(resolve_schema_export("test.global", "Thing", SchemaFormat::Typescript), Ok("export type Thing = {};"));
-        assert!(schema_export_catalog_entries().contains(&SchemaExportEntry { scope: "test.global", export: "Thing", format: SchemaFormat::Typescript }));
-    }
-    //#endregion 🔖️SchemaExportResolution
-
-    //#region 🔖️Draft07OracleVectors
-    const DRAFT07_VECTORS: &str = include_str!("🧫️fixtures/✅️draft07-validation-vectors.json");
-
-    fn pointer_to_owned_path(pointer: &str) -> String {
-        pointer.split('/').skip(1).fold("$".to_string(), |path, segment| if segment.chars().all(|entry| entry.is_ascii_digit()) { format!("{path}[{segment}]") } else { format!("{path}.{segment}") })
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn owned_validator_agrees_with_the_shared_draft07_vectors() {
-        let vectors = parse_json(DRAFT07_VECTORS).expect("vectors json");
-        let cases = vectors.get("cases").and_then(Value::as_array).expect("cases");
-        assert!(cases.len() >= 16, "expected the full vector corpus, found {}", cases.len());
-        for case in cases {
-            let id = case.get("id").and_then(Value::as_str).expect("case id");
-            let documents: Vec<String> = case.get("documents").and_then(Value::as_array).map(|documents| documents.iter().map(json_to_string).collect()).unwrap_or_default();
-            let documents: Vec<&str> = documents.iter().map(String::as_str).collect();
-            let schema = json_to_string(case.get("schema").expect("case schema"));
-            let validator = crate::OwnedJsonSchemaValidator::compile_with_documents(&schema, &documents).unwrap_or_else(|error| panic!("{id}: compile: {error}"));
-            for instance in case.get("valid").and_then(Value::as_array).expect("valid instances") {
-                let instance = json_to_string(instance);
-                assert!(validator.validate_json(&instance).is_ok(), "{id}: expected {instance} to validate, got {:?}", validator.validate_json(&instance));
-            }
-            for entry in case.get("invalid").and_then(Value::as_array).expect("invalid instances") {
-                let instance = json_to_string(entry.get("instance").expect("instance"));
-                let expected = pointer_to_owned_path(entry.get("errorPath").and_then(Value::as_str).expect("errorPath"));
-                let Err(SchemaError::Validation(message)) = validator.validate_json(&instance) else {
-                    panic!("{id}: expected {instance} to be rejected");
-                };
-                assert!(message.starts_with(&format!("{expected}: ")), "{id}: expected {instance} to fail at {expected}, got `{message}`");
-            }
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn owned_pattern_matcher_covers_the_supported_ecma_subset() {
-        let corpus: [(&str, &[(&str, bool)]); 11] = [
-            ("^[a-z][a-z0-9]*$", &[("scope", true), ("s9", true), ("Scope", false), ("", false)]),
-            ("^v\\d{1,3}$", &[("v1", true), ("v123", true), ("v1234", false), ("v", false)]),
-            ("^(rust|typescript|graphql)$", &[("rust", true), ("graphql", true), ("proto", false)]),
-            ("^[^,]+$", &[("plain", true), ("a,b", false)]),
-            ("a.c", &[("abc", true), ("a\nc", false), ("xxabcxx", true)]),
-            ("^\\w+(\\s\\w+)*$", &[("one two three", true), ("one  two", false)]),
-            ("^a{2,}b?$", &[("aa", true), ("aaab", true), ("a", false)]),
-            ("colou?r", &[("color", true), ("colour", true), ("colr", false)]),
-            ("^(?!0{4}$)[0-9a-f]{4}$", &[("00a0", true), ("0000", false), ("ffff", true)]),
-            ("^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$", &[("a/b", true), ("a/..b", true), ("/a", false), ("a/../b", false), ("..", false)]),
-            ("(?=.*x)ab", &[("abx", true), ("xab", false), ("ab", false)]),
-        ];
-        for (pattern, cases) in corpus {
-            let matcher = crate::PatternMatcher::compile(pattern).unwrap_or_else(|reason| panic!("{pattern}: {reason}"));
-            for (text, expected) in cases {
-                assert_eq!(matcher.is_match(text), *expected, "pattern {pattern} against {text}");
-            }
-        }
-        for rejected in ["(?<=a)", "(?<!a)", "a\\1", "\\ba", "[z-a]", "(a", "*a"] {
-            assert!(crate::PatternMatcher::compile(rejected).is_err(), "expected {rejected} to be rejected");
-        }
-    }
-    //#endregion 🔖️Draft07OracleVectors
-}
+#[path = "🧪️tests/🔬️component-unit/🦀️.rs"]
+mod tests;
 //#endregion 🔖️Tests

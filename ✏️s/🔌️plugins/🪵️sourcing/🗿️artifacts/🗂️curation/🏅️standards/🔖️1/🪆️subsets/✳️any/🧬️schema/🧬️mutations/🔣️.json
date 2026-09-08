@@ -1,21 +1,16 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/sourcing/curation/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/sourcing/curation/mutations.json",
   "title": "SourcingMutation",
   "oneOf": [
     {
-      "$ref": "./🔢change-curated-item-count/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/sourcing/curation/mutation/change-curated-item-count/schema.json"
     },
     {
-      "$ref": "./🌱create-curated-item/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/sourcing/curation/mutation/create-curated-item/schema.json"
     },
     {
-      "$ref": "./🗑️delete-curated-item/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/sourcing/curation/mutation/delete-curated-item/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-curated-item-count",
-    "create-curated-item",
-    "delete-curated-item"
   ]
 }

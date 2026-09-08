@@ -36,10 +36,10 @@
                 "minLength": 1
               },
               "before": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/state"
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/State"
               },
               "after": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/state"
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/State"
               },
               "changes": {
                 "type": "array",
@@ -60,7 +60,7 @@
                       "minLength": 1
                     },
                     "patch": {
-                      "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/domainPatch"
+                      "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/DomainPatch"
                     }
                   }
                 }

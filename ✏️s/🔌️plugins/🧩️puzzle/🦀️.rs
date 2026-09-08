@@ -1,5 +1,8 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
@@ -9,12 +12,12 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the Puzzle 2D, 3D, and 5D surfaces.
     pub enum PuzzleApps: PluginApp {
-        Puzzle2dEditor(VcsArtifactApp<EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>),
-        Puzzle2dViewer(VcsArtifactApp<ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
-        Puzzle3dEditor(VcsArtifactApp<EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),
-        Puzzle3dViewer(VcsArtifactApp<ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),
-        Puzzle5dEditor(VcsArtifactApp<EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>),
-        Puzzle5dViewer(VcsArtifactApp<ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>),
+        Puzzle2dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_puzzle_2d::editor::puzzle2d::Puzzle2dPlayApp>>),
+        Puzzle2dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_puzzle_2d::viewer::puzzle2d::Puzzle2dViewer>>),
+        Puzzle3dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_puzzle_3d::editor::puzzle3d::Puzzle3dPlayApp>>),
+        Puzzle3dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_puzzle_3d::viewer::puzzle3d::Puzzle3dViewer>>),
+        Puzzle5dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_puzzle_5d::editor::puzzle5d::Puzzle5dPlayApp>>),
+        Puzzle5dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_puzzle_5d::viewer::puzzle5d::Puzzle5dViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -56,23 +59,23 @@ pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
         .label("Puzzle")
         .version("0.1.0")
         .package_id("semio:puzzle")
-        .declare_artifact(crate::artifacts::puzzle2d::artifact())
-        .declare_artifact(crate::artifacts::puzzle3d::artifact())
-        .declare_artifact(crate::artifacts::puzzle5d::artifact())
-        .editor_mutation_roster::<crate::editor::puzzle2d::Puzzle2dPlayApp>()
-        .viewer_mutation_roster::<crate::viewer::puzzle2d::Puzzle2dViewer>()
-        .editor_mutation_roster::<crate::editor::puzzle3d::Puzzle3dPlayApp>()
-        .viewer_mutation_roster::<crate::viewer::puzzle3d::Puzzle3dViewer>()
-        .editor_mutation_roster::<crate::editor::puzzle5d::Puzzle5dPlayApp>()
-        .viewer_mutation_roster::<crate::viewer::puzzle5d::Puzzle5dViewer>()
-        .job(crate::editor::puzzle3d::precompute::FILL_JOB_KIND, crate::editor::puzzle3d::precompute::fill_job)
+        .declare_artifact(semio_s_artifact_puzzle_2d::artifact::<PuzzleApps>())
+        .declare_artifact(semio_s_artifact_puzzle_3d::artifact::<PuzzleApps>())
+        .declare_artifact(semio_s_artifact_puzzle_5d::artifact::<PuzzleApps>())
+        .editor_mutation_roster::<semio_s_artifact_puzzle_2d::editor::puzzle2d::Puzzle2dPlayApp>()
+        .viewer_mutation_roster::<semio_s_artifact_puzzle_2d::viewer::puzzle2d::Puzzle2dViewer>()
+        .editor_mutation_roster::<semio_s_artifact_puzzle_3d::editor::puzzle3d::Puzzle3dPlayApp>()
+        .viewer_mutation_roster::<semio_s_artifact_puzzle_3d::viewer::puzzle3d::Puzzle3dViewer>()
+        .editor_mutation_roster::<semio_s_artifact_puzzle_5d::editor::puzzle5d::Puzzle5dPlayApp>()
+        .viewer_mutation_roster::<semio_s_artifact_puzzle_5d::viewer::puzzle5d::Puzzle5dViewer>()
+        .job(semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::FILL_JOB_KIND, semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::fill_job)
         // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M5 — `.activation(…)`/`.execution(…)`/
         // `.requests(…)` (`📓️design-abi.md` §3/§6), same shape M0/M1 already landed for
         // stdio/draw/forms/mathematical/layout/raster. One activation per owned artifact kind, read
         // live from each kind's own `artifact_kind().id` (never hardcoded).
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::puzzle2d::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::puzzle3d::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::puzzle5d::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_puzzle_2d::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_puzzle_3d::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_puzzle_5d::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest {
             id: CapabilityId("documents.write".into()),
@@ -97,37 +100,9 @@ pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
 
 //#region 🔖️SurfaceTests
 #[cfg(test)]
-mod surface_tests {
-    use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
-
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle2d_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::puzzle2d::Puzzle2dViewer>().await;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle2d_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::puzzle2d::Puzzle2dPlayApp, crate::viewer::puzzle2d::Puzzle2dViewer>().await;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle3d_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::puzzle3d::Puzzle3dViewer>().await;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle3d_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::puzzle3d::Puzzle3dPlayApp, crate::viewer::puzzle3d::Puzzle3dViewer>().await;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle5d_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::puzzle5d::Puzzle5dViewer>().await;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle5d_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::puzzle5d::Puzzle5dPlayApp, crate::viewer::puzzle5d::Puzzle5dViewer>().await;
-    }
-}
+#[path = "🧪️tests/🔬️surface/🦀️.rs"]
+mod surface_tests;
 //#endregion 🔖️SurfaceTests
+
+#[cfg(feature = "plugin-entry")]
+semio_framework_plugin::plugin_exports!(plugin, PuzzleApps);

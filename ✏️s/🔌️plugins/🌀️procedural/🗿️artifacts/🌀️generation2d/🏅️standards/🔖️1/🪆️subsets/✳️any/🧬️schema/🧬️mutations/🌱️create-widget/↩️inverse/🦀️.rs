@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `CreateWidget` — the `delete-widget` of the id it created (the payload itself
 //! carries the id, so no BASE lookup is needed to know what to undo).
 
-use crate::mutations::{delete_widget, Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{delete_widget, Generation2dMutation};
 use crate::{widget_id, Generation2dSnapshot};
 
 pub fn inverse(payload: &super::CreateWidget, _base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {

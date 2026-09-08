@@ -1,35 +1,138 @@
 {
-  "$id": "https://semio.tech/schema/stdio.avi.snapshot.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/avi/1.0/hdrl/snapshot/text.json",
   "title": "AviSnapshot",
   "description": "RIFF/AVI 1.0: avih typed, per-stream strh typed + strf discriminated by fccType, movi chunks assigned to their stream with idx1-derived keyframe flags, everything else typed-raw.",
   "type": "object",
-  "required": ["schema", "mainHeader", "streams", "idx1Present", "unknownChunks"],
+  "required": [
+    "schema",
+    "mainHeader",
+    "streams",
+    "idx1Present",
+    "unknownChunks"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "mainHeader": {
-      "type": "object", "x-semio-state": "artifact",
-      "properties": {
-        "microSecPerFrame": { "type": "integer" }, "maxBytesPerSec": { "type": "integer" }, "paddingGranularity": { "type": "integer" }, "flags": { "type": "integer" },
-        "totalFrames": { "type": "integer" }, "initialFrames": { "type": "integer" }, "streams": { "type": "integer" }, "suggestedBufferSize": { "type": "integer" },
-        "width": { "type": "integer" }, "height": { "type": "integer" }, "reserved": { "type": "array", "items": { "type": "integer" } }
-      }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
     },
-    "streams": {
-      "type": "array", "x-semio-state": "artifact",
-      "items": {
-        "type": "object",
-        "properties": {
-          "strh": { "type": "object" },
-          "strf": { "oneOf": [
-            { "type": "object", "properties": { "format": { "const": "bitmapInfo" } } },
-            { "type": "object", "properties": { "format": { "const": "waveFormat" } } },
-            { "type": "object", "properties": { "format": { "const": "raw" } } }
-          ] },
-          "chunks": { "type": "array", "items": { "type": "object", "properties": { "fourcc": { "type": "string" }, "data": { "type": "array" }, "keyframe": { "type": "boolean" } } } }
+    "mainHeader": {
+      "type": "object",
+      "x-semio-state": "artifact",
+      "properties": {
+        "microSecPerFrame": {
+          "type": "integer"
+        },
+        "maxBytesPerSec": {
+          "type": "integer"
+        },
+        "paddingGranularity": {
+          "type": "integer"
+        },
+        "flags": {
+          "type": "integer"
+        },
+        "totalFrames": {
+          "type": "integer"
+        },
+        "initialFrames": {
+          "type": "integer"
+        },
+        "streams": {
+          "type": "integer"
+        },
+        "suggestedBufferSize": {
+          "type": "integer"
+        },
+        "width": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "reserved": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
         }
       }
     },
-    "idx1Present": { "type": "boolean", "x-semio-state": "artifact" },
-    "unknownChunks": { "type": "array", "x-semio-state": "artifact", "items": { "type": "object", "properties": { "fourcc": { "type": "string" }, "data": { "type": "array" } } } }
+    "streams": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object",
+        "properties": {
+          "strh": {
+            "type": "object"
+          },
+          "strf": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "const": "bitmapInfo"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "const": "waveFormat"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "const": "raw"
+                  }
+                }
+              }
+            ]
+          },
+          "chunks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "fourcc": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "array"
+                },
+                "keyframe": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "idx1Present": {
+      "type": "boolean",
+      "x-semio-state": "artifact"
+    },
+    "unknownChunks": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object",
+        "properties": {
+          "fourcc": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array"
+          }
+        }
+      }
+    }
   }
 }

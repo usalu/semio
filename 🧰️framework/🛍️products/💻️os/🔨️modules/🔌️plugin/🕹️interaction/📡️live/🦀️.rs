@@ -60,14 +60,7 @@ pub(crate) struct LocalInteractionLiveQuery<D, C, Q: LocalInteractionQueryCaptur
 }
 
 impl<D, C> LocalInteractionLiveQuery<D, C> {
-    pub(crate) fn new(
-        request_id: u64,
-        query_generation: u64,
-        identity: LocalInteractionIdentity,
-        document: Option<SnapshotRead<D>>,
-        config: Option<SnapshotRead<C>>,
-        interaction: Option<SnapshotRead<protocol::InteractionState>>,
-    ) -> Self {
+    pub(crate) fn new(request_id: u64, query_generation: u64, identity: LocalInteractionIdentity, document: Option<SnapshotRead<D>>, config: Option<SnapshotRead<C>>, interaction: Option<SnapshotRead<protocol::InteractionState>>) -> Self {
         let failed = document.is_none() || config.is_none() || interaction.is_none();
         let inputs = LocalInteractionInputReads::from_optional(document, config);
         let query = interaction.map(|read| LocalInteractionQuery::new(LocalInteractionCaptureCursor::new(read, identity), request_id, query_generation));

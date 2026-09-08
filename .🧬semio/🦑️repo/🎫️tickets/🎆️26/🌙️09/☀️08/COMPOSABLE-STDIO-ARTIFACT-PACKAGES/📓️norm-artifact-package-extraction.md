@@ -26,13 +26,15 @@ The norm plugin package is now a composition facade: its package root mounts `no
 - `din18599` depends on `din16798`, `din4108`, and stdio `semio`.
 - `en1990` depends on stdio `semio`.
 - `en1991` depends on `en1990`.
-- `en1992` has an optional FEM dependency.
-- `en1993` depends on `en1992` and has an optional FEM dependency.
+- `en1992` has an optional direct dependency on the `semio-s-artifact-fem-2d` leaf.
+- `en1993` depends on `en1992` and has an optional direct dependency on the `semio-s-artifact-fem-2d` leaf.
 - `en1994` depends on `en1993`.
 - `en1995` through `en1999` form the observed standard chain and also use `en1990` where their sources require it.
 - `iso16757` depends on `en1999`.
 
 The plugin `cross-fem` feature propagates into the two FEM-owning leaves.
+
+The two cross-domain helpers now import the 2D artifact's public `elements2d` and `model` APIs directly. Their optional feature graph contains no dependency on the owning FEM plugin and constructs the leaf's closed `Elements::BeamEb2` variant explicitly.
 
 ## Schema test
 
@@ -85,7 +87,16 @@ Both independently compiled leaves pass. DIN 16798 exercises a standalone packag
 
 `cargo fmt --package ... -- --check` parsed the contract and representative small/composed/macro-heavy leaves, then reported pre-existing repository formatting differences. It was used as a parse audit rather than recorded as a passing format gate.
 
-The full norm wildcard check progressed through the independent contract, DIN 4108, DIN 16798, EN 1992, EN 1993, EN 1994, and VDI 3805 boundaries. It then stopped in the concurrently edited stdio `semio` dependency before compiling the `en1990`-dependent norm chain. The stdio owner has the exact 27 missing/cfg-gated `io` module errors and is repairing that dependency closure.
+The stdio owner subsequently repaired that boundary. A fresh `cargo tree -p semio-s-artifact-norm-en1990 --prefix none` now shows only `semio-s-artifact-stdio-semio` and `semio-s-artifact-stdio-contract`, with zero unrelated stdio artifact leaves. The final full norm wildcard and plugin test commands are queued after the shared OS-host build and listed in `📓️framework-space-artifact-extraction.md`.
+
+Both optional FEM dependency trees resolve directly to `semio-s-artifact-fem-2d`, and static source/manifests contain no `semio-s-plugin-fem`, `fem::core`, or `dep:fem` reference:
+
+```text
+cargo tree -p semio-s-artifact-norm-en1992 --features cross-fem --prefix none
+cargo tree -p semio-s-artifact-norm-en1993 --features cross-fem --prefix none
+```
+
+The first complete leaf compile also found that the extracted ISO 16757 root re-exported `Iso16757Snapshot` through both its canonical document-schema route and its generated standards route. The redundant standards-route re-export was removed; the canonical root API remains unchanged.
 
 ## Integration handoff
 

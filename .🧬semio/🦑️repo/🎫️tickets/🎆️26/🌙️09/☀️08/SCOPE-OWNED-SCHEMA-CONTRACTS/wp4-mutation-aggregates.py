@@ -204,8 +204,7 @@ def apply_aggregate(root: str, leaves: dict[str, dict], report: dict, aggregate_
     doc = {"$schema": DRAFT7, "$id": previous.get("$id") or f"https://semio.tech/schema/{scope}/mutation.json", "title": previous.get("title") or "".join(part.capitalize() for part in re.split(r"[/\-]", scope)) + "Mutation"}
     if previous.get("description"):
         doc["description"] = previous["description"]
-    doc["oneOf"] = [{"$ref": f"./{leaf[len(root) + 1:]}/{TARGET_REL}"} for leaf, _ in members]
-    doc["x-semio-mutationKinds"] = [info["descriptor"]["semanticKind"] for _, info in members]
+    doc["oneOf"] = [{"$ref": leaf_schema_id(scope, info["descriptor"]["semanticKind"])} for _, info in members]
     save(aggregate_rel, doc)
     report["aggregates"] += 1
 
@@ -277,6 +276,236 @@ def relref(files: list[str], grouped: dict[str, list[str]], leaves: dict[str, di
         report["aggregates"] += 1
         if changed and apply:
             save(rel, updated)
+    return report
+
+
+def pascal(files: list[str], apply: bool) -> dict:
+    """🔠️ Contract §A: an export id is a PascalCase `$defs` key, so `payload` becomes `Payload`.
+
+    A lowercase key is not addressable as an export, which is why the aggregate branches that name it
+    read as unresolved. Only the leading character moves; a key that is still not PascalCase afterwards,
+    or that would collide with an existing export, is refused. Intra-document `#/$defs/<key>` pointers are
+    carried along here; cross-document ones are repaired by `--absref` (see `repoint`).
+    """
+    report = {"documents": 0, "exports": 0, "pointers": 0, "refused": [], "files": []}
+    for rel in sorted(files):
+        if MUT not in rel or rel.startswith(STDIO) or rel.startswith(TICKETS) or not rel.endswith(".json"):
+            continue
+        try:
+            doc = load(rel)
+        except Exception:
+            continue
+        if not isinstance(doc, dict) or "$schema" not in doc or not isinstance(doc.get("$defs"), dict):
+            continue
+        report["documents"] += 1
+        renames = {}
+        for key in doc["$defs"]:
+            if re.fullmatch(r"[A-Z][A-Za-z0-9]*", key):
+                continue
+            candidate = key[:1].upper() + key[1:]
+            if not re.fullmatch(r"[A-Z][A-Za-z0-9]*", candidate) or candidate in doc["$defs"]:
+                report["refused"].append(f"{rel}: $defs key {key!r} has no unambiguous PascalCase export id")
+                continue
+            renames[key] = candidate
+        if not renames:
+            continue
+        pointers = 0
+
+        def rewrite(node):
+            nonlocal pointers
+            if isinstance(node, list):
+                return [rewrite(item) for item in node]
+            if not isinstance(node, dict):
+                return node
+            out = {}
+            for key, value in node.items():
+                if key == "$ref" and isinstance(value, str) and value.startswith("#/$defs/"):
+                    head, _, tail = value[len("#/$defs/"):].partition("/")
+                    if head in renames:
+                        pointers += 1
+                        out[key] = f"#/$defs/{renames[head]}" + (f"/{tail}" if tail else "")
+                        continue
+                out[key] = rewrite(value)
+            return out
+
+        updated = rewrite(doc)
+        updated["$defs"] = {renames.get(key, key): value for key, value in updated["$defs"].items()}
+        report["exports"] += len(renames)
+        report["pointers"] += pointers
+        report["files"].append(rel)
+        if apply:
+            save(rel, updated)
+    return report
+
+
+def stray(files: list[str], apply: bool) -> dict:
+    """🧽 Removes a `$schema` declared on a SUBschema, which names a dialect no validator switches to.
+
+    Draft-07 only reads `$schema` at the document root; a nested one is a leftover of the 2020-12 era that
+    makes a document look half-migrated to any reader that greps for the dialect string.
+    """
+    report = {"documents": 0, "keys": 0, "files": []}
+    for rel in sorted(files):
+        if MUT not in rel or rel.startswith(STDIO) or rel.startswith(TICKETS) or not rel.endswith(".json"):
+            continue
+        try:
+            doc = load(rel)
+        except Exception:
+            continue
+        if not isinstance(doc, dict) or "$schema" not in doc:
+            continue
+        report["documents"] += 1
+        removed = 0
+
+        def prune(node, root: bool):
+            nonlocal removed
+            if isinstance(node, list):
+                return [prune(item, False) for item in node]
+            if not isinstance(node, dict):
+                return node
+            out = {}
+            for key, value in node.items():
+                if key == "$schema" and not root:
+                    removed += 1
+                    continue
+                out[key] = prune(value, False)
+            return out
+
+        updated = prune(doc, True)
+        if removed:
+            report["keys"] += removed
+            report["files"].append(rel)
+            if apply:
+                save(rel, updated)
+    return report
+
+
+def dropkinds(files: list[str], apply: bool) -> dict:
+    """🧹 Cross-partition row 23: the aggregate's `$ref` union IS the identity, so the restated kind list goes.
+
+    Unblocked once the structural aggregate check landed (`policyMutationAggregateMembers` in the root
+    `📜️script.ts`, and `mutation-aggregate-kinds-redundant` in `📚️library/🔍️discovery`). With row 79 every
+    branch names `…/mutation/<semanticKind>/schema.json`, so even the textual identity fallbacks still read
+    the kind out of the union. Refuses any aggregate whose declared kinds are not exactly what its own
+    branches name, because dropping the list would then lose information.
+    """
+    report = {"aggregates": 0, "dropped": 0, "refused": []}
+    for rel in sorted(files):
+        if MUT not in rel or rel.startswith(STDIO) or rel.startswith(TICKETS) or not rel.endswith(f"{MUT[:-1]}/🔣️.json"):
+            continue
+        try:
+            doc = load(rel)
+        except Exception:
+            continue
+        if not isinstance(doc, dict) or "x-semio-mutationKinds" not in doc:
+            continue
+        report["aggregates"] += 1
+        declared = doc["x-semio-mutationKinds"]
+        branches = [branch.get("$ref", "") for branch in doc.get("oneOf", []) if isinstance(branch, dict)]
+        carried = [kind for kind in declared if any(f"/mutation/{kind}/schema.json" in ref for ref in branches)]
+        if len(carried) != len(declared):
+            report["refused"].append(f"{rel}: {sorted(set(declared) - set(carried))} are not named by any branch $ref")
+            continue
+        report["dropped"] += 1
+        if apply:
+            save(rel, {k: v for k, v in doc.items() if k != "x-semio-mutationKinds"})
+    return report
+
+
+def repoint(base: str, pointer: str, rel: str, report: dict) -> str:
+    """🔤️ Keeps a `#/$defs/<Export>` pointer valid across an export-id re-casing in the target module.
+
+    Contract §A export ids are PascalCase; peers re-case a module's `$defs` keys as their scope lands,
+    which silently invalidates every cross-document pointer that still spells the old key. A pointer whose
+    key is gone is repaired ONLY when exactly one key of the target differs from it by case; anything else
+    is reported, never guessed.
+    """
+    match = re.fullmatch(r"/\$defs/([^/]+)", pointer or "")
+    if not match:
+        return pointer
+    if "_index" not in report:
+        report["_index"] = {identity: doc for identity, (_, doc) in document_index(report["_files"]).items()}
+    target = report["_index"].get(base)
+    if not isinstance(target, dict):
+        return pointer
+    exports = target.get("$defs") or {}
+    if match.group(1) in exports:
+        return pointer
+    equal = [key for key in exports if key.lower() == match.group(1).lower()]
+    if len(equal) != 1:
+        report["refused"].append(f"{rel}: {base}#{pointer} names an export the target does not declare ({sorted(exports)})")
+        return pointer
+    report["repointed"] = report.get("repointed", 0) + 1
+    return f"/$defs/{equal[0]}"
+
+
+def absref(files: list[str], apply: bool, remap: dict[str, str] | None = None) -> dict:
+    """🔗️ Cross-partition row 79: every filesystem-relative `$ref` names the target document's `$id`.
+
+    A mutation leaf is a scope of its own (contract §A), so an aggregate branch is a CROSS-document
+    reference and must address the target by `$id`, never by a path. The rewrite is mechanical and
+    lossless: the JSON pointer is carried over untouched, and a target that declares no `$id` is
+    refused rather than guessed at, because there is no id to name it by.
+    """
+    report = {"documents": 0, "refs": 0, "rewritten": 0, "aggregates": 0, "leaves": 0, "refused": [], "edits": [], "_files": files}
+    for rel in sorted(files):
+        if MUT not in rel or rel.startswith(STDIO) or rel.startswith(TICKETS) or not rel.endswith(".json"):
+            continue
+        try:
+            doc = load(rel)
+        except Exception:
+            continue
+        if not isinstance(doc, dict) or "$schema" not in doc:
+            continue
+        report["documents"] += 1
+        changed = 0
+
+        def rewrite(node):
+            nonlocal changed
+            if isinstance(node, list):
+                return [rewrite(item) for item in node]
+            if not isinstance(node, dict):
+                return node
+            out = {}
+            for key, value in node.items():
+                if key == "$ref" and isinstance(value, str) and value.startswith("http"):
+                    base, _, pointer = value.partition("#")
+                    base = (remap or {}).get(base, base)
+                    pointer = repoint(base, pointer, rel, report)
+                    replacement = base + (f"#{pointer}" if pointer else "")
+                    if replacement != value:
+                        changed += 1
+                        report["remapped"] = report.get("remapped", 0) + 1
+                        report["edits"].append(f"{rel}: {value} → {replacement}")
+                    out[key] = replacement
+                    continue
+                if key == "$ref" and isinstance(value, str) and not value.startswith("#") and not value.startswith("http"):
+                    report["refs"] += 1
+                    base, _, pointer = value.partition("#")
+                    target = os.path.normpath(os.path.join(os.path.dirname(rel), __import__("urllib.parse", fromlist=["unquote"]).unquote(base)))
+                    try:
+                        identity = load(target).get("$id")
+                    except Exception:
+                        identity = None
+                    if not isinstance(identity, str):
+                        report["refused"].append(f"{rel}: {value} → {target} declares no $id")
+                        out[key] = value
+                        continue
+                    replacement = identity + (f"#{pointer}" if pointer else "")
+                    if replacement != value:
+                        changed += 1
+                        report["rewritten"] += 1
+                        report["edits"].append(f"{rel}: {value} → {replacement}")
+                    out[key] = replacement
+                    continue
+                out[key] = rewrite(value)
+            return out
+
+        updated = rewrite(doc)
+        if changed:
+            report["aggregates" if rel.endswith(f"{MUT[:-1]}/🔣️.json") else "leaves"] += 1
+            if apply:
+                save(rel, updated)
     return report
 
 
@@ -390,7 +619,9 @@ def to_draft07(node, base_rel: str, index: dict[str, tuple[str, dict]], report: 
         names = sorted(evaluated_names(out, base_rel, index))
         if "additionalProperties" in out:
             raise Unresolvable(f"{base_rel}: additionalProperties beside unevaluatedProperties")
-        out["propertyNames"] = {"enum": names}
+        # 🈳️An empty evaluated set means "no property is allowed"; draft-07's meta-schema forbids an
+        # empty `enum`, and the boolean schema says the same thing without one.
+        out["propertyNames"] = {"enum": names} if names else False
         report["closuresRewritten"] += 1
     return out
 
@@ -423,10 +654,57 @@ def draft07(files: list[str], grouped: dict[str, list[str]], present: set[str], 
     return report
 
 
+ID_BASE = "https://semio.tech/schema/"
+
+
+def module_scope_path(root: str, present: set[str]) -> str | None:
+    """🧭️ The scope path a mutation root inherits, read from its own module's `🧬️schema/🔣️.json` `$id`.
+
+    Contract §A: a scope id comes from the module `$id`, never from a second path heuristic — so the
+    leaf grammar of row 10/78 (`<root module $id scope path>/mutation/<kind>/schema.json`) reads the one
+    declaration instead of re-deriving it. A root whose module declares no `$id` has no scope path, and
+    the caller refuses rather than inventing one.
+    """
+    module_rel = f"{os.path.dirname(root)}/🔣️.json"
+    if module_rel not in present:
+        return None
+    try:
+        identity = load(module_rel).get("$id")
+    except Exception:
+        return None
+    if not isinstance(identity, str) or not identity.startswith(ID_BASE) or "/" not in identity[len(ID_BASE):]:
+        return None
+    return identity[len(ID_BASE):].rsplit("/", 1)[0]
+
+
 def reidentify(grouped: dict[str, list[str]], leaves: dict[str, dict], present: set[str], apply: bool) -> dict:
-    """🆔️ Idempotent `$id` rewrite of every mutation document to the contract §A grammar."""
-    report = {"leaves": 0, "leavesChanged": 0, "aggregates": 0, "aggregatesChanged": 0, "facets": 0, "facetsChanged": 0, "titles": 0, "collisions": [], "mapping": {}}
+    """🆔️ Idempotent `$id` rewrite of every mutation document to the contract §A grammar.
+
+    Injectivity is established BEFORE anything is written: the whole `$id → [document]` multimap is built
+    first, and every id claimed twice is refused together with all its claimants, so a collision can never
+    be written and then discovered.
+    """
+    report = {"leaves": 0, "leavesChanged": 0, "aggregates": 0, "aggregatesChanged": 0, "facets": 0, "facetsChanged": 0, "titles": 0, "collisions": [], "unowned": [], "mapping": {}}
     seen: dict[str, str] = {}
+
+    claims: dict[str, list[str]] = collections.defaultdict(list)
+    for leaf, info in sorted(leaves.items()):
+        scope = module_scope_path(info["root"], present)
+        if scope is None:
+            continue
+        claims[leaf_schema_id(scope, info["descriptor"]["semanticKind"])].append(f"{leaf}/{TARGET_REL}")
+    for root in sorted(grouped):
+        scope = module_scope_path(root, present)
+        if scope is None:
+            continue
+        if f"{root}/🔣️.json" in present:
+            claims[aggregate_schema_id(scope)].append(f"{root}/🔣️.json")
+        for facet in FACET_DOC_DIRS:
+            if f"{root}/{facet}/🔣️.json" in present:
+                claims[facet_schema_id(scope, facet)].append(f"{root}/{facet}/🔣️.json")
+    refused = {identity for identity, claimants in claims.items() if len(claimants) > 1}
+    for identity in sorted(refused):
+        report["collisions"].append(f"{identity} is claimed by {len(claims[identity])} documents: {', '.join(claims[identity])}")
 
     def stamp(rel: str, schema_id: str, title: str | None, dialect: str | None = None) -> tuple[bool, bool]:
         doc = load(rel)
@@ -462,18 +740,29 @@ def reidentify(grouped: dict[str, list[str]], leaves: dict[str, dict], present: 
         if rel not in present:
             continue
         report["leaves"] += 1
-        scope = scope_id(info["root"])
-        changed, title_changed = stamp(rel, leaf_schema_id(scope, info["descriptor"]["semanticKind"]), info["descriptor"].get("aggregateVariant"))
+        scope = module_scope_path(info["root"], present)
+        if scope is None:
+            report["unowned"].append(rel)
+            continue
+        identity = leaf_schema_id(scope, info["descriptor"]["semanticKind"])
+        if identity in refused:
+            continue
+        changed, title_changed = stamp(rel, identity, info["descriptor"].get("aggregateVariant"))
         report["leavesChanged"] += int(changed)
         report["titles"] += int(title_changed)
 
     for root in sorted(grouped):
-        scope = scope_id(root)
+        scope = module_scope_path(root, present)
         rel = f"{root}/🔣️.json"
         if rel in present:
             report["aggregates"] += 1
-            changed, _ = stamp(rel, aggregate_schema_id(scope), None, DRAFT7)
-            report["aggregatesChanged"] += int(changed)
+            if scope is None:
+                report["unowned"].append(rel)
+            elif aggregate_schema_id(scope) not in refused:
+                changed, _ = stamp(rel, aggregate_schema_id(scope), None, DRAFT7)
+                report["aggregatesChanged"] += int(changed)
+        if scope is None:
+            continue
         for facet in FACET_DOC_DIRS:
             facet_rel = f"{root}/{facet}/🔣️.json"
             if facet_rel not in present:
@@ -483,10 +772,16 @@ def reidentify(grouped: dict[str, list[str]], leaves: dict[str, dict], present: 
             report["facetsChanged"] += int(changed)
 
     final = collections.Counter()
-    for leaf, info in sorted(leaves.items()):
+    for leaf in sorted(leaves):
         rel = f"{leaf}/{TARGET_REL}"
-        if rel in present:
-            final[leaf_schema_id(scope_id(info["root"]), info["descriptor"]["semanticKind"])] += 1
+        if rel not in present:
+            continue
+        try:
+            identity = load(rel).get("$id")
+        except Exception:
+            identity = None
+        if isinstance(identity, str):
+            final[identity] += 1
     report["duplicateTargets"] = {k: v for k, v in final.items() if v > 1}
     return report
 
@@ -518,6 +813,35 @@ def main() -> int:
     if "--relref" in sys.argv:
         rewired = relref(files, grouped, leaves, present, apply)
         print(json.dumps(rewired, ensure_ascii=False, indent=1))
+        return 1 if rewired["refused"] else 0
+
+    if "--pascal" in sys.argv:
+        cased = pascal(files, apply)
+        print(json.dumps({k: (v if k != "files" else len(v)) for k, v in cased.items()}, ensure_ascii=False, indent=1))
+        return 1 if cased["refused"] else 0
+
+    if "--stray" in sys.argv:
+        pruned = stray(files, apply)
+        print(json.dumps(pruned, ensure_ascii=False, indent=1))
+        return 0
+
+    if "--dropkinds" in sys.argv:
+        cleaned = dropkinds(files, apply)
+        print(json.dumps(cleaned, ensure_ascii=False, indent=1))
+        return 1 if cleaned["refused"] else 0
+
+    if "--absref" in sys.argv:
+        remap = None
+        if "--remap" in sys.argv:
+            with open(sys.argv[sys.argv.index("--remap") + 1], encoding="utf-8") as handle:
+                remap = json.load(handle)["mapping"]
+        rewired = absref(files, apply, remap)
+        for internal in ("_files", "_index"):
+            rewired.pop(internal, None)
+        print(json.dumps({k: (v if k not in ("edits",) else len(v)) for k, v in rewired.items()}, ensure_ascii=False, indent=1))
+        if "--out" in sys.argv:
+            with open(sys.argv[sys.argv.index("--out") + 1], "w", encoding="utf-8") as handle:
+                json.dump(rewired, handle, ensure_ascii=False, indent=1)
         return 1 if rewired["refused"] else 0
 
     if "--draft07" in sys.argv:

@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➕insert-block/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/md/commonmark/any/mutation/insert-block/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➖remove-block/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/md/commonmark/any/mutation/remove-block/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔁replace-block/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/md/commonmark/any/mutation/replace-block/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./✏️set-inlines/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/md/commonmark/any/mutation/set-inlines/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/md/commonmark/any/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",

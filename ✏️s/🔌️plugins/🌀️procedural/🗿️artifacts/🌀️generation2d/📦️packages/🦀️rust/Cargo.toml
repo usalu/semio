@@ -40,7 +40,7 @@ serde_json = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true, optional = true }
 semio-framework-os-flow = { workspace = true, optional = true }
 semio-framework-os-infinite = { workspace = true, optional = true }
-semio-framework-ui = { workspace = true, optional = true }
+semio-framework-ui = { workspace = true, optional = true, features = ["wgpu"] }
 semio-framework-ui-contract = { workspace = true, optional = true }
 semio-framework-ui-styling = { workspace = true, optional = true }
 

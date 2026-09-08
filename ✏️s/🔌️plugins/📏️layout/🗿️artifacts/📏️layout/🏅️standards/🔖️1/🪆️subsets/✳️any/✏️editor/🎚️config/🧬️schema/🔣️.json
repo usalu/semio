@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/app/layout/layout/config.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/layout/layout/config/schema.json",
   "title": "LayoutConfig",
   "type": "object",
   "additionalProperties": false,
@@ -54,22 +55,47 @@
       "title": "LayoutDropPreviewState",
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "x", "y"],
+      "required": [
+        "kind",
+        "x",
+        "y"
+      ],
       "properties": {
-        "kind": { "type": "string" },
-        "x": { "type": "number", "format": "double" },
-        "y": { "type": "number", "format": "double" }
+        "kind": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
       }
     },
     "LayoutCamera": {
       "title": "LayoutCamera",
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y", "zoom"],
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
       "properties": {
-        "x": { "type": "number", "format": "double" },
-        "y": { "type": "number", "format": "double" },
-        "zoom": { "type": "number", "format": "double" }
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
       }
     }
   }

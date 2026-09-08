@@ -1,74 +1,16 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.dev/schema/os/flow-vcs/snapshot",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json",
   "title": "FlowFixture Intrinsic Wire Schema",
   "description": "Source-owned serde domain shapes. Intrinsic unknown fields and default omission follow current artifact/neural serde; direct operation wrappers are strict. No runtime detector coverage is asserted.",
-  "$ref": "#/$defs/fixture",
+  "$ref": "#/$defs/Fixture",
   "$defs": {
-    "index": {
+    "Index": {
       "type": "integer",
       "minimum": 0,
       "maximum": 4294967295
     },
-    "layout": {
-      "type": "object",
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        }
-      },
-      "required": [
-        "x",
-        "y"
-      ]
-    },
-    "camera": {
-      "type": "object",
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        },
-        "zoom": {
-          "type": "number"
-        }
-      },
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ]
-    },
-    "neuralValue": {
-      "anyOf": [
-        {
-          "type": [
-            "null",
-            "boolean",
-            "number",
-            "string"
-          ]
-        },
-        {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/neuralValue"
-          }
-        }
-      ]
-    },
-    "dictionary": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/$defs/neuralValue"
-      }
-    },
-    "synapse": {
+    "Synapse": {
       "type": "object",
       "properties": {
         "id": {
@@ -93,154 +35,7 @@
         "to"
       ]
     },
-    "neuron": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "kind": {
-          "type": "string"
-        },
-        "params": {
-          "$ref": "#/$defs/dictionary"
-        },
-        "tree": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/tree"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "required": [
-        "id",
-        "kind"
-      ]
-    },
-    "tree": {
-      "type": "object",
-      "properties": {
-        "neurons": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/neuron"
-          }
-        },
-        "synapses": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/synapse"
-          }
-        }
-      },
-      "required": [
-        "neurons",
-        "synapses"
-      ]
-    },
-    "channel": {
-      "type": "object",
-      "properties": {
-        "neuron": {
-          "type": "string"
-        },
-        "channel": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "neuron",
-        "channel"
-      ]
-    },
-    "preview": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "source": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/channel"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "mode": {
-          "type": "string"
-        },
-        "preview": {
-          "$ref": "#/$defs/dictionary"
-        },
-        "expanded": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "layout": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/layout"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "required": [
-        "id",
-        "mode"
-      ]
-    },
-    "nodeGui": {
-      "type": "object",
-      "properties": {
-        "layout": {
-          "$ref": "#/$defs/layout"
-        },
-        "chrome": {
-          "$ref": "#/$defs/chrome"
-        }
-      },
-      "required": [
-        "layout",
-        "chrome"
-      ]
-    },
-    "flowUi": {
-      "type": "object",
-      "properties": {
-        "camera": {
-          "$ref": "#/$defs/camera"
-        },
-        "nodes": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/nodeGui"
-          }
-        },
-        "previews": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/preview"
-          }
-        }
-      },
-      "required": [
-        "camera",
-        "nodes"
-      ]
-    },
-    "layoutEntry": {
+    "LayoutEntry": {
       "type": "object",
       "properties": {
         "id": {
@@ -249,7 +44,7 @@
         "layout": {
           "anyOf": [
             {
-              "$ref": "#/$defs/layout"
+              "$ref": "#/definitions/layout"
             },
             {
               "type": "null"
@@ -262,102 +57,7 @@
       ],
       "additionalProperties": false
     },
-    "chrome": {
-      "oneOf": [
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "plain"
-            },
-            "preview": {
-              "type": "boolean"
-            }
-          },
-          "required": [
-            "kind"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "slider"
-            },
-            "label": {
-              "type": "string"
-            },
-            "min": {
-              "type": "number"
-            },
-            "max": {
-              "type": "number"
-            },
-            "step": {
-              "type": "number"
-            },
-            "value": {
-              "type": "number"
-            }
-          },
-          "required": [
-            "kind",
-            "label",
-            "min",
-            "max",
-            "step"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "note"
-            },
-            "text": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "kind"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "image"
-            },
-            "src": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "kind"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "variable"
-            },
-            "name": {
-              "type": "string"
-            },
-            "schema": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "kind",
-            "name",
-            "schema"
-          ]
-        }
-      ]
-    },
-    "widget": {
+    "Widget": {
       "oneOf": [
         {
           "type": "object",
@@ -372,7 +72,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/dictionary"
+              "$ref": "#/definitions/dictionary"
             },
             "input_ports": {
               "type": "array",
@@ -494,7 +194,7 @@
               "type": "string"
             },
             "preview": {
-              "$ref": "#/$defs/dictionary"
+              "$ref": "#/definitions/dictionary"
             },
             "expanded": {
               "type": "array",
@@ -557,10 +257,10 @@
               "type": "string"
             },
             "tree": {
-              "$ref": "#/$defs/tree"
+              "$ref": "#/definitions/tree"
             },
             "flow": {
-              "$ref": "#/$defs/flowUi"
+              "$ref": "#/definitions/flowUi"
             }
           },
           "required": [
@@ -571,31 +271,31 @@
         }
       ]
     },
-    "fixture": {
+    "Fixture": {
       "type": "object",
       "properties": {
         "schema": {
           "type": "string"
         },
         "camera": {
-          "$ref": "#/$defs/camera"
+          "$ref": "#/definitions/camera"
         },
         "widgets": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/widget"
+            "$ref": "#/$defs/Widget"
           }
         },
         "synapses": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/synapse"
+            "$ref": "#/$defs/Synapse"
           }
         },
         "layout": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/layout"
+            "$ref": "#/definitions/layout"
           }
         }
       },
@@ -606,6 +306,311 @@
         "synapses"
       ]
     }
+  },
+  "definitions": {
+    "layout": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "camera": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ]
+    },
+    "neuralValue": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/neuralValue"
+          }
+        }
+      ]
+    },
+    "dictionary": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/neuralValue"
+      }
+    },
+    "neuron": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/definitions/dictionary"
+        },
+        "tree": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/tree"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "kind"
+      ]
+    },
+    "tree": {
+      "type": "object",
+      "properties": {
+        "neurons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/neuron"
+          }
+        },
+        "synapses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Synapse"
+          }
+        }
+      },
+      "required": [
+        "neurons",
+        "synapses"
+      ]
+    },
+    "channel": {
+      "type": "object",
+      "properties": {
+        "neuron": {
+          "type": "string"
+        },
+        "channel": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "neuron",
+        "channel"
+      ]
+    },
+    "preview": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/channel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mode": {
+          "type": "string"
+        },
+        "preview": {
+          "$ref": "#/definitions/dictionary"
+        },
+        "expanded": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "layout": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/layout"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "mode"
+      ]
+    },
+    "nodeGui": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "$ref": "#/definitions/layout"
+        },
+        "chrome": {
+          "$ref": "#/definitions/chrome"
+        }
+      },
+      "required": [
+        "layout",
+        "chrome"
+      ]
+    },
+    "flowUi": {
+      "type": "object",
+      "properties": {
+        "camera": {
+          "$ref": "#/definitions/camera"
+        },
+        "nodes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/nodeGui"
+          }
+        },
+        "previews": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/preview"
+          }
+        }
+      },
+      "required": [
+        "camera",
+        "nodes"
+      ]
+    },
+    "chrome": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "plain"
+            },
+            "preview": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "slider"
+            },
+            "label": {
+              "type": "string"
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "step": {
+              "type": "number"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "label",
+            "min",
+            "max",
+            "step"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "note"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "image"
+            },
+            "src": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "variable"
+            },
+            "name": {
+              "type": "string"
+            },
+            "schema": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "schema"
+          ]
+        }
+      ]
+    }
   }
 }
-

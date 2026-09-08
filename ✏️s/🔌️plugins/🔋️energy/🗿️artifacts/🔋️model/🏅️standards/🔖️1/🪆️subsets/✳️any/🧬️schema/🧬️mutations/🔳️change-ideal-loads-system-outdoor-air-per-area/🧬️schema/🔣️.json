@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-ideal-loads-system-outdoor-air-per-area/schema.json",
+  "$id": "https://semio.tech/schema/s/energy/model/mutation/change-ideal-loads-system-outdoor-air-per-area/schema.json",
   "title": "ChangeIdealLoadsSystemOutdoorAirPerArea",
   "type": "object",
   "additionalProperties": false,

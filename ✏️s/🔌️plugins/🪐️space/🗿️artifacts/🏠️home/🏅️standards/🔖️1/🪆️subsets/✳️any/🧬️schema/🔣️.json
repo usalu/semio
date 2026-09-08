@@ -130,11 +130,11 @@
                           "const": "applyDirectoryEventPage"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "Config"
+                            "config"
                           ]
                         },
                         "blocker": {
@@ -156,11 +156,11 @@
                           "const": "createStudio"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "Artifact"
+                            "artifact"
                           ]
                         },
                         "blocker": {
@@ -182,11 +182,11 @@
                           "const": "bindSpaceFile"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "HostOnly"
+                            "host-only"
                           ]
                         },
                         "blocker": {
@@ -208,11 +208,11 @@
                           "const": "importSpace"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "Artifact"
+                            "artifact"
                           ]
                         },
                         "blocker": {
@@ -234,11 +234,11 @@
                           "const": "openSpace"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "HostOnly"
+                            "host-only"
                           ]
                         },
                         "blocker": {
@@ -260,11 +260,11 @@
                           "const": "navigateVirtualFileSystemNode"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "HostOnly"
+                            "host-only"
                           ]
                         },
                         "blocker": {
@@ -286,11 +286,11 @@
                           "const": "deleteVirtualFileSystemNode"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "Artifact"
+                            "artifact"
                           ]
                         },
                         "blocker": {
@@ -312,11 +312,11 @@
                           "const": "goHome"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "HostOnly"
+                            "host-only"
                           ]
                         },
                         "blocker": {
@@ -338,11 +338,11 @@
                           "const": "setActivePanelTab"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "Config"
+                            "config"
                           ]
                         },
                         "blocker": {
@@ -364,11 +364,11 @@
                           "const": "createSpace"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "HostOnly"
+                            "host-only"
                           ]
                         },
                         "blocker": {
@@ -390,11 +390,11 @@
                           "const": "deleteSpace"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "HostOnly"
+                            "host-only"
                           ]
                         },
                         "blocker": {
@@ -416,11 +416,11 @@
                           "const": "renameSpace"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "HostOnly"
+                            "host-only"
                           ]
                         },
                         "blocker": {
@@ -442,11 +442,11 @@
                           "const": "shareSpace"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "HostOnly"
+                            "host-only"
                           ]
                         },
                         "blocker": {
@@ -468,11 +468,11 @@
                           "const": "manageSpace"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "HostOnly"
+                            "host-only"
                           ]
                         },
                         "blocker": {
@@ -494,11 +494,11 @@
                           "const": "copyInviteLink"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "HostOnly"
+                            "host-only"
                           ]
                         },
                         "blocker": {
@@ -520,11 +520,11 @@
                           "const": "foldDirectoryEvents"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "Config"
+                            "config"
                           ]
                         },
                         "blocker": {
@@ -546,11 +546,11 @@
                           "const": "presenceHeartbeat"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "HostOnly"
+                            "host-only"
                           ]
                         },
                         "blocker": {
@@ -572,11 +572,11 @@
                           "const": "setClient"
                         },
                         "disposition": {
-                          "const": "Migrated"
+                          "const": "migrated"
                         },
                         "lanes": {
                           "const": [
-                            "Config"
+                            "config"
                           ]
                         },
                         "blocker": {
@@ -641,6 +641,9 @@
           "title": "HomeRetainedCommandLimits",
           "description": "The `s.space.home@1/*#editor` app's retained-command execution law: its owned job factory, its eight const byte/step budgets, its eighteen-route disposition census and its checkpoint boundary cases."
         }
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
       ]
     }
   }

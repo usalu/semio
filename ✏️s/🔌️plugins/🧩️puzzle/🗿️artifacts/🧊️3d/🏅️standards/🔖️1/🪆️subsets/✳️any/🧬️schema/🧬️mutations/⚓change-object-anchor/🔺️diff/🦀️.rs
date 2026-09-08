@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ChangeObjectAnchor` — patches the one addressed object in place.
-use crate::diff::{Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta};
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

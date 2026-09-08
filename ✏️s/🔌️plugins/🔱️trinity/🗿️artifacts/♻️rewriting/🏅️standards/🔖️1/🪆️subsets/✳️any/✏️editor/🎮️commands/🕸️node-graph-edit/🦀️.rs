@@ -2,8 +2,8 @@
 
 use semio_s_artifact_trinity_jack::{Graph, JackSnapshot};
 use crate::rewriting_snapshot_mutations;
-use crate::op::RewriteRuleMutation;
-use crate::schema::Rhs;
+use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::Rhs;
 use crate::RewritingSnapshot;
 use crate::editor::rewriting::config::RewritingConfigMutation;
 use semio_framework_plugin::Emit;
@@ -69,7 +69,7 @@ fn delete_rule_clause(state: &mut RewritingSnapshot, node_id: &str) -> bool {
     let Some(clause_ref) = parse_clause_ref(node_id) else {
         return false;
     };
-    let Ok(mut lhs) = pack::from_json_str::<crate::schema::Lhs>(&state.lhs_json) else {
+    let Ok(mut lhs) = pack::from_json_str::<schema::Lhs>(&state.lhs_json) else {
         return false;
     };
     let Ok(mut rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {

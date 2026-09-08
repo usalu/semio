@@ -78,7 +78,7 @@ mod subject {
     use super::{canonical, vector, DERIVED_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
-    use semio_s_artifact_fem_3d::standards::v1::subsets::any::schema::mutations::fem3d_mutation_report_json;
+    use crate::standards::v1::subsets::any::schema::mutations::fem3d_mutation_report_json;
 
     //#region 🔖️Report
     /// 📋️ One member of the production bridge's report, named in the error when it is absent — never

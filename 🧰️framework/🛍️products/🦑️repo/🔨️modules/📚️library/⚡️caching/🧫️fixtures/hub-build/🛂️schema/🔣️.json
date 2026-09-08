@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["project", "projectRoot", "prerequisite", "prerequisiteRoot", "output", "entry", "arguments"],
+  "properties": {
+    "project": { "type": "string" }, "projectRoot": { "type": "string" },
+    "prerequisite": { "type": "string" }, "prerequisiteRoot": { "type": "string" },
+    "output": { "type": "string" }, "entry": { "type": "string" },
+    "arguments": { "type": "array", "items": { "type": "string" } }
+  }
+}

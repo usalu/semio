@@ -1,10 +1,16 @@
 {
-  "$id": "https://semio.tech/schema/stdio.semio.model.snapshot/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/model/snapshot/text.json",
   "title": "SemioModelSnapshotText",
   "description": "semio_format preamble line + hex-encoded compact-JSON snapshot body.",
   "type": "object",
   "properties": {
-    "preamble": { "type": "string" },
-    "body": { "type": "string", "pattern": "^([0-9a-f]{2})*$" }
+    "preamble": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{2})*$"
+    }
   }
 }

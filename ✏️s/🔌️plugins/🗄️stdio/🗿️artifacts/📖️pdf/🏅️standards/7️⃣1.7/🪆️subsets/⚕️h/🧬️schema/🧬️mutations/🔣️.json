@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔤️embed-font-file/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/h/mutation/embed-font-file/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📜️insert-javascript-action/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/h/mutation/insert-javascript-action/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🚀️insert-launch-action/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/h/mutation/insert-launch-action/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./✒️insert-signature-field/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/h/mutation/insert-signature-field/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧺️remove-font-file/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/h/mutation/remove-font-file/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🚫️remove-javascript-action/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/h/mutation/remove-javascript-action/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🛬️remove-launch-action/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/h/mutation/remove-launch-action/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./✂️remove-signature-field/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/h/mutation/remove-signature-field/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "./👤️set-info-author/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/h/mutation/set-info-author/schema.json"
         },
         {
           "type": "object",
@@ -169,7 +169,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏷️set-info-title/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/h/mutation/set-info-title/schema.json"
         },
         {
           "type": "object",

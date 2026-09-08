@@ -1,14 +1,14 @@
 //! 👁️ Generation3d play app — the generation output-preview window (generate mode): a tessellated
 //! preview of the patched fixture's evaluated geometry.
 
-use crate::schema::generation_fixture_for;
+use crate::standards::v1::subsets::any::schema::generation_fixture_for;
 use crate::editor::generation3d::config::Generation3dConfig;
 use crate::editor::generation3d::modes::edit::windows::preview::show_mode_measure;
 use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use crate::editor::generation3d::{preview_camera_json, preview_payload, preview_selection_json, PreviewInteractionMarks, PreviewPayload, GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_GRANULARITY};
 use semio_framework_artifact_playbook_playbook::{selected_generation, GenerationPlayState};
-use semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture;
+use semio_framework_artifact_flow_flow::FlowFixture;
 use semio_framework_plugin::{world3d_scene, world3d_sun_measures, BuiltNode, LocalizedLabel, SurfaceKind, TextEditorScene, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
@@ -76,14 +76,6 @@ pub fn render(fixture: &FlowFixture, generation: &GenerationPlayState, cfg: &Gen
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::generation3d::testkit::{app, render as render_body};
-
-    #[semio_framework_async_macros::async_test]
-    async fn generate_preview_hints_without_evaluated_output() {
-        let mut app = app().await;
-        assert!(render_body(&mut app, GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW).await.contains("evaluate a generation"));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

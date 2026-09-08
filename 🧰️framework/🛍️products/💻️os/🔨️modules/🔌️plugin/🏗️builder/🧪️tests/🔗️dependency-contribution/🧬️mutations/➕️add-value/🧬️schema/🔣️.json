@@ -3,7 +3,7 @@
   "$id": "https://semio.tech/schema/framework/os/plugin/builder/tests/dependency-contribution/mutation/add-value/schema.json",
   "title": "AddValue",
   "$defs": {
-    "payload": {
+    "Payload": {
       "type": "object",
       "properties": {
         "delta": {
@@ -19,7 +19,7 @@
   },
   "allOf": [
     {
-      "$ref": "#/$defs/payload"
+      "$ref": "#/$defs/Payload"
     }
   ],
   "propertyNames": {

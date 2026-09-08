@@ -30,11 +30,5 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for StartRunNode {
 //#endregion ⚙️Semantics
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::MutationLeaf;
-    #[test]
-    fn metadata_has_the_canonical_start_node_identity() {
-        assert_eq!(<StartRunNode as MutationLeaf>::DESCRIPTOR.semantic_kind, "start-run-node");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

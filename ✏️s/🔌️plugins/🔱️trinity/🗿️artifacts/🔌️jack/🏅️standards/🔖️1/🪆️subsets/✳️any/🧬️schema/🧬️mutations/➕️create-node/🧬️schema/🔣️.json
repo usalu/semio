@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/trinity/jack/1/any/mutation/create-node/schema.json",
+  "$id": "https://semio.tech/schema/s/trinity/jack/mutation/create-node/schema.json",
   "title": "CreateNode",
   "type": "object",
   "additionalProperties": false,
@@ -9,7 +9,6 @@
   ],
   "properties": {
     "node": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "title": "CreateNodeNode",
       "type": "object",
       "additionalProperties": false,
@@ -53,7 +52,6 @@
         "ports": {
           "type": "array",
           "items": {
-            "$schema": "https://json-schema.org/draft/2020-12/schema",
             "title": "CreateNodePort",
             "type": "object",
             "additionalProperties": false,

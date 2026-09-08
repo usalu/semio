@@ -14,14 +14,6 @@ pub fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure 
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn measure_reflects_config_state() {
-        let config = LowpolyConfig { show_edges: false, ..LowpolyConfig::default() };
-        let m = measure(&config, semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US"));
-        assert!(matches!(m, WindowMeasure::Toggle { pressed: false, .. }));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/block/5d/1/any/mutation/create-representation/schema.json",
+  "$id": "https://semio.tech/schema/s/block/block5d/mutation/create-representation/schema.json",
   "title": "CreateRepresentation",
   "type": "object",
   "additionalProperties": false,

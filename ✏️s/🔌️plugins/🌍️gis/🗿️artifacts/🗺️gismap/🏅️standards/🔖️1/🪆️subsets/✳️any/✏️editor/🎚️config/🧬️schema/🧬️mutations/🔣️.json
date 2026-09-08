@@ -1,37 +1,28 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/gis/gismap/1/any/editor/config/mutations.json",
+  "$id": "https://semio.tech/schema/app/gis/gis2d/config/mutations.json",
   "title": "SGisGismap1AnyEditorConfigMutation",
   "oneOf": [
     {
-      "$ref": "./🎥️set-camera/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/app/gis/gis2d/config/mutation/set-camera/schema.json"
     },
     {
-      "$ref": "./📏️set-layer-stroke-scale/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/app/gis/gis2d/config/mutation/set-layer-stroke-scale/schema.json"
     },
     {
-      "$ref": "./👁️set-layer-visibility/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/app/gis/gis2d/config/mutation/set-layer-visibility/schema.json"
     },
     {
-      "$ref": "./🗣️set-locale/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/app/gis/gis2d/config/mutation/set-locale/schema.json"
     },
     {
-      "$ref": "./🔽️set-lod-mode/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/app/gis/gis2d/config/mutation/set-lod-mode/schema.json"
     },
     {
-      "$ref": "./🖼️set-render-mode/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/app/gis/gis2d/config/mutation/set-render-mode/schema.json"
     },
     {
-      "$ref": "./🎨️set-vector-style/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/app/gis/gis2d/config/mutation/set-vector-style/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "set-camera",
-    "set-layer-stroke-scale",
-    "set-layer-visibility",
-    "set-locale",
-    "set-lod-mode",
-    "set-render-mode",
-    "set-vector-style"
   ]
 }

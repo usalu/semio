@@ -3,7 +3,7 @@
   "$id": "https://semio.tech/schema/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-then-notify-foreign/schema.json",
   "title": "AddCounterThenNotifyForeign",
   "$defs": {
-    "payload": {
+    "Payload": {
       "type": "object",
       "required": [
         "delta",
@@ -11,10 +11,10 @@
       ],
       "properties": {
         "delta": {
-          "$ref": "../../../📐️schema/🔣️.json#/$defs/I64"
+          "$ref": "https://semio.tech/schema/os/spr/command/component.json#/$defs/MutationLawsI64"
         },
         "foreignCount": {
-          "$ref": "../../../📐️schema/🔣️.json#/$defs/U8"
+          "$ref": "https://semio.tech/schema/os/spr/command/component.json#/$defs/MutationLawsU8"
         }
       }
     }
@@ -22,7 +22,7 @@
   "type": "object",
   "allOf": [
     {
-      "$ref": "#/$defs/payload"
+      "$ref": "#/$defs/Payload"
     }
   ],
   "propertyNames": {

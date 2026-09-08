@@ -1,9 +1,13 @@
 {
-  "$id": "https://semio.tech/schema/app/sequence/sequence/presence.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/sequence/sequence/presence/schema.json",
   "title": "SequencePresence",
   "type": "object",
   "additionalProperties": false,
-  "required": ["orientation", "camera"],
+  "required": [
+    "orientation",
+    "camera"
+  ],
   "properties": {
     "orientation": {
       "type": "string",
@@ -19,11 +23,24 @@
       "title": "SequenceCamera",
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y", "zoom"],
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
       "properties": {
-        "x": { "type": "number", "format": "double" },
-        "y": { "type": "number", "format": "double" },
-        "zoom": { "type": "number", "format": "double" }
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
       }
     }
   }

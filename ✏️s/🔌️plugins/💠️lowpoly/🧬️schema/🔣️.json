@@ -63,8 +63,8 @@
               },
               "classification": {
                 "enum": [
-                  "Migrated",
-                  "BatchOnlyPendingRewrite"
+                  "migrated",
+                  "batch-only-pending-rewrite"
                 ]
               },
               "lanes": {
@@ -72,10 +72,10 @@
                 "uniqueItems": true,
                 "items": {
                   "enum": [
-                    "HostOnly",
-                    "Artifact",
-                    "Config",
-                    "Transient"
+                    "host-only",
+                    "artifact",
+                    "config",
+                    "transient"
                   ]
                 },
                 "maxItems": 3
@@ -103,7 +103,7 @@
                 "if": {
                   "properties": {
                     "classification": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     }
                   }
                 },
@@ -125,7 +125,7 @@
                       "properties": {
                         "lanes": {
                           "const": [
-                            "Artifact"
+                            "artifact"
                           ]
                         },
                         "preparation": {
@@ -139,7 +139,7 @@
                       "properties": {
                         "lanes": {
                           "const": [
-                            "Config"
+                            "config"
                           ]
                         },
                         "preparation": {
@@ -153,7 +153,7 @@
                       "properties": {
                         "lanes": {
                           "const": [
-                            "HostOnly"
+                            "host-only"
                           ]
                         },
                         "preparation": {
@@ -165,7 +165,7 @@
                       "properties": {
                         "lanes": {
                           "const": [
-                            "Transient"
+                            "transient"
                           ]
                         },
                         "preparation": {
@@ -177,8 +177,8 @@
                       "properties": {
                         "lanes": {
                           "const": [
-                            "Config",
-                            "Transient"
+                            "config",
+                            "transient"
                           ]
                         },
                         "preparation": {
@@ -192,8 +192,8 @@
                       "properties": {
                         "lanes": {
                           "const": [
-                            "Artifact",
-                            "Transient"
+                            "artifact",
+                            "transient"
                           ]
                         },
                         "preparation": {
@@ -207,8 +207,8 @@
                       "properties": {
                         "lanes": {
                           "const": [
-                            "Artifact",
-                            "Config"
+                            "artifact",
+                            "config"
                           ]
                         },
                         "preparation": {
@@ -223,9 +223,9 @@
                       "properties": {
                         "lanes": {
                           "const": [
-                            "Artifact",
-                            "Config",
-                            "Transient"
+                            "artifact",
+                            "config",
+                            "transient"
                           ]
                         },
                         "preparation": {
@@ -243,7 +243,7 @@
                 "if": {
                   "properties": {
                     "classification": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     }
                   }
                 },

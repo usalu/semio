@@ -22,13 +22,6 @@ pub fn decode(bytes: &[u8]) -> Result<SetDpartRoot, String> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn owned_payload_round_trips() {
-        let payload = SetDpartRoot { job: "sample".to_string() };
-        assert_eq!(decode(&encode(&payload).unwrap()).unwrap(), payload);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

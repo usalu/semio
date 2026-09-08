@@ -15,7 +15,7 @@
     {
       "toolId": "createArtifact",
       "lanes": [
-        "hostOnly"
+        "host-only"
       ]
     },
     {
@@ -39,19 +39,19 @@
     {
       "toolId": "requestDeleteArtifact",
       "lanes": [
-        "hostOnly"
+        "host-only"
       ]
     },
     {
       "toolId": "openArtifact",
       "lanes": [
-        "hostOnly"
+        "host-only"
       ]
     },
     {
       "toolId": "openArtifactWith",
       "lanes": [
-        "hostOnly"
+        "host-only"
       ]
     },
     {
@@ -69,31 +69,31 @@
     {
       "toolId": "inviteMember",
       "lanes": [
-        "hostOnly"
+        "host-only"
       ]
     },
     {
       "toolId": "removeMember",
       "lanes": [
-        "hostOnly"
+        "host-only"
       ]
     },
     {
       "toolId": "setVisibility",
       "lanes": [
-        "hostOnly"
+        "host-only"
       ]
     },
     {
       "toolId": "copyInviteLink",
       "lanes": [
-        "hostOnly"
+        "host-only"
       ]
     },
     {
       "toolId": "requestInviteMember",
       "lanes": [
-        "hostOnly"
+        "host-only"
       ]
     }
   ],

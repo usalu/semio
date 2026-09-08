@@ -12,10 +12,6 @@ extern crate semio_framework_os_kernel as vcs;
 #[path = "../../💾️persistence/🦀️.rs"]
 pub mod persistence;
 
-#[cfg(feature = "os-host-full")]
-#[path = "../../♻️retirement/🦀️.rs"]
-mod retirement;
-
 //#region 🔖️OsHostFull
 #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 use semio_framework_artifact_workflow_workflow as workflow_kernel;

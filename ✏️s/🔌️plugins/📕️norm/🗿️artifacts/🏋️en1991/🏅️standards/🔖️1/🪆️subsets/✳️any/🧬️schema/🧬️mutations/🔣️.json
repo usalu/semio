@@ -1,137 +1,103 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1991/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/norm/en1991/mutations.json",
   "title": "En1991Mutation",
   "oneOf": [
     {
-      "$ref": "./🚚️change-accidental-mass-t/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-accidental-mass-t/schema.json"
     },
     {
-      "$ref": "./🚗️change-accidental-speed-km-h/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-accidental-speed-km-h/schema.json"
     },
     {
-      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "./📐️change-area-m2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-area-m2/schema.json"
     },
     {
-      "$ref": "./⚖️change-assumed-gk-kn-m2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-assumed-gk-kn-m2/schema.json"
     },
     {
-      "$ref": "./🛣️change-bridge-lane/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-bridge-lane/schema.json"
     },
     {
-      "$ref": "./↔️change-bridge-lane-width-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-bridge-lane-width-m/schema.json"
     },
     {
-      "$ref": "./💪️change-bridge-moment-resistance-knm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-bridge-moment-resistance-knm/schema.json"
     },
     {
-      "$ref": "./🌉️change-bridge-span-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-bridge-span-m/schema.json"
     },
     {
-      "$ref": "./🗂️change-category/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-category/schema.json"
     },
     {
-      "$ref": "./🌀️change-cd/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-cd/schema.json"
     },
     {
-      "$ref": "./🚧️change-construction-activity/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-construction-activity/schema.json"
     },
     {
-      "$ref": "./🏗️change-crane-class/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-crane-class/schema.json"
     },
     {
-      "$ref": "./🔎️change-cs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-cs/schema.json"
     },
     {
-      "$ref": "./🌡️change-delta-tk/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-delta-tk/schema.json"
     },
     {
-      "$ref": "./❄️change-en-sk-kn-m2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-en-sk-kn-m2/schema.json"
     },
     {
-      "$ref": "./🌬️change-en-vbms/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-en-vbms/schema.json"
     },
     {
-      "$ref": "./🔥️change-fire-curve/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-fire-curve/schema.json"
     },
     {
-      "$ref": "./🛡️change-fire-member-capacity-c/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-fire-member-capacity-c/schema.json"
     },
     {
-      "$ref": "./⏱️change-fire-resistance-min/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-fire-resistance-min/schema.json"
     },
     {
-      "$ref": "./🏷️change-hoist-class/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-hoist-class/schema.json"
     },
     {
-      "$ref": "./🪝️change-hoisting-speed-ms/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-hoisting-speed-ms/schema.json"
     },
     {
-      "$ref": "./🧱️change-self-weight-material/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-self-weight-material/schema.json"
     },
     {
-      "$ref": "./📏️change-self-weight-thickness-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-self-weight-thickness-m/schema.json"
     },
     {
-      "$ref": "./🌾️change-silo-bulk-density-kn-m3/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-silo-bulk-density-kn-m3/schema.json"
     },
     {
-      "$ref": "./🗼️change-silo-height-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-silo-height-m/schema.json"
     },
     {
-      "$ref": "./⭕️change-silo-hydraulic-radius-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-silo-hydraulic-radius-m/schema.json"
     },
     {
-      "$ref": "./⚙️change-silo-k/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-silo-k/schema.json"
     },
     {
-      "$ref": "./🧲️change-silo-mu/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-silo-mu/schema.json"
     },
     {
-      "$ref": "./🏔️change-snow-altitude-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-snow-altitude-m/schema.json"
     },
     {
-      "$ref": "./🗺️change-snow-zone/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-snow-zone/schema.json"
     },
     {
-      "$ref": "./🪁️change-wind-zone/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1991/mutation/change-wind-zone/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-accidental-mass-t",
-    "change-accidental-speed-km-h",
-    "change-annex",
-    "change-area-m2",
-    "change-assumed-gk-kn-m2",
-    "change-bridge-lane",
-    "change-bridge-lane-width-m",
-    "change-bridge-moment-resistance-knm",
-    "change-bridge-span-m",
-    "change-category",
-    "change-cd",
-    "change-construction-activity",
-    "change-crane-class",
-    "change-cs",
-    "change-delta-tk",
-    "change-en-sk-kn-m2",
-    "change-en-vbms",
-    "change-fire-curve",
-    "change-fire-member-capacity-c",
-    "change-fire-resistance-min",
-    "change-hoist-class",
-    "change-hoisting-speed-ms",
-    "change-self-weight-material",
-    "change-self-weight-thickness-m",
-    "change-silo-bulk-density-kn-m3",
-    "change-silo-height-m",
-    "change-silo-hydraulic-radius-m",
-    "change-silo-k",
-    "change-silo-mu",
-    "change-snow-altitude-m",
-    "change-snow-zone",
-    "change-wind-zone"
   ]
 }

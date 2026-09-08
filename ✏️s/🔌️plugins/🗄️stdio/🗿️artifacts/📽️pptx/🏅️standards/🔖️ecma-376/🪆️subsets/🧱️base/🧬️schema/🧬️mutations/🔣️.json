@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔷insert-shape/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/base/mutation/insert-shape/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➕insert-slide/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/base/mutation/insert-slide/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔀move-slide/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/base/mutation/move-slide/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔶remove-shape/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/base/mutation/remove-shape/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➖remove-slide/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/base/mutation/remove-slide/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📐set-shape-position/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/base/mutation/set-shape-position/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./✍️set-shape-text/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/base/mutation/set-shape-text/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/base/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",

@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/build-artifact-registry.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "entries", "findings"],
+  "properties": {
+    "version": { "const": 1 },
+    "entries": { "type": "array", "items": { "$ref": "#/$defs/Entry" } },
+    "findings": { "type": "array", "items": { "$ref": "#/$defs/Finding" } }
+  },
+  "$defs": {
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "path", "category", "producer", "consumers", "cacheability", "portability", "retention", "cleanup", "activeUseLock", "namespace"],
+      "properties": {
+        "owner": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "category": { "enum": ["deliverable", "task-results", "compiler-state", "dependency-store", "downloaded-asset", "report", "service-state", "unclassified"] },
+        "producer": { "type": ["string", "null"] },
+        "consumers": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+        "cacheability": { "type": "boolean" },
+        "portability": { "enum": ["host", "unknown"] },
+        "retention": {
+          "type": "object", "additionalProperties": false, "required": ["strategy", "budgetGroup"],
+          "properties": {
+            "strategy": { "enum": ["replace-on-success", "tool-managed", "explicit-maintenance", "unassigned"] },
+            "budgetGroup": { "type": ["string", "null"] }
+          }
+        },
+        "cleanup": { "enum": ["nx", "native-tool", "disabled"] },
+        "activeUseLock": {
+          "type": "object", "additionalProperties": false, "required": ["resource", "coverage"],
+          "properties": { "resource": { "type": "string" }, "coverage": { "enum": ["pending", "complete"] } }
+        },
+        "namespace": { "type": "boolean" }
+      }
+    },
+    "Finding": {
+      "type": "object", "additionalProperties": false, "required": ["rule", "owner", "path", "evidence"],
+      "properties": {
+        "rule": { "enum": ["CACHE-03", "CACHE-04", "DISK-01"] },
+        "owner": { "type": "string" }, "path": { "type": "string" }, "evidence": { "type": "string" }
+      }
+    }
+  }
+}

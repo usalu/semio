@@ -12,7 +12,7 @@
       ],
       "properties": {
         "AddMark": {
-          "$ref": "./➕add-mark/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/text/mutation/add-mark/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "ChangeRunLanguage": {
-          "$ref": "./🌐change-run-language/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/text/mutation/change-run-language/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "EditRun": {
-          "$ref": "./✏️edit-run/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/text/mutation/edit-run/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "InsertRun": {
-          "$ref": "./📥insert-run/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/text/mutation/insert-run/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "RemoveMark": {
-          "$ref": "./➖remove-mark/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/text/mutation/remove-mark/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "RemoveRun": {
-          "$ref": "./🗑️remove-run/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/text/mutation/remove-run/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "ReorderRuns": {
-          "$ref": "./🔀reorder-runs/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/text/mutation/reorder-runs/schema.json"
         }
       }
     }

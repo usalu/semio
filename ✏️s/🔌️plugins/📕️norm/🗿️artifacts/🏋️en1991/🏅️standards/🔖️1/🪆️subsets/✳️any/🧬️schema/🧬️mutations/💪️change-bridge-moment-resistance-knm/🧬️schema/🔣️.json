@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1991/1/any/mutation/change-bridge-moment-resistance-knm/schema.json",
+  "$id": "https://semio.tech/schema/s/norm/en1991/mutation/change-bridge-moment-resistance-knm/schema.json",
   "title": "ChangeBridgeMomentResistanceKnm",
   "type": "object",
   "additionalProperties": false,

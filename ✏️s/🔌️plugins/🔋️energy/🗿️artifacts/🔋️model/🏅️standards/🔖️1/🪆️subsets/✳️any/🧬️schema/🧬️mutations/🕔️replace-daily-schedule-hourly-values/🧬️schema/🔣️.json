@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/replace-daily-schedule-hourly-values/schema.json",
+  "$id": "https://semio.tech/schema/s/energy/model/mutation/replace-daily-schedule-hourly-values/schema.json",
   "title": "ReplaceDailyScheduleHourlyValues",
   "type": "object",
   "additionalProperties": false,

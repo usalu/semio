@@ -1,17 +1,17 @@
 //! 🧬️ Generation2d artifact schema — every field of the artifact with its state class.
 
-use crate::snapshot::schema::Generation2dSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
 use semio_framework_artifact_infinite_dag::DagFixture;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::forms_bridge::apply_generation_values_to_fixture;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::render_scene_json;
-use semio_framework_artifact_flow_semio_framework_os_flow::CameraJson;
-use semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture;
+use semio_framework_artifact_flow_flow::CameraJson;
+use semio_framework_artifact_flow_flow::FlowFixture;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession, FlowHost};
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactDsl;
 #[cfg(feature = "component-app-assembly")]
@@ -78,31 +78,31 @@ impl Generation2dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.procedural.generation2d` — twenty handcrafted schema leaves.
-pub fn generation2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn generation2d_artifact_schema_descriptor() -> ::semio_framework_schema::ArtifactSchemaDescriptor {
+    ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.procedural.generation2d",
-        artifact: schema::FacetLeaves {
+        artifact: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🕸️.graphql"),
@@ -246,11 +246,11 @@ pub fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalS
 /// dedupe/dag-rebuild normalization does not leak spurious collection operations — only the actual
 /// mutation becomes an operation, which keeps concurrent disjoint edits mergeable on the backbone.
 #[cfg(feature = "component-app-assembly")]
-pub fn host_operations(fixture: &FlowFixture, mutate: impl FnOnce(&mut FlowHost)) -> Vec<crate::op::Generation2dMutation> {
+pub fn host_operations(fixture: &FlowFixture, mutate: impl FnOnce(&mut FlowHost)) -> Vec<crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation> {
     let mut host = host_from_fixture(fixture);
     let baseline = host.fixture.clone();
     mutate(&mut host);
-    crate::op::generation2d_fixture_operations(&baseline, &host.fixture)
+    crate::standards::v1::subsets::any::schema::mutations::text::generation2d_fixture_operations(&baseline, &host.fixture)
 }
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
@@ -401,7 +401,7 @@ pub fn generation_preview_layers(eval_json: &str) -> String {
 /// 📄️ The `procedural2d-play` "default" document — parsed from the bundled `.generation2d` example
 /// fixture, falling back to the empty document if the fixture ever fails to parse.
 pub fn default_snapshot() -> Generation2dSnapshot {
-    Generation2dSnapshot::parse_dsl(crate::dsl::GENERATION2D_EXAMPLE_TEXT).unwrap_or_default()
+    Generation2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::GENERATION2D_EXAMPLE_TEXT).unwrap_or_default()
 }
 
 pub fn empty_generation2d_snapshot() -> Generation2dSnapshot {
@@ -411,12 +411,6 @@ pub fn empty_generation2d_snapshot() -> Generation2dSnapshot {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn default_snapshot_parses_the_bundled_example() {
-        assert!(!default_snapshot().fixture.widgets.is_empty());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.ifc/mutations/text.json",
-  "title": "IfcMutationsText",
-  "type": "object"
-}

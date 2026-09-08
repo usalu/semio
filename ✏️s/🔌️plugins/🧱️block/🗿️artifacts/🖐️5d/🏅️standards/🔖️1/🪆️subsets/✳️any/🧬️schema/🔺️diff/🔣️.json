@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/block/block5d/diff.json",
   "title": "Block5dDiff",
   "type": "object",

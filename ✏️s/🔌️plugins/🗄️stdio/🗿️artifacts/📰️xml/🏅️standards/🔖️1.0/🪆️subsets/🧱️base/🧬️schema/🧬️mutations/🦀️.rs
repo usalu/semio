@@ -42,9 +42,5 @@ pub(crate) fn demo_mutation_cases() -> Vec<XmlMutation> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::SemanticMutation;
-    #[test]
-    fn aggregate_roster_is_exact() { assert_eq!(XmlMutation::kinds().len(), 6); }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

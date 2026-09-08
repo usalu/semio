@@ -5,6 +5,7 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+#[cfg(test)]
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
@@ -114,7 +115,7 @@ pub fn en1990_qk(snapshot: &En1990Snapshot) -> Vec<En1990QkEntry> {
 //#region 🔖️ArtifactKind
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    crate::app_surface::artifact_kind_spec("en1990", "EN 1990")
+    app_surface::artifact_kind_spec("en1990", "EN 1990")
 }
 //#endregion 🔖️ArtifactKind
 
@@ -158,11 +159,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::document_schema::en1990_artifact_schema_descriptor())
-        .inferences([crate::standards::v1::subsets::any::schema::inferences::en1990_artifact_inference_descriptor()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
+        .schema(document_schema::en1990_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::en1990_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::en1990::En1990PlayApp>>()
+        .document_codec::<semio_framework_plugin::EditorApp<editor::en1990::En1990PlayApp>>()
         .try_build()
 }
 
@@ -178,28 +179,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "en1990.document",
                     extension: Some("en1990"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::document_dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::document_dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1990.document"),
                 },
                 dsl::LanguageSpec {
                     id: "en1990.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1990.op"),
                 },
                 dsl::LanguageSpec {
                     id: "en1990.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("en1990.diff"),
@@ -210,8 +211,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1990.pack"),
                 },
                 dsl::LanguageSpec {
@@ -220,8 +221,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1990.spr"),
                 },
             ]
@@ -232,38 +233,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    trait En1990ChildOwnerOracle {
-        fn expected() -> serde_json::Value;
-    }
-
-    struct SerdeJsonEn1990ChildOwnerOracle;
-
-    impl En1990ChildOwnerOracle for SerdeJsonEn1990ChildOwnerOracle {
-        fn expected() -> serde_json::Value {
-            serde_json::from_str(include_str!("🧫️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral EN 1990 child-owner fixture")
-        }
-    }
-
-    #[test]
-    fn qk_working_table_is_owned_by_the_exact_child() {
-        let owned = en1990_qk_child_from_entries(&[En1990QkEntry { category: "snow".into(), value: 42.0 }]);
-        let wire = dsl::json::to_json_string(&owned);
-        let reconstructed: En1990QkChild = dsl::json::from_json_str(&wire).expect("EN 1990 child wire roundtrip");
-        let mut oracle_wire = Vec::new();
-        crate::document::child_identity_oracle::serialize(&owned, &mut serde_json::Serializer::new(&mut oracle_wire)).expect("independent child identity oracle");
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&wire).expect("first-party child identity JSON"), serde_json::from_slice::<serde_json::Value>(&oracle_wire).expect("Serde child identity JSON"));
-        let observed = serde_json::json!({
-            "ownedHasPayload": owned.local_owner::<En1990QkWorkingTable>().is_some(),
-            "wireIdentityMatches": owned == reconstructed,
-            "wireHasPayload": reconstructed.local_owner::<En1990QkWorkingTable>().is_some(),
-        });
-
-        assert_eq!(observed, SerdeJsonEn1990ChildOwnerOracle::expected());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[path = "."]

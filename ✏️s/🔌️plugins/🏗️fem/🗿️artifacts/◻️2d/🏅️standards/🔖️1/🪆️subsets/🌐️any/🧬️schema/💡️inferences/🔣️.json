@@ -1,9 +1,12 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/fem/fem2d/inference.json",
   "title": "Fem2dInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["bounds"],
+  "required": [
+    "bounds"
+  ],
   "properties": {
     "bounds": {
       "$ref": "#/$defs/Fem2dBounds",
@@ -14,20 +17,49 @@
     "Fem2dBoundingBox": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["min", "max"],
+      "required": [
+        "min",
+        "max"
+      ],
       "properties": {
-        "min": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
-        "max": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+        "min": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "max": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
       }
     },
     "Fem2dBounds": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["boundingBox", "nodeCount", "elementCount"],
+      "required": [
+        "boundingBox",
+        "nodeCount",
+        "elementCount"
+      ],
       "properties": {
-        "boundingBox": { "$ref": "#/$defs/Fem2dBoundingBox" },
-        "nodeCount": { "type": "integer", "minimum": 0 },
-        "elementCount": { "type": "integer", "minimum": 0 }
+        "boundingBox": {
+          "$ref": "#/$defs/Fem2dBoundingBox"
+        },
+        "nodeCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "elementCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

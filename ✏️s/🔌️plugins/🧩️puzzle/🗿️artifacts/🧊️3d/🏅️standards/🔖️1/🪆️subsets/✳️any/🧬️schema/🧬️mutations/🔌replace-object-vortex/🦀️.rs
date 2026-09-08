@@ -1,7 +1,7 @@
 //! 🔌 Puzzle3d mutation — `ReplaceObjectVortex`: whole-value swap of one vortex's presentation
 //! fields (kind/label/position/direction/radius/hidden/locked together, one property-panel gesture).
-use crate::diff::Puzzle3dDiff;
-use crate::mutations::Puzzle3dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use crate::{Puzzle3dSnapshot, Puzzle3dVortex};
 
 //#region 🔖️Mutation

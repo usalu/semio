@@ -12,8 +12,8 @@
 //!
 //! Re-extruding the apron at its own footprint, base and thickness is a no-op WARNING — the whole-entity comparison is what decides, not the id.
 
-use crate::mutations::Fem3dMutation;
-use crate::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -47,7 +47,7 @@ fn applies_to_committed_after() {
 #[test]
 fn a_redundant_write_is_a_warning_not_a_rejection() {
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &crate::diff::Fem3dDiff::default(), "replace-solid/same-solid-8ad12c: a no-op must carry the identity diff");
+    assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "replace-solid/same-solid-8ad12c: a no-op must carry the identity diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "replace-solid/same-solid-8ad12c: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.no-op", "replace-solid/same-solid-8ad12c: a redundant write is reported as no-op, never as target-missing");
@@ -93,7 +93,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed identity diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-solid/same-solid-8ad12c: committed diff JSON is not canonical");
@@ -102,8 +102,8 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed identity delta on `before` reproduces the committed `after`.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::standards::v1::subsets::any::schema::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-solid/same-solid-8ad12c: committed diff did not carry before to after");
 }
 

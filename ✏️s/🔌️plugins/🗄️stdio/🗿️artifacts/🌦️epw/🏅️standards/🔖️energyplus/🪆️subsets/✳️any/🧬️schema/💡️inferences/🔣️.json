@@ -1,23 +1,47 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/epw/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/epw/energyplus/any/inference.json",
   "title": "EpwInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["climate"],
+  "required": [
+    "climate"
+  ],
   "properties": {
-    "climate": { "$ref": "#/$defs/EpwClimateSummary", "x-semio-derived": true }
+    "climate": {
+      "$ref": "#/$defs/EpwClimateSummary",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "EpwClimateSummary": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["recordCount", "parsedTempCount", "minDryBulbC", "maxDryBulbC", "avgDryBulbC"],
+      "required": [
+        "recordCount",
+        "parsedTempCount",
+        "minDryBulbC",
+        "maxDryBulbC",
+        "avgDryBulbC"
+      ],
       "properties": {
-        "recordCount": { "type": "integer", "minimum": 0 },
-        "parsedTempCount": { "type": "integer", "minimum": 0 },
-        "minDryBulbC": { "type": "number" },
-        "maxDryBulbC": { "type": "number" },
-        "avgDryBulbC": { "type": "number" }
+        "recordCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "parsedTempCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minDryBulbC": {
+          "type": "number"
+        },
+        "maxDryBulbC": {
+          "type": "number"
+        },
+        "avgDryBulbC": {
+          "type": "number"
+        }
       }
     }
   }

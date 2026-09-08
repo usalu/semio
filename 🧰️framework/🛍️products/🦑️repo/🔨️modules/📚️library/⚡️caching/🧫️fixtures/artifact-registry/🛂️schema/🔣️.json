@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/build-artifact-registry-fixture.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "declarations", "files", "hardlink", "symlink", "invalid", "overlaps"],
+  "properties": {
+    "version": { "const": 1 },
+    "declarations": { "type": "array", "items": { "$ref": "#/$defs/Declaration" } },
+    "files": { "type": "array", "items": { "type": "object", "required": ["path", "text"], "additionalProperties": false, "properties": { "path": { "type": "string" }, "text": { "type": "string" } } } },
+    "hardlink": { "$ref": "#/$defs/Link" }, "symlink": { "$ref": "#/$defs/Link" },
+    "invalid": { "type": "array", "items": { "type": "string" } },
+    "overlaps": { "type": "array", "items": { "$ref": "#/$defs/Declaration" } }
+  },
+  "$defs": {
+    "Declaration": { "type": "object", "additionalProperties": false, "required": ["owner", "path"], "properties": { "owner": { "type": "string" }, "path": { "type": "string" }, "cacheability": { "type": "boolean" }, "consumers": { "type": "array", "items": { "type": "string" } } } },
+    "Link": { "type": "object", "additionalProperties": false, "required": ["source", "path"], "properties": { "source": { "type": "string" }, "path": { "type": "string" } } }
+  }
+}

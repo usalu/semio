@@ -4,7 +4,7 @@
 | `framework.action-argument-resolution` | `🧰️framework/🔨️modules/🧩️action-argument-resolution/🧬️schema` | `ChoicesFixture` |
 | `framework.action-bus.wire-retirement` | `🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/🧬️schema` | `WireRetirementFixture` |
 | `framework.actor.activation` | `🧰️framework/🔨️modules/🎭️actor/🪪️activation/🧬️schema` | `ActivationFixture` |
-| `framework.actor.activation-reservation` | `🧰️framework/🔨️modules/🎭️actor/🎠️activation/🧬️schema` | `ActivationReservation` |
+| `framework.actor.activation-reservation` | `🧰️framework/🔨️modules/🎭️actor/🎠️activation-reservation/🧬️schema` | `ActivationReservation` |
 | `framework.actor.activation.inbound` | `🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/🧬️schema` | `InboundFixture` |
 | `framework.actor.activation.instance` | `🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/🧬️schema` | `InstanceFixture` |
 | `framework.actor.activation.instance.output` | `🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧬️schema` | `Output` |
@@ -37,6 +37,7 @@
 | `framework.graph.manifest` | `🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema` | `Outputs` |
 | `framework.interaction` | `🧰️framework/🔨️modules/🕹️interaction/🧬️schema` | `InteractionDefinition`, `GranularityDefinition`, `HierarchyProvider`, `HoverSpec`, `SelectionSpec`, `SelectionMode`, `SelectionMethod`, `MergeMode`, `InteractionTarget`, `DomainSelection`, `DomainHover`, `InteractionState`, `TopologyNode`, `DomainTopology`, `PresenceDomain`, `PresenceInteraction` |
 | `framework.job` | `🧰️framework/🔨️modules/🧵️job/🧬️schema` | `SharedFrameworkActionRoutesFixture`, `FixedOperationRegistryFixture` |
+| `framework.job.budget` | `🧰️framework/🔨️modules/🧵️job/⏱️budget/🧬️schema` | `Budget`, `Clock`, `Binding` |
 | `framework.kernel` | `🧰️framework/🔨️modules/🎠️kernel/🧬️schema` | `DescriptorLoadFixture`, `SourceWatchFixture`, `TurnPatchOwnerFixture`, `AppRouterPluginFaultsFixture` |
 | `framework.kernel.poll.composition` | `🧰️framework/🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧬️schema` | `Composition`, `CompositionFixture` |
 | `framework.kernel.return.content` | `🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🧬️schema` | `Content`, `ContentFixture` |
@@ -49,8 +50,7 @@
 | `framework.kernel.return.source` | `🧰️framework/🔨️modules/🎠️kernel/📤️return/🏠️source/🧬️schema` | `SourceFixture` |
 | `framework.kernel.return.source.entries` | `🧰️framework/🔨️modules/🎠️kernel/📤️return/🏠️source/📚️entries/🧬️schema` | `EntriesFixture` |
 | `framework.manifest` | `🧰️framework/🔨️modules/🛂️manifest/🧬️schema` | `TutorialLocalInteractionFixture`, `ActionSemanticsFixture`, `ArtifactKindFormatsFixture`, `TutorialDocumentTrackFixture` |
-| `framework.replication` | `🧰️framework/🔨️modules/📡️replication/🧬️schema` | `ArtifactBootstrapFixture` |
-| `framework.replication.fixtures.presence-peer-codec-v1` | `🧰️framework/🔨️modules/📡️replication/🧫️fixtures/👥️presence-peer-codec-v1/🧬️schema` | `PresencePeerCodecFixture` |
+| `framework.replication` | `🧰️framework/🔨️modules/📡️replication/🧬️schema` | `ArtifactBootstrapFixture`, `PresencePeerCodecFixture` |
 | `framework.replication.format.verification` | `🧰️framework/🔨️modules/📡️replication/📐️format/🔎️verification/🧬️schema` | `Verification` |
 | `framework.replication.format.verification.record` | `🧰️framework/🔨️modules/📡️replication/📐️format/🔎️verification/🧾️record/🧬️schema` | `Record` |
 | `framework.replication.mutation` | `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema` | `MutationLeafContractFixture`, `MutationLeafSourceContractFixture` |
@@ -101,8 +101,7 @@
 | `framework.ui.host.input.admission.commit.enqueue` | `🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🔗️commit/📥️enqueue/🧬️schema` | `EnqueueFixture` |
 | `framework.ui.host.input.admission.root` | `🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🪪️root/🧬️schema` | `RootFixture` |
 | `framework.ui.host.input.admission.writer` | `🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/✍️writer/🧬️schema` | `WriterFixture` |
-| `framework.ui.render.targets.metal.packages.rust` | `🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🧬️schema` | `ObjcRuntimeAbiFixture` |
-| `framework.ui.render.targets.webgpu` | `🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🧊️webgpu/🧬️schema` | `SurfacePort` |
+| `framework.ui.render` | `🧰️framework/🔨️modules/🖱️ui/🖌️render/🧬️schema` | `WebgpuSurfacePort`, `MetalObjectiveCAbiFixture` |
 | `framework.ui.runtime.document` | `🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📃️document/🧬️schema` | `Document` |
 | `framework.ui.runtime.handback` | `🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🚪️handback/🧬️schema` | `Handback` |
 | `framework.ui.runtime.output` | `🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📤️output/🧬️schema` | `Output` |

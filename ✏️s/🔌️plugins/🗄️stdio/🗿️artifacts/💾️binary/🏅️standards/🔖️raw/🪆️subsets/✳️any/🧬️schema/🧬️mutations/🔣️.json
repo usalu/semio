@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➕️append-bytes/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/binary/raw/any/mutation/append-bytes/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./✂️replace-byte-range/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/binary/raw/any/mutation/replace-byte-range/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/binary/raw/any/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔪️truncate-at/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/binary/raw/any/mutation/truncate-at/schema.json"
         },
         {
           "type": "object",

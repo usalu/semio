@@ -110,6 +110,7 @@ members = [
     # inside the workspace dir but were neither members nor excluded, so they could
     # not run any cargo command standalone. Adoption fixes real breakage.
     "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
@@ -315,6 +316,7 @@ semio-framework-dispatch-macros = { path = "🧰️framework/🔨️modules/🔀
 semio-framework-hash = { path = "🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-mesh-engine = { path = "🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust" }
 semio-framework-schema = { path = "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 schema = { path = "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-value-derive = { path = "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { path = "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust" }

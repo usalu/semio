@@ -1,0 +1,180 @@
+
+use super::*;
+use crate::{PlaybookBlock, PlaybookStep};
+use protocol::MutationKind;
+use protocol::SemanticMutation;
+use protocol::os_spr::testkit::{assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+
+fn sample_block(id: &str, kind: &str, label: &str) -> PlaybookBlock {
+    PlaybookBlock {
+        id: id.into(),
+        label: label.into(),
+        kind: kind.into(),
+        description: None,
+        required: None,
+        placeholder: None,
+        default: None,
+        min: None,
+        max: None,
+        step: None,
+        unit: None,
+        text: None,
+        options: None,
+        fields: None,
+        schema: None,
+        src: None,
+        accept: None,
+        fixture_slug: None,
+        params: None,
+        condition: None,
+    }
+}
+
+fn sample_snapshot() -> PlaybookSnapshot {
+    let base = PlaybookSnapshot::default();
+    let mut steps = base.steps();
+    steps.push(PlaybookStep { id: "s2".into(), title: "Review".into(), description: None, blocks: vec![sample_block("b1", "number", "Team size")] });
+    crate::playbook_snapshot_with_steps(&base.schema, &base.id, &base.version, base.title.clone(), steps)
+}
+
+//#region 🔖️MutationLaws
+#[semio_framework_async_macros::async_test]
+async fn add_step_inverse_law() {
+    let base = sample_snapshot();
+    let step = PlaybookStep { id: "s3".into(), title: "New".into(), description: None, blocks: Vec::new() };
+    assert_mutation_inverse_law(&base, &PlaybookMutation::AddStep(AddStep { step, index: None })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn remove_step_inverse_law() {
+    let base = sample_snapshot();
+    assert_mutation_inverse_law(&base, &PlaybookMutation::RemoveStep(RemoveStep { step_id: "s2".into() })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn move_step_inverse_law() {
+    let base = sample_snapshot();
+    assert_mutation_inverse_law(&base, &PlaybookMutation::MoveStep(MoveStep { step_id: "s2".into(), index: 0 })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn add_block_inverse_law() {
+    let base = sample_snapshot();
+    let block = sample_block("b2", "text", "New");
+    assert_mutation_inverse_law(&base, &PlaybookMutation::AddBlock(AddBlock { step_id: "s2".into(), block, index: None })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn remove_block_inverse_law() {
+    let base = sample_snapshot();
+    assert_mutation_inverse_law(&base, &PlaybookMutation::RemoveBlock(RemoveBlock { step_id: "s2".into(), block_id: "b1".into() })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn move_block_same_step_inverse_law() {
+    let base = sample_snapshot();
+    let mut steps = base.steps();
+    steps[1].blocks.push(sample_block("b2", "text", "Other"));
+    let base = crate::playbook_snapshot_with_steps(&base.schema, &base.id, &base.version, base.title.clone(), steps);
+    assert_mutation_inverse_law(&base, &PlaybookMutation::MoveBlock(MoveBlock { block_id: "b1".into(), from_step_id: "s2".into(), to_step_id: "s2".into(), index: 1 })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn move_block_cross_step_inverse_law() {
+    let base = sample_snapshot();
+    assert_mutation_inverse_law(&base, &PlaybookMutation::MoveBlock(MoveBlock { block_id: "b1".into(), from_step_id: "s2".into(), to_step_id: "s".into(), index: 0 })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn replace_block_inverse_law() {
+    let base = sample_snapshot();
+    let mut block = sample_block("b1", "number", "Team size (people)");
+    block.required = Some(true);
+    block.min = Some(1.0);
+    block.max = Some(80.0);
+    block.unit = Some("people".into());
+    assert_mutation_inverse_law(&base, &PlaybookMutation::ReplaceBlock(ReplaceBlock { step_id: "s2".into(), block })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn update_step_inverse_law() {
+    let base = sample_snapshot();
+    assert_mutation_inverse_law(&base, &PlaybookMutation::UpdateStep(UpdateStep { step_id: "s2".into(), title: "Review carefully".into(), description: Some("d".into()) })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn change_title_inverse_law() {
+    let base = sample_snapshot();
+    assert_mutation_inverse_law(&base, &PlaybookMutation::ChangeTitle(ChangeTitle { new_title: Some("Recipe".into()) })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn move_step_diff_absorb_law() {
+    let base = sample_snapshot();
+    let d1 = MoveStep { step_id: "s2".into(), index: 0 }.diff(&base).into_parts().0;
+    let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
+    let d2 = MoveStep { step_id: "s".into(), index: 0 }.diff(&mid).into_parts().0;
+    assert_mutation_diff_absorb_law(&base, d1, d2).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn move_block_cross_step_diff_never_falls_back_to_a_whole_artifact_replacement() {
+    let base = sample_snapshot();
+    let diff = MoveBlock { block_id: "b1".into(), from_step_id: "s2".into(), to_step_id: "s".into(), index: 0 }.diff(&base).into_parts().0;
+    assert!(diff.artifact.is_none(), "cross-step MoveBlock diff must be a real per-field replacement, not the old whole-artifact fallback");
+    let after = protocol::MutationDiff::apply(&diff, &base).expect("valid mutation diff");
+    let after_steps = after.steps();
+    assert!(after_steps[0].blocks.iter().any(|block| block.id == "b1"));
+    assert!(!after_steps[1].blocks.iter().any(|block| block.id == "b1"));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn dispatch_registers_semantic_descriptors() {
+    register_playbook_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
+    for kind in PlaybookMutation::kinds() {
+        assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
+    }
+    assert_eq!(PlaybookMutation::kinds().len(), 9);
+}
+//#endregion 🔖️MutationLaws
+
+//#region 🔖️OutcomeLaws
+// 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — one law test per verb
+// family present in this facet, calling `assert_missing_target_is_error` (landed in
+// `📡️spr/🧪️testkit`). No family in this facet reaches Fatal (playbook's only duplicate-prone
+// family, `add`, treats a duplicate id as Warning `mutation.no-op`, never Fatal), so
+// `assert_fatal_never_applies` has nothing meaningful to exercise here.
+// `assert_outcome_policy_matrix` is NOT landed under that name (only the generic closure-based
+// `assert_policy_matrix` exists) — see this ticket's report.
+#[semio_framework_async_macros::async_test]
+async fn add_family_missing_target_is_error() {
+    let base = sample_snapshot();
+    assert_missing_target_is_error(&base, &PlaybookMutation::AddBlock(AddBlock { step_id: "missing".into(), block: sample_block("b1", "text", "New"), index: None })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn remove_family_missing_target_is_error() {
+    let base = sample_snapshot();
+    assert_missing_target_is_error(&base, &PlaybookMutation::RemoveStep(RemoveStep { step_id: "missing".into() })).await;
+    assert_missing_target_is_error(&base, &PlaybookMutation::RemoveBlock(RemoveBlock { step_id: "missing".into(), block_id: "b1".into() })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn move_family_missing_target_is_error() {
+    let base = sample_snapshot();
+    assert_missing_target_is_error(&base, &PlaybookMutation::MoveStep(MoveStep { step_id: "missing".into(), index: 0 })).await;
+    assert_missing_target_is_error(&base, &PlaybookMutation::MoveBlock(MoveBlock { block_id: "b1".into(), from_step_id: "missing".into(), to_step_id: "s2".into(), index: 0 })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn replace_family_missing_target_is_error() {
+    let base = sample_snapshot();
+    assert_missing_target_is_error(&base, &PlaybookMutation::ReplaceBlock(ReplaceBlock { step_id: "missing".into(), block: sample_block("b1", "text", "New") })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn update_family_missing_target_is_error() {
+    let base = sample_snapshot();
+    assert_missing_target_is_error(&base, &PlaybookMutation::UpdateStep(UpdateStep { step_id: "missing".into(), title: "x".into(), description: None })).await;
+}
+//#endregion 🔖️OutcomeLaws

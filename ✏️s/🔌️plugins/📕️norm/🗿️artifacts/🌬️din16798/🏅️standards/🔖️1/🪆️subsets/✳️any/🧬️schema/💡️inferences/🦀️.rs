@@ -69,21 +69,8 @@ pub fn din16798_artifact_inference_descriptor() -> framework_schema::ArtifactInf
 
 #[cfg(test)]
 //#region 🧪️Tests
-mod tests {
-    use super::*;
-    use protocol::Inference;
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
-        let snapshot = Din16798Snapshot::default();
-        assert_eq!(Din16798Inference::infer(&snapshot), Din16798Inference::infer(&snapshot));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
-        assert_eq!(Din16798Inference::infer(&Din16798Snapshot::default()), Din16798Inference::default());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
@@ -215,25 +202,6 @@ pub fn evaluate(document: &Din16798Snapshot) -> CheckReport {
 
 //#region 🧪️ComplianceReportTests
 #[cfg(test)]
-mod compliance_report_tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn residential_environment_e2e_with_acoustic() {
-        let report = check_residential_environment(85.0, 3, 40.0, 21.0, 24.0);
-        assert!(report.all_pass());
-        assert_eq!(report.checks.len(), 3);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn full_environment_evaluate_covers_all_nine_parts() {
-        let document = Din16798Snapshot::default();
-        let report = evaluate(&document);
-        assert_eq!(report.checks.len(), 25, "checks: {:?}", report.checks);
-        assert!(report.all_pass(), "checks: {:?}", report.checks);
-        assert_eq!(document.annex, crate::document::AnnexChoice::De);
-        let pmv = part_1::pmv_iso7730(document.t_op_c, document.rh_percent, document.air_speed_m_s);
-        assert!(pmv.abs() < 0.5);
-    }
-}
+#[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
+mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests

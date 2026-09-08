@@ -1,7 +1,7 @@
 //! 🧬️ Puzzle3d artifact schema — every field of the artifact with its state class.
 
 use crate::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dSnapshot, Puzzle3dTargetVolume};
-use artifact_schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 //#region 🔖️Artifact
 /// 🧬️ Full puzzle3d artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -170,31 +170,31 @@ impl Puzzle3dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.puzzle.puzzle3d` — twenty handcrafted schema leaves.
-pub fn puzzle3d_artifact_schema_descriptor() -> artifact_schema::ArtifactSchemaDescriptor {
-    artifact_schema::ArtifactSchemaDescriptor {
+pub fn puzzle3d_artifact_schema_descriptor() -> ::semio_framework_schema::ArtifactSchemaDescriptor {
+    ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.puzzle.puzzle3d",
-        artifact: artifact_schema::FacetLeaves {
+        artifact: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: artifact_schema::FacetLeaves {
+        snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: artifact_schema::FacetLeaves {
+        diff: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: artifact_schema::FacetLeaves {
+        mutations: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -896,141 +896,12 @@ pub enum Puzzle3dEngineOutcome {
 /// it instead of re-deriving a mesh-buffer/scene/fill-plan scaffold of its own. `pub(crate)` so the app's
 /// own `#[cfg(test)]` modules (session/geometry/brush) can reach it across the artifact/app boundary.
 #[cfg(test)]
-pub(crate) mod testkit {
-    use super::*;
-
-    pub(crate) const DEFAULT_OVERLAP_BUDGET: f64 = 0.02;
-
-    pub(crate) fn unit_cube_mesh_buffers() -> (Vec<f32>, Vec<u32>) {
-        (
-            vec![-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0],
-            vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2],
-        )
-    }
-
-    /// 🧊️ Same box as `unit_cube_mesh_buffers` but with outward-facing (CCW-from-outside) winding, needed
-    /// for tests that rely on `CollisionShape::contains_point` actually reporting interior points as inside.
-    pub(crate) fn outward_wound_unit_cube_mesh_buffers() -> (Vec<f32>, Vec<u32>) {
-        (
-            vec![-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0],
-            vec![0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 5, 4, 0, 1, 5, 2, 7, 6, 2, 3, 7, 0, 7, 3, 0, 4, 7, 1, 6, 5, 1, 2, 6],
-        )
-    }
-
-    /// 🏗️ One `Host` object with a single free `port-a` vortex — the smallest scene that still schedules
-    /// both precompute lanes.
-    pub(crate) fn single_object_scene_json() -> String {
-        let scene = SceneConfig {
-            fixture: Fixture {
-                attractions: vec![],
-                target_volumes: vec![],
-                objects: vec![FixtureObject {
-                    id: "host".to_string(),
-                    object_kind: Some("Host".to_string()),
-                    anchor: Default::default(),
-                    mesh_url: Some("/test/host.glb".to_string()),
-                    origin: [0.0, 0.0, 0.0],
-                    orientation: Some([0.0, 0.0, 0.0, 1.0]),
-                    scale: None,
-                    vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
-                    reveal_index: None,
-                }],
-            },
-            kind_catalogs: Some(KindCatalogBundle {
-                objects: vec![ObjectKind {
-                    id: "Host".to_string(),
-                    representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/test/host.glb".to_string(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
-                    scale: None,
-                    vortices: vec![],
-                }],
-                vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None, ..Default::default() }],
-                cables: vec![],
-            }),
-            kind_compatibility: vec![],
-            overlap_budget: DEFAULT_OVERLAP_BUDGET,
-            seed: 1,
-            host_rules: BrushHostRules::default(),
-            weights: BrushKindWeights::default(),
-        };
-        serde_json::to_string(&scene).unwrap()
-    }
-
-    /// 🪣️ One synthetic already-planned fill object / attraction / placement payload, for the fill-plan
-    /// prefix-stability laws in the app's own precompute session tests.
-    pub(crate) fn fill_plan_object(id: &str) -> FixtureObject {
-        FixtureObject {
-            id: id.to_string(),
-            object_kind: Some("Placed".to_string()),
-            anchor: Default::default(),
-            mesh_url: Some("/test/placed.glb".to_string()),
-            origin: [0.0, 0.0, 0.0],
-            orientation: Some([0.0, 0.0, 0.0, 1.0]),
-            scale: None,
-            vortices: vec![],
-            reveal_index: None,
-        }
-    }
-
-    pub(crate) fn fill_plan_attraction(index: usize) -> AttractionProps {
-        AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 }
-    }
-
-    pub(crate) fn fill_plan_payload(index: usize) -> BrushPlacePayload {
-        BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None }
-    }
-}
+#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
+pub(crate) mod testkit;
 //#endregion 🧪️PrecomputeTestkit
 
 //#region 🧪️PrecomputeModelTests
 #[cfg(test)]
-mod precompute_model_tests {
-    use super::*;
-
-    /// 🔗️ Keeps the example fixture's scene-authored kind catalog in sync with the compile-time
-    /// `puzzle3d-default` manifest.
-    #[test]
-    fn concrete_forest_kind_catalog_matches_puzzle3d_default_manifest() {
-        let fixture = crate::dsl::parse_dsl(crate::dsl::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("concrete-forest example parses as dsl");
-        let catalogs: KindCatalogBundle = serde_json::from_value(serde_json::to_value(&fixture.meta.kind_catalogs).unwrap()).unwrap();
-        let manifest = semio_framework_graph::manifest::manifest_by_id("puzzle3d-default").expect("puzzle3d-default manifest must be registered");
-        let wire_kind_ids: std::collections::BTreeSet<_> = manifest.wire_kinds.iter().map(|row| row.id.as_str()).collect();
-        let edge_kind_ids: std::collections::BTreeSet<_> = manifest.edge_kinds.iter().map(|row| row.id.as_str()).collect();
-        for vortex in &catalogs.vortices {
-            if let Some(default_cable_kind) = &vortex.default_cable_kind {
-                assert!(wire_kind_ids.contains(default_cable_kind.as_str()), "vortex kind {:?} references unknown wire kind {default_cable_kind:?}", vortex.id);
-            }
-        }
-        for cable in &catalogs.cables {
-            if let Some(default_attraction_kind) = &cable.default_attraction_kind {
-                assert!(edge_kind_ids.contains(default_attraction_kind.as_str()), "cable kind {:?} references unknown edge kind {default_attraction_kind:?}", cable.id);
-            }
-        }
-    }
-
-    /// 🪪️ A vortex id that already carries its owner's prefix is passed through untouched.
-    #[test]
-    fn vortex_full_id_prefixes_only_bare_ids() {
-        assert_eq!(puzzle3d_vortex_full_id("host", "v0"), "host:v0");
-        assert_eq!(puzzle3d_vortex_full_id("host", "other:v0"), "other:v0");
-    }
-
-    #[test]
-    fn brush_preview_state_converts_into_a_placement_payload() {
-        let preview = BrushPreviewState {
-            target_vortex_full_id: "host:v0".into(),
-            object_kind_id: "Kind".into(),
-            source_vortex_index: 2,
-            mesh_url: "/mesh.glb".into(),
-            origin: [1.0, 2.0, 3.0],
-            orientation: [0.0, 0.0, 0.0, 1.0],
-            scale: Some(dsl::DslValue::float(2.0)),
-        };
-        let payload = BrushPlacePayload::from(preview);
-        assert_eq!(payload.target_vortex_full_id, "host:v0");
-        assert_eq!(payload.object_kind_id, "Kind");
-        assert_eq!(payload.source_vortex_index, 2);
-        assert_eq!(payload.origin, [1.0, 2.0, 3.0]);
-        assert_eq!(payload.scale, Some(dsl::DslValue::float(2.0)));
-    }
-}
+#[path = "🧪️tests/🔬️precompute-model/🦀️.rs"]
+mod precompute_model_tests;
 //#endregion 🧪️PrecomputeModelTests

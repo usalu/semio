@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/iso16757/1/any/mutation/rename-product-group/schema.json",
+  "$id": "https://semio.tech/schema/s/norm/iso16757/mutation/rename-product-group/schema.json",
   "title": "RenameProductGroup",
   "type": "object",
   "additionalProperties": false,

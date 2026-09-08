@@ -2,7 +2,7 @@
 
 use semio_s_artifact_trinity_jack::{Camera, PropertyValue};
 use crate::LayoutPoint;
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff

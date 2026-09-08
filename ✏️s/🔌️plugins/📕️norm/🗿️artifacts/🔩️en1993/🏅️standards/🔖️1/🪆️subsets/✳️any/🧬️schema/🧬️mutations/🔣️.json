@@ -1,77 +1,58 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1993/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/norm/en1993/mutations.json",
   "title": "En1993Mutation",
   "oneOf": [
     {
-      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "./🔩️update-bolt-inputs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-bolt-inputs/schema.json"
     },
     {
-      "$ref": "./🌉️update-bridge-inputs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-bridge-inputs/schema.json"
     },
     {
-      "$ref": "./🥶️update-cold-formed-inputs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-cold-formed-inputs/schema.json"
     },
     {
-      "$ref": "./🏗️update-crane-inputs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-crane-inputs/schema.json"
     },
     {
-      "$ref": "./🔁️update-fatigue-inputs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-fatigue-inputs/schema.json"
     },
     {
-      "$ref": "./🔥️update-fire-inputs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-fire-inputs/schema.json"
     },
     {
-      "$ref": "./⬜️update-hss-inputs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-hss-inputs/schema.json"
     },
     {
-      "$ref": "./📊️update-member-properties/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-member-properties/schema.json"
     },
     {
-      "$ref": "./🪵️update-pile-inputs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-pile-inputs/schema.json"
     },
     {
-      "$ref": "./🧱️update-plated-inputs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-plated-inputs/schema.json"
     },
     {
-      "$ref": "./🛢️update-silo-shell-inputs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-silo-shell-inputs/schema.json"
     },
     {
-      "$ref": "./✨️update-stainless-inputs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-stainless-inputs/schema.json"
     },
     {
-      "$ref": "./🪢️update-tension-component-inputs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-tension-component-inputs/schema.json"
     },
     {
-      "$ref": "./↕️update-through-thickness-inputs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-through-thickness-inputs/schema.json"
     },
     {
-      "$ref": "./🗼️update-tower-inputs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-tower-inputs/schema.json"
     },
     {
-      "$ref": "./🧲️update-weld-inputs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-weld-inputs/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-annex",
-    "update-bolt-inputs",
-    "update-bridge-inputs",
-    "update-cold-formed-inputs",
-    "update-crane-inputs",
-    "update-fatigue-inputs",
-    "update-fire-inputs",
-    "update-hss-inputs",
-    "update-member-properties",
-    "update-pile-inputs",
-    "update-plated-inputs",
-    "update-silo-shell-inputs",
-    "update-stainless-inputs",
-    "update-tension-component-inputs",
-    "update-through-thickness-inputs",
-    "update-tower-inputs",
-    "update-weld-inputs"
   ]
 }

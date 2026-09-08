@@ -17,7 +17,5 @@
     "🟦️.ts"
   ],
   "exclude": [
-    "🧪️index.test.ts",
-    "🧬️invariants.test.ts"
   ]
 }

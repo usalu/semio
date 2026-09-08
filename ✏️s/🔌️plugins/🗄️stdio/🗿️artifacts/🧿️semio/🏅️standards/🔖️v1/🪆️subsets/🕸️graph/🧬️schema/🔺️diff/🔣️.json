@@ -1,18 +1,39 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.graph/diff.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/diff.json",
   "title": "SemioGraphDiff",
   "description": "Sparse per-field diff over SemioGraphSnapshot — two independent optional whole-list-replace slots, `nodes` and `edges`.",
   "type": "object",
   "properties": {
     "nodes": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "x-semio-state": "artifact",
-      "properties": { "values": { "type": "array", "items": { "type": "object" } } }
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
     },
     "edges": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "x-semio-state": "artifact",
-      "properties": { "values": { "type": "array", "items": { "type": "object" } } }
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
     }
   }
 }

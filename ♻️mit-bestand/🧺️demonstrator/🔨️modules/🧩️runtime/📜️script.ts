@@ -58,7 +58,7 @@ class PrepareTestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Demonstrator E2E preparation accepts no arguments");
     readDemonstratorActivation(this.repoRoot);
-    const session = openServiceSession(demonstratorE2eSessionRoot(this.repoRoot), DEMONSTRATOR_E2E_OWNER, demonstratorE2eInvocationPid(process.env));
+    const session = await openServiceSession(demonstratorE2eSessionRoot(this.repoRoot), DEMONSTRATOR_E2E_OWNER, demonstratorE2eInvocationPid(process.env));
     console.log(`Prepared Demonstrator E2E service ${session.id}`);
   }
 }
@@ -73,8 +73,8 @@ class ServeTestScript extends BundleScript {
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     try {
       readDemonstratorActivation(this.repoRoot);
-      await serveVite({ root, config: join(root, "⚙️vite.config.ts"), host: "127.0.0.1", port: 0, signal: controller.signal, session, ready: url => { publishServiceReady(sessionRoot, session, url); console.log(`Demonstrator E2E ready: ${url}`); } });
-    } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); closeServiceSession(sessionRoot, session); }
+      await serveVite({ root, config: join(root, "⚙️vite.config.ts"), host: "127.0.0.1", port: 0, signal: controller.signal, session, ready: async url => { await publishServiceReady(sessionRoot, session, url, controller.signal); console.log(`Demonstrator E2E ready: ${url}`); } });
+    } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); await closeServiceSession(sessionRoot, session); }
   }
 }
 

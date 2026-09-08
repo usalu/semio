@@ -28,7 +28,7 @@ import {
   type PluginRegistryEntry,
 } from "../../📜️script.ts";
 
-const fixtureRoot = join(import.meta.dirname, "🧪️tests", "🧬️catalog-complete");
+const fixtureRoot = join(import.meta.dirname, "../🧬️catalog-complete");
 const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {
   readonly nodes: readonly CatalogVerificationNode[];
   readonly expectedOrder: readonly string[];
@@ -41,9 +41,9 @@ const temporaryRoots: string[] = [];
 describe("handpicked module deployment directories", () => {
   it("admits only schema-owned module routes and canonical encoded request paths", async () => {
     const deployment = await import("../../📦️deployment/🟦️.ts"), { URL: IndependentUrl } = await import("whatwg-url");
-    const routes = JSON.parse(readFileSync(join(import.meta.dirname, "📦️deployment/🛣️routes.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(import.meta.dirname, "📦️deployment/🧬️schema/🔣️.json"), "utf8"));
-    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "📦️deployment/🧪️cases.json"), "utf8"));
+    const routes = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🛣️routes.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧬️schema/🔣️.json"), "utf8"));
+    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧪️cases.json"), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema.$defs.DeploymentModuleRoutesV1);
     expect(validate(routes)).toBe(true);
     expect(deployment.parseModuleRoutes(routes)).toEqual(routes);
@@ -59,7 +59,7 @@ describe("handpicked module deployment directories", () => {
 
   it("uses the declared authored bridge without deriving a filename from the public ID", async () => {
     const emojiRegex = (await import("emoji-regex")).default;
-    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "📦️deployment/🧪️cases.json"), "utf8"));
+    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧪️cases.json"), "utf8"));
     for (const name of [cases.bridgeFile, cases.installMetaFile]) expect([...name.matchAll(emojiRegex())]).toHaveLength(1);
     const deployment = await import("../../📦️deployment/🟦️.ts");
     expect(deployment.moduleStaticDirectoryNames("puzzle", false)).toEqual(cases.staticDirectories);
@@ -75,15 +75,15 @@ describe("handpicked module deployment directories", () => {
   });
   it("matches the schema and independent emoji oracle without changing public identities", async () => {
     const emojiRegex = (await import("emoji-regex")).default;
-    const catalog = JSON.parse(readFileSync(join(import.meta.dirname, "📦️deployment/🗺️catalog.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(import.meta.dirname, "📦️deployment/🧬️schema/🔣️.json"), "utf8"));
-    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "📦️deployment/🧪️cases.json"), "utf8"));
-    const registrySchemas = new Ajv({ strict: true }).addSchema(JSON.parse(readFileSync(join(import.meta.dirname, "../../../../🧩️extension/📐️directory.schema.json"), "utf8"))).addSchema(schema);
+    const catalog = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🗺️catalog.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧬️schema/🔣️.json"), "utf8"));
+    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧪️cases.json"), "utf8"));
+    const registrySchemas = new Ajv({ strict: true }).addSchema(JSON.parse(readFileSync(join(import.meta.dirname, "../../../../🧩️extension/🧬️schema/🔣️.json"), "utf8"))).addSchema(schema);
     const validate = registrySchemas.getSchema(`${schema.$id}#/$defs/DeploymentCatalogV1`)!;
     expect(validate(catalog)).toBe(true);
     expect(parseModuleDirectories(catalog)).toEqual(catalog.modules);
     expect(catalog.modules).toHaveLength(59);
-    const ids = JSON.parse(readFileSync(join(import.meta.dirname, "🤖️generated/🔌️plugins.json"), "utf8")).map((entry: { pluginId: string }) => entry.pluginId);
+    const ids = JSON.parse(readFileSync(join(import.meta.dirname, "../../🤖️generated/🔌️plugins.json"), "utf8")).map((entry: { pluginId: string }) => entry.pluginId);
     expect(catalog.modules.map((entry: { pluginId: string }) => entry.pluginId)).toEqual(ids);
     const identities = new Set<string>();
     for (const row of catalog.modules) {

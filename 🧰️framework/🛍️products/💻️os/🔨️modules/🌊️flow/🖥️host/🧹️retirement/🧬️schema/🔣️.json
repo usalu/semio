@@ -1,0 +1,189 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/flow/host/retirement/component.json",
+  "title": "Flow Host Retirement Contracts",
+  "$defs": {
+    "FlowSessionRetirementV1": {
+      "title": "Flow Session Byte Retirement",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "grants",
+        "text",
+        "preview",
+        "dag",
+        "scene",
+        "expected"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.flow.session-retirement"
+        },
+        "grants": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4096
+          }
+        },
+        "text": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text",
+            "repeat",
+            "reservedCapacity"
+          ],
+          "properties": {
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8
+            },
+            "repeat": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "reservedCapacity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16777216
+            }
+          }
+        },
+        "preview": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text",
+            "repeat"
+          ],
+          "properties": {
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8
+            },
+            "repeat": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            }
+          }
+        },
+        "dag": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schemaText",
+            "nodeId",
+            "nodeName",
+            "text",
+            "repeat",
+            "minimumUtf8Bytes"
+          ],
+          "properties": {
+            "schemaText": {
+              "type": "string",
+              "minLength": 1
+            },
+            "nodeId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "nodeName": {
+              "type": "string",
+              "minLength": 1
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8
+            },
+            "repeat": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "minimumUtf8Bytes": {
+              "type": "integer",
+              "minimum": 4097,
+              "maximum": 16777216
+            }
+          }
+        },
+        "scene": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "retirementCapacity",
+            "retainedCommands",
+            "retainedPathElements",
+            "retainedVelloRects",
+            "retainedConsumers"
+          ],
+          "properties": {
+            "retirementCapacity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "retainedCommands": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "retainedPathElements": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "retainedVelloRects": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "retainedConsumers": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "releasedBytes",
+            "terminalOwners",
+            "zeroGrant"
+          ],
+          "properties": {
+            "releasedBytes": {
+              "type": "integer",
+              "minimum": 4097,
+              "maximum": 16777216
+            },
+            "terminalOwners": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 0
+            },
+            "zeroGrant": {
+              "const": "blocked"
+            }
+          }
+        }
+      }
+    }
+  }
+}

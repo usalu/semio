@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ChangeTargetVolumeHidden` — patches the one addressed target-volume in place.
-use crate::diff::{Puzzle3dDiff, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumePatchEntry, Puzzle3dTargetVolumesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumePatchEntry, Puzzle3dTargetVolumesDelta};
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

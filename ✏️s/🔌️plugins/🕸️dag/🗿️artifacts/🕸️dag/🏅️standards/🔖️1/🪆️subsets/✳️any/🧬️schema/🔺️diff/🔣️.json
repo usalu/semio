@@ -1,86 +1,202 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/dag/dag/diff.json",
   "title": "DagDiff",
   "type": "object",
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "artifact": { "title": "DagArtifact", "type": "object", "x-semio-state": "artifact" },
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "nodes": { "$ref": "#/$defs/DagNodesDelta", "x-semio-state": "artifact" },
-    "edges": { "$ref": "#/$defs/DagEdgesDelta", "x-semio-state": "artifact" },
-    "setNodes": { "$ref": "#/$defs/DagNodeSpecList", "x-semio-state": "artifact" },
-    "setEdges": { "$ref": "#/$defs/DagFixtureEdgeList", "x-semio-state": "artifact" },
-    "selectedNodeIds": { "$ref": "#/$defs/DagStringList", "x-semio-state": "presence" },
-    "camera": { "$ref": "#/$defs/DagCamera", "x-semio-state": "config" },
-    "locale": { "type": "string", "x-semio-state": "config" }
+    "artifact": {
+      "title": "DagArtifact",
+      "type": "object",
+      "x-semio-state": "artifact"
+    },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "nodes": {
+      "$ref": "#/$defs/DagNodesDelta",
+      "x-semio-state": "artifact"
+    },
+    "edges": {
+      "$ref": "#/$defs/DagEdgesDelta",
+      "x-semio-state": "artifact"
+    },
+    "setNodes": {
+      "$ref": "#/$defs/DagNodeSpecList",
+      "x-semio-state": "artifact"
+    },
+    "setEdges": {
+      "$ref": "#/$defs/DagFixtureEdgeList",
+      "x-semio-state": "artifact"
+    },
+    "selectedNodeIds": {
+      "$ref": "#/$defs/DagStringList",
+      "x-semio-state": "presence"
+    },
+    "camera": {
+      "$ref": "#/$defs/DagCamera",
+      "x-semio-state": "config"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "config"
+    }
   },
   "$defs": {
     "DagNodeSpecList": {
       "title": "DagNodeSpecList",
       "type": "object",
       "additionalProperties": false,
-      "required": ["values"],
-      "properties": { "values": { "type": "array", "items": { "$ref": "#/$defs/DagNodeSpec" } } }
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DagNodeSpec"
+          }
+        }
+      }
     },
     "DagFixtureEdgeList": {
       "title": "DagFixtureEdgeList",
       "type": "object",
       "additionalProperties": false,
-      "required": ["values"],
-      "properties": { "values": { "type": "array", "items": { "$ref": "#/$defs/DagFixtureEdge" } } }
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DagFixtureEdge"
+          }
+        }
+      }
     },
     "DagStringList": {
       "title": "DagStringList",
       "type": "object",
       "additionalProperties": false,
-      "required": ["values"],
+      "required": [
+        "values"
+      ],
       "properties": {
-        "values": { "type": "array", "items": { "type": "string" } }
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "DagNodesDelta": {
       "title": "DagNodesDelta",
       "type": "object",
       "additionalProperties": false,
-      "required": ["added", "removed", "patched"],
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
       "properties": {
-        "added": { "type": "array", "items": { "$ref": "#/$defs/DagNodeSpec" } },
-        "removed": { "type": "array", "items": { "type": "string" } },
-        "patched": { "type": "array", "items": { "$ref": "#/$defs/DagNodePatchEntry" } },
-        "reordered": { "type": "array", "items": { "type": "string" } }
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DagNodeSpec"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DagNodePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "DagEdgesDelta": {
       "title": "DagEdgesDelta",
       "type": "object",
       "additionalProperties": false,
-      "required": ["added", "removed", "patched"],
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
       "properties": {
-        "added": { "type": "array", "items": { "$ref": "#/$defs/DagFixtureEdge" } },
-        "removed": { "type": "array", "items": { "type": "string" } },
-        "patched": { "type": "array", "items": { "$ref": "#/$defs/DagEdgePatchEntry" } },
-        "reordered": { "type": "array", "items": { "type": "string" } }
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DagFixtureEdge"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DagEdgePatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "DagNodePatchEntry": {
       "title": "DagNodePatchEntry",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "patch"],
+      "required": [
+        "id",
+        "patch"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "patch": { "$ref": "#/$defs/DagNodePatch" }
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/DagNodePatch"
+        }
       }
     },
     "DagEdgePatchEntry": {
       "title": "DagEdgePatchEntry",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "patch"],
+      "required": [
+        "id",
+        "patch"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "patch": { "$ref": "#/$defs/DagEdgePatch" }
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/DagEdgePatch"
+        }
       }
     },
     "DagNodePatch": {
@@ -93,39 +209,70 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "source": { "type": "string" },
-        "target": { "type": "string" }
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
       }
     },
     "DagNodeSpec": {
       "title": "DagNodeSpec",
       "type": "object",
       "additionalProperties": true,
-      "required": ["id"],
+      "required": [
+        "id"
+      ],
       "properties": {
-        "id": { "type": "string" }
+        "id": {
+          "type": "string"
+        }
       }
     },
     "DagFixtureEdge": {
       "title": "DagFixtureEdge",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "source", "target"],
+      "required": [
+        "id",
+        "source",
+        "target"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "source": { "type": "string" },
-        "target": { "type": "string" }
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
       }
     },
     "DagCamera": {
       "title": "DagCamera",
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y", "zoom"],
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
       "properties": {
-        "x": { "type": "number", "format": "double" },
-        "y": { "type": "number", "format": "double" },
-        "zoom": { "type": "number", "format": "double" }
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
       }
     }
   }

@@ -1,93 +1,70 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/iso16757/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/norm/iso16757/mutations.json",
   "title": "Iso16757Mutation",
   "oneOf": [
     {
-      "$ref": "./🔒️add-selection-constraint/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/add-selection-constraint/schema.json"
     },
     {
-      "$ref": "./🔄️change-exchange-process/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/change-exchange-process/schema.json"
     },
     {
-      "$ref": "./🎛️change-part-number-input/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/change-part-number-input/schema.json"
     },
     {
-      "$ref": "./🎯️change-selection-class/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/change-selection-class/schema.json"
     },
     {
-      "$ref": "./🧵️change-selection-series/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/change-selection-series/schema.json"
     },
     {
-      "$ref": "./📦️create-product/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/create-product/schema.json"
     },
     {
-      "$ref": "./🧺️create-product-group/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/create-product-group/schema.json"
     },
     {
-      "$ref": "./📐️create-property-definition/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/create-property-definition/schema.json"
     },
     {
-      "$ref": "./🌳️create-subject/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/create-subject/schema.json"
     },
     {
-      "$ref": "./🚫️delete-product/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/delete-product/schema.json"
     },
     {
-      "$ref": "./🧹️delete-product-group/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/delete-product-group/schema.json"
     },
     {
-      "$ref": "./🧽️delete-property-definition/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/delete-property-definition/schema.json"
     },
     {
-      "$ref": "./✂️delete-subject/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/delete-subject/schema.json"
     },
     {
-      "$ref": "./🔌️remove-part-number-input/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/remove-part-number-input/schema.json"
     },
     {
-      "$ref": "./🔓️remove-selection-constraint/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/remove-selection-constraint/schema.json"
     },
     {
-      "$ref": "./📇️rename-catalogue/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/rename-catalogue/schema.json"
     },
     {
-      "$ref": "./🏭️rename-manufacturer/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/rename-manufacturer/schema.json"
     },
     {
-      "$ref": "./🏷️rename-product/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/rename-product/schema.json"
     },
     {
-      "$ref": "./🗂️rename-product-group/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/rename-product-group/schema.json"
     },
     {
-      "$ref": "./🧮️replace-part-number-rule/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/replace-part-number-rule/schema.json"
     },
     {
-      "$ref": "./🚦️update-script-limits/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/iso16757/mutation/update-script-limits/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "add-selection-constraint",
-    "change-exchange-process",
-    "change-part-number-input",
-    "change-selection-class",
-    "change-selection-series",
-    "create-product",
-    "create-product-group",
-    "create-property-definition",
-    "create-subject",
-    "delete-product",
-    "delete-product-group",
-    "delete-property-definition",
-    "delete-subject",
-    "remove-part-number-input",
-    "remove-selection-constraint",
-    "rename-catalogue",
-    "rename-manufacturer",
-    "rename-product",
-    "rename-product-group",
-    "replace-part-number-rule",
-    "update-script-limits"
   ]
 }

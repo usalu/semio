@@ -45,8 +45,5 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetAttributeMut
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn semantic_identity_matches_descriptor() { assert_eq!(<SetAttributeMutation as protocol::MutationKind<XmlSnapshot, super::super::XmlMutation>>::SEMANTICS.kind, "set-attribute"); }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

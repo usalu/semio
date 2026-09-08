@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateElement`.
 use super::CreateElement;
-use crate::diff::{Fem3dDiff, Fem3dElementsDelta};
-use crate::mutations::resolve_element;
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dElementsDelta};
+use crate::standards::v1::subsets::any::schema::mutations::resolve_element;
 use crate::{element_id, Fem3dSnapshot};
 
 //#region 🔖️Diff

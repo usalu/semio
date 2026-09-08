@@ -21,6 +21,13 @@ silently applied.
   `s.writer.writer`, `hub.inference`, `os.directory`, `framework.actor.return`. It is declared in the
   module's `🔣️.json` as `$id` and must equal the id the Rust `ArtifactSchemaDescriptor` registers where
   one exists. Never derive ids by stripping emoji from paths.
+- A scope never restates another scope's `$defs`. Surface lanes (`🎚️config`, `👥️presence`, `🫧️transient`)
+  and facet documents (`🔺️diff`, `📸️snapshot`, `💡️inferences`) reference the owning export
+  (`<owner $id>#/$defs/<Export>`); a Rust re-export is `pub use` (a private `use` declares nothing).
+  Surface lanes are their own scopes: `$id …/<artifact scope path>/config|presence|transient/schema.json`.
+- Module-internal helpers live in `definitions` and are referenced as `#/definitions/<helper>`; they are
+  not exports and never findings. Only cross-document references must address an export:
+  `<target $id>#/$defs/<ExportId>`.
 - **Export id** = a PascalCase key of the module's `$defs` (JSON Schema), the same-named `message`
   (proto), `type` (GraphQL), `struct/enum` (Rust), exported `interface/type` + `parse<Export>` function (TS).
 - **`$id` grammar (settled after WP2)**: `https://semio.tech/schema/<scope path>/<facet>.json`. The scope
@@ -31,6 +38,11 @@ silently applied.
   its own scope**: `<leaf>/🧬️schema/🔣️.json` declares `$id …/<root scope path>/mutation/<semanticKind>/schema.json`
   (scope id `<root>.mutation.<semanticKind>`, facet `schema`, exports `Payload`/`Wire` or the `title`).
   The catalog generator recognizes a `🧬️mutations/<leaf>/🧬️schema/` module as a scope of its own.
+- Export presence per format: JSON `$defs.<Export>`; proto `message <Export>`; GraphQL any of
+  `type|input|enum|interface|union|scalar <Export>`; Rust `pub struct|enum <Export>`; TypeScript both an
+  exported type and `parse<Export>()`. `x-semio-formats` lists every format the export exists in,
+  including the normative one. Diagnostic codes: the harness `schema-*` vocabulary is the single code
+  table shared by the harness and the root `schema check`.
 - **Format ids** = taxonomy `schemaFormats` keys (`🔣️jsonschema`, `🛰️protobuf`, `🔗️graphql`, `🦀️rust`,
   `🟦️typescript`). Normative format for `🧬️data` facets is JSON Schema.
 - **Resolution key** = `(scope id, export id, format id)`. Fixture binding URI: `schema://<scope id>/<ExportId>`
@@ -57,9 +69,27 @@ silently applied.
 - Mutation leaves: the leaf stays the authority; every leaf payload schema moves to the taxonomy default
   `<leaf>/🧬️schema/🔣️.json` and the descriptor `payloadSchema` is updated to that relative path.
   Module aggregates `🧬️mutations/🔣️.json` are pure `$ref` unions (G-B shape), never inline payloads.
+  Because each leaf is its own scope, aggregate branches reference leaves by absolute `$id`
+  (`<leaf $id>` or `<leaf $id>#/$defs/Payload`), resolved through the catalog; no filesystem-relative refs.
+  A two-segment leaf directory (`🧬️mutations/<domain>/<verb>`, gltf) is a leaf; its scope id uses the
+  descriptor's `semanticKind`.
 - Fixture directories are named per taxonomy: `🧫️fixtures` (`testFixturesDirName`) for data collections,
   `🧪️tests` (`testsDirName`) for test cases. `🧪️fixtures` is not a taxonomy name; wave-2 partition owners
   rename it and rewire readers. Dev-tool output graphs that are serialized and consumed are scope contracts.
+- **Format coverage (settled after WP4-plugins):** a scope provides the formats whose files exist in its
+  module; a JSON-Schema-only module is complete when no other format consumes the scope. Every export
+  must exist in every format the scope provides, unless the export carries
+  `"x-semio-formats": ["🔣️jsonschema", …]` declaring restricted support honestly (law/contract exports
+  that are only validated, never transported). An export with no consumer and no fixture binding is dead
+  and is deleted together with its data.
+- Eligible owner levels also include `plugin-extension` (`✏️s/🔌️plugins/*/🧩️extensions/*`) and
+  `plugin-submodule` (`✏️s/🔌️plugins/*/<module>` such as `🗄️stdio/📇️registry`, a directory that is neither
+  `🗿️artifacts`, `🧩️extensions`, `📦️packages`, nor a test/fixture tree).
+- **Shared vocabularies mirror the runtime enum, in kebab case** (settled after WP4c-framework): retained
+  command lanes = `ArtifactToolPublicationLane` (`artifact|config|host-only|draft|presence|transient|child`);
+  disposition/admission/status = `InteractiveJobClassification`
+  (`unclassified|migrated|batch-only-pending-rewrite|forbidden-from-ui|deleted|fail-closed`). A shared
+  shape is never narrower than the runtime; owners narrow with `const`.
 - Wrapper schemas that describe a fixture file (hostile lists, `maximumBytes`, state-machine "spec of one
   example") are NOT contracts: keep the example data, move the real contract into the owner module, and
   express hostile cases as fixture expectations (stage + reason), not as schema.
@@ -90,6 +120,9 @@ silently applied.
   wire type and has 235 external literals). `resolve_schema_export(scope, export, format)` unifies fixed
   facets and named exports; registration conflicts remain fatal. Draft-07 structural validation is
   `semio_framework_schema::structural_validator_for` / `✅️validator.rs` (owned, ajv-oracle-verified).
+  The registry/resolver types live in an os-kernel-free leaf crate (`semio-framework-schema-registry`,
+  re-exported by `semio-framework-schema`) so every scope crate, including dependency-restricted ones,
+  registers its own exports.
 
 ## D. Ownership decisions already settled by WP0
 

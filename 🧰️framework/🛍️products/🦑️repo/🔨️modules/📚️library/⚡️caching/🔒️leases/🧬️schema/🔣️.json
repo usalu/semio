@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/caching/resource-leases/fixtures.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cases", "repetitions"],
+  "properties": {
+    "repetitions": { "type": "integer", "minimum": 2 },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "first", "second", "action"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "first": { "$ref": "#/$defs/Participant" },
+          "second": { "$ref": "#/$defs/Participant" },
+          "action": { "enum": ["parallel", "release-first", "cancel-second", "kill-first"] }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Participant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime", "mode", "resource"],
+      "properties": {
+        "runtime": { "enum": ["bun", "node", "python"] },
+        "mode": { "enum": ["shared", "exclusive"] },
+        "resource": { "type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^[^\\u0000]+$" }
+      }
+    }
+  }
+}

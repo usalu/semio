@@ -312,20 +312,8 @@ impl Patchable<FigureTileDraftPatch> for FigureTileDraft {
 //#region 🧪️Tests
 #[cfg(test)]
 #[allow(clippy::items_after_test_module)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn presentation_snapshot_schema_is_animate_presentation() {
-        assert_eq!(default_presentation_snapshot().schema, PRESENTATION_DOCUMENT_SCHEMA);
-    }
-
-    #[test]
-    fn artifact_kind_matches_the_store_schema() {
-        assert_eq!(artifact_kind().schema, PRESENTATION_DOCUMENT_SCHEMA);
-        assert_eq!(artifact_kind().id, PRESENTATION_DOCUMENT_SCHEMA);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 //#region 🔖️Declaration
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {

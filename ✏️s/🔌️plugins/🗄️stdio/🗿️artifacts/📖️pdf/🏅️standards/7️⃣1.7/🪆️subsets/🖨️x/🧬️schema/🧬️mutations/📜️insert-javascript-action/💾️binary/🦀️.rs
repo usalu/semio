@@ -22,13 +22,6 @@ pub fn decode(bytes: &[u8]) -> Result<InsertJavascriptAction, String> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn owned_payload_round_trips() {
-        let payload = InsertJavascriptAction { script: "sample".to_string() };
-        assert_eq!(decode(&encode(&payload).unwrap()).unwrap(), payload);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

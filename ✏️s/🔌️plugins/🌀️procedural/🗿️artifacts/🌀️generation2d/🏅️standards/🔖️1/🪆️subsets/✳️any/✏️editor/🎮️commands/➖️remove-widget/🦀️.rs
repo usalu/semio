@@ -1,12 +1,12 @@
 //! 🧩️ 🧩️ Generation2d play app commands command — `remove-widget`.
 
-use crate::op::Generation2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
 use crate::Generation2dSnapshot;
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-use crate::schema::host_operations;
+use crate::standards::v1::subsets::any::schema::host_operations;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]

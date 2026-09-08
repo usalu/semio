@@ -5,7 +5,7 @@
 //! table surface gets a presence roster (owned by `👥️PresenceBar`, lane 2-F/3-A territory), not a
 //! placeholder that silently drops the action id.
 
-use crate::op::SHomeMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -24,20 +24,6 @@ pub fn handle(_payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, SHomeSnapsho
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn heartbeat_is_dispatchable_and_emits_nothing() {
-        let history = semio_framework_plugin::HistoryView::empty();
-        let doc_snapshot = SHomeSnapshot::default();
-        let doc = ArtifactView::new(&doc_snapshot, &history);
-        let config = HomeConfig::default();
-        let cfg = ConfigView { snapshot: &config };
-        let emit = handle(&PresenceHeartbeat {}, &doc, &cfg).expect("handle");
-        assert!(emit.artifact_mutations.is_empty());
-        assert!(emit.config_mutations.is_empty());
-        assert!(emit.effects.is_empty());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

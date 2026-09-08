@@ -32,15 +32,16 @@ pub type Vec2 = [f64; 2];
 // Serialize`/`Deserialize` not satisfied). No in-component crate (`semio-s-plugin-draw`,
 // `semio-s-plugin-flow-extension-draw`) enables it — both convert to/from their own
 // `ToValue`/`FromValue`-only wire types or only touch `DrawingError`/`Vec2` (neither serde-derived),
-// so the feature stays off for every plugin wasm component. `#[value(tag = "kind", rename_all =
-// "camelCase")]` mirrors `#[serde(tag = "kind", rename_all = "camelCase")]` exactly — internally
-// tagged, and with no `rename_all_fields` given, the single case covers both the tag values AND
-// each named-field variant's own field names (serde's own default when only `rename_all` is
-// given), so `large_arc` renders as `largeArc` either way.
+// so the feature stays off for every plugin wasm component. `rename_all` cases the tag values;
+// `rename_all_fields` is the only attribute that cases a variant's OWN named fields — in serde and,
+// since ticket 26/09/08/SCOPE-OWNED-SCHEMA-CONTRACTS row 47a, in `value_derive` too. Both are
+// declared on both codecs here because `large_arc` MUST render as `largeArc`: it is the
+// plugin-facing wire name (this crate's `Cargo.toml` marks `ToValue`/`FromValue` as exactly that)
+// and `◻️2d/🟦️.ts:48`'s `PathSegment` mirror reads `segment.largeArc`.
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(tag = "kind", rename_all = "camelCase"))]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[cfg_attr(feature = "serde", serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PathSegment {
     Move { to: Vec2 },
     Line { to: Vec2 },

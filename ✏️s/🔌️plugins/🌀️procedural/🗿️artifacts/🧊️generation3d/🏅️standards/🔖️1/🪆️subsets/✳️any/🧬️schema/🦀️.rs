@@ -1,23 +1,22 @@
 //! 🧬️ Generation3d artifact schema — every field of the artifact with its state class.
 
-use crate::dsl::{
+use crate::standards::v1::subsets::any::schema::snapshot::text::{
     GENERATION3D_EXAMPLE_BOX_FILLET_TEXT, GENERATION3D_EXAMPLE_BOX_SHELL_TEXT, GENERATION3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT, GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT, GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT, GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT,
     GENERATION3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT, GENERATION3D_EXAMPLE_SPHERE_TORUS_TEXT,
 };
-use crate::snapshot::schema::Generation3dSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 use crate::widget_id;
-use semio_framework_artifact_infinite_dag::DagFixture;
 #[cfg(feature = "component-app-assembly")]
-use semio_framework_os_flow::forms_bridge::apply_generation_values_to_fixture;
+use semio_framework_os_flow::forms_bridge::apply_generation_values_to_fixture as apply_generation_values_to_fixture_json;
 use semio_framework_artifact_playbook_playbook::selected_generation;
 use semio_framework_artifact_playbook_playbook::GenerationPlayState;
-use semio_framework_artifact_flow_semio_framework_os_flow::CameraJson;
-use semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture;
+use semio_framework_artifact_flow_flow::CameraJson;
+use semio_framework_artifact_flow_flow::FlowFixture;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::{flow_host_with_session, FlowEvalSession, FlowHost};
-use semio_framework_artifact_flow_semio_framework_os_flow::{Widget};
-use schema::ArtifactSchema;
+use semio_framework_artifact_flow_flow::{Widget};
+use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactDsl;
 
@@ -121,31 +120,31 @@ impl Generation3dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.procedural.generation3d` — twenty handcrafted schema leaves.
-pub fn generation3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn generation3d_artifact_schema_descriptor() -> ::semio_framework_schema::ArtifactSchemaDescriptor {
+    ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.procedural.generation3d",
-        artifact: schema::FacetLeaves {
+        artifact: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🕸️.graphql"),
@@ -333,6 +332,7 @@ pub fn example_document_json(example_id: &str) -> String {
 /// 🌉️ Bridges a `FormGeneration.values` map (`semio_framework_artifact_playbook_playbook::PlaybookValues`, see `FormGeneration`
 /// in `📖️playbook/🦀️.rs`) into the `pack::json::Object` that `forms_bridge::apply_generation_values_to_fixture`
 /// actually takes.
+#[cfg(feature = "component-app-assembly")]
 fn generation_values_to_pack_object(values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> dsl::json::Object {
     match dsl::json::from_dsl_value(&dsl::DslValue::object(values.clone())) {
         dsl::json::Value::Object(object) => object,
@@ -341,12 +341,39 @@ fn generation_values_to_pack_object(values: &semio_framework_artifact_playbook_p
 }
 
 pub fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlayState) -> FlowFixture {
-    if let Some(selected) = selected_generation(generation) {
-        let patched = apply_generation_values_to_fixture(&dsl::json::to_json_string(fixture), &generation_values_to_pack_object(&selected.values));
-        FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone())
-    } else {
-        fixture.clone()
+    let Some(selected) = selected_generation(generation) else {
+        return fixture.clone();
+    };
+    let mut patched = fixture.clone();
+    for widget in &mut patched.widgets {
+        let Some(value) = selected.values.get(widget_id(widget)) else {
+            continue;
+        };
+        match widget {
+            Widget::InputSlider { value: current, .. } => {
+                if let Some(number) = value.as_f64() {
+                    *current = number;
+                }
+            }
+            Widget::InputNote { text, .. } => {
+                if let Some(next) = value.as_str() {
+                    *text = next.to_string();
+                }
+            }
+            Widget::InputImage { src, .. } => {
+                if let Some(next) = value.as_str() {
+                    *src = next.to_string();
+                }
+            }
+            Widget::Variable { name, .. } => {
+                if let Some(next) = value.as_str() {
+                    *name = next.to_string();
+                }
+            }
+            _ => {}
+        }
     }
+    patched
 }
 
 #[cfg(feature = "component-app-assembly")]
@@ -364,9 +391,9 @@ pub fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalS
 /// 🔀️ Rebuilds the fixture the flow host would normalize `before` to, then diffs `target` against
 /// that baseline.
 #[cfg(feature = "component-app-assembly")]
-pub fn commit_fixture(before: &FlowFixture, target: &FlowFixture) -> Vec<crate::op::Generation3dMutation> {
+pub fn commit_fixture(before: &FlowFixture, target: &FlowFixture) -> Vec<crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation> {
     let baseline = host_from_fixture(before).fixture;
-    crate::op::generation3d_fixture_operations(&baseline, target)
+    crate::standards::v1::subsets::any::schema::mutations::text::generation3d_fixture_operations(&baseline, target)
 }
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
@@ -413,7 +440,7 @@ pub fn widget_id_from_instance_id(instance_id: &str) -> &str {
 #[cfg(feature = "component-app-assembly")]
 pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
     let fixture_json = dsl::json::to_json_string(fixture);
-    let patched = apply_generation_values_to_fixture(&fixture_json, &generation_values_to_pack_object(values));
+    let patched = apply_generation_values_to_fixture_json(&fixture_json, &generation_values_to_pack_object(values));
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
     let mut host = FlowHost::from_fixture(patched_fixture);
     host.set_neuron_kind_infos_json(&semio_framework_os_flow::flow_neuron_kind_infos_json());
@@ -436,6 +463,7 @@ pub fn gumball_widget_id(source_id: &str, operation: &str) -> String {
     format!("{source_id}__gumball_{operation}")
 }
 
+#[cfg(feature = "component-app-assembly")]
 pub fn gumball_widget_json(host: &FlowHost, widget_id_str: &str) -> Option<dsl::DslValue> {
     host.fixture.widgets.iter().find(|widget| widget_id(widget) == widget_id_str).map(dsl::ToValue::to_value)
 }

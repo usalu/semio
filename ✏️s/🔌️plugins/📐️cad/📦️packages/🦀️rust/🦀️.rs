@@ -44,9 +44,6 @@ semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::CadApps);
 pub mod examples {
     #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_cad_demo_session;
-    #[cfg(test)]
-    #[path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
-    mod art_cad_demo_tests;
 }
 //#endregion 📚️Examples
 

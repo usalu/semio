@@ -1,7 +1,7 @@
 //! 🧩️ 🧩️ Generation3d play app commands command — `delete-selection`.
 
-use crate::op::Generation3dMutation;
-use crate::schema::{commit_fixture, host_from_fixture};
+use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::{commit_fixture, host_from_fixture};
 use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use semio_framework_os_flow::FlowEvalSession;
@@ -12,7 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "delete-selection")]
 pub struct DeleteSelection {}
 
-fn delete_selected(fixture: &semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+fn delete_selected(fixture: &semio_framework_artifact_flow_flow::FlowFixture, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     let mut host = host_from_fixture(fixture);
     for id in selected {
         let _ = host.remove_widget(id);

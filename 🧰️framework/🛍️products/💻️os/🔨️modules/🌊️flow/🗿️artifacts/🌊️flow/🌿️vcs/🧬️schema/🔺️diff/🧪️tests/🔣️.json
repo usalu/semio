@@ -9,10 +9,10 @@
       { "delta": "synapses", "value": { "removed": [], "inserted": [], "replaced": [["s1", { "id": "s1-new", "from": "a", "to": "b", "fromPort": "out", "toPort": "in" }]] } }
     ] } },
     { "name": "layout-assignments", "value": { "deltas": [
-      { "delta": "layout", "value": [{ "id": "a", "layout": { "x": 3, "y": 4 } }, { "id": "a", "layout": null }] }
+      { "delta": "layout", "value": [{ "id": "a", "layout": { "x": 3.0, "y": 4.0 } }, { "id": "a", "layout": null }] }
     ] } },
     { "name": "explicit-fixture", "value": { "deltas": [
-      { "delta": "fixture", "value": { "schema": "flow.fixture", "camera": { "x": 0, "y": 0, "zoom": 1 }, "widgets": [], "synapses": [], "layout": {} } }
+      { "delta": "fixture", "value": { "schema": "flow.fixture", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "widgets": [], "synapses": [], "layout": {} } }
     ] } },
     { "name": "maximum-wire-position", "value": { "deltas": [
       { "delta": "widgets", "value": { "removed": [], "inserted": [[4294967295, { "kind": "inputNote", "id": "x", "text": "" }]], "replaced": [] } }

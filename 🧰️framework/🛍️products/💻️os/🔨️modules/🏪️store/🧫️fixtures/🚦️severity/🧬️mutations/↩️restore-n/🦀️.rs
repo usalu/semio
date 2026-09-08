@@ -28,10 +28,5 @@ impl crate::os_spr::MutationKind<DemoSnapshot, SeverityMutation> for RestoreN {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn direct_fixture_leaf_contract() {
-        super::super::assert_fixture_descriptor::<RestoreN>(include_str!("🔣️.json"));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

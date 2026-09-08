@@ -1,33 +1,87 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.image/snapshot.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/image/snapshot.json",
   "title": "SemioImageSnapshot",
   "description": "width/height/colorspace/bitDepth + frames{delayMs, rgba8} + icc + metadata entries.",
   "type": "object",
-  "required": ["schema", "width", "height", "colorspace", "bitDepth", "frames", "metadata"],
+  "required": [
+    "schema",
+    "width",
+    "height",
+    "colorspace",
+    "bitDepth",
+    "frames",
+    "metadata"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "width": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
-    "height": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
-    "colorspace": { "enum": ["rgb", "rgba", "grayscale", "grayscaleAlpha", "indexed"], "x-semio-state": "artifact" },
-    "bitDepth": { "type": "integer", "minimum": 0, "maximum": 255, "x-semio-state": "artifact" },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "colorspace": {
+      "enum": [
+        "rgb",
+        "rgba",
+        "grayscale",
+        "grayscaleAlpha",
+        "indexed"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "bitDepth": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-state": "artifact"
+    },
     "frames": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
         "type": "object",
         "properties": {
-          "delayMs": { "type": "integer", "minimum": 0 },
-          "rgba8": { "type": "string", "contentEncoding": "hex" }
+          "delayMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "rgba8": {
+            "type": "string",
+            "contentEncoding": "hex"
+          }
         }
       }
     },
-    "icc": { "type": ["string", "null"], "contentEncoding": "hex", "x-semio-state": "artifact" },
+    "icc": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "contentEncoding": "hex",
+      "x-semio-state": "artifact"
+    },
     "metadata": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
         "type": "object",
-        "properties": { "key": { "type": "string" }, "value": { "type": "string" } }
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
       }
     }
   }

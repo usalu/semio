@@ -16,8 +16,8 @@
 //! value that already matches. This case pins the applied UPDATE of an existing key.
 
 use semio_s_artifact_trinity_jack::PropertyValue;
-use crate::diff::RewritingDiff;
-use crate::mutations::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
 

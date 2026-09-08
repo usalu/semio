@@ -1392,7 +1392,7 @@ function windowEngagementControlToSpec(control: WindowEngagementControl | undefi
   return { ...numeric, kind: "stepper" };
 }
 
-/** 🫀️ Both numbers come from the ONE schema-owned liveness policy (`semio.actor.shard-liveness.v1`,
+/** 🫀️ Both numbers come from the ONE schema-owned liveness policy (`https://semio.tech/schema/framework/actor/shard-client/schema.json#/$defs/ShardClient`,
  * re-exported through `🔌️PluginRuntime`) — never a literal here. `pluginLoadIdleTimeoutMs` is an IDLE
  * budget, not a total one: the deadline is pushed forward every time this plugin's own load reports
  * progress, so a multi-MB wasm component fetching, compiling and instantiating for two minutes on a

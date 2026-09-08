@@ -1,0 +1,100 @@
+import { describe, expect, test } from "bun:test";
+import Ajv from "ajv";
+import { minimatch } from "minimatch";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import ts from "typescript";
+import { inspectTestLayoutSources, repoRootFromHere, testTaxonomy, validateCaseContract, type DiscoveredCase, type OracleRegistry, type TestLayoutFinding, type TestLayoutSource } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import protocol from "../../🧬️schema/🔣️.json";
+import vectors from "./🔣️.json";
+
+type Expected = Readonly<{ code: string; path: string; line: number | null }>;
+type VectorCase = Readonly<{ id: string; sources: readonly TestLayoutSource[]; expected: readonly Expected[] }>;
+
+const identity = (finding: Expected | TestLayoutFinding): Expected => ({ code: finding.code, path: finding.path, line: finding.line });
+const sort = (findings: readonly Expected[]): Expected[] => [...findings].sort((left, right) => left.path.localeCompare(right.path) || left.code.localeCompare(right.code) || (left.line ?? 0) - (right.line ?? 0));
+const taxonomy = testTaxonomy(repoRootFromHere());
+
+describe("📐️ canonical test layout", () => {
+  test("language-neutral vectors satisfy their schema", () => {
+    // 📐️The vector is measured against the OWNING module's export, never a schema beside itself: a case
+    // directory holds examples and never the contract they are examples of.
+    const validate = new Ajv({ allErrors: true, strict: true }).compile(protocol.$defs.TestLayoutCases);
+    expect(validate(vectors)).toBe(true);
+    expect(validate.errors).toBeNull();
+  });
+
+  for (const vector of vectors.cases as readonly VectorCase[]) test(vector.id, () => {
+    expect(sort(inspectTestLayoutSources(taxonomy, vector.sources).map(identity))).toEqual(sort(vector.expected));
+  });
+
+  test("legacy JavaScript suffix classification matches minimatch", () => {
+    const sources = (vectors.cases as readonly VectorCase[]).flatMap((vector) => vector.sources);
+    const findings = inspectTestLayoutSources(taxonomy, sources);
+    for (const path of vectors.filenameOracle.paths) expect(findings.some((finding) => finding.path === path && finding.code === "legacy-test-filename")).toBe(minimatch(path, vectors.filenameOracle.pattern));
+  });
+
+  test("lexical binding classification matches the TypeScript checker", () => {
+    const vector = vectors.cases.find(vector => vector.id === "javascript-lexical-bindings")!;
+    for (const source of vector.sources.filter(source => !/namespace-shadow|modified-register|require-alias|expect-shadow/u.test(source.path))) {
+      const file = ts.createSourceFile(source.path, source.source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+      const options: ts.CompilerOptions = { allowJs: true, noLib: true, noResolve: true };
+      const host = ts.createCompilerHost(options);
+      host.getSourceFile = name => name === source.path ? file : undefined;
+      host.fileExists = name => name === source.path;
+      host.readFile = name => name === source.path ? source.source : undefined;
+      const checker = ts.createProgram([source.path], options, host).getTypeChecker(), registrars = new Set<ts.Declaration>();
+      for (const statement of file.statements) if (ts.isImportDeclaration(statement) && ts.isStringLiteralLike(statement.moduleSpecifier) && taxonomy.testJavaScriptFrameworkModules.includes(statement.moduleSpecifier.text)) {
+        const bindings = statement.importClause?.namedBindings;
+        if (bindings && ts.isNamedImports(bindings)) for (const element of bindings.elements) if ((element.propertyName ?? element.name).text === "test") registrars.add(element);
+      }
+      const lines: number[] = [];
+      const visit = (node: ts.Node): void => {
+        if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
+          const declarations = checker.getSymbolAtLocation(node.expression)?.declarations;
+          if (declarations?.some(declaration => registrars.has(declaration)) || !declarations && node.expression.text === "test") lines.push(file.getLineAndCharacterOfPosition(node.getStart(file)).line + 1);
+        }
+        ts.forEachChild(node, visit);
+      };
+      visit(file);
+      const expected = vector.expected.find(finding => finding.path === source.path)?.line;
+      expect(lines[0]).toBe(expected);
+      expect(inspectTestLayoutSources(taxonomy, [source]).find(finding => finding.code === "inline-test-body")?.line).toBe(lines[0]);
+    }
+  });
+
+  test("feature contracts and implementation paths share the canonical case names", () => {
+    const owner = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test", caseDir = `${owner}/🧪️tests/🖥️host-protocol-parity`;
+    const registry: OracleRegistry = { schemaVersion: 1, oracles: [], probes: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], contributions: [] };
+    const discovered: DiscoveredCase = { owner, ownerName: "test", case: "", caseDir, featurePath: `${caseDir}/🥒️.feature`, adapters: {}, sharedFixtureDir: null, localFixtureDir: null, projectName: "layout-fixture" };
+    const names = new Map<string, boolean>();
+    for (const vector of vectors.cases as readonly VectorCase[]) for (const source of vector.sources) {
+      const name = /\/🧪️tests\/([^/]+)\/🟦️\.ts$/u.exec(source.path)?.[1];
+      if (name) names.set(name, !vector.expected.some(finding => finding.path === source.path && finding.code === "test-case-name"));
+    }
+    for (const [name, accepted] of names) {
+      const findings = validateCaseContract(repoRootFromHere(), { ...discovered, case: name }, registry);
+      expect(findings.every(finding => finding.id !== "case-slug")).toBe(accepted);
+    }
+    for (const vector of vectors.cases as readonly VectorCase[]) for (const finding of vector.expected.filter(finding => finding.code === "test-owner-delivery-scope")) {
+      const sourceOwner = finding.path.slice(0, finding.path.indexOf("/🧪️tests/"));
+      const findings = validateCaseContract(repoRootFromHere(), { ...discovered, owner: sourceOwner, case: "🧪️case" }, registry);
+      expect(findings.some(finding => finding.id === "case-in-delivery-scope")).toBe(true);
+    }
+  });
+
+  test("Nx hashes semantic-owner cases while production excludes them", async () => {
+    const repoRoot = repoRootFromHere(), { cacheInternals } = await import("../../../📚️library/🟨️.mjs");
+    const targetRoot = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust";
+    const owner = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine";
+    const project = JSON.parse(readFileSync(join(repoRoot, targetRoot, "📋️project.json"), "utf8"));
+    const inputs = cacheInternals.projectInputs(project, targetRoot, repoRoot, new Map());
+    expect(inputs.default.some((input: unknown) => typeof input === "string" && input.startsWith(`{workspaceRoot}/${owner}/`))).toBe(true);
+    expect(inputs.production).toContain(`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`);
+    const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", libraryRoot = `${library}/📦️packages/🟦️typescript`;
+    const libraryProject = JSON.parse(readFileSync(join(repoRoot, libraryRoot, "📋️project.json"), "utf8"));
+    const libraryInputs = cacheInternals.projectInputs(libraryProject, libraryRoot, repoRoot, new Map());
+    expect(libraryInputs.default).not.toContain(`!{workspaceRoot}/${library}/**/🧪️tests/**/*`);
+    expect(libraryInputs.production).toContain(`!{workspaceRoot}/${library}/**/🧪️tests/**/*`);
+  });
+});

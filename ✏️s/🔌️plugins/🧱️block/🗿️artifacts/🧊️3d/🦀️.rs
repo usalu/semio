@@ -7,9 +7,24 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_schema as schema;
 
-pub use crate::schema::snapshot::Block3dSnapshot;
+pub use semio_s_artifact_block_2d::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
+
+#[cfg(feature = "component-app-assembly")]
+pub trait ArtifactApps:
+    semio_framework_plugin::PluginApp
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::block3d::Block3dPlayApp>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::block3d::Block3dViewer>>>
+{
+}
+
+#[cfg(feature = "component-app-assembly")]
+impl<PA> ArtifactApps for PA where
+    PA: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::block3d::Block3dPlayApp>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::block3d::Block3dViewer>>>
+{
+}
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
@@ -268,17 +283,8 @@ pub const BLOCK3D_DIALECT: semio_framework_plugin::app::Dialect = semio_framewor
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn artifact_kind_declares_the_3d_block_interchange_kind() {
-        let kind = artifact_kind();
-        assert_eq!(kind.id, "3d.block");
-        assert_eq!(kind.schema, BLOCK_3D_SCHEMA);
-        assert_eq!(kind.component_kind, "block3d");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 //#region 🪪️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
@@ -337,10 +343,10 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `standards::v1::subsets::any::subset()` instead. Mirrors `🗒️note`/`🖍️draw`/`🔱️trinity`'s own
 /// migration exactly.
 #[cfg(feature = "component-app-assembly")]
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::BlockApps> {
+pub fn artifact<PA: crate::ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.block.block3d").expect("canonical block3d kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.block.block3d").expect("canonical block3d kind"), localization: &[], standards: vec![crate::standards::v1::standard::<PA>()] }
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -356,28 +362,28 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "block.block3d",
                     extension: Some("block3d"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("block.block3d"),
                 },
                 dsl::LanguageSpec {
                     id: "block.block3d.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("block.block3d.op"),
                 },
                 dsl::LanguageSpec {
                     id: "block.block3d.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("block.block3d.diff"),
@@ -388,8 +394,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("3d.pack"),
                 },
                 dsl::LanguageSpec {
@@ -398,8 +404,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("3d.spr"),
                 },
             ]
@@ -1133,70 +1139,20 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
             }
         }
 
-        // ---- Shims: keep pre-migration module paths resolving for external callers ----
-        pub mod schema {
-            pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod io {
-            pub use super::standards::v1::subsets::any::io::*;
-        }
-        pub mod op {
-            pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-        }
-        pub mod dsl {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-        }
-        pub mod spr {
-            pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-        }
-        pub mod diff {
-            pub use crate::standards::v1::subsets::any::schema::diff::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::diff::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::diff::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-            }
-        }
-        pub mod mutations {
-            pub use crate::standards::v1::subsets::any::schema::mutations::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::mutations::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-            }
-        }
-        pub mod snapshot {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-            }
-        }
-        pub use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
+                pub use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
         pub use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
         pub use crate::standards::v1::subsets::any::schema::snapshot::Block3dSnapshot;
+
+#[path = "."]
+pub mod examples {
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🦀️.rs"]
+    pub mod art_3d_hexagonal_cut_concrete_forest_left;
+    #[cfg(test)]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🦀️.rs"]
+    mod art_3d_hexagonal_cut_concrete_forest_left_tests;
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🦀️.rs"]
+    pub mod art_3d_nakagin_capsule;
+}
 
 #[cfg(feature = "component-app-assembly")]
 #[path = "."]

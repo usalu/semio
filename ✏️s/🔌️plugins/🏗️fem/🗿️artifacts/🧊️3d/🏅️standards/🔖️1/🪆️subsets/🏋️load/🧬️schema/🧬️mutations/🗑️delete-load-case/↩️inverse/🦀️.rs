@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeleteLoadCase` — recreates the captured load case from `base`.
 use super::DeleteLoadCase;
-use crate::mutations::{create_load_case, Fem3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{create_load_case, Fem3dMutation};
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse

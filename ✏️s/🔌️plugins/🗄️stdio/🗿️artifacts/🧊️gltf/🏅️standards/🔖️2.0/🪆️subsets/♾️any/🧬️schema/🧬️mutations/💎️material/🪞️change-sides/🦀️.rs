@@ -42,18 +42,8 @@ pub fn apply(snapshot: &mut GltfSnapshot, payload: &GltfChangeMaterialDoubleSide
     Ok(())
 }
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[semio_framework_async_macros::async_test]
-    async fn applies_and_rejects_identity() {
-        let mut snapshot = GltfSnapshot::default();
-        snapshot.document.materials.push(Default::default());
-        let payload = GltfChangeMaterialDoubleSidedPayload { material: 0, double_sided: true };
-        apply(&mut snapshot, &payload).unwrap();
-        assert!(snapshot.document.materials[0].double_sided);
-        assert!(apply(&mut snapshot, &payload).is_err());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -98,12 +88,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMateria
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod direct_leaf_tests {
-    use super::*;
-
-    #[test]
-    fn semantic_identity_matches_the_language_neutral_descriptor() {
-        assert_eq!(<ChangeMaterialDoubleSidedMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "change-material-double-sided");
-    }
-}
+#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
+mod direct_leaf_tests;
 //#endregion 🧪️Tests

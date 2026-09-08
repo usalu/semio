@@ -3,8 +3,8 @@
 //! Guards, in the order they run: `mutation.duplicate-id` (Fatal), then the shared
 //! `guards::material_plausibility` elasticity bounds (`mutation.invariant`, Fatal).
 use super::CreateMaterial;
-use crate::diff::{Fem2dDiff, Fem2dMaterialsDelta};
-use crate::mutations::guards;
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dMaterialsDelta};
+use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff

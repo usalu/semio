@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ReplaceSection` — recovers the pre-mutation section from `base`.
 use super::ReplaceSection;
-use crate::mutations::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse

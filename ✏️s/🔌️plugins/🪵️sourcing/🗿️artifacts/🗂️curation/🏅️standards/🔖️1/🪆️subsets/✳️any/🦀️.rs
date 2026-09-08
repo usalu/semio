@@ -22,13 +22,13 @@ fn inference_descriptors() -> &'static [::framework_schema::ArtifactInferenceDes
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset() -> SubsetDeclaration<crate::SourcingApps> {
+pub fn subset<A: crate::SourcingApplication>() -> SubsetDeclaration<A> {
     SubsetDeclaration {
         dialect: SOURCING_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::curation_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::SourcingViewer, crate::SourcingApps>(viewer::create_sourcing_viewer()),
-        editor: editor_surface::<editor::SourcingCurationApp, crate::SourcingApps>(editor::create_sourcing_curation_app()),
+        viewer: viewer_surface::<viewer::SourcingViewer, A>(viewer::create_sourcing_viewer()),
+        editor: editor_surface::<editor::SourcingCurationApp, A>(editor::create_sourcing_curation_app()),
         examples: examples(),
     }
 }

@@ -55,7 +55,7 @@ function oracle(supported: readonly Token[], unsupported: readonly Token[]): rea
 }
 
 test("reference coverage selection has a closed neutral contract and every adapter", () => {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8")));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🛂️schema/🔣️.json"), "utf8")));
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
   for (const bad of [{ ...vector, extra: true }, { ...vector, schemaVersion: 2 }, { ...vector, scale: { ...vector.scale, expectedCoverageCalls: 1 } }]) expect(validate(bad)).toBe(false);
   const errors: ParseError[] = [];

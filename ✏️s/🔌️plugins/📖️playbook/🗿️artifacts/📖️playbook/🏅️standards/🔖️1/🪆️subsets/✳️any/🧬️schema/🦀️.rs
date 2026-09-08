@@ -270,14 +270,8 @@ pub fn default_block(id: String, kind: &str) -> crate::PlaybookBlock {
 }
 
 #[cfg(test)]
-mod document_helpers_tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn default_block_sets_kind_and_label() {
-        assert_eq!(default_block("b1".into(), "text").kind, "text");
-    }
-}
+#[path = "🧪️tests/🔬️document-helpers/🦀️.rs"]
+mod document_helpers_tests;
 //#endregion 🔖️DocumentHelpers
 
 //#region 🧬️DerivedArtifactFacets

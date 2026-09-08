@@ -27,12 +27,6 @@ impl MutationKind<Gis2dConfig, Gis2dConfigMutation> for SetRenderMode {
 
 //#region 🧪️Contracts
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn direct_payload_metadata_codecs_and_inverse_match_the_neutral_fixture() {
-        super::super::super::direct_mutation_tests::assert_leaf::<SetRenderMode>(3, Gis2dConfigMutation::SetRenderMode, include_str!("🔣️.json"));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Contracts

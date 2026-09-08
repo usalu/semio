@@ -12,16 +12,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use crate::artifact::*;
 use crate::widget_id_for;
 use crate::retained::{FlowOwner, FlowRetirement};
-use protocol::value::ordered::{Grant as LayoutGrant, UpdateCursor as LayoutUpdate};
 
 // #region 🔖️ArtifactVcs
-// 🧾️ `create_document_envelope`/`ArtifactCommand` are unconditional (not test/wasm-only)
-// because `FlowHost`'s own undo/redo (see `impl FlowHost`'s `🔖️History` region) dispatches through
-// them in every build.
 use crate::os_spr::{Identified, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
 #[cfg(test)]
 use crate::os_spr::{ArtifactId, Edit, SchemaId};
-#[cfg(any(target_arch = "wasm32", test))]
 #[cfg(test)]
 use crate::os_store::create_document_envelope;
 #[cfg(test)]
@@ -92,39 +87,13 @@ fn flow_native_index(index: u32, length: usize) -> MutationApplyResult<usize> {
 }
 
 /// 🧱️ Structural collection edits retain insertion positions independently of mutation payloads.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct FlowCollectionDelta<T> {
     pub removed: Vec<String>,
     pub inserted: Vec<(u32, T)>,
     pub replaced: Vec<(String, T)>,
-}
-
-/// 🌉️ Hand-written: generic structs are a shape `#[derive(ToValue, FromValue)]` cannot express.
-impl<T: crate::os_dsl::ToValue> crate::os_dsl::ToValue for FlowCollectionDelta<T> {
-    fn to_value(&self) -> crate::os_dsl::DslValue {
-        crate::os_dsl::DslValue::Object(vec![
-            ("removed".into(), crate::os_dsl::ToValue::to_value(&self.removed)),
-            ("inserted".into(), crate::os_dsl::ToValue::to_value(&self.inserted)),
-            ("replaced".into(), crate::os_dsl::ToValue::to_value(&self.replaced)),
-        ])
-    }
-}
-
-impl<T: crate::os_dsl::FromValue> crate::os_dsl::FromValue for FlowCollectionDelta<T> {
-    fn from_value(value: crate::os_dsl::DslValue) -> Result<Self, crate::os_dsl::ValueError> {
-        let crate::os_dsl::DslValue::Object(entries) = &value else { return Err(crate::os_dsl::ValueError::new("expected an object for FlowCollectionDelta")) };
-        for (key, _) in entries {
-            if !matches!(key.as_str(), "removed" | "inserted" | "replaced") {
-                return Err(crate::os_dsl::ValueError::new(format!("unknown field `{key}`")));
-            }
-        }
-        Ok(Self {
-            removed: value.get("removed").cloned().map(crate::os_dsl::FromValue::from_value).transpose().map_err(|error: crate::os_dsl::ValueError| error.under("removed"))?.unwrap_or_default(),
-            inserted: value.get("inserted").cloned().map(crate::os_dsl::FromValue::from_value).transpose().map_err(|error: crate::os_dsl::ValueError| error.under("inserted"))?.unwrap_or_default(),
-            replaced: value.get("replaced").cloned().map(crate::os_dsl::FromValue::from_value).transpose().map_err(|error: crate::os_dsl::ValueError| error.under("replaced"))?.unwrap_or_default(),
-        })
-    }
 }
 
 /// ▶️ Validates one structural fragment without copying or dropping its payload owners.
@@ -782,4 +751,3 @@ impl MemberStoreOwner<FlowMutation> for FlowFixture {
 pub fn empty_flow_snapshot() -> FlowFixture {
     FlowFixture::default()
 }
-

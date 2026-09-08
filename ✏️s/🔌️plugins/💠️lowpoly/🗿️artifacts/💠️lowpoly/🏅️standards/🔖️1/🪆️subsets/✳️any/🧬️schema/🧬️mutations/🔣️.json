@@ -1,78 +1,59 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/mutations.json",
   "title": "LowpolyMutation",
   "description": "Seventeen-variant mutation dispatch envelope — real facet mirror of the Rust `LowpolyMutation` enum (`dsl::Mutations`-derived). serde's default externally-tagged representation: exactly one key, the PascalCase Rust variant name, whose value is that variant's payload — confirmed against every mutation family's committed `🧪️tests/…/🦠️mutation/🔣️.json` fixture. Each branch references its sibling `<mutation>/🧬️schema/🔣️.json` leaf rather than duplicating it.",
   "oneOf": [
     {
-      "$ref": "./🔘️change-object-smooth-shading/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/change-object-smooth-shading/schema.json"
     },
     {
-      "$ref": "./🎛️change-paint-layer-blend-mode/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/change-paint-layer-blend-mode/schema.json"
     },
     {
-      "$ref": "./🌫️change-paint-layer-opacity/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/change-paint-layer-opacity/schema.json"
     },
     {
-      "$ref": "./👁️change-paint-layer-visible/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/change-paint-layer-visible/schema.json"
     },
     {
-      "$ref": "./🕸️create-mesh/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/create-mesh/schema.json"
     },
     {
-      "$ref": "./🌱️create-object/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/create-object/schema.json"
     },
     {
-      "$ref": "./🧨delete-mesh/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/delete-mesh/schema.json"
     },
     {
-      "$ref": "./💀️delete-object/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/delete-object/schema.json"
     },
     {
-      "$ref": "./🎨️edit-paint-layer/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/edit-paint-layer/schema.json"
     },
     {
-      "$ref": "./➕️insert-paint-layer/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/insert-paint-layer/schema.json"
     },
     {
-      "$ref": "./↗️move-object/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/move-object/schema.json"
     },
     {
-      "$ref": "./➖️remove-paint-layer/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/remove-paint-layer/schema.json"
     },
     {
-      "$ref": "./🏷️rename-object/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/rename-object/schema.json"
     },
     {
-      "$ref": "./🔖️rename-paint-layer/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/rename-paint-layer/schema.json"
     },
     {
-      "$ref": "./🔀️reorder-objects/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/reorder-objects/schema.json"
     },
     {
-      "$ref": "./🔄️rotate-object/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/rotate-object/schema.json"
     },
     {
-      "$ref": "./📐️scale-object/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/scale-object/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-object-smooth-shading",
-    "change-paint-layer-blend-mode",
-    "change-paint-layer-opacity",
-    "change-paint-layer-visible",
-    "create-mesh",
-    "create-object",
-    "delete-mesh",
-    "delete-object",
-    "edit-paint-layer",
-    "insert-paint-layer",
-    "move-object",
-    "remove-paint-layer",
-    "rename-object",
-    "rename-paint-layer",
-    "reorder-objects",
-    "rotate-object",
-    "scale-object"
   ]
 }

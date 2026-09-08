@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteWidget` — recreates the removed widget at its captured BASE index, or a
 //! no-op (`Vec::new()`) when the id was already absent.
 
-use crate::mutations::{create_widget, Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{create_widget, Generation2dMutation};
 use crate::{widget_id, Generation2dSnapshot};
 
 pub fn inverse(payload: &super::DeleteWidget, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {

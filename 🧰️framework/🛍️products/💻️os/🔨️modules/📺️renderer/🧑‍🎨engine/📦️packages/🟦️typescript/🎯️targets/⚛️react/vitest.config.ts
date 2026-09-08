@@ -1,6 +1,6 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(root, "../../../../../../../../../..");
@@ -11,6 +11,8 @@ const includeBackboneWorker = process.env.SEMIO_INCLUDE_BACKBONE_WORKER === "1";
 const includeAgentBridge = process.env.SEMIO_INCLUDE_AGENT_BRIDGE === "1";
 const backboneWorkerSuite = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts");
 const engineTestSuites = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/*/🟦️.{ts,tsx}");
+const playwrightEngineTestSuites = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📚️storybook-hosts-*/🟦️.ts");
+const rootPolicySelfTestSuites = ["interactivity-live-reconcile", "interactivity-mounted-engine-surface-lifetime", "interactivity-mounted-frame-transaction"].map((id) => resolve(repoRoot, `./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️${id}/🟦️.ts`));
 const quickTestSuite = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚡️quick/🟦️.ts");
 const agentBridgeTestSuite = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️tests/🧩️component/🟦️.ts");
 const longInSourceSuites = [
@@ -45,6 +47,7 @@ export default defineConfig({
     name: "@semio-tech/framework-renderer-react",
     environment: "jsdom",
     coverage: { include: ["index.tsx"] },
+    exclude: [...configDefaults.exclude, playwrightEngineTestSuites, ...rootPolicySelfTestSuites],
     include: includeAgentBridge ? [agentBridgeTestSuite] : testLevel === "fundamental" || testLevel === "quick" ? [quickTestSuite] : [engineTestSuites],
     testNamePattern: testLevel === "fundamental" ? /validates the language-neutral renderer resident capacity with the Node oracle/ : undefined,
     // 🧪️ In-source (`import.meta.vitest`) suites in the `🧑‍🎨engine/🧱️elements/` co-location dirs —

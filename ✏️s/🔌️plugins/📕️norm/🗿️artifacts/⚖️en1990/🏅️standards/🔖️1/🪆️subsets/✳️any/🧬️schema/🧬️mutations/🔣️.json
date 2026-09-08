@@ -1,49 +1,37 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1990/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/norm/en1990/mutations.json",
   "title": "En1990Mutation",
   "oneOf": [
     {
-      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1990/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "./⚠️change-consequence-class/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1990/mutation/change-consequence-class/schema.json"
     },
     {
-      "$ref": "./⚓️change-permanent-action/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1990/mutation/change-permanent-action/schema.json"
     },
     {
-      "$ref": "./🛡️change-resistance/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1990/mutation/change-resistance/schema.json"
     },
     {
-      "$ref": "./🌋️change-seismic-action/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1990/mutation/change-seismic-action/schema.json"
     },
     {
-      "$ref": "./🏷️change-variable-action-category/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1990/mutation/change-variable-action-category/schema.json"
     },
     {
-      "$ref": "./🏋️change-variable-action-value/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1990/mutation/change-variable-action-value/schema.json"
     },
     {
-      "$ref": "./➕️insert-variable-action/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1990/mutation/insert-variable-action/schema.json"
     },
     {
-      "$ref": "./🗑️remove-variable-action/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1990/mutation/remove-variable-action/schema.json"
     },
     {
-      "$ref": "./🔀️reorder-variable-actions/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1990/mutation/reorder-variable-actions/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-annex",
-    "change-consequence-class",
-    "change-permanent-action",
-    "change-resistance",
-    "change-seismic-action",
-    "change-variable-action-category",
-    "change-variable-action-value",
-    "insert-variable-action",
-    "remove-variable-action",
-    "reorder-variable-actions"
   ]
 }

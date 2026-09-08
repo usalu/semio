@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/din16798/1/any/mutation/change-bedrooms/schema.json",
+  "$id": "https://semio.tech/schema/s/norm/din16798/mutation/change-bedrooms/schema.json",
   "title": "ChangeBedrooms",
   "type": "object",
   "additionalProperties": false,

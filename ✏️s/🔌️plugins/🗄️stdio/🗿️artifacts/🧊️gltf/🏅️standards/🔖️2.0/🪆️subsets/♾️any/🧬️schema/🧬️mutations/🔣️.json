@@ -16,7 +16,7 @@
           "const": "createAccessor"
         },
         "payload": {
-          "$ref": "./📐️accessor/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-accessor/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "deleteAccessor"
         },
         "payload": {
-          "$ref": "./📐️accessor/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-accessor/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "moveAccessor"
         },
         "payload": {
-          "$ref": "./📐️accessor/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-accessor/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "reorderAccessors"
         },
         "payload": {
-          "$ref": "./📐️accessor/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-accessors/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "createAnimation"
         },
         "payload": {
-          "$ref": "./🎞️animation/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-animation/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
           "const": "deleteAnimation"
         },
         "payload": {
-          "$ref": "./🎞️animation/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-animation/schema.json"
         }
       }
     },
@@ -112,7 +112,7 @@
           "const": "moveAnimation"
         },
         "payload": {
-          "$ref": "./🎞️animation/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-animation/schema.json"
         }
       }
     },
@@ -128,7 +128,7 @@
           "const": "reorderAnimations"
         },
         "payload": {
-          "$ref": "./🎞️animation/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-animations/schema.json"
         }
       }
     },
@@ -144,7 +144,7 @@
           "const": "changeAssetDescriptiveMetadata"
         },
         "payload": {
-          "$ref": "./🪪️asset/📝️change-description/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-asset-descriptive-metadata/schema.json"
         }
       }
     },
@@ -160,7 +160,7 @@
           "const": "changeAssetExtensionData"
         },
         "payload": {
-          "$ref": "./🪪️asset/🧩️change-extensions/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-asset-extension-data/schema.json"
         }
       }
     },
@@ -176,7 +176,7 @@
           "const": "changeAssetExtraData"
         },
         "payload": {
-          "$ref": "./🪪️asset/🧾️change-extras/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-asset-extra-data/schema.json"
         }
       }
     },
@@ -192,7 +192,7 @@
           "const": "changeAssetVersion"
         },
         "payload": {
-          "$ref": "./🪪️asset/🔖️version/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-asset-version/schema.json"
         }
       }
     },
@@ -208,7 +208,7 @@
           "const": "createBufferView"
         },
         "payload": {
-          "$ref": "./🪟️buffer-view/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-buffer-view/schema.json"
         }
       }
     },
@@ -224,7 +224,7 @@
           "const": "deleteBufferView"
         },
         "payload": {
-          "$ref": "./🪟️buffer-view/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-buffer-view/schema.json"
         }
       }
     },
@@ -240,7 +240,7 @@
           "const": "moveBufferView"
         },
         "payload": {
-          "$ref": "./🪟️buffer-view/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-buffer-view/schema.json"
         }
       }
     },
@@ -256,7 +256,7 @@
           "const": "reorderBufferViews"
         },
         "payload": {
-          "$ref": "./🪟️buffer-view/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-buffer-views/schema.json"
         }
       }
     },
@@ -272,7 +272,7 @@
           "const": "createBuffer"
         },
         "payload": {
-          "$ref": "./💿️buffer/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-buffer/schema.json"
         }
       }
     },
@@ -288,7 +288,7 @@
           "const": "deleteBuffer"
         },
         "payload": {
-          "$ref": "./💿️buffer/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-buffer/schema.json"
         }
       }
     },
@@ -304,7 +304,7 @@
           "const": "moveBuffer"
         },
         "payload": {
-          "$ref": "./💿️buffer/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-buffer/schema.json"
         }
       }
     },
@@ -320,7 +320,7 @@
           "const": "reorderBuffers"
         },
         "payload": {
-          "$ref": "./💿️buffer/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-buffers/schema.json"
         }
       }
     },
@@ -336,7 +336,7 @@
           "const": "createCamera"
         },
         "payload": {
-          "$ref": "./🎥️camera/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-camera/schema.json"
         }
       }
     },
@@ -352,7 +352,7 @@
           "const": "deleteCamera"
         },
         "payload": {
-          "$ref": "./🎥️camera/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-camera/schema.json"
         }
       }
     },
@@ -368,7 +368,7 @@
           "const": "moveCamera"
         },
         "payload": {
-          "$ref": "./🎥️camera/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-camera/schema.json"
         }
       }
     },
@@ -384,7 +384,7 @@
           "const": "reorderCameras"
         },
         "payload": {
-          "$ref": "./🎥️camera/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-cameras/schema.json"
         }
       }
     },
@@ -400,7 +400,7 @@
           "const": "bindDefaultScene"
         },
         "payload": {
-          "$ref": "./🏠️default-scene/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-default-scene/schema.json"
         }
       }
     },
@@ -416,7 +416,7 @@
           "const": "unbindDefaultScene"
         },
         "payload": {
-          "$ref": "./🏠️default-scene/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-default-scene/schema.json"
         }
       }
     },
@@ -432,7 +432,7 @@
           "const": "changeDocumentExtensionData"
         },
         "payload": {
-          "$ref": "./📃️document/🧩️change-extensions/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-document-extension-data/schema.json"
         }
       }
     },
@@ -448,7 +448,7 @@
           "const": "changeDocumentExtraData"
         },
         "payload": {
-          "$ref": "./📃️document/📝️change-extras/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-document-extra-data/schema.json"
         }
       }
     },
@@ -464,7 +464,7 @@
           "const": "createImage"
         },
         "payload": {
-          "$ref": "./🖼️image/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-image/schema.json"
         }
       }
     },
@@ -480,7 +480,7 @@
           "const": "deleteImage"
         },
         "payload": {
-          "$ref": "./🖼️image/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-image/schema.json"
         }
       }
     },
@@ -496,7 +496,7 @@
           "const": "moveImage"
         },
         "payload": {
-          "$ref": "./🖼️image/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-image/schema.json"
         }
       }
     },
@@ -512,7 +512,7 @@
           "const": "reorderImages"
         },
         "payload": {
-          "$ref": "./🖼️image/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-images/schema.json"
         }
       }
     },
@@ -528,7 +528,7 @@
           "const": "changeMaterialAlphaMode"
         },
         "payload": {
-          "$ref": "./💎️material/🌫️change-alpha/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-material-alpha-mode/schema.json"
         }
       }
     },
@@ -544,7 +544,7 @@
           "const": "changeMaterialDoubleSided"
         },
         "payload": {
-          "$ref": "./💎️material/🪞️change-sides/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-material-double-sided/schema.json"
         }
       }
     },
@@ -560,7 +560,7 @@
           "const": "createMaterial"
         },
         "payload": {
-          "$ref": "./💎️material/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-material/schema.json"
         }
       }
     },
@@ -576,7 +576,7 @@
           "const": "deleteMaterial"
         },
         "payload": {
-          "$ref": "./💎️material/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-material/schema.json"
         }
       }
     },
@@ -592,7 +592,7 @@
           "const": "moveMaterial"
         },
         "payload": {
-          "$ref": "./💎️material/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-material/schema.json"
         }
       }
     },
@@ -608,7 +608,7 @@
           "const": "reorderMaterials"
         },
         "payload": {
-          "$ref": "./💎️material/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-materials/schema.json"
         }
       }
     },
@@ -624,7 +624,7 @@
           "const": "changeMeshExtensionData"
         },
         "payload": {
-          "$ref": "./🕸️mesh/🧩️change-extensions/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-mesh-extension-data/schema.json"
         }
       }
     },
@@ -640,7 +640,7 @@
           "const": "changeMeshExtraData"
         },
         "payload": {
-          "$ref": "./🕸️mesh/📝️change-extras/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-mesh-extra-data/schema.json"
         }
       }
     },
@@ -656,7 +656,7 @@
           "const": "changeMeshMorphWeights"
         },
         "payload": {
-          "$ref": "./🕸️mesh/⚖️change-weights/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-mesh-morph-weights/schema.json"
         }
       }
     },
@@ -672,7 +672,7 @@
           "const": "createMesh"
         },
         "payload": {
-          "$ref": "./🕸️mesh/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-mesh/schema.json"
         }
       }
     },
@@ -688,7 +688,7 @@
           "const": "deleteMesh"
         },
         "payload": {
-          "$ref": "./🕸️mesh/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-mesh/schema.json"
         }
       }
     },
@@ -704,7 +704,7 @@
           "const": "moveMesh"
         },
         "payload": {
-          "$ref": "./🕸️mesh/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-mesh/schema.json"
         }
       }
     },
@@ -720,7 +720,7 @@
           "const": "changeMeshName"
         },
         "payload": {
-          "$ref": "./🕸️mesh/🏷️rename/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-mesh-name/schema.json"
         }
       }
     },
@@ -736,7 +736,7 @@
           "const": "reorderMeshs"
         },
         "payload": {
-          "$ref": "./🕸️mesh/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-meshs/schema.json"
         }
       }
     },
@@ -752,7 +752,7 @@
           "const": "bindMorphTargetAttribute"
         },
         "payload": {
-          "$ref": "./🎚️morph-attribute/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-morph-target-attribute/schema.json"
         }
       }
     },
@@ -768,7 +768,7 @@
           "const": "moveMorphTargetAttribute"
         },
         "payload": {
-          "$ref": "./🎚️morph-attribute/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-morph-target-attribute/schema.json"
         }
       }
     },
@@ -784,7 +784,7 @@
           "const": "reorderMorphTargetAttributes"
         },
         "payload": {
-          "$ref": "./🎚️morph-attribute/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-morph-target-attributes/schema.json"
         }
       }
     },
@@ -800,7 +800,7 @@
           "const": "unbindMorphTargetAttribute"
         },
         "payload": {
-          "$ref": "./🎚️morph-attribute/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-morph-target-attribute/schema.json"
         }
       }
     },
@@ -816,7 +816,7 @@
           "const": "createMorphTarget"
         },
         "payload": {
-          "$ref": "./🧬️morph-target/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-morph-target/schema.json"
         }
       }
     },
@@ -832,7 +832,7 @@
           "const": "deleteMorphTarget"
         },
         "payload": {
-          "$ref": "./🧬️morph-target/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-morph-target/schema.json"
         }
       }
     },
@@ -848,7 +848,7 @@
           "const": "moveMorphTarget"
         },
         "payload": {
-          "$ref": "./🧬️morph-target/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-morph-target/schema.json"
         }
       }
     },
@@ -864,7 +864,7 @@
           "const": "reorderMorphTargets"
         },
         "payload": {
-          "$ref": "./🧬️morph-target/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-morph-targets/schema.json"
         }
       }
     },
@@ -880,7 +880,7 @@
           "const": "bindNodeCamera"
         },
         "payload": {
-          "$ref": "./📷️node-camera/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-node-camera/schema.json"
         }
       }
     },
@@ -896,7 +896,7 @@
           "const": "unbindNodeCamera"
         },
         "payload": {
-          "$ref": "./📷️node-camera/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-node-camera/schema.json"
         }
       }
     },
@@ -912,7 +912,7 @@
           "const": "bindNodeChild"
         },
         "payload": {
-          "$ref": "./🌿️node-child/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-node-child/schema.json"
         }
       }
     },
@@ -928,7 +928,7 @@
           "const": "moveNodeChild"
         },
         "payload": {
-          "$ref": "./🌿️node-child/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-node-child/schema.json"
         }
       }
     },
@@ -944,7 +944,7 @@
           "const": "reorderNodeChildren"
         },
         "payload": {
-          "$ref": "./🌿️node-child/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-node-children/schema.json"
         }
       }
     },
@@ -960,7 +960,7 @@
           "const": "unbindNodeChild"
         },
         "payload": {
-          "$ref": "./🌿️node-child/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-node-child/schema.json"
         }
       }
     },
@@ -976,7 +976,7 @@
           "const": "bindNodeMesh"
         },
         "payload": {
-          "$ref": "./🏗️node-mesh/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-node-mesh/schema.json"
         }
       }
     },
@@ -992,7 +992,7 @@
           "const": "unbindNodeMesh"
         },
         "payload": {
-          "$ref": "./🏗️node-mesh/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-node-mesh/schema.json"
         }
       }
     },
@@ -1008,7 +1008,7 @@
           "const": "bindNodeSkin"
         },
         "payload": {
-          "$ref": "./🩻️node-skin/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-node-skin/schema.json"
         }
       }
     },
@@ -1024,7 +1024,7 @@
           "const": "unbindNodeSkin"
         },
         "payload": {
-          "$ref": "./🩻️node-skin/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-node-skin/schema.json"
         }
       }
     },
@@ -1040,7 +1040,7 @@
           "const": "changeNodeExtensionData"
         },
         "payload": {
-          "$ref": "./🌳️node/🧩️change-extensions/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-node-extension-data/schema.json"
         }
       }
     },
@@ -1056,7 +1056,7 @@
           "const": "changeNodeExtraData"
         },
         "payload": {
-          "$ref": "./🌳️node/📝️change-extras/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-node-extra-data/schema.json"
         }
       }
     },
@@ -1072,7 +1072,7 @@
           "const": "changeNodeMorphWeights"
         },
         "payload": {
-          "$ref": "./🌳️node/⚖️change-weights/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-node-morph-weights/schema.json"
         }
       }
     },
@@ -1088,7 +1088,7 @@
           "const": "createNode"
         },
         "payload": {
-          "$ref": "./🌳️node/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-node/schema.json"
         }
       }
     },
@@ -1104,7 +1104,7 @@
           "const": "deleteNode"
         },
         "payload": {
-          "$ref": "./🌳️node/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-node/schema.json"
         }
       }
     },
@@ -1120,7 +1120,7 @@
           "const": "moveNode"
         },
         "payload": {
-          "$ref": "./🌳️node/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-node/schema.json"
         }
       }
     },
@@ -1136,7 +1136,7 @@
           "const": "changeNodeName"
         },
         "payload": {
-          "$ref": "./🌳️node/🏷️rename/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-node-name/schema.json"
         }
       }
     },
@@ -1152,7 +1152,7 @@
           "const": "reorderNodes"
         },
         "payload": {
-          "$ref": "./🌳️node/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-nodes/schema.json"
         }
       }
     },
@@ -1168,7 +1168,7 @@
           "const": "moveNodeParent"
         },
         "payload": {
-          "$ref": "./🌳️node/🌿️reparent/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-node-parent/schema.json"
         }
       }
     },
@@ -1184,7 +1184,7 @@
           "const": "changeNodeTransform"
         },
         "payload": {
-          "$ref": "./🌳️node/📐️transform/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-node-transform/schema.json"
         }
       }
     },
@@ -1200,7 +1200,7 @@
           "const": "bindPrimitiveAttribute"
         },
         "payload": {
-          "$ref": "./🔤️primitive-attribute/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-primitive-attribute/schema.json"
         }
       }
     },
@@ -1216,7 +1216,7 @@
           "const": "movePrimitiveAttribute"
         },
         "payload": {
-          "$ref": "./🔤️primitive-attribute/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-primitive-attribute/schema.json"
         }
       }
     },
@@ -1232,7 +1232,7 @@
           "const": "reorderPrimitiveAttributes"
         },
         "payload": {
-          "$ref": "./🔤️primitive-attribute/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-primitive-attributes/schema.json"
         }
       }
     },
@@ -1248,7 +1248,7 @@
           "const": "unbindPrimitiveAttribute"
         },
         "payload": {
-          "$ref": "./🔤️primitive-attribute/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-primitive-attribute/schema.json"
         }
       }
     },
@@ -1264,7 +1264,7 @@
           "const": "bindPrimitiveIndices"
         },
         "payload": {
-          "$ref": "./🔢️primitive-indices/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-primitive-indices/schema.json"
         }
       }
     },
@@ -1280,7 +1280,7 @@
           "const": "unbindPrimitiveIndices"
         },
         "payload": {
-          "$ref": "./🔢️primitive-indices/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-primitive-indices/schema.json"
         }
       }
     },
@@ -1296,7 +1296,7 @@
           "const": "bindPrimitiveMaterial"
         },
         "payload": {
-          "$ref": "./🧱️primitive-material/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-primitive-material/schema.json"
         }
       }
     },
@@ -1312,7 +1312,7 @@
           "const": "unbindPrimitiveMaterial"
         },
         "payload": {
-          "$ref": "./🧱️primitive-material/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-primitive-material/schema.json"
         }
       }
     },
@@ -1328,7 +1328,7 @@
           "const": "changePrimitiveExtensionData"
         },
         "payload": {
-          "$ref": "./🔺️primitive/🧩️change-extensions/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-primitive-extension-data/schema.json"
         }
       }
     },
@@ -1344,7 +1344,7 @@
           "const": "changePrimitiveExtraData"
         },
         "payload": {
-          "$ref": "./🔺️primitive/📝️change-extras/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-primitive-extra-data/schema.json"
         }
       }
     },
@@ -1360,7 +1360,7 @@
           "const": "changePrimitiveTopologyMode"
         },
         "payload": {
-          "$ref": "./🔺️primitive/📐️change-topology/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-primitive-topology-mode/schema.json"
         }
       }
     },
@@ -1376,7 +1376,7 @@
           "const": "createPrimitive"
         },
         "payload": {
-          "$ref": "./🔺️primitive/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-primitive/schema.json"
         }
       }
     },
@@ -1392,7 +1392,7 @@
           "const": "deletePrimitive"
         },
         "payload": {
-          "$ref": "./🔺️primitive/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-primitive/schema.json"
         }
       }
     },
@@ -1408,7 +1408,7 @@
           "const": "movePrimitive"
         },
         "payload": {
-          "$ref": "./🔺️primitive/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-primitive/schema.json"
         }
       }
     },
@@ -1424,7 +1424,7 @@
           "const": "reorderPrimitives"
         },
         "payload": {
-          "$ref": "./🔺️primitive/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-primitives/schema.json"
         }
       }
     },
@@ -1440,7 +1440,7 @@
           "const": "addRequiredExtension"
         },
         "payload": {
-          "$ref": "./✅️required-extension/➕️add/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/add-required-extension/schema.json"
         }
       }
     },
@@ -1456,7 +1456,7 @@
           "const": "moveRequiredExtension"
         },
         "payload": {
-          "$ref": "./✅️required-extension/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-required-extension/schema.json"
         }
       }
     },
@@ -1472,7 +1472,7 @@
           "const": "removeRequiredExtension"
         },
         "payload": {
-          "$ref": "./✅️required-extension/➖️remove/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/remove-required-extension/schema.json"
         }
       }
     },
@@ -1488,7 +1488,7 @@
           "const": "reorderRequiredExtensions"
         },
         "payload": {
-          "$ref": "./✅️required-extension/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-required-extensions/schema.json"
         }
       }
     },
@@ -1504,7 +1504,7 @@
           "const": "createSampler"
         },
         "payload": {
-          "$ref": "./🎛️sampler/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-sampler/schema.json"
         }
       }
     },
@@ -1520,7 +1520,7 @@
           "const": "deleteSampler"
         },
         "payload": {
-          "$ref": "./🎛️sampler/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-sampler/schema.json"
         }
       }
     },
@@ -1536,7 +1536,7 @@
           "const": "moveSampler"
         },
         "payload": {
-          "$ref": "./🎛️sampler/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-sampler/schema.json"
         }
       }
     },
@@ -1552,7 +1552,7 @@
           "const": "reorderSamplers"
         },
         "payload": {
-          "$ref": "./🎛️sampler/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-samplers/schema.json"
         }
       }
     },
@@ -1568,7 +1568,7 @@
           "const": "bindSceneRootNode"
         },
         "payload": {
-          "$ref": "./🌲️scene-root/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-scene-root-node/schema.json"
         }
       }
     },
@@ -1584,7 +1584,7 @@
           "const": "moveSceneRootNode"
         },
         "payload": {
-          "$ref": "./🌲️scene-root/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-scene-root-node/schema.json"
         }
       }
     },
@@ -1600,7 +1600,7 @@
           "const": "reorderSceneRootNodes"
         },
         "payload": {
-          "$ref": "./🌲️scene-root/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-scene-root-nodes/schema.json"
         }
       }
     },
@@ -1616,7 +1616,7 @@
           "const": "unbindSceneRootNode"
         },
         "payload": {
-          "$ref": "./🌲️scene-root/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-scene-root-node/schema.json"
         }
       }
     },
@@ -1632,7 +1632,7 @@
           "const": "changeSceneExtensionData"
         },
         "payload": {
-          "$ref": "./🎬️scene/🧩️change-extensions/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-scene-extension-data/schema.json"
         }
       }
     },
@@ -1648,7 +1648,7 @@
           "const": "changeSceneExtraData"
         },
         "payload": {
-          "$ref": "./🎬️scene/📝️change-extras/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-scene-extra-data/schema.json"
         }
       }
     },
@@ -1664,7 +1664,7 @@
           "const": "createScene"
         },
         "payload": {
-          "$ref": "./🎬️scene/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-scene/schema.json"
         }
       }
     },
@@ -1680,7 +1680,7 @@
           "const": "deleteScene"
         },
         "payload": {
-          "$ref": "./🎬️scene/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-scene/schema.json"
         }
       }
     },
@@ -1696,7 +1696,7 @@
           "const": "moveScene"
         },
         "payload": {
-          "$ref": "./🎬️scene/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-scene/schema.json"
         }
       }
     },
@@ -1712,7 +1712,7 @@
           "const": "changeSceneName"
         },
         "payload": {
-          "$ref": "./🎬️scene/🏷️rename/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-scene-name/schema.json"
         }
       }
     },
@@ -1728,7 +1728,7 @@
           "const": "reorderScenes"
         },
         "payload": {
-          "$ref": "./🎬️scene/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-scenes/schema.json"
         }
       }
     },
@@ -1744,7 +1744,7 @@
           "const": "createSkin"
         },
         "payload": {
-          "$ref": "./🦴️skin/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-skin/schema.json"
         }
       }
     },
@@ -1760,7 +1760,7 @@
           "const": "deleteSkin"
         },
         "payload": {
-          "$ref": "./🦴️skin/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-skin/schema.json"
         }
       }
     },
@@ -1776,7 +1776,7 @@
           "const": "moveSkin"
         },
         "payload": {
-          "$ref": "./🦴️skin/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-skin/schema.json"
         }
       }
     },
@@ -1792,7 +1792,7 @@
           "const": "reorderSkins"
         },
         "payload": {
-          "$ref": "./🦴️skin/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-skins/schema.json"
         }
       }
     },
@@ -1808,7 +1808,7 @@
           "const": "createTexture"
         },
         "payload": {
-          "$ref": "./🎨️texture/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-texture/schema.json"
         }
       }
     },
@@ -1824,7 +1824,7 @@
           "const": "deleteTexture"
         },
         "payload": {
-          "$ref": "./🎨️texture/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-texture/schema.json"
         }
       }
     },
@@ -1840,7 +1840,7 @@
           "const": "moveTexture"
         },
         "payload": {
-          "$ref": "./🎨️texture/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-texture/schema.json"
         }
       }
     },
@@ -1856,7 +1856,7 @@
           "const": "reorderTextures"
         },
         "payload": {
-          "$ref": "./🎨️texture/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-textures/schema.json"
         }
       }
     },
@@ -1872,7 +1872,7 @@
           "const": "addUsedExtension"
         },
         "payload": {
-          "$ref": "./📣️used-extension/➕️add/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/add-used-extension/schema.json"
         }
       }
     },
@@ -1888,7 +1888,7 @@
           "const": "moveUsedExtension"
         },
         "payload": {
-          "$ref": "./📣️used-extension/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-used-extension/schema.json"
         }
       }
     },
@@ -1904,7 +1904,7 @@
           "const": "removeUsedExtension"
         },
         "payload": {
-          "$ref": "./📣️used-extension/➖️remove/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/remove-used-extension/schema.json"
         }
       }
     },
@@ -1920,7 +1920,7 @@
           "const": "reorderUsedExtensions"
         },
         "payload": {
-          "$ref": "./📣️used-extension/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-used-extensions/schema.json"
         }
       }
     }

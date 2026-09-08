@@ -7,7 +7,6 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as schema;
-extern crate self as semio_s_artifact_demonstrator_playground;
 
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
@@ -89,9 +88,9 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::standards::v1::subsets::any::schema::playground_artifact_schema_descriptor())
-        .inferences([crate::standards::v1::subsets::any::schema::inferences::playground_artifact_inference_descriptor()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
+        .schema(standards::v1::subsets::any::schema::playground_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::playground_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .try_build()
 }
@@ -114,10 +113,10 @@ fn playground_document_language() -> dsl::LanguageSpec {
         id: "playground.document",
         extension: Some("playground"),
         role: dsl::LanguageRole::Document,
-        grammar: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("playground.document"),
     }
 }
@@ -127,10 +126,10 @@ fn playground_op_language() -> dsl::LanguageSpec {
         id: "playground.op",
         extension: None,
         role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("playground.op"),
     }
 }
@@ -140,8 +139,8 @@ fn playground_diff_language() -> dsl::LanguageSpec {
         id: "playground.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::standards::v1::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v1::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(standards::v1::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(standards::v1::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("playground.diff"),
@@ -155,8 +154,8 @@ fn playground_pack_language() -> dsl::LanguageSpec {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("playground.pack"),
     }
 }
@@ -168,8 +167,8 @@ fn playground_spr_language() -> dsl::LanguageSpec {
         role: dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("playground.spr"),
     }
 }

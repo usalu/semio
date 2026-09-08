@@ -1,7 +1,7 @@
 //! 🧮️ 🧮️ FEM 3D app commands command — `set-analysis-settings`.
 
-use crate::mutations::update_analysis_settings;
-use crate::op::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
+use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
 use crate::Fem3dSnapshot;
 use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -29,18 +29,5 @@ pub fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem3dSnapsho
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::fem3d::testkit::{dispatch, fem3d_empty_app};
-    use crate::editor::fem3d::Fem3dCommand;
-
-    #[semio_framework_async_macros::async_test]
-    async fn set_analysis_settings_partially_updates_and_keeps_the_rest() {
-        let mut app = fem3d_empty_app().await;
-        dispatch(&mut app, Fem3dCommand::SetAnalysisSettings(SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: None })).await;
-        let analysis = &app.snapshot().expect("snapshot").analysis;
-        assert_eq!(analysis.modal_count, 5);
-        assert_eq!(analysis.buckling_count, 3);
-        assert_eq!(analysis.deformation_scale, 50.0);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

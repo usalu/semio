@@ -19,18 +19,29 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+mod art_procedure_demo_tests;
 extern crate semio_framework_schema as framework_schema;
-// 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<ProcedureMutation, ImperativeConfigMutation>, Fault>`, the exact signature
-// `ArtifactApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned
-// error type; boxing it here would diverge from the trait it must satisfy, and the lint does not fire on
-// the trait impl itself (only on the free functions the taxonomy split creates), so this is a pure
-// artefact of decomposition.
-#[allow(clippy::result_large_err)]
-extern crate self as semio_s_artifact_imperative_procedure;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use std::collections::BTreeMap;
+
+/// 🧩️ Built-in operators mounted by the procedure runtime.
+#[path = "."]
+pub mod extensions {
+    #[path = "../../🧩️extensions/🎮️control/🦀️.rs"]
+    pub mod control;
+    #[path = "../../🧩️extensions/📣️effect/🦀️.rs"]
+    pub mod effect;
+    #[path = "../../🧩️extensions/🧠️logic/🦀️.rs"]
+    pub mod logic;
+    #[path = "../../🧩️extensions/🧮️math/🦀️.rs"]
+    pub mod math;
+    #[path = "../../🧩️extensions/📝️text/🦀️.rs"]
+    pub mod text;
+}
 
 //#region 🔖️Types
 pub use imperative_engine::{Path, Step};
@@ -324,13 +335,13 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    crate::standards::v1::subsets::any::io::bootstrap_imperative_runtime();
+    standards::v1::subsets::any::io::bootstrap_imperative_runtime();
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::schema::procedure_artifact_schema_descriptor())
-        .inferences([crate::standards::v1::subsets::any::schema::inferences::procedure_artifact_inference_descriptor()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
+        .schema(schema::procedure_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::procedure_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::procedure::ImperativePlayApp>>()
+        .document_codec::<semio_framework_plugin::EditorApp<editor::procedure::ImperativePlayApp>>()
         .try_build()
 }
 
@@ -347,8 +358,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "procedure.document",
                     extension: Some("procedure"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::document_dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::document_dsl::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("procedure.document"),
@@ -357,8 +368,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "imperative.procedure.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("imperative.procedure.op"),
@@ -367,8 +378,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "imperative.procedure.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("imperative.procedure.diff"),
@@ -444,60 +455,8 @@ pub(crate) fn retire_procedure_fixture(mut snapshot: ProcedureSnapshot) {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    trait ProcedureChildOwnerOracle {
-        fn expected() -> serde_json::Value;
-    }
-
-    struct SerdeJsonProcedureChildOwnerOracle;
-
-    impl ProcedureChildOwnerOracle for SerdeJsonProcedureChildOwnerOracle {
-        fn expected() -> serde_json::Value {
-            serde_json::from_str(include_str!("🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Imperative child-owner fixture")
-        }
-    }
-
-    /// 🗂️ The manifest-facing `ArtifactKindSpec.schema` ("procedure.document") is deliberately NOT
-    /// `PROCEDURE_DOCUMENT_SCHEMA` ("procedure.document/v1") — the former names the artifact kind in
-    /// the OS media catalogue, the latter keys the store envelope. Pinned so a future edit can't silently
-    /// merge them.
-    #[semio_framework_async_macros::async_test]
-    async fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
-        assert_eq!(artifact_kind().schema, "procedure.document");
-        assert_eq!(PROCEDURE_DOCUMENT_SCHEMA, "procedure.document/v1");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn default_snapshot_is_empty_with_the_bare_schema() {
-        let snapshot = ProcedureSnapshot::default();
-        assert_eq!(snapshot.schema, "procedure.document");
-        let scene = procedure_working_scene(&snapshot);
-        assert!(scene.path.steps.is_empty());
-        assert!(scene.seed.keys().next().is_none());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn working_content_is_owned_by_each_exact_child() {
-        let flow = procedure_flow_child_with_owner(&Path::new());
-        let text = procedure_text_child_with_owner(&BTreeMap::new());
-        let flow_wire = dsl::os_pack::to_json_string(&flow);
-        let text_wire = dsl::os_pack::to_json_string(&text);
-        let reconstructed_flow: ProcedureFlowChild = dsl::os_pack::from_json_str(&flow_wire).expect("Imperative flow child wire roundtrip");
-        let reconstructed_text: ProcedureTextChild = dsl::os_pack::from_json_str(&text_wire).expect("Imperative text child wire roundtrip");
-        let observed = serde_json::json!({
-            "ownedFlowHasPayload": flow.local_owner::<ProcedureFlowWorkingData>().is_some(),
-            "ownedTextHasPayload": text.local_owner::<ProcedureTextWorkingData>().is_some(),
-            "flowWireIdentityMatches": flow == reconstructed_flow,
-            "textWireIdentityMatches": text == reconstructed_text,
-            "flowWireHasPayload": reconstructed_flow.local_owner::<ProcedureFlowWorkingData>().is_some(),
-            "textWireHasPayload": reconstructed_text.local_owner::<ProcedureTextWorkingData>().is_some(),
-        });
-
-        assert_eq!(observed, SerdeJsonProcedureChildOwnerOracle::expected());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[path = "."]
@@ -607,7 +566,7 @@ mod tests {
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/t036/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/🔬️t036/🦀️.rs"]
                                     mod tests_warns_that_an_over_clamped_index_leaves_the_tail_step_in_place;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -624,7 +583,7 @@ mod tests {
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/t037/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/🔬️t037/🦀️.rs"]
                                     mod tests_warns_that_step_1_already_carries_the_requested_params;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/📝️text/🦀️.rs"]
                                     pub mod text;

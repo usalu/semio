@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 fn engagement_token_matches(raw: &str, command: &str) -> bool {
     let raw_bytes = raw.as_bytes();
     let mut raw_index = 0usize;
-    let mut command_chars = command.chars().filter(|ch| ch.is_alphanumeric());
+    let command_chars = command.chars().filter(|ch| ch.is_alphanumeric());
     for expected in command_chars {
         while raw_index < raw_bytes.len() {
             let ch = raw[raw_index..].chars().next().unwrap();
@@ -104,26 +104,6 @@ pub mod engagement_submit {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use crate::editor::lowpoly::testkit::{app_with_registry, dispatch, select_face};
-    use crate::editor::lowpoly::LowpolyCommand;
-
-    #[semio_framework_async_macros::async_test]
-    async fn engagement_submit_resolves_a_typed_token_into_a_real_command() {
-        
-        let mut a = app_with_registry().await;
-        let object_id = a.snapshot().expect("projection").objects[0].id.clone();
-        select_face(&mut a, &object_id, 0).await;
-        let before = a.snapshot().expect("projection").objects[0].mesh.clone();
-        dispatch(&mut a, LowpolyCommand::EngagementSubmit(super::engagement_submit::EngagementSubmit { value: Some("extrude".into()) })).await;
-        assert_ne!(a.snapshot().expect("projection").objects[0].mesh, before, "typed 'extrude' must run the extrude command");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn engagement_submit_ignores_unresolvable_input() {
-        let mut a = app_with_registry().await;
-        let result = dispatch(&mut a, LowpolyCommand::EngagementSubmit(super::engagement_submit::EngagementSubmit { value: Some("bogus".into()) })).await;
-        assert!(result.mutations.is_empty());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `CreateVortex`.
 
 use crate::Block3dSnapshot;
-use crate::diff::{Block3dDiff, Block3dVorticesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Block3dDiff, Block3dVorticesDelta};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateVortex, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {

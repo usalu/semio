@@ -57,7 +57,7 @@ function compiled(compiler: typeof compilers[number], factory: boolean): { oneOf
 }
 
 test("pattern compilation reuse has a closed language-neutral schema and independent JSON parser", () => {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8")));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🛂️schema/🔣️.json"), "utf8")));
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
   for (const changed of [{ ...vector, extra: true }, { ...vector, rounds: 1 }, { ...vector, uniqueNormalizedPatterns: 1 }, { ...vector, factory: "processGlobalCache" }]) expect(validate(changed)).toBe(false);
   const errors: ParseError[] = [];
@@ -273,7 +273,7 @@ test("changed runtime matcher declarations and call sites are strictly typed", (
 
 test("registers pattern compiler reuse through its closed canonical route", async () => {
   const directory = join(import.meta.dir, "../♻️taxonomy-pattern-compiler-reuse/🧪️registration"), bytes = readFileSync(join(directory, "../♻️taxonomy-pattern-compiler-reuse/🔣️.json"), "utf8"), registration = JSON.parse(bytes);
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directory, "../♻️taxonomy-pattern-compiler-reuse/🧬️schema/🔣️.json"), "utf8")));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directory, "../♻️taxonomy-pattern-compiler-reuse/🛂️schema/🔣️.json"), "utf8")));
   expect(validate(registration), JSON.stringify(validate.errors)).toBe(true);
   for (const changed of [{ ...registration, source: "../♻️taxonomy-pattern-compiler-reuse/🟦️.ts" }, { ...registration, budget: 120000 }, { ...registration, budgetMs: 120000 }, { ...registration, runner: "other" }, { ...registration, launchOrder: 410.205 }]) expect(validate(changed)).toBe(false);
   const errors: ParseError[] = [];

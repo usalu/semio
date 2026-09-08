@@ -88,12 +88,6 @@ pub fn inverse_opening_config_mutation_steps(mutation: &super::mutations::Openin
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn opening_preferences_default_is_empty() {
-        assert_eq!(OpeningPreferences::default(), OpeningPreferences { defaults: Vec::new() });
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

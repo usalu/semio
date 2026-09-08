@@ -234,3 +234,10 @@ and these data-file `$schema` pointers (inside the partition, will be updated by
 `⏱️budget/🕰️clock.json:2`, `⏱️budget/🪢️binding.json:2`, `⏱️budget/🧫️fixture/🔣️.json:2`, plus the
 matching `"$schema": {"const": …}` in each of the three schema files. `$id` would become
 `https://semio.tech/schema/framework/job/budget/schema.json`.
+
+**Applied by W10b (`📓️wp4b-framework-modules.md` row 35).** The three schema files are gone; the module is
+`🧵️job/⏱️budget/🧬️schema/🔣️.json`, `$id https://semio.tech/schema/framework/job/budget/schema.json`,
+exports `Budget` / `Clock` / `Binding`. The three data files now carry
+`"$schema": "https://semio.tech/schema/framework/job/budget/schema.json#/$defs/<Export>"`. The root
+`📜️script.ts` edits above are still **open** for W2c — `toolJobMicrosecondBudgetSelfTests()` is broken
+until they land (accepted transient break, coordinator decision on ledger row 35).

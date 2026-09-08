@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeleteReference` — reconstructs a `create-reference` of the captured
 //! BASE entry. Missing target ⇒ `Vec::new()`.
-use crate::mutations::Puzzle3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Inverse
@@ -9,6 +9,6 @@ pub fn inverse(payload: &super::mutation::DeleteReference, base: &Puzzle3dSnapsh
         return Vec::new();
     };
     let index = base.references.iter().position(|entry| entry.id == payload.id);
-    vec![crate::mutations::create_reference::mutation::create_reference(item.clone(), index)]
+    vec![crate::standards::v1::subsets::any::schema::mutations::create_reference::mutation::create_reference(item.clone(), index)]
 }
 //#endregion 🔖️Inverse

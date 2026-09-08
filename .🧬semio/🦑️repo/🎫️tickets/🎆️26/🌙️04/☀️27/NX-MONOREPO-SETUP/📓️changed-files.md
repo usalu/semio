@@ -485,3 +485,55 @@ Retained executable probes: `🔬️browser-imports/📜️script.ts` and `🔬�
 - `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📋️project.json` — removed duplicate raw WASI release build entry point; existing canonical component target remains.
 
 - `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📜️script.ts` — removed duplicate raw WASI release build entry point; existing canonical component target remains.
+
+## Resource Leases and Transactional Service Sessions
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔒️leases/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔒️leases/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔒️leases/🧫️cases.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔒️leases/🧪️tests/📜️script.ts`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs` — corrected the protocol alias to its existing replication dependency after the real WASM compiler reported three unresolved ordered-value imports.
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🟦️.ts` — discover the registry’s taxonomy-named Vitest suites.
+
+- `.storybook/playwright.config.ts` — repair current test ownership and schema references.
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/📖️generated-projection/🟦️.ts` — repair current test ownership and schema references.
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/✅️catalog-complete/🟦️.ts` — repair current test ownership and schema references.
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🪪️plugin-identity/🟦️.ts` — repair current test ownership and schema references.
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🚀️launch/🟦️.ts` — repair current test ownership and schema references.
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json` — repair current test ownership and schema references.
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts` — isolate the Nx bootstrap and verify it with native Nx.
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts` — isolate the Nx bootstrap and verify it with native Nx.
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/nx-bootstrap/🔣️.json` — isolate the Nx bootstrap and verify it with native Nx.
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/nx-bootstrap/🧬️schema/🔣️.json` — isolate the Nx bootstrap and verify it with native Nx.
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🚀️bootstrap/📜️script.ts` — isolate the Nx bootstrap and verify it with native Nx.
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️index/🟦️.ts` — use the canonical public Nx bootstrap.
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts` — use the canonical public Nx bootstrap.
+
+## Artifact Registry
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📇️registry/🟦️.ts` and `🧬️schema/🔣️.json`: ownership and storage accounting.
+- `⚡️caching/🧫️fixtures/artifact-registry/🔣️.json` and `🧬️schema/🔣️.json`: language-neutral contracts.
+- `⚡️caching/🧪️tests/📇️artifacts/📜️script.ts`: schema, ownership and native filesystem oracle.
+- `⚡️caching/📜️script.ts`: audit/policy/disk-report/test integration.
+- Ticket `🔬️artifact-registry/📜️script.ts` and `📓️artifact-registry.md`: retained probe and evidence.
+
+## Hub Build Owner
+
+- `🌎️hub/📦️packages/🦀️rust/📋️project.json` and `📜️script.ts`: generic native build owner and removal of the duplicate script implementation.
+- `⚡️caching/🧫️fixtures/hub-build/🔣️.json` and `🛂️schema/🔣️.json`: neutral build contract.
+- `⚡️caching/🧪️tests/🌎️hub/📜️script.ts` and ticket `🔬️hub-build/📜️script.ts`: native Nx/esbuild validation.
+- Continuous-service, bootstrap and artifact-registry test readers follow current `🛂️schema` fixture paths after concurrent relocation.

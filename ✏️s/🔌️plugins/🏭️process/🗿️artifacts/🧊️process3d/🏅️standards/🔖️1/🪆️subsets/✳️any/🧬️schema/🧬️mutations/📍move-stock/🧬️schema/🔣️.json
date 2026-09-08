@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/process/process3d/1/any/mutation/move-stock/schema.json",
+  "$id": "https://semio.tech/schema/s/process/process3d/mutation/move-stock/schema.json",
   "title": "MoveStock",
   "type": "object",
   "additionalProperties": false,

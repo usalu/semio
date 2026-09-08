@@ -99,11 +99,21 @@
 //!   `deny_unknown_fields` must not see it), and no further check is added here: the payload type
 //!   decides its own policy for everything else.
 //!
+//! An internally tagged single-unnamed-field variant whose payload does NOT encode to an object
+//! (a `String`, a number, an array — serde refuses this shape outright, this derive does not) is
+//! carried as the single entry `{"value": <payload>}` beside the tag. Decoding is the inverse of
+//! that runtime branch, in that order: the tag-stripped object is offered to the payload's
+//! `FromValue` first, and only when that fails is a lone `value` entry unwrapped and offered
+//! bare. The order matters — a payload type whose only field is itself named `value` produces an
+//! indistinguishable key set, and object-first decodes both correctly.
+//!
 //! `rename_all_fields = "…"` (container, tagged/externally-tagged enums only): cases an enum
-//! variant's OWN named fields independently of `rename_all`, which continues to case the variant
-//! tags themselves — exactly serde's split between the two attributes. When only one of the pair
-//! is given, that single case covers both tags and fields (serde's default too). Found live in
-//! `📇️directory/🧬️schema` (`tag` cased one way, fields cased `camelCase` another).
+//! variant's OWN named fields, and is the ONLY attribute that does — exactly serde's split between
+//! the two attributes (`rename_all` cases variant tags, `rename_all_fields` cases variant fields,
+//! serde ≥ 1.0.190). An enum that declares only `rename_all` therefore wires its variants' named
+//! fields under their Rust identifiers verbatim; there is no fallback from one attribute to the
+//! other, because serde has none. Found live in `📇️directory/🧬️schema` (`tag` cased one way,
+//! fields cased `camelCase` another).
 //!
 //! An enum variant's OWN named field (unlike a plain struct field) supports only `rename`,
 //! `default`, `skip`, and `skip_serializing_if` — `skip` omits the field on serialize and always
@@ -220,11 +230,14 @@ struct ContainerAttrs {
 }
 
 impl ContainerAttrs {
-    /// 🐫 The case an enum variant's OWN named fields wire under: `rename_all_fields` when set
-    /// (independent of variant-tag casing), else `rename_all` (serde's default — the same case
-    /// covers both variant tags and their fields when only one attribute is given).
+    /// 🐫 The case an enum variant's OWN named fields wire under — `rename_all_fields` and nothing
+    /// else. A container-level `rename_all` cases only the *variant names* on an enum, never their
+    /// fields; that is precisely why serde added `rename_all_fields` (serde ≥ 1.0.190,
+    /// <https://serde.rs/container-attrs.html#rename_all_fields>). Falling back to `rename_all`
+    /// here made this derive disagree with serde on every `#[value(rename_all = "…")]` enum with
+    /// multi-word named variant fields.
     fn field_rename_all(&self) -> Option<String> {
-        self.rename_all_fields.clone().or_else(|| self.rename_all.clone())
+        self.rename_all_fields.clone()
     }
 }
 
@@ -978,9 +991,28 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                         // leaving the tag in here was a decode/encode asymmetry: a payload type
                         // that itself carries `#[value(deny_unknown_fields)]` would reject its
                         // own valid wire form because the wrapper's tag key looked unknown to it.
+                        //
+                        // 🪆 The `__scalar` arm is the exact inverse of `expand_to_value`'s runtime
+                        // branch: a payload whose `to_value()` is NOT an object cannot be spliced
+                        // beside the tag, so the encoder carries it as the single entry
+                        // `{"value": <scalar>}`. Which of the two shapes a given wire object is
+                        // cannot be decided from the payload TYPE at expansion time (a struct whose
+                        // only field is literally named `value` produces the same key set), so the
+                        // object form is attempted first and the carrier is unwrapped only when it
+                        // fails — that ordering decodes both shapes correctly, where a key-shape
+                        // test alone would mis-decode `struct P { value: String }`.
                         let payload_ty = &unnamed.unnamed[0].ty;
                         Ok(quote! {
-                            #wire_variant => Self::#variant_ident(<#payload_ty as #value_crate::FromValue>::from_value(#value_crate::DslValue::Object(__entries.iter().filter(|(__k, _)| __k != #tag).cloned().collect()))?),
+                            #wire_variant => Self::#variant_ident({
+                                let __payload: Vec<(String, #value_crate::DslValue)> = __entries.iter().filter(|(__k, _)| __k != #tag).cloned().collect();
+                                match <#payload_ty as #value_crate::FromValue>::from_value(#value_crate::DslValue::Object(__payload.clone())) {
+                                    ::core::result::Result::Ok(__decoded) => __decoded,
+                                    ::core::result::Result::Err(__object_error) => match __payload.as_slice() {
+                                        [(__k, __scalar)] if __k == "value" => <#payload_ty as #value_crate::FromValue>::from_value(__scalar.clone())?,
+                                        _ => return ::core::result::Result::Err(__object_error),
+                                    },
+                                }
+                            }),
                         })
                     }
                     (Fields::Named(named), content_key) => {

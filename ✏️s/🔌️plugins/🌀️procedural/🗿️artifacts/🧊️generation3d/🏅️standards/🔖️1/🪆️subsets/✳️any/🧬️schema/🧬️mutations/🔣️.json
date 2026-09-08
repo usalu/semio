@@ -1,65 +1,49 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/procedural/generation3d/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/procedural/generation3d/mutations.json",
   "title": "Generation3dMutation",
   "oneOf": [
     {
-      "$ref": "./🔧️change-generation-value/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/mutation/change-generation-value/schema.json"
     },
     {
-      "$ref": "./🔤️change-schema/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/mutation/change-schema/schema.json"
     },
     {
-      "$ref": "./🔗️connect-synapse/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/mutation/connect-synapse/schema.json"
     },
     {
-      "$ref": "./➕create-generation/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/mutation/create-generation/schema.json"
     },
     {
-      "$ref": "./🌱️create-widget/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/mutation/create-widget/schema.json"
     },
     {
-      "$ref": "./🗑️delete-generation/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/mutation/delete-generation/schema.json"
     },
     {
-      "$ref": "./❌delete-widget/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/mutation/delete-widget/schema.json"
     },
     {
-      "$ref": "./🧹️delete-widget-position/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/mutation/delete-widget-position/schema.json"
     },
     {
-      "$ref": "./✂️disconnect-synapse/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/mutation/disconnect-synapse/schema.json"
     },
     {
-      "$ref": "./📍️move-widget/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/mutation/move-widget/schema.json"
     },
     {
-      "$ref": "./🏷️rename-generation/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/mutation/rename-generation/schema.json"
     },
     {
-      "$ref": "./📷️update-camera/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/mutation/update-camera/schema.json"
     },
     {
-      "$ref": "./🔄️update-synapse/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/mutation/update-synapse/schema.json"
     },
     {
-      "$ref": "./🩹update-widget/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/mutation/update-widget/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-generation-value",
-    "change-schema",
-    "connect-synapse",
-    "create-generation",
-    "create-widget",
-    "delete-generation",
-    "delete-widget",
-    "delete-widget-position",
-    "disconnect-synapse",
-    "move-widget",
-    "rename-generation",
-    "update-camera",
-    "update-synapse",
-    "update-widget"
   ]
 }

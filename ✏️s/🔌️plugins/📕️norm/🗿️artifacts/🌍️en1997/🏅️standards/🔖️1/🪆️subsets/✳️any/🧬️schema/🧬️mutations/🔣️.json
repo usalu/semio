@@ -1,97 +1,73 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1997/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/norm/en1997/mutations.json",
   "title": "En1997Mutation",
   "oneOf": [
     {
-      "$ref": "./🎚️change-alpha-s/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-alpha-s/schema.json"
     },
     {
-      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "./↔️change-bm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-bm/schema.json"
     },
     {
-      "$ref": "./🧲️change-c-kpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-c-kpa/schema.json"
     },
     {
-      "$ref": "./🧭️change-design-approach/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-design-approach/schema.json"
     },
     {
-      "$ref": "./⬇️change-dfm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-dfm/schema.json"
     },
     {
-      "$ref": "./🌀️change-es-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-es-mpa/schema.json"
     },
     {
-      "$ref": "./🦶️change-footing-area-m2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-footing-area-m2/schema.json"
     },
     {
-      "$ref": "./⚖️change-gamma-kn-m3/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-gamma-kn-m3/schema.json"
     },
     {
-      "$ref": "./➡️change-h-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-h-ed-kn/schema.json"
     },
     {
-      "$ref": "./🏗️change-n-pile-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-n-pile-ed-kn/schema.json"
     },
     {
-      "$ref": "./🧮️change-nu/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-nu/schema.json"
     },
     {
-      "$ref": "./📐️change-phi-deg/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-phi-deg/schema.json"
     },
     {
-      "$ref": "./🔘️change-pile-base-area-m2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-pile-base-area-m2/schema.json"
     },
     {
-      "$ref": "./⭕️change-pile-dm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-pile-dm/schema.json"
     },
     {
-      "$ref": "./📏️change-pile-lm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-pile-lm/schema.json"
     },
     {
-      "$ref": "./🗺️change-pile-n-profiles/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-pile-n-profiles/schema.json"
     },
     {
-      "$ref": "./🛡️change-qb-kpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-qb-kpa/schema.json"
     },
     {
-      "$ref": "./🪵️change-qs-kpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-qs-kpa/schema.json"
     },
     {
-      "$ref": "./🚦️change-settlement-limit-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-settlement-limit-mm/schema.json"
     },
     {
-      "$ref": "./🏋️change-v-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-v-ed-kn/schema.json"
     },
     {
-      "$ref": "./🔎️change-z-investigated-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-z-investigated-m/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-alpha-s",
-    "change-annex",
-    "change-bm",
-    "change-c-kpa",
-    "change-design-approach",
-    "change-dfm",
-    "change-es-mpa",
-    "change-footing-area-m2",
-    "change-gamma-kn-m3",
-    "change-h-ed-kn",
-    "change-n-pile-ed-kn",
-    "change-nu",
-    "change-phi-deg",
-    "change-pile-base-area-m2",
-    "change-pile-dm",
-    "change-pile-lm",
-    "change-pile-n-profiles",
-    "change-qb-kpa",
-    "change-qs-kpa",
-    "change-settlement-limit-mm",
-    "change-v-ed-kn",
-    "change-z-investigated-m"
   ]
 }

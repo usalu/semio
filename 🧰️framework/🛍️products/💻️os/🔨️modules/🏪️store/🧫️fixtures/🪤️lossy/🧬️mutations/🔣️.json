@@ -6,7 +6,7 @@
       "type": "object",
       "properties": {
         "SetN": {
-          "$ref": "🔢️set-n/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/framework/os/store/fixtures/lossy/mutation/set-n/schema.json#/$defs/Payload"
         }
       },
       "required": [

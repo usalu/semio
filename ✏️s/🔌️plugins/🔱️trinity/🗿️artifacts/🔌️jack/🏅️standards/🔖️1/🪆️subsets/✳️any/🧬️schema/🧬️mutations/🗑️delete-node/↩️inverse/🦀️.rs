@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteNode` — reconstructs the removed node from BASE, then re-`connect`s every
 //! severed edge (in reverse dependency order: node first, edges after). Missing target ⇒
 //! `Vec::new()`.
-use crate::mutations::{create_edge, create_node, TrinityGraphMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{create_edge, create_node, TrinityGraphMutation};
 use crate::JackSnapshot;
 
 //#region 🔖️Inverse

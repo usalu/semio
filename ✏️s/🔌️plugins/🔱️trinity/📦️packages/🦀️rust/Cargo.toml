@@ -28,7 +28,7 @@ ports = { react = 6056, wgpu = 6156 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [features]
 # 🔌️ The WASM component entry point (`plugin_exports!` → `#[no_mangle]`
@@ -39,6 +39,8 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-s-artifact-trinity-jack = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-trinity-rewriting = { workspace = true, features = ["component-app-assembly"] }
 semio-framework-ui-contract.workspace = true
 framework_editor = { path = "../../../../../🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust", package = "semio-framework-editor" }
 semio-s-artifact-stdio-csv = { workspace = true }

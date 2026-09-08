@@ -35,14 +35,8 @@ export function renderImage(view: ImageView): BuiltNode {
 
 //#region 🧪️Tests
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-  describe("renderImage", () => {
-    it("builds a base64 data URI from mime + base64", () => {
-      const node = renderImage({ width: 4, height: 2, mime: "image/png", base64: "QUJD" });
-      if (node.component.type !== "image") throw new Error("expected image");
-      expect(node.component.src).toBe("data:image/png;base64,QUJD");
-    });
-  });
+  const { registerTests1 } = await import("./🧪️tests/🧪️renderimage/🟦️.ts");
+  await registerTests1(import.meta.vitest, { renderImage }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests
 // #endregion 🖼️ImageWindowKit

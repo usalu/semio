@@ -1,10 +1,10 @@
 //! 🧬️ Generation2d diff schema — sparse field delta over the artifact.
 
-use crate::schema::Generation2dArtifact;
+use crate::standards::v1::subsets::any::schema::Generation2dArtifact;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
-use semio_framework_artifact_flow_semio_framework_os_flow::CameraJson;
-use semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture;
-use schema::ArtifactSchema;
+use semio_framework_artifact_flow_flow::CameraJson;
+use semio_framework_artifact_flow_flow::FlowFixture;
+use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Generation2dDiff
 /// 🧬️ Generation2dDiff facet type.

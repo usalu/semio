@@ -1,6 +1,6 @@
 //! 🧬️ S Home diff schema — sparse field delta over the artifact.
 
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the S Home artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).

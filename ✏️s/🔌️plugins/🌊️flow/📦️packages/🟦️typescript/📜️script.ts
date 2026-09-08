@@ -6,15 +6,18 @@ import { BundleScript, ScriptRouter, runCmd, resolveTestLevel, runBundleScriptMa
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️.ts","✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
+    runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
 
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "🧪️tests/🟦️.ts");
+    runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 
-type Lane = "Artifact" | "Config" | "Draft" | "Presence" | "Transient" | "Child" | "HostOnly";
-type Group = { status: "Migrated" | "BatchOnlyPendingRewrite"; lanes: Lane[]; routes: string[]; blocker?: string };
+/** 🔤️ The Rust variant name of one kebab lane/disposition from `framework.ui`'s shared vocabulary. */
+const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
+
+type Lane = "artifact" | "config" | "draft" | "presence" | "transient" | "child" | "host-only";
+type Group = { status: "migrated" | "batch-only-pending-rewrite"; lanes: Lane[]; routes: string[]; blocker?: string };
 type Fixture = {
   schema: string;
   owner: "FlowPlayApp" | "NotePlayApp";
@@ -47,13 +50,13 @@ function publicationRows(source: string): string[] {
 }
 
 function exactPublication(source: string, route: string, lanes: Lane[]): boolean {
-  const declared = lanes.map((lane) => `(?:semio_framework_plugin::)?ArtifactToolPublicationLane::${lane}`).join(",\\s*");
+  const declared = lanes.map((lane) => `(?:semio_framework_plugin::)?ArtifactToolPublicationLane::${variant(lane)}`).join(",\\s*");
   return new RegExp(`ArtifactToolPublicationContract \\{ tool_id: "${route}", lanes: &\\[${declared}\\] \\}`).test(source);
 }
 
 function fixtureOracle(fixture: Fixture): boolean {
   const classified = fixture.groups.flatMap((group) => group.routes);
-  const retained = fixture.groups.filter((group) => group.status === "Migrated").flatMap((group) => group.routes);
+  const retained = fixture.groups.filter((group) => group.status === "migrated").flatMap((group) => group.routes);
   return ["semio.flow-note.action-cohort.v1", "semio.note.action-cohort.v1"].includes(fixture.schema)
     && exact(fixture.retainedRoutes, retained)
     && classified.length === fixture.routeCount - fixture.frameworkOwnedRoutes.length
@@ -64,8 +67,8 @@ function fixtureOracle(fixture: Fixture): boolean {
     && fixture.groups.every((group) => group.routes.length > 0
       && group.lanes.length > 0
       && new Set(group.lanes).size === group.lanes.length
-      && (group.status === "Migrated" ? group.blocker === undefined : Boolean(group.blocker?.length))
-      && (!group.lanes.includes("HostOnly") || group.lanes.length === 1));
+      && (group.status === "migrated" ? group.blocker === undefined : Boolean(group.blocker?.length))
+      && (!group.lanes.includes("host-only") || group.lanes.length === 1));
 }
 
 function sourceOracle(fixture: Fixture, source: string, retainedSource = ""): boolean {
@@ -82,7 +85,7 @@ function sourceOracle(fixture: Fixture, source: string, retainedSource = ""): bo
       && source.includes("impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowHostEffectJobFactory")
       && source.includes("type Owner = semio_framework_plugin::EditorApp<FlowPlayApp>;")
       && source.includes("registry.register(FlowHostEffectJobFactory::new(&controller))")
-      && (!fixture.groups.some((group) => group.status === "Migrated" && group.lanes.some((lane) => lane !== "HostOnly"))
+      && (!fixture.groups.some((group) => group.status === "migrated" && group.lanes.some((lane) => lane !== "host-only"))
         || source.includes("impl semio_framework::ToolJobFactory for FlowDirectStoreJobFactory")
           && source.includes("impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowDirectStoreJobFactory")
           && source.includes("registry.register(FlowDirectStoreJobFactory::new(&controller))")
@@ -101,7 +104,7 @@ function sourceOracle(fixture: Fixture, source: string, retainedSource = ""): bo
           && !directStore.includes("preview_off.contains")
           && !directStore.includes("preview_off.retain"))
       && exact(publicationRows(source), fixture.retainedRoutes)
-      && fixture.groups.filter((group) => group.status === "Migrated").every((group) => group.routes.every((route) => exactPublication(source, route, group.lanes)))
+      && fixture.groups.filter((group) => group.status === "migrated").every((group) => group.routes.every((route) => exactPublication(source, route, group.lanes)))
     : retainedSource.includes("impl semio_framework::ToolJobFactory for NoteCommandJobFactory")
       && retainedSource.includes("impl semio_framework_plugin::ArtifactOwnedToolJobFactory for NoteCommandJobFactory")
       && retainedSource.includes("type Owner = EditorApp<NotePlayApp>;")
@@ -109,7 +112,7 @@ function sourceOracle(fixture: Fixture, source: string, retainedSource = ""): bo
       && source.includes("fn build_artifact_store_one_item_preparation_factory()")
       && source.includes("fn build_config_store_one_item_preparation_factory()")
       && exact(publicationRows(retainedContracts), fixture.retainedRoutes)
-      && fixture.groups.filter((group) => group.status === "Migrated").every((group) => group.routes.every((route) => exactPublication(retainedContracts, route, group.lanes)));
+      && fixture.groups.filter((group) => group.status === "migrated").every((group) => group.routes.every((route) => exactPublication(retainedContracts, route, group.lanes)));
   return exact(commandRows(source), [...classified, ...fixture.frameworkOwnedRoutes])
     && exact([...pairs.keys()], classified)
     && fixture.groups.every((group) => group.routes.every((route) => pairs.get(route) === group.status))
@@ -157,7 +160,7 @@ class ActionCohortAuditScript extends BundleScript {
         ? await Bun.file(resolve(pluginRoot, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs")).text()
         : "";
       if (!sourceOracle(fixture, source, retainedSource) || !(await globalOracle(fixture, source, pluginRoot))) throw new Error(`${fixture.owner} diverged from source truth`);
-      const first = fixture.groups.find((group) => group.status === "BatchOnlyPendingRewrite")!.routes[0]!;
+      const first = fixture.groups.find((group) => group.status === "batch-only-pending-rewrite")!.routes[0]!;
       const hostileActivation = source.replace(
         new RegExp(`(\\.action_interactive_job\\("${first}",\\s*(?:semio_framework_plugin::)?InteractiveJobClassification::)BatchOnlyPendingRewrite`),
         "$1Migrated",
@@ -171,7 +174,7 @@ class ActionCohortAuditScript extends BundleScript {
     const hostileFixtures: Fixture[] = [
       { ...fixtures[0]!, retainedRoutes: [...fixtures[0]!.retainedRoutes, "addWidget"] },
       { ...fixtures[0]!, routeCount: 36 },
-      { ...fixtures[1]!, groups: fixtures[1]!.groups.map((group, index) => index === 3 ? { ...group, lanes: ["HostOnly", "Artifact"] } : group) },
+      { ...fixtures[1]!, groups: fixtures[1]!.groups.map((group, index) => index === 3 ? { ...group, lanes: ["host-only", "artifact"] } : group) },
     ];
     if (hostileFixtures.some((fixture) => Boolean(validate(fixture)) && fixtureOracle(fixture))) throw new Error("Flow/Note hostile fixture mutation passed both oracles");
     const total = selected.reduce((sum, fixture) => sum + fixture.routeCount, 0);

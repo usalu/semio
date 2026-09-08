@@ -4,14 +4,14 @@
   "title": "RestoreN",
   "type": "object",
   "$defs": {
-    "payload": {
+    "Payload": {
       "type": "object",
       "properties": {
         "n": {
-          "$ref": "../../../../🧬️schema/🔣️.json#/$defs/NullableI32"
+          "$ref": "https://semio.tech/schema/os/store/fixtures/schema.json#/$defs/NullableI32"
         },
         "physicalMs": {
-          "$ref": "../../../../🧬️schema/🔣️.json#/$defs/U64"
+          "$ref": "https://semio.tech/schema/os/store/fixtures/schema.json#/$defs/U64"
         }
       },
       "required": [
@@ -21,7 +21,7 @@
   },
   "allOf": [
     {
-      "$ref": "#/$defs/payload"
+      "$ref": "#/$defs/Payload"
     }
   ],
   "propertyNames": {

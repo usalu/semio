@@ -1,6 +1,18 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.kit.diff/binary.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/diff/binary.json",
   "title": "SemioKitDiffFrame",
   "type": "object",
-  "properties": { "format": { "type": "integer" }, "presence": { "type": "integer" }, "payload": { "type": "string", "contentEncoding": "hex" } }
+  "properties": {
+    "format": {
+      "type": "integer"
+    },
+    "presence": {
+      "type": "integer"
+    },
+    "payload": {
+      "type": "string",
+      "contentEncoding": "hex"
+    }
+  }
 }

@@ -5,7 +5,6 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_schema as schema;
 
 pub use semio_s_artifact_fem_2d::{algebra, analyses, elements2d, elements3d, formulation, mesh, model, sparse};
 #[cfg(feature = "component-app-assembly")]
@@ -211,7 +210,7 @@ impl Default for FemCamera {
 }
 
 /// 📸️ `Fem3dSnapshot` lives in `📸️snapshot/🧬️schema` — re-exported here for crate consumers.
-pub use crate::schema::Fem3dArtifact;
+pub use crate::standards::v1::subsets::any::schema::Fem3dArtifact;
 
 // #endregion 🔖️Document
 
@@ -250,7 +249,23 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
 /// artifact-scoped function set.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    #[cfg(feature = "component-app-assembly")]
+pub trait ArtifactApps:
+    semio_framework_plugin::PluginApp
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::fem3d::Fem3dPlayApp>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::fem3d::Fem3dViewer>>>
+{
+}
+
+#[cfg(feature = "component-app-assembly")]
+impl<PA> ArtifactApps for PA where
+    PA: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::fem3d::Fem3dPlayApp>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::fem3d::Fem3dViewer>>>
+{
+}
+
+use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.fem.fem3d.standard.v1", "standard", "1", &[], None),
         ("s.fem.fem3d.standard.v1.profile.any", "profile", "any", &[], None),
@@ -299,10 +314,10 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
 /// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
 #[cfg(feature = "component-app-assembly")]
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::FemApps> {
+pub fn artifact<PA: crate::ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.fem.fem3d").expect("canonical fem3d kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.fem.fem3d").expect("canonical fem3d kind"), localization: &[], standards: vec![crate::standards::v1::standard::<PA>()] }
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -317,8 +332,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "fem.fem3d",
                     extension: Some("fem3d"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::dsl::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("fem.fem3d"),
@@ -327,8 +342,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "fem.fem3d.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("fem.fem3d.op"),
@@ -337,8 +352,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "fem.fem3d.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("fem.fem3d.diff"),
@@ -349,8 +364,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("fem3d.pack"),
                 },
                 dsl::LanguageSpec {
@@ -359,8 +374,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("fem3d.spr"),
                 },
             ]
@@ -371,38 +386,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 // #region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::model::Dof;
-
-    #[test]
-    fn fem_dof_round_trips_through_core_dof() {
-        for dof in FemDof::ALL {
-            assert_eq!(FemDof::from(Dof::from(dof)), dof);
-        }
-    }
-
-    #[test]
-    fn fem_analysis_settings_default_matches_pre_migration_values() {
-        let settings = FemAnalysisSettings::default();
-        assert_eq!(settings.modal_count, 3);
-        assert_eq!(settings.buckling_count, 3);
-        assert_eq!(settings.deformation_scale, 50.0);
-    }
-
-    #[test]
-    fn fem_camera_default_is_empty_json_object() {
-        assert_eq!(FemCamera::default().json, "{}");
-    }
-
-    #[test]
-    fn computation_artifact_kind_matches_computation_fem3d() {
-        let kind = computation_artifact_kind();
-        assert_eq!(kind.id, "computation.fem3d");
-        assert_eq!(kind.component_kind, "fem3d-results");
-        assert_eq!(kind.schema, "computation.fem3d");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 // #endregion 🧪️Tests
 
 #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs"]
@@ -1168,68 +1153,7 @@ mod tests {
             }
         }
 
-        // ---- Shims: keep pre-migration module paths resolving for external callers ----
-        pub mod schema {
-            pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod io {
-            pub use super::standards::v1::subsets::any::io::*;
-        }
-        pub mod op {
-            pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-        }
-        pub mod dsl {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-        }
-        pub mod spr {
-            pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-        }
-        pub mod diff {
-            pub use crate::standards::v1::subsets::any::schema::diff::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::diff::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::diff::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-            }
-        }
-        pub mod mutations {
-            pub use crate::standards::v1::subsets::any::schema::mutations::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::mutations::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-            }
-        }
-        pub mod snapshot {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-            }
-        }
-        pub use crate::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+                pub use crate::standards::v1::subsets::any::schema::diff::Fem3dDiff;
         pub use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
         pub use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
@@ -1251,6 +1175,19 @@ pub mod editor {
 #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod examples {
+            #[path = "."]
+            pub mod demo_session {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+        }
 
         #[path = "."]
         pub mod config {

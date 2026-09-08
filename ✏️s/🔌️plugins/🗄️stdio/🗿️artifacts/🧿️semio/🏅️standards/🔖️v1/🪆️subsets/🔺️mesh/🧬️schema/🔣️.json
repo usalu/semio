@@ -1,13 +1,31 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.mesh/artifact.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/artifact.json",
   "title": "SemioMeshArtifact",
   "description": "Full artifact state, mirrors SemioMeshSnapshot field for field.",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "meshes": { "type": "array", "x-semio-state": "artifact" },
-    "materials": { "type": "array", "x-semio-state": "artifact" },
-    "textures": { "type": "array", "x-semio-state": "artifact" }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "meshes": {
+      "type": "array",
+      "x-semio-state": "artifact"
+    },
+    "materials": {
+      "type": "array",
+      "x-semio-state": "artifact"
+    },
+    "textures": {
+      "type": "array",
+      "x-semio-state": "artifact"
+    }
   },
-  "required": ["schema", "meshes", "materials", "textures"]
+  "required": [
+    "schema",
+    "meshes",
+    "materials",
+    "textures"
+  ]
 }

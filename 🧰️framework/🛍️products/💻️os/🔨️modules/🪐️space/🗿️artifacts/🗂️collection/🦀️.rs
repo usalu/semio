@@ -5,6 +5,9 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_value_derive as value_derive;
 
+#[path = "♻️retirement/🦀️.rs"]
+mod retirement;
+
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -983,7 +986,7 @@ pub const COLLECTION_ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️sch
 /// 📦️ Parses and validates the builtin collection package declaration.
 pub fn collection_package_from_schema(source: &str) -> Result<CollectionArtifactPackage, CollectionPackageSchemaError> {
     let parsed = store::os_pack::json::from_json_str::<CollectionPackageSource>(source).map_err(|error| CollectionPackageSchemaError(error.to_string()))?;
-    if parsed.definition_version != 1 || parsed.id != "os.collection" || parsed.artifact != "collection" || parsed.directory != "🗂️collection" || parsed.rust_package != "semio-framework-artifact-space-collection" || parsed.nx_project != "@semio-tech/space-collection-rs" || !parsed.dependencies.is_empty() {
+    if parsed.definition_version != 1 || parsed.id != "os.collection" || parsed.artifact != "collection" || parsed.directory != "🗂️collection" || parsed.rust_package != "semio-framework-artifact-space-collection" || parsed.nx_project != "@semio-tech/framework-space-collection-rs" || !parsed.dependencies.is_empty() {
         return Err(CollectionPackageSchemaError("builtin collection package identity does not match its canonical declaration".into()));
     }
     Ok(CollectionArtifactPackage {

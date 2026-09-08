@@ -1,16 +1,56 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.image/artifact.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/image/artifact.json",
   "title": "SemioImageArtifact",
   "description": "Full artifact state, mirrors SemioImageSnapshot field for field.",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "width": { "type": "integer", "x-semio-state": "artifact" },
-    "height": { "type": "integer", "x-semio-state": "artifact" },
-    "colorspace": { "enum": ["rgb", "rgba", "grayscale", "grayscaleAlpha", "indexed"], "x-semio-state": "artifact" },
-    "bitDepth": { "type": "integer", "x-semio-state": "artifact" },
-    "frames": { "type": "array", "x-semio-state": "artifact", "items": { "type": "object" } },
-    "icc": { "type": ["string", "null"], "x-semio-state": "artifact" },
-    "metadata": { "type": "array", "x-semio-state": "artifact", "items": { "type": "object" } }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "width": {
+      "type": "integer",
+      "x-semio-state": "artifact"
+    },
+    "height": {
+      "type": "integer",
+      "x-semio-state": "artifact"
+    },
+    "colorspace": {
+      "enum": [
+        "rgb",
+        "rgba",
+        "grayscale",
+        "grayscaleAlpha",
+        "indexed"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "bitDepth": {
+      "type": "integer",
+      "x-semio-state": "artifact"
+    },
+    "frames": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object"
+      }
+    },
+    "icc": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "metadata": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object"
+      }
+    }
   }
 }

@@ -61,18 +61,6 @@ pub fn layout_horizontal(bounds: Rect, gap: f32, padding: f32, child_widths: &[f
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn vertical_layout_distributes_children() {
-        let theme = Theme::default();
-        let bounds = Rect::new(0.0, 0.0, 100.0, 100.0);
-        let rects = layout_vertical(bounds, 4.0, 8.0, &[20.0, 30.0]);
-        assert_eq!(rects.len(), 2);
-        assert!(rects[0].h > 20.0);
-        assert!(rects[1].y > rects[0].y);
-        let _ = theme;
-    }
-}
+#[path = "../../../../🧪️tests/🔬️targets-wgpu-layout-unit/🦀️.rs"]
+mod tests;
 // #endregion layout

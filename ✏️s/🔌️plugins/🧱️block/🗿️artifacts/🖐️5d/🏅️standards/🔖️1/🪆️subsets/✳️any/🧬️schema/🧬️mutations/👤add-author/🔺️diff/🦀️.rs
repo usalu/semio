@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `AddAuthor`.
 
 use crate::Block5dSnapshot;
-use crate::diff::{Block5dAuthorList, Block5dDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Block5dAuthorList, Block5dDiff};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddAuthor, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {

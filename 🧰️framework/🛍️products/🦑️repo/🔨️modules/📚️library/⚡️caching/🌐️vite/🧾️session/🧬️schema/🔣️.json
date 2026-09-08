@@ -3,6 +3,8 @@
   "$id": "https://semio.tech/schema/repo/library/caching/vite/session/schema.json",
   "$ref": "#/$defs/Session",
   "$defs": {
+    "MutationLease": { "const": { "directory": ".leases", "resource": "sessions" } },
+    "ReadinessRace": { "const": ["request", "replace-session", "respond", "reject-stale-session"] },
     "Session": {
       "type": "object",
       "additionalProperties": false,

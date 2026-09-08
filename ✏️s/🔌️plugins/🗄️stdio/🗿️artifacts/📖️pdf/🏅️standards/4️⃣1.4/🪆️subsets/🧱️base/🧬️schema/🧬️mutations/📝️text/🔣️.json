@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Pdf14MutationText",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.4/base/mutations/text.json",
+  "title": "PdfMutationText",
   "type": "string",
   "pattern": "^(insert-page|remove-page|move-page|resize-page|replace-page-text) payload=([0-9a-fA-F]{2})+$"
 }

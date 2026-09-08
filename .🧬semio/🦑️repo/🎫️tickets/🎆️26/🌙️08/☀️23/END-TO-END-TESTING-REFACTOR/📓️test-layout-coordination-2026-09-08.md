@@ -37,3 +37,13 @@ Renderer tests under `engine/📦️packages/🟦️typescript/🎯️targets/�
 3. Independent Terra audit of all active test layouts and updated runner references, then focused runtime verification and cleanup.
 
 Rust edge cases may use test-gated `include!("canonical case implementation")` wiring when a standalone function or mixed module needs its original namespace preserved. This is equivalent authored-file ownership to external `#[path]` modules; all actual test bodies still leave the production source. Validation must record nonzero discovered/executed suite counts, avoiding false success from empty test selection.
+
+## First Rust Batch Evidence
+
+The Rust worker reported moving three hub one-level suites (command, WAL, authorization) to named unit cases. It ran rustfmt checks on all three moved bodies, resolved seven rewritten fixture paths, and preserved five test attributes. This is batch-level evidence only; the full Rust tree migration and repository runtime verification remain open.
+
+Legacy `index` test suite folders should receive content-based suite names (for example `engine-contract`); existing named component suites may stay grouped under their component's semantic owner.
+
+## Ticket Closure Capacity Check
+
+The repo MCP server defaults to a 1 MiB JSON request limit. A migration touching thousands of Rust source and case paths may exceed this when closing with the required complete file list. Measure the actual final UTF-8 request size before closing; do not silently truncate the list or attribute unrelated Git changes. The existing close implementation accepts arrays only and normalizes each entry; no file-manifest expansion is currently implemented. This is a potential integration issue, not yet a blocker.

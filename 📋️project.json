@@ -322,6 +322,22 @@
         "command": "bun ./📜️script.ts schema oracle"
       }
     },
+    "schema-compile": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts schema compile",
+        "forwardAllArgs": true
+      }
+    },
+    "schema-entries": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts schema entries",
+        "forwardAllArgs": true
+      }
+    },
     "schema-test": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -677,6 +693,13 @@
         "command": "bun ./📜️script.ts verify mutation-outcome-law"
       }
     },
+    "semantic-vocabulary": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts verify semantic-vocabulary"
+      }
+    },
     "stdio-inference": {
       "executor": "nx:run-commands",
       "dependsOn": [
@@ -759,7 +782,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts policy package-purity",
+        "command": "bun ./📜️script.ts verify package-purity",
         "forwardAllArgs": true
       }
     },

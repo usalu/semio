@@ -218,6 +218,9 @@ pub mod describe;
 #[path = "🧵️retained-command/🦀️.rs"]
 pub mod retained_command;
 
+#[path = "📡️backbone/🔗️binding/🦀️.rs"]
+pub mod document_backbone_binding;
+
 #[path = "👥️presence/♻️retirement/🦀️.rs"]
 mod presence_retirement;
 pub use presence_retirement::{NoPresenceRetirementFactory, PresenceStoreOwnedDisposer};
@@ -247,24 +250,24 @@ pub mod app {
     // #region app
     //! 🧩️ Declarative app builder and plugin trait.
 
-    use dsl::{DslValue, to_dsl_value};
+    use dsl::{to_dsl_value, DslValue};
     use protocol::{OpBinary, OpText};
-    /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
-    pub use semio_framework::AppDefinition;
     use semio_framework::kernel::{FixedCommandPage, UiDirtyScope};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
+    /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
+    pub use semio_framework::AppDefinition;
     use semio_framework::{
-        ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CLEAR_SELECTION_ACTION_ID, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, Fault, FaultCode, FaultFrom, FaultOrigin,
-        INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, IconName, InteractionDefinition, InteractionRef, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes,
-        NOTE_SHELL_COMMAND_ACTION_ID, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
-        SET_HISTORY_COMMAND_FILTER_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, ToolDefinition, ToolRef, TutorialDefinition, UI_FOOTER_ELEMENT_ID,
-        UI_NAVBAR_ELEMENT_ID, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, clipboard_action_definitions, element_id_segment, history_action_definitions, is_element_id,
+        clipboard_action_definitions, element_id_segment, history_action_definitions, is_element_id,
         kernel::{
             ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactKind, ArtifactVersion, CapabilityRequirement, ClipboardError, ClipboardFragment, EditRef, Effect, HistoryEntry, HistoryPatch, HybridLogicalTimestamp, InverseMutation, InvocationId,
             InvocationResult, KernelMutation, MutationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy,
         },
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
-        start_tutorial_action_definition,
+        start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, Fault, FaultCode, FaultFrom, FaultOrigin, IconName,
+        InteractionDefinition, InteractionRef, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest,
+        ToolDefinition, ToolRef, TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID,
+        RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID,
+        START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID,
     };
     /// 🗃️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-dedyn, O1): `#[dyn_enum]` closes `PluginApp`
     /// over each fleet plugin's own per-plugin enum via `dyn_enum_close!`, cross-crate (see
@@ -300,8 +303,8 @@ pub mod app {
     /// exactly like the sibling `🎞️gif` migration leaf (`store::os_io::ArtifactDialect`) already does.
     use store::os_io::{ArtifactKindId, ArtifactRef};
     use store::{
-        ArtifactCommand, ArtifactEnvelope, ArtifactPack, ArtifactStore, ChildDispatch, CompositionCoordinator, ConfigStore, EngineHandles, GroupMeta, HistoryColumn, HistoryLane, MemberFactory, Mutation, MutationDiff, NoMembers, SpaceMember,
-        build_history_columns, create_config_envelope, create_document_envelope,
+        build_history_columns, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactPack, ArtifactStore, ChildDispatch, CompositionCoordinator, ConfigStore, EngineHandles, GroupMeta, HistoryColumn,
+        HistoryLane, MemberFactory, Mutation, MutationDiff, NoMembers, SpaceMember,
     };
 
     /// 🔗️ `manifest::Keybinding.action` (FORBIDDEN file, `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs`)
@@ -321,8 +324,8 @@ pub mod app {
     /// that happen to share a home crate, and a second glob here would silently shadow the contract's
     /// own types with the old ones, quietly undoing the migration.
     use ui_wgpu::wgpu::{
-        ContextMenuItemSpec, ContextMenuRequest, ContextMenuSurfaceTarget, FRAMEWORK_HISTORY_BODY_KEY, Locale, LocalizedLabel, NamedLayout, Terminology, WindowEngagement, WindowEngagementSlot, WindowLayout,
-        WindowMeasure, WindowOptions, collect_window_kind_ids_from_layout,
+        collect_window_kind_ids_from_layout, ContextMenuItemSpec, ContextMenuRequest, ContextMenuSurfaceTarget, Locale, LocalizedLabel, NamedLayout, Terminology, WindowEngagement, WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions,
+        FRAMEWORK_HISTORY_BODY_KEY,
     };
 
     //#region 🔖️TreeConvert
@@ -380,15 +383,7 @@ pub mod app {
     }
 
     #[cfg(test)]
-    mod tree_convert_tests {
-        use super::*;
-
-        #[test]
-        fn dynamic_text_root_reports_fixed_capacity_admission_failure() {
-            let error = built_text_to_component_tree(ui_wgpu::wgpu::Label::data("x".repeat(UI_TEXT_MAX_BYTES + 1))).expect_err("oversized dynamic text must not panic or truncate");
-            assert_eq!(error.code, "ui.fixed-capacity");
-        }
-    }
+    include!("🧪️tests/🔬️app-tree-convert/🦀️.rs");
     //#endregion 🔖️TreeConvert
 
     /// 🔀️ Bridges the two SurfaceKind enums that currently coexist: the contract owns the semantic
@@ -731,9 +726,9 @@ pub mod app {
     /// 2). Defined in `semio_framework` so plugins and the OS product
     /// share one definition without an inverted dependency; re-exported here verbatim.
     pub use semio_framework::{
-        Analysis, AnalyzeSource, ArtifactDialect, AsyncComposeFn, ComposeError, ComposeFuture, ComposeSource, ComposedArtifact, ComposerEntry, Composition, Dialect, ErasedComposeSource, IoConfidence, IoDirection, IoFallback, IoFallbackDispatcher,
-        IoKey, IoPayload, IoResolveError, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry, WireComposeSource, WireComposedArtifact, io_compose_via, io_dialects_for, io_dispatch, io_keys_for, io_resolve, list_composer_entries,
-        register_composer_entries, register_subset_validator, resolve_ready, set_io_fallback_dispatcher, subset_validator_entry_of, wire_artifact_compose, wire_decode_composed_artifact, wire_list_composer_entries,
+        io_compose_via, io_dialects_for, io_dispatch, io_keys_for, io_resolve, list_composer_entries, register_composer_entries, register_subset_validator, resolve_ready, set_io_fallback_dispatcher, subset_validator_entry_of, wire_artifact_compose,
+        wire_decode_composed_artifact, wire_list_composer_entries, Analysis, AnalyzeSource, ArtifactDialect, AsyncComposeFn, ComposeError, ComposeFuture, ComposeSource, ComposedArtifact, ComposerEntry, Composition, Dialect, ErasedComposeSource,
+        IoConfidence, IoDirection, IoFallback, IoFallbackDispatcher, IoKey, IoPayload, IoResolveError, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry, WireComposeSource, WireComposedArtifact,
     };
 
     /// 🧵️ Directed snapshot conversion out of this dialect into a foreign dialect. One unit
@@ -1488,80 +1483,7 @@ pub mod app {
     }
 
     #[cfg(test)]
-    mod artifact_inference_service_tests {
-        use super::*;
-
-        fn echo(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
-            Ok(ArtifactInferenceExecution {
-                canonical_payload: request.canonical_payload.to_vec(),
-                diagnostics: Vec::new(),
-                validity: "valid".into(),
-                quality: "complete".into(),
-                complete: true,
-                actual_cache_mode: request.requested_cache_mode.clone(),
-            })
-        }
-
-        fn reject(_request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
-            Err(ArtifactInferenceExecutionError::new("test.rejected", "rejected"))
-        }
-
-        async fn metadata(artifact_kind: &'static str, inference_schema: &'static str) -> ArtifactInferenceServiceMetadata {
-            ArtifactInferenceServiceMetadata {
-                owner: "test",
-                artifact_kind,
-                artifact_schema: artifact_kind,
-                artifact_schema_version: 1,
-                document_schema: "test.document",
-                document_schema_version: 1,
-                inference_schema,
-                inference_schema_version: 1,
-                algorithm_version: 1,
-                policy_version: 1,
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn artifact_inference_registry_is_order_independent_and_idempotent() {
-            let alpha = ArtifactInferenceService::new(metadata("s.test.alpha", "s.test.alpha.inference").await, echo);
-            let beta = ArtifactInferenceService::new(metadata("s.test.beta", "s.test.beta.inference").await, echo);
-            let mut forward = ArtifactInferenceServiceRegistry::new();
-            forward.register(alpha).unwrap();
-            forward.register(beta).unwrap();
-            forward.register(alpha).unwrap();
-            let mut reverse = ArtifactInferenceServiceRegistry::new();
-            reverse.register(beta).unwrap();
-            reverse.register(alpha).unwrap();
-            assert_eq!(forward.metadata(), reverse.metadata());
-            let budget = WireArtifactInferenceBudget { allocation_bytes: 16, work_units: 1, recursion_depth: 1 };
-            let request = ArtifactInferenceExecutionRequest { policy: &[], budgets: &budget, cancellation_id: "test", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Cold, canonical_payload: b"pack", dependencies: &[] };
-            assert_eq!(forward.infer("s.test.alpha", "s.test.alpha.inference", &request).unwrap().canonical_payload, b"pack");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn artifact_inference_registry_rejects_any_conflicting_duplicate() {
-            let identity = metadata("s.test.conflict", "s.test.conflict.inference").await;
-            let first = ArtifactInferenceService::new(identity, echo);
-            assert_eq!(first.executable_identity(), ArtifactInferenceService::new(identity, echo).executable_identity());
-            assert_ne!(first.executable_identity(), ArtifactInferenceService::new(identity, reject).executable_identity());
-            let mut changed_metadata = metadata("s.test.conflict", "s.test.conflict.inference").await;
-            changed_metadata.algorithm_version = 2;
-            let mut registry = ArtifactInferenceServiceRegistry::new();
-            registry.register(first).unwrap();
-            let executable_error = registry.register(ArtifactInferenceService::new(identity, reject)).unwrap_err();
-            let ArtifactInferenceRegistrationError::Conflict(conflict) = executable_error else {
-                panic!("in-memory registry must report a registration conflict");
-            };
-            assert_eq!(conflict.existing, conflict.incoming);
-            let error = registry.register(ArtifactInferenceService::new(changed_metadata, reject)).unwrap_err();
-            let ArtifactInferenceRegistrationError::Conflict(conflict) = error else {
-                panic!("in-memory registry must report a registration conflict");
-            };
-            assert_eq!(conflict.key.artifact_kind, "s.test.conflict");
-            assert_eq!(conflict.existing.algorithm_version, 1);
-            assert_eq!(conflict.incoming.algorithm_version, 2);
-        }
-    }
+    include!("🧪️tests/🔬️app-artifact-inference-service/🦀️.rs");
     //#endregion 💡️ArtifactInferenceService
 
     //#region 🌉️ArtifactInferenceWire
@@ -1927,119 +1849,7 @@ pub mod app {
     }
 
     #[cfg(test)]
-    mod artifact_inference_wire_tests {
-        use super::*;
-
-        async fn metadata(inference_schema: &'static str) -> ArtifactInferenceServiceMetadata {
-            ArtifactInferenceServiceMetadata {
-                owner: "s.test",
-                artifact_kind: "s.test",
-                artifact_schema: "s.test.schema",
-                artifact_schema_version: 1,
-                document_schema: "s.test.document",
-                document_schema_version: 1,
-                inference_schema,
-                inference_schema_version: 1,
-                algorithm_version: 1,
-                policy_version: 1,
-            }
-        }
-
-        fn echo(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
-            Ok(ArtifactInferenceExecution {
-                canonical_payload: request.canonical_payload.to_vec(),
-                diagnostics: Vec::new(),
-                validity: "valid".into(),
-                quality: "complete".into(),
-                complete: true,
-                actual_cache_mode: request.requested_cache_mode.clone(),
-            })
-        }
-
-        fn cancel(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
-            cancel_artifact_inference(request.cancellation_id)?;
-            echo(request)
-        }
-
-        async fn request(inference_schema: &str) -> WireArtifactInferenceRequest {
-            WireArtifactInferenceRequest {
-                wire_version: ARTIFACT_INFERENCE_WIRE_VERSION,
-                owner: "s.test".into(),
-                artifact_kind: "s.test".into(),
-                artifact_schema: "s.test.schema".into(),
-                artifact_schema_version: 1,
-                document_schema: "s.test.document".into(),
-                document_schema_version: 1,
-                inference_schema: inference_schema.into(),
-                inference_schema_version: 1,
-                algorithm_version: 1,
-                policy_version: 1,
-                revision: 3,
-                generation: 4,
-                source_dialect: "s.test.standard.v1.dialect.canonical".into(),
-                policy: vec![1],
-                budgets: WireArtifactInferenceBudget { allocation_bytes: 128, work_units: 2, recursion_depth: 1 },
-                cancellation_id: format!("cancel-{inference_schema}"),
-                previous_state: None,
-                requested_cache_mode: WireArtifactInferenceCacheMode::Cold,
-                canonical_payload: vec![2],
-                dependencies: vec![("s.dependency".into(), vec![3])],
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn request_rejects_unknown_wire_version_before_registry_lookup() {
-            let request = WireArtifactInferenceRequest {
-                wire_version: 1,
-                owner: "test".into(),
-                artifact_kind: "test".into(),
-                artifact_schema: "test".into(),
-                artifact_schema_version: 1,
-                document_schema: "test".into(),
-                document_schema_version: 1,
-                inference_schema: "test.inference".into(),
-                inference_schema_version: 1,
-                algorithm_version: 1,
-                policy_version: 1,
-                revision: 3,
-                generation: 4,
-                source_dialect: "s.stdio.test.standard.v1.dialect.canonical".into(),
-                policy: Vec::new(),
-                budgets: WireArtifactInferenceBudget { allocation_bytes: 1, work_units: 1, recursion_depth: 1 },
-                cancellation_id: "test-cancel".into(),
-                previous_state: None,
-                requested_cache_mode: WireArtifactInferenceCacheMode::Cold,
-                canonical_payload: Vec::new(),
-                dependencies: Vec::new(),
-            };
-            let error = wire_artifact_infer(protocol::json::to_json_string(&request).as_bytes()).await.unwrap_err();
-            assert_eq!(error.code, "artifact-inference.wire-version");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn wire_execution_preserves_every_echoed_request_fact() {
-            let mut registry = ArtifactInferenceServiceRegistry::new();
-            registry.register(ArtifactInferenceService::new(metadata("s.test.inference.echo").await, echo)).unwrap();
-            let request = request("s.test.inference.echo").await;
-            let bytes = wire_artifact_infer_from(&registry, protocol::json::to_json_string(&request).as_bytes()).unwrap();
-            let result: WireArtifactInferenceResult = protocol::json::from_json_str(std::str::from_utf8(&bytes).unwrap()).unwrap();
-            assert_eq!(result.policy, request.policy);
-            assert_eq!(result.budgets, request.budgets);
-            assert_eq!(result.previous_state, request.previous_state);
-            assert_eq!(result.requested_cache_mode, request.requested_cache_mode);
-            assert_eq!(result.dependencies, request.dependencies);
-            assert_eq!(result.actual_cache_mode, WireArtifactInferenceCacheMode::Cold);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn wire_execution_observes_midflight_cancellation() {
-            let mut registry = ArtifactInferenceServiceRegistry::new();
-            registry.register(ArtifactInferenceService::new(metadata("s.test.inference.cancel").await, cancel)).unwrap();
-            let request = request("s.test.inference.cancel");
-            let error = wire_artifact_infer_from(&registry, protocol::json::to_json_string(&request.await).as_bytes()).unwrap_err();
-            assert_eq!(error.code, "artifact-inference.cancelled");
-        }
-    }
+    include!("🧪️tests/🔬️app-artifact-inference-wire/🦀️.rs");
     //#endregion 🌉️ArtifactInferenceWire
 
     //#region 🧾️ArtifactDefinition
@@ -2836,7 +2646,11 @@ pub mod app {
                 "conformance-suite" => segments.len() >= 5 && segments[3] == "conformance-suite",
                 _ => true,
             };
-            if valid { Ok(()) } else { Err(ArtifactDefinitionError::new("artifact-definition.category-identity", format!("{} does not use the canonical {} identity grammar", capability.identity, category))) }
+            if valid {
+                Ok(())
+            } else {
+                Err(ArtifactDefinitionError::new("artifact-definition.category-identity", format!("{} does not use the canonical {} identity grammar", capability.identity, category)))
+            }
         }
 
         fn stdio_capability(self, identity: ArtifactIdentity, kind: ArtifactCapabilityKind, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
@@ -3122,7 +2936,17 @@ pub mod app {
     impl ArtifactDeclarationBuilder<DeclarationReady> {
         /// 🧾️ Lists exact runtime capability rows without attempting plugin assembly.
         pub async fn runtime_capability_requirements(&self) -> Result<Vec<ArtifactRuntimeCapabilityRequirement>, ArtifactDefinitionError> {
-            ArtifactCapabilitySources { schemas: &self.schemas, inferences: &self.inferences, inference_services: &self.inference_services, composers: &self.composers, formats: &self.formats, subset_validators: &self.subset_validators, languages: &self.languages, document_codecs: &self.document_codecs }.requirements()
+            ArtifactCapabilitySources {
+                schemas: &self.schemas,
+                inferences: &self.inferences,
+                inference_services: &self.inference_services,
+                composers: &self.composers,
+                formats: &self.formats,
+                subset_validators: &self.subset_validators,
+                languages: &self.languages,
+                document_codecs: &self.document_codecs,
+            }
+            .requirements()
         }
 
         /// 🧬️ Appends further schema descriptors for independently versioned standards or profiles.
@@ -3514,7 +3338,17 @@ pub mod app {
 
         /// 🧾️ Lists every exact runtime capability required by this immutable declaration.
         pub fn runtime_capability_requirements(&self) -> Result<Vec<ArtifactRuntimeCapabilityRequirement>, ArtifactDefinitionError> {
-            ArtifactCapabilitySources { schemas: &self.schemas, inferences: &self.inferences, inference_services: &self.inference_services, composers: &self.composers, formats: &self.formats, subset_validators: &self.subset_validators, languages: &self.languages, document_codecs: &self.document_codecs }.requirements()
+            ArtifactCapabilitySources {
+                schemas: &self.schemas,
+                inferences: &self.inferences,
+                inference_services: &self.inference_services,
+                composers: &self.composers,
+                formats: &self.formats,
+                subset_validators: &self.subset_validators,
+                languages: &self.languages,
+                document_codecs: &self.document_codecs,
+            }
+            .requirements()
         }
 
         /// 🛡️ Inserts every attached definition into a caller-owned plugin registry. The caller
@@ -4426,17 +4260,7 @@ pub mod app {
     impl std::error::Error for ContributionRegistrationError {}
 
     #[cfg(test)]
-    mod owned_contribution_error_tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn owned_errors_preserve_their_messages() {
-            let dependency = ContributionRegistrationError::DependencyNotDeclared { plugin_id: "consumer".into(), artifact_kind: "s.owner.kind".into(), owner: "owner".into() };
-            assert_eq!(dependency.to_string(), "contribution targets artifact kind \"s.owner.kind\" (owned by plugin \"owner\"), which is not a direct dependency of \"consumer\"");
-            let malformed = ContributionRegistrationError::MalformedMutationId { plugin_id: "consumer".into(), mutation_id: "bad".into() };
-            assert_eq!(malformed.to_string(), "contributed mutation id \"bad\" does not match the frozen grammar `<target-document-schema>#consumer:<kebab-kind>`");
-        }
-    }
+    include!("🧪️tests/🔬️app-owned-contribution-error/🦀️.rs");
 
     /// ✅️ Contract freeze §4 registration gates, run over already-assembled manifest data (never a
     /// live registry): (a) a contribution's target artifact kind must be OWNED by a plugin the
@@ -4704,150 +4528,11 @@ pub mod app {
     }
 
     #[cfg(test)]
-    mod artifact_contribution_tests {
-        use super::*;
-
-        async fn semantics(kind: &str) -> semio_framework::ContributedMutationSemantics {
-            semio_framework::ContributedMutationSemantics { verb: "add".into(), entity: "thing".into(), kind: kind.into(), record: "AddedThing".into() }
-        }
-
-        async fn descriptor_with_mutation(artifact_kind: &str, mutation_id: &str, kind: &str) -> semio_framework::ArtifactContributionDescriptor {
-            semio_framework::ArtifactContributionDescriptor {
-                artifact_kind: artifact_kind.into(),
-                mutations: vec![semio_framework::ContributedMutationMetadata { mutation_id: mutation_id.into(), semantics: semantics(kind).await, schema_version: 1, algorithm_version: 1 }],
-                inferences: Vec::new(),
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn dependency_gating_rejects_a_contribution_onto_a_non_dependency() {
-            let descriptor = descriptor_with_mutation("s.dep.target", "dep.document#contributor:add-thing", "add-thing").await;
-            let error = register_contributions("contributor", &[], std::slice::from_ref(&descriptor)).expect_err("missing dependency must be rejected");
-            assert!(matches!(error, ContributionRegistrationError::DependencyNotDeclared { owner, .. } if owner == "dep"));
-            let dependencies = vec![semio_framework::PluginDependency::new("dep", semio_framework::VersionReq::Any)];
-            register_contributions("contributor", &dependencies, std::slice::from_ref(&descriptor)).expect("direct dependency must be accepted");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn id_namespacing_rejects_a_collision_with_an_owner_kind() {
-            let dependencies = vec![semio_framework::PluginDependency::new("dep", semio_framework::VersionReq::Any)];
-            let bare = descriptor_with_mutation("s.dep.target", "dep.document#add-thing", "add-thing").await;
-            let error = register_contributions("contributor", &dependencies, std::slice::from_ref(&bare)).expect_err("bare owner-shaped id must be rejected");
-            assert!(matches!(error, ContributionRegistrationError::CollidesWithOwnerKind(id) if id == "dep.document#add-thing"));
-            let well_formed = descriptor_with_mutation("s.dep.target", "dep.document#contributor:add-thing", "add-thing").await;
-            register_contributions("contributor", &dependencies, std::slice::from_ref(&well_formed)).expect("well-formed contributed id must be accepted");
-        }
-
-        // 🚫️async: E4 fn-pointer slot — `commit_owner_mutation_roster` takes
-        // `&[fn() -> (&'static str, &'static [SemanticDescriptor])]`, a plain sync fn pointer; see R2/R9.
-        fn owner_roster_provider() -> (&'static str, &'static [::protocol::SemanticDescriptor]) {
-            const KINDS: &[::protocol::SemanticDescriptor] =
-                &[::protocol::SemanticDescriptor { verb: "add", entity: "widget", kind: "add-widget", record: "AddedWidget" }, ::protocol::SemanticDescriptor { verb: "remove", entity: "widget", kind: "remove-widget", record: "RemovedWidget" }];
-            ("roster-determinism-test.document", KINDS)
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn mutation_roster_entries_are_deterministic_across_repeated_calls() {
-            let providers: &[OwnerMutationRoster] = &[owner_roster_provider];
-            commit_owner_mutation_roster(providers).await.expect("commit owner roster");
-            let first = mutation_roster_entries().await;
-            let second = mutation_roster_entries().await;
-            assert_eq!(first, second);
-            let mut sorted = first.clone();
-            sorted.sort_by(|a, b| a.mutation_id.cmp(&b.mutation_id));
-            assert_eq!(first, sorted);
-            assert!(first.iter().any(|entry| entry.mutation_id == "roster-determinism-test.document#add-widget"));
-        }
-    }
+    include!("🧪️tests/🔬️app-artifact-contribution/🦀️.rs");
     //#endregion 🔖️ArtifactContribution
 
     #[cfg(test)]
-    mod artifact_definition_contract_tests {
-        use super::*;
-
-        fn identity(value: &str) -> ArtifactIdentity {
-            ArtifactIdentity::parse(value).unwrap()
-        }
-
-        fn capability(owner: &ArtifactIdentity, segment: &str, kind: ArtifactCapabilityKind) -> ArtifactCapability {
-            let identity = match kind.as_str() {
-                "standard" => owner.standard("v4"),
-                "profile" => owner.standard("v4").and_then(|identity| identity.profile(segment)),
-                "source-dialect" => owner.standard("v4").and_then(|identity| identity.source_dialect(segment)),
-                "representation" => owner.standard("v4").and_then(|identity| identity.representation(segment)),
-                "codec" => owner.standard("v4").and_then(|identity| identity.codec(segment, "v1")),
-                "mutation" => owner.mutation(segment, "v1"),
-                "inference" => owner.inference(segment, "v1"),
-                "localization" => owner.child("localization").and_then(|identity| identity.child("en")),
-                category => owner.child(category).and_then(|identity| identity.child(segment)),
-            }
-            .unwrap();
-            ArtifactCapability::new(identity, kind).descriptor(b"test".to_vec()).unwrap()
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn plural_definition_carries_every_artifact_capability_without_a_dispatch_edit() {
-            let owner = identity("s.stdio.ifc");
-            let schema = capability(&owner, "schema", ArtifactCapabilityKind::schema()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.stdio.ifc.v4").unwrap()).unwrap();
-            let standard = capability(&owner, "standard", ArtifactCapabilityKind::standard());
-            let profile = capability(&owner, "profile", ArtifactCapabilityKind::profile());
-            let dialect = capability(&owner, "source-dialect", ArtifactCapabilityKind::source_dialect()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.ifc.standard.v4.dialect.any").unwrap()).unwrap();
-            let representation = capability(&owner, "representation", ArtifactCapabilityKind::representation()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::mime(), "application/ifc").unwrap()).unwrap();
-            let codec = capability(&owner, "codec", ArtifactCapabilityKind::codec()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "stdio.ifc.v4.pack").unwrap()).unwrap();
-            let mutation = capability(&owner, "mutation", ArtifactCapabilityKind::mutation());
-            let inference = capability(&owner, "inference", ArtifactCapabilityKind::inference());
-            let resource = capability(&owner, "resource", ArtifactCapabilityKind::resource()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), "ifc").unwrap()).unwrap();
-            let localization = capability(&owner, "localization", ArtifactCapabilityKind::localization())
-                .localization(ArtifactLocalization::new(ArtifactLocale::parse("en").unwrap(), "Industry Foundation Classes").unwrap())
-                .unwrap()
-                .localization(ArtifactLocalization::new(ArtifactLocale::parse("de").unwrap(), "Industriegrundklassen").unwrap())
-                .unwrap();
-            let conformance = capability(&owner, "conformance-suite", ArtifactCapabilityKind::conformance_suite()).claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension_implementation(), "ifc-v4-conformance").unwrap()).unwrap();
-            let definition = [schema, standard, profile, dialect, representation, codec, mutation, inference, resource, localization, conformance]
-                .into_iter()
-                .try_fold(ArtifactDefinition::new(owner.clone()), |definition, capability| definition.capability(capability))
-                .unwrap();
-
-            assert_eq!(definition.capabilities().count(), 11);
-            assert!(definition.validate().is_ok());
-            assert!(definition.capabilities().any(|capability| capability.identity().as_str() == "s.stdio.ifc.standard.v4"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn registry_rejects_duplicate_schema_dialect_codec_mime_and_extension_claims_atomically() {
-            let owner_a = identity("s.stdio.ifc");
-            let owner_b = identity("s.stdio.json");
-            let namespaces = [ArtifactIdentityNamespace::schema(), ArtifactIdentityNamespace::dialect(), ArtifactIdentityNamespace::codec(), ArtifactIdentityNamespace::mime(), ArtifactIdentityNamespace::extension()];
-            for (index, namespace) in namespaces.into_iter().enumerate() {
-                let value = format!("shared-{index}");
-                let first = ArtifactDefinition::new(owner_a.clone())
-                    .capability(capability(&owner_a, &format!("first-{index}"), ArtifactCapabilityKind::resource()).claim(ArtifactIdentityClaim::new(namespace.clone(), value.clone()).unwrap()).unwrap())
-                    .unwrap();
-                let second = ArtifactDefinition::new(owner_b.clone()).capability(capability(&owner_b, &format!("second-{index}"), ArtifactCapabilityKind::resource()).claim(ArtifactIdentityClaim::new(namespace, value).unwrap()).unwrap()).unwrap();
-                let mut registry = ArtifactDefinitionRegistry::new();
-                registry.register(first).unwrap();
-                let error = registry.register(second).unwrap_err();
-                assert_eq!(error.code(), "artifact-definition.conflicting-claim");
-                assert_eq!(registry.len(), 1);
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn identities_and_locales_are_explicit_and_conflicts_do_not_overwrite() {
-            assert!(ArtifactIdentity::parse("s.stdio..ifc").is_err());
-            assert!(ArtifactLocale::parse("EN").is_err());
-            let owner = identity("s.stdio.ifc");
-            let localized = capability(&owner, "localized", ArtifactCapabilityKind::localization()).localization(ArtifactLocalization::new(ArtifactLocale::parse("en").unwrap(), "Ifc").unwrap()).unwrap();
-            let duplicate = localized.clone().localization(ArtifactLocalization::new(ArtifactLocale::parse("en").unwrap(), "IFC").unwrap()).unwrap_err();
-            assert_eq!(duplicate.code(), "artifact-definition.duplicate-locale");
-
-            let mut registry = ArtifactDefinitionRegistry::new();
-            registry.register(ArtifactDefinition::new(owner.clone()).capability(localized).unwrap()).unwrap();
-            let error = registry.register(ArtifactDefinition::new(owner)).unwrap_err();
-            assert_eq!(error.code(), "artifact-definition.conflicting-artifact");
-            assert_eq!(registry.len(), 1);
-        }
-    }
+    include!("🧪️tests/🔬️app-artifact-definition-contract/🦀️.rs");
 
     pub struct AppBuilder {
         id: String,
@@ -5414,9 +5099,9 @@ pub mod app {
                 if !(!interaction.selection.merges.is_empty()) {
                     return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} interaction {} must declare at least one merge mode", self.id, interaction.id)));
                 } // 🕹️ W3b: `transitive` (hover or selection) means "expand to descendant closure" — over
-                // `HierarchyProvider::Flat` there is no descendant relation to expand along at all, so a
-                // transitive `Flat` domain could only ever silently degrade to non-transitive behavior;
-                // reject it at build time instead.
+                  // `HierarchyProvider::Flat` there is no descendant relation to expand along at all, so a
+                  // transitive `Flat` domain could only ever silently degrade to non-transitive behavior;
+                  // reject it at build time instead.
                 if !(!interaction.hover.transitive || !matches!(interaction.hierarchy, semio_framework::HierarchyProvider::Flat)) {
                     return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} interaction {} declares hover.transitive with HierarchyProvider::Flat (transitive requires a real hierarchy)", self.id, interaction.id)));
                 }
@@ -6017,57 +5702,7 @@ pub mod app {
     }
 
     #[cfg(test)]
-    mod panel_kit_tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn tree_item_builds_a_bare_item() {
-            let item = tree_item("ns.kind.a", "A").expect("bounded fixture");
-            assert_eq!(item.key.as_str(), "ns.kind.a");
-            let Component::TreeItem(props) = &item.component else { panic!("expected a TreeItem") };
-            assert_eq!(props.label.0.as_str(), "A");
-            assert!(props.description.is_none());
-            assert!(item.bindings.is_empty());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn tree_item_with_action_draggable_maps_json_object_to_string_drag_data() {
-            let action = ActionId::try_v1("app", "addWidget").expect("bounded fixture");
-            let item =
-                tree_item_with_action_draggable("ns.kind.a", "A", None, (action, None), &dsl::os_pack::json::object([("application/x-widget".to_string(), dsl::os_pack::json::Value::String("{\"kind\":\"a\"}".to_string()))])).expect("bounded fixture");
-            let Component::TreeItem(props) = &item.component else { panic!("expected a TreeItem") };
-            assert_eq!(props.draggable, Some(true));
-            assert!(props.drag_data.as_ref().unwrap().iter().any(|(key, value)| key.as_str() == "application/x-widget" && value.as_str() == "{\"kind\":\"a\"}"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn selection_ids_reads_the_ids_array_arg() {
-            let args = DslValue::from(&serde_json::json!({ "ids": ["a", "b"] }));
-            assert_eq!(selection_ids(Some(&args)), vec!["a".to_string(), "b".to_string()]);
-            assert!(selection_ids(None).is_empty());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn panel_tree_builder_produces_a_namespaced_tree_with_placeholder() {
-            let builder = PanelTreeBuilder::new("ns-play-document").expect("bounded fixture");
-            let item_id = builder.item_id("widget", "w1").expect("bounded fixture");
-            assert_eq!(item_id.as_str(), "ns-play-document.widget.w1");
-            let mut items = UiFixedList::default();
-            items.try_push(tree_item(item_id, "W1").expect("bounded fixture")).expect("bounded fixture");
-            let builder = builder.section("ns-play-document.widgets", Some(Label::try_from("Widgets").expect("bounded fixture")), true, items).expect("bounded fixture");
-            let builder = builder.section_or_placeholder("ns-play-document.synapses", Some(Label::try_from("Synapses").expect("bounded fixture")), false, UiFixedList::default(), "(none)").expect("bounded fixture");
-            let builder = builder.selected(["ns-play-document.widget.w1".to_string()]).expect("bounded fixture");
-            let builder = builder.interaction_domain("ns-play-document").expect("bounded fixture");
-            let node = builder.build().expect("bounded fixture");
-            assert_eq!(node.children.len(), 2);
-            let Component::TreeSection(_) = &node.children[0].component else { panic!("expected a TreeSection") };
-            assert_eq!(node.children[0].children.len(), 1);
-            let Component::TreeItem(placeholder) = &node.children[1].children[0].component else { panic!("expected a TreeItem") };
-            assert_eq!(placeholder.label.0.as_str(), "(none)");
-            let Component::Tree(tree_props) = &node.component else { panic!("expected a Tree") };
-            assert_eq!(tree_props.interaction_domain.as_deref(), Some("ns-play-document"));
-        }
-    }
+    include!("🧪️tests/🔬️app-panel-kit/🦀️.rs");
     //#endregion 🔖️PanelKit
 
     //#region 🔖️FormKit
@@ -6193,69 +5828,7 @@ pub mod app {
     }
 
     #[cfg(test)]
-    mod form_kit_tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn form_panel_builder_wraps_a_field_control_and_submit_button() {
-            let on_change = ActionId::try_v1("app", "setValue").expect("bounded fixture");
-            let submit_action = ActionId::try_v1("app", "submit").expect("bounded fixture");
-            let control = input(InputKind::Text)
-                .try_id("ns-play-form.field.name")
-                .unwrap_or_else(|_| panic!("bounded fixture id"))
-                .try_on(Trigger::Change, on_change)
-                .unwrap_or_else(|_| panic!("bounded fixture binding"))
-                .try_build()
-                .expect("bounded fixture");
-            let builder = FormPanelBuilder::new("ns-play-form").await.expect("bounded fixture");
-            let builder = builder.field("name", "Name", Some("Full name".into()), control).await.expect("bounded fixture");
-            let builder = builder.submit("Submit", submit_action).await.expect("bounded fixture");
-            let node = builder.build().await.expect("bounded fixture");
-            assert_eq!(node.key.as_str(), "ns-play-form");
-            assert_eq!(node.children.len(), 2);
-            let field = &node.children[0];
-            assert_eq!(field.key.as_str(), "ns-play-form.field.name");
-            let Component::Container(props) = &field.component else { panic!("expected a Field container") };
-            assert_eq!(props.description.as_deref(), Some("Full name"));
-            let Component::Button(button_props) = &node.children[1].component else { panic!("expected a Button node") };
-            assert_eq!(button_props.label.0.as_str(), "Submit");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn form_panel_builder_from_dictionary_routes_entries_into_field_rows() {
-            let on_change = ActionId::try_v1("app", "setValue").expect("bounded fixture");
-            let dictionary = serde_json::json!([
-                { "id": "email", "label": "Email", "description": "Contact email", "value": "a@b.com" },
-                { "id": "phone" },
-            ]);
-            let builder = FormPanelBuilder::new("ns-play-form").await.expect("bounded fixture");
-            let builder = builder.from_dictionary(&dictionary, on_change).await.expect("bounded fixture");
-            let node = builder.build().await.expect("bounded fixture");
-            assert_eq!(node.children.len(), 2);
-            let email_field = &node.children[0];
-            assert_eq!(email_field.key.as_str(), "ns-play-form.field.email");
-            let Component::Container(email_props) = &email_field.component else { panic!("expected a Field container") };
-            assert_eq!(email_props.label.as_ref().map(|label| label.0.clone()).as_deref(), Some("Email"));
-            let Component::Container(phone_props) = &node.children[1].component else { panic!("expected a Field container") };
-            assert_eq!(phone_props.label.as_ref().map(|label| label.0.clone()).as_deref(), Some("phone"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn entity_detail_builds_a_stack_with_header_key_value_and_actions() {
-            let action = ActionId::try_v1("app", "edit").expect("bounded fixture");
-            let button = button(Label::try_from("Edit").expect("bounded fixture"))
-                .icon(UiText::try_from_str("edit").expect("bounded fixture"))
-                .try_on(Trigger::Activate, action)
-                .unwrap_or_else(|_| panic!("bounded fixture binding"))
-                .try_build()
-                .expect("bounded fixture");
-            let entry = KeyValueEntry { label: Label::try_from("Kind").expect("bounded fixture"), value: UiText::try_from_str("gizmo").expect("bounded fixture") };
-            let node = entity_detail("Widget", Some(Label::try_from("A widget").expect("bounded fixture")), [entry], [button]).await.expect("bounded fixture");
-            assert_eq!(node.children.len(), 4);
-            let Component::KeyValueList(key_value) = &node.children[2].component else { panic!("expected a KeyValue node") };
-            assert_eq!(key_value.entries[0].value.as_str(), "gizmo");
-        }
-    }
+    include!("🧪️tests/🔬️app-form-kit/🦀️.rs");
     //#endregion 🔖️FormKit
 
     //#region 🔖️Terminology
@@ -6295,7 +5868,11 @@ pub mod app {
     /// 🗣️ Region-tolerant `"de"`/`"de-DE"` → `Locale::De` parse, `_` → `Locale::En` — the shared body
     /// of every hand-rolled per-app `is_de_locale`/`fn locale(cfg) -> Locale` this replaces.
     pub fn locale_from_str(locale: &str) -> Locale {
-        if locale.starts_with("de") { Locale::De } else { Locale::En }
+        if locale.starts_with("de") {
+            Locale::De
+        } else {
+            Locale::En
+        }
     }
 
     /// 🗣️ Resolves the active label set for the shell-provided locale/terminology axes.
@@ -6366,27 +5943,7 @@ pub mod app {
 }
 
     #[cfg(test)]
-    mod terminology_tests {
-        use super::*;
-
-        app_labels! {
-            struct SampleLabels {
-                greeting: native_en "Hello", native_de "Hallo", reuse_en "Hi", reuse_de "Servus";
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn resolve_labels_is_exhaustive_over_all_four_cells() {
-            let native_en = ViewModel { locale: Locale::En, terminology: Terminology::Native, ..ViewModel::default() };
-            let native_de = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..ViewModel::default() };
-            let reuse_en = ViewModel { locale: Locale::En, terminology: Terminology::Reuse, ..ViewModel::default() };
-            let reuse_de = ViewModel { locale: Locale::De, terminology: Terminology::Reuse, ..ViewModel::default() };
-            assert_eq!(resolve_labels::<SampleLabels>(&native_en).greeting.as_str(), "Hello");
-            assert_eq!(resolve_labels::<SampleLabels>(&native_de).greeting.as_str(), "Hallo");
-            assert_eq!(resolve_labels::<SampleLabels>(&reuse_en).greeting.as_str(), "Hi");
-            assert_eq!(resolve_labels::<SampleLabels>(&reuse_de).greeting.as_str(), "Servus");
-        }
-    }
+    include!("🧪️tests/🔬️app-terminology/🦀️.rs");
     //#endregion 🔖️Terminology
 
     //#region 🔖️ActionFactory
@@ -6614,104 +6171,7 @@ pub mod app {
     /// 🎯️ M1 retained typed-command bridge fixtures, kept separate from intent dispatch so
     /// cursor, cancellation, deadline, and depth regressions fail at their owner boundary.
     #[cfg(test)]
-    mod merge_ui_values_tests {
-        use super::*;
-
-        fn ui_text(value: &str) -> UiText {
-            UiText::try_from_str(value).expect("bounded fixture text")
-        }
-
-        fn ui_list(values: impl IntoIterator<Item = UiValue>) -> UiList {
-            let mut builder = UiListBuilder::try_new().expect("fixed list builder");
-            for value in values {
-                builder.push(value).expect("fixed list page");
-            }
-            builder.finish()
-        }
-
-        fn ui_map(entries: impl IntoIterator<Item = (String, UiValue)>) -> UiMap {
-            let mut builder = UiMapBuilder::try_new().expect("fixed map builder");
-            for (key, value) in entries {
-                builder.push(key, value).expect("ascending fixed map page");
-            }
-            builder.finish()
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn retained_ui_value_bridge_advances_every_shape_to_the_matching_json_candidate() {
-            assert_eq!(ui_value_to_dsl_retained(&UiValue::Null).await.expect("retained null"), DslValue::Null);
-            assert_eq!(ui_value_to_dsl_retained(&UiValue::Bool(true)).await.expect("retained bool"), DslValue::Bool(true));
-            assert_eq!(ui_value_to_dsl_retained(&UiValue::Number(-2.5)).await.expect("retained number"), serde_json::json!(-2.5));
-            assert_eq!(ui_value_to_dsl_retained(&UiValue::Text(ui_text("hi"))).await.expect("retained text"), DslValue::String("hi".into()));
-            assert_eq!(ui_value_to_dsl_retained(&UiValue::List(ui_list([UiValue::Number(1.0), UiValue::Bool(false)]))).await.expect("retained list"), serde_json::json!([1.0, false]));
-            let mut map = BTreeMap::new();
-            map.insert("id".to_string(), UiValue::Text(ui_text("w1")));
-            assert_eq!(ui_value_to_dsl_retained(&UiValue::Map(ui_map(map))).await.expect("retained map"), serde_json::json!({ "id": "w1" }));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn merge_ui_values_returns_none_when_neither_side_is_set() {
-            assert_eq!(merge_ui_values(None, None).await.expect("empty merge"), None);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn merge_ui_values_falls_back_to_whichever_single_side_is_set() {
-            assert_eq!(merge_ui_values(Some(&UiValue::Text(ui_text("a"))), None).await.expect("args merge"), Some(DslValue::from(&serde_json::json!("a"))));
-            assert_eq!(merge_ui_values(None, Some(&UiValue::Number(3.0))).await.expect("input merge"), Some(DslValue::from(&serde_json::json!(3.0))));
-        }
-
-        /// 🔀️ The decided merge rule: `input` wins on key collision when both are objects.
-        #[semio_framework_async_macros::async_test]
-        async fn merge_ui_values_prefers_input_on_key_collision_between_two_maps() {
-            let mut args_map = BTreeMap::new();
-            args_map.insert("value".to_string(), UiValue::Number(1.0));
-            args_map.insert("scope".to_string(), UiValue::Text(ui_text("keep")));
-            let mut input_map = BTreeMap::new();
-            input_map.insert("value".to_string(), UiValue::Number(2.0));
-            let merged = merge_ui_values(Some(&UiValue::Map(ui_map(args_map))), Some(&UiValue::Map(ui_map(input_map)))).await.expect("retained merge").expect("both sides set");
-            assert_eq!(merged, serde_json::json!({ "value": 2.0, "scope": "keep" }));
-        }
-
-        /// 🔀️ A scalar `input` has no field to merge INTO — it replaces `args` wholesale (e.g.
-        /// `Trigger::Delta`'s signed step count next to a non-object `args`).
-        #[semio_framework_async_macros::async_test]
-        async fn merge_ui_values_replaces_a_non_object_args_wholesale_when_input_is_also_set() {
-            let merged = merge_ui_values(Some(&UiValue::Text(ui_text("stale"))), Some(&UiValue::Number(-2.0))).await.expect("retained merge");
-            assert_eq!(merged, Some(DslValue::from(&serde_json::json!(-2.0))));
-        }
-
-        #[test]
-        fn retained_ui_value_bridge_cancel_and_deadline_preserve_the_original_owner() {
-            let original = UiValue::List(ui_list([UiValue::Text(ui_text("kept"))]));
-            let mut producer = UiCommandJsonProducer::try_new(&original).expect("credited alias");
-            assert_eq!(producer.drive_one(false, true), UiCommandJsonStep::MoreWork);
-            assert_eq!(producer.items, 0);
-            assert_eq!(producer.drive_one(true, false), UiCommandJsonStep::Cancelled);
-            let UiValue::List(values) = original else { panic!("original list") };
-            assert_eq!(values.len(), 1);
-        }
-
-        #[test]
-        fn retained_ui_value_bridge_rejects_depth_plus_one_without_consuming_the_original() {
-            let mut original = UiValue::Null;
-            for _ in 0..=UI_COMMAND_VALUE_DEPTH {
-                original = UiValue::List(ui_list([original]));
-            }
-            let mut producer = UiCommandJsonProducer::try_new(&original).expect("credited root alias");
-            let mut opportunities = 0;
-            loop {
-                opportunities += 1;
-                match producer.drive_one(false, false) {
-                    UiCommandJsonStep::MoreWork => continue,
-                    UiCommandJsonStep::Fault => break,
-                    step => panic!("unexpected bridge step {step:?}"),
-                }
-            }
-            assert!(opportunities > UI_COMMAND_VALUE_DEPTH);
-            let UiValue::List(values) = original else { panic!("original list") };
-            assert_eq!(values.len(), 1);
-        }
-    }
+    include!("🧪️tests/🔬️app-merge-ui-values/🦀️.rs");
     //#endregion 🧪️MergeUiValuesTests
 
     #[cfg(test)]
@@ -6728,7 +6188,7 @@ pub mod app {
         //! `terminology_tests`/`panel_kit_tests` above for the sibling pattern of testing SDK primitives
         //! themselves inline.
 
-        use super::{ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactToolFactoryRegistry, PluginApp, VcsArtifactApp, register_framework_reserved_factories};
+        use super::{register_framework_reserved_factories, ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactToolFactoryRegistry, PluginApp, VcsArtifactApp};
         use store::{Backbone, BackboneMessage, MemoryBackbone};
 
         pub const FIXTURE_TREE_MAX_DEPTH: usize = 64;
@@ -6893,7 +6353,7 @@ pub mod app {
 
         /// 🧪️ Every declared app action must bridge through `command_from_action` and round-trip `command_id`.
         pub async fn assert_declared_actions_bridge_to_commands<A: ArtifactApp + Default>(manifest: fn() -> App) {
-            use semio_framework::{DslValue, effective_action_args};
+            use semio_framework::{effective_action_args, DslValue};
             let definition = manifest().definition;
             let _app = A::default();
             let skip = [
@@ -7093,7 +6553,7 @@ pub mod app {
         //#region 👁️✏️SurfaceTestkit
         // 🎫️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.5 — lane 0-F. New
         // subregion, appended after the peer `🧪️testkit` subregion above without touching it.
-        use super::{ArtifactEditor, ArtifactViewer, ViewerApp, declarations};
+        use super::{declarations, ArtifactEditor, ArtifactViewer, ViewerApp};
 
         /// 👁️ Exercises the production ViewerApp adapter with a representative viewer command.
         /// The adapter must emit neither document nor draft mutations. Command registration and
@@ -7215,786 +6675,7 @@ pub mod app {
     //#endregion 🔖️Testkit
 
     #[cfg(test)]
-    mod app_builder_tests {
-        use super::*;
-        use ui_wgpu::wgpu::LocalizedLabel;
-        use ui_wgpu::wgpu::create_default_layout;
-
-        /// 🪪️ Contract §1 fixture — a canonical id built via `surface_app_id` from a fixture `Dialect`,
-        /// not a hand-written pre-migration string. One shared helper rather than one dialect per test.
-        async fn canonical_test_app_id(slug: &str) -> String {
-            surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.app-builder.{slug}"), standard: "1".into(), subset: "*".into() }, AppRole::Editor)
-        }
-
-        /// 🪦️ REMOVED (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, registrar):
-        /// `build_definition_rejects_{,dialog_}select_arg_with_no_options` asserted that a Select
-        /// argument declaring zero options is rejected. After the peer `ActionArgDef` redesign
-        /// (`control` field -> `control()` derived from `ArgSchema`), `ActionArgControl::Select` is
-        /// only ever produced when `options` is non-empty, so "a Select with no options" is
-        /// structurally unrepresentable and the rejection can never fire. The tests were asserting
-        /// an impossible outcome, not lost coverage — illegal state made unconstructible beats
-        /// validating it. The defensive asserts in `validate_arg_defs` are kept as a tripwire in
-        /// case `control()` ever widens again.
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_layout_with_unknown_window_kind() {
-            let base = App::builder("bad-app", LocalizedLabel::data("Bad")).await;
-            let __chain = base
-                .document(["semio", "bad"])
-                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                .await
-                .mode_tools("edit", vec![])
-                .await
-                .window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                .await
-                .default_layout(create_default_layout(&["missing".into()], "row", None, None))
-                .await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_is_sync_and_accepts_valid_manifest() {
-            let definition = App::builder(canonical_test_app_id("good-app").await, LocalizedLabel::data("Good"))
-                .await
-                .document(["semio", "good"])
-                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                .await
-                .mode_tools("edit", vec![])
-                .await
-                .window_kind("main", LocalizedLabel::data("Main"), "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                .await
-                .panel_tab("framework.panel.artifact", LocalizedLabel::data("Document"), PanelGroup::Workbench, "good.document")
-                .await
-                .default_layout(create_default_layout(&["main".into()], "row", None, None))
-                .await
-                .build_definition();
-            assert_eq!(definition.window_kinds.len(), 1);
-            assert_eq!(definition.window_kinds.iter().next().map(|kind| kind.icon_id.as_str()), Some("app-window"));
-            assert_eq!(definition.modes.first().icon_id.as_str(), "pencil");
-            // 🕰️ 1 declared + the auto-injected framework History tab.
-            assert_eq!(definition.panel_tabs.len(), 2);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn catalog_chrome_icons_resolve_to_vendored_icon_names() {
-            for mode in ["edit", "paint", "generate", "explore", "builder", "review", "report"] {
-                let icon = semio_framework::catalog_mode_icon_id(mode).await;
-                assert_eq!(IconName::from_str(icon.as_str()), Some(icon), "mode {mode} -> {}", icon.as_str());
-            }
-            assert_eq!(IconName::from("menu").as_str(), "list");
-            assert_eq!(IconName::from("square-pen").as_str(), "pencil");
-            assert_eq!(IconName::from("trees").as_str(), "list-tree");
-            let definition = App::builder(canonical_test_app_id("icon-app").await, LocalizedLabel::data("Icon"))
-                .await
-                .document(["semio", "icon"])
-                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                .await
-                .mode_tools("edit", vec![])
-                .await
-                .window_kind("main", LocalizedLabel::data("Main"), "icon.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                .await
-                .default_layout(create_default_layout(&["main".into()], "row", None, None))
-                .await
-                .build_definition();
-            assert_eq!(definition.modes.first().icon_id.as_str(), "pencil");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_terminology_document_for_undeclared_terminology() {
-            let base = App::builder("bad-terminology-app", LocalizedLabel::data("Bad")).await;
-            let __chain = base
-                .document(["semio", "bad"])
-                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                .await
-                .mode_tools("edit", vec![])
-                .await
-                .window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                .await
-                .default_layout(create_default_layout(&["main".into()], "row", None, None))
-                .await
-                .terminology_document("reuse", ["Entwerfen mit Bestand", "Bad"])
-                .await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_accepts_declared_terminology_document() {
-            let definition = App::builder(canonical_test_app_id("good-terminology-app").await, LocalizedLabel::data("Good"))
-                .await
-                .document(["semio", "good"])
-                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                .await
-                .mode_tools("edit", vec![])
-                .await
-                .window_kind("main", LocalizedLabel::data("Main"), "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                .await
-                .default_layout(create_default_layout(&["main".into()], "row", None, None))
-                .await
-                .terminology("reuse")
-                .await
-                .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
-                .await
-                .build_definition();
-            assert_eq!(definition.terminology_breadcrumbs.get("reuse").map(Vec::as_slice), Some(["Entwerfen mit Bestand".to_string(), "Aggregator".to_string()].as_slice()));
-        }
-
-        async fn minimal_app(slug: &str) -> AppBuilder {
-            App::builder(canonical_test_app_id(slug).await, LocalizedLabel::data("App"))
-                .await
-                .document(["semio", slug])
-                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                .await
-                .window_kind("main", LocalizedLabel::data("Main"), format!("{slug}.main"), SurfaceKind::Canvas2d, IconName::AppWindow)
-                .await
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn release_catalog_rejects_unclassified_and_retains_explicit_non_ui_dispositions() {
-            use semio_framework::InteractiveJobClassification::{BatchOnlyPendingRewrite, Deleted, ForbiddenFromUi, Migrated, Unclassified};
-
-            let mut unclassified = ActionDefinition::bounded_catalog("blockedAction", LocalizedLabel::data("Blocked"), ActionKind::Mutation);
-            unclassified.semantics.execution.interactive_job = Unclassified;
-            let error = minimal_app("unclassified-action").await.action_with(unclassified).await.try_build_definition().expect_err("unclassified declarations must block release");
-            assert_eq!(error.code, "app-definition.interactive-job-classification");
-
-            let migrated = minimal_app("migrated-inventory")
-                .await
-                .action_with(ActionDefinition::bounded_catalog("migratedAction", LocalizedLabel::data("Migrated"), ActionKind::Mutation))
-                .await
-                .interactive_jobs(Migrated)
-                .await
-                .try_build_definition()
-                .expect("an explicit app-wide disposition classifies its existing inventory");
-            assert!(migrated.window_kinds.iter().flat_map(|window| &window.actions).all(|action| action.semantics.execution.interactive_job == Migrated));
-
-            for (index, classification) in [BatchOnlyPendingRewrite, ForbiddenFromUi, Deleted].into_iter().enumerate() {
-                let mut action = ActionDefinition::bounded_catalog("blockedAction", LocalizedLabel::data("Blocked"), ActionKind::Mutation);
-                action.semantics.execution.interactive_job = classification;
-                let definition = minimal_app(&format!("classified-action-{index}")).await.action_with(action).await.try_build_definition().expect("an explicit non-UI disposition is valid inventory data");
-                let retained = definition.window_kinds.iter().flat_map(|window| &window.actions).find(|entry| entry.id == "blockedAction").expect("classified action retained");
-                assert_eq!(retained.semantics.execution.interactive_job, classification);
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_auto_injects_history_actions_and_keybindings() {
-            let definition = minimal_app("history-app").await.build_definition();
-            let history_ids: HashSet<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|c| c.id.as_str()).collect();
-            assert!(history_ids.contains("undo"));
-            assert!(history_ids.contains("redo"));
-            assert!(history_ids.contains("commitCheckpoint"));
-            assert!(history_ids.contains("createAlternative"));
-            assert!(history_ids.contains("switchAlternative"));
-            assert!(history_ids.contains("checkoutCheckpoint"));
-            let undo_binding = definition.keybindings.iter().find(|binding| binding.keys == "mod+z").expect("undo keybinding auto-injected");
-            assert_eq!(undo_binding.action.action, "undo");
-            assert_eq!(undo_binding.action.controller_id, canonical_test_app_id("history-app").await);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_does_not_duplicate_manually_declared_history_keybinding() {
-            let definition = minimal_app("manual-undo-app").await.keybinding("mod+z", "undo").await.build_definition();
-            assert_eq!(definition.keybindings.iter().filter(|b| b.keys == "mod+z").count(), 1);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_auto_injects_clipboard_actions_and_keybindings() {
-            let definition = minimal_app("clipboard-app").await.build_definition();
-            let clipboard_ids: HashSet<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|c| c.id.as_str()).collect();
-            assert!(clipboard_ids.contains("copy"));
-            assert!(clipboard_ids.contains("cut"));
-            assert!(clipboard_ids.contains("paste"));
-            let copy_action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == "copy").expect("copy declared");
-            assert_eq!(copy_action.kind, ActionKind::Clipboard);
-            let paste_action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == "paste").expect("paste declared");
-            assert!(paste_action.args.iter().any(|arg| arg.id == "anchor"));
-            let copy_binding = definition.keybindings.iter().find(|binding| binding.keys == "mod+c").expect("copy keybinding auto-injected");
-            assert_eq!(copy_binding.action.action, "copy");
-            assert_eq!(copy_binding.action.controller_id, canonical_test_app_id("clipboard-app").await);
-            let paste_binding = definition.keybindings.iter().find(|binding| binding.keys == "mod+v").expect("paste keybinding auto-injected");
-            assert_eq!(paste_binding.action.action, "paste");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_auto_injects_the_history_panel_tab_and_filter_action() {
-            let definition = minimal_app("history-panel-app").await.build_definition();
-            let mut history_panel_tab_ids: Vec<&str> = Vec::new();
-            for tab in definition.panel_tabs.iter() {
-                history_panel_tab_ids.push(tab.id());
-            }
-            assert!(history_panel_tab_ids.iter().any(|id| *id == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID));
-            let action_ids: HashSet<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|a| a.id.as_str()).collect();
-            assert!(action_ids.contains(REVERT_TO_COMMAND_ACTION_ID));
-            assert!(action_ids.contains(SET_HISTORY_COMMAND_FILTER_ACTION_ID));
-            let revert = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == REVERT_TO_COMMAND_ACTION_ID).expect("revertToCommand declared");
-            assert_eq!(revert.kind, ActionKind::History);
-            assert!(!revert.in_palette);
-            let filter = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == SET_HISTORY_COMMAND_FILTER_ACTION_ID).expect("setHistoryCommandFilter declared");
-            assert_eq!(filter.kind, ActionKind::View);
-            assert!(!filter.in_palette);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_does_not_duplicate_a_manually_declared_history_panel_tab() {
-            let definition = minimal_app("manual-history-app").await.panel_tab(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID, LocalizedLabel::data("Custom History"), PanelGroup::Settings, "custom.history").await.build_definition();
-            let mut manual_history_tab_ids: Vec<&str> = Vec::new();
-            for t in definition.panel_tabs.iter() {
-                manual_history_tab_ids.push(t.id());
-            }
-            assert_eq!(manual_history_tab_ids.iter().filter(|id| **id == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID).count(), 1);
-            let manual_history_tab_idx = manual_history_tab_ids.iter().position(|id| *id == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID).expect("history tab present");
-            let tab = &definition.panel_tabs[manual_history_tab_idx];
-            assert_eq!(tab.body_key.as_deref(), Some("custom.history"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn operation_view_and_shell_actions_are_declared_with_their_kind() {
-            let definition = minimal_app("typed-actions-app")
-                .await
-                .mutation("addLayer", LocalizedLabel::data("Add Layer"))
-                .await
-                .view_action("setCamera", LocalizedLabel::data("Set Camera"))
-                .await
-                .shell_action("exportPng", LocalizedLabel::data("Export PNG"))
-                .await
-                .build_definition();
-            let by_id = |id: &str| definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|c| c.id == id).expect("declared");
-            assert_eq!(by_id("addLayer").kind, ActionKind::Mutation);
-            assert_eq!(by_id("setCamera").kind, ActionKind::View);
-            assert_eq!(by_id("exportPng").kind, ActionKind::Shell);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_duplicate_action_ids() {
-            let __base = minimal_app("dupe-action-app").await;
-            let __chain = __base.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.mutation("addLayer", LocalizedLabel::data("Add Layer Again")).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_keybinding_for_undeclared_action_once_opted_in() {
-            let __base = minimal_app("undeclared-keybinding-app").await;
-            let __chain = __base.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.keybinding("mod+l", "removeLayer").await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn declaring_utilities_injects_set_active_utility_action_and_keybinding() {
-            use semio_framework::{ActionKind, SET_ACTIVE_UTILITY_ACTION_ID, UtilityDefinition};
-            let definition = minimal_app("utility-app")
-                .await
-                .utility(UtilityDefinition { keys: Some("b".into()), ..UtilityDefinition::new("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush) })
-                .await
-                .utility_simple("eraser", LocalizedLabel::data("Eraser"), IconName::Eraser)
-                .await
-                .build_definition();
-            let set_active_utility = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility injected");
-            assert_eq!(set_active_utility.kind, ActionKind::View);
-            assert!(!set_active_utility.in_palette);
-            let binding = definition.keybindings.iter().find(|binding| binding.keys == "b").expect("utility keybinding auto-injected");
-            assert_eq!(binding.action.action, SET_ACTIVE_UTILITY_ACTION_ID);
-            assert_eq!(binding.action.args, Some(DslValue::Object(vec![("utilityId".into(), DslValue::String("brush".into()))])));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn no_utilities_means_no_set_active_utility_action() {
-            use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
-            let definition = minimal_app("no-utility-app").await.build_definition();
-            assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_accepts_and_resolves_mode_tools() {
-            use semio_framework::ToolRef;
-            let definition = minimal_app("tool-app").await.tool_simple("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).await.mode_tools("edit", vec![ToolRef::new("fill").await]).await.build_definition();
-            assert_eq!(definition.tools.len(), 1);
-            assert_eq!(definition.modes[0].tools, vec![ToolRef::new("fill").await]);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_mode_tool_ref_to_undeclared_tool() {
-            use semio_framework::ToolRef;
-            let __base = minimal_app("undeclared-mode-tool-app").await;
-            let __chain = __base.mode_tools("edit", vec![ToolRef::new("missing").await]).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_tool_referenced_by_no_mode() {
-            let __base = minimal_app("orphan-tool-app").await;
-            let __chain = __base.tool_simple("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err(), "a declared tool must be referenced by mode_tools on at least one mode");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn declaring_tools_injects_set_active_tool_action_and_keybinding() {
-            use semio_framework::{ActionKind, SET_ACTIVE_TOOL_ACTION_ID, ToolDefinition, ToolRef};
-            let definition = minimal_app("tool-keybinding-app")
-                .await
-                .tool(ToolDefinition { keys: Some("f".into()), ..ToolDefinition::new("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).await })
-                .await
-                .mode_tools("edit", vec![ToolRef::new("fill").await])
-                .await
-                .build_definition();
-            let set_active_tool = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID).expect("setActiveTool injected");
-            assert_eq!(set_active_tool.kind, ActionKind::View);
-            assert!(!set_active_tool.in_palette);
-            let binding = definition.keybindings.iter().find(|binding| binding.keys == "f").expect("tool keybinding auto-injected");
-            assert_eq!(binding.action.action, SET_ACTIVE_TOOL_ACTION_ID);
-            assert_eq!(binding.action.args, Some(DslValue::Object(vec![("toolId".into(), DslValue::String("fill".into()))])));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn no_tools_means_no_set_active_tool_action() {
-            use semio_framework::SET_ACTIVE_TOOL_ACTION_ID;
-            let definition = minimal_app("no-tool-app").await.build_definition();
-            assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn action_args_attaches_declared_arguments() {
-            let definition =
-                minimal_app("args-app").await.mutation("resize", LocalizedLabel::data("Resize")).await.action_args("resize", vec![ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required()]).await.build_definition();
-            let resize = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "resize").expect("declared");
-            assert_eq!(resize.args.len(), 1);
-            assert_eq!(resize.args[0].id, "scale");
-            assert!(resize.args[0].required);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_window_kind_utility_referencing_undeclared_utility() {
-            let __base = minimal_app("bad-utility-ref-app").await;
-            let __chain = __base.utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush).await.window_kind_utilities("main", vec!["missing".into()]).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_window_kind_action_referencing_undeclared_action() {
-            let __base = minimal_app("bad-action-ref-app").await;
-            let __chain = __base.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.window_kind_action_refs("main", vec!["removeLayer".into()]).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_carries_window_interactions_and_injects_framework_actions() {
-            use semio_framework::{GranularityDefinition, HierarchyProvider, HoverSpec, INTERACTION_HOVER_ACTION_ID, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
-            let definition = minimal_app("interaction-app")
-                .await
-                .interaction(InteractionDefinition {
-                    id: "world".into(),
-                    label: LocalizedLabel::data("World"),
-                    granularities: vec![GranularityDefinition { id: "object".into(), label: LocalizedLabel::data("Object"), icon_id: "box".into() }],
-                    hierarchy: HierarchyProvider::Flat,
-                    hover: HoverSpec::default(),
-                    selection: SelectionSpec { modes: vec![SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
-                })
-                .await
-                .window_kind_interactions("main", vec![InteractionRef::new("world")])
-                .await
-                .build_definition();
-            assert_eq!(definition.interactions.len(), 1);
-            assert_eq!(definition.window_kinds.first().interactions, vec![InteractionRef::new("world")]);
-            assert_eq!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == INTERACTION_HOVER_ACTION_ID).map(|action| action.kind), Some(ActionKind::Interaction));
-            assert_eq!(definition.keybindings.iter().find(|binding| binding.keys == "escape").map(|binding| binding.action.action.as_str()), Some("clearSelection"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn declaring_introduction_injects_start_introduction_action() {
-            use semio_framework::{ActionKind, IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};
-            use ui_wgpu::wgpu::LocalizedLabel;
-            let definition = minimal_app("intro-app")
-                .await
-                .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("welcome", LocalizedLabel::data("Welcome"), LocalizedLabel::data("Hi there"))] })
-                .await
-                .build_definition();
-            let start_introduction = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == START_INTRODUCTION_ACTION_ID).expect("startIntroduction injected");
-            assert_eq!(start_introduction.kind, ActionKind::View);
-            assert!(!start_introduction.in_palette, "the shell-owned Introduce App command owns palette discovery");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn no_introduction_means_no_start_introduction_action() {
-            use semio_framework::START_INTRODUCTION_ACTION_ID;
-            let definition = minimal_app("no-intro-app").await.build_definition();
-            assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == START_INTRODUCTION_ACTION_ID));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_introduction_with_no_steps() {
-            use semio_framework::IntroductionDefinition;
-            let __base = minimal_app("empty-intro-app").await;
-            let __chain = __base.introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![] }).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_duplicate_introduction_step_ids() {
-            use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
-            use ui_wgpu::wgpu::LocalizedLabel;
-            let __base = minimal_app("dupe-step-app").await;
-            let __chain = __base
-                .introduction(IntroductionDefinition {
-                    title: LocalizedLabel::data("Welcome"),
-                    steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")), IntroductionStepDefinition::new("step", LocalizedLabel::data("B"), LocalizedLabel::data("b"))],
-                })
-                .await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_introduction_step_introducing_undeclared_window_kind() {
-            use semio_framework::{IntroductionDefinition, IntroductionStepDefinition, window_element_id};
-            use ui_wgpu::wgpu::LocalizedLabel;
-            let __base = minimal_app("bad-window-app").await;
-            let __chain = __base
-                .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(window_element_id("missing"))] })
-                .await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_introduction_step_introducing_undeclared_panel_tab() {
-            use semio_framework::{IntroductionDefinition, IntroductionStepDefinition, panel_tab_element_id, panel_tab_first_draggable_element_id};
-            use ui_wgpu::wgpu::LocalizedLabel;
-            let __base = minimal_app("bad-panel-tab-app").await;
-            let __chain = __base
-                .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_element_id("missing"))] })
-                .await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-            let __base = minimal_app("bad-panel-tab-first-draggable-app").await;
-            let __chain = __base
-                .introduction(IntroductionDefinition {
-                    title: LocalizedLabel::data("Welcome"),
-                    steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_first_draggable_element_id("missing"))],
-                })
-                .await;
-            let result_first_draggable = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result_first_draggable.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_introduction_step_targeting_malformed_element_id() {
-            use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
-            use ui_wgpu::wgpu::LocalizedLabel;
-            let __base = minimal_app("bad-element-app").await;
-            let __chain =
-                __base.introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce("not-camel-case")] }).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-            let __base = minimal_app("bad-element-show-app").await;
-            let __chain = __base
-                .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).show(vec!["not-camel-case".into()])] })
-                .await;
-            let result_show = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result_show.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_accepts_introduction_step_introducing_escape_hatch_element_id() {
-            use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
-            use ui_wgpu::wgpu::LocalizedLabel;
-            let definition = minimal_app("good-escape-hatch-app")
-                .await
-                .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce("ui.custom.thing")] })
-                .await
-                .build_definition();
-            let introduction = definition.introduction.expect("introduction present");
-            assert_eq!(introduction.steps.len(), 1);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_introduction_step_interacting_on_undeclared_utility() {
-            use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
-            use ui_wgpu::wgpu::LocalizedLabel;
-            let __base = minimal_app("bad-interaction-utility-app").await;
-            let __chain = __base
-                .introduction(IntroductionDefinition {
-                    title: LocalizedLabel::data("Welcome"),
-                    steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).interact(vec![IntroductionInteraction::utility("missing", "Activate").await])],
-                })
-                .await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_introduction_step_interacting_on_undeclared_window_kind() {
-            use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
-            use ui_wgpu::wgpu::LocalizedLabel;
-            let __base = minimal_app("bad-interaction-window-app").await;
-            let __chain = __base
-                .introduction(IntroductionDefinition {
-                    title: LocalizedLabel::data("Welcome"),
-                    steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).interact(vec![IntroductionInteraction::orbit("missing", "Orbit").await])],
-                })
-                .await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_accepts_introduction_with_declared_window_utility_and_action_targets() {
-            use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition, window_element_id};
-            use ui_wgpu::wgpu::LocalizedLabel;
-            let definition = minimal_app("good-intro-app")
-                .await
-                .mutation("addLayer", LocalizedLabel::data("Add Layer"))
-                .await
-                .utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush)
-                .await
-                .window_kind_utilities("main", vec!["brush".into()])
-                .await
-                .window_kind_action_refs("main", vec!["addLayer".into()])
-                .await
-                .introduction(IntroductionDefinition {
-                    title: LocalizedLabel::data("Welcome"),
-                    steps: vec![
-                        IntroductionStepDefinition::new("welcome", LocalizedLabel::data("Welcome"), LocalizedLabel::data("Hi")),
-                        IntroductionStepDefinition::new("main-window", LocalizedLabel::data("Main Window"), LocalizedLabel::data("…")).introduce(window_element_id("main")),
-                        IntroductionStepDefinition::new("brush-utility", LocalizedLabel::data("Brush"), LocalizedLabel::data("…")).introduce("brush").interact(vec![IntroductionInteraction::utility("brush", "Activate Brush").await]),
-                        IntroductionStepDefinition::new("add-layer", LocalizedLabel::data("Add Layer"), LocalizedLabel::data("…")).interact(vec![IntroductionInteraction::action("addLayer", "Add a Layer").await]),
-                        IntroductionStepDefinition::new("navigate-main", LocalizedLabel::data("Navigate"), LocalizedLabel::data("…"))
-                            .interact(vec![IntroductionInteraction::pan("main", "Pan").await, IntroductionInteraction::zoom("main", "Zoom").await]),
-                    ],
-                })
-                .await
-                .build_definition();
-            let introduction = definition.introduction.expect("introduction present");
-            assert_eq!(introduction.steps.len(), 5);
-        }
-
-        async fn minimal_tutorial(id: &str) -> TutorialDefinition {
-            use semio_framework::{TutorialBase, TutorialDefinition, TutorialTracks, TutorialUiSnapshot};
-            TutorialDefinition {
-                id: id.into(),
-                title: LocalizedLabel::data("Tutorial"),
-                description: None,
-                duration_ms: 10_000,
-                chapters: vec![],
-                base: TutorialBase { document_dsl: None, example_id: None, ui: TutorialUiSnapshot::default(), cameras: vec![] },
-                tracks: TutorialTracks::default(),
-                recorded_at: None,
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn declaring_tutorial_injects_start_tutorial_action() {
-            use semio_framework::{ActionKind, START_TUTORIAL_ACTION_ID};
-            let definition = minimal_app("tutorial-app").await.tutorial(minimal_tutorial("welcome-tour").await).await.build_definition();
-            let start_tutorial = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == START_TUTORIAL_ACTION_ID).expect("startTutorial injected");
-            assert_eq!(start_tutorial.kind, ActionKind::View);
-            assert!(!start_tutorial.in_palette, "the shell-owned Play Tutorial command owns palette discovery");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn no_tutorial_means_no_start_tutorial_action_but_record_is_always_injected() {
-            use semio_framework::{RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID};
-            let definition = minimal_app("no-tutorial-app").await.build_definition();
-            assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == START_TUTORIAL_ACTION_ID));
-            assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == RECORD_TUTORIAL_ACTION_ID), "recordTutorial is injected unconditionally — recording needs no app declaration");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_tutorial_failing_structural_validation() {
-            let mut tutorial = minimal_tutorial("out-of-range-tour").await;
-            tutorial.duration_ms = 100;
-            tutorial.chapters.push(semio_framework::TutorialChapter { id: "late".into(), at: 999_999, title: LocalizedLabel::data("Late"), body: None });
-            let base = minimal_app("bad-structural-tutorial-app").await;
-            let __chain = base.tutorial(tutorial).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_duplicate_tutorial_ids() {
-            let tour_a = minimal_tutorial("tour").await;
-            let tour_b = minimal_tutorial("tour").await;
-            let __base = minimal_app("dupe-tutorial-app").await;
-            let __chain = __base.tutorial(tour_a).await.tutorial(tour_b).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_tutorial_event_referencing_undeclared_action() {
-            use semio_framework::{TutorialEvent, TutorialEventKind};
-            let mut tutorial = minimal_tutorial("bad-event-tour").await;
-            tutorial.tracks.events = vec![TutorialEvent { at: 10, kind: TutorialEventKind::Action { action: "missingAction".into(), args: None } }];
-            let base = minimal_app("bad-tutorial-event-app").await;
-            let __chain = base.tutorial(tutorial).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_tutorial_ui_change_referencing_undeclared_utility() {
-            use semio_framework::{TutorialUiChange, TutorialUiKeyframe, TutorialUiSample};
-            let mut tutorial = minimal_tutorial("bad-ui-change-tour").await;
-            tutorial.tracks.ui = vec![TutorialUiKeyframe { at: 10, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveUtility { window_id: "main".into(), utility_id: Some("missing".into()) }] } }];
-            let base = minimal_app("bad-tutorial-ui-app").await;
-            let __chain = base.tutorial(tutorial).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_tutorial_gesture_targeting_malformed_element_id() {
-            use semio_framework::{IntroductionGesture, IntroductionPoint, TutorialGestureCue};
-            let mut tutorial = minimal_tutorial("bad-gesture-tour").await;
-            tutorial.tracks.gestures = vec![TutorialGestureCue { at: 10, duration_ms: 200, gesture: IntroductionGesture::LeftClick { at: IntroductionPoint::Element { id: "not-camel-case".into(), offset: None } }, cursor: None }];
-            let base = minimal_app("bad-tutorial-gesture-app").await;
-            let __chain = base.tutorial(tutorial).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_accepts_tutorial_with_declared_action_utility_and_gesture_targets() {
-            use semio_framework::{IntroductionGesture, IntroductionPoint, TutorialEvent, TutorialEventKind, TutorialGestureCue, TutorialUiChange, TutorialUiKeyframe, TutorialUiSample, window_element_id};
-            let mut tutorial = minimal_tutorial("good-tour").await;
-            tutorial.tracks.events = vec![TutorialEvent { at: 10, kind: TutorialEventKind::Action { action: "addLayer".into(), args: None } }];
-            tutorial.tracks.ui = vec![TutorialUiKeyframe { at: 20, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveUtility { window_id: "main".into(), utility_id: Some("brush".into()) }] } }];
-            tutorial.tracks.gestures = vec![TutorialGestureCue { at: 30, duration_ms: 200, gesture: IntroductionGesture::LeftClick { at: IntroductionPoint::Element { id: window_element_id("main"), offset: None } }, cursor: None }];
-            let definition =
-                minimal_app("good-tutorial-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush).await.tutorial(tutorial).await.build_definition();
-            assert_eq!(definition.tutorials.len(), 1);
-            assert_eq!(definition.tutorials[0].id, "good-tour");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn declaring_dialog_appends_to_definition() {
-            use semio_framework::{ActionRef, DialogDefinition};
-            let definition =
-                minimal_app("dialog-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer"))).await.build_definition();
-            assert_eq!(definition.dialogs.len(), 1);
-            assert_eq!(definition.dialogs[0].id, "addLayer");
-            assert_eq!(definition.dialogs[0].submit_label, LocalizedLabel::data("OK"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_duplicate_dialog_ids() {
-            use semio_framework::{ActionRef, DialogDefinition};
-            let __base = minimal_app("dupe-dialog-app").await;
-            let __chain = __base
-                .mutation("addLayer", LocalizedLabel::data("Add Layer"))
-                .await
-                .dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer")))
-                .await
-                .dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer Again"), ActionRef::new("addLayer")))
-                .await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_dialog_submit_action_referencing_undeclared_action() {
-            use semio_framework::{ActionRef, DialogDefinition};
-            let __base = minimal_app("bad-dialog-submit-app").await;
-            let __chain = __base.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("missing"))).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_dialog_cancel_action_referencing_undeclared_action() {
-            use semio_framework::{ActionRef, DialogDefinition};
-            let __base = minimal_app("bad-dialog-cancel-app").await;
-            let __chain = __base.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer")).on_cancel(ActionRef::new("missing"))).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn dialog_submit_action_may_reference_an_injected_history_action() {
-            use semio_framework::{ActionRef, DialogDefinition};
-            let definition = minimal_app("dialog-injected-action-app").await.dialog(DialogDefinition::new("confirmUndo", LocalizedLabel::data("Undo?"), ActionRef::new("undo"))).await.build_definition();
-            assert_eq!(definition.dialogs[0].submit_action, ActionRef::new("undo"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_dialog_duplicate_arg_ids() {
-            use semio_framework::{ActionArgDef, ActionRef, DialogDefinition};
-            let __base = minimal_app("dupe-dialog-arg-app").await;
-            let __chain = __base
-                .mutation("addLayer", LocalizedLabel::data("Add Layer"))
-                .await
-                .dialog(
-                    DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer")).args(vec![ActionArgDef::text("name", LocalizedLabel::data("Name")), ActionArgDef::text("name", LocalizedLabel::data("Name Again"))]),
-                )
-                .await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_accepts_app_and_mode_scope_commands() {
-            use semio_framework::CommandDefinition;
-            let definition = minimal_app("command-app")
-                .await
-                .app_command("app.export", LocalizedLabel::data("Export"), "document", ActionKind::Shell)
-                .await
-                .mode_command("edit", CommandDefinition::bounded_catalog("mode.focus", LocalizedLabel::data("Focus"), "view", ActionKind::View))
-                .await
-                .build_definition();
-            assert_eq!(definition.commands.iter().map(|command| command.id.as_str()).collect::<Vec<_>>(), vec!["app.export"]);
-            assert_eq!(definition.modes[0].commands.iter().map(|command| command.id.as_str()).collect::<Vec<_>>(), vec!["mode.focus"]);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_duplicate_command_ids() {
-            let __base = minimal_app("dupe-command-app").await;
-            let __chain = __base.app_command("app.export", LocalizedLabel::data("Export"), "document", ActionKind::Shell).await.app_command("app.export", LocalizedLabel::data("Export Again"), "document", ActionKind::Shell).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_duplicate_mode_command_ids() {
-            use semio_framework::CommandDefinition;
-            let __base = minimal_app("dupe-mode-command-app").await;
-            let __chain = __base
-                .mode_command("edit", CommandDefinition::bounded_catalog("mode.focus", LocalizedLabel::data("Focus"), "view", ActionKind::View))
-                .await
-                .mode_command("edit", CommandDefinition::bounded_catalog("mode.focus", LocalizedLabel::data("Focus Again"), "view", ActionKind::View))
-                .await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_derives_command_owner_from_structural_containment() {
-            use semio_framework::CommandDefinition;
-            let definition = minimal_app("structural-command-app")
-                .await
-                .app_command("focus", LocalizedLabel::data("App Focus"), "app", ActionKind::View)
-                .await
-                .mode_command("edit", CommandDefinition::bounded_catalog("focus", LocalizedLabel::data("Mode Focus"), "mode", ActionKind::View))
-                .await
-                .build_definition();
-            assert_eq!(definition.commands[0].category, "app");
-            assert_eq!(definition.modes[0].commands[0].category, "mode");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_empty_mode_command_id() {
-            use semio_framework::CommandDefinition;
-            let __base = minimal_app("empty-mode-command-app").await;
-            let __chain = __base.mode_command("edit", CommandDefinition::bounded_catalog("", LocalizedLabel::data("Focus"), "view", ActionKind::View)).await;
-            let result = std::panic::catch_unwind(move || __chain.build_definition());
-            assert!(result.is_err());
-        }
-    }
+    include!("🧪️tests/🔬️app-app-builder/🦀️.rs");
 
     //#region 📚️ExampleSource
     /// 📚️ Value type exported by an example definition leaf (`📚️examples/<slug>/🦀️.rs`):
@@ -8069,60 +6750,7 @@ pub mod app {
     }
 
     #[cfg(test)]
-    mod example_source_tests {
-        use super::*;
-
-        /// 🪪️ Contract §1 fixture — a canonical id built via `surface_app_id` from a fixture `Dialect`,
-        /// not a hand-written pre-migration string like the retired `"puzzle2d-play"`/`"demo-play"`.
-        fn canonical_test_app_id(slug: &str) -> String {
-            surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.example-source.{slug}"), standard: "1".into(), subset: "*".into() }, AppRole::Editor)
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn example_source_converts_into_example_definition_and_registers_on_app() {
-            let source = ExampleSource::new("nakagin", LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin-Kapselturm"), "{\"kind\":\"demo\"}", "building");
-            assert_eq!(source.id(), "nakagin");
-            assert_eq!(source.document(), "{\"kind\":\"demo\"}");
-            assert_eq!(source.payload(), source.document_json());
-            let definition = ExampleDefinition::from(&source);
-            assert_eq!(definition.id, "nakagin");
-            assert_eq!(definition.artifact_json, "{\"kind\":\"demo\"}");
-            assert!(definition.app_id.is_empty());
-            let app = App::from_builder(
-                App::builder(canonical_test_app_id("puzzle2d-play"), LocalizedLabel::data("Puzzle"))
-                    .await
-                    .document(["semio", "puzzle"])
-                    .mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                    .await
-                    .window_kind("main", LocalizedLabel::data("Main"), "puzzle.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                    .await,
-            )
-            .await
-            .example_source(&source)
-            .await;
-            assert_eq!(app.examples.len(), 1);
-            assert_eq!(app.examples[0].id, "nakagin");
-            assert_eq!(app.examples[0].icon_id, IconName::from("building"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn example_delegates_to_example_source() {
-            let app = App::from_builder(
-                App::builder(canonical_test_app_id("demo-play"), LocalizedLabel::data("Demo"))
-                    .await
-                    .document(["semio", "demo"])
-                    .mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                    .await
-                    .window_kind("main", LocalizedLabel::data("Main"), "demo.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                    .await,
-            )
-            .await
-            .example("default", LocalizedLabel::native("Default", "Standard"), "{}", "file")
-            .await;
-            assert_eq!(app.examples.len(), 1);
-            assert_eq!(app.examples[0].id, "default");
-        }
-    }
+    include!("🧪️tests/🔬️app-example-source/🦀️.rs");
     //#endregion 📚️ExampleSource
 
     pub struct App {
@@ -8457,81 +7085,7 @@ pub mod app {
     }
 
     #[cfg(test)]
-    mod child_member_registry_tests {
-        use super::*;
-
-        fn dialect() -> ArtifactDialect {
-            ArtifactDialect { artifact_kind: "test-child".into(), standard: "native".into(), subset: "*".into() }
-        }
-
-        #[test]
-        fn fixed_child_member_registry_admits_exact_capacity_rejects_plus_one_and_cursor_detaches_every_owner() {
-            let mut registry = ChildMemberRegistry::new();
-            for index in 0..CHILD_CONTENT_SLOTS {
-                let key = (format!("slot-{index}"), format!("child-{index}"));
-                let admission = registry.admit(&key).expect("exact fixed child capacity");
-                registry.insert_admitted(admission, key, (dialect(), index));
-            }
-            let rejected_key = ("slot-plus-one".to_string(), "child-plus-one".to_string());
-            assert!(registry.admit(&rejected_key).is_err(), "capacity plus one is rejected before an owner is transferred");
-            for index in 0..CHILD_CONTENT_SLOTS {
-                assert!(registry.take_at(index).is_some(), "one exact child owner detaches per cursor step");
-            }
-            assert!(registry.is_empty());
-        }
-
-        #[test]
-        fn fixed_child_member_registry_resolves_hash_collisions_without_replacement() {
-            let mut first_by_hash: [Option<(String, String)>; CHILD_CONTENT_SLOTS] = std::array::from_fn(|_| None);
-            let mut collision = None;
-            for index in 0..=CHILD_CONTENT_SLOTS {
-                let key = ("slot".to_string(), format!("collision-{index}"));
-                let hash = ChildMemberRegistry::<usize>::hash(&key.0, &key.1).expect("bounded key hash");
-                if let Some(first) = first_by_hash[hash].take() {
-                    collision = Some((first, key));
-                    break;
-                }
-                first_by_hash[hash] = Some(key);
-            }
-            let (first, second) = collision.expect("pigeonhole collision across capacity plus one keys");
-            let mut registry = ChildMemberRegistry::new();
-            let first_admission = registry.admit(&first).expect("first colliding owner");
-            registry.insert_admitted(first_admission, first.clone(), (dialect(), 1));
-            let second_admission = registry.admit(&second).expect("second colliding owner probes to a distinct fixed slot");
-            registry.insert_admitted(second_admission, second.clone(), (dialect(), 2));
-            assert_eq!(registry.get(&first).map(|(_, owner)| *owner), Some(1));
-            assert_eq!(registry.get(&second).map(|(_, owner)| *owner), Some(2));
-            for index in 0..CHILD_CONTENT_SLOTS {
-                drop(registry.take_at(index));
-            }
-        }
-
-        #[test]
-        fn stale_child_member_admission_cannot_cancel_a_reused_slot_generation() {
-            let key = ("slot".to_string(), "child".to_string());
-            let mut registry = ChildMemberRegistry::new();
-            let stale = registry.admit(&key).expect("first admission");
-            assert!(registry.cancel_admission(&stale));
-            let current = registry.admit(&key).expect("same direct slot is reused with a fresh generation");
-            assert_ne!(stale.generation, current.generation);
-            assert!(!registry.cancel_admission(&stale), "stale generation cannot cancel the reused reservation");
-            registry.insert_admitted(current, key, (dialect(), 7));
-            for index in 0..CHILD_CONTENT_SLOTS {
-                drop(registry.take_at(index));
-            }
-        }
-
-        #[test]
-        fn incomplete_child_member_registry_drop_faults_in_release_instead_of_destroying_nested_owners() {
-            let result = std::panic::catch_unwind(|| {
-                let key = ("slot".to_string(), "retained".to_string());
-                let mut registry = ChildMemberRegistry::new();
-                let admission = registry.admit(&key).expect("exact retained admission");
-                registry.insert_admitted(admission, key, (dialect(), vec![0u8; 64 * 1024]));
-            });
-            assert!(result.is_err(), "ordinary incomplete Drop is observably fail-closed and MaybeUninit keeps the nested owner from implicit destruction");
-        }
-    }
+    include!("🧪️tests/🔬️app-child-member-registry/🦀️.rs");
 
     pub(crate) struct ChildContentEntry {
         slot: String,
@@ -11005,140 +9559,7 @@ pub mod app {
     /// real `*_protocol` crate's own Command enum tests use (see e.g. `flow_protocol`'s
     /// `flow_command_text_binary_round_trips_document_mutating_variants`).
     #[cfg(test)]
-    mod app_commands_tests {
-        use crate::{ArtifactView, ConfigView, Emit, HistoryView, NoConfigMutation};
-
-        mod add_widget {
-            use semio_framework_value_derive::{FromValue, ToValue};
-            #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
-            pub struct AddWidget {
-                pub kind: String,
-                pub x: f64,
-            }
-
-            /// 🎯️ Mirrors the shape a real `🎮️commands/add_widget/🦀️.rs::handle` will have —
-            /// `(payload, doc, cfg) -> ArtifactMutationOutcome<Mutation, ConfigMutation>`.
-            pub fn handle(payload: &AddWidget, _doc: &crate::ArtifactView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
-                Ok(crate::Emit::mutations(vec![format!("add:{}:{}", payload.kind, payload.x)]))
-            }
-        }
-
-        mod delete_selection {
-            use semio_framework_value_derive::{FromValue, ToValue};
-            #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
-            pub struct DeleteSelection {
-                pub id: String,
-            }
-
-            pub fn handle(payload: &DeleteSelection, _doc: &crate::ArtifactView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
-                Ok(crate::Emit::mutations(vec![format!("delete:{}", payload.id)]))
-            }
-        }
-
-        app_commands! {
-            pub enum TestFakeCommand for u32, String, (), NoConfigMutation {
-                "addWidget" => add_widget::AddWidget,
-                "deleteSelection" => delete_selection::DeleteSelection,
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn command_id_matches_declared_row() {
-            assert_eq!(TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), x: 1.5 }).command_id(), "addWidget");
-            assert_eq!(TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }).command_id(), "deleteSelection");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn generated_tool_job_catalog_is_an_exact_bijection_with_rows() {
-            assert_eq!(TestFakeCommand::TOOL_JOB_IDS, &["addWidget", "deleteSelection"]);
-            assert_eq!(<TestFakeCommand as crate::ToolCommandCatalog>::TOOL_JOB_IDS, TestFakeCommand::TOOL_JOB_IDS);
-            assert_eq!(<TestFakeCommand as ::protocol::OpBinary>::TOOL_JOB_IDS, TestFakeCommand::TOOL_JOB_IDS);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn dispatch_forwards_to_the_payload_modules_own_handle() {
-            let snapshot = 0u32;
-            let config = ();
-            let history = HistoryView::empty();
-            let doc = ArtifactView::new(&snapshot, &history);
-            let cfg = ConfigView { snapshot: &config };
-
-            let emit: Emit<String, NoConfigMutation> = TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), x: 1.5 }).dispatch(&doc, &cfg).expect("dispatch add-widget");
-            assert_eq!(emit.artifact_mutations, vec!["add:inputSlider:1.5".to_string()]);
-
-            let emit: Emit<String, NoConfigMutation> = TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }).dispatch(&doc, &cfg).expect("dispatch delete-selection");
-            assert_eq!(emit.artifact_mutations, vec!["delete:n1".to_string()]);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn wire_round_trips_through_dsl_ops_op_text_and_op_binary() {
-            store::os_store::test_support::assert_op_text_binary_equivalence(&TestFakeCommand::AddWidget(add_widget::AddWidget { kind: "neuron".into(), x: 2.0 }));
-            store::os_store::test_support::assert_op_text_binary_equivalence(&TestFakeCommand::DeleteSelection(delete_selection::DeleteSelection { id: "n1".into() }));
-        }
-
-        mod keyed {
-            use semio_framework_value_derive::{FromValue, ToValue};
-            #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
-            pub struct AddWidget {
-                pub kind: String,
-            }
-
-            pub fn handle(payload: &AddWidget, _doc: &crate::ArtifactView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>, ctx: &mut u32) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
-                *ctx += 1;
-                Ok(crate::Emit::mutations(vec![format!("add:{}:{ctx}", payload.kind)]))
-            }
-        }
-
-        mod keyed_unit {
-            use semio_framework_value_derive::{FromValue, ToValue};
-            #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
-            pub struct DeleteSelection {}
-
-            pub fn handle(_payload: &DeleteSelection, _doc: &crate::ArtifactView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>, _ctx: &mut u32) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {
-                Ok(crate::Emit::mutations(vec!["delete".to_string()]))
-            }
-        }
-
-        app_commands! {
-            pub enum TestKeyedCommand for u32, String, (), NoConfigMutation, ctx = u32 {
-                "addWidget" as "add-widget" => keyed::AddWidget,
-                "deleteSelection" as "delete-selection" => keyed_unit::DeleteSelection,
-            }
-        }
-
-        /// 🧪️ The keyed arm must keep `command_id()` (manifest action id) and the `dsl` wire keyword
-        /// independent — the exact split every hand-written `*_protocol` Command enum already has.
-        #[semio_framework_async_macros::async_test]
-        async fn keyed_rows_separate_the_command_id_from_the_wire_keyword() {
-            let command = TestKeyedCommand::AddWidget(keyed::AddWidget { kind: "inputSlider".into() });
-            assert_eq!(command.command_id(), "addWidget");
-            assert!(protocol::OpText::print_op(&command).starts_with("add-widget "), "wire keyword must be the kebab `as` literal, got {:?}", protocol::OpText::print_op(&command));
-            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
-        }
-
-        /// 🧪️ A fieldless payload struct must print/encode exactly like the unit variant it replaces —
-        /// the migration-safety property for every `DeleteSelection`-style bare variant.
-        #[semio_framework_async_macros::async_test]
-        async fn fieldless_payload_matches_a_unit_variants_wire_form() {
-            let command = TestKeyedCommand::DeleteSelection(keyed_unit::DeleteSelection {});
-            assert_eq!(protocol::OpText::print_op(&command), "delete-selection");
-            assert_eq!(protocol::OpBinary::encode_op(&command).expect("encode"), vec![1u8, 1, 0, 0]);
-            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn ctx_is_threaded_through_dispatch_into_every_handler() {
-            let snapshot = 0u32;
-            let config = ();
-            let history = HistoryView::empty();
-            let doc = ArtifactView::new(&snapshot, &history);
-            let cfg = ConfigView { snapshot: &config };
-            let mut ctx = 41u32;
-            let emit: Emit<String, NoConfigMutation> = TestKeyedCommand::AddWidget(keyed::AddWidget { kind: "neuron".into() }).dispatch(&doc, &cfg, &mut ctx).expect("dispatch");
-            assert_eq!(emit.artifact_mutations, vec!["add:neuron:42".to_string()]);
-            assert_eq!(ctx, 42);
-        }
-    }
+    include!("🧪️tests/🔬️app-app-commands/🦀️.rs");
     //#endregion 🔖️AppCommands
 
     /// @emoji 🧩️ Typed, per-app author surface. An app declares its `Snapshot` and `Mutation` (a
@@ -11742,16 +10163,7 @@ pub mod app {
     impl std::error::Error for MediaArtifactError {}
 
     #[cfg(test)]
-    mod owned_media_error_tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn owned_errors_preserve_their_messages() {
-            assert_eq!(MediaArtifactError::Payload("payload".into()).to_string(), "payload");
-            assert_eq!(MediaArtifactError::SchemaMismatch { expected: "a".into(), found: "b".into() }.to_string(), "document schema mismatch: expected a, found b");
-            assert_eq!(MediaArtifactError::NoImporter("raw".into()).to_string(), "no binary importer registered for format \"raw\"");
-        }
-    }
+    include!("🧪️tests/🔬️app-owned-media-error/🦀️.rs");
 
     /// 🔀️ `PluginApp::transaction_prepare`'s result: `foreign` is this member's own recursively
     /// discovered foreign steps (contract §5.4 — empty when its prepared ops touch no other
@@ -12008,6 +10420,8 @@ pub mod app {
         /// @emoji 📦️ Binary-pack counterpart to {@link Self::load_document_text}.
         async fn load_document_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault>;
         async fn attach_backbone(&mut self, backbone: store::Backbones) -> Result<(), Fault>;
+        async fn attach_hot_backbone(&mut self, backbone: store::Backbones) -> Result<(), Fault>;
+        async fn tick_backbone(&mut self) -> Result<Vec<protocol::MergeReport>, Fault>;
         async fn detach_backbone(&mut self) -> Result<(), Fault>;
         /// @emoji 🕰️ `view_state` is kept here ONLY for wrapper-owned framework chrome (the injected
         /// history panel body's locale — see `VcsArtifactApp::render`); it is never forwarded into
@@ -12543,7 +10957,11 @@ pub mod app {
         /// 🔀️ Conditionally applies `build` to the menu so far — the idiomatic way to gate a section on
         /// a guard (selection kind, hover target, ...) without breaking the fluent chain.
         pub fn when(self, condition: bool, build: impl FnOnce(Self) -> Self) -> Self {
-            if condition { build(self) } else { self }
+            if condition {
+                build(self)
+            } else {
+                self
+            }
         }
 
         pub fn build(self) -> Vec<ContextMenuItemSpec> {
@@ -12568,7 +10986,11 @@ pub mod app {
                 let joiner = if is_de { " und " } else { ", and " };
                 let last = parts.last().cloned().unwrap_or_default();
                 let head = parts[..parts.len() - 1].join(", ");
-                if is_de { format!("{head} und {last}") } else { format!("{head}{joiner}{last}") }
+                if is_de {
+                    format!("{head} und {last}")
+                } else {
+                    format!("{head}{joiner}{last}")
+                }
             }
         }
     }
@@ -14084,150 +12506,7 @@ pub mod app {
     }
 
     #[cfg(test)]
-    mod artifact_media_export_credit_tests {
-        use super::*;
-
-        #[test]
-        fn segmented_output_accepts_exact_cap_and_rejects_plus_one_or_foreign_authority() {
-            let chunks = ArtifactOutputChunks::new(4);
-            assert!(chunks.take_chunk().is_err());
-            assert_eq!(chunks.push(vec![1, 2, 3, 4]), Ok(4));
-            assert!(chunks.push(vec![5]).is_err());
-            assert_eq!(chunks.seal(), Ok(4));
-            assert_eq!(chunks.chunks_remaining(), 1);
-
-            let foreign = ArtifactOutputChunks::new(4);
-            assert_eq!(foreign.push(vec![1, 2, 3, 4]), Ok(4));
-            assert_eq!(foreign.seal(), Ok(4));
-            let result = ArtifactMediaExportResult::structured(MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, "", foreign.clone()).expect("sealed foreign result");
-            assert!(validate_media_export_structure(&result, &chunks, 4, 4).is_err());
-            let download = ArtifactDownloadOutput::new("exact.bin", "application/octet-stream", Some("base64".into()), foreign).expect("bounded sealed download");
-            assert_eq!(download.handle_encoding(), "semio-segmented-handle-v1:base64");
-
-            assert_eq!(chunks.take_chunk().expect("sealed output"), Some(vec![1, 2, 3, 4]));
-            assert_eq!(chunks.take_chunk().expect("drained output"), None);
-            let oversized = ArtifactOutputChunks::new(ARTIFACT_OUTPUT_CHUNK_BYTES + 1);
-            assert!(oversized.push(vec![0; ARTIFACT_OUTPUT_CHUNK_BYTES + 1]).is_err());
-        }
-
-        #[test]
-        fn final_poll_credit_accepts_maximum_and_rejects_plus_one_without_allocating_media() {
-            let credit = ArtifactMediaExportCredit::new(8);
-            let chunks = ArtifactOutputChunks::new(8);
-            assert_eq!(chunks.push(b"123456".to_vec()), Ok(6));
-            assert_eq!(chunks.seal(), Ok(6));
-            assert_eq!(credit.credit(8), Ok(8));
-            assert_eq!(credit.validate_terminal(), Ok(8));
-            let maximum = ArtifactMediaExportResult::structured(MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, "2d", chunks.clone()).expect("sealed maximum result");
-            assert!(validate_media_export_structure(&maximum, &chunks, credit.bytes(), 8).is_ok());
-            assert!(credit.credit(1).is_err());
-            assert!(credit.validate_terminal().is_err());
-
-            let under_credited = ArtifactMediaExportCredit::new(8);
-            assert_eq!(under_credited.credit(8), Ok(8));
-            let plus_one_chunks = ArtifactOutputChunks::new(9);
-            assert_eq!(plus_one_chunks.push(b"1234567".to_vec()), Ok(7));
-            assert_eq!(plus_one_chunks.seal(), Ok(7));
-            let plus_one = ArtifactMediaExportResult::structured(maximum.media_type, "2d", plus_one_chunks.clone()).expect("sealed plus-one result");
-            assert!(validate_media_export_structure(&plus_one, &plus_one_chunks, under_credited.bytes(), 8).is_err());
-        }
-
-        #[test]
-        fn segmented_output_preallocates_exact_former_growth_boundary_and_drains_terminal_storage_to_zero() {
-            const SLOTS: usize = 65;
-            let maximum = SLOTS * ARTIFACT_OUTPUT_CHUNK_BYTES;
-            let chunks = ArtifactOutputChunks::new(maximum);
-            assert_eq!(chunks.slot_capacity(), SLOTS);
-            for index in 0..SLOTS {
-                assert_eq!(chunks.push(vec![index as u8; ARTIFACT_OUTPUT_CHUNK_BYTES]), Ok((index + 1) * ARTIFACT_OUTPUT_CHUNK_BYTES));
-            }
-            assert!(chunks.push(vec![0]).is_err());
-            assert_eq!(chunks.seal(), Ok(maximum));
-            for index in 0..SLOTS {
-                assert_eq!(chunks.take_chunk().expect("preadmitted slot"), Some(vec![index as u8; ARTIFACT_OUTPUT_CHUNK_BYTES]));
-            }
-            assert_eq!(chunks.chunks_remaining(), 0);
-            assert_eq!(chunks.take_chunk().expect("terminal queue"), None);
-
-            struct DropSentinel(std::sync::Arc<std::sync::atomic::AtomicUsize>);
-            impl Drop for DropSentinel {
-                fn drop(&mut self) {
-                    self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-                }
-            }
-            let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-            let mut queue = ArtifactFixedQueue::new(SLOTS);
-            for _ in 0..SLOTS {
-                assert!(queue.push(DropSentinel(drops.clone())).is_ok());
-            }
-            for _ in 0..SLOTS {
-                drop(queue.pop().expect("sentinel slot"));
-            }
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), SLOTS);
-            drop(queue);
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), SLOTS, "dropping a fully drained maximum-slot queue must not revisit capacity slots");
-        }
-
-        #[test]
-        fn segmented_output_seal_is_linearly_ordered_with_push() {
-            let chunks = ArtifactOutputChunks::new(ARTIFACT_OUTPUT_CHUNK_BYTES);
-            let state = chunks.inner.state.try_lock().expect("exclusive producer authority");
-            let contender = chunks.clone();
-            let result = std::thread::spawn(move || contender.seal()).join().expect("seal contender returns");
-            assert_eq!(result.expect_err("seal must not race an active producer").code.0, "interactive-job.segmented-output-busy");
-            assert!(!chunks.is_sealed());
-            drop(state);
-            assert_eq!(chunks.push(vec![1; ARTIFACT_OUTPUT_CHUNK_BYTES]), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES));
-            assert_eq!(chunks.seal(), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES));
-            assert_eq!(chunks.bytes(), ARTIFACT_OUTPUT_CHUNK_BYTES);
-        }
-
-        #[test]
-        fn snapshot_a_survives_cache_b_and_only_the_bounded_retirement_owner_performs_final_drop() {
-            struct DropItem(std::sync::Arc<std::sync::atomic::AtomicUsize>);
-            impl Drop for DropItem {
-                fn drop(&mut self) {
-                    self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-                }
-            }
-            struct SnapshotDisposer;
-            impl ArtifactSnapshotDisposer<Vec<DropItem>> for SnapshotDisposer {
-                fn close_step(&mut self, snapshot: &mut Option<std::sync::Arc<Vec<DropItem>>>, maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-                    if maximum_items == 0 {
-                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                    }
-                    let Some(owner) = snapshot.as_mut() else { return Ok(PluginCloseStep::Complete) };
-                    let Some(items) = std::sync::Arc::get_mut(owner) else { return Ok(PluginCloseStep::Blocked { reason: "snapshot remains externally owned" }) };
-                    if items.pop().is_some() {
-                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-                    }
-                    drop(snapshot.take());
-                    Ok(PluginCloseStep::Complete)
-                }
-
-                fn terminal_is_empty(&self, snapshot: &Option<std::sync::Arc<Vec<DropItem>>>) -> bool {
-                    snapshot.is_none()
-                }
-            }
-
-            let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-            let cache_a = std::sync::Arc::new(vec![DropItem(drops.clone()), DropItem(drops.clone())]);
-            let job_a = cache_a.clone();
-            let (lease, mut retirement_a) = ArtifactSnapshotCloseLease::new(&cache_a, Box::new(SnapshotDisposer));
-            let cache_b = std::sync::Arc::new(Vec::<DropItem>::new());
-            drop(cache_a);
-            assert!(lease.can_release(&job_a), "runtime retention keeps exact A alive after cache advances to B");
-            drop(job_a);
-            drop(lease);
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0, "job and lease release must not become final for snapshot A");
-            assert_eq!(retirement_a.close_step(1, 0).expect("first bounded A disposal"), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
-            assert_eq!(retirement_a.close_step(1, 0).expect("second bounded A disposal"), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            assert_eq!(retirement_a.close_step(1, 0).expect("terminal A disposal"), PluginCloseStep::Complete);
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 2);
-            assert!(std::sync::Arc::strong_count(&cache_b) == 1, "cache B is independent of retired A authority");
-        }
-    }
+    include!("🧪️tests/🔬️app-artifact-media-export-credit/🦀️.rs");
 
     /// 🎞️ Exact live-instance and operation authority for one resumable media export.
     pub struct ArtifactMediaExportJobRequest<A: ArtifactApp> {
@@ -15475,7 +13754,11 @@ pub mod app {
         }
 
         fn take_outcome(&mut self, operation: u64) -> Option<bool> {
-            if self.outcome.is_some_and(|(owner, _)| owner == operation) { self.outcome.take().map(|(_, accepted)| accepted) } else { None }
+            if self.outcome.is_some_and(|(owner, _)| owner == operation) {
+                self.outcome.take().map(|(_, accepted)| accepted)
+            } else {
+                None
+            }
         }
 
         fn cancel(&mut self, operation: u64) {
@@ -15878,208 +14161,10 @@ pub mod app {
     }
 
     #[cfg(test)]
-    mod artifact_fixed_registry_tests {
-        use super::*;
-
-        #[derive(Debug)]
-        struct ActiveMediaExportSentinel(std::sync::Arc<std::sync::atomic::AtomicUsize>);
-        #[derive(Debug)]
-        struct SnapshotRetentionSentinel(std::sync::Arc<std::sync::atomic::AtomicUsize>);
-        #[derive(Debug)]
-        struct SegmentedDownloadSentinel(std::sync::Arc<std::sync::atomic::AtomicUsize>);
-
-        macro_rules! sentinel_drop {
-            ($owner:ty) => {
-                impl Drop for $owner {
-                    fn drop(&mut self) {
-                        self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-                    }
-                }
-            };
-        }
-
-        sentinel_drop!(ActiveMediaExportSentinel);
-        sentinel_drop!(SnapshotRetentionSentinel);
-        sentinel_drop!(SegmentedDownloadSentinel);
-
-        fn reject_duplicate<T: std::fmt::Debug>(first: T, duplicate: T, drops: &std::sync::Arc<std::sync::atomic::AtomicUsize>) {
-            let mut registry = ArtifactFixedRegistry::new();
-            let mut close_registry = ArtifactFixedRegistry::new();
-            registry.insert(17, first).expect("first exact owner");
-            let duplicate = registry.insert(17, duplicate).expect_err("an occupied same-id slot must reject replacement ownership");
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
-            assert!(close_registry.can_insert(17));
-            close_registry.insert_admitted(17, duplicate);
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
-            let first = registry.remove(17).expect("exact live owner");
-            let duplicate = close_registry.remove(17).expect("exact rejected-owner quarantine");
-            drop(first);
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
-            drop(duplicate);
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 2);
-        }
-
-        #[test]
-        fn duplicate_id_never_drops_active_media_snapshot_or_segmented_download_ownership() {
-            let media_drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-            reject_duplicate(ActiveMediaExportSentinel(media_drops.clone()), ActiveMediaExportSentinel(media_drops.clone()), &media_drops);
-            let snapshot_drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-            reject_duplicate(SnapshotRetentionSentinel(snapshot_drops.clone()), SnapshotRetentionSentinel(snapshot_drops.clone()), &snapshot_drops);
-            let download_drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-            reject_duplicate(SegmentedDownloadSentinel(download_drops.clone()), SegmentedDownloadSentinel(download_drops.clone()), &download_drops);
-        }
-
-        #[test]
-        fn media_construction_failure_at_each_fallible_seam_keeps_exact_close_authority() {
-            struct ConstructionOwner {
-                remaining_steps: u8,
-                drops: std::sync::Arc<std::sync::atomic::AtomicUsize>,
-            }
-            impl Drop for ConstructionOwner {
-                fn drop(&mut self) {
-                    self.drops.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-                }
-            }
-            let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-            let mut closures = ArtifactFixedRegistry::new();
-            for (operation_id, _) in ["builder", "dispatch", "session", "worker-submit"].into_iter().enumerate() {
-                closures.insert_admitted(operation_id as u64, ConstructionOwner { remaining_steps: operation_id as u8 + 1, drops: drops.clone() });
-            }
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
-            for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
-                let Some(operation_id) = closures.id_at(index) else { continue };
-                while closures.get(operation_id).is_some_and(|owner| owner.remaining_steps != 0) {
-                    closures.get_mut(operation_id).expect("exact construction owner").remaining_steps -= 1;
-                }
-                drop(closures.remove(operation_id));
-            }
-            assert!(closures.is_empty());
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 4);
-        }
-
-        #[test]
-        fn media_registry_detach_preserves_unrelated_live_owner_and_exact_close_handoff() {
-            struct MediaOwner {
-                identity: std::sync::Arc<()>,
-                drops: std::sync::Arc<std::sync::atomic::AtomicUsize>,
-            }
-            impl Drop for MediaOwner {
-                fn drop(&mut self) {
-                    self.drops.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-                }
-            }
-            let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-            let first_identity = std::sync::Arc::new(());
-            let second_identity = std::sync::Arc::new(());
-            let mut live = ArtifactFixedRegistry::new();
-            let mut closing = ArtifactFixedRegistry::new();
-            live.insert_admitted(41, MediaOwner { identity: first_identity.clone(), drops: drops.clone() });
-            live.insert_admitted(42, MediaOwner { identity: second_identity.clone(), drops: drops.clone() });
-            let first = live.remove(41).expect("exact media owner detaches once");
-            assert!(std::sync::Arc::ptr_eq(&first.identity, &first_identity));
-            assert!(std::sync::Arc::ptr_eq(&live.get(42).expect("unrelated media owner remains live").identity, &second_identity));
-            closing.insert_admitted(41, first);
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
-            drop(closing.remove(41).expect("exact detached owner transfers to close"));
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
-            drop(live.remove(42).expect("unrelated owner remains independently removable"));
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 2);
-        }
-
-        fn ingress_with_page(byte: u8) -> ActiveArtifactEnvelopeIngress {
-            let mut pages = store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES }).expect("one exact ingress page credit");
-            let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
-            bytes[0] = byte;
-            store::ArtifactEnvelopeDecodePage::try_from_array(bytes, 1).expect("one-byte exact page").admit_into(&mut pages).unwrap_or_else(|_| panic!("pre-admitted ingress page"));
-            ActiveArtifactEnvelopeIngress::new(pages)
-        }
-
-        fn close_ingress(mut ingress: ActiveArtifactEnvelopeIngress) {
-            assert_eq!(ingress.close_step(0, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            assert_eq!(ingress.close_step(1, 0), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            assert_eq!(ingress.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), PluginCloseStep::Pending { released_items: 1, released_bytes: 1 });
-            assert_eq!(ingress.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), PluginCloseStep::Complete);
-            assert!(ingress.terminal_is_empty());
-            drop(ingress);
-        }
-
-        #[test]
-        fn artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots() {
-            let mut live = ArtifactFixedRegistry::new();
-            for operation in 0..ARTIFACT_LIVE_OUTPUT_SLOTS as u64 {
-                live.insert(operation, ingress_with_page(operation as u8)).unwrap_or_else(|_| panic!("fixed ingress slot"));
-            }
-            let rejected = live.insert(ARTIFACT_LIVE_OUTPUT_SLOTS as u64, ingress_with_page(255)).err().unwrap_or_else(|| panic!("modulo-colliding plus-one ingress returns its exact owner"));
-            close_ingress(rejected);
-            for operation in 0..ARTIFACT_LIVE_OUTPUT_SLOTS as u64 {
-                close_ingress(live.remove(operation).expect("exact ingress slot closes in admission order"));
-            }
-            assert!(live.is_empty());
-        }
-
-        #[test]
-        fn artifact_envelope_ingress_cancel_and_interrupted_close_release_one_real_page_per_grant() {
-            let mut ingress = ingress_with_page(7);
-            ingress.closing = true;
-            close_ingress(ingress);
-        }
-    }
+    include!("🧪️tests/🔬️app-artifact-fixed-registry/🦀️.rs");
 
     #[cfg(test)]
-    mod artifact_reserved_tool_job_tests {
-        use super::*;
-
-        struct TerminalJob {
-            terminal: bool,
-            drops: std::sync::Arc<std::sync::atomic::AtomicUsize>,
-        }
-
-        impl Drop for TerminalJob {
-            fn drop(&mut self) {
-                self.drops.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-            }
-        }
-
-        impl semio_framework_job::InteractiveJob for TerminalJob {
-            fn step(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-                semio_framework_job::StepOutcome::Yield
-            }
-
-            fn begin_close(&mut self) {}
-
-            fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-                self.terminal = true;
-                semio_framework_job::InteractiveJobCloseStep::Complete
-            }
-
-            fn terminal_is_empty(&self) -> bool {
-                self.terminal
-            }
-        }
-
-        impl ArtifactReservedJob for TerminalJob {
-            fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-                self.terminal = true;
-                Ok(PluginCloseStep::Complete)
-            }
-
-            fn terminal_is_empty(&self) -> bool {
-                self.terminal
-            }
-        }
-
-        #[test]
-        fn erased_dispatch_clone_release_preserves_unique_bounded_job_disposal_authority() {
-            let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-            let mut retained = ArtifactReservedToolJob::new(TerminalJob { terminal: false, drops: drops.clone() });
-            let erased_dispatch_clone = retained.clone();
-            drop(erased_dispatch_clone);
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
-            assert!(matches!(retained.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), Ok(PluginCloseStep::Complete)));
-            assert!(retained.terminal_is_empty());
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
-        }
-    }
+    include!("🧪️tests/🔬️app-artifact-reserved-tool-job/🦀️.rs");
 
     impl FrameworkReservedCommitPermit {
         async fn is_cancelled(&self) -> bool {
@@ -16864,18 +14949,13 @@ pub mod app {
     impl<A: ArtifactApp> TypedCommandFullOperationJob<A> {
         fn checkpoint(&self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::Checkpoint {
             let state = [self.phase as u8, self.prepare_cursor, self.reducer_cursor];
-            semio_framework_job::Checkpoint {
-                state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &state),
-                applied_progress: u64::from(self.prepare_cursor).saturating_add(u64::from(self.reducer_cursor)),
-            }
+            semio_framework_job::Checkpoint { state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &state), applied_progress: u64::from(self.prepare_cursor).saturating_add(u64::from(self.reducer_cursor)) }
         }
 
         fn fault(&mut self, cx: &mut semio_framework_job::StepContext<'_>, message: &[u8]) -> semio_framework_job::StepOutcome {
             self.phase = TypedCommandFullOperationPhase::Fault;
             semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, message) })
         }
-
-
     }
 
     impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A> {
@@ -17275,1347 +15355,7 @@ pub mod app {
     }
 
     #[cfg(test)]
-    mod typed_command_full_operation_tests {
-        use super::*;
-        use crate::publication_fixture::{ChangePublicationPresence, PublicationPresence, PublicationPresenceMutation};
-
-        const FIXTURE: &str = include_str!("🧵️retained-command/🔄️full-operation/🧪️fixture/🔣️.json");
-
-        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-        struct TypedCommandCensusDecision {
-            bytes: usize,
-            accepted: bool,
-        }
-
-        trait TypedCommandCensusOracle {
-            fn decide(&self, description: &str, coalesce_key: &str, maximum: usize) -> TypedCommandCensusDecision;
-        }
-
-        struct OwnedTypedCommandCensus;
-
-        impl TypedCommandCensusOracle for OwnedTypedCommandCensus {
-            fn decide(&self, description: &str, coalesce_key: &str, maximum: usize) -> TypedCommandCensusDecision {
-                let mut bytes = 0usize;
-                let mut accepted = true;
-                for _ in description.as_bytes() {
-                    accepted &= bytes.checked_add(1).is_some_and(|next| {
-                        bytes = next;
-                        next <= maximum
-                    });
-                }
-                for _ in coalesce_key.as_bytes() {
-                    accepted &= bytes.checked_add(1).is_some_and(|next| {
-                        bytes = next;
-                        next <= maximum
-                    });
-                }
-                accepted &= bytes.checked_add(1).is_some_and(|next| {
-                    bytes = next;
-                    next <= maximum
-                });
-                TypedCommandCensusDecision { bytes, accepted }
-            }
-        }
-
-        struct SerdeJsonTypedCommandCensus;
-
-        impl TypedCommandCensusOracle for SerdeJsonTypedCommandCensus {
-            fn decide(&self, description: &str, coalesce_key: &str, maximum: usize) -> TypedCommandCensusDecision {
-                let value = serde_json::json!({ "coalesceKey": coalesce_key, "description": description, "uiScopeFields": 1 });
-                let bytes =
-                    value["description"].as_str().expect("oracle description").as_bytes().len() + value["coalesceKey"].as_str().expect("oracle coalesce key").as_bytes().len() + value["uiScopeFields"].as_u64().expect("oracle UI scope") as usize;
-                TypedCommandCensusDecision { bytes, accepted: bytes <= maximum }
-            }
-        }
-
-        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-        enum FixtureTransition {
-            Yield,
-            Cancelled,
-            Checkpoint,
-            Advance,
-            Retain,
-            Fault,
-        }
-
-        struct OwnedFixtureMachine {
-            phase: usize,
-            advanced: usize,
-            retained_page: bool,
-            owners: usize,
-            terminal: bool,
-        }
-
-        impl OwnedFixtureMachine {
-            fn new(phase: usize) -> Self {
-                Self { phase, advanced: 0, retained_page: true, owners: 0, terminal: false }
-            }
-
-            fn grant(&mut self, fuel: u64, expired: bool, cancelled: bool) -> FixtureTransition {
-                if cancelled {
-                    return FixtureTransition::Cancelled;
-                }
-                if fuel == 0 || expired {
-                    return FixtureTransition::Yield;
-                }
-                self.phase = self.phase.saturating_add(1);
-                self.advanced += 1;
-                FixtureTransition::Checkpoint
-            }
-
-            fn freshness(operation_revision: u64, live_revision: u64, operation_generation: u64, live_generation: u64) -> bool {
-                operation_revision == live_revision && operation_generation == live_generation
-            }
-
-            fn admission(capacity: usize, occupied: usize, roots: usize, required_roots: usize) -> bool {
-                occupied < capacity && roots == required_roots
-            }
-
-            fn publish(&mut self, attempt: u8, acknowledged: bool, maximum_retries: u8) -> FixtureTransition {
-                if acknowledged {
-                    self.retained_page = false;
-                    FixtureTransition::Advance
-                } else if attempt > maximum_retries {
-                    FixtureTransition::Fault
-                } else {
-                    FixtureTransition::Retain
-                }
-            }
-
-            fn close_scalar(value: &mut String, maximum_bytes: usize) -> (usize, usize) {
-                let Some(bytes) = value.chars().next_back().map(char::len_utf8) else { return (0, 0) };
-                if bytes > maximum_bytes {
-                    return (0, 0);
-                }
-                value.pop();
-                (0, bytes)
-            }
-
-            fn close_owner(&mut self, maximum_items: usize) -> (usize, usize) {
-                if self.owners == 0 {
-                    self.terminal = true;
-                    return (0, 0);
-                }
-                if maximum_items == 0 {
-                    return (0, 0);
-                }
-                self.owners -= 1;
-                self.terminal = self.owners == 0;
-                (1, 0)
-            }
-        }
-
-        struct SerdeFixtureOracle<'a>(&'a Value);
-
-        impl SerdeFixtureOracle<'_> {
-            fn transition(&self) -> FixtureTransition {
-                match self.0["expected"].as_str().expect("fixture expected transition") {
-                    "yield" => FixtureTransition::Yield,
-                    "cancelled" => FixtureTransition::Cancelled,
-                    "checkpoint" => FixtureTransition::Checkpoint,
-                    "advance" => FixtureTransition::Advance,
-                    "retain" => FixtureTransition::Retain,
-                    "fault" => FixtureTransition::Fault,
-                    unexpected => panic!("unknown fixture transition {unexpected}"),
-                }
-            }
-        }
-
-        struct TwoTurnPublicationPresencePreparationFactory;
-
-        struct TwoTurnPublicationPresencePreparation {
-            request: Option<store::ArtifactEphemeralOneItemPreparationRequest<PublicationPresence, PublicationPresenceMutation>>,
-            prepared: Option<store::ArtifactEphemeralOneItemPrepared<PublicationPresence>>,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint,
-            turn: u8,
-            closing: bool,
-        }
-
-        impl store::ArtifactEphemeralOneItemPreparationFactory<PublicationPresence, PublicationPresenceMutation> for TwoTurnPublicationPresencePreparationFactory {
-            fn preflight(&self, _mutation: &PublicationPresenceMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-                Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 64 })
-            }
-
-            fn begin(
-                &self,
-                request: store::ArtifactEphemeralOneItemPreparationRequest<PublicationPresence, PublicationPresenceMutation>,
-            ) -> Result<Box<dyn store::ArtifactEphemeralOneItemPreparation<PublicationPresence, PublicationPresenceMutation>>, store::ArtifactEphemeralOneItemPreparationRequest<PublicationPresence, PublicationPresenceMutation>> {
-                Ok(Box::new(TwoTurnPublicationPresencePreparation { request: Some(request), prepared: None, checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), turn: 0, closing: false }))
-            }
-        }
-
-        impl store::ArtifactEphemeralOneItemPreparation<PublicationPresence, PublicationPresenceMutation> for TwoTurnPublicationPresencePreparation {
-            fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-                if !grant.permits_one() {
-                    return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-                }
-                if self.turn == 0 {
-                    self.turn = 1;
-                    self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: [1; 32] };
-                    return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
-                }
-                if self.prepared.is_none() {
-                    let request = self.request.take().ok_or_else(|| "two-turn publication-presence preparation lost its owner bundle".to_string())?;
-                    let next_root = request.mutation.diff(request.base.as_ref()).diff().apply(request.base.as_ref()).map_err(|error| error.to_string())?;
-                    self.prepared = Some(store::ArtifactEphemeralOneItemPrepared { next_root: std::sync::Arc::new(next_root) });
-                    self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 2, digest: [2; 32] };
-                }
-                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
-            }
-
-            fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-                self.checkpoint
-            }
-
-            fn prepared(&self) -> Option<&store::ArtifactEphemeralOneItemPrepared<PublicationPresence>> {
-                self.prepared.as_ref()
-            }
-
-            fn take_prepared(&mut self) -> Option<store::ArtifactEphemeralOneItemPrepared<PublicationPresence>> {
-                self.prepared.take()
-            }
-
-            fn cancel(&mut self) {}
-
-            fn begin_close(&mut self) {
-                self.closing = true;
-            }
-
-            fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-                if !self.closing || grant.maximum_items == 0 {
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                }
-                if self.prepared.take().is_some() || self.request.take().is_some() {
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-                }
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-
-            fn terminal_is_empty(&self) -> bool {
-                self.closing && self.request.is_none() && self.prepared.is_none()
-            }
-        }
-
-        struct PublicationPresenceLocalRootRetirement {
-            root: Option<std::sync::Arc<PublicationPresence>>,
-        }
-
-        impl store::ErasedSnapshotRetirement for PublicationPresenceLocalRootRetirement {
-            fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-                if maximum_items == 0 {
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                }
-                if self.root.take().is_some() {
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-                }
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-
-            fn terminal_is_empty(&self) -> bool {
-                self.root.is_none()
-            }
-        }
-
-        struct PublicationPresenceLocalRootRetirementFactory;
-
-        impl store::SnapshotRetirementFactory<PublicationPresence> for PublicationPresenceLocalRootRetirementFactory {
-            fn retire(&self, snapshot: std::sync::Arc<PublicationPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
-                Box::new(PublicationPresenceLocalRootRetirement { root: Some(snapshot) })
-            }
-        }
-
-        pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
-            let fixture: Value = serde_json::from_str(include_str!("🥇️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
-            let grant = store::ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize };
-            assert_eq!(grant.maximum_items, 1);
-            assert_eq!(grant.maximum_bytes, TYPED_OPERATION_RESULT_PAGE_BYTES);
-            for case in fixture["publicationCases"].as_array().unwrap() {
-                let boundary = case["cancelAt"].as_str().unwrap();
-                let mut app = VcsArtifactApp::<A>::new(A::default()).await;
-                let revision = app.store.content_revision_now();
-                let operation = semio_framework_job::Operation::new(
-                    semio_framework_job::allocate_operation_id(),
-                    semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())),
-                    semio_framework_job::Generation(app.store.generation_now()),
-                    17,
-                );
-                let cancellations = app.tool_cancellations.clone();
-                let lease = cancellations.begin(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }).unwrap();
-                let before = app.presence_store.local_read().unwrap();
-                let mut mounted = MountedTypedCommandFullOperation::<A> {
-                    verb: "setGraphParameter".into(),
-                    meta: ActionMeta { actor: "fixture".into(), instance_id: 7 },
-                    operation,
-                    canonical_revision: revision,
-                    artifact_generation: operation.generation.0,
-                    config_generation: 0,
-                    draft_generation: 0,
-                    presence_generation: 0,
-                    transient_generation: 0,
-                    publication_lanes: &[ArtifactToolPublicationLane::Presence],
-                    session: None,
-                    session_rejected: None,
-                    completion: None,
-                    raw_input: None,
-                    output_chunks: None,
-                    cancellation_lease: Some(lease),
-                    terminal_outcome: None,
-                    terminal_seen: true,
-                    publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())),
-                    pending_artifact_publication: None,
-                    pending_child_publication: None,
-                    captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
-                    captured_child_content_generation: 0,
-                    result_page: None,
-                    result_page_presented: false,
-                    result_sequence: 0,
-                    publication_attempt: 0,
-                    ui_pending: true,
-                    stage: MountedTypedCommandFullOperationStage::Publishing,
-                };
-                if boundary != "producer" {
-                    let pending =
-                        app.presence_store.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), app.presence_local_root_retirement_factory.clone()).unwrap();
-                    mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Presence(pending));
-                    let target = match boundary {
-                        "preparation" => store::ArtifactStoreOneItemPublicationPhase::Preparing,
-                        "preflight" => store::ArtifactStoreOneItemPublicationPhase::PreflightingCommit,
-                        "publishing" => store::ArtifactStoreOneItemPublicationPhase::Publishing,
-                        "awaitingAck" => store::ArtifactStoreOneItemPublicationPhase::AwaitingAck,
-                        other => panic!("unknown publication boundary {other}"),
-                    };
-                    for _ in 0..8 {
-                        let Some(PendingArtifactStorePublication::Presence(pending)) = mounted.pending_artifact_publication.as_ref() else {
-                            panic!("exact pending presence owner");
-                        };
-                        if pending.phase() == target {
-                            break;
-                        }
-                        app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
-                    }
-                    let Some(PendingArtifactStorePublication::Presence(pending)) = mounted.pending_artifact_publication.as_ref() else {
-                        panic!("exact pending presence owner");
-                    };
-                    assert_eq!(pending.phase(), target);
-                }
-                mounted.cancellation_lease.as_ref().unwrap().cancel();
-                if boundary == "awaitingAck" {
-                    let page = mounted.result_page.as_ref().unwrap().clone();
-                    assert!(!mounted.reject_cancelled_publication().unwrap());
-                    assert_eq!(mounted.result_page.as_ref().unwrap().token, page.token);
-                    assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), page.bytes());
-                    assert!(mounted.acknowledge_result_page(page.token).unwrap());
-                }
-                app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
-                assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
-                let cancelled = mounted.result_page.as_ref().unwrap();
-                assert_eq!(cancelled.lane, TypedOperationResultLane::Fault);
-                assert!(std::str::from_utf8(cancelled.bytes()).unwrap().contains("cancelled"));
-                assert_eq!(serde_json::json!({ "committed": app.presence_store.generation_now() != 0 }), serde_json::json!({ "committed": case["committed"] }));
-                assert_eq!(std::ptr::eq(before.get(), app.presence_store.local()), !case["committed"].as_bool().unwrap());
-                assert!(!mounted.ui_pending);
-                let token = cancelled.token;
-                assert!(mounted.acknowledge_result_page(token).unwrap());
-                for _ in 0..64 {
-                    if mounted.terminal_is_empty() {
-                        break;
-                    }
-                    match mounted.retirement_step(grant.maximum_items, grant.maximum_bytes).unwrap() {
-                        PluginCloseStep::Pending { released_items, released_bytes } => {
-                            assert!(released_items <= 1);
-                            assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                        }
-                        PluginCloseStep::Complete => break,
-                        PluginCloseStep::AwaitingInput { reason } => panic!("cancelled exact publication close awaited input: {reason}"),
-                        PluginCloseStep::Blocked { reason } => panic!("cancelled exact publication close blocked: {reason}"),
-                    }
-                }
-                assert!(mounted.terminal_is_empty(), "{boundary}");
-                assert_eq!(cancellations.active_operation_count(), 0);
-                drop(before);
-                for _ in 0..100_000 {
-                    if app.close_terminal_is_empty() {
-                        break;
-                    }
-                    match app.close_step(grant.maximum_items, grant.maximum_bytes).unwrap() {
-                        PluginCloseStep::Pending { released_items, released_bytes } => {
-                            assert!(released_items <= 1);
-                            assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                        }
-                        PluginCloseStep::Complete => break,
-                        PluginCloseStep::AwaitingInput { reason } => panic!("cancelled publication app close awaited input: {reason}"),
-                        PluginCloseStep::Blocked { reason } => panic!("cancelled publication app close blocked: {reason}"),
-                    }
-                }
-                assert!(app.close_terminal_is_empty(), "{boundary}");
-                eprintln!("[DEBUG] actual mounted publisher cancellation boundary {boundary} retained its exact Store root/ACK and reached bounded terminal close");
-            }
-            for case in fixture["linearizationCases"].as_array().unwrap() {
-                let cancellations = ToolCancellationHandle::default();
-                let key = ToolOperationKey {
-                    app_instance_id: 7,
-                    document: ArtifactDocumentAuthority(7),
-                    operation_id: semio_framework_job::allocate_operation_id(),
-                    base_revision: semio_framework_job::RevisionId(3),
-                    generation: semio_framework_job::Generation(0),
-                };
-                let lease = cancellations.begin(key.clone()).unwrap();
-                let mut presence = store::PresenceStore::<PublicationPresence, PublicationPresenceMutation>::new(PublicationPresence::default());
-                let factory: std::sync::Arc<dyn store::SnapshotRetirementFactory<PublicationPresence>> = std::sync::Arc::new(PublicationPresenceLocalRootRetirementFactory);
-                presence.install_local_retirement_factory(factory.clone()).unwrap();
-                let mut pending = presence.begin_publish_one(key.operation_id, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), Some(factory.clone())).unwrap();
-                for _ in 0..8 {
-                    if pending.phase() == store::ArtifactStoreOneItemPublicationPhase::Publishing {
-                        break;
-                    }
-                    assert!(matches!(presence.advance_publish_one(&mut pending, grant).unwrap(), store::ArtifactStoreOneItemAdvance::Progress(_)));
-                }
-                assert_eq!(pending.phase(), store::ArtifactStoreOneItemPublicationPhase::Publishing);
-                let mut permit = if case["claimFirst"].as_bool().unwrap() { Some(lease.try_claim_publication().unwrap()) } else { None };
-                assert!(cancellations.cancel(&key).unwrap());
-                if !case["claimFirst"].as_bool().unwrap() {
-                    permit = lease.try_claim_publication();
-                }
-                if permit.is_some() {
-                    assert!(matches!(presence.advance_publish_one(&mut pending, grant).unwrap(), store::ArtifactStoreOneItemAdvance::Published(_)));
-                    assert!(pending.acknowledge());
-                }
-                drop(permit);
-                assert!(lease.try_claim_publication().is_none(), "a cancelled lease can never claim a later publication unit");
-                assert_eq!(serde_json::json!({ "committed": presence.generation_now() != 0 }), serde_json::json!({ "committed": case["committed"] }));
-                pending.begin_close();
-                for _ in 0..16 {
-                    if pending.terminal_is_empty() {
-                        break;
-                    }
-                    let _ = pending.close_step(grant).unwrap();
-                }
-                assert!(pending.terminal_is_empty());
-                lease.finish();
-                assert_eq!(cancellations.active_operation_count(), 0);
-                let mut close = presence.begin_retirement(std::sync::Arc::new(PublicationPresence::default()), |_| true).ok().unwrap();
-                for _ in 0..2048 {
-                    if close.close_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete {
-                        break;
-                    }
-                }
-                assert!(close.terminal_is_empty());
-            }
-        }
-
-        fn fixture_latest_wins_key(scope: &Value) -> std::sync::Arc<String> {
-            let parts = [scope["document"].as_str().unwrap(), scope["controller"].as_str().unwrap(), scope["tool"].as_str().unwrap(), scope["target"].as_str().unwrap()];
-            let mut copy = ToolLatestWinsKeyCopy::new(scope["instance"].as_u64().unwrap() as u32, parts).unwrap();
-            assert_eq!(copy.advance(parts, 0, 4_096), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            assert_eq!(copy.advance(parts, 1, 0), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            for _ in 0..100_000 {
-                match copy.advance(parts, 1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
-                    PluginCloseStep::Complete => return copy.take_key().unwrap(),
-                    PluginCloseStep::Pending { released_items, released_bytes } => {
-                        assert!(released_items <= 1);
-                        assert!(released_bytes <= 4_096);
-                    }
-                    PluginCloseStep::AwaitingInput { reason } => panic!("full-domain key awaited input: {reason}"),
-                    PluginCloseStep::Blocked { reason } => panic!("full-domain key blocked: {reason}"),
-                }
-            }
-            panic!("full-domain key did not progress under the production grant")
-        }
-
-        pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(factory: &dyn store::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>, mutation: fn() -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
-            let fixture: Value = serde_json::from_str(include_str!("🥇️tool-latest-wins.json")).unwrap();
-            for case in fixture["publicationCases"].as_array().unwrap() {
-                for delayed_ack in [false, true] {
-                    let boundary = case["cancelAt"].as_str().unwrap();
-                    let mut app = VcsArtifactApp::<A>::new(A::default()).await;
-                    let before = app.store.snapshot_root();
-                    let revision = app.store.content_revision_now();
-                    let generation = app.store.generation_now();
-                    let operation =
-                        semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(generation), 1);
-                    let lease = app
-                        .tool_cancellations
-                        .begin_keyed(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation })
-                        .unwrap();
-                    let mut mounted = MountedTypedCommandFullOperation::<A> {
-                        verb: "setGraphParameter".into(),
-                        meta: ActionMeta { actor: "fixture".into(), instance_id: 7 },
-                        operation,
-                        canonical_revision: revision,
-                        artifact_generation: generation,
-                        config_generation: 0,
-                        draft_generation: 0,
-                        presence_generation: 0,
-                        transient_generation: 0,
-                        publication_lanes: &[ArtifactToolPublicationLane::Artifact],
-                        session: None,
-                        session_rejected: None,
-                        completion: None,
-                        raw_input: None,
-                        output_chunks: None,
-                        cancellation_lease: Some(lease),
-                        terminal_outcome: None,
-                        terminal_seen: true,
-                        publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())),
-                        pending_artifact_publication: None,
-                        pending_child_publication: None,
-                        captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
-                        captured_child_content_generation: 0,
-                        result_page: None,
-                        result_page_presented: false,
-                        result_sequence: 0,
-                        publication_attempt: 0,
-                        ui_pending: true,
-                        stage: MountedTypedCommandFullOperationStage::Publishing,
-                    };
-                    if boundary != "producer" {
-                        let pending =
-                            app.store.begin_apply_one(operation.operation, generation, revision, "fixture".into(), mutation(), None, HistoryLane::Document, Some(factory)).unwrap_or_else(|_| panic!("exact scalar document preparation admission"));
-                        mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Artifact(pending));
-                        let target = match boundary {
-                            "preparation" => store::ArtifactStoreOneItemPublicationPhase::Preparing,
-                            "preflight" => store::ArtifactStoreOneItemPublicationPhase::PreflightingCommit,
-                            "publishing" => store::ArtifactStoreOneItemPublicationPhase::Publishing,
-                            "awaitingAck" => store::ArtifactStoreOneItemPublicationPhase::AwaitingAck,
-                            _ => unreachable!(),
-                        };
-                        for _ in 0..100_000 {
-                            let Some(PendingArtifactStorePublication::Artifact(pending)) = mounted.pending_artifact_publication.as_ref() else {
-                                panic!("exact document pending owner");
-                            };
-                            if pending.phase() == target {
-                                break;
-                            }
-                            app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
-                        }
-                        let Some(PendingArtifactStorePublication::Artifact(pending)) = mounted.pending_artifact_publication.as_ref() else {
-                            panic!("exact document pending owner");
-                        };
-                        assert_eq!(pending.phase(), target);
-                    }
-                    mounted.cancellation_lease.as_ref().unwrap().cancel();
-                    if boundary == "awaitingAck" {
-                        let receipt = mounted.result_page.as_ref().unwrap().clone();
-                        assert!(!mounted.reject_cancelled_publication().unwrap());
-                        assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), receipt.bytes());
-                        if delayed_ack {
-                            let presented = mounted.take_result_page().unwrap();
-                            assert_eq!(presented.token.attempt, fixture["resultAck"]["attempt"].as_u64().unwrap() as u8);
-                            assert!(!mounted.has_runnable_work());
-                            for _ in 0..fixture["resultAck"]["preAckPolls"].as_u64().unwrap() {
-                                assert!(mounted.take_result_page().is_none());
-                            }
-                            assert!(mounted.acknowledge_result_page(presented.token).unwrap());
-                        } else {
-                            assert!(mounted.acknowledge_result_page(receipt.token).unwrap());
-                        }
-                    }
-                    app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
-                    let final_page = if delayed_ack {
-                        let presented = mounted.take_result_page().unwrap();
-                        let mut deliveries = 1;
-                        for _ in 0..fixture["resultAck"]["preAckPolls"].as_u64().unwrap() {
-                            deliveries += usize::from(mounted.take_result_page().is_some());
-                        }
-                        assert_eq!(deliveries, fixture["resultAck"]["deliveries"].as_u64().unwrap() as usize);
-                        assert_eq!(presented.token.attempt, fixture["resultAck"]["attempt"].as_u64().unwrap() as u8);
-                        assert!(!mounted.has_runnable_work());
-                        presented
-                    } else {
-                        mounted.result_page.as_ref().unwrap().clone()
-                    };
-                    assert_eq!(final_page.lane, TypedOperationResultLane::Fault);
-                    let committed = case["committed"].as_bool().unwrap();
-                    let actual = serde_json::json!({ "count": observe(&app.store.snapshot_root()), "generation": app.store.generation_now() - generation, "sameRoot": std::sync::Arc::ptr_eq(&before, &app.store.snapshot_root()) });
-                    let expected = serde_json::json!({ "count": if committed { 42 } else { 0 }, "generation": u64::from(committed), "sameRoot": !committed });
-                    assert_eq!(actual, expected, "{boundary}, delayed ACK={delayed_ack}");
-                    assert!(mounted.acknowledge_result_page(final_page.token).unwrap());
-                    for _ in 0..100_000 {
-                        if mounted.terminal_is_empty() {
-                            break;
-                        }
-                        match mounted.retirement_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
-                            PluginCloseStep::Pending { released_items, released_bytes } => {
-                                assert!(released_items <= 1);
-                                assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                            }
-                            PluginCloseStep::Complete => {}
-                            PluginCloseStep::AwaitingInput { reason } => panic!("document cancellation close awaited input: {reason}"),
-                            PluginCloseStep::Blocked { reason } => panic!("document cancellation close blocked: {reason}"),
-                        }
-                    }
-                    assert!(mounted.terminal_is_empty());
-                    drop(before);
-                    for _ in 0..100_000 {
-                        if app.close_terminal_is_empty() {
-                            break;
-                        }
-                        match app.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
-                            PluginCloseStep::Pending { released_items, released_bytes } => {
-                                assert!(released_items <= 1);
-                                assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                            }
-                            PluginCloseStep::Complete => {}
-                            PluginCloseStep::AwaitingInput { reason } => panic!("document cancellation app close awaited input: {reason}"),
-                            PluginCloseStep::Blocked { reason } => panic!("document cancellation app close blocked: {reason}"),
-                        }
-                    }
-                    assert!(app.close_terminal_is_empty());
-                    eprintln!("[DEBUG] real mounted Document publication {boundary}, delayed ACK={delayed_ack}: count/revision/root retained and close terminal");
-                }
-            }
-        }
-
-        #[test]
-        fn retained_latest_wins_full_domain_exact_keys_match_serde_oracle_and_retire() {
-            let fixture: Value = serde_json::from_str(include_str!("🥇️tool-latest-wins.json")).unwrap();
-            let first = &fixture["first"];
-            assert_eq!(first["target"].as_str().unwrap().len(), 8_192);
-            for case in fixture["cases"].as_array().unwrap() {
-                let next = &case["next"];
-                assert_eq!(next["target"].as_str().unwrap().len(), 8_192);
-                let oracle = first == next;
-                assert_eq!(oracle, case["superseded"].as_bool().unwrap());
-                let cancellations = ToolCancellationHandle::default();
-                let mut registry = ToolLatestWinsRegistry::new();
-                let first_operation = semio_framework_job::allocate_operation_id();
-                let first_lease = cancellations
-                    .begin_keyed(ToolOperationKey {
-                        app_instance_id: first["instance"].as_u64().unwrap() as u32,
-                        document: ArtifactDocumentAuthority(7),
-                        operation_id: first_operation,
-                        base_revision: semio_framework_job::RevisionId(1),
-                        generation: semio_framework_job::Generation(0),
-                    })
-                    .unwrap();
-                assert!(registry.begin(first_operation.0, fixture_latest_wins_key(first), &first_lease));
-                for _ in 0..100_000 {
-                    if registry.take_outcome(first_operation.0) == Some(true) {
-                        break;
-                    }
-                    let _ = registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
-                }
-                assert!(!first_lease.token.is_cancelled_now());
-                for _ in 0..100_000 {
-                    if registry.can_begin() {
-                        break;
-                    }
-                    let _ = registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
-                }
-                assert!(registry.can_begin());
-                let next_operation = semio_framework_job::allocate_operation_id();
-                let next_lease = cancellations
-                    .begin_keyed(ToolOperationKey {
-                        app_instance_id: next["instance"].as_u64().unwrap() as u32,
-                        document: ArtifactDocumentAuthority(7),
-                        operation_id: next_operation,
-                        base_revision: semio_framework_job::RevisionId(1),
-                        generation: semio_framework_job::Generation(0),
-                    })
-                    .unwrap();
-                assert!(registry.begin(next_operation.0, fixture_latest_wins_key(next), &next_lease));
-                let mut accepted = false;
-                for _ in 0..100_000 {
-                    if let Some(result) = registry.take_outcome(next_operation.0) {
-                        accepted = result;
-                        break;
-                    }
-                    match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
-                        PluginCloseStep::Pending { released_items, released_bytes } => {
-                            assert!(released_items <= 1);
-                            assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                        }
-                        PluginCloseStep::Complete => {}
-                        PluginCloseStep::AwaitingInput { reason } => panic!("exact key comparison awaited input: {reason}"),
-                        PluginCloseStep::Blocked { reason } => panic!("exact key comparison blocked: {reason}"),
-                    }
-                }
-                assert!(accepted);
-                assert_eq!(first_lease.token.is_cancelled_now(), oracle, "{}", case["id"]);
-                assert!(!next_lease.token.is_cancelled_now());
-                first_lease.finish();
-                next_lease.finish();
-                assert_eq!(cancellations.active_operation_count(), 0);
-                registry.begin_close();
-                for _ in 0..300_000 {
-                    if registry.terminal_is_empty() {
-                        break;
-                    }
-                    match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
-                        PluginCloseStep::Pending { released_items, released_bytes } => {
-                            assert!(released_items <= 1);
-                            assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                        }
-                        PluginCloseStep::Complete => {}
-                        PluginCloseStep::AwaitingInput { reason } => panic!("exact key close awaited input: {reason}"),
-                        PluginCloseStep::Blocked { reason } => panic!("exact key close blocked: {reason}"),
-                    }
-                }
-                assert!(registry.terminal_is_empty());
-                eprintln!("[DEBUG] exact latest-wins key {} matched independent serde scope equality and retired its 8192-byte identity", case["id"]);
-            }
-        }
-
-        #[test]
-        fn retained_latest_wins_producer_child_cannot_bypass_document_or_app_publication_claim() {
-            let cancellations = ToolCancellationHandle::default();
-            let key = ToolOperationKey {
-                app_instance_id: 7,
-                document: ArtifactDocumentAuthority(7),
-                operation_id: semio_framework_job::allocate_operation_id(),
-                base_revision: semio_framework_job::RevisionId(1),
-                generation: semio_framework_job::Generation(0),
-            };
-            let lease = cancellations.begin_keyed(key.clone()).unwrap();
-            let producer = lease.cancel_token();
-            producer.cancel_now();
-            assert!(!lease.token.is_cancelled_now());
-            assert!(lease.try_claim_publication().is_some());
-            assert!(cancellations.cancel_document(key.document).unwrap());
-            assert!(lease.try_claim_publication().is_none());
-            lease.finish();
-            let lease = cancellations.begin_keyed(ToolOperationKey { operation_id: semio_framework_job::allocate_operation_id(), ..key }).unwrap();
-            let prior_claim = lease.try_claim_publication().unwrap();
-            cancellations.cancel_scope_generation();
-            drop(prior_claim);
-            assert!(lease.try_claim_publication().is_none());
-            lease.finish();
-            assert_eq!(cancellations.active_operation_count(), 0);
-        }
-
-        #[test]
-        fn retained_latest_wins_contended_finish_is_deferred_and_cannot_release_replacement() {
-            let fixture: Value = serde_json::from_str(include_str!("🔗️tool-latest-wins-integration.json")).unwrap();
-            let cancellations = ToolCancellationHandle::default();
-            let key = ToolOperationKey {
-                app_instance_id: 7,
-                document: ArtifactDocumentAuthority(7),
-                operation_id: semio_framework_job::allocate_operation_id(),
-                base_revision: semio_framework_job::RevisionId(1),
-                generation: semio_framework_job::Generation(0),
-            };
-            let lease = cancellations.begin_keyed(key.clone()).unwrap();
-            let lock = cancellations.state.lock().unwrap();
-            lease.finish();
-            assert_eq!(serde_json::json!(cancellations.active_operation_count()), fixture["deferredFinish"]["activeBeforeSweep"]);
-            drop(lock);
-            let index = TOOL_CANCELLATION_SLOTS + key.operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS;
-            assert_eq!(cancellations.cleanup_finished_slot(index).unwrap(), Some(true));
-            assert_eq!(serde_json::json!(cancellations.active_operation_count()), fixture["deferredFinish"]["activeAfterSweep"]);
-            let old = cancellations.begin_keyed(key.clone()).unwrap();
-            assert!(cancellations.cleanup_slot(index).unwrap());
-            let replacement = cancellations.begin_keyed(ToolOperationKey { generation: semio_framework_job::Generation(1), ..key }).unwrap();
-            old.finish();
-            assert_eq!(serde_json::json!(cancellations.active_operation_count() == 1 && !replacement.token.is_cancelled_now()), fixture["deferredFinish"]["replacementPreserved"]);
-            replacement.finish();
-            assert_eq!(cancellations.active_operation_count(), 0);
-            eprintln!("[DEBUG] lock-held keyed finish retained its preadmitted release marker; one-slot sweep released only its exact claim");
-        }
-
-        #[test]
-        fn retained_latest_wins_rebase_rebinds_exact_registered_cancellation_authority() {
-            let fixture: Value = serde_json::from_str(include_str!("🔗️tool-latest-wins-integration.json")).unwrap();
-            let cancellations = ToolCancellationHandle::default();
-            let old = ToolOperationKey {
-                app_instance_id: 7,
-                document: ArtifactDocumentAuthority(7),
-                operation_id: semio_framework_job::allocate_operation_id(),
-                base_revision: semio_framework_job::RevisionId(1),
-                generation: semio_framework_job::Generation(fixture["rebase"]["beforeGeneration"].as_u64().unwrap()),
-            };
-            let fresh = ToolOperationKey { base_revision: semio_framework_job::RevisionId(2), generation: semio_framework_job::Generation(fixture["rebase"]["afterGeneration"].as_u64().unwrap()), ..old.clone() };
-            let mut lease = cancellations.begin_keyed(old.clone()).unwrap();
-            let busy = cancellations.state.lock().unwrap();
-            assert!(!lease.rebind_keyed(fresh.base_revision, fresh.generation).unwrap());
-            drop(busy);
-            assert!(lease.rebind_keyed(fresh.base_revision, fresh.generation).unwrap());
-            assert_eq!(lease.key, fresh);
-            assert_eq!(serde_json::json!({ "old": cancellations.cancel(&old).unwrap(), "fresh": cancellations.cancel(&fresh).unwrap() }), serde_json::json!({ "old": fixture["rebase"]["cancelOldKey"], "fresh": fixture["rebase"]["cancelFreshKey"] }));
-            assert!(lease.try_claim_publication().is_none());
-            lease.finish();
-            assert_eq!(cancellations.active_operation_count(), 0);
-            eprintln!("[DEBUG] retained keyed rebase rejected the old cancellation key and accepted only the exact refreshed revision/generation");
-        }
-
-        #[test]
-        fn retained_latest_wins_full_registry_reclaims_completed_targets_before_admission() {
-            let fixture: Value = serde_json::from_str(include_str!("🔗️tool-latest-wins-integration.json")).unwrap();
-            let cancellations = ToolCancellationHandle::default();
-            let mut registry = ToolLatestWinsRegistry::new();
-            let count = fixture["reclamation"]["sequentialCompletedTargets"].as_u64().unwrap();
-            let mut accepted = 0;
-            for index in 0..count {
-                let operation = semio_framework_job::allocate_operation_id();
-                let lease = cancellations
-                    .begin_keyed(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation, base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(0) })
-                    .unwrap();
-                let key = std::sync::Arc::new(format!("target-{index:04}"));
-                let mut begun = false;
-                let mut result = None;
-                for _ in 0..100_000 {
-                    if !begun {
-                        begun = registry.begin(operation.0, key.clone(), &lease);
-                    }
-                    if begun {
-                        result = registry.take_outcome(operation.0);
-                    }
-                    if result.is_some() {
-                        break;
-                    }
-                    match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
-                        PluginCloseStep::Pending { released_items, released_bytes } => {
-                            assert!(released_items <= 1);
-                            assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                        }
-                        PluginCloseStep::Complete => {}
-                        PluginCloseStep::AwaitingInput { reason } => panic!("full-map retained admission awaited input: {reason}"),
-                        PluginCloseStep::Blocked { reason } => panic!("full-map retained admission blocked: {reason}"),
-                    }
-                }
-                assert_eq!(result, Some(true), "completed target {index} must not consume permanent admission capacity");
-                accepted += 1;
-                for _ in 0..100_000 {
-                    if registry.can_begin() {
-                        break;
-                    }
-                    registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
-                }
-                assert!(registry.can_begin());
-                lease.finish();
-            }
-            assert_eq!(serde_json::json!(accepted), fixture["reclamation"]["acceptedTargets"]);
-            assert_eq!(cancellations.active_operation_count(), 0);
-            registry.begin_close();
-            for _ in 0..100_000 {
-                if registry.terminal_is_empty() {
-                    break;
-                }
-                registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
-            }
-            assert!(registry.terminal_is_empty());
-            eprintln!("[DEBUG] retained latest-wins registry admitted65sequential completed targets under64live slots and one-item/4096-byte grants");
-        }
-
-        pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
-            let fixture: Value = serde_json::from_str(include_str!("🔗️tool-latest-wins-integration.json")).unwrap();
-            let mut app = VcsArtifactApp::<A>::new(A::default()).await;
-            let first = fixture["slotReservation"]["firstOperation"].as_u64().unwrap();
-            let collision = fixture["slotReservation"]["collidingOperation"].as_u64().unwrap();
-            app.typed_operation_reservations[first as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = Some(first);
-            assert_eq!(serde_json::json!(app.can_admit_typed_operation(collision)), fixture["slotReservation"]["collisionAdmitted"]);
-            assert!(!app.can_admit_typed_operation(first));
-            app.typed_operation_reservations[first as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None;
-            assert!(app.can_admit_typed_operation(collision));
-            let revision = app.store.content_revision_now();
-            for id in [1, 2] {
-                let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(0), 17);
-                let lease = app
-                    .tool_cancellations
-                    .begin_keyed(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation })
-                    .unwrap();
-                let pending = if id == 2 {
-                    Some(PendingArtifactStorePublication::Presence(
-                        app.presence_store.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), app.presence_local_root_retirement_factory.clone()).unwrap(),
-                    ))
-                } else {
-                    None
-                };
-                app.tool_operations.insert_admitted(
-                    id,
-                    MountedTypedCommandFullOperation::<A> {
-                        verb: "setGraphParameter".into(),
-                        meta: ActionMeta { actor: "fixture".into(), instance_id: 7 },
-                        operation,
-                        canonical_revision: revision,
-                        artifact_generation: 0,
-                        config_generation: 0,
-                        draft_generation: 0,
-                        presence_generation: 0,
-                        transient_generation: 0,
-                        publication_lanes: &[ArtifactToolPublicationLane::Presence],
-                        session: None,
-                        session_rejected: None,
-                        completion: None,
-                        raw_input: None,
-                        output_chunks: None,
-                        cancellation_lease: Some(lease),
-                        terminal_outcome: None,
-                        terminal_seen: true,
-                        publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())),
-                        pending_artifact_publication: pending,
-                        pending_child_publication: None,
-                        captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
-                        captured_child_content_generation: 0,
-                        result_page: None,
-                        result_page_presented: false,
-                        result_sequence: 0,
-                        publication_attempt: 0,
-                        ui_pending: false,
-                        stage: if id == 1 { MountedTypedCommandFullOperationStage::Worker } else { MountedTypedCommandFullOperationStage::Publishing },
-                    },
-                );
-            }
-            for _ in 0..fixture["fairness"]["secondPublishesWithinMetadataVisits"].as_u64().unwrap() {
-                if app.presence_store.generation_now() == 1 {
-                    break;
-                }
-                app.advance_typed_operation_publication_one().await.unwrap();
-            }
-            assert_eq!(app.presence_store.generation_now(), 1);
-            assert_eq!(app.tool_operations.get(1).unwrap().stage, MountedTypedCommandFullOperationStage::Worker);
-            assert!(app.take_typed_operation_result_page(7).is_none());
-            assert!(app.take_typed_operation_result_page(7).is_some());
-            for id in 3..=ARTIFACT_LIVE_OUTPUT_SLOTS as u64 {
-                let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(0), 17);
-                let page = TypedOperationResultPage::try_new(TypedOperationResultToken { receiver: 7, operation: id, generation: 0, sequence: 0, attempt: 1 }, TypedOperationResultLane::Terminal, b"presented ACK waiter").unwrap();
-                app.tool_operations.insert_admitted(
-                    id,
-                    MountedTypedCommandFullOperation::<A> {
-                        verb: String::new(),
-                        meta: ActionMeta { actor: String::new(), instance_id: 7 },
-                        operation,
-                        canonical_revision: revision,
-                        artifact_generation: 0,
-                        config_generation: 0,
-                        draft_generation: 0,
-                        presence_generation: 0,
-                        transient_generation: 0,
-                        publication_lanes: &[],
-                        session: None,
-                        session_rejected: None,
-                        completion: None,
-                        raw_input: None,
-                        output_chunks: None,
-                        cancellation_lease: None,
-                        terminal_outcome: None,
-                        terminal_seen: true,
-                        publication: None,
-                        pending_artifact_publication: None,
-                        pending_child_publication: None,
-                        captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
-                        captured_child_content_generation: 0,
-                        result_page: Some(page),
-                        result_page_presented: true,
-                        result_sequence: 0,
-                        publication_attempt: 0,
-                        ui_pending: false,
-                        stage: MountedTypedCommandFullOperationStage::AwaitingAck,
-                    },
-                );
-            }
-            app.tool_operations.get_mut(1).unwrap().stage = MountedTypedCommandFullOperationStage::Retiring;
-            assert!(app.tool_operations.get(1).unwrap().publication.is_some());
-            app.maintenance_stage = 0;
-            app.maintenance_tool_cursor = 2;
-            assert_eq!(app.maintenance_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap(), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            assert!(app.tool_operations.get(1).unwrap().publication.is_none());
-            assert_eq!(app.tool_operations.get(2).unwrap().stage, MountedTypedCommandFullOperationStage::AwaitingAck);
-            assert!(app.tool_operations.get(2).unwrap().result_page_presented);
-            for id in 3..=ARTIFACT_LIVE_OUTPUT_SLOTS as u64 {
-                drop(app.tool_operations.remove(id).expect("remove synthetic presented ACK waiter"));
-            }
-            let cancellation_state = app.tool_cancellations.state.clone();
-            let lock = cancellation_state.lock().unwrap();
-            for _ in 0..64 {
-                let first = app.tool_operations.get_mut(1).unwrap();
-                if first.terminal_is_empty() {
-                    break;
-                }
-                first.retirement_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
-            }
-            assert!(app.tool_operations.get(1).unwrap().terminal_is_empty());
-            assert_eq!(app.tool_cancellations.active_operation_count(), 2);
-            app.maintenance_stage = 18;
-            app.maintenance_cancellation_cursor = TOOL_CANCELLATION_SLOTS + 1;
-            assert_eq!(app.maintenance_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            assert_eq!(app.maintenance_cancellation_cursor, TOOL_CANCELLATION_SLOTS + 1);
-            assert_eq!(app.tool_cancellations.active_operation_count(), 2);
-            drop(lock);
-            app.maintenance_stage = 18;
-            app.maintenance_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
-            assert_eq!(app.tool_cancellations.active_operation_count(), 1);
-            for _ in 0..100_000 {
-                if app.close_terminal_is_empty() {
-                    break;
-                }
-                match app.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
-                    PluginCloseStep::Pending { released_items, released_bytes } => {
-                        assert!(released_items <= 1);
-                        assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                    }
-                    PluginCloseStep::Complete => break,
-                    PluginCloseStep::AwaitingInput { reason } => panic!("fairness fixture close awaited input: {reason}"),
-                    PluginCloseStep::Blocked { reason } => panic!("fairness fixture close blocked: {reason}"),
-                }
-            }
-            assert!(app.close_terminal_is_empty());
-            eprintln!("[DEBUG] reserved modulo-collision rejected; ready second publisher and result ACK progressed past a retained first worker");
-        }
-
-        #[test]
-        fn language_neutral_empty_single_max_and_plus_one_match_the_test_only_oracle() {
-            let fixture: Value = serde_json::from_str(FIXTURE).expect("language-neutral typed-command fixture");
-            let maximum = fixture["capacities"]["maxOutputBytes"].as_u64().expect("maximum output bytes") as usize;
-            let owned = OwnedTypedCommandCensus;
-            let oracle = SerdeJsonTypedCommandCensus;
-            for case in fixture["cases"].as_array().expect("fixture cases") {
-                let description = case["description"].as_str().expect("fixture description");
-                let coalesce_key = case["coalesceKey"].as_str().expect("fixture coalesce key");
-                let expected = TypedCommandCensusDecision { bytes: case["expectedBytes"].as_u64().expect("fixture expected bytes") as usize, accepted: case["accepted"].as_bool().expect("fixture acceptance") };
-                assert_eq!(owned.decide(description, coalesce_key, maximum), expected);
-                assert_eq!(oracle.decide(description, coalesce_key, maximum), expected);
-            }
-        }
-
-        #[test]
-        fn every_language_neutral_hostile_row_executes_the_owned_state_machine_and_serde_oracle() {
-            let fixture: Value = serde_json::from_str(FIXTURE).expect("language-neutral typed-command fixture");
-            assert_eq!(fixture["capacities"]["maxFaultBytes"].as_u64(), Some(TYPED_OPERATION_FAULT_BYTES as u64));
-            assert_eq!(fixture["grantLaws"].as_array().expect("grant laws").len(), 4);
-            assert_eq!(fixture["freshnessLaws"].as_array().expect("freshness laws").len(), 3);
-            assert_eq!(fixture["admissionLaws"].as_array().expect("admission laws").len(), 4);
-            assert_eq!(fixture["publicationLaws"].as_array().expect("publication laws").len(), 3);
-            assert_eq!(fixture["laneTrace"].as_array().expect("lane trace").len(), 9);
-            assert_eq!(fixture["rawPageLaws"].as_array().expect("raw page laws").len(), 3);
-            assert_eq!(fixture["faultLaws"].as_array().expect("fault laws").len(), 3);
-            assert_eq!(fixture["closeLaws"].as_array().expect("close laws").len(), 4);
-            let declared_rows = fixture["cases"].as_array().expect("output census").len()
-                + fixture["grantLaws"].as_array().expect("grant laws").len()
-                + fixture["freshnessLaws"].as_array().expect("freshness laws").len()
-                + fixture["admissionLaws"].as_array().expect("admission laws").len()
-                + fixture["publicationLaws"].as_array().expect("publication laws").len()
-                + fixture["laneTrace"].as_array().expect("lane trace").len()
-                + fixture["rawPageLaws"].as_array().expect("raw page laws").len()
-                + fixture["faultLaws"].as_array().expect("fault laws").len()
-                + fixture["closeLaws"].as_array().expect("close laws").len();
-            assert_eq!(declared_rows, 40, "the production seam assertions supplement, never replace, the forty language-neutral rows");
-
-            for law in fixture["grantLaws"].as_array().expect("grant laws") {
-                let phases = law["phases"].as_array().cloned().unwrap_or_else(|| vec![Value::Null]);
-                for (phase, _) in phases.iter().enumerate() {
-                    let mut machine = OwnedFixtureMachine::new(phase);
-                    let actual = machine.grant(law["fuel"].as_u64().expect("grant fuel"), law["deadline"] == "expired", law["cancelled"].as_bool().expect("grant cancellation"));
-                    assert_eq!(actual, SerdeFixtureOracle(law).transition());
-                    assert_eq!(machine.advanced, law["advancedUnits"].as_u64().expect("advanced units") as usize);
-                }
-            }
-            for law in fixture["freshnessLaws"].as_array().expect("freshness laws") {
-                let accepted = OwnedFixtureMachine::freshness(
-                    law["operationRevision"].as_u64().expect("operation revision"),
-                    law["liveRevision"].as_u64().expect("live revision"),
-                    law["operationGeneration"].as_u64().expect("operation generation"),
-                    law["liveGeneration"].as_u64().expect("live generation"),
-                );
-                assert_eq!(accepted, law["accepted"].as_bool().expect("freshness oracle"));
-            }
-            for law in fixture["admissionLaws"].as_array().expect("admission laws") {
-                let roots = law["roots"].as_u64().unwrap_or(fixture["capacities"]["roots"].as_u64().expect("root capacity"));
-                let required = law["requiredRoots"].as_u64().unwrap_or(roots);
-                let capacity = law["capacity"].as_u64().unwrap_or(1);
-                let occupied = law["occupied"].as_u64().unwrap_or(0);
-                assert_eq!(OwnedFixtureMachine::admission(capacity as usize, occupied as usize, roots as usize, required as usize), law["accepted"].as_bool().expect("admission oracle"));
-            }
-            for law in fixture["publicationLaws"].as_array().expect("publication laws") {
-                let mut machine = OwnedFixtureMachine::new(0);
-                let actual = machine.publish(law["attempt"].as_u64().expect("publication attempt") as u8, law["acknowledged"].as_bool().expect("publication ACK"), fixture["capacities"]["maximumRetries"].as_u64().expect("maximum retries") as u8);
-                assert_eq!(actual, SerdeFixtureOracle(law).transition());
-                assert_eq!(machine.retained_page, !law["acknowledged"].as_bool().expect("publication ACK"));
-            }
-            let mut lane_machine = OwnedFixtureMachine::new(0);
-            for law in fixture["laneTrace"].as_array().expect("lane trace") {
-                assert_eq!(law["sequence"].as_u64().expect("lane sequence") as usize, lane_machine.advanced);
-                assert_eq!(law["items"].as_u64(), Some(1));
-                assert_eq!(law["receipt"].as_bool(), Some(true));
-                assert_eq!(lane_machine.publish(0, law["acknowledged"].as_bool().expect("lane ACK"), 2), FixtureTransition::Advance);
-                lane_machine.advanced += 1;
-                lane_machine.retained_page = true;
-            }
-            for law in fixture["rawPageLaws"].as_array().expect("raw page laws") {
-                let declared = law["declaredBytes"].as_u64().expect("declared bytes") as usize;
-                let mut admitted = 0usize;
-                let mut returned = 0usize;
-                for page in law["pageBytes"].as_array().expect("page bytes") {
-                    let page = page.as_u64().expect("page length") as usize;
-                    if admitted.checked_add(page).is_some_and(|next| next <= declared) {
-                        admitted += page;
-                    } else {
-                        returned += 1;
-                    }
-                }
-                if admitted != declared && returned == 0 {
-                    returned = law["pageBytes"].as_array().expect("page bytes").len();
-                }
-                let accepted = admitted == declared && returned == 0;
-                assert_eq!(accepted, law["accepted"].as_bool().expect("raw page acceptance"));
-                assert_eq!(returned, law["returnedOwners"].as_u64().expect("returned page owners") as usize);
-            }
-            for law in fixture["faultLaws"].as_array().expect("fault laws") {
-                let mut input = String::new();
-                for segment in law["segments"].as_array().expect("fault segments") {
-                    let scalar = segment["scalar"].as_str().expect("fault scalar");
-                    for _ in 0..segment["count"].as_u64().expect("fault scalar count") {
-                        input.push_str(scalar);
-                    }
-                }
-                let mut oracle_bytes = 0usize;
-                for scalar in input.chars() {
-                    let next = oracle_bytes + scalar.len_utf8();
-                    if next > TYPED_OPERATION_FAULT_BYTES {
-                        break;
-                    }
-                    oracle_bytes = next;
-                }
-                let bounded = ArtifactBoundedToolFault::from_fault(&Fault::new(FaultOrigin::App, FaultCode::new("fixture"), input));
-                assert_eq!(bounded.as_bytes().len(), oracle_bytes);
-                assert_eq!(bounded.as_bytes().len(), law["retainedBytes"].as_u64().expect("retained fault bytes") as usize);
-                assert!(std::str::from_utf8(bounded.as_bytes()).is_ok());
-            }
-            for law in fixture["closeLaws"].as_array().expect("close laws") {
-                if let Some(value) = law["value"].as_str() {
-                    let mut value = value.to_string();
-                    let (items, bytes) = OwnedFixtureMachine::close_scalar(&mut value, law["maximumBytes"].as_u64().expect("close byte credit") as usize);
-                    assert_eq!(items, law["releasedItems"].as_u64().expect("released items") as usize);
-                    assert_eq!(bytes, law["releasedBytes"].as_u64().expect("released bytes") as usize);
-                    assert_eq!(value, law["remaining"].as_str().expect("remaining value"));
-                } else {
-                    let mut machine = OwnedFixtureMachine::new(0);
-                    machine.owners = law["owners"].as_u64().expect("close owners") as usize;
-                    for _ in 0..law["calls"].as_u64().expect("close calls") {
-                        machine.close_owner(law["maximumItems"].as_u64().expect("close item credit") as usize);
-                    }
-                    assert_eq!(machine.terminal, law["terminal"].as_bool().expect("terminal oracle"));
-                }
-            }
-        }
-
-        #[test]
-        fn document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root() {
-            let canonical_revision = [3; 32];
-            let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(93), semio_framework_job::RevisionId(u64::from_be_bytes([3; 8])), semio_framework_job::Generation(0), 17);
-            let mut presence = store::PresenceStore::<PublicationPresence, PublicationPresenceMutation>::new(PublicationPresence::default());
-            let root_factory: std::sync::Arc<dyn store::SnapshotRetirementFactory<PublicationPresence>> = std::sync::Arc::new(PublicationPresenceLocalRootRetirementFactory);
-            presence.install_local_retirement_factory(root_factory.clone()).unwrap();
-            let initial_root = presence.local_read().unwrap();
-            let factory = TwoTurnPublicationPresencePreparationFactory;
-            let mut publication = presence.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&factory), Some(root_factory.clone())).expect("two-turn presence publication admits");
-            let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 64 };
-            assert!(matches!(presence.advance_publish_one(&mut publication, grant), Ok(store::ArtifactStoreOneItemAdvance::Progress(_))));
-            assert!(std::ptr::eq(initial_root.get(), presence.local()));
-            assert_eq!(presence.generation_now(), 0);
-
-            let changed_document_revision = [4; 32];
-            assert!(!typed_operation_document_is_fresh(&operation, canonical_revision, changed_document_revision, 0));
-            publication.begin_close();
-            for _ in 0..4 {
-                if publication.close_step(grant).expect("stale pending publication closes") == store::SnapshotRetirementStep::Complete {
-                    break;
-                }
-            }
-            assert!(publication.terminal_is_empty());
-            assert!(std::ptr::eq(initial_root.get(), presence.local()));
-            assert_eq!(presence.generation_now(), 0);
-            drop(initial_root);
-            let mut close = presence.begin_retirement(std::sync::Arc::new(PublicationPresence::default()), |_| true).ok().unwrap();
-            for _ in 0..2048 {
-                if close.close_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete {
-                    break;
-                }
-            }
-            assert!(close.terminal_is_empty());
-        }
-
-        #[test]
-        fn retained_child_wire_rejection_retires_nested_owners_under_the_production_grant() {
-            let fixture: Value = serde_json::from_str(include_str!("../🏪️store/📢️member-publication.json")).expect("retained child fixture");
-            let row = &fixture["orderedMembers"][0];
-            let mut wire = row["wire"].as_str().unwrap().as_bytes().to_vec();
-            wire.resize(wire.len() + row["paddingBytes"].as_u64().unwrap() as usize, b' ');
-            let wire_bytes = wire.len();
-            let mut child = ChildEmit { slot: "slot".into(), child_id: "child".into(), ops: vec![wire], op_schema: SchemaId("demo.member.json-number".into()), labels: vec!["ä🧩".into()] };
-            assert_eq!(child.close_one(0, TYPED_OPERATION_RESULT_PAGE_BYTES), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            assert_eq!(child.ops[0].len(), wire_bytes);
-            let mut bytes = 0;
-            let mut complete = false;
-            for _ in 0..wire_bytes + 128 {
-                match child.close_one(1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
-                    PluginCloseStep::Pending { released_items, released_bytes } => {
-                        assert!(released_items <= 1);
-                        assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                        bytes += released_bytes;
-                    }
-                    PluginCloseStep::Complete => {
-                        complete = true;
-                        break;
-                    }
-                    PluginCloseStep::AwaitingInput { reason } => panic!("admitted child wire awaited input: {reason}"),
-                    PluginCloseStep::Blocked { .. } => panic!("admitted child wire must retire under the maximum production grant"),
-                }
-            }
-            assert!(complete);
-            assert!(bytes >= wire_bytes);
-            assert!(child.ops.is_empty() && child.labels.is_empty() && child.slot.is_empty() && child.child_id.is_empty() && child.op_schema.0.is_empty());
-            eprintln!("[DEBUG] child wire retirement released {bytes} bytes under the production grant");
-        }
-
-        #[test]
-        fn typed_child_publication_has_one_retained_async_group_owner_and_never_clone_publishes() {
-            let source = include_str!("🦀️.rs");
-            let child_start = source.rfind("async fn publish_mounted_typed_child_operation_unit(").expect("retained child publisher");
-            let child_end = source[child_start..].find("fn publish_mounted_typed_operation_unit(").map(|offset| child_start + offset).expect("retained child publisher end");
-            let child_publisher = &source[child_start..child_end];
-            for retained_seam in [
-                "PendingChildGroupPublicationPhase::Ready",
-                "captured_child_content_generation",
-                "captured.identity_digest()",
-                "try_claim_publication",
-                "begin_dispatch",
-                "&pending.child_emits",
-                "dispatch_emit_group(",
-                "TypedOperationResultLane::Child",
-            ] {
-                assert!(child_publisher.contains(retained_seam), "retained Child publication lost its exact owner seam: {retained_seam}");
-            }
-            for forbidden in ["child_emits.last().cloned()", "vec![child.clone()]", "for child in pending.child_emits.clone()"] {
-                assert!(!child_publisher.contains(forbidden), "retained Child publication restored clone-then-publish: {forbidden}");
-            }
-            let publisher_start = child_end;
-            let publisher_end = source[publisher_start..].find("fn require_tool_operation_authority(").map(|offset| publisher_start + offset).expect("typed publisher end");
-            let publisher = &source[publisher_start..publisher_end];
-            let parent_guard = publisher.find("if emit.child_emits.is_empty()").expect("parent publication group guard");
-            let retained_install = publisher.find("PendingChildGroupPublication::new(").expect("retained child owner install");
-            assert!(parent_guard < retained_install, "parent mutations must remain group-owned whenever Child output is present");
-            assert!(source.contains("ArtifactToolPublicationLane::Child => None"));
-        }
-
-        #[test]
-        fn full_operation_source_rejects_generic_reducers_and_old_monolithic_shells() {
-            let source = include_str!("🦀️.rs");
-            let start = source.find("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>").expect("typed full-operation job");
-            let end = source[start..].find("struct TypedCommandFullOperationJobFactory").map(|offset| start + offset).expect("typed full-operation factory");
-            let job = &source[start..end];
-            for stage in ["typed-command-prepare", "typed-command-reducer"] {
-                assert!(job.contains(stage));
-            }
-            for forbidden in ["A::handle", "A::ephemeral", "bounded_command_output_bytes", "serde_json::to_vec", "fault.message.as_bytes().to_vec()", "for child in emit.child_emits", "ActiveToolCommand", "BoundedFirstStepCommandJob"] {
-                assert!(!job.contains(forbidden), "forbidden typed-command shortcut returned: {forbidden}");
-            }
-            let route = source.rfind("async fn dispatch_typed_command_inner").expect("typed command route");
-            let gate = source[route..].find("self.require_complete_tool_operation_pipeline(&admission)?").expect("fail-closed full-operation gate");
-            let refresh = source[route..].find("self.refresh_cache().await").expect("deferred legacy preparation census");
-            assert!(gate < refresh, "incomplete typed command must fail before legacy preparation");
-            for decoder in ["let command = Box::new(A::command_from_action(action, args).await?)", "let command = A::command_from_action(command_id, Some(&args)).await"] {
-                let decoder = source.find(decoder).expect("typed route decoder");
-                let gate = source[..decoder].rfind("self.require_complete_tool_operation_pipeline(&admission)?").expect("typed route pre-decoder gate");
-                assert!(gate < decoder, "generic command construction must remain behind full-operation admission");
-            }
-            let intent = source.find("async fn handle_intent_frame(&mut self, intent: &UiIntent").expect("intent route");
-            let intent_end = source[intent..].find("async fn resume_task_emit").map(|offset| intent + offset).expect("intent route end");
-            let intent_route = &source[intent..intent_end];
-            for forbidden in ["serde_json::to_value", "serde_json::to_vec", "A::command_from_intent"] {
-                assert!(!intent_route.contains(forbidden), "intent route performed pre-admission work: {forbidden}");
-            }
-            assert!(source.contains("pub fn dispatch_typed"), "typed-value route must remain available to the dependency testkit");
-        }
-
-        #[test]
-        fn fixture_contract_is_anchored_to_the_production_retained_factory_publisher_and_host_receivers() {
-            let source = include_str!("🦀️.rs");
-            let admission_marker = ["async fn admit_command_json_with_", "proof(&self"].concat();
-            let admission_start = source.rfind(&admission_marker).expect("production raw JSON admission");
-            let admission_end = source[admission_start..].find("pub async fn new(app: A)").map(|offset| admission_start + offset).expect("admission route end");
-            let admission = &source[admission_start..admission_end];
-            let reserve = admission.find(".begin_exact_wire").expect("maximum extent authority");
-            let encode = admission.find("protocol::json::to_json_string(&(verb, wire_args))").expect("bounded wire encoder");
-            let seal = admission.find("finish_admitted_prefix").expect("truthful exact prefix");
-            assert!(reserve < encode && encode < seal);
-
-            let dispatch_start = source.rfind("async fn dispatch_typed_command_inner").expect("production typed dispatch");
-            let dispatch_end = source[dispatch_start..].find("pub fn dispatch_typed").map(|offset| dispatch_start + offset).expect("production dispatch end");
-            let dispatch = &source[dispatch_start..dispatch_end];
-            assert!(dispatch.contains("dispatch_wire_retained_with_spec"));
-            assert!(dispatch.contains("retained_wire.take()"));
-
-            let publisher_start = source.rfind("fn publish_mounted_typed_operation_unit").expect("production one-page publisher");
-            let publisher_end = source[publisher_start..].find("fn require_tool_operation_authority").map(|offset| publisher_start + offset).expect("publisher end");
-            let publisher = &source[publisher_start..publisher_end];
-            for retained_seam in ["pending_artifact_publication", "begin_apply_one", "advance_apply_one", "ArtifactStoreOneItemAdvance::Published", "publication.close_step(grant)"] {
-                assert!(publisher.contains(retained_seam), "production publisher lost its retained one-item seam: {retained_seam}");
-            }
-            for forbidden in [".apply_one(", "artifact_mutations.last().cloned()", "config_mutations.last().cloned()", "draft_mutations.last().cloned()", "presence.last().cloned()", "transient.last().cloned()"] {
-                assert!(!publisher.contains(forbidden), "production publisher restored a monolithic or clone-then-pop shortcut: {forbidden}");
-            }
-            let freshness = publisher.find("typed-operation pending publication rejected a stale immutable document root").expect("per-turn document freshness gate");
-            let pending_advance = publisher[freshness..].find("if let Some(pending) = mounted.pending_artifact_publication.as_mut()").map(|offset| freshness + offset).expect("pending publication advance");
-            assert!(freshness < pending_advance, "document freshness must fail closed before every retained lane advance");
-            assert!(publisher[..pending_advance].contains("pending.begin_close()"));
-            assert!(publisher[..pending_advance].contains("pending.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES)"));
-            assert!(!publisher.contains("dispatch_emit_group("));
-            assert!(!publisher.contains(".await"));
-            assert!(publisher.contains("typed_effect_outbox.push"));
-            assert!(publisher.contains("typed_event_outbox.push"));
-            assert!(publisher.contains("typed_ui_outbox.push"));
-            assert!(source.contains("mounted.publication_attempt = mounted.publication_attempt.saturating_add(1)"));
-            assert!(source.contains("take_typed_operation_effect"));
-            assert!(source.contains("take_typed_operation_event"));
-            assert!(source.contains("take_typed_operation_ui_scope"));
-
-            let reactor = include_str!("⚛️reactor/🦀️.rs");
-            assert!(reactor.contains("output.typed_operation_result.as_ref()"));
-            assert!(reactor.contains("page.renderer_exchange_bytes()"));
-            assert!(reactor.contains("TypedOperationResultPage::renderer_ack_token"));
-            assert!(reactor.contains("plugin_acknowledge_typed_operation_result(runtime, token)"));
-            assert!(!reactor.contains("typed_operation_result: _"), "the old typed-result drop route must remain unreachable");
-        }
-
-        #[test]
-        fn language_neutral_renderer_page_and_exact_ack_have_bounded_stable_wire_fields() {
-            let token = TypedOperationResultToken { receiver: u32::MAX, operation: u64::MAX, generation: u64::MAX - 1, sequence: u32::MAX, attempt: 2 };
-            let page = TypedOperationResultPage::try_new(token, TypedOperationResultLane::Terminal, &[0x5a; TYPED_OPERATION_RESULT_PAGE_BYTES]).expect("exact renderer page maximum");
-            let wire = page.renderer_exchange_bytes();
-            assert!(wire.starts_with(TypedOperationResultPage::RENDERER_PAGE_MAGIC));
-            assert_eq!(&wire[wire.len() - TYPED_OPERATION_RESULT_PAGE_BYTES..], &[0x5a; TYPED_OPERATION_RESULT_PAGE_BYTES]);
-
-            let mut ack = Vec::from(TypedOperationResultPage::RENDERER_ACK_MAGIC);
-            ack.extend_from_slice(&token.receiver.to_le_bytes());
-            ack.extend_from_slice(&token.operation.to_le_bytes());
-            ack.extend_from_slice(&token.generation.to_le_bytes());
-            ack.extend_from_slice(&token.sequence.to_le_bytes());
-            ack.push(token.attempt);
-            assert_eq!(TypedOperationResultPage::renderer_ack_token(&ack), Some(token));
-            ack.push(0);
-            assert_eq!(TypedOperationResultPage::renderer_ack_token(&ack), None);
-        }
-
-        #[test]
-        fn host_configuration_uses_one_bounded_event_sourced_lane_before_the_generic_gate() {
-            let source = include_str!("🦀️.rs");
-            let start = source.find("pub(crate) async fn dispatch_action").expect("action route");
-            let end = source[start..].find("async fn dispatch_command(").map(|offset| start + offset).expect("command route");
-            let route = &source[start..end];
-            let hook = route.find("A::host_configuration_mutation(action, args)?").expect("host configuration owner hook");
-            let admission = route[hook..].find("self.admit_host_configuration_json(action, args).await?").expect("bounded host admission") + hook;
-            let authority = route[admission..].find("self.require_tool_operation_authority(&admission)?").expect("bounded host authority") + admission;
-            let event = route[authority..].find("Emit::config(vec![config_mutation])").expect("single event-sourced configuration mutation") + authority;
-            let generic_gate = route[event..].find("self.require_complete_tool_operation_pipeline(&admission)?").expect("generic retained operation gate") + event;
-            assert!(hook < admission && admission < authority && authority < event && event < generic_gate);
-
-            let command_start = end;
-            let command_end = source[command_start..].find("async fn dispatch_typed_command(").map(|offset| command_start + offset).expect("typed command route");
-            let command_route = &source[command_start..command_end];
-            let command_hook = command_route.find("A::host_configuration_mutation(command_id, Some(&args))?").expect("manifest command host configuration owner hook");
-            let command_admission = command_route[command_hook..].find("self.admit_host_configuration_json(command_id, Some(&args)).await?").expect("manifest command bounded host admission") + command_hook;
-            let command_authority = command_route[command_admission..].find("self.require_tool_operation_authority(&admission)?").expect("manifest command bounded host authority") + command_admission;
-            let command_event = command_route[command_authority..].find("Emit::config(vec![config_mutation])").expect("manifest command single event-sourced configuration mutation") + command_authority;
-            let command_generic_gate = command_route[command_event..].find("self.require_complete_tool_operation_pipeline(&admission)?").expect("manifest command generic retained operation gate") + command_event;
-            assert!(command_hook < command_admission && command_admission < command_authority && command_authority < command_event && command_event < command_generic_gate);
-
-            let proof_start = source.find("fn qualified_host_configuration_tool_proof").expect("host configuration proof resolver");
-            let proof_end = source[proof_start..].find("async fn admit_command_wire_with_proof").map(|offset| proof_start + offset).expect("host configuration proof resolver end");
-            let proof = &source[proof_start..proof_end];
-            assert!(proof.contains("QualifiedToolProof::Bounded(proof.clone())"));
-            assert!(!proof.contains("interactive-job.missing-owned-reducer"));
-        }
-    }
+    include!("🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs");
     //#endregion 🎯️ToolCommandJobs
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -20307,8 +17047,7 @@ pub mod app {
                 return Ok(PluginCloseStep::Complete);
             };
             *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-            let pool =
-                semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
+            let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
             if closing {
                 if let Some(active) = self.store_replacement_jobs.get_mut(operation_id) {
                     active.request_cancel();
@@ -20403,8 +17142,7 @@ pub mod app {
                 return Ok(PluginCloseStep::Complete);
             };
             *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-            let pool =
-                semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
+            let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
             let live_generation = if closing {
                 self.envelope_decode_jobs.get(operation_id).map(|active| {
                     active.cancel.cancel_now();
@@ -21041,7 +17779,11 @@ pub mod app {
                             })
                         })
                     });
-                    if extended == Some(true) { history } else { std::sync::Arc::new(self.build_history_view().await) }
+                    if extended == Some(true) {
+                        history
+                    } else {
+                        std::sync::Arc::new(self.build_history_view().await)
+                    }
                 }
                 _ => std::sync::Arc::new(self.build_history_view().await),
             };
@@ -21240,7 +17982,15 @@ pub mod app {
 
         async fn dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let Emit {
-                artifact_mutations, config_mutations, draft_mutations, description, coalesce_key, effects, events, ui_scope, child_emits,
+                artifact_mutations,
+                config_mutations,
+                draft_mutations,
+                description,
+                coalesce_key,
+                effects,
+                events,
+                ui_scope,
+                child_emits,
                 #[cfg(test)]
                 tasks,
             } = emit;
@@ -22245,8 +18995,7 @@ pub mod app {
                 return Err(MediaError::Payload(handle.parent_document_id.clone(), "unknown or superseded media export handle".into()));
             }
             let mut active = self.media_exports.remove(handle.operation_id.0).expect("checked exact media export owner");
-            let pool =
-                semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
+            let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
             #[cfg(target_arch = "wasm32")]
             if let Some(now_ms) = semio_framework_job::default_now_ms() {
                 pool.pump(now_ms);
@@ -22528,9 +19277,7 @@ pub mod app {
                     self.record_command(action, ActionKind::History, Some("Revert to Command".to_string()), None, None, None).await;
                     Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event().await], UiDirtyScope::Full).await)
                 }
-                Some((None, None, ActionKind::Shell, Some(inverse))) => {
-                    Ok(Self::empty_result(action, meta, vec![Effect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args }], Vec::new(), UiDirtyScope::None).await)
-                }
+                Some((None, None, ActionKind::Shell, Some(inverse))) => Ok(Self::empty_result(action, meta, vec![Effect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args }], Vec::new(), UiDirtyScope::None).await),
                 _ => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await),
             }
         }
@@ -22643,8 +19390,7 @@ pub mod app {
             if A::ROLE == AppRole::Viewer && VIEWER_REJECTED_ACTION_IDS.contains(&action) {
                 return Err(viewer_read_only_fault(action));
             }
-            let definition =
-                self.registry.get(action).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unknown-key"), format!("UI dispatch rejected unknown action key '{action}' before command construction")))?;
+            let definition = self.registry.get(action).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unknown-key"), format!("UI dispatch rejected unknown action key '{action}' before command construction")))?;
             validate_ui_dispatch_classification("action", action, definition.semantics.execution.interactive_job)?;
             if HISTORY_ACTION_IDS.contains(&action)
                 || CLIPBOARD_ACTION_IDS.contains(&action)
@@ -23554,8 +20300,7 @@ pub mod app {
             };
             #[cfg(test)]
             let params = semio_framework_job::BatchJobParams { now_us: self.test_tool_clock.unwrap_or(params.now_us), ..params };
-            let pool =
-                semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
+            let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
             let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new(dispatch.job, params) {
                 Ok(session) => (Some(session), None),
                 Err(rejected) => (None, Some(rejected)),
@@ -24101,10 +20846,8 @@ pub mod app {
                 let operation = self.tool_operations.get_mut(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-typed-operation-authority"), "typed operation owner changed during bounded close"))?;
                 let step = match operation.stage {
                     MountedTypedCommandFullOperationStage::Worker => {
-                        let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(
-                            semio_framework_async::ProcessKind::InteractiveNative,
-                            std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get),
-                        ));
+                        let pool =
+                            semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
                         operation.drive_worker_step(&pool)?
                     }
                     MountedTypedCommandFullOperationStage::Publishing => {
@@ -24641,10 +21384,8 @@ pub mod app {
                         });
                     };
                     self.maintenance_tool_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-                    let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(
-                        semio_framework_async::ProcessKind::InteractiveNative,
-                        std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get),
-                    ));
+                    let pool =
+                        semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
                     let operation = self
                         .tool_operations
                         .get_mut(operation_id)
@@ -25086,14 +21827,8 @@ pub mod app {
                 document_revision,
                 topology_revision,
             };
-            self.local_interaction_query = Some(crate::local_interaction::live::LocalInteractionLiveQuery::new(
-                request_id,
-                query_generation,
-                identity,
-                self.store.snapshot_read().ok(),
-                self.config_store.snapshot_read().ok(),
-                self.interaction_store.snapshot_read().ok(),
-            ));
+            self.local_interaction_query =
+                Some(crate::local_interaction::live::LocalInteractionLiveQuery::new(request_id, query_generation, identity, self.store.snapshot_read().ok(), self.config_store.snapshot_read().ok(), self.interaction_store.snapshot_read().ok()));
             self.local_interaction_query_stage = 0;
             self.local_interaction_emitted_bytes = 0;
             self.local_interaction_retired_bytes = 0;
@@ -25630,6 +22365,20 @@ pub mod app {
             Ok(())
         }
 
+        async fn attach_hot_backbone(&mut self, backbone: store::Backbones) -> Result<(), Fault> {
+            self.store.attach_hot_backbone(backbone).await.map_err(|error| error.into_fault())?;
+            self.cache = None;
+            Ok(())
+        }
+
+        async fn tick_backbone(&mut self) -> Result<Vec<protocol::MergeReport>, Fault> {
+            let reports = self.store.tick_backbone_reports().await.map_err(|error| error.into_fault())?;
+            if !reports.is_empty() {
+                self.cache = None;
+            }
+            Ok(reports)
+        }
+
         async fn detach_backbone(&mut self) -> Result<(), Fault> {
             self.store.detach_backbone().map_err(|error| error.into_fault())?;
             self.cache = None;
@@ -25646,7 +22395,15 @@ pub mod app {
                 let root = ui_history_panel(history, &self.registry.controller_id, view_state.locale == Locale::De, A::ROLE == AppRole::Viewer).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 return Ok(built_to_component_tree(root));
             }
-            let effective_body_key = if let Some(ref wid) = view_state.window_id { if !body_key.contains(':') { format!("{body_key}:{wid}") } else { body_key.to_string() } } else { body_key.to_string() };
+            let effective_body_key = if let Some(ref wid) = view_state.window_id {
+                if !body_key.contains(':') {
+                    format!("{body_key}:{wid}")
+                } else {
+                    body_key.to_string()
+                }
+            } else {
+                body_key.to_string()
+            };
             // 🕹️ Task 5: materialized once, before either branch, then used to stamp EVERY
             // `interaction_domain`-bound `UiTree` this render produces — see `stamp_and_cache_interaction_ui`.
             let interaction_state = self.interaction_state().await;
@@ -26680,273 +23437,12 @@ pub mod app {
 
     //#region 🔖️WindowKitsTests
     #[cfg(test)]
-    mod window_kits_tests {
-        use super::*;
-
-        async fn label_en_de(label: &LocalizedLabel) -> (String, String) {
-            (label.resolve(Terminology::default(), Locale::En).to_string(), label.resolve(Terminology::default(), Locale::De).to_string())
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn kind_ids_match_the_frozen_table() {
-            assert_eq!(TextWindowKit::KIND_ID, "framework.window.text");
-            assert_eq!(TableWindowKit::KIND_ID, "framework.window.table");
-            assert_eq!(TreeWindowKit::KIND_ID, "framework.window.tree");
-            assert_eq!(ImageWindowKit::KIND_ID, "framework.window.image");
-            assert_eq!(MeshWindowKit::KIND_ID, "framework.window.mesh");
-            assert_eq!(DocumentWindowKit::KIND_ID, "framework.window.document");
-            assert_eq!(MediaWindowKit::KIND_ID, "framework.window.media");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn window_kind_ids_and_labels_are_non_empty_and_id_matches_definition() {
-            for (kind_id, def) in [
-                (TextWindowKit::KIND_ID, TextWindowKit::window_kind()),
-                (TableWindowKit::KIND_ID, TableWindowKit::window_kind()),
-                (TreeWindowKit::KIND_ID, TreeWindowKit::window_kind()),
-                (ImageWindowKit::KIND_ID, ImageWindowKit::window_kind()),
-                (MeshWindowKit::KIND_ID, MeshWindowKit::window_kind()),
-                (DocumentWindowKit::KIND_ID, DocumentWindowKit::window_kind()),
-                (MediaWindowKit::KIND_ID, MediaWindowKit::window_kind()),
-            ] {
-                assert_eq!(def.id, kind_id);
-                assert!(def.actions.is_empty(), "read-only {kind_id} must declare no actions");
-                let (en, de) = label_en_de(&def.label).await;
-                assert!(!en.is_empty() && !de.is_empty(), "{kind_id} label must have both en and de");
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn en_de_labels_differ_except_text() {
-            let (text_en, text_de) = label_en_de(&TextWindowKit::window_kind().label).await;
-            assert_eq!(text_en, "Text");
-            assert_eq!(text_de, "Text");
-
-            let (table_en, table_de) = label_en_de(&TableWindowKit::window_kind().label).await;
-            assert_eq!(table_en, "Table");
-            assert_eq!(table_de, "Tabelle");
-            assert_ne!(table_en, table_de);
-
-            let (tree_en, tree_de) = label_en_de(&TreeWindowKit::window_kind().label).await;
-            assert_eq!(tree_en, "Tree");
-            assert_eq!(tree_de, "Baum");
-            assert_ne!(tree_en, tree_de);
-
-            let (image_en, image_de) = label_en_de(&ImageWindowKit::window_kind().label).await;
-            assert_eq!(image_en, "Image");
-            assert_eq!(image_de, "Bild");
-            assert_ne!(image_en, image_de);
-
-            let (mesh_en, mesh_de) = label_en_de(&MeshWindowKit::window_kind().label).await;
-            assert_eq!(mesh_en, "Mesh");
-            assert_eq!(mesh_de, "Netz");
-            assert_ne!(mesh_en, mesh_de);
-
-            let (document_en, document_de) = label_en_de(&DocumentWindowKit::window_kind().label).await;
-            assert_eq!(document_en, "Document");
-            assert_eq!(document_de, "Dokument");
-            assert_ne!(document_en, document_de);
-
-            let (media_en, media_de) = label_en_de(&MediaWindowKit::window_kind().label).await;
-            assert_eq!(media_en, "Media");
-            assert_eq!(media_de, "Medien");
-            assert_ne!(media_en, media_de);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn editable_variants_declare_exactly_their_frozen_command_id() {
-            let cases: [(&str, WindowKindDefinition); 7] = [
-                ("replace-text", TextWindowKit::editable_window_kind()),
-                ("set-cell", TableWindowKit::editable_window_kind()),
-                ("set-node", TreeWindowKit::editable_window_kind()),
-                ("set-pixel-region", ImageWindowKit::editable_window_kind()),
-                ("set-vertex", MeshWindowKit::editable_window_kind()),
-                ("set-page", DocumentWindowKit::editable_window_kind()),
-                ("seek-media", MediaWindowKit::editable_window_kind()),
-            ];
-            for (command_id, def) in cases {
-                assert_eq!(def.actions.len(), 1, "{command_id} editable kind must declare exactly one action");
-                assert_eq!(def.actions[0].id, command_id);
-                assert_eq!(def.actions[0].kind, ActionKind::Mutation);
-                assert_eq!(def.actions[0].semantics.execution.interactive_job, semio_framework::InteractiveJobClassification::Migrated);
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn text_kit_renders_buffer_into_component_scene() {
-            let view = TextView { text: "hello world".into(), language: Some("en".into()), read_only: false };
-            let node = TextWindowKit::render(&view).expect("bounded fixture");
-            let Component::Surface(props) = node.component else { panic!("expected Surface") };
-            let expected = semio_framework_ui_scene::TextEditorScene {
-                buffer: "hello world".into(),
-                language: Some("en".into()),
-                selection_json: None,
-                tokens_json: None,
-                diagnostics_json: None,
-                completions_json: None,
-                overlays_json: None,
-                occurrences_json: None,
-                placeholders_json: None,
-                extra_carets_json: None,
-                selectable_spans_json: None,
-                settings_json: None,
-                camera_json: None,
-                hover_json: None,
-                newline_gates_json: None,
-                rename_json: None,
-            };
-            assert_eq!(props, semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &expected).expect("bounded fixture"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn text_kit_read_only_stamps_settings_json() {
-            let view = TextView { text: "x".into(), language: None, read_only: true };
-            let node = TextWindowKit::render(&view).expect("bounded fixture");
-            let Component::Surface(props) = node.component else { panic!("expected Surface") };
-            let expected = semio_framework_ui_scene::TextEditorScene {
-                buffer: "x".into(),
-                language: None,
-                selection_json: None,
-                tokens_json: None,
-                diagnostics_json: None,
-                completions_json: None,
-                overlays_json: None,
-                occurrences_json: None,
-                placeholders_json: None,
-                extra_carets_json: None,
-                selectable_spans_json: None,
-                settings_json: Some("{\"readOnly\":true}".to_string()),
-                camera_json: None,
-                hover_json: None,
-                newline_gates_json: None,
-                rename_json: None,
-            };
-            assert_eq!(props, semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &expected).expect("bounded fixture"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn table_kit_renders_columns_and_rows_json() {
-            let view = TableView { columns: vec!["a".into(), "b".into()], rows: vec![vec!["1".into(), "2".into()]] };
-            let node = TableWindowKit::render(&view).expect("bounded fixture");
-            let Component::Surface(props) = node.component else { panic!("expected Surface") };
-            let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("table scene");
-            assert_eq!(scene.columns_json, "[\"a\",\"b\"]");
-            assert_eq!(scene.rows_json, "[[\"1\",\"2\"]]");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn table_kit_render_rows_stamps_a_stable_row_id_and_omits_the_actions_column_when_no_row_has_one() {
-            let mut view = TableRowsView::new(UiText::try_from_str("Actions").expect("bounded text"));
-            view.try_push_column(UiText::try_from_str("Name").expect("bounded text")).expect("fixed column");
-            let mut table_row = TableRow::new(UiText::try_from_str("space:abc").expect("bounded text"));
-            table_row.try_push_cell(UiText::try_from_str("Atelier").expect("bounded text")).expect("fixed cell");
-            view.try_push_row(table_row).expect("fixed row");
-            let node = TableWindowKit::render_rows(view).expect("bounded fixture");
-            assert!(matches!(node.component, Component::Container(_)));
-            assert_eq!(node.children.len(), 2);
-            assert_eq!(node.children.get(1).expect("row").key.as_str(), "space:abc");
-            assert_eq!(node.children.get(0).expect("header").children.len(), 1);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn table_kit_render_rows_renders_row_action_buttons_carrying_their_dispatchable_descriptor() {
-            let action = ActionId::try_v1("s.space.home", "delete-space").expect("bounded action");
-            let mut view = TableRowsView::new(UiText::try_from_str("Actions").expect("bounded text"));
-            view.try_push_column(UiText::try_from_str("Name").expect("bounded text")).expect("fixed column");
-            let mut table_row = TableRow::new(UiText::try_from_str("space:abc").expect("bounded text"));
-            table_row.try_push_cell(UiText::try_from_str("Atelier").expect("bounded text")).expect("fixed cell");
-            table_row.try_push_action(TableRowAction::new(UiText::try_from_str(IconName::Trash2.as_str()).expect("bounded icon"), Label(UiText::try_from_str("Delete").expect("bounded label")), (action.clone(), None))).expect("fixed action");
-            view.try_push_row(table_row).expect("fixed row");
-            let node = TableWindowKit::render_rows(view).expect("bounded fixture");
-            assert_eq!(node.children.get(0).expect("header").children.len(), 2);
-            let button = node.children.get(1).expect("row").children.get(1).expect("button");
-            assert!(matches!(button.component, Component::Button(_)));
-            assert_eq!(button.bindings.get(0).expect("binding").action, action);
-        }
-
-        #[test]
-        fn table_rows_max_plus_one_returns_the_exact_row_owner() {
-            let mut view = TableRowsView::new(UiText::default());
-            for index in 0..TABLE_WINDOW_ROWS {
-                let id = UiText::try_format(format_args!("row-{index}")).expect("bounded id");
-                assert!(view.try_push_row(TableRow::new(id)).is_ok());
-            }
-            let rejected_id = UiText::try_from_str("row-max-plus-one").expect("bounded id");
-            let rejected = view.try_push_row(TableRow::new(rejected_id.clone())).expect_err("fixed row cap");
-            assert_eq!(rejected.id, rejected_id);
-        }
-
-        #[test]
-        fn abandoned_table_rows_retire_one_row_action_or_cell_per_opportunity() {
-            while close_table_rows_view_one() {}
-            let mut view = TableRowsView::new(UiText::default());
-            let mut row = TableRow::new(UiText::try_from_str("row").expect("bounded id"));
-            row.try_push_cell(UiText::try_from_str("cell").expect("bounded cell")).expect("fixed cell");
-            row.try_push_action(TableRowAction::new(UiText::try_from_str("trash-2").expect("bounded icon"), Label(UiText::try_from_str("Delete").expect("bounded label")), (ActionId::try_v1("fixture", "delete").expect("bounded action"), None)))
-                .expect("fixed action");
-            view.try_push_row(row).expect("fixed row");
-            drop(view);
-            let mut opportunities = 0;
-            while close_table_rows_view_one() {
-                opportunities += 1;
-            }
-            assert!(opportunities >= 4);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn tree_kit_renders_nested_items() {
-            let view = TreeView { roots: vec![TreeNodeView { id: "root".into(), label: "Root".into(), children: vec![TreeNodeView { id: "child".into(), label: "Child".into(), children: Vec::new() }] }] };
-            let tree = TreeWindowKit::render(&view).expect("bounded fixture");
-            assert!(matches!(tree.component, Component::Tree(_)));
-            assert_eq!(tree.children.len(), 1);
-            let section = &tree.children[0];
-            assert!(matches!(section.component, Component::TreeSection(_)));
-            let root_item = &section.children[0];
-            assert_eq!(root_item.key.as_str(), "root");
-            assert_eq!(root_item.children[0].key.as_str(), "child");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn image_kit_renders_data_uri_from_base64() {
-            let view = ImageView { width: 4, height: 2, mime: "image/png".into(), base64: "QUJD".into() };
-            let node = ImageWindowKit::render(&view).expect("bounded fixture");
-            let Component::Image(image) = node.component else { panic!("expected Image") };
-            assert_eq!(image.src.as_str(), "data:image/png;base64,QUJD");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn mesh_kit_renders_world3d_component_scene() {
-            let view = MeshView { camera_json: "{}".into(), meshes_json: "[]".into(), instances_json: "[]".into(), selection_json: "[]".into() };
-            let node = MeshWindowKit::render(&view).expect("bounded fixture");
-            let Component::Surface(props) = node.component else { panic!("expected Surface") };
-            let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(&props).expect("world_3d scene");
-            assert_eq!(scene.camera_json.as_str(), "{}");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn document_kit_renders_one_child_per_page() {
-            let view = DocumentView { pages: vec![DocumentPage { text: "p1".into() }, DocumentPage { text: "p2".into() }] };
-            let stack = DocumentWindowKit::render(&view).expect("bounded fixture");
-            assert!(matches!(stack.layout, LayoutSpec::Stack(_)));
-            assert_eq!(stack.children.len(), 2);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn media_kit_renders_duration_and_position() {
-            let view = MediaView { duration_ms: 60_000, position_ms: 1_500, kind: MediaKind::Video };
-            let node = MediaWindowKit::render(&view).expect("bounded fixture");
-            let Component::KeyValueList(key_value) = node.component else { panic!("expected KeyValueList") };
-            assert_eq!(key_value.entries.len(), 3);
-            assert_eq!(key_value.entries[0].value.as_str(), "60000");
-            assert_eq!(key_value.entries[1].value.as_str(), "1500");
-            assert_eq!(key_value.entries[2].value.as_str(), "video");
-        }
-    }
+    include!("🧪️tests/🔬️app-window-kits/🦀️.rs");
     //#endregion 🔖️WindowKitsTests
     //#endregion 🔖️WindowKits
 
     //#region 🔖️Surfaces
-    use semio_framework::{AppRole, surface_app_id};
+    use semio_framework::{surface_app_id, AppRole};
 
     /// 🎭️ Authoring traits for artifact surfaces split by mutation capability (ticket
     /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1/§2.2/§2.4). `ArtifactEditor`
@@ -28612,385 +25108,7 @@ pub mod app {
         /// and that `io_route` finds the `standard 1 / subset strict` conformance-profile hop back to
         /// `standard 1 / subset any`. Plugin waves reading this ticket copy this shape verbatim.
         #[cfg(test)]
-        pub(crate) mod fixture {
-            // 🎯️ Deliberately NOT `use super::super::*` (the `app` module glob `declarations` itself
-            // uses) — that would re-import `app`'s OWN `ArtifactDeclaration` (old, debt D1) bare,
-            // colliding with `declarations::ArtifactDeclaration` (new, this region) also brought in by
-            // `use super::*` below: `error[E0659]: ArtifactDeclaration is ambiguous`. Explicit named
-            // imports instead, for exactly what this fixture needs from `app`.
-            use super::super::super::declaration_fixture_mutations::{std1_any as std1_any_mutations, std1_strict as std1_strict_mutations, std2_any as std2_any_mutations};
-            use super::super::{
-                AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactKindId, ArtifactPack, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, EngineHandles, Fault, IconName, InteractionView,
-                LocalizedLabel, Mutation, MutationDiff, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, SurfaceKind, ViewEmit, Viewer, testkit,
-            };
-            use super::*;
-            use serde::{Deserialize, Serialize};
-            use std1_any_mutations::Std1AnyMutation;
-            use std1_strict_mutations::Std1StrictMutation;
-            use std2_any_mutations::Std2AnyMutation;
-
-            //#region 🔖️Dialects
-            pub(crate) const STD1_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("1"), subset: SubsetId::ANY };
-            pub(crate) const STD1_STRICT_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("1"), subset: SubsetId("strict") };
-            pub(crate) const STD2_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("2"), subset: SubsetId::ANY };
-            //#endregion 🔖️Dialects
-
-            //#region 🔖️FixtureChannel
-            /// 🏗️ One self-contained subset's snapshot/diff/mutation/command/editor/viewer set — every
-            /// subset owns its own types (design.md rule 2), even though the three fixture subsets are
-            /// structurally identical (a real subset would differ in shape; only the WIRING this
-            /// fixture proves is what matters here). Plain `serde_json` text/binary codecs (no hand-
-            /// authored `.grammar.semio`/`.protocol.semio`) — `NativeCodecs.snapshot/diff/mutations`
-            /// stay `LanguagePair { text: None, binary: None }`, which the type itself documents as legal.
-            macro_rules! fixture_channel {
-                ($snapshot:ident, $diff:ident, $mutation:ident, $leaf_owner:ident, $command:ident, $editor:ident, $viewer:ident, $dialect:expr, $schema:literal) => {
-                    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-                    pub(crate) struct $snapshot {
-                        pub value: i32,
-                    }
-                    impl store::ArtifactDsl for $snapshot {
-                        const EXTENSION: &'static str = $schema;
-                        fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-                            if text.trim().is_empty() {
-                                return Ok(Self::default());
-                            }
-                            serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
-                        }
-                        fn print_dsl(&self) -> String {
-                            serde_json::to_string(self).unwrap_or_default()
-                        }
-                    }
-                    impl ArtifactPack for $snapshot {
-                        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-                            serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
-                        }
-                        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-                            if bytes.is_empty() {
-                                return Ok(Self::default());
-                            }
-                            serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
-                        }
-                    }
-
-                    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-                    pub(crate) struct $diff {
-                        pub value: Option<i32>,
-                    }
-                    impl MutationDiff<$snapshot> for $diff {
-                        fn apply(&self, base: &$snapshot) -> protocol::MutationApplyResult<$snapshot> {
-                            Ok($snapshot { value: self.value.unwrap_or(base.value) })
-                        }
-                        fn absorb(&mut self, other: Self) {
-                            if other.value.is_some() {
-                                self.value = other.value;
-                            }
-                        }
-                    }
-
-                    impl protocol::OpText for $mutation {
-                        fn parse_op(line: &str) -> Result<Self, store::TextError> {
-                            serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
-                        }
-                        fn print_op(&self) -> String {
-                            serde_json::to_string(self).unwrap_or_default()
-                        }
-                    }
-                    impl protocol::OpBinary for $mutation {
-                        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-                            serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()).into())
-                        }
-                        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-                            serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()).into())
-                        }
-                    }
-
-                    #[derive(Clone, Copy, Debug, Default, PartialEq)]
-                    pub(crate) enum $command {
-                        #[default]
-                        Noop,
-                    }
-                    impl protocol::OpBinary for $command {
-                        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-                            Ok(Vec::new())
-                        }
-                        fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-                            Ok($command::Noop)
-                        }
-                    }
-
-                    #[derive(Default)]
-                    pub(crate) struct $editor;
-                    impl ArtifactEditor for $editor {
-                        const DIALECT: Dialect = $dialect;
-                        const DOCUMENT_SCHEMA: &'static str = $schema;
-                        type Snapshot = $snapshot;
-                        type Mutation = $mutation;
-                        type Config = NoConfig;
-                        type ConfigMutation = NoConfigMutation;
-                        type Draft = NoDraft;
-                        type DraftMutation = NoDraftMutation;
-                        type Presence = NoPresence;
-                        type PresenceMutation = NoPresenceMutation;
-                        type Transient = crate::app::NoTransient;
-                        type TransientMutation = crate::app::NoTransientMutation;
-                        type Command = $command;
-                        fn initial_snapshot() -> $snapshot {
-                            $snapshot::default()
-                        }
-                        fn handle(
-                            _command: &$command,
-                            doc: &ArtifactView<'_, $snapshot>,
-                            _cfg: &ConfigView<'_, NoConfig>,
-                            _interaction: &InteractionView<'_>,
-                            _draft: &DraftView<'_, NoDraft>,
-                            _engines: &EngineHandles,
-                        ) -> ArtifactMutationOutcome<$mutation> {
-                            Ok(Emit { artifact_mutations: vec![$mutation::SetValue($leaf_owner::SetValue { value: doc.snapshot.value })], ..Default::default() })
-                        }
-                        fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<ComponentTree> {
-                            built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("value={}", doc.snapshot.value)))
-                        }
-                    }
-
-                    #[derive(Default)]
-                    pub(crate) struct $viewer;
-                    impl ArtifactViewer for $viewer {
-                        const DIALECT: Dialect = $dialect;
-                        const DOCUMENT_SCHEMA: &'static str = $schema;
-                        type Snapshot = $snapshot;
-                        type Mutation = $mutation;
-                        type Config = NoConfig;
-                        type ConfigMutation = NoConfigMutation;
-                        type Presence = NoPresence;
-                        type PresenceMutation = NoPresenceMutation;
-                        type Transient = crate::app::NoTransient;
-                        type TransientMutation = crate::app::NoTransientMutation;
-                        type Command = $command;
-                        fn initial_snapshot() -> $snapshot {
-                            $snapshot::default()
-                        }
-                        fn handle(_command: &$command, _doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
-                            Ok(ViewEmit::default())
-                        }
-                        fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<ComponentTree> {
-                            built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("value={}", doc.snapshot.value)))
-                        }
-                    }
-                };
-            }
-
-            fixture_channel!(Std1AnySnapshot, Std1AnyDiff, Std1AnyMutation, std1_any_mutations, Std1AnyCommand, Std1AnyEditor, Std1AnyViewer, STD1_ANY_DIALECT, "semio.testkit.w1c-fixture.std1-any/v1");
-            fixture_channel!(Std1StrictSnapshot, Std1StrictDiff, Std1StrictMutation, std1_strict_mutations, Std1StrictCommand, Std1StrictEditor, Std1StrictViewer, STD1_STRICT_DIALECT, "semio.testkit.w1c-fixture.std1-strict/v1");
-            fixture_channel!(Std2AnySnapshot, Std2AnyDiff, Std2AnyMutation, std2_any_mutations, Std2AnyCommand, Std2AnyEditor, Std2AnyViewer, STD2_ANY_DIALECT, "semio.testkit.w1c-fixture.std2-any/v1");
-            //#endregion 🔖️FixtureChannel
-
-            //#region 🔖️ProfileHop
-            /// 🚪️ `standard 1 / subset strict` is a CONFORMANCE PROFILE of `standard 1 / subset any` —
-            /// the one relationship design.md's io system models as an ordinary `IoEntry`, not a
-            /// separate mechanism. `Deserializer::CONFORMANCE` rejects a negative `value` (this
-            /// fixture's stand-in "profile" rule), proving §3's payload-law hop AND the W1-C
-            /// conformance decision (`Deserializer::CONFORMANCE`, not `IoDeclaration.conformance`) in
-            /// one exercise.
-            pub(crate) struct StrictFromAny;
-            impl semio_framework::io::io_mechanism::Deserializer<Std1StrictSnapshot> for StrictFromAny {
-                const FROM: Dialect = STD1_ANY_DIALECT;
-                const FIDELITY: semio_framework::io_schema::IoFidelity = semio_framework::io_schema::IoFidelity::Semantic;
-                const CONFORMANCE: Option<fn(&Std1StrictSnapshot) -> Vec<dsl::Diagnostic>> = Some(check_non_negative);
-                async fn deserialize(payload: &semio_framework::io_schema::IoPayload) -> semio_framework::io_schema::IoResult<Std1StrictSnapshot> {
-                    let semio_framework::io_schema::IoPayload::Binary(bytes) = payload else {
-                        return Err(semio_framework::io_schema::IoError { message: "StrictFromAny: expected a binary payload".to_string(), diagnostics: Vec::new() });
-                    };
-                    let base = Std1AnySnapshot::decode_pack(bytes).map_err(|error| semio_framework::io_schema::IoError { message: format!("StrictFromAny: base decode failed: {error}"), diagnostics: Vec::new() })?;
-                    Ok(semio_framework::io_schema::IoOutcome { value: Std1StrictSnapshot { value: base.value }, diagnostics: Vec::new() })
-                }
-            }
-
-            // 🚫️async: E4 fn-pointer slot — `Deserializer::CONFORMANCE: Option<fn(&T) -> Vec<Diagnostic>>`.
-            fn check_non_negative(snapshot: &Std1StrictSnapshot) -> Vec<dsl::Diagnostic> {
-                if snapshot.value < 0 { vec![dsl::Diagnostic::error("s.testkit.w1c-fixture.negative-value", dsl::TextSpan::at(0, 0), "conformance profile requires a non-negative value")] } else { Vec::new() }
-            }
-
-            pub(crate) struct StrictIntoAny;
-            impl semio_framework::io::io_mechanism::Serializer<Std1StrictSnapshot> for StrictIntoAny {
-                const INTO: Dialect = STD1_ANY_DIALECT;
-                const FIDELITY: semio_framework::io_schema::IoFidelity = semio_framework::io_schema::IoFidelity::Exact;
-                async fn serialize(from: &Std1StrictSnapshot) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
-                    Ok(semio_framework::io_schema::IoOutcome { value: semio_framework::io_schema::IoPayload::Binary(Std1AnySnapshot { value: from.value }.encode_pack()), diagnostics: Vec::new() })
-                }
-            }
-
-            // 🚫️async: E1 pure fixture builder — `OnceLock::get_or_init`'s closure is a fixed sync
-            // `FnOnce() -> T` (std API), so the entries inside are resolved via `resolve_ready`; both
-            // never truly suspend (io-async-signatures).
-            fn std1_strict_entries() -> &'static [semio_framework::io::io_mechanism::IoEntry] {
-                static ENTRIES: std::sync::OnceLock<Vec<semio_framework::io::io_mechanism::IoEntry>> = std::sync::OnceLock::new();
-                ENTRIES.get_or_init(|| {
-                    vec![semio_framework::io::io_mechanism::deserializer_entry::<Std1StrictSnapshot, StrictFromAny>(STD1_STRICT_DIALECT), semio_framework::io::io_mechanism::serializer_entry::<Std1StrictSnapshot, StrictIntoAny>(STD1_STRICT_DIALECT)]
-                })
-            }
-            //#endregion 🔖️ProfileHop
-
-            //#region 🔖️Builders
-            fn schema_descriptor(id: &'static str) -> ::semio_framework_schema::ArtifactSchemaDescriptor {
-                let leaves = ::semio_framework_schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "{}", proto: "" };
-                ::semio_framework_schema::ArtifactSchemaDescriptor { id, artifact: leaves.clone(), snapshot: leaves.clone(), diff: leaves.clone(), mutations: leaves }
-            }
-
-            fn native_codecs<S, M>(schema: &str) -> NativeCodecs
-            where
-                S: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
-                M: Mutation<S> + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + OpText + OpBinary + 'static,
-            {
-                NativeCodecs {
-                    snapshot: LanguagePair { text: None, binary: None },
-                    diff: LanguagePair { text: None, binary: None },
-                    mutations: LanguagePair { text: None, binary: None },
-                    inferences: None,
-                    codec: store::ArtifactCodec::of::<S, M>(schema.to_string()),
-                }
-            }
-
-            /// 🏗️ Minimal valid `AppDefinition` — `.document(...)`/`.mode(...)`/`.window_kind(...)` are
-            /// `AppBuilder::build_definition`'s hard asserts (non-empty document segments, ≥1 mode, ≥1
-            /// window kind); every fixture surface shares this shape since only the WIRING matters here.
-            fn editor_definition(dialect: Dialect) -> AppDefinition {
-                Editor::builder(dialect)
-                    .document(["semio", "testkit", "w1c-fixture"])
-                    .mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                    .window_kind("main", LocalizedLabel::data("Main"), "w1c.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                    .build_definition()
-            }
-
-            fn viewer_definition(dialect: Dialect) -> AppDefinition {
-                Viewer::builder(dialect)
-                    .document(["semio", "testkit", "w1c-fixture"])
-                    .mode("view", LocalizedLabel::data("View"), "eye")
-                    .window_kind("main", LocalizedLabel::data("Main"), "w1c.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                    .build_definition()
-            }
-
-            semio_framework_dispatch_macros::dyn_enum_close! {
-                /// 🗃️ Closed fixture app set for every declared editor and viewer surface.
-                pub(crate) enum FixtureApps: PluginApp {
-                    Std1AnyEditorApp(VcsArtifactApp<EditorApp<Std1AnyEditor>>),
-                    Std1AnyViewerApp(VcsArtifactApp<ViewerApp<Std1AnyViewer>>),
-                    Std1StrictEditorApp(VcsArtifactApp<EditorApp<Std1StrictEditor>>),
-                    Std1StrictViewerApp(VcsArtifactApp<ViewerApp<Std1StrictViewer>>),
-                    Std2AnyEditorApp(VcsArtifactApp<EditorApp<Std2AnyEditor>>),
-                    Std2AnyViewerApp(VcsArtifactApp<ViewerApp<Std2AnyViewer>>),
-                }
-            }
-
-            /// 🌳️ The fixture's whole tree: TWO standards, THREE subsets total — `standard "1"` owns
-            /// `any` (base) and `strict` (conformance profile of `any`, wired via `std1_strict_entries`);
-            /// `standard "2"` owns one independent `any` subset, proving the walk covers >1 standard.
-            pub(crate) fn build_declaration() -> ArtifactDeclaration<FixtureApps> {
-                ArtifactDeclaration {
-                    kind: ArtifactKindId::parse("s.testkit.w1c-fixture").expect("canonical fixture kind"),
-                    localization: &[],
-                    standards: vec![
-                        StandardDeclaration {
-                            id: StandardId("1"),
-                            media: MediaDeclaration { mimes: &["application/vnd.semio.w1c-fixture+json"], extensions: &["w1cfixture"] },
-                            subsets: vec![
-                                SubsetDeclaration {
-                                    dialect: STD1_ANY_DIALECT,
-                                    schema: SchemaDeclaration { descriptor: schema_descriptor("s.testkit.w1c-fixture@1/*"), inferences: &[], inference_services: Vec::new() },
-                                    io: IoDeclaration { native: native_codecs::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.w1c-fixture.std1-any/v1"), entries: &[] },
-                                    viewer: viewer_surface::<Std1AnyViewer, FixtureApps>(viewer_definition(STD1_ANY_DIALECT)),
-                                    editor: editor_surface::<Std1AnyEditor, FixtureApps>(editor_definition(STD1_ANY_DIALECT)),
-                                    examples: &[],
-                                },
-                                SubsetDeclaration {
-                                    dialect: STD1_STRICT_DIALECT,
-                                    schema: SchemaDeclaration { descriptor: schema_descriptor("s.testkit.w1c-fixture@1/strict"), inferences: &[], inference_services: Vec::new() },
-                                    io: IoDeclaration { native: native_codecs::<Std1StrictSnapshot, Std1StrictMutation>("semio.testkit.w1c-fixture.std1-strict/v1"), entries: std1_strict_entries() },
-                                    viewer: viewer_surface::<Std1StrictViewer, FixtureApps>(viewer_definition(STD1_STRICT_DIALECT)),
-                                    editor: editor_surface::<Std1StrictEditor, FixtureApps>(editor_definition(STD1_STRICT_DIALECT)),
-                                    examples: &[],
-                                },
-                            ],
-                        },
-                        StandardDeclaration {
-                            id: StandardId("2"),
-                            media: MediaDeclaration { mimes: &["application/vnd.semio.w1c-fixture-2+json"], extensions: &["w1cfixture2"] },
-                            subsets: vec![SubsetDeclaration {
-                                dialect: STD2_ANY_DIALECT,
-                                schema: SchemaDeclaration { descriptor: schema_descriptor("s.testkit.w1c-fixture@2/*"), inferences: &[], inference_services: Vec::new() },
-                                io: IoDeclaration { native: native_codecs::<Std2AnySnapshot, Std2AnyMutation>("semio.testkit.w1c-fixture.std2-any/v1"), entries: &[] },
-                                viewer: viewer_surface::<Std2AnyViewer, FixtureApps>(viewer_definition(STD2_ANY_DIALECT)),
-                                editor: editor_surface::<Std2AnyEditor, FixtureApps>(editor_definition(STD2_ANY_DIALECT)),
-                                examples: &[],
-                            }],
-                        },
-                    ],
-                }
-            }
-            //#endregion 🔖️Builders
-
-            //#region 🔖️Tests
-            #[semio_framework_async_macros::async_test]
-            async fn ids_are_derived_from_the_dialect() {
-                testkit::assert_subset_declaration_ids_are_derived(&build_declaration()).await;
-            }
-
-            #[test]
-            fn format_descriptor_identity_is_scoped_to_artifact_and_standard() {
-                let artifact = ArtifactDeclaration::<FixtureApps> { kind: ArtifactKindId::parse("s.testkit.other").expect("canonical artifact kind"), localization: &[], standards: Vec::new() };
-                let standard = StandardDeclaration::<FixtureApps> { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.testkit-other+json"], extensions: &["testkit-other"] }, subsets: Vec::new() };
-                let descriptor = format_descriptor_of(&artifact, &standard);
-                assert_eq!(descriptor.kind_id, "s.testkit.other@1");
-                assert_eq!(descriptor.short_id, "s.testkit.other@1");
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn declaring_registers_schema_io_and_surfaces() {
-                testkit::assert_declaration_tree_registers_all("testkit", build_declaration()).await;
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn a_conflicting_declaration_leaves_zero_rows_behind() {
-                let mut invalid = build_declaration();
-                // 🎯️ Force a preflight failure by construction: standard "2"'s subset gets standard
-                // "1"/"any"'s schema id, but with DIFFERENT facet content — `schema_descriptor` alone
-                // would build byte-identical (harmlessly idempotent) descriptors for the same id, so
-                // the `rust` leaf is perturbed to make the two genuinely conflict. Every OTHER field
-                // (dialect, io, surfaces) stays standard "2"'s own — `preflight_artifact_schema_
-                // descriptors`'s internal batch dedup rejects two DIFFERENT descriptors sharing one id
-                // before anything commits.
-                let mut conflicting = schema_descriptor("s.testkit.w1c-fixture@1/*");
-                conflicting.artifact.rust = "// a different, conflicting facet body";
-                invalid.standards[1].subsets[0].schema.descriptor = conflicting;
-                testkit::assert_declaration_registration_is_atomic("testkit", invalid).await;
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn open_mutate_save_round_trips_through_the_generic_snapshot_builder() {
-                type Construction = SnapshotBuilder<Std1AnySnapshot, Std1AnyMutation>;
-                let bytes = Std1AnySnapshot { value: 1 }.encode_pack();
-                let opened = Construction::from_binary(&bytes).expect("open");
-                let (mutated, outcome) = opened.mutate(Std1AnyMutation::SetValue(std1_any_mutations::SetValue { value: 42 }));
-                assert!(outcome.messages().is_empty(), "a fresh mutate must not fail");
-                let saved = mutated.build().expect("save");
-                assert_eq!(saved.value, 42);
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn io_route_finds_the_conformance_profile_hop() {
-                let _plugin = Plugin::<FixtureApps>::builder("testkit").label("w1c-fixture-route").version("0.0.1").package_id("semio:testkit").declare_artifact(build_declaration()).try_build().expect("fixture declares cleanly");
-                let route = semio_framework::io::io_mechanism::io_route(&ArtifactDialect::from(STD1_ANY_DIALECT), &ArtifactDialect::from(STD1_STRICT_DIALECT), 3).await.expect("a route from the base subset into its conformance profile must exist");
-                assert_eq!(route.value.hops.len(), 1, "the profile hop is direct");
-
-                let payload = semio_framework::io_schema::IoPayload::Binary(Std1AnySnapshot { value: 7 }.encode_pack());
-                let result = semio_framework::io::io_mechanism::io_run(&route.value, payload).await.expect("running the route decodes into the profile");
-                let semio_framework::io_schema::IoPayload::Binary(bytes) = result.value else {
-                    panic!("profile hop must produce a binary payload");
-                };
-                let profiled = Std1StrictSnapshot::decode_pack(&bytes).expect("profile snapshot decodes");
-                assert_eq!(profiled.value, 7);
-            }
-            //#endregion 🔖️Tests
-        }
+        include!("🧪️tests/🔬️app-declarations-fixture/🦀️.rs");
         //#endregion 🔖️Fixture
     }
     //#endregion 🔖️Declarations
@@ -29063,16 +25181,16 @@ pub mod plugin_runtime {
     // #region plugin_runtime
     //! 📤️ WASM component export glue for plugin bundles.
 
-    use crate::ArtifactApp;
     use crate::app::{
-        ActionMeta, AppInstance, ArtifactMediaExportHandle, ArtifactMediaExportPoll, EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, MediaError, Plugin, PluginApp, PluginAssemblyError, PluginProgram, PresenceRosterAdmission,
-        TransactionProposalDraft, TypedOperationResultPage, TypedOperationResultToken, resolve_ready, retained_job_payload,
+        resolve_ready, retained_job_payload, ActionMeta, AppInstance, ArtifactMediaExportHandle, ArtifactMediaExportPoll, EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, MediaError, Plugin, PluginApp, PluginAssemblyError, PluginProgram,
+        PresenceRosterAdmission, TransactionProposalDraft, TypedOperationResultPage, TypedOperationResultToken,
     };
-    use dsl::{DslValue, FromValue, ToValue, from_dsl_value, to_dsl_value};
+    use crate::ArtifactApp;
+    use dsl::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
     use semio_framework::{
+        kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, Effect, InvocationResult, MessageEndpoint, QuotaSchema},
         AssetDeclaration, ExecutionMode, ExtensionPointDeclaration, Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, TopicContribution, ViewModel,
-        kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, Effect, InvocationResult, QuotaSchema},
     };
     /// 🎯️ M1/M2 (ticket 26/08/17 `design-unified.md`): `UiIntent`/`PresenceUpdate` for
     /// `plugin_dispatch_intents`/`plugin_take_presence` — this module (a sibling of `pub mod app`, not
@@ -29086,7 +25204,7 @@ pub mod plugin_runtime {
     use serde_json::Value;
     use std::cell::{Cell, RefCell};
     use std::collections::HashMap;
-    use std::sync::atomic::{AtomicU8, AtomicU32, AtomicU64, Ordering};
+    use std::sync::atomic::{AtomicU32, AtomicU64, AtomicU8, Ordering};
     use ui_wgpu::wgpu::{ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef};
 
     struct RuntimeAppCell<PA: PluginApp> {
@@ -29355,7 +25473,7 @@ pub mod plugin_runtime {
     mod instance_lifetime {
         include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🚪️lifetime/🦀️.rs"));
     }
-    pub use instance_lifetime::{PluginInstanceCloseLease, plugin_capture_instance_close};
+    pub use instance_lifetime::{plugin_capture_instance_close, PluginInstanceCloseLease};
 
     const PLUGIN_RUNTIME_INSTANCE_SLOTS: usize = 1_024;
     const PLUGIN_RUNTIME_INSTANCE_WORDS: usize = PLUGIN_RUNTIME_INSTANCE_SLOTS / u64::BITS as usize;
@@ -29375,7 +25493,6 @@ pub mod plugin_runtime {
             bytes[..actor.len()].copy_from_slice(actor.as_bytes());
             Ok(Self { len: actor.len() as u16, bytes })
         }
-
     }
 
     impl std::fmt::Display for RuntimeActorAuthority {
@@ -29428,7 +25545,6 @@ pub mod plugin_runtime {
             })
         }
 
-
         #[cfg(test)]
         fn insert(&mut self, instance_id: u32, value: T) -> Result<(), T> {
             if !self.allocation_admitted {
@@ -29454,6 +25570,13 @@ pub mod plugin_runtime {
             self.entry(Self::index(instance_id)).and_then(|(candidate, value)| (*candidate == instance_id).then_some(value))
         }
 
+        fn get_mut(&mut self, instance_id: u32) -> Option<&mut T> {
+            let index = Self::index(instance_id);
+            if self.entry(index).is_none_or(|(candidate, _)| *candidate != instance_id) {
+                return None;
+            }
+            Some(unsafe { &mut self.slots[index].assume_init_mut().1 })
+        }
 
         fn can_insert(&self, instance_id: u32) -> bool {
             self.allocation_admitted && !self.occupied(Self::index(instance_id))
@@ -29506,116 +25629,23 @@ pub mod plugin_runtime {
         fn drop(&mut self) {}
     }
 
-    #[cfg(test)]
-    mod native_aggregate_backing_tests {
-        include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🚪️lifetime/🧪️aggregate-admission.rs"));
+    struct RuntimeDocumentBackboneBindingV1 {
+        generation: u64,
+        uri: Option<String>,
+        channel: Option<store::ActorBackboneChannelOwner>,
+    }
+
+    impl RuntimeDocumentBackboneBindingV1 {
+        fn state(&self) -> crate::document_backbone_binding::DocumentBackboneBindingStateV1 {
+            crate::document_backbone_binding::DocumentBackboneBindingStateV1 { generation: self.generation, uri: self.uri.clone() }
+        }
     }
 
     #[cfg(test)]
-    mod runtime_instance_registry_tests {
-        use super::*;
+    include!("🧪️tests/🔬️plugin-runtime-native-aggregate-backing/🦀️.rs");
 
-        #[test]
-        fn sparse_live_instances_receive_successive_round_robin_turns() {
-            let fixture: Value = serde_json::from_str(include_str!("⚛️reactor/🧪️fixtures/🔣️.json")).unwrap();
-            let mut registry = RuntimeInstanceRegistry::new();
-            for id in fixture["instances"].as_array().unwrap() {
-                registry.insert_admitted(id.as_u64().unwrap() as u32, ());
-            }
-            let mut cursor = 0;
-            let actual: Vec<_> = fixture["roundRobin"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .map(|_| {
-                    let (index, id, _) = registry.next_entry_from(cursor).expect("next occupied instance");
-                    cursor = index + 1;
-                    id
-                })
-                .collect();
-            assert_eq!(serde_json::to_value(actual).unwrap(), fixture["roundRobin"]);
-            for id in fixture["instances"].as_array().unwrap() {
-                registry.take(id.as_u64().unwrap() as u32);
-            }
-            assert!(registry.next_entry_from(cursor).is_none());
-        }
-
-        #[test]
-        fn runtime_instance_registry_has_fixed_capacity_collision_and_reuse() {
-            let mut registry = RuntimeInstanceRegistry::new();
-            assert!(registry.allocation_admitted);
-            for index in 0..PLUGIN_RUNTIME_INSTANCE_SLOTS as u32 {
-                assert!(registry.insert(index.saturating_add(100_000), index).is_ok());
-            }
-            assert_eq!(registry.insert(100_000 + PLUGIN_RUNTIME_INSTANCE_SLOTS as u32, u32::MAX), Err(u32::MAX));
-            assert_eq!(registry.take(100_000), Some(0));
-            assert!(registry.insert(100_000 + PLUGIN_RUNTIME_INSTANCE_SLOTS as u32, 7).is_ok());
-            assert_eq!(registry.get(100_000 + PLUGIN_RUNTIME_INSTANCE_SLOTS as u32), Some(&7));
-        }
-
-        #[test]
-        fn runtime_instance_close_quarantine_never_implicitly_drops_nested_value() {
-            struct DropSentinel(std::sync::Arc<std::sync::atomic::AtomicUsize>);
-            impl Drop for DropSentinel {
-                fn drop(&mut self) {
-                    self.0.fetch_add(1, Ordering::SeqCst);
-                }
-            }
-            let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-            let mut live = RuntimeInstanceRegistry::new();
-            let mut quarantine = RuntimeInstanceRegistry::new();
-            assert!(live.insert(73, DropSentinel(drops.clone())).is_ok());
-            let detached = live.take(73).expect("exact live instance");
-            assert!(quarantine.insert(73, detached).is_ok());
-            assert_eq!(drops.load(Ordering::SeqCst), 0, "the close handoff must not run the nested destructor");
-            drop(live);
-            assert_eq!(drops.load(Ordering::SeqCst), 0);
-            drop(quarantine);
-            assert_eq!(drops.load(Ordering::SeqCst), 0, "an incomplete registry shell must fail safe without walking or dropping nested values");
-        }
-
-        #[test]
-        fn exhausted_close_generation_is_rejected_before_exact_owner_detachment() {
-            struct DropSentinel(std::sync::Arc<std::sync::atomic::AtomicUsize>);
-            impl Drop for DropSentinel {
-                fn drop(&mut self) {
-                    self.0.fetch_add(1, Ordering::SeqCst);
-                }
-            }
-            let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-            let mut live = RuntimeInstanceRegistry::new();
-            live.insert_admitted(91, DropSentinel(drops.clone()));
-            assert!(checked_runtime_close_generation(u64::MAX).is_err());
-            assert!(live.get(91).is_some(), "generation admission must precede owner detachment");
-            assert_eq!(drops.load(Ordering::SeqCst), 0);
-            drop(live.take(91));
-            assert_eq!(drops.load(Ordering::SeqCst), 1);
-        }
-
-        #[test]
-        fn cleanup_queue_saturation_preserves_detached_app_ownership() {
-            let instance_id = 700_000u32;
-            let exact_owner = std::sync::Arc::new(73usize);
-            let mut live = RuntimeInstanceRegistry::new();
-            let mut quarantine = RuntimeInstanceRegistry::new();
-            live.insert_admitted(instance_id, exact_owner.clone());
-            for index in 0..PLUGIN_RUNTIME_INSTANCE_SLOTS as u32 {
-                quarantine.insert_admitted(instance_id.saturating_add(index), std::sync::Arc::new(index as usize));
-            }
-            assert!(!quarantine.can_insert(instance_id), "saturated quarantine must reject before live detachment");
-            if quarantine.can_insert(instance_id) {
-                let detached = live.take(instance_id).expect("preflight admitted exact owner");
-                quarantine.insert_admitted(instance_id, detached);
-            }
-            let retained = live.get(instance_id).expect("rejected close retains the live owner");
-            assert!(std::sync::Arc::ptr_eq(retained, &exact_owner), "saturation hands back the exact owner, not a clone or reconstruction");
-            drop(live.take(instance_id));
-            for index in 0..PLUGIN_RUNTIME_INSTANCE_SLOTS as u32 {
-                drop(quarantine.take(instance_id.saturating_add(index)));
-            }
-            assert!(quarantine.is_empty());
-        }
-    }
+    #[cfg(test)]
+    include!("🧪️tests/🔬️plugin-runtime-runtime-instance-registry/🦀️.rs");
 
     /// 🧩️ Typed state owned by each embedding plugin's `plugin_exports!` expansion.
     pub struct PluginRuntime<PA: PluginApp> {
@@ -29630,6 +25660,7 @@ pub mod plugin_runtime {
         close_generation: Cell<u64>,
         local_interaction_query_generation: crate::local_interaction::live::LocalInteractionQueryGeneration,
         instance_actors: RefCell<RuntimeInstanceRegistry<RuntimeActorAuthority>>,
+        document_backbones: RefCell<RuntimeInstanceRegistry<RuntimeDocumentBackboneBindingV1>>,
     }
 
     impl<PA: PluginApp> Default for PluginRuntime<PA> {
@@ -29653,6 +25684,7 @@ pub mod plugin_runtime {
                 close_generation: Cell::new(0),
                 local_interaction_query_generation: Default::default(),
                 instance_actors: RefCell::new(RuntimeInstanceRegistry::new()),
+                document_backbones: RefCell::new(RuntimeInstanceRegistry::new()),
             }
         }
     }
@@ -29725,7 +25757,11 @@ pub mod plugin_runtime {
     /// 🗣️ Decodes a packed `ViewModel` payload (empty → default). No process-global    /// 🗣️ Decodes a packed `ViewModel` payload (empty → default). No process-global cache —
     /// host-authoritative chrome/draft owns locale; every command/refresh carries view_state on the wire.
     async fn decode_view_state(view_state_bytes: &[u8]) -> ViewModel {
-        if view_state_bytes.is_empty() { ViewModel::default() } else { store::pack_rt::decode_wire_value(view_state_bytes).ok().and_then(|value| serde_json::from_value::<ViewModel>(Value::from(value)).ok()).unwrap_or_default() }
+        if view_state_bytes.is_empty() {
+            ViewModel::default()
+        } else {
+            store::pack_rt::decode_wire_value(view_state_bytes).ok().and_then(|value| serde_json::from_value::<ViewModel>(Value::from(value)).ok()).unwrap_or_default()
+        }
     }
 
     /// 🧬️ The local async mutex keeps the instance in-place across a suspending app call. Dropping an
@@ -29826,19 +25862,22 @@ pub mod plugin_runtime {
                 contributions: vec![],
             };
         }
-        runtime.plugin.borrow().as_ref().map_or_else(|| PluginManifest {
-            plugin_id: "empty".into(),
-            label: "Empty".into(),
-            version: "0.0.0".into(),
-            apps: vec![],
-            examples: vec![],
-            capabilities: vec![],
-            topic_contributions: vec![],
-            commands: vec![],
-            artifact_kinds: vec![],
-            dependencies: vec![],
-            contributions: vec![],
-        }, Plugin::manifest)
+        runtime.plugin.borrow().as_ref().map_or_else(
+            || PluginManifest {
+                plugin_id: "empty".into(),
+                label: "Empty".into(),
+                version: "0.0.0".into(),
+                apps: vec![],
+                examples: vec![],
+                capabilities: vec![],
+                topic_contributions: vec![],
+                commands: vec![],
+                artifact_kinds: vec![],
+                dependencies: vec![],
+                contributions: vec![],
+            },
+            Plugin::manifest,
+        )
     }
 
     /// 🛂️ Builder-declared descriptor fields owned by the same Plugin as its manifest.
@@ -29958,61 +25997,7 @@ pub mod plugin_runtime {
     }
 
     #[cfg(test)]
-    mod contributed_mutation_wire_tests {
-        use super::*;
-        use crate::contributed_mutation_wire::{AddValue, WireTestMutation, WireTestSnapshot};
-        use store::{ArtifactPack, OpBinary};
-
-        async fn commit_test_contribution(artifact_kind: &str, target_document_schema: &str, contributor: &str, delta: i32) -> String {
-            let contribution = crate::app::ArtifactContribution::builder(artifact_kind).await.mutation::<WireTestSnapshot, WireTestMutation, AddValue>(target_document_schema, 1, 1).await.build();
-            let (descriptor, _inferences, mutation_runtime) = contribution.resolve(contributor);
-            let mutation_id = descriptor.mutations[0].mutation_id.clone();
-            crate::app::commit_contributed_mutation_services(mutation_runtime).await.expect("commit contributed mutation services");
-            let _ = delta;
-            mutation_id
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn artifact_mutation_plan_rejects_a_mismatched_artifact_kind() {
-            let mutation_id = commit_test_contribution("s.wiretest.kind-mismatch", "wiretest.kind-mismatch.document", "wiretest-contributor-a", 5).await;
-            let payload = crate::app::encode_contributed_wire(&AddValue { delta: 5 }).await;
-            let request = crate::app::WireArtifactMutationPlanRequest { artifact_kind: "s.wiretest.wrong-kind".into(), mutation_id, revision: 7, generation: 3, snapshot_pack: WireTestSnapshot { value: 10 }.encode_pack(), payload };
-            let error = wire_artifact_mutation_plan(&encode_wire_serialized(&request)).await.expect_err("mismatched artifact_kind must be rejected");
-            assert!(error.message.contains("artifact-mutation.artifact-kind-mismatch"), "unexpected message: {}", error.message);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn artifact_mutation_plan_rejects_an_unregistered_mutation_id() {
-            let request = crate::app::WireArtifactMutationPlanRequest {
-                artifact_kind: "s.wiretest.unregistered".into(),
-                mutation_id: "wiretest.unregistered.document#nobody:add-value".into(),
-                revision: 1,
-                generation: 1,
-                snapshot_pack: WireTestSnapshot { value: 0 }.encode_pack(),
-                payload: Vec::new(),
-            };
-            let error = wire_artifact_mutation_plan(&encode_wire_serialized(&request)).await.expect_err("unregistered mutation_id must be rejected");
-            assert!(error.message.contains("artifact-mutation.not-registered"), "unexpected message: {}", error.message);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn artifact_mutation_plan_echoes_identity_and_runs_the_registered_plan() {
-            let mutation_id = commit_test_contribution("s.wiretest.echo", "wiretest.echo.document", "wiretest-contributor-b", 5).await;
-            let payload = crate::app::encode_contributed_wire(&AddValue { delta: 5 }).await;
-            let request = crate::app::WireArtifactMutationPlanRequest { artifact_kind: "s.wiretest.echo".into(), mutation_id: mutation_id.clone(), revision: 42, generation: 9, snapshot_pack: WireTestSnapshot { value: 10 }.encode_pack(), payload };
-            let encoded = wire_artifact_mutation_plan(&encode_wire_serialized(&request)).await.expect("matching artifact_kind must be accepted");
-            let result: crate::app::WireArtifactMutationPlanResult = decode_wire_serialized(&encoded).await.expect("result decodes");
-            assert_eq!(result.artifact_kind, "s.wiretest.echo");
-            assert_eq!(result.mutation_id, mutation_id);
-            assert_eq!(result.revision, 42);
-            assert_eq!(result.generation, 9);
-            assert_eq!(result.label, "Add 5 to value");
-            assert!(result.foreign.is_empty());
-            assert_eq!(result.owner_ops.len(), 1);
-            let op = WireTestMutation::decode_op(&result.owner_ops[0]).expect("owner op decodes");
-            assert_eq!(op, WireTestMutation::AddValue(AddValue { delta: 5 }));
-        }
-    }
+    include!("🧪️tests/🔬️plugin-runtime-contributed-mutation-wire/🦀️.rs");
 
     /// 🪪️ Preflights every runtime row before factory work and publishes its allocation-bound lifecycle together.
     pub(crate) async fn plugin_open_actor_instance<PA: PluginApp>(runtime: &PluginRuntime<PA>, request: semio_framework::kernel::ActorInstanceOpenRequest, app_id: &str, actor: &str) -> Result<(), Fault> {
@@ -30025,7 +26010,8 @@ pub mod plugin_runtime {
         let mut instances = runtime.instances.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime instance authority busy"))?;
         let quarantine = runtime.close_quarantine.try_borrow().map_err(|_| plugin_internal_fault("runtime quarantine authority busy"))?;
         let mut actors = runtime.instance_actors.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime actor authority busy"))?;
-        if !instances.can_insert(request.instance_id) || !quarantine.can_insert(request.instance_id) || !actors.can_insert(request.instance_id) {
+        let document_backbones = runtime.document_backbones.try_borrow().map_err(|_| plugin_internal_fault("document backbone binding authority busy"))?;
+        if !instances.can_insert(request.instance_id) || !quarantine.can_insert(request.instance_id) || !actors.can_insert(request.instance_id) || !document_backbones.can_insert(request.instance_id) {
             return Err(plugin_internal_fault("native opening slot collided"));
         }
         if let Some(fault) = runtime.plugin_assembly_error.try_borrow().map_err(|_| plugin_internal_fault("plugin assembly authority busy"))?.clone() {
@@ -30254,7 +26240,11 @@ pub mod plugin_runtime {
             return RuntimeMaintenanceStatus::Ready;
         }
         let stalled = stalled_steps.fetch_add(1, Ordering::SeqCst).saturating_add(1);
-        if stalled >= RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT { RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress) } else { RuntimeMaintenanceStatus::Ready }
+        if stalled >= RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
+            RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress)
+        } else {
+            RuntimeMaintenanceStatus::Ready
+        }
     }
 
     /// ⏱️ Publishes one maintenance turn: the measured wall cost is recorded next to the status so
@@ -30518,7 +26508,11 @@ pub mod plugin_runtime {
             stalled_steps.swap(0, Ordering::SeqCst);
             0
         };
-        if stalled >= RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT { RuntimeCloseStatus::Fault(RuntimeCleanupFault::ZeroProgress) } else { RuntimeCloseStatus::Ready }
+        if stalled >= RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT {
+            RuntimeCloseStatus::Fault(RuntimeCleanupFault::ZeroProgress)
+        } else {
+            RuntimeCloseStatus::Ready
+        }
     }
 
     fn run_runtime_close_turn_inner<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>) -> Option<RuntimeCloseStatus> {
@@ -30715,105 +26709,13 @@ pub mod plugin_runtime {
     }
 
     #[cfg(test)]
-    mod runtime_close_budget_tests {
-        use super::*;
-
-        #[test]
-        fn repeated_transient_close_lock_contention_never_consumes_structural_livelock_credit() {
-            let stalled = AtomicU8::new(0);
-            for _ in 0..1_024 {
-                assert_eq!(runtime_close_nonterminal_status(true, None, &stalled), RuntimeCloseStatus::Ready);
-            }
-            assert_eq!(stalled.load(Ordering::SeqCst), 0);
-        }
-
-        #[test]
-        fn structural_zero_progress_exhausts_its_exact_close_credit() {
-            let stalled = AtomicU8::new(0);
-            for _ in 1..RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT {
-                assert_eq!(runtime_close_nonterminal_status(false, Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }), &stalled), RuntimeCloseStatus::Ready);
-            }
-            assert_eq!(runtime_close_nonterminal_status(false, Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }), &stalled), RuntimeCloseStatus::Fault(RuntimeCleanupFault::ZeroProgress));
-        }
-
-        #[test]
-        fn permanently_blocked_live_cleanup_faults_without_claiming_released_ownership() {
-            let stalled = AtomicU32::new(0);
-            let blocked = Some(crate::app::PluginCloseStep::Blocked { reason: "injected permanent external wait" });
-            for _ in 1..RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
-                assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled), RuntimeMaintenanceStatus::Ready);
-            }
-            assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled), RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress));
-            assert_eq!(stalled.load(Ordering::SeqCst), RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT);
-        }
-
-        #[test]
-        fn exact_host_input_wait_resets_structural_live_cleanup_stall_credit() {
-            let stalled = AtomicU32::new(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT - 1);
-            let awaiting_input = Some(crate::app::PluginCloseStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" });
-            for _ in 0..1_024 {
-                assert_eq!(runtime_live_cleanup_nonterminal_status(false, awaiting_input, &stalled), RuntimeMaintenanceStatus::Ready);
-            }
-            assert_eq!(stalled.load(Ordering::SeqCst), 0);
-        }
-
-        #[test]
-        fn contended_live_cleanup_does_not_consume_structural_stall_credit() {
-            let stalled = AtomicU32::new(0);
-            for _ in 0..1_024 {
-                assert_eq!(runtime_live_cleanup_nonterminal_status(true, None, &stalled), RuntimeMaintenanceStatus::Ready);
-            }
-            assert_eq!(stalled.load(Ordering::SeqCst), 0);
-        }
-    }
+    include!("🧪️tests/🔬️plugin-runtime-runtime-close-budget/🦀️.rs");
 
     /// 🩺️ Language-neutral decode conformance: every declared cleanup-fault variant must round-trip
     /// through its status atom and produce exactly the fixture's wire code and message shape, so the
     /// React shell's classifier and this module can never drift apart silently.
     #[cfg(test)]
-    mod runtime_cleanup_fault_vector_tests {
-        use super::*;
-
-        const FIXTURE: &str = include_str!("🩺️runtime-fault-vectors.json");
-
-        #[test]
-        fn every_declared_variant_decodes_to_its_language_neutral_wire_vector() {
-            let fixture: Value = serde_json::from_str(FIXTURE).expect("language-neutral cleanup fault vectors");
-            assert_eq!(fixture["ceilingUs"].as_u64(), Some(semio_framework_trace::INTERACTIVE_STEP_CEILING_US));
-            let vectors = fixture["vectors"].as_array().expect("fixture vectors");
-            assert_eq!(vectors.len(), RUNTIME_CLEANUP_FAULTS.len());
-            for (declared, expected) in RUNTIME_CLEANUP_FAULTS.iter().zip(vectors) {
-                let vector = declared.vector();
-                assert_eq!(vector.slug, expected["variant"].as_str().expect("variant"));
-                assert_eq!(vector.code, expected["code"].as_str().expect("code"), "{}", vector.slug);
-                assert_eq!(vector.detail, expected["detail"].as_str().expect("detail"), "{}", vector.slug);
-                assert_eq!(RuntimeMaintenanceStatus::from_repr(RuntimeMaintenanceStatus::Fault(*declared).repr()).cause(), Some(*declared), "{}", vector.slug);
-                assert_eq!(RuntimeCloseStatus::from_repr(RuntimeCloseStatus::Fault(*declared).repr()).cause(), Some(*declared), "{}", vector.slug);
-                for scope in ["live", "close"] {
-                    let fault = runtime_cleanup_fault(scope, *declared, 7, 12_345);
-                    assert_eq!(fault.origin, FaultOrigin::Plugin);
-                    assert_eq!(format!("{:?}", fault.severity), "Error");
-                    assert_eq!(fault.code.0, vector.code);
-                    assert_eq!(fault.message, format!("runtime {scope} cleanup faulted for instance 7: {} [{}] (elapsed 12345us, ceiling {}us)", vector.detail, vector.slug, semio_framework_trace::INTERACTIVE_STEP_CEILING_US));
-                    assert!(runtime_cleanup_fault(scope, *declared, 7, RUNTIME_CLEANUP_UNMEASURED_US).message.ends_with(&format!("(elapsed unmeasured, ceiling {}us)", semio_framework_trace::INTERACTIVE_STEP_CEILING_US)));
-                }
-            }
-        }
-
-        #[test]
-        fn non_fault_status_reprs_never_collide_with_a_fault_variant() {
-            for status in [RuntimeMaintenanceStatus::Ready, RuntimeMaintenanceStatus::Queued, RuntimeMaintenanceStatus::Running] {
-                assert_eq!(RuntimeMaintenanceStatus::from_repr(status.repr()), status);
-                assert_eq!(status.cause(), None);
-            }
-            for status in [RuntimeCloseStatus::Ready, RuntimeCloseStatus::Queued, RuntimeCloseStatus::Running, RuntimeCloseStatus::Complete, RuntimeCloseStatus::ExternalWait, RuntimeCloseStatus::DeadlineYield] {
-                assert_eq!(RuntimeCloseStatus::from_repr(status.repr()), status);
-                assert_eq!(status.cause(), None);
-            }
-            let codes: std::collections::BTreeSet<&str> = RUNTIME_CLEANUP_FAULTS.iter().map(|fault| fault.vector().code).collect();
-            assert_eq!(codes.len(), RUNTIME_CLEANUP_FAULTS.len());
-        }
-    }
+    include!("🧪️tests/🔬️plugin-runtime-runtime-cleanup-fault-vector/🦀️.rs");
 
     fn run_runtime_close_turn<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>) {
         run_runtime_close_turn_with_clock(state, semio_framework_job::default_now_us);
@@ -30915,6 +26817,7 @@ pub mod plugin_runtime {
         let mut instances = runtime.instances.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?;
         let mut quarantine = runtime.close_quarantine.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?;
         let mut actors = runtime.instance_actors.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime actor authority is busy"))?;
+        let mut document_backbones = runtime.document_backbones.try_borrow_mut().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?;
         if let Some(expected) = expected {
             let current = instances.get(instance_id).ok_or_else(|| plugin_internal_fault("captured app lifetime is no longer live"))?;
             if !std::sync::Weak::ptr_eq(expected, &std::sync::Arc::downgrade(current)) {
@@ -30961,6 +26864,12 @@ pub mod plugin_runtime {
         drop(instances.take(instance_id));
         runtime.close_generation.set(generation);
         let _ = actors.take(instance_id);
+        if let Some(binding) = document_backbones.take(instance_id) {
+            if let Some(owner) = binding.channel {
+                owner.begin_retire().map_err(|error| plugin_internal_fault(error.to_string()))?;
+            }
+        }
+        drop(document_backbones);
         drop(actors);
         drop(quarantine);
         drop(instances);
@@ -31299,118 +27208,7 @@ pub mod plugin_runtime {
     }
 
     #[cfg(test)]
-    mod dff_public_action_admission_tests {
-        use super::*;
-
-        fn padded_action(controller_id: &str, action_id: &str, bytes: usize) -> String {
-            let mut body = format!(r#"{{"address":{{"pluginId":"fixture","appId":"{controller_id}","modeId":"mode","windowKindId":"window","windowInstanceId":"instance","actionId":"{action_id}"}},"arguments":{{}}}}"#);
-            body.extend(std::iter::repeat(' ').take(bytes - body.len()));
-            body
-        }
-
-        fn padded_command(controller_id: &str, command_id: &str, bytes: usize) -> String {
-            let mut body = format!(r#"{{"address":{{"owner":{{"app":{{"pluginId":"fixture","appId":"{controller_id}"}}}},"commandId":"{command_id}"}},"arguments":{{}}}}"#);
-            body.extend(std::iter::repeat(' ').take(bytes - body.len()));
-            body
-        }
-
-        fn owner(controller_id: &str) -> crate::app::ToolOwnerWitness {
-            let owner_type_name = match controller_id {
-                "s.draw.draw@1/*#editor" => "semio_framework_plugin::app::EditorApp<semio_s_plugin_draw::editor::draw::DrawPlayApp>",
-                "s.flow.flow@1/*#editor" => "semio_framework_plugin::app::EditorApp<semio_s_plugin_flow::editor::flow::FlowPlayApp>",
-                "s.forms.forms@1/*#editor" => "semio_framework_plugin::app::EditorApp<semio_s_plugin_forms::editor::forms::FormsPlayApp>",
-                "s.remodel.remodel@1/*#editor" => "semio_framework_plugin::app::EditorApp<semio_s_plugin_remodel::editor::remodel::RemodelPlayApp>",
-                _ => "unproved::Owner",
-            };
-            crate::app::ToolOwnerWitness::test_with_name(owner_type_name)
-        }
-
-        fn admit_action(body: &str, runtime_controller_id: &str) -> Result<(), Fault> {
-            validate_public_action_envelope(body, owner(runtime_controller_id), runtime_controller_id, &[])
-        }
-
-        fn admit_command(body: &str, runtime_controller_id: &str) -> Result<(), Fault> {
-            validate_public_command_envelope(body, owner(runtime_controller_id), runtime_controller_id, &[])
-        }
-
-        #[test]
-        fn action_and_command_specific_dff_wire_caps_are_enforced_before_deserialization() {
-            for (controller_id, command_id, limit) in [
-                ("s.forms.forms@1/*#editor", "setTryValue", 16_384),
-                ("s.forms.forms@1/*#editor", "setTryValueStep", 16_384),
-                ("s.draw.draw@1/*#editor", "canvasPointerDown", 8_192),
-                ("s.flow.flow@1/*#editor", "duplicateWidget", 8_192),
-                ("s.flow.flow@1/*#editor", "duplicateWidgetStep", 8_192),
-            ] {
-                assert!(admit_action(&padded_action(controller_id, command_id, limit), controller_id).is_ok(), "{command_id} action must admit its exact maximum");
-                assert!(admit_action(&padded_action(controller_id, command_id, limit + 1), controller_id).is_err(), "{command_id} action must reject one byte beyond its maximum");
-                assert!(admit_command(&padded_command(controller_id, command_id, limit), controller_id).is_ok(), "{command_id} command must admit its exact maximum");
-                assert!(admit_command(&padded_command(controller_id, command_id, limit + 1), controller_id).is_err(), "{command_id} command must reject one byte beyond its maximum");
-            }
-        }
-
-        #[test]
-        fn same_schema_and_id_cannot_inherit_another_controllers_public_limit() {
-            let limit = 8_192;
-            assert!(admit_action(&padded_action("s.draw.draw@1/*#editor", "canvasPointerDown", limit + 1), "s.draw.draw@1/*#editor").is_err());
-            assert!(admit_action(&padded_action("s.other.draw@1/*#editor", "canvasPointerDown", limit + 1), "s.other.draw@1/*#editor").is_ok());
-            assert!(admit_command(&padded_command("s.draw.draw@1/*#editor", "canvasPointerDown", limit + 1), "s.draw.draw@1/*#editor").is_err());
-            assert!(admit_command(&padded_command("s.other.draw@1/*#editor", "canvasPointerDown", limit + 1), "s.other.draw@1/*#editor").is_ok());
-        }
-
-        #[test]
-        fn malformed_and_hostile_strings_are_rejected_by_predecode_admission() {
-            assert!(admit_action(r#"{"address":{"actionId":"canvasPointerDown""#, "s.draw.draw@1/*#editor").is_err());
-            assert!(admit_command(r#"{"address":{"commandId":"canvasPointerDown""#, "s.draw.draw@1/*#editor").is_err());
-            let hostile_action = format!(r#"{{"address":{{"actionId":"setTryValue"}},"arguments":{{"valueJson":"{}"}}}}"#, "x".repeat(MAX_PUBLIC_ACTION_STRING_BYTES + 1));
-            let hostile_command = format!(r#"{{"address":{{"commandId":"setTryValue"}},"arguments":{{"valueJson":"{}"}}}}"#, "x".repeat(MAX_PUBLIC_ACTION_STRING_BYTES + 1));
-            assert!(admit_action(&hostile_action, "s.draw.draw@1/*#editor").is_err());
-            assert!(admit_command(&hostile_command, "s.draw.draw@1/*#editor").is_err());
-            assert!(admit_command(r#"{"addr\u0065ss":{"commandId":"canvasPointerDown"},"arguments":{}}"#, "s.draw.draw@1/*#editor").is_err());
-            assert!(admit_command(r#"{"address":{"command\u0049d":"canvasPointerDown"},"arguments":{}}"#, "s.draw.draw@1/*#editor").is_err());
-            assert!(admit_command(r#"{"address":{"commandId":"canvasPointer\u0044own"},"arguments":{}}"#, "s.draw.draw@1/*#editor").is_err());
-        }
-
-        #[test]
-        fn command_classifier_uses_only_the_exact_address_command_id() {
-            let mut decoy = r#"{"address":{"owner":"os","commandId":"ordinary"},"arguments":{"commandId":"canvasPointerDown"}}"#.to_string();
-            decoy.extend(std::iter::repeat(' ').take(8_193 - decoy.len()));
-            assert!(admit_command(&decoy, "s.draw.draw@1/*#editor").is_ok());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn public_action_and_command_entry_points_require_a_live_instance_before_decode() {
-            let runtime = PluginRuntime::<crate::app::NoPluginApp>::new();
-            let action = plugin_handle_action(&runtime, 1, &padded_action("s.draw.draw@1/*#editor", "canvasPointerDown", 8_192), "{}").await.expect_err("an action without a live instance must reject before decoding");
-            assert!(action.message.contains("unknown instance"));
-            let command = plugin_handle_command(&runtime, 1, &padded_command("s.draw.draw@1/*#editor", "canvasPointerDown", 8_192), "{}").await.expect_err("a command without a live instance must reject before decoding");
-            assert!(command.message.contains("unknown instance"));
-
-            let malformed = plugin_handle_command(&runtime, 1, r#"{"address":{"commandId":"setTryValue""#, "{}").await.expect_err("a malformed DFF command must be rejected before decoding");
-            assert!(malformed.message.contains("structurally incomplete"));
-            let hostile = format!(r#"{{"address":{{"owner":"os","commandId":"setTryValue"}},"arguments":{{"valueJson":"{}"}}}}"#, "x".repeat(MAX_PUBLIC_ACTION_STRING_BYTES + 1));
-            let hostile = plugin_handle_command(&runtime, 1, &hostile, "{}").await.expect_err("a hostile DFF command string must be rejected before decoding");
-            assert!(hostile.message.contains("oversized string"));
-        }
-
-        #[test]
-        fn action_entry_points_await_the_retained_job_instead_of_single_polling_it() {
-            let source = include_str!("🦀️.rs");
-            let public_start = source.find("pub async fn plugin_handle_action").expect("public action entry point");
-            let public_end = source[public_start..].find("pub async fn plugin_handle_command").map(|offset| public_start + offset).expect("public action boundary");
-            let public_action = &source[public_start..public_end];
-            assert!(public_action.contains("runtime_instance_cell(runtime, instance_id)?"));
-            assert!(public_action.contains("handle_action_invocation(&invocation, active_mode_id.as_deref(), &meta).await"));
-            assert!(!public_action.contains("resolve_ready(instance.app.handle_action_invocation"));
-
-            let exchange_start = source.find("protocol::AppCommand::Command { seq, command, view_state }").expect("reactor command exchange");
-            let exchange_end = source[exchange_start..].find("protocol::AppCommand::ConfigRead").map(|offset| exchange_start + offset).expect("reactor command exchange boundary");
-            let exchange = &source[exchange_start..exchange_end];
-            assert!(exchange.contains("runtime_instance_cell(runtime, instance_id)?"));
-            assert!(exchange.contains("handle_action_invocation(&invocation, active_mode_id.as_deref(), &meta).await"));
-            assert!(!exchange.contains("resolve_ready(instance.app.handle_action_invocation"));
-        }
-    }
+    include!("🧪️tests/🔬️plugin-runtime-dff-public-action-admission/🦀️.rs");
 
     #[expect(clippy::await_holding_lock, reason = "This local future retains exclusive app ownership while suspended; competing production instance access uses try_lock and refuses or yields instead of waiting.")]
     pub async fn plugin_handle_action<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, action_json: &str, context_json: &str) -> Result<InvocationResult, Fault> {
@@ -31507,6 +27305,9 @@ pub mod plugin_runtime {
 
     /// @emoji 📜️ Text-DSL counterpart of {@link plugin_load_document_pack}.
     pub async fn plugin_load_document_text<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, files: &store::ArtifactTextFiles) -> Result<(), Fault> {
+        if runtime.document_backbones.try_borrow().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?.get(instance_id).is_some_and(|binding| binding.uri.is_some()) {
+            return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.document-backbone.load-while-bound"), "retire the exact document backbone before replacing the document and rebind afterward"));
+        }
         with_instances_mut(runtime, |list| {
             let mut instance = find_instance(list, instance_id)?;
             resolve_ready(instance.app.load_document_text(files))
@@ -31527,11 +27328,154 @@ pub mod plugin_runtime {
     /// @emoji 📦️ Replaces the instance's document from pack+spr bytes ({@link store::ArtifactPackFiles})
     /// via `store::parse_document_pack`.
     pub async fn plugin_load_document_pack<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, files: &store::ArtifactPackFiles) -> Result<(), Fault> {
+        if runtime.document_backbones.try_borrow().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?.get(instance_id).is_some_and(|binding| binding.uri.is_some()) {
+            return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.document-backbone.load-while-bound"), "retire the exact document backbone before replacing the document and rebind afterward"));
+        }
         with_instances_mut(runtime, |list| {
             let mut instance = find_instance(list, instance_id)?;
             resolve_ready(instance.app.load_document_pack(files))
         })
         .await
+    }
+
+    pub struct DocumentBackboneTurnOutputV1 {
+        pub instance_id: u32,
+        pub frames: Vec<Vec<u8>>,
+        pub effects: Vec<Effect>,
+    }
+
+    fn document_backbone_effects(owner: &store::ActorBackboneChannelOwner, uri: &str) -> Result<Vec<Effect>, Fault> {
+        let mut effects = Vec::new();
+        for _ in 0..store::BACKBONE_CHANNEL_MAXIMUM_MESSAGES {
+            let Some(payload) = owner.take_outbound().map_err(|error| plugin_internal_fault(error.to_string()))? else { break };
+            effects.push(Effect::SendMessage { target: MessageEndpoint::Backbone { uri: uri.into() }, payload });
+        }
+        Ok(effects)
+    }
+
+    fn live_document_backbone_for_uri<PA: PluginApp>(runtime: &PluginRuntime<PA>, uri: &str) -> Result<Option<(u32, u64, store::ActorBackboneChannelOwner)>, Fault> {
+        let bindings = runtime.document_backbones.try_borrow().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?;
+        for index in 0..PLUGIN_RUNTIME_INSTANCE_SLOTS {
+            let Some((instance_id, binding)) = bindings.entry_at(index) else { continue };
+            if binding.uri.as_deref() == Some(uri) {
+                if let Some(channel) = &binding.channel {
+                    return Ok(Some((instance_id, binding.generation, channel.clone())));
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    fn document_backbone_receipt_effect(receipt: crate::document_backbone_binding::DocumentBackboneBindingReceiptV1) -> Effect {
+        Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(receipt.instance_id.to_string()) }, payload: receipt.encode() }
+    }
+
+    pub async fn plugin_handle_document_backbone_binding<PA: PluginApp>(runtime: &PluginRuntime<PA>, source_instance: &str, payload: &[u8]) -> Result<Option<Vec<Effect>>, Fault> {
+        use crate::document_backbone_binding::{decide_document_backbone_binding_v1, decode_document_backbone_binding_command_v1, DocumentBackboneBindingDecisionV1};
+
+        let Some(command) = decode_document_backbone_binding_command_v1(payload).map_err(plugin_internal_fault)? else { return Ok(None) };
+        let source_matches = source_instance.parse::<u32>().ok() == Some(command.instance_id);
+        let instance_live = runtime.guest_lifetimes.try_borrow().map_err(|_| plugin_internal_fault("lifecycle authority busy"))?.get(command.instance_id).is_some_and(|slot| slot.cell.is_live());
+        if !source_matches || !instance_live {
+            return Ok(Some(vec![document_backbone_receipt_effect(crate::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.instance-refused"))]));
+        }
+        let state = runtime.document_backbones.try_borrow().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?.get(command.instance_id).map(RuntimeDocumentBackboneBindingV1::state).unwrap_or_default();
+        match decide_document_backbone_binding_v1(&state, &command) {
+            DocumentBackboneBindingDecisionV1::Replay(receipt) | DocumentBackboneBindingDecisionV1::Refuse(receipt) => Ok(Some(vec![document_backbone_receipt_effect(receipt)])),
+            DocumentBackboneBindingDecisionV1::Bind(receipt) => {
+                if live_document_backbone_for_uri(runtime, &command.uri)?.is_some() {
+                    return Ok(Some(vec![document_backbone_receipt_effect(crate::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.binding-collision"))]));
+                }
+                let (channel, owner) = store::ActorBackboneChannelOwner::pair(&command.uri);
+                let backbone = store::Backbones::Port(store::PortBackbone::with_channel(&command.uri, channel).await);
+                let attached = with_instances_mut(runtime, |list| {
+                    let mut instance = find_instance(list, command.instance_id)?;
+                    resolve_ready(instance.app.attach_hot_backbone(backbone))
+                })
+                .await;
+                if attached.is_err() {
+                    owner.begin_retire().map_err(|error| plugin_internal_fault(error.to_string()))?;
+                    return Ok(Some(vec![document_backbone_receipt_effect(crate::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.attach-refused"))]));
+                }
+                let mut bindings = runtime.document_backbones.try_borrow_mut().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?;
+                if let Some(binding) = bindings.get_mut(command.instance_id) {
+                    if binding.state() != state {
+                        drop(bindings);
+                        let _ = plugin_detach_backbone(runtime, command.instance_id).await;
+                        owner.begin_retire().map_err(|error| plugin_internal_fault(error.to_string()))?;
+                        return Ok(Some(vec![document_backbone_receipt_effect(crate::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.binding-collision"))]));
+                    }
+                    binding.generation = command.binding_generation;
+                    binding.uri = Some(command.uri.clone());
+                    binding.channel = Some(owner);
+                } else {
+                    if !bindings.can_insert(command.instance_id) {
+                        drop(bindings);
+                        let _ = plugin_detach_backbone(runtime, command.instance_id).await;
+                        owner.begin_retire().map_err(|error| plugin_internal_fault(error.to_string()))?;
+                        return Ok(Some(vec![document_backbone_receipt_effect(crate::document_backbone_binding::DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.binding-capacity"))]));
+                    }
+                    bindings.insert_admitted(command.instance_id, RuntimeDocumentBackboneBindingV1 { generation: command.binding_generation, uri: Some(command.uri.clone()), channel: Some(owner) });
+                }
+                Ok(Some(vec![document_backbone_receipt_effect(receipt)]))
+            }
+            DocumentBackboneBindingDecisionV1::Retire(receipt) => {
+                let owner = runtime
+                    .document_backbones
+                    .try_borrow()
+                    .map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?
+                    .get(command.instance_id)
+                    .and_then(|binding| binding.channel.clone())
+                    .ok_or_else(|| plugin_internal_fault("live document backbone channel is missing"))?;
+                owner.begin_retire().map_err(|error| plugin_internal_fault(error.to_string()))?;
+                plugin_detach_backbone(runtime, command.instance_id).await?;
+                let mut effects = document_backbone_effects(&owner, &command.uri)?;
+                if !owner.terminal_is_empty().map_err(|error| plugin_internal_fault(error.to_string()))? {
+                    return Err(plugin_internal_fault("retired document backbone channel did not drain"));
+                }
+                let mut bindings = runtime.document_backbones.try_borrow_mut().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?;
+                let binding = bindings.get_mut(command.instance_id).ok_or_else(|| plugin_internal_fault("document backbone binding disappeared during retirement"))?;
+                binding.uri = None;
+                binding.channel = None;
+                effects.push(document_backbone_receipt_effect(receipt));
+                Ok(Some(effects))
+            }
+        }
+    }
+
+    pub async fn plugin_receive_document_backbone<PA: PluginApp>(runtime: &PluginRuntime<PA>, uri: &str, payload: &[u8]) -> Result<DocumentBackboneTurnOutputV1, Fault> {
+        let (instance_id, generation, owner) = live_document_backbone_for_uri(runtime, uri)?.ok_or_else(|| plugin_internal_fault("backbone message has no exact live document binding"))?;
+        owner.push_inbound(uri, payload).map_err(|error| plugin_internal_fault(error.to_string()))?;
+        let (reports, conflicts) = with_instances_mut(runtime, |list| {
+            let mut instance = find_instance(list, instance_id)?;
+            let reports = resolve_ready(instance.app.tick_backbone())?;
+            let conflicts = if reports.is_empty() { Vec::new() } else { resolve_ready(instance.app.open_conflicts()) };
+            Ok((reports, conflicts))
+        })
+        .await?;
+        let current = live_document_backbone_for_uri(runtime, uri)?;
+        if !current.as_ref().is_some_and(|(current_instance, current_generation, current_owner)| *current_instance == instance_id && *current_generation == generation && current_owner.admits_same_channel(&owner)) {
+            return Err(plugin_internal_fault("document backbone authority changed during inbound delivery"));
+        }
+        let mut frames = Vec::new();
+        for report in &reports {
+            frames.push(protocol::encode_app_frame(&protocol::AppFrame::MergeReport { in_reply_to: None, report: encode_wire_serialized(report) }).await);
+        }
+        if !reports.is_empty() {
+            frames.push(protocol::encode_app_frame(&protocol::AppFrame::Conflicts { in_reply_to: None, conflicts: encode_wire_serialized(&conflicts) }).await);
+        }
+        Ok(DocumentBackboneTurnOutputV1 { instance_id, frames, effects: document_backbone_effects(&owner, uri)? })
+    }
+
+    pub fn plugin_drain_document_backbones<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Result<Vec<Effect>, Fault> {
+        let bindings = runtime.document_backbones.try_borrow().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?;
+        let mut effects = Vec::new();
+        for index in 0..PLUGIN_RUNTIME_INSTANCE_SLOTS {
+            let Some((_, binding)) = bindings.entry_at(index) else { continue };
+            let (Some(uri), Some(owner)) = (binding.uri.as_deref(), binding.channel.as_ref()) else { continue };
+            effects.extend(document_backbone_effects(owner, uri)?);
+        }
+        Ok(effects)
     }
 
     /// @emoji 🗂️ Registers `A::Snapshot`'s pack↔dsl codec under `schema` in the process-wide
@@ -31979,44 +27923,7 @@ pub mod plugin_runtime {
 
     //#region 🧪️OpeningCommandRelayTests
     #[cfg(test)]
-    mod opening_command_relay_tests {
-        use super::*;
-
-        async fn replay(effect: Effect) -> (String, Value) {
-            let Effect::ReplayShellCommand { action_id, args: Some(args) } = effect else { panic!("expected a shell command relay") };
-            (action_id, Value::from(args))
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn open_artifact_relays_an_exactly_matched_surface() {
-            let (action_id, args) = replay(relay_open_artifact("s.test.document@1/*#editor".into(), 1, "test-plugin".into(), "s.test.document@1/*#editor".into()).await.expect("matching surface relays")).await;
-            assert_eq!(action_id, "os.open-artifact");
-            assert_eq!(args, serde_json::json!({ "artifactRef": "s.test.document@1/*#editor", "role": 1, "pluginId": "test-plugin", "appId": "s.test.document@1/*#editor" }));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn default_app_commands_relay_the_validated_wire_coordinates() {
-            let (set_action_id, set_args) = replay(relay_set_default_app("s.test.document".into(), "1".into(), "*".into(), 0, "test-plugin".into(), "s.test.document@1/*#viewer".into()).await.expect("matching default surface relays")).await;
-            assert_eq!(set_action_id, "os.set-default-app");
-            assert_eq!(set_args, serde_json::json!({ "artifactKind": "s.test.document", "standard": "1", "subset": "*", "role": 0, "pluginId": "test-plugin", "appId": "s.test.document@1/*#viewer" }));
-
-            let (clear_action_id, clear_args) = replay(relay_clear_default_app("s.test.document".into(), "1".into(), "*".into(), 1).await.expect("valid clear relays")).await;
-            assert_eq!(clear_action_id, "os.clear-default-app");
-            assert_eq!(clear_args, serde_json::json!({ "artifactKind": "s.test.document", "standard": "1", "subset": "*", "role": 1 }));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn opening_relays_reject_invalid_or_inconsistent_addresses() {
-            let invalid_role = relay_open_artifact("s.test.document@1/*#viewer".into(), 7, String::new(), String::new()).await.expect_err("unknown role must fail");
-            assert_eq!(invalid_role.code.0, "opening.invalid-role");
-
-            let partial_app = relay_open_artifact("s.test.document@1/*#viewer".into(), 0, "test-plugin".into(), String::new()).await.expect_err("partial app reference must fail");
-            assert_eq!(partial_app.code.0, "opening.partial-app-ref");
-
-            let mismatched_app = relay_set_default_app("s.test.document".into(), "1".into(), "*".into(), 0, "test-plugin".into(), "s.test.other@1/*#viewer".into()).await.expect_err("app dialect must match default coordinate");
-            assert_eq!(mismatched_app.code.0, "opening.app-mismatch");
-        }
-    }
+    include!("🧪️tests/🔬️plugin-runtime-opening-command-relay/🦀️.rs");
     //#endregion 🧪️OpeningCommandRelayTests
 
     /// 🔀️ Frames a `TransactionProposalDraft` (contract §5.1) as `AppFrame::TransactionProposal`,
@@ -32095,53 +28002,26 @@ pub mod plugin_runtime {
                 Self::Decoded(owner) => PluginCommandIngressStep::Ready(owner),
                 Self::Closing { mut cursor, fault } => {
                     let (complete, _) = cursor.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
-                    if complete && cursor.terminal_is_empty() { PluginCommandIngressStep::TerminalFault(fault) } else { PluginCommandIngressStep::Pending(Self::Closing { cursor, fault }) }
+                    if complete && cursor.terminal_is_empty() {
+                        PluginCommandIngressStep::TerminalFault(fault)
+                    } else {
+                        PluginCommandIngressStep::Pending(Self::Closing { cursor, fault })
+                    }
                 }
                 Self::ClosingDecoded { mut owner, fault } => {
                     let (complete, _, _) = owner.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
-                    if complete && owner.terminal_is_empty() { PluginCommandIngressStep::TerminalFault(fault) } else { PluginCommandIngressStep::Pending(Self::ClosingDecoded { owner, fault }) }
+                    if complete && owner.terminal_is_empty() {
+                        PluginCommandIngressStep::TerminalFault(fault)
+                    } else {
+                        PluginCommandIngressStep::Pending(Self::ClosingDecoded { owner, fault })
+                    }
                 }
             }
         }
     }
 
     #[cfg(test)]
-    mod paged_command_ingress_tests {
-        use super::*;
-
-        fn two_page_command() -> semio_framework::kernel::PagedCommand {
-            let mut pages = semio_framework::kernel::CommandPageSet::try_new().unwrap();
-            pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(&[2; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]).unwrap()).unwrap();
-            pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(b"tail").unwrap()).unwrap();
-            semio_framework::kernel::PagedCommand::try_from_pages(pages).unwrap()
-        }
-
-        #[test]
-        fn interrupted_two_page_command_closes_one_exact_page_per_step_then_faults() {
-            let fault = plugin_internal_fault("cancelled");
-            let first = PluginCommandIngress::Encoded(two_page_command()).cancel(fault);
-            let second = match first.step() {
-                PluginCommandIngressStep::Pending(next) => next,
-                _ => panic!("first close step must retain the tail"),
-            };
-            assert!(matches!(second.step(), PluginCommandIngressStep::TerminalFault(fault) if fault.message == "cancelled"));
-        }
-
-        #[test]
-        fn decoded_two_field_cancellation_never_publishes_partial_success() {
-            let owner = protocol::DecodedAppCommandOwner::new(protocol::AppCommand::Command { seq: 3, command: vec![1; 4_096], view_state: vec![2; 4_096] });
-            let first = PluginCommandIngress::Decoded(owner).cancel(plugin_internal_fault("cancelled"));
-            let second = match first.step() {
-                PluginCommandIngressStep::Pending(next) => next,
-                _ => panic!("first decoded field close must remain pending"),
-            };
-            let third = match second.step() {
-                PluginCommandIngressStep::Pending(next) => next,
-                _ => panic!("second decoded field close must remain pending until the shell witness"),
-            };
-            assert!(matches!(third.step(), PluginCommandIngressStep::TerminalFault(fault) if fault.message == "cancelled"));
-        }
-    }
+    include!("🧪️tests/🔬️plugin-runtime-paged-command-ingress/🦀️.rs");
 
     #[derive(Default)]
     pub struct PluginExchangeOutput {
@@ -32699,13 +28579,7 @@ pub mod plugin_runtime {
                                 let mutations = encode_wire_serialized(&result.mutations);
                                 let inverse_group = encode_wire_serialized(&result.inverse_group);
                                 if mutations.len() > protocol::INVOCATION_RESULT_PACK_MAXIMUM_BYTES || inverse_group.len() > protocol::INVOCATION_RESULT_PACK_MAXIMUM_BYTES {
-                                    push_dispatch_fault(
-                                        &mut frames,
-                                        seq,
-                                        Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.invocation-result-capacity"), "packed mutations or inverse group exceed command transport authority"),
-                                        &report,
-                                    )
-                                    .await;
+                                    push_dispatch_fault(&mut frames, seq, Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.invocation-result-capacity"), "packed mutations or inverse group exceed command transport authority"), &report).await;
                                 } else {
                                     mutated = true;
                                     frames.push(protocol::AppFrame::Invocation {
@@ -33120,7 +28994,9 @@ pub mod plugin_runtime {
         })
         .await?
         {
-            if let Some(fault) = outcome.fault { push_app_fault(&mut frames, Some(outcome.seq), fault).await }
+            if let Some(fault) = outcome.fault {
+                push_app_fault(&mut frames, Some(outcome.seq), fault).await
+            }
         }
 
         // 🌉️ Rewritten from a `.map(protocol::encode_app_frame).collect()` into an explicit loop
@@ -33596,29 +29472,7 @@ pub mod plugin_runtime {
     }
 
     #[cfg(test)]
-    mod extension_bundle_dependency_tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn extends_mismatching_the_first_dependency_panics() {
-            let result = std::panic::catch_unwind(|| ExtensionBundle::new("ext-mismatch", "Ext Mismatch", "0.1.0").depends_on("primary-dep", semio_framework::VersionReq::Any).extends("someone-else"));
-            assert!(result.is_err(), "extends != dependencies[0].plugin_id must panic");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn extends_set_before_a_mismatching_dependency_also_panics() {
-            let result = std::panic::catch_unwind(|| ExtensionBundle::new("ext-mismatch-2", "Ext Mismatch 2", "0.1.0").extends("primary-dep").depends_on("someone-else", semio_framework::VersionReq::Any));
-            assert!(result.is_err(), "extends != dependencies[0].plugin_id must panic regardless of call order");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn extends_matching_the_first_dependency_is_accepted_regardless_of_call_order() {
-            let bundle = ExtensionBundle::new("ext-ok", "Ext Ok", "0.1.0").extends("primary-dep").depends_on("primary-dep", semio_framework::VersionReq::Any).depends_on("secondary-dep", semio_framework::VersionReq::Any);
-            assert_eq!(bundle.manifest.dependencies[0].plugin_id, "primary-dep");
-            assert_eq!(bundle.manifest.dependencies[1].plugin_id, "secondary-dep");
-            assert_eq!(bundle.manifest.extends, "primary-dep");
-        }
-    }
+    include!("🧪️tests/🔬️plugin-runtime-extension-bundle-dependency/🦀️.rs");
 
     crate::component_persistent_local! {
         static EXTENSION_BUNDLE: RefCell<Option<ExtensionBundle>> = RefCell::new(None);
@@ -33672,19 +29526,22 @@ pub mod plugin_runtime {
     pub async fn extension_manifest() -> ExtensionManifest {
         ensure_extension_initialized().await;
         EXTENSION_BUNDLE.with(|slot| {
-            slot.borrow().as_ref().map_or_else(|| ExtensionManifest {
-                package_id: String::new(),
-                extension_id: String::new(),
-                label: String::new(),
-                version: String::new(),
-                extends: String::new(),
-                capabilities: Vec::new(),
-                topic_contributions: Vec::new(),
-                dependencies: Vec::new(),
-                contributions: Vec::new(),
-                execution: ExecutionMode::default(),
-                capability_requests: Vec::new(),
-            }, |bundle| bundle.manifest.clone())
+            slot.borrow().as_ref().map_or_else(
+                || ExtensionManifest {
+                    package_id: String::new(),
+                    extension_id: String::new(),
+                    label: String::new(),
+                    version: String::new(),
+                    extends: String::new(),
+                    capabilities: Vec::new(),
+                    topic_contributions: Vec::new(),
+                    dependencies: Vec::new(),
+                    contributions: Vec::new(),
+                    execution: ExecutionMode::default(),
+                    capability_requests: Vec::new(),
+                },
+                |bundle| bundle.manifest.clone(),
+            )
         })
     }
 
@@ -33745,8 +29602,7 @@ pub mod plugin_runtime {
             $crate::__semio_plugin_actor_exports!(
                 || {
                     $crate::app::resolve_ready($crate::plugin_runtime::install_extension_bundle(($bundle_fn)()));
-                    $crate::app::resolve_ready($crate::plugin_runtime::extension_activate())
-                        .map_err(|fault| $crate::PluginAssemblyError::new("extension.activate", format!("{fault:?}")))?;
+                    $crate::app::resolve_ready($crate::plugin_runtime::extension_activate()).map_err(|fault| $crate::PluginAssemblyError::new("extension.activate", format!("{fault:?}")))?;
                     ($plugin_fn)()
                 },
                 $app,
@@ -33850,4622 +29706,7 @@ pub mod plugin_runtime {
     /// The retired `semio_plugin!` macro is gone — typestate on the builder makes missing identity fields a compile error.
 
     #[cfg(test)]
-    mod plugin_builder_contract_tests {
-        //! 🧪️ The plugin contract's own unit test: a `TestApp` implementing the pure `ArtifactApp`
-        //! surface (B1), wrapped in `VcsArtifactApp`, exercising typed operations with true inverses, config
-        //! operations that emit no document operations, history interception, and remote-operation ingest
-        //! idempotency. `TestCommand` is `TestApp`'s typed `Self::Command`; framework-reserved verbs
-        //! (history/clipboard/revert/filter/noteShellCommand) still dispatch by string via `handle_action`/
-        //! `handle_command` — everything app-specific dispatches via `dispatch_typed`.
-        use dsl::DslValue;
-        use semio_framework_value_derive::{FromValue, ToValue};
-        use ui_wgpu::wgpu::LocalizedLabel;
-
-        /// 🌉️ Test-only convenience: builds a `serde_json::json!` literal, then bridges it to the
-        /// `DslValue` `handle_action`/`dispatch_action`/`command_from_action` speak at the trait
-        /// boundary — the fixtures below stay readable as JSON literals without keeping a
-        /// `serde_json::Value` alive past this one conversion.
-        fn dv(value: Value) -> DslValue {
-            DslValue::from(&value)
-        }
-
-        use super::ContextMenuWireRequest;
-        use crate::app::{
-            ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactView, AsyncTask, ChildEmit, CommandView, ConfigView, DraftView, Emit, EphemeralSnapshot, HistoryCommandFilter, HistoryView, InteractionHoverState, InteractionView, Menu, NoDraft,
-            NoDraftMutation, NoPresence, NoPresenceMutation, PeerPresence, PluginApp, TaskCtx, TaskResolution, VcsArtifactApp, ui_history_panel,
-        };
-        use crate::app::{ArtifactDeserializer, ArtifactSerializer, Dialect, ErasedComposeSource, IoPayload, StandardId, SubsetId, deserializer_entry_of, resolve_ready, serializer_entry_of};
-        use crate::publication_fixture::{ChangePublicationPresence, ChangePublicationTransient, PublicationPresence, PublicationPresenceMutation, PublicationTransient, PublicationTransientMutation};
-        use crate::store::FaultFrom;
-        use crate::{IconName, MediaClass, MediaType, ViewModel, selection_count_phrase};
-        use protocol::Mutation;
-        use semio_framework::Fault;
-        use semio_framework::kernel::ArtifactHandle;
-        use semio_framework::kernel::{AppEvent, ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement, UiDirtyScope};
-        use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, CommandDefinition, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
-        use semio_framework_job::InteractiveJob as _;
-        mod local_interaction_dispatch {
-            include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/🦀️.rs"));
-        }
-        /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): this module names every other type
-        /// explicitly (no `use super::*;`), so the `🕹️IntentDispatchTests` fixture needs its own
-        /// import too, rather than relying on `mod app`'s outer glob.
-        use semio_framework_ui_contract::{ActionId, SurfaceId, Trigger, UiIntent, UiNodeId, UiRevision};
-        use serde::{Deserialize, Serialize};
-        use serde_json::json;
-        use std::collections::BTreeMap;
-        use store::os_io::ArtifactRef;
-        use store::{ArtifactPack, EngineHandles};
-        use store::{Backbone, BackboneMessage, MemoryBackbone};
-        use store::{MemberFactory, SpaceMember};
-        use ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY;
-        use ui_wgpu::wgpu::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef};
-
-        /// 🪪️ `TestApp`'s one dialect coordinate (contract §1) — every canonical id this module needs
-        /// (`TestApp::APP_ID`, the `App::builder` ids below, every `CommandAddress`/`ActionAddress`/
-        /// `ClipboardFragment.source_app` literal) derives from this ONE fixture instead of the
-        /// pre-migration `"synthetic-play"` string, so `test_app_surface_id` and `TestApp::APP_ID` can
-        /// never independently drift (guarded by `test_app_id_matches_its_own_dialect` below).
-        const TEST_APP_DIALECT: Dialect = Dialect { artifact_kind: "s.test.synthetic", standard: StandardId("1"), subset: SubsetId::ANY };
-
-        #[test]
-        fn app_owned_request_context_identity_matches_language_neutral_oracle_and_rejects_every_root_drift() {
-            let fixture: Value = serde_json::from_str(include_str!("🧵️retained-command/🧪️fixtures/🧬️request-context.json")).expect("request context fixture");
-            let hex = |text: &str| text.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("hex pair"), 16).expect("hex byte")).collect::<Vec<_>>();
-            let revision: [u8; 32] = hex(fixture["canonicalBaseRevisionHex"].as_str().expect("revision hex")).try_into().expect("revision width");
-            let expected = u64::from_str_radix(fixture["expectedIdentityDigestHex"].as_str().expect("digest hex"), 16).expect("digest");
-            let app_instance_id = fixture["appInstanceId"].as_u64().expect("app instance") as u32;
-            let draft_generation = fixture["draftGeneration"].as_u64().expect("draft generation");
-            let transient_generation = fixture["transientGeneration"].as_u64().expect("transient generation");
-            let children_digest = u64::from_str_radix(fixture["childrenDigestHex"].as_str().expect("children digest hex"), 16).expect("children digest");
-            let identity = test_artifact_owned_tool_job_context_identity_digest;
-            assert_eq!(identity(app_instance_id, revision, draft_generation, transient_generation, children_digest), expected);
-            assert_eq!(fixture["mismatchCases"].as_array().expect("mismatch cases").len(), 5);
-            assert_ne!(identity(app_instance_id + 1, revision, draft_generation, transient_generation, children_digest), expected);
-            let mut changed_revision = revision;
-            changed_revision[31] ^= 1;
-            assert_ne!(identity(app_instance_id, changed_revision, draft_generation, transient_generation, children_digest), expected);
-            assert_ne!(identity(app_instance_id, revision, draft_generation + 1, transient_generation, children_digest), expected);
-            assert_ne!(identity(app_instance_id, revision, draft_generation, transient_generation + 1, children_digest), expected);
-            assert_ne!(identity(app_instance_id, revision, draft_generation, transient_generation, children_digest ^ 1), expected);
-            assert_eq!(fixture["restartBoundary"]["workerThreadLoss"], "exact-resume-with-retained-context");
-            assert_eq!(fixture["restartBoundary"]["processRestartWithoutExactTransientSnapshot"], "fail-closed");
-        }
-
-        /// 🪪️ Live `surface_app_id` call over `TEST_APP_DIALECT` — the id every `App::builder(...)` call
-        /// in this module passes, per contract §1 (`AppBuilder::build_definition` rejects a hand-written id).
-        async fn test_app_surface_id() -> String {
-            surface_app_id(&TEST_APP_DIALECT.into(), AppRole::Editor)
-        }
-
-        //#region 🧬️TestDocumentMutationFixture
-        use crate::test_app_mutation_fixture::document::{MAXIMUM_CHILD_CLONES, MAXIMUM_CHILD_ENCODINGS, MAXIMUM_CHILD_PROBE_BYTES};
-        use crate::test_app_mutation_fixture::TestSnapshot;
-
-        /// 🧪️ Trivial dummy `ArtifactSerializer`/`ArtifactDeserializer` pair, round-tripping
-        /// `TestSnapshot` to itself, for `serializer_entry_of`/`deserializer_entry_of` smoke tests.
-        struct DummySerializer;
-        impl ArtifactSerializer for DummySerializer {
-            type From = TestSnapshot;
-            type Into = TestSnapshot;
-            const FROM: Dialect = Dialect { artifact_kind: "s.test.dummy", standard: StandardId("1"), subset: SubsetId("*") };
-            const INTO: Dialect = Dialect { artifact_kind: "s.test.dummy.out", standard: StandardId("1"), subset: SubsetId("*") };
-            async fn serialize(from: &TestSnapshot) -> Result<TestSnapshot, store::PackError> {
-                Ok(from.clone())
-            }
-        }
-
-        struct DummyDeserializer;
-        impl ArtifactDeserializer for DummyDeserializer {
-            type From = TestSnapshot;
-            type Into = TestSnapshot;
-            const FROM: Dialect = Dialect { artifact_kind: "s.test.dummy.out", standard: StandardId("1"), subset: SubsetId("*") };
-            const INTO: Dialect = Dialect { artifact_kind: "s.test.dummy", standard: StandardId("1"), subset: SubsetId("*") };
-            async fn deserialize(from: &TestSnapshot) -> Result<TestSnapshot, store::PackError> {
-                Ok(from.clone())
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn serializer_entry_of_and_deserializer_entry_of_erase_correctly() {
-            let ser = serializer_entry_of::<DummySerializer>();
-            assert_eq!(ser.writes, DummySerializer::INTO);
-            assert_eq!(ser.reads.to_vec(), vec![DummySerializer::FROM]);
-            let de = deserializer_entry_of::<DummyDeserializer>();
-            assert_eq!(de.writes, DummyDeserializer::INTO);
-            assert_eq!(de.reads.to_vec(), vec![DummyDeserializer::FROM]);
-
-            let seed = TestSnapshot { count: 7, label: "x".into() };
-            let bytes = ArtifactPack::encode_pack(&seed);
-            let composed = resolve_ready((ser.compose)(&[ErasedComposeSource { dialect: DummySerializer::FROM, payload: IoPayload::Binary(bytes) }])).expect("serializer_entry_of erased compose should succeed with exactly 1 source");
-            assert_eq!(composed.dialect, DummySerializer::INTO);
-            match composed.payload {
-                IoPayload::Binary(out) => assert_eq!(<TestSnapshot as ArtifactPack>::decode_pack(&out).unwrap(), seed),
-                IoPayload::Text(_) => panic!("expected Binary payload"),
-            }
-
-            let zero_sources_err = match resolve_ready((de.compose)(&[])) {
-                Err(err) => err,
-                Ok(_) => panic!("deserializer_entry_of erased compose should reject 0 sources"),
-            };
-            assert!(zero_sources_err.message.contains("needs exactly 1 source"), "{}", zero_sources_err.message);
-            let two_sources = [ErasedComposeSource { dialect: DummyDeserializer::FROM, payload: IoPayload::Binary(Vec::new()) }, ErasedComposeSource { dialect: DummyDeserializer::FROM, payload: IoPayload::Binary(Vec::new()) }];
-            let two_sources_err = match resolve_ready((de.compose)(&two_sources)) {
-                Err(err) => err,
-                Ok(_) => panic!("deserializer_entry_of erased compose should reject 2 sources"),
-            };
-            assert!(two_sources_err.message.contains("needs exactly 1 source"), "{}", two_sources_err.message);
-        }
-
-        //#region 🧬️TestDocumentMutationLeaves
-        use crate::test_app_mutation_fixture::{SetCount, SetLabel, TestMutation};
-        //#endregion 🧬️TestDocumentMutationLeaves
-
-        struct TestCountOneItemPreparationFactory;
-
-        struct TestCountOneItemPreparation {
-            request: Option<store::ArtifactStoreOneItemPreparationRequest<TestSnapshot, TestMutation>>,
-            prepared: Option<store::ArtifactStoreOneItemPrepared<TestSnapshot, TestMutation>>,
-            authority_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
-            turn: u8,
-            closing: bool,
-        }
-
-        impl store::ArtifactStoreOneItemPreparationFactory<TestSnapshot, TestMutation> for TestCountOneItemPreparationFactory {
-            fn preflight(&self, mutation: &TestMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-                if !matches!(mutation, TestMutation::SetCount(SetCount { .. })) || description.is_some() || lane != store::HistoryLane::Document {
-                    return Err("test count accepts exactly one scalar mutation".into());
-                }
-                Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 1_024 })
-            }
-
-            fn begin(
-                &self,
-                request: store::ArtifactStoreOneItemPreparationRequest<TestSnapshot, TestMutation>,
-            ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<TestSnapshot, TestMutation>>, store::ArtifactStoreOneItemPreparationRequest<TestSnapshot, TestMutation>> {
-                if !request.base.get().label.is_empty() || request.authority.actor().len() > 32 || request.authority.group_id().is_some() {
-                    return Err(request);
-                }
-                Ok(Box::new(TestCountOneItemPreparation { request: Some(request), prepared: None, authority_retirement: None, turn: 0, closing: false }))
-            }
-        }
-
-        impl store::ArtifactStoreOneItemPreparation<TestSnapshot, TestMutation> for TestCountOneItemPreparation {
-            fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-                if !grant.permits_one() || grant.maximum_bytes < 1_024 || self.closing {
-                    return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-                }
-                if self.turn == 0 {
-                    self.turn = 1;
-                    return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint()));
-                }
-                if self.prepared.is_none() {
-                    let request = self.request.as_ref().ok_or_else(|| "test count lost its exact request".to_string())?;
-                    let TestMutation::SetCount(SetCount { value }) = &request.mutation else {
-                        return Err("test count requires scalar mutation".into());
-                    };
-                    let authority = &request.authority;
-                    let edit = store::Edit {
-                        id: format!("fixture-count-{}", authority.next_sequence_number()),
-                        actor: Some(authority.actor().into()),
-                        forwards: vec![TestMutation::SetCount(SetCount { value: *value })],
-                        inverse: vec![TestMutation::SetCount(SetCount { value: request.base.get().count })],
-                        mutation_meta: vec![protocol::MutationMeta {
-                            mutation_id: None,
-                            dependencies: Vec::new(),
-                            base_version: 0,
-                            author_id: Some(ActorId(authority.actor().into())),
-                            timestamp: authority.next_clock(),
-                            undo_policy: UndoPolicy::ExactBaseOnly,
-                            payload_hash: None,
-                            semantic_kind: None,
-                            label: None,
-                            group_id: None,
-                            origin: Default::default(),
-                        }],
-                        description: None,
-                        coalesce_key: None,
-                        sequence_number: authority.next_sequence_number(),
-                        started_at: String::new(),
-                        finished_at: None,
-                    };
-                    self.prepared = Some(authority.prepare_one_item(edit, std::sync::Arc::new(TestSnapshot { count: *value, label: String::new() }))?);
-                    self.turn = 2;
-                }
-                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint()))
-            }
-
-            fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-                store::ArtifactStoreOneItemCheckpoint {
-                    cursor: u32::from(self.turn),
-                    completed_items: u32::from(self.turn),
-                    completed_bytes: u64::from(self.turn),
-                    digest: self.prepared.as_ref().map_or([0; 32], store::ArtifactStoreOneItemPrepared::edit_digest),
-                }
-            }
-
-            fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<TestSnapshot, TestMutation>> {
-                self.prepared.as_ref()
-            }
-            fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<TestSnapshot, TestMutation>> {
-                self.prepared.take()
-            }
-            fn cancel(&mut self) {
-                self.closing = true;
-            }
-            fn begin_close(&mut self) {
-                self.closing = true;
-            }
-
-            fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-                if !self.closing || !grant.permits_one() || grant.maximum_bytes < 1_024 {
-                    return Ok(store::SnapshotRetirementStep::Blocked);
-                }
-                if self.prepared.take().is_some() {
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 1_024 });
-                }
-                if let Some(request) = self.request.take() {
-                    assert!(request.base.return_to_registry());
-                    self.authority_retirement = Some(request.authority.retire());
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-                }
-                if let Some(owner) = self.authority_retirement.as_mut() {
-                    let step = owner.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
-                    if step == store::SnapshotRetirementStep::Complete {
-                        assert!(owner.terminal_is_empty());
-                        self.authority_retirement = None;
-                    }
-                    return Ok(step);
-                }
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-
-            fn terminal_is_empty(&self) -> bool {
-                self.closing && self.prepared.is_none() && self.request.is_none() && self.authority_retirement.is_none()
-            }
-        }
-        //#endregion 🧬️TestDocumentMutationFixture
-
-        use crate::test_app_mutation_fixture::{ChangeTestConfigSelection, TestConfig, TestConfigMutation};
-
-        /// 🧪️ B1: `TestApp`'s typed command enum — the sole dispatch surface for its own behavior.
-        #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslOps)]
-        enum TestCommand {
-            #[dsl(key = "increment")]
-            Increment,
-            #[dsl(key = "set-label")]
-            SetLabel { value: String },
-            #[dsl(key = "amend-label")]
-            AmendLabel { value: String },
-            #[dsl(key = "commit-label")]
-            CommitLabel { value: String },
-            #[dsl(key = "bad-view")]
-            BadView,
-            #[dsl(key = "select")]
-            Select { id: Option<String> },
-            #[dsl(key = "navigate")]
-            Navigate,
-            #[dsl(key = "noop-operation")]
-            NoopMutation,
-            #[dsl(key = "view-no-scope")]
-            ViewNoScope,
-            #[dsl(key = "view-partial-scope")]
-            ViewPartialScope,
-            #[dsl(key = "increment-via-command")]
-            IncrementViaCommand,
-            #[dsl(key = "watchdog-overrun")]
-            WatchdogOverrun,
-            #[dsl(key = "set-label-via-command")]
-            SetLabelViaCommand { value: String },
-            #[dsl(key = "set-active-utility")]
-            SetActiveUtility { utility_id: String },
-            /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): exercises `Emit.child_emits` — emits a
-            /// parent-document op alongside a `ChildEmit` targeting whichever `(slot, child_id)` the
-            /// test registered via `VcsArtifactApp::register_child` beforehand.
-            #[dsl(key = "composite-edit")]
-            CompositeEdit { slot: String, child_id: String, child_value: i32 },
-            #[dsl(key = "probe-child")]
-            ProbeChild { slot: String, child_id: String },
-            /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: spawns an `AsyncTask` that awaits a real
-            /// `host::storage_read` round trip (parked on `RequestRegistry`, resolved by an
-            /// injected completion in the test — see `⚛️reactor`'s `test_support`), then resolves
-            /// with `TaskResolution::Command(ApplyCountFromTask)` — Elm's Msg-from-Cmd, exercised
-            /// end to end without a wasm32-wasip2 build.
-            #[dsl(key = "spawn-count-task")]
-            SpawnCountTask,
-            /// 🧵️ The follow-up command a `SpawnCountTask` resume redispatches — also directly
-            /// dispatchable on its own, so a test can assert the SAME command applied via a normal
-            /// dispatch and via a task resume produce byte-identical mutations.
-            #[dsl(key = "apply-count-from-task")]
-            ApplyCountFromTask { value: i32 },
-        }
-
-        impl ::protocol::OpText for TestCommand {
-            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
-                let variants = <Self as ::dsl::DslVariants>::variants();
-                for (keyword, spec_fn) in &variants {
-                    let probe = format!("{keyword} ");
-                    if line == keyword.as_str() || line.starts_with(&probe) {
-                        let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                        let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
-                    }
-                }
-                Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-            }
-            fn print_op(&self) -> String {
-                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
-                let variants = <Self as ::dsl::DslVariants>::variants();
-                let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
-                if body.is_empty() { keyword } else { format!("{keyword} {body}") }
-            }
-        }
-
-        impl ::protocol::OpBinary for TestCommand {
-            const TOOL_JOB_IDS: &'static [&'static str] = &["compositeEdit", "applyCountFromTask"];
-
-            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-                ::dsl::variants_binary::encode_op(self)
-            }
-            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-                ::dsl::variants_binary::decode_op(bytes)
-            }
-        }
-
-        /// 🧪️ App under test. `received_actions` records every command id THIS app's own `handle` was
-        /// actually called with — used to prove framework-owned interceptions (e.g. `noteShellCommand`)
-        /// never reach it.
-        #[derive(Default)]
-        struct TestApp<const RETAINED: bool = false> {
-            received_actions: std::cell::RefCell<Vec<String>>,
-        }
-
-        include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🦀️.rs"));
-
-        //#region 🧵️RetainedCommandReplayFixture
-        const TEST_RETAINED_COMMAND_CONTROLLER: &str = "s.test.synthetic@1/*#editor";
-        const TEST_RETAINED_COMMAND_TOOL: &str = "setLabel";
-        const TEST_RETAINED_COMMAND_SCHEMA: &str = "semio.test.retained-command.v1";
-        const TEST_RETAINED_COMMAND_RAW_BYTES: usize = 4_096;
-        static TEST_RETAINED_COMMAND_STEP_CALLS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-
-        struct TestRetainedCommandWork {
-            cursor: u8,
-        }
-
-        struct TestRetainedChildCommandWork {
-            emit: Option<Emit<TestMutation, TestConfigMutation, NoDraftMutation>>,
-        }
-
-        impl crate::retained_command::ArtifactCommandWork<TestApp> for TestRetainedChildCommandWork {
-            fn tool_id(&self) -> &'static str {
-                TEST_RETAINED_COMMAND_TOOL
-            }
-
-            fn extent(&self, _command: &TestCommand, _snapshot: &TestSnapshot, _interaction: &InteractionState, _context: Option<&ArtifactOwnedToolJobContext<TestApp>>) -> Option<usize> {
-                Some(1)
-            }
-
-            fn step(&mut self, input: &crate::retained_command::ArtifactCommandInputs<'_, TestApp>) -> Result<crate::retained_command::ArtifactCommandWorkStep<TestApp>, Fault> {
-                let crate::retained_command::ArtifactCommandInputs { command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
-                self.emit.take().map(crate::retained_command::ArtifactCommandWorkStep::Complete).ok_or_else(|| Fault::from("test-retained-child-work-repeated"))
-            }
-        }
-
-        impl crate::retained_command::ArtifactCommandWork<TestApp> for TestRetainedCommandWork {
-            fn tool_id(&self) -> &'static str {
-                TEST_RETAINED_COMMAND_TOOL
-            }
-
-            fn extent(&self, _command: &TestCommand, _snapshot: &TestSnapshot, _interaction: &InteractionState, _context: Option<&ArtifactOwnedToolJobContext<TestApp>>) -> Option<usize> {
-                Some(3)
-            }
-
-            fn step(&mut self, input: &crate::retained_command::ArtifactCommandInputs<'_, TestApp>) -> Result<crate::retained_command::ArtifactCommandWorkStep<TestApp>, Fault> {
-                let crate::retained_command::ArtifactCommandInputs { command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
-                TEST_RETAINED_COMMAND_STEP_CALLS.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-                if self.cursor < 2 {
-                    self.cursor += 1;
-                    return Ok(crate::retained_command::ArtifactCommandWorkStep::Progress { stage: "test-retained-command-work", preview: br#"{"en":"Applying","de":"Anwenden"}"# });
-                }
-                Ok(crate::retained_command::ArtifactCommandWorkStep::Complete(Emit::mutations(vec![TestMutation::SetLabel(SetLabel { value: "resumed".into() })])))
-            }
-
-            fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-                let Some(first) = target.first_mut() else { return Err(Fault::from("test-retained-command-checkpoint-capacity")) };
-                *first = self.cursor;
-                Ok(1)
-            }
-
-            fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
-                let [cursor] = checkpoint else { return Err(Fault::from("test-retained-command-checkpoint-invalid")) };
-                if *cursor > 2 {
-                    return Err(Fault::from("test-retained-command-checkpoint-cursor"));
-                }
-                self.cursor = *cursor;
-                Ok(())
-            }
-        }
-
-        struct TestRetainedCommandFactory {
-            keys: Vec<ToolFactoryKey>,
-        }
-
-        impl TestRetainedCommandFactory {
-            fn new() -> Self {
-                Self { keys: vec![ToolFactoryKey::new(TEST_RETAINED_COMMAND_CONTROLLER, TEST_RETAINED_COMMAND_TOOL)] }
-            }
-        }
-
-        struct OtherTestRetainedCommandFactory(TestRetainedCommandFactory);
-
-        impl ToolJobFactory for OtherTestRetainedCommandFactory {
-            type Payload = crate::retained_command::ArtifactRetainedCommandPayload<TestApp>;
-            type Job = crate::retained_command::ArtifactRetainedCommandJob<TestApp>;
-            fn keys(&self) -> &[ToolFactoryKey] {
-                &self.0.keys
-            }
-            fn payload_schema_id(&self) -> &str {
-                TEST_RETAINED_COMMAND_SCHEMA
-            }
-            fn classification(&self) -> InteractiveJobClassification {
-                InteractiveJobClassification::Migrated
-            }
-            fn execution_contract(&self) -> ToolExecutionContract {
-                ToolJobFactory::execution_contract(&self.0)
-            }
-            fn create_job(&mut self, operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-                ToolJobFactory::create_job(&mut self.0, operation, payload)
-            }
-        }
-
-        impl ArtifactOwnedToolJobFactory for OtherTestRetainedCommandFactory {
-            type Owner = TestApp;
-            const TOOL_IDS: &'static [&'static str] = &[TEST_RETAINED_COMMAND_TOOL];
-            const DOCUMENT_SCHEMA: &'static str = TestApp::<false>::DOCUMENT_SCHEMA;
-            const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = TestRetainedCommandFactory::PUBLICATION_CONTRACTS;
-        }
-
-        impl ArtifactOwnedToolJobFactory for TestRetainedCommandFactory {
-            type Owner = TestApp;
-            const TOOL_IDS: &'static [&'static str] = &[TEST_RETAINED_COMMAND_TOOL];
-            const DOCUMENT_SCHEMA: &'static str = TestApp::<false>::DOCUMENT_SCHEMA;
-            const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: TEST_RETAINED_COMMAND_TOOL, lanes: &[ArtifactToolPublicationLane::HostOnly] }];
-        }
-
-        impl ToolJobFactory for TestRetainedCommandFactory {
-            type Payload = crate::retained_command::ArtifactRetainedCommandPayload<TestApp>;
-            type Job = crate::retained_command::ArtifactRetainedCommandJob<TestApp>;
-
-            fn keys(&self) -> &[ToolFactoryKey] {
-                &self.keys
-            }
-
-            fn payload_schema_id(&self) -> &str {
-                TEST_RETAINED_COMMAND_SCHEMA
-            }
-
-            fn classification(&self) -> InteractiveJobClassification {
-                InteractiveJobClassification::Migrated
-            }
-
-            fn execution_contract(&self) -> ToolExecutionContract {
-                ToolExecutionContract::resumable(TEST_RETAINED_COMMAND_RAW_BYTES, 4, 1, TEST_RETAINED_COMMAND_RAW_BYTES, 7_500, 1, 1)
-            }
-
-            fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-                Ok(crate::retained_command::ArtifactRetainedCommandJob::new(payload))
-            }
-
-            fn create_job_from_wire_pages_with_payload(
-                &mut self,
-                _operation: semio_framework_job::Operation,
-                payload: Self::Payload,
-                input: action_bus::RetainedToolWireInput,
-                checkpoint: Option<action_bus::RetainedToolWireInput>,
-            ) -> Result<Self::Job, (ToolJobFactoryError, action_bus::RetainedToolWireInput, Option<action_bus::RetainedToolWireInput>)> {
-                if input.declared_bytes() > TEST_RETAINED_COMMAND_RAW_BYTES || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > crate::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
-                    return Err((ToolJobFactoryError::new("test retained command extent"), input, checkpoint));
-                }
-                Ok(match checkpoint {
-                    Some(checkpoint) => crate::retained_command::ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
-                    None => crate::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input),
-                })
-            }
-        }
-
-        fn test_retained_command_id(command: &TestCommand) -> &'static str {
-            match command {
-                TestCommand::SetLabel { .. } => TEST_RETAINED_COMMAND_TOOL,
-                _ => "unsupported",
-            }
-        }
-
-        async fn test_retained_command_payload(completion: ArtifactToolCompletion<TestApp>) -> crate::retained_command::ArtifactRetainedCommandPayload<TestApp> {
-            crate::retained_command::ArtifactRetainedCommandPayload::try_new(
-                crate::retained_command::ArtifactRetainedCommandInputs { command: TestCommand::SetLabel { value: "wire".into() }, snapshot: std::sync::Arc::new(TestSnapshot::default()), config: std::sync::Arc::new(TestConfig::default()), history: std::sync::Arc::new(HistoryView::empty()), interaction_state: std::sync::Arc::new(InteractionState::default()), interaction_hover: std::sync::Arc::new(InteractionHoverState::new()), context: None, operation: AppOperationContext { app_instance_id: 7, parent_document_id: "test-document".into(), operation_id: 41, generation: 3, canonical_base_revision: [5; 32] }, completion },
-                test_retained_command_id,
-                TEST_RETAINED_COMMAND_RAW_BYTES,
-                3,
-                Box::new(TestRetainedCommandWork { cursor: 0 }),
-            )
-            .expect("test retained command payload")
-        }
-
-        async fn test_retained_child_command_payload(completion: ArtifactToolCompletion<TestApp>, emit: Emit<TestMutation, TestConfigMutation, NoDraftMutation>) -> crate::retained_command::ArtifactRetainedCommandPayload<TestApp> {
-            crate::retained_command::ArtifactRetainedCommandPayload::try_new(
-                crate::retained_command::ArtifactRetainedCommandInputs { command: TestCommand::SetLabel { value: "wire".into() }, snapshot: std::sync::Arc::new(TestSnapshot::default()), config: std::sync::Arc::new(TestConfig::default()), history: std::sync::Arc::new(HistoryView::empty()), interaction_state: std::sync::Arc::new(InteractionState::default()), interaction_hover: std::sync::Arc::new(InteractionHoverState::new()), context: None, operation: AppOperationContext { app_instance_id: 7, parent_document_id: "test-document".into(), operation_id: 42, generation: 3, canonical_base_revision: [5; 32] }, completion },
-                test_retained_command_id,
-                TEST_RETAINED_COMMAND_RAW_BYTES,
-                1,
-                Box::new(TestRetainedChildCommandWork { emit: Some(emit) }),
-            )
-            .expect("test retained child command payload")
-        }
-
-        fn test_retained_wire_input(bus: &ActionBus, bytes: &[u8]) -> (ToolWireAdmission, action_bus::RetainedToolWireInput) {
-            let (admission, mut input) = bus.begin_exact_wire(TEST_RETAINED_COMMAND_CONTROLLER, TEST_RETAINED_COMMAND_TOOL, TEST_RETAINED_COMMAND_SCHEMA, bytes.len()).expect("test retained command admission");
-            for page in bytes.chunks(action_bus::TOOL_WIRE_PAGE_BYTES) {
-                input.admit_page(action_bus::ToolWirePage::try_copy_from(page).expect("test retained wire page")).map_err(|(fault, _)| fault).expect("test retained page admission");
-            }
-            input.seal().expect("test retained wire seal");
-            (admission, input)
-        }
-
-        fn test_close_retained_payload(payload: &mut semio_framework_job::RetainedJobPayload) {
-            while !payload.terminal_is_empty() {
-                let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            }
-        }
-        //#endregion 🧵️RetainedCommandReplayFixture
-
-        //#region 🧪️TestClipboardReservedJob
-        struct TestClipboardReservedJob<const RETAINED: bool> {
-            tool_id: String,
-            snapshot: std::sync::Arc<TestSnapshot>,
-            raw_wire: Vec<u8>,
-            input: Option<ArtifactReservedToolInput>,
-            completion: Option<ArtifactToolCompletion<TestApp<RETAINED>>>,
-            closing: bool,
-        }
-
-        impl<const RETAINED: bool> TestClipboardReservedJob<RETAINED> {
-            fn new(request: ArtifactReservedToolJobRequest<TestApp<RETAINED>>) -> Self {
-                Self { tool_id: request.tool_id, snapshot: request.snapshot, raw_wire: request.raw_wire, input: Some(request.input), completion: Some(request.completion), closing: false }
-            }
-
-            fn emit(&mut self) -> Emit<TestMutation, TestConfigMutation, NoDraftMutation> {
-                let ArtifactReservedToolInput::Action { args, .. } = self.input.take().expect("test clipboard input") else { panic!("clipboard route received media input") };
-                match self.tool_id.as_str() {
-                    "copy" | "cut" if self.snapshot.label.is_empty() => Emit::default(),
-                    "copy" | "cut" => {
-                        let fragment = ClipboardFragment {
-                            schema: TestApp::<RETAINED>::DOCUMENT_SCHEMA.to_string(),
-                            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-                            dsl_text: self.snapshot.label.clone(),
-                            pack_bytes: None,
-                            source_app: TestApp::<RETAINED>::APP_ID.to_string(),
-                            label: self.snapshot.label.clone(),
-                        };
-                        Emit { artifact_mutations: (self.tool_id == "cut").then(|| TestMutation::SetLabel(SetLabel { value: String::new() })).into_iter().collect(), effects: vec![Effect::ClipboardWrite { fragment }], ..Default::default() }
-                    }
-                    "paste" => {
-                        let Some(args) = args else { return Emit::default() };
-                        let Some(fragment) = args.get("fragment").and_then(|value| serde_json::from_value::<ClipboardFragment>(value.clone().into()).ok()) else { return Emit::default() };
-                        if fragment.media_type != (MediaType { class: MediaClass::Data, form: MediaForm::Value }) {
-                            return Emit::default();
-                        }
-                        let placement = serde_json::from_value::<PastePlacement>(args.into()).unwrap_or_default();
-                        let value = match placement.anchor {
-                            PasteAnchor::Original => fragment.dsl_text,
-                            anchor => format!("{}-{anchor:?}", fragment.dsl_text),
-                        };
-                        Emit::mutations(vec![TestMutation::SetLabel(SetLabel { value })])
-                    }
-                    _ => Emit::default(),
-                }
-            }
-        }
-
-        impl<const RETAINED: bool> semio_framework_job::InteractiveJob for TestClipboardReservedJob<RETAINED> {
-            fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-                if cx.is_cancelled() {
-                    return semio_framework_job::StepOutcome::Cancelled;
-                }
-                let emit = self.emit();
-                self.completion.as_ref().expect("test clipboard completion").complete(Ok(emit), EphemeralEmit::default()).expect("single test clipboard completion");
-                semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                })
-            }
-
-            fn begin_close(&mut self) {
-                self.closing = true;
-            }
-
-            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-                self.closing = true;
-                if !self.raw_wire.is_empty() {
-                    if maximum_items == 0 || maximum_bytes == 0 {
-                        return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                    }
-                    let released_bytes = self.raw_wire.len().min(maximum_bytes);
-                    self.raw_wire.truncate(self.raw_wire.len() - released_bytes);
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-                }
-                if self.input.take().is_some() || self.completion.take().is_some() {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                }
-                semio_framework_job::InteractiveJobCloseStep::Complete
-            }
-
-            fn terminal_is_empty(&self) -> bool {
-                self.closing && self.raw_wire.is_empty() && self.input.is_none() && self.completion.is_none()
-            }
-        }
-
-        impl<const RETAINED: bool> ArtifactReservedJob for TestClipboardReservedJob<RETAINED> {
-            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-                Ok(match semio_framework_job::InteractiveJob::close_step(self, maximum_items, maximum_bytes) {
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
-                    semio_framework_job::InteractiveJobCloseStep::Blocked => PluginCloseStep::Blocked { reason: "test clipboard route close is blocked" },
-                    semio_framework_job::InteractiveJobCloseStep::Complete => PluginCloseStep::Complete,
-                })
-            }
-
-            fn terminal_is_empty(&self) -> bool {
-                semio_framework_job::InteractiveJob::terminal_is_empty(self)
-            }
-        }
-        //#endregion 🧪️TestClipboardReservedJob
-
-        struct PublicationPresenceRetirement {
-            snapshot: Option<std::sync::Arc<PublicationPresence>>,
-        }
-
-        impl store::ErasedSnapshotRetirement for PublicationPresenceRetirement {
-            fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-                if maximum_items == 0 {
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                }
-                if self.snapshot.take().is_some() {
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-                }
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-
-            fn terminal_is_empty(&self) -> bool {
-                self.snapshot.is_none()
-            }
-        }
-
-        struct PublicationPresenceRetirementFactory;
-
-        impl store::SnapshotRetirementFactory<PublicationPresence> for PublicationPresenceRetirementFactory {
-            fn retire(&self, snapshot: std::sync::Arc<PublicationPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
-                Box::new(PublicationPresenceRetirement { snapshot: Some(snapshot) })
-            }
-        }
-
-        //#region 🧹️PublicationLaneFixtureOwners
-        struct TestPublicationPresenceStoreDisposer(Option<store::PresenceStoreRetirement<PublicationPresence>>);
-
-        impl ArtifactOwnedDisposer<store::PresenceStore<PublicationPresence, PublicationPresenceMutation>> for TestPublicationPresenceStoreDisposer {
-            fn close_step(&mut self, owner: &mut store::PresenceStore<PublicationPresence, PublicationPresenceMutation>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-                if maximum_items == 0 {
-                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                }
-                if let Some(active) = self.0.as_mut() {
-                    return active.close_step(1, maximum_bytes).map_err(Fault::from).map(|step| match step {
-                        store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
-                        store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "presence fixture retains captured readers" },
-                        store::SnapshotRetirementStep::Complete => PluginCloseStep::Complete,
-                    });
-                }
-                self.0 = Some(owner.begin_retirement(std::sync::Arc::new(PublicationPresence::default()), |_| true).map_err(|(reason, _)| Fault::from(reason))?);
-                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-            }
-
-            fn terminal_is_empty(&self, owner: &store::PresenceStore<PublicationPresence, PublicationPresenceMutation>) -> bool {
-                owner.retirement_started() && self.0.as_ref().is_some_and(store::PresenceStoreRetirement::terminal_is_empty) && owner.peers_root().is_empty()
-            }
-        }
-
-        struct TestPublicationTransientStoreDisposer;
-
-        impl ArtifactOwnedDisposer<store::TransientStore<PublicationTransient, PublicationTransientMutation>> for TestPublicationTransientStoreDisposer {
-            fn close_step(&mut self, _owner: &mut store::TransientStore<PublicationTransient, PublicationTransientMutation>, maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-                if maximum_items == 0 {
-                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                }
-                Ok(PluginCloseStep::Complete)
-            }
-
-            fn terminal_is_empty(&self, _owner: &store::TransientStore<PublicationTransient, PublicationTransientMutation>) -> bool {
-                true
-            }
-        }
-        //#endregion 🧹️PublicationLaneFixtureOwners
-
-        impl<const RETAINED: bool> ArtifactApp for TestApp<RETAINED> {
-            const DIALECT: Dialect = TEST_APP_DIALECT;
-            fn bounded_first_step_tool_proofs() -> Vec<ArtifactBoundedFirstStepProof> {
-                test_restart_proofs::<RETAINED>()
-            }
-
-            fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
-                test_restart_register::<RETAINED>(registry)
-            }
-
-            async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<ToolOperationSpec>, Fault> {
-                test_restart_build::<RETAINED>(request).await
-            }
-
-            fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-                if RETAINED { Some(std::sync::Arc::new(TestCountOneItemPreparationFactory)) } else { None }
-            }
-
-            fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-                Some(std::sync::Arc::new(PublicationPresenceRetirementFactory))
-            }
-            // 🪪️ Must equal `test_app_surface_id()` — a hand-typed `&'static str` because the runtime
-            // `ArtifactApp::APP_ID` const (contract §2.1, "kept") cannot call a heap-allocating fn at
-            // compile time; `test_app_id_matches_its_own_dialect` below is the drift guard.
-            const APP_ID: &'static str = "s.test.synthetic@1/*#editor";
-            const DOCUMENT_SCHEMA: &'static str = "semio.test/v1";
-            type Snapshot = TestSnapshot;
-            type Mutation = TestMutation;
-            type Config = TestConfig;
-            type ConfigMutation = TestConfigMutation;
-            type Draft = NoDraft;
-            type DraftMutation = NoDraftMutation;
-            type Presence = PublicationPresence;
-            type PresenceMutation = PublicationPresenceMutation;
-            type Transient = PublicationTransient;
-            type TransientMutation = PublicationTransientMutation;
-            type Command = TestCommand;
-
-            fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-                Some(std::sync::Arc::new(PublicationPresenceRetirementFactory))
-            }
-
-            fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
-                Some(bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-            }
-
-            fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
-                Some(bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-            }
-
-            fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
-                Some(bounded_document_store_owners::<Self::Draft, Self::DraftMutation>())
-            }
-
-            fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-                Some(bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
-            }
-
-            fn build_config_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-                Some(bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
-            }
-
-            fn build_draft_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-                Some(bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
-            }
-
-            fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-                Some(Box::new(TestPublicationPresenceStoreDisposer(None)))
-            }
-
-            fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-                if RETAINED { Some(Box::new(TestRestartTransientDisposer::new())) } else { Some(Box::new(TestPublicationTransientStoreDisposer)) }
-            }
-
-            fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
-                Ok(matches!(request.tool_id.as_str(), "copy" | "cut" | "paste").then(|| ArtifactReservedToolJob::new(TestClipboardReservedJob::new(request))))
-            }
-
-            async fn initial_snapshot() -> TestSnapshot {
-                TestSnapshot::default()
-            }
-
-            async fn ephemeral(
-                command: &TestCommand,
-                _doc: &ArtifactView<'_, TestSnapshot>,
-                _cfg: &ConfigView<'_, TestConfig>,
-                presence: &PresenceView<'_, PublicationPresence>,
-                transient: &TransientView<'_, PublicationTransient>,
-            ) -> EphemeralEmit<Self> {
-                match command {
-                    TestCommand::Increment => EphemeralEmit {
-                        presence: vec![ChangePublicationPresence { revision: presence.local.revision.saturating_add(1) }.into()],
-                        transient: vec![ChangePublicationTransient { revision: transient.snapshot.revision.saturating_add(1) }.into()],
-                    },
-                    _ => EphemeralEmit::default(),
-                }
-            }
-
-            async fn command_id(command: &TestCommand) -> &'static str {
-                match command {
-                    TestCommand::Increment => "increment",
-                    TestCommand::SetLabel { .. } => "setLabel",
-                    TestCommand::AmendLabel { .. } => "amendLabel",
-                    TestCommand::CommitLabel { .. } => "commitLabel",
-                    TestCommand::BadView => "badView",
-                    TestCommand::Select { .. } => "select",
-                    TestCommand::Navigate => "navigate",
-                    TestCommand::NoopMutation => "noopMutation",
-                    TestCommand::ViewNoScope => "viewNoScope",
-                    TestCommand::ViewPartialScope => "viewPartialScope",
-                    TestCommand::IncrementViaCommand => "incrementViaCommand",
-                    TestCommand::WatchdogOverrun => "watchdogOverrun",
-                    TestCommand::SetLabelViaCommand { .. } => "setLabelViaCommand",
-                    TestCommand::SetActiveUtility { .. } => "setActiveUtility",
-                    TestCommand::CompositeEdit { .. } => "compositeEdit",
-                    TestCommand::ProbeChild { .. } => "probeChild",
-                    TestCommand::SpawnCountTask => "spawnCountTask",
-                    TestCommand::ApplyCountFromTask { .. } => "applyCountFromTask",
-                }
-            }
-
-            async fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
-                match action {
-                    "incrementViaCommand" | "mode.increment" => Ok(TestCommand::IncrementViaCommand),
-                    "setLabelViaCommand" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("value")).and_then(DslValue::as_str).unwrap_or_default().to_string() }),
-                    "targetWindow" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("windowId")).and_then(DslValue::as_str).unwrap_or_default().to_string() }),
-                    "probeChild" => Ok(TestCommand::ProbeChild {
-                        slot: args.and_then(|value| value.get("slot")).and_then(DslValue::as_str).unwrap_or_default().to_string(),
-                        child_id: args.and_then(|value| value.get("childId")).and_then(DslValue::as_str).unwrap_or_default().to_string(),
-                    }),
-                    // 🎯️ M1 (ticket 26/08/17 `design-unified.md`): reachable ONLY through the
-                    // `command_from_intent` bridge (this string is never dispatched by any other
-                    // existing test) — the `🕹️IntentDispatchTests` fixture proves kind discipline
-                    // survives the new intent path exactly like it already does for `dispatch_typed`.
-                    "badView" => Ok(TestCommand::BadView),
-                    _ => Err(Fault::from(format!("unknown test command: {action}"))),
-                }
-            }
-
-            async fn handle(
-                command: &TestCommand,
-                doc: &ArtifactView<'_, TestSnapshot>,
-                _cfg: &ConfigView<'_, TestConfig>,
-                _interaction: &InteractionView<'_>,
-                _draft: &DraftView<'_, NoDraft>,
-                _engines: &EngineHandles,
-            ) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
-                let _ = Self::command_id(command);
-                match command {
-                    TestCommand::Increment | TestCommand::IncrementViaCommand => Ok(Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: doc.snapshot.count + 1 })], description: Some("increment".into()), ..Default::default() }),
-                    TestCommand::WatchdogOverrun => {
-                        let started = std::time::Instant::now();
-                        while started.elapsed() < std::time::Duration::from_millis(10) {
-                            std::hint::spin_loop();
-                        }
-                        Ok(Emit::default())
-                    }
-                    TestCommand::SetLabel { value } => Ok(Emit { artifact_mutations: vec![TestMutation::SetLabel(SetLabel { value: value.clone() })], coalesce_key: Some("label".into()), ..Default::default() }),
-                    TestCommand::SetLabelViaCommand { value } => Ok(Emit::mutations(vec![TestMutation::SetLabel(SetLabel { value: value.clone() })])),
-                    TestCommand::AmendLabel { value } => Ok(Emit::amend(vec![TestMutation::SetLabel(SetLabel { value: value.clone() })], "label")),
-                    TestCommand::CommitLabel { value } => Ok(Emit::commit(vec![TestMutation::SetLabel(SetLabel { value: value.clone() })], "commit label")),
-                    TestCommand::BadView => Ok(Emit::mutations(vec![TestMutation::SetCount(SetCount { value: 99 })])),
-                    TestCommand::SetActiveUtility { utility_id } => Ok(Emit::event(AppEvent { kind: "active-utility".into(), payload: json!({ "utilityId": utility_id.clone() }).into() })),
-                    TestCommand::Select { id } => Ok(Emit::config(vec![ChangeTestConfigSelection { selected: id.clone() }.into()])),
-                    TestCommand::Navigate => Ok(Emit::effect(Effect::Navigate { uri: "semio://home".into() })),
-                    TestCommand::NoopMutation => Ok(Emit::default()),
-                    TestCommand::ViewNoScope => Ok(Emit { ui_scope: UiDirtyScope::None, ..Default::default() }),
-                    TestCommand::ViewPartialScope => {
-                        Ok(Emit { ui_scope: UiDirtyScope::Partial { window_bodies: vec!["some.window".into()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false }, ..Default::default() })
-                    }
-                    TestCommand::CompositeEdit { slot, child_id, child_value } => Ok(Emit {
-                        artifact_mutations: vec![TestMutation::SetLabel(SetLabel { value: "composite".into() })],
-                        child_emits: vec![ChildEmit::of::<TestSnapshot, _>(slot.clone(), child_id.clone(), &[TestMutation::SetCount(SetCount { value: *child_value })])],
-                        ..Default::default()
-                    }),
-                    TestCommand::ProbeChild { slot, child_id } => {
-                        let _snapshot = doc.children.typed_read::<TestSnapshot>(slot, child_id)?;
-                        Ok(Emit::effect(Effect::DispatchAction { req: RequestId(91_001), action: "probeChildContinuation".into(), args: None, delay_ms: 0 }))
-                    }
-                    // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: no mutations of its own — the
-                    // task's eventual `TaskResolution::Command` follow-up is what mutates the
-                    // document, on a LATER dispatch (see `ApplyCountFromTask` below).
-                    TestCommand::SpawnCountTask => Ok(Emit::task(
-                        AsyncTask::new("spawn-count-task", |ctx: TaskCtx| async move {
-                            let bytes = ctx.host.storage_read("counter").await?;
-                            let value = i32::from_le_bytes(bytes.try_into().unwrap_or([0; 4]));
-                            let command = TestCommand::ApplyCountFromTask { value };
-                            let encoded = <TestCommand as ::protocol::OpBinary>::encode_op(&command).map_err(|error| error.into_fault())?;
-                            Ok(TaskResolution::Command(encoded))
-                        })
-                        .await,
-                    )),
-                    TestCommand::ApplyCountFromTask { value } => Ok(Emit::mutations(vec![TestMutation::SetCount(SetCount { value: *value })])),
-                }
-            }
-
-            async fn render(_body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> UiAssemblyResult<ComponentTree> {
-                built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
-            }
-
-            async fn clipboard_media_type() -> Option<MediaType> {
-                Some(MediaType { class: MediaClass::Data, form: MediaForm::Value })
-            }
-
-            async fn copy_fragment(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
-                if doc.snapshot.label.is_empty() {
-                    return Err(ClipboardError::EmptySelection);
-                }
-                Ok(ClipboardFragment {
-                    schema: Self::DOCUMENT_SCHEMA.to_string(),
-                    media_type: Self::clipboard_media_type().await.expect("declared above"),
-                    dsl_text: doc.snapshot.label.clone(),
-                    pack_bytes: None,
-                    source_app: Self::APP_ID.to_string(),
-                    label: doc.snapshot.label.clone(),
-                })
-            }
-
-            async fn cut_operations(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &InteractionView<'_>) -> Vec<TestMutation> {
-                if doc.snapshot.label.is_empty() { Vec::new() } else { vec![TestMutation::SetLabel(SetLabel { value: String::new() })] }
-            }
-
-            async fn paste_operations(_doc: &ArtifactView<'_, TestSnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<TestMutation>, ClipboardError> {
-                if !Self::clipboard_accepts().await.contains(&fragment.media_type) {
-                    return Err(ClipboardError::IncompatibleMediaType(fragment.media_type));
-                }
-                let value = match placement.anchor {
-                    PasteAnchor::Original => fragment.dsl_text.clone(),
-                    _ => format!("{}-{:?}", fragment.dsl_text, placement.anchor),
-                };
-                Ok(vec![TestMutation::SetLabel(SetLabel { value })])
-            }
-
-            /// 🧪️ Menu = always "setLabelRequired"; "incrementViaCommand" gated on a non-empty label
-            /// (a selection-guard stand-in) — exercises `Menu::action`/`Menu::command`/`Menu::when`. The
-            /// `flatLeaf1..10` branch only fires for the magic `"flat-menu-test"` label (so
-            /// `contract_registry`-backed tests, which never set that label, are untouched) — a flat >9-row
-            /// menu fixture for `context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu` below,
-            /// proving `VcsArtifactApp::context_menu` runs every emitter through `organize_context_menu`.
-            async fn context_menu(_request: &ContextMenuRequest, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-                // 🩹️ Rewritten from `Menu::when(cond, |m| m.command(..))` — `when`'s closure param is
-                // `impl FnOnce(Self) -> Self` (sync, a public documented pattern other plugins use), but
-                // `Menu::command`/`action` are genuinely async (they await `AppActionRegistry::get*`). An
-                // async closure can't satisfy a sync `FnOnce`, so this fixture inlines the two guarded
-                // branches as explicit `if`s instead of touching `when`'s public signature. See R10 residue
-                // class 1 (`` inside a sync closure).
-                let mut menu = Menu::of(registry).action("setLabelRequired");
-                if !doc.snapshot.label.is_empty() && doc.snapshot.label != "flat-menu-test" {
-                    menu = menu.command("incrementViaCommand");
-                }
-                if doc.snapshot.label == "flat-menu-test" {
-                    for index in 1..=10 {
-                        menu = menu.action(format!("flatLeaf{index}"));
-                    }
-                }
-                menu.build()
-            }
-
-            /// 🧪️ `🕹️InteractionDispatch` fixture: the "items" domain (declared only by `interaction_registry`
-            /// below — every OTHER test's registry declares no interactions, so this is never called for
-            /// them) is `HierarchyProvider::Topology`-backed by a single synthetic id, "item-1", present
-            /// exactly when `doc.snapshot.label` is non-empty — lets a test simulate "delete the selected
-            /// node" by setting the label back to empty and observing `validate_state` prune it.
-            async fn interaction_topology(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> InteractionTopology {
-                let mut domains = BTreeMap::new();
-                let ordered = if doc.snapshot.label.is_empty() { Vec::new() } else { vec![TopologyNode { id: "item-1".into(), granularity: "item".into(), parent: None }] };
-                domains.insert("items".to_string(), DomainTopology { ordered });
-                InteractionTopology { domains }
-            }
-        }
-
-        //#region 🗝️RegisteredKeyedDispatchFixture
-        #[derive(Default)]
-        struct KeyedTestApp;
-
-        struct KeyedTestCommandDisposer;
-
-        impl ArtifactOwnedDisposer<TestCommand> for KeyedTestCommandDisposer {
-            fn close_step(&mut self, command: &mut TestCommand, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-                if maximum_items == 0 || maximum_bytes < 4 {
-                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                }
-                let TestCommand::CompositeEdit { slot, child_id, .. } = command else {
-                    return Err(Fault::from("keyed fixture owns only its composite command"));
-                };
-                if let Some(character) = slot.pop().or_else(|| child_id.pop()) {
-                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: character.len_utf8() });
-                }
-                Ok(PluginCloseStep::Complete)
-            }
-
-            fn terminal_is_empty(&self, command: &TestCommand) -> bool {
-                matches!(command, TestCommand::CompositeEdit { slot, child_id, .. } if slot.is_empty() && child_id.is_empty())
-            }
-        }
-
-        struct KeyedTestJob {
-            command: Option<Box<TestCommand>>,
-            completion: Option<ArtifactToolCompletion<KeyedTestApp>>,
-            raw: Option<action_bus::RetainedToolWireInput>,
-            page: usize,
-            base_count: i32,
-            closing: bool,
-        }
-
-        impl semio_framework_job::InteractiveJob for KeyedTestJob {
-            fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-                if cx.is_cancelled() {
-                    return semio_framework_job::StepOutcome::Cancelled;
-                }
-                if cx.should_yield() {
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                let Some(now_us) = cx.now_us() else {
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                assert!(cx.deadline_us().saturating_sub(now_us) <= 500, "registered factory deadline must preserve its exact 500us contract");
-                if self.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
-                    self.page += 1;
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                let TestCommand::CompositeEdit { slot, child_id, child_value } = self.command.as_deref().unwrap() else {
-                    panic!("exact keyed fixture command");
-                };
-                let child_emits = (!slot.is_empty()).then(|| ChildEmit::of::<TestSnapshot, _>(slot.clone(), child_id.clone(), &[TestMutation::SetCount(SetCount { value: *child_value })])).into_iter().collect();
-                let emit = Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: self.base_count + child_value })], child_emits, description: Some("retained composite edit".into()), ..Default::default() };
-                self.completion.as_ref().unwrap().complete(Ok(emit), EphemeralEmit::default()).expect("one exact keyed completion");
-                semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                })
-            }
-
-            fn begin_close(&mut self) {
-                self.closing = true;
-            }
-
-            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-                if !self.closing || maximum_items == 0 {
-                    return semio_framework_job::InteractiveJobCloseStep::Blocked;
-                }
-                if let Some(raw) = self.raw.as_mut() {
-                    let step = raw.close_step(1, maximum_bytes);
-                    if raw.terminal_is_empty() {
-                        self.raw = None;
-                        return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                    }
-                    return step;
-                }
-                if let Some(command) = self.command.as_mut() {
-                    match KeyedTestCommandDisposer.close_step(command, 1, maximum_bytes).unwrap() {
-                        PluginCloseStep::Pending { released_items, released_bytes } => return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                        PluginCloseStep::AwaitingInput { .. } => return semio_framework_job::InteractiveJobCloseStep::Blocked,
-                        PluginCloseStep::Blocked { .. } => return semio_framework_job::InteractiveJobCloseStep::Blocked,
-                        PluginCloseStep::Complete => {
-                            assert!(KeyedTestCommandDisposer.terminal_is_empty(command));
-                            self.command = None;
-                            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                        }
-                    }
-                }
-                if self.completion.take().is_some() {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                }
-                semio_framework_job::InteractiveJobCloseStep::Complete
-            }
-
-            fn terminal_is_empty(&self) -> bool {
-                self.closing && self.raw.is_none() && self.command.is_none() && self.completion.is_none()
-            }
-        }
-
-        struct KeyedTestFactory {
-            keys: Vec<ToolFactoryKey>,
-        }
-
-        impl ToolJobFactory for KeyedTestFactory {
-            type Payload = KeyedTestJob;
-            type Job = KeyedTestJob;
-            fn keys(&self) -> &[ToolFactoryKey] {
-                &self.keys
-            }
-            fn payload_schema_id(&self) -> &str {
-                "semio.test.keyed-command.v1"
-            }
-            fn classification(&self) -> InteractiveJobClassification {
-                InteractiveJobClassification::Migrated
-            }
-            fn execution_contract(&self) -> ToolExecutionContract {
-                ToolExecutionContract::resumable(32_768, 4, 1, 4_096, 500, 1, 1)
-            }
-            fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-                Ok(payload)
-            }
-            fn create_job_from_wire_pages_with_payload(
-                &mut self,
-                _operation: semio_framework_job::Operation,
-                mut payload: Self::Payload,
-                input: action_bus::RetainedToolWireInput,
-                checkpoint: Option<action_bus::RetainedToolWireInput>,
-            ) -> Result<Self::Job, (ToolJobFactoryError, action_bus::RetainedToolWireInput, Option<action_bus::RetainedToolWireInput>)> {
-                assert!(checkpoint.is_none());
-                payload.raw = Some(input);
-                Ok(payload)
-            }
-        }
-
-        impl ArtifactOwnedToolJobFactory for KeyedTestFactory {
-            type Owner = KeyedTestApp;
-            const TOOL_IDS: &'static [&'static str] = &["compositeEdit"];
-            const DOCUMENT_SCHEMA: &'static str = KeyedTestApp::DOCUMENT_SCHEMA;
-            const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] =
-                &[ArtifactToolPublicationContract { tool_id: "compositeEdit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Child] }];
-            fn latest_wins_target(command: &TestCommand) -> Option<&str> {
-                match command {
-                    TestCommand::CompositeEdit { child_id, .. } => Some(child_id),
-                    _ => None,
-                }
-            }
-            fn build_latest_wins_command_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<TestCommand>>> {
-                Some(Box::new(KeyedTestCommandDisposer))
-            }
-        }
-
-        //#region 🧹️KeyedNoStateFixtureOwners
-        //#endregion 🧹️KeyedNoStateFixtureOwners
-
-        impl ArtifactApp for KeyedTestApp {
-            const DIALECT: Dialect = Dialect { artifact_kind: "s.test.keyed", standard: StandardId("1"), subset: SubsetId::ANY };
-            const APP_ID: &'static str = "s.test.keyed@1/*#editor";
-            const DOCUMENT_SCHEMA: &'static str = "semio.test/v1";
-            type Snapshot = TestSnapshot;
-            type Mutation = TestMutation;
-            type Config = TestConfig;
-            type ConfigMutation = TestConfigMutation;
-            type Draft = NoDraft;
-            type DraftMutation = NoDraftMutation;
-            type Presence = NoPresence;
-            type PresenceMutation = NoPresenceMutation;
-            type Transient = NoTransient;
-            type TransientMutation = NoTransientMutation;
-            type Command = TestCommand;
-            crate::bounded_first_step_tool_proofs! {
-                owner: KeyedTestApp, owner_file: "plugin/🦀️.rs", controller: "s.test.keyed@1/*#editor", document_schema: "semio.test/v1",
-                factory: "KeyedTestFactory", factory_type: KeyedTestFactory,
-                contract: ToolExecutionContract::resumable(32_768, 4, 1, 4_096, 500, 1, 1), tools: ["compositeEdit"]
-            }
-            fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
-                registry.register(KeyedTestFactory { keys: vec![ToolFactoryKey::new(registry.controller_id(), "compositeEdit")] })
-            }
-            async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<ToolOperationSpec>, Fault> {
-                assert!(request.snapshot.label.is_empty());
-                let job = KeyedTestJob { command: Some(request.command), completion: Some(request.completion), raw: None, page: 0, base_count: request.snapshot.count, closing: false };
-                Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
-            }
-            fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-                Some(std::sync::Arc::new(TestCountOneItemPreparationFactory))
-            }
-            fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
-                TestApp::<false>::build_document_store_owners()
-            }
-            fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
-                TestApp::<false>::build_config_store_owners()
-            }
-            fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
-                TestApp::<false>::build_draft_store_owners()
-            }
-            fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-                TestApp::<false>::build_document_store_disposer()
-            }
-            fn build_config_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-                TestApp::<false>::build_config_store_disposer()
-            }
-            fn build_draft_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-                TestApp::<false>::build_draft_store_disposer()
-            }
-            fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-                Some(mutation_fixture::no_state::presence_store_disposer())
-            }
-            fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-                Some(mutation_fixture::no_state::transient_store_disposer())
-            }
-            fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-                Some(mutation_fixture::no_state::presence_peer_retirement_factory())
-            }
-            fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-                Some(mutation_fixture::no_state::presence_local_root_retirement_factory())
-            }
-            fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-                Some(mutation_fixture::no_state::transient_local_root_retirement_factory())
-            }
-            async fn initial_snapshot() -> TestSnapshot {
-                TestSnapshot::default()
-            }
-            async fn command_id(command: &TestCommand) -> &'static str {
-                TestApp::<false>::command_id(command).await
-            }
-            async fn handle(
-                _command: &TestCommand,
-                _doc: &ArtifactView<'_, TestSnapshot>,
-                _cfg: &ConfigView<'_, TestConfig>,
-                _interaction: &InteractionView<'_>,
-                _draft: &DraftView<'_, NoDraft>,
-                _engines: &EngineHandles,
-            ) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
-                Err(Fault::from("keyed fixture requires its actual retained factory"))
-            }
-            async fn render(body: &str, doc: &ArtifactView<'_, TestSnapshot>, cfg: &ConfigView<'_, TestConfig>) -> UiAssemblyResult<ComponentTree> {
-                TestApp::<false>::render(body, doc, cfg).await
-            }
-        }
-
-        #[test]
-        fn keyed_fixture_no_state_disposers_and_retirement_factories_close_live_owners() {
-            fn close_root<T: Send + Sync + 'static>(factory: std::sync::Arc<dyn store::SnapshotRetirementFactory<T>>, root: T) {
-                let mut retirement = store::SnapshotRetirementFactory::retire(factory.as_ref(), std::sync::Arc::new(root));
-                assert!(matches!(store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 0, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })));
-                for _ in 0..4 {
-                    match store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("bounded root retirement") {
-                        store::SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES),
-                        store::SnapshotRetirementStep::Complete => {
-                            assert!(store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()));
-                            return;
-                        }
-                        store::SnapshotRetirementStep::Blocked => panic!("no-state root retirement must not block"),
-                    }
-                }
-                panic!("no-state root retirement exceeded its bounded close turns");
-            }
-
-            close_root(<KeyedTestApp as ArtifactApp>::build_presence_local_root_retirement_factory().expect("presence local factory"), NoPresence::default());
-            close_root(<KeyedTestApp as ArtifactApp>::build_presence_peer_retirement_factory().expect("presence peer factory"), NoPresence::default());
-            close_root(<KeyedTestApp as ArtifactApp>::build_transient_local_root_retirement_factory().expect("transient local factory"), NoTransient::default());
-
-            let mut presence = store::PresenceStore::<NoPresence, NoPresenceMutation>::new(NoPresence::default());
-            presence.install_local_retirement_factory(<KeyedTestApp as ArtifactApp>::build_presence_local_root_retirement_factory().expect("presence local factory")).expect("presence local factory installs once");
-            presence.install_peer_retirement_factory(<KeyedTestApp as ArtifactApp>::build_presence_peer_retirement_factory().expect("presence peer factory")).expect("presence peer factory installs once");
-            let mut presence_disposer = <KeyedTestApp as ArtifactApp>::build_presence_store_disposer().expect("presence disposer");
-            assert_eq!(presence_disposer.close_step(&mut presence, 0, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("zero grant"), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            for _ in 0..8 {
-                if presence_disposer.close_step(&mut presence, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("presence close") == PluginCloseStep::Complete {
-                    break;
-                }
-            }
-            assert!(presence_disposer.terminal_is_empty(&presence));
-            assert!(presence.retirement_started() && presence.peers_root().is_empty());
-
-            let mut transient = store::TransientStore::<NoTransient, NoTransientMutation>::new(NoTransient::default());
-            let mut transient_disposer = <KeyedTestApp as ArtifactApp>::build_transient_store_disposer().expect("transient disposer");
-            let original_transient_root = transient.current_root();
-            let original_transient_weak = std::sync::Arc::downgrade(&original_transient_root);
-            let original_transient_generation = transient.generation_now();
-            assert_eq!(transient_disposer.close_step(&mut transient, 0, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("zero grant"), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            assert!(!transient_disposer.terminal_is_empty(&transient));
-            let short_transient_grant = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES.checked_sub(1).expect("nonzero transient retirement page");
-            assert_eq!(transient_disposer.close_step(&mut transient, 1, short_transient_grant).expect("short transient grant"), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            assert_eq!(transient.generation_now(), original_transient_generation);
-            assert!(std::sync::Arc::ptr_eq(&original_transient_root, &transient.current_root()));
-            assert_eq!(
-                transient_disposer.close_step(&mut transient, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("transient owned-store retirement"),
-                PluginCloseStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES }
-            );
-            assert_eq!(transient.generation_now(), 0);
-            assert!(!std::sync::Arc::ptr_eq(&original_transient_root, &transient.current_root()));
-            drop(original_transient_root);
-            assert!(original_transient_weak.upgrade().is_none());
-            assert_eq!(transient_disposer.close_step(&mut transient, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("transient terminal completion"), PluginCloseStep::Complete);
-            assert!(transient_disposer.terminal_is_empty(&transient));
-            assert_eq!(transient_disposer.close_step(&mut transient, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("transient repeated complete"), PluginCloseStep::Complete);
-            transient = store::TransientStore::new(NoTransient::default());
-            let drifted_transient_root = transient.current_root();
-            assert!(!transient_disposer.terminal_is_empty(&transient));
-            assert!(transient_disposer.close_step(&mut transient, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).is_err(), "transient terminal witness rejects owner drift");
-            assert!(std::sync::Arc::ptr_eq(&drifted_transient_root, &transient.current_root()));
-        }
-
-        async fn keyed_test_registry() -> AppActionRegistry {
-            let manifest = App::from_builder(
-                App::builder(KeyedTestApp::APP_ID, LocalizedLabel::data("Keyed Fixture"))
-                    .await
-                    .document(["state"])
-                    .mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                    .await
-                    .window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                    .await
-                    .app_command("compositeEdit", LocalizedLabel::data("Set Parameter"), "fixture", ActionKind::Mutation)
-                    .await
-                    .interactive_jobs(InteractiveJobClassification::Migrated)
-                    .await,
-            )
-            .await;
-            AppActionRegistry::from_definition(&manifest.definition)
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn retained_latest_wins_registered_dispatch_rebases_worker_and_publishes_real_document() {
-            test_retained_keyed_dispatch::<KeyedTestApp>(
-                keyed_test_registry().await,
-                |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value },
-                |value| TestMutation::SetCount(SetCount { value }),
-                |snapshot| snapshot.count,
-                None,
-            )
-            .await;
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn microsecond_registered_factory_dispatch_preserves_exact_half_ms_fake_clock() {
-            fn clock() -> Option<u64> {
-                Some(1_000)
-            }
-            test_retained_keyed_dispatch::<KeyedTestApp>(
-                keyed_test_registry().await,
-                |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value },
-                |value| TestMutation::SetCount(SetCount { value }),
-                |snapshot| snapshot.count,
-                Some(clock),
-            )
-            .await;
-            eprintln!("[DEBUG] registered 500us factory completed real dispatch/rebase/publication/ACK/close with exact fake microsecond clock");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn retained_operation_continues_after_command_admission_until_publication_and_retirement() {
-            let fixture: Value = serde_json::from_str(include_str!("⚛️reactor/🧪️fixtures/🔣️.json")).unwrap();
-            let id = fixture["wire"]["receiver"].as_u64().unwrap() as u32;
-            let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
-            app.bind_instance_id(id).await;
-            let value = fixture["command"]["value"].as_i64().unwrap() as i32;
-            let command = TestCommand::CompositeEdit { slot: String::new(), child_id: fixture["command"]["target"].as_str().unwrap().into(), child_value: value };
-            app.dispatch_typed(command, &ActionMeta { actor: "fixture".into(), instance_id: id }).await.unwrap();
-            let runtime = super::PluginRuntime::new();
-            let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app }));
-            runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
-            let mut terminal = false;
-            let mut receipts = 0;
-            for turn in 0..fixture["command"]["maximumTurns"].as_u64().unwrap() {
-                super::plugin_step_live_cleanup(&runtime).unwrap();
-                let (output, more) = super::plugin_continue_typed_operations(&runtime).await.unwrap();
-                if let Some((receiver, output)) = output {
-                    assert_eq!(receiver, id);
-                    if let Some(page) = output.typed_operation_result {
-                        assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
-                        terminal |= page.lane == TypedOperationResultLane::Terminal;
-                        receipts += 1;
-                        super::plugin_acknowledge_typed_operation_result(&runtime, page.token).await.unwrap();
-                    }
-                }
-                if !more {
-                    assert!(terminal, "the actor must remain runnable until its terminal result");
-                    eprintln!("[DEBUG] admitted command published and retired after {turn} turns with {receipts} exact receipts");
-                    break;
-                }
-                std::thread::yield_now();
-            }
-            let active = cell.instance.lock().unwrap();
-            assert!(terminal);
-            assert!(!active.app.has_pending_typed_operations());
-            assert_eq!(active.app.snapshot().unwrap().count, value);
-            drop(active);
-            let retired = std::sync::Arc::downgrade(&cell);
-            drop(cell);
-            super::plugin_destroy_app(&runtime, id).await.unwrap();
-            for _ in 0..100_000 {
-                if let Err(error) = super::plugin_step_close_cleanup(&runtime) {
-                    let entries = runtime.close_quarantine.borrow();
-                    let state = &entries.get(id).unwrap().state;
-                    let pump = state.pump.lock().unwrap();
-                    let detail = state.last_fault.lock().unwrap();
-                    panic!(
-                        "{error:?}: elapsed={} stalled={} terminal={} complete={} blocked={} faulted={} pending={:?} origin={} detail={}",
-                        state.last_callback_elapsed_us.load(std::sync::atomic::Ordering::SeqCst),
-                        state.stalled_steps.load(std::sync::atomic::Ordering::SeqCst),
-                        pump.terminal,
-                        pump.complete,
-                        pump.blocked,
-                        pump.faulted,
-                        pump.pending_status,
-                        state.last_fault_origin.load(std::sync::atomic::Ordering::SeqCst),
-                        String::from_utf8_lossy(&detail[..])
-                    );
-                }
-                if runtime.close_quarantine.borrow().get(id).is_none() {
-                    break;
-                }
-                std::thread::yield_now();
-            }
-            assert!(runtime.close_quarantine.borrow().get(id).is_none());
-            assert!(retired.upgrade().is_none());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn retained_child_group_publishes_one_acknowledged_parent_child_gesture_and_retires() {
-            let id = 41;
-            let mut app = VcsArtifactApp::<KeyedTestApp, TestMembers>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
-            app.bind_instance_id(id).await;
-            let mut child = new_test_child("child-1").await.expect("construct child");
-            let TestMembers::Child(child_store) = &mut child;
-            child_store.install_member_store_owners_exact(<TestSnapshot as store::MemberStoreOwner<TestMutation>>::member_store_owners());
-            app.register_child("slot", "child-1", test_child_dialect().await, child).await.expect("register child");
-            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { actor: "fixture".into(), instance_id: id }).await.expect("admit retained child gesture");
-
-            let runtime = super::PluginRuntime::new();
-            let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app }));
-            runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
-            let acknowledgement_fixture: Value = serde_json::from_str(include_str!("🥇️tool-latest-wins.json")).expect("language-neutral result ACK fixture");
-            let mut lanes = Vec::new();
-            for turn in 0..100_000 {
-                if let Err(error) = super::plugin_step_live_cleanup(&runtime) {
-                    let pump = cell.maintenance_pump.lock().expect("failed maintenance pump");
-                    panic!(
-                        "[DEBUG] {error:?}: turn={turn} status={} generation={} stalled={} entries={} session={} outcome={} rejected={} terminal={} pending={:?} closing={} faulted={}",
-                        cell.maintenance_status.load(std::sync::atomic::Ordering::SeqCst),
-                        cell.maintenance_generation.load(std::sync::atomic::Ordering::SeqCst),
-                        cell.maintenance_stalled_steps.load(std::sync::atomic::Ordering::SeqCst),
-                        cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed),
-                        pump.session.is_some(),
-                        pump.outcome.is_some(),
-                        pump.rejected.is_some(),
-                        pump.terminal,
-                        pump.pending_status,
-                        pump.closing,
-                        pump.faulted
-                    );
-                }
-                let (output, mut more) = super::plugin_continue_typed_operations(&runtime).await.expect("drive one production publication turn");
-                if let Some((receiver, output)) = output {
-                    assert_eq!(receiver, id);
-                    if let Some(page) = output.typed_operation_result {
-                        assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
-                        lanes.push(page.lane);
-                        if page.lane == TypedOperationResultLane::Child {
-                            assert_eq!(page.token.attempt, acknowledgement_fixture["resultAck"]["attempt"].as_u64().unwrap() as u8);
-                            let delayed_token = page.token;
-                            {
-                                let active = cell.instance.lock().expect("delayed ACK retained app");
-                                assert!(active.app.has_pending_typed_operations());
-                                assert_eq!(active.app.typed_operation_result_state_for_test(delayed_token.operation), Some((delayed_token, TypedOperationResultLane::Child, true, false)));
-                            }
-                            let maintenance_entries_before = cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed);
-                            let pre_ack_polls = acknowledgement_fixture["resultAck"]["preAckPolls"].as_u64().unwrap();
-                            for poll in 1..=pre_ack_polls {
-                                let expected_entries = maintenance_entries_before + poll;
-                                for _ in 0..100_000 {
-                                    super::plugin_step_live_cleanup(&runtime).expect("delayed renderer ACK remains valid maintenance input wait");
-                                    plugin_job_yield_once().await;
-                                    if cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= expected_entries {
-                                        break;
-                                    }
-                                }
-                                assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= expected_entries, "production maintenance callback must execute before counting one delayed ACK poll");
-                                let (output, _) = super::plugin_continue_typed_operations(&runtime).await.expect("delayed renderer ACK does not fault continuation");
-                                assert!(output.as_ref().and_then(|(_, output)| output.typed_operation_result.as_ref()).is_none(), "presented result page must not be republished before an explicit retry deadline");
-                            }
-                            assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= maintenance_entries_before + pre_ack_polls);
-                            let input_waits_before_alignment = cell.maintenance_probe_input_waits.load(std::sync::atomic::Ordering::SeqCst);
-                            for _ in 0..100_000 {
-                                super::plugin_step_live_cleanup(&runtime).expect("reach one processed exact ACK-wait maintenance stage");
-                                plugin_job_yield_once().await;
-                                if cell.maintenance_probe_input_waits.load(std::sync::atomic::Ordering::SeqCst) > input_waits_before_alignment
-                                    && super::RuntimeMaintenanceStatus::from_repr(cell.maintenance_status.load(std::sync::atomic::Ordering::SeqCst)) == super::RuntimeMaintenanceStatus::Ready
-                                    && cell.maintenance_stalled_steps.load(std::sync::atomic::Ordering::SeqCst) == 0
-                                {
-                                    break;
-                                }
-                            }
-                            assert!(cell.maintenance_probe_input_waits.load(std::sync::atomic::Ordering::SeqCst) > input_waits_before_alignment, "maintenance must process the presented result as an external input wait");
-                            {
-                                let active = cell.instance.lock().expect("stable delayed ACK retained app");
-                                assert_eq!(active.app.typed_operation_result_state_for_test(delayed_token.operation), Some((delayed_token, TypedOperationResultLane::Child, true, false)));
-                            }
-                            assert_eq!(cell.maintenance_stalled_steps.load(std::sync::atomic::Ordering::SeqCst), 0);
-                            super::plugin_acknowledge_typed_operation_result(&runtime, delayed_token).await.expect("delayed exact retained result ACK");
-                            more = true;
-                        } else {
-                            super::plugin_acknowledge_typed_operation_result(&runtime, page.token).await.expect("ack exact retained result");
-                            more = true;
-                        }
-                    }
-                }
-                if !more {
-                    assert!(lanes.contains(&TypedOperationResultLane::Terminal), "runtime retired before its terminal page");
-                    eprintln!("[DEBUG] retained Child runtime published every host lane and retired after {turn} turns");
-                    break;
-                }
-                plugin_job_yield_once().await;
-            }
-            assert!(lanes.contains(&TypedOperationResultLane::Child));
-            assert!(lanes.contains(&TypedOperationResultLane::Terminal));
-            {
-                let mut active = cell.instance.lock().expect("live runtime app");
-                assert!(!active.app.has_pending_typed_operations());
-                assert_eq!(active.app.snapshot().expect("parent snapshot").count, 9);
-                let (_, child) = active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("live child");
-                let TestMembers::Child(child) = child;
-                assert_eq!(child.snapshot().expect("child snapshot").count, 9);
-
-                active.app.dispatch_action("undo", None, &ActionMeta { actor: "fixture".into(), instance_id: id }).await.expect("undo retained group");
-                assert_eq!(active.app.snapshot().expect("undone parent snapshot").count, 0);
-                let (_, child) = active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("undone child");
-                let TestMembers::Child(child) = child;
-                assert_eq!(child.snapshot().expect("undone child snapshot").count, 0);
-
-                active.app.dispatch_action("redo", None, &ActionMeta { actor: "fixture".into(), instance_id: id }).await.expect("redo retained group");
-                assert_eq!(active.app.snapshot().expect("redone parent snapshot").count, 9);
-                let (_, child) = active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("redone child");
-                let TestMembers::Child(child) = child;
-                assert_eq!(child.snapshot().expect("redone child snapshot").count, 9);
-            }
-            let retired = std::sync::Arc::downgrade(&cell);
-            drop(cell);
-            super::plugin_destroy_app(&runtime, id).await.expect("begin runtime destroy");
-            for _ in 0..100_000 {
-                super::plugin_step_close_cleanup(&runtime).expect("drive exact runtime close");
-                if runtime.close_quarantine.borrow().get(id).is_none() {
-                    break;
-                }
-                std::thread::yield_now();
-            }
-            assert!(runtime.close_quarantine.borrow().get(id).is_none());
-            assert!(retired.upgrade().is_none());
-            eprintln!("[DEBUG] retained Child publication emitted Child+Terminal ACK pages, moved one parent-child undo group, and retired every owner");
-        }
-        //#endregion 🗝️RegisteredKeyedDispatchFixture
-
-        use crate::plugin_app_close_prelude::*;
-        semio_framework_dispatch_macros::dyn_enum_close! {
-            enum TestRuntimeApps: PluginApp {
-                Test(VcsArtifactApp<TestApp>),
-            }
-        }
-
-        /// 🧬️ A hostile structural copy of Draw's public controller/schema/tool constants. Its
-        /// concrete Rust type is deliberately not the audited Draw owner type.
-        #[derive(Default)]
-        struct CopyDrawApp;
-
-        impl ArtifactApp for CopyDrawApp {
-            const DIALECT: Dialect = Dialect { artifact_kind: "s.draw.draw", standard: StandardId("1"), subset: SubsetId::ANY };
-            const APP_ID: &'static str = "s.draw.draw@1/*#editor";
-            const DOCUMENT_SCHEMA: &'static str = "draw.document";
-            type Snapshot = TestSnapshot;
-            type Mutation = TestMutation;
-            type Config = TestConfig;
-            type ConfigMutation = TestConfigMutation;
-            type Draft = NoDraft;
-            type DraftMutation = NoDraftMutation;
-            type Presence = NoPresence;
-            type PresenceMutation = NoPresenceMutation;
-            type Transient = NoTransient;
-            type TransientMutation = NoTransientMutation;
-            type Command = TestCommand;
-
-            async fn initial_snapshot() -> TestSnapshot {
-                TestSnapshot::default()
-            }
-
-            async fn command_id(_command: &TestCommand) -> &'static str {
-                "canvasPointerDown"
-            }
-
-            async fn handle(
-                command: &TestCommand,
-                doc: &ArtifactView<'_, TestSnapshot>,
-                cfg: &ConfigView<'_, TestConfig>,
-                interaction: &InteractionView<'_>,
-                draft: &DraftView<'_, NoDraft>,
-                engines: &EngineHandles,
-            ) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
-                TestApp::<false>::handle(command, doc, cfg, interaction, draft, engines).await
-            }
-
-            async fn render(body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, cfg: &ConfigView<'_, TestConfig>) -> UiAssemblyResult<ComponentTree> {
-                TestApp::<false>::render(body_key, doc, cfg).await
-            }
-        }
-
-        // 🚫️async: E1 pure constructor, called pervasively as `&meta()` — see R9.
-        fn meta() -> ActionMeta {
-            ActionMeta { actor: "local".into(), instance_id: 1 }
-        }
-
-        async fn synthetic_play_app() -> App {
-            App::from_builder(
-                App::builder(test_app_surface_id().await, LocalizedLabel::data("Synthetic"))
-                    .await
-                    .document(["state"])
-                    .mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                    .await
-                    .window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                    .await,
-            )
-            .await
-        }
-
-        /// 🧪️ A registry-backed app declaring the contract-enforcement fixtures: an operation resolved by
-        /// the context-menu label lookup, a declared-but-empty operation, a mis-behaving View action, and a
-        /// utility (which auto-injects the `setActiveUtility` View action). B1: `setLabelRequired`'s
-        /// required/default-arg materialization tests were deleted — that mechanism was JSON-args-specific
-        /// (`AppActionRegistry`/`materialize_args`) and has no meaning for a typed `Self::Command` value a
-        /// Rust caller constructs directly (a "missing required field" is a compile error, not a runtime
-        /// one). `setLabelRequired` stays declared here purely as a registry fixture for the context-menu
-        /// label-resolution test below. These synthetic reducers have no retained factory authority;
-        /// only an exact authority test may promote its own selected row to Migrated.
-        async fn contract_registry() -> AppActionRegistry {
-            let app = App::from_builder(
-                App::builder(test_app_surface_id().await, LocalizedLabel::data("Synthetic"))
-                    .await.document(["state"])
-                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                .await.window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                .await.mutation("setLabelRequired", LocalizedLabel::data("Set Label"))
-                .await.action_args("setLabelRequired", vec![ActionArgDef::text("value", LocalizedLabel::data("Value")).required()])
-                // 🧪️ `Mutation`-kind by declaration, but `TestApp` emits zero operations for it — the
-                // "declared Mutation action that happened to produce nothing" fixture.
-                .await.mutation("noopMutation", LocalizedLabel::data("Noop Mutation"))
-                .await.mutation("targetWindow", LocalizedLabel::data("Target Window"))
-                .await.view_action("badView", LocalizedLabel::data("Bad View"))
-                .await.utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush)
-                .await.app_command("incrementViaCommand", LocalizedLabel::data("Increment"), "counter", ActionKind::Mutation)
-                .await.app_command("watchdogOverrun", LocalizedLabel::data("Watchdog Overrun"), "counter", ActionKind::Mutation)
-                .await.app_command("setLabelViaCommand", LocalizedLabel::data("Set Label"), "counter", ActionKind::Mutation)
-                .await.mode_command("edit", CommandDefinition::bounded_catalog("mode.increment", LocalizedLabel::data("Mode Increment"), "counter", ActionKind::Mutation))
-                .await.interactive_jobs(InteractiveJobClassification::BatchOnlyPendingRewrite).await,
-            )
-            .await;
-            AppActionRegistry::from_definition(&app.definition)
-        }
-
-        async fn contract_app_under_test() -> VcsArtifactApp<TestApp> {
-            VcsArtifactApp::with_registry(TestApp::<false>::default(), contract_registry().await).await
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn activated_tool_factory_keys_are_an_exact_bijection_with_migrated_declarations() {
-            let platform = Platform::new(None).await;
-            let registry = contract_registry().await;
-            let declared = registry.test_migrated_tool_ids();
-            let controller_id = registry.test_controller_id().to_string();
-            let mut app = VcsArtifactApp::<TestApp>::with_registry_on_bus(TestApp::<false>::default(), registry.clone(), platform.action_bus.clone()).await;
-            let registered: std::collections::BTreeSet<String> = app
-                .test_registered_tool_keys()
-                .into_iter()
-                .map(|key| {
-                    assert_eq!(key.0, controller_id);
-                    key.1
-                })
-                .collect();
-            assert_eq!(registered, declared);
-            let platform_visible = platform.action_bus.keys().into_iter().filter(|key| key.controller_id == controller_id).map(|key| key.tool_id).collect::<std::collections::BTreeSet<_>>();
-            assert_eq!(platform_visible, declared);
-            let before = platform.action_bus.dispatch_count();
-            let error = app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect_err("an unproved typed command must remain fail closed");
-            assert_eq!(error.code.0, "interactive-job.missing-factory");
-            assert_eq!(platform.action_bus.dispatch_count(), before);
-        }
-
-        //#region 🧪️SharedFrameworkActionRouteTests
-        #[semio_framework_async_macros::async_test]
-        async fn shared_framework_actions_have_exact_registered_factory_and_joined_bus_identity() {
-            let platform = Platform::new(None).await;
-            let registry = contract_registry().await;
-            let controller_id = registry.test_controller_id().to_string();
-            let app = VcsArtifactApp::<TestApp>::with_registry_on_bus(TestApp::<false>::default(), registry, platform.action_bus.clone()).await;
-            let expected: [(&str, &str, std::any::TypeId, &'static str, usize); 12] = [
-                ("copy", "framework.reserved.copy.v1", std::any::TypeId::of::<FrameworkCopyJobFactory<TestApp>>(), std::any::type_name::<FrameworkCopyJobFactory<TestApp>>(), 1_048_576),
-                ("cut", "framework.reserved.cut.v1", std::any::TypeId::of::<FrameworkCutJobFactory<TestApp>>(), std::any::type_name::<FrameworkCutJobFactory<TestApp>>(), 1_048_576),
-                ("paste", "framework.reserved.paste.v1", std::any::TypeId::of::<FrameworkPasteJobFactory<TestApp>>(), std::any::type_name::<FrameworkPasteJobFactory<TestApp>>(), 1_048_576),
-                ("noteShellCommand", "framework.reserved.noteShellCommand.v1", std::any::TypeId::of::<FrameworkNoteShellCommandJobFactory<TestApp>>(), std::any::type_name::<FrameworkNoteShellCommandJobFactory<TestApp>>(), 65_536),
-                (
-                    "setHistoryCommandFilter",
-                    "framework.reserved.setHistoryCommandFilter.v1",
-                    std::any::TypeId::of::<FrameworkSetHistoryCommandFilterJobFactory<TestApp>>(),
-                    std::any::type_name::<FrameworkSetHistoryCommandFilterJobFactory<TestApp>>(),
-                    4_096,
-                ),
-                ("recordTutorial", "framework.reserved.recordTutorial.v1", std::any::TypeId::of::<FrameworkRecordTutorialJobFactory<TestApp>>(), std::any::type_name::<FrameworkRecordTutorialJobFactory<TestApp>>(), 4_096),
-                ("clearSelection", "framework.reserved.clearSelection.v1", std::any::TypeId::of::<FrameworkClearSelectionJobFactory<TestApp>>(), std::any::type_name::<FrameworkClearSelectionJobFactory<TestApp>>(), 4_096),
-                ("interactionHover", "framework.reserved.interactionHover.v1", std::any::TypeId::of::<FrameworkInteractionHoverJobFactory<TestApp>>(), std::any::type_name::<FrameworkInteractionHoverJobFactory<TestApp>>(), 65_536),
-                ("interactionSelect", "framework.reserved.interactionSelect.v1", std::any::TypeId::of::<FrameworkInteractionSelectJobFactory<TestApp>>(), std::any::type_name::<FrameworkInteractionSelectJobFactory<TestApp>>(), 65_536),
-                ("selectAll", "framework.reserved.selectAll.v1", std::any::TypeId::of::<FrameworkSelectAllJobFactory<TestApp>>(), std::any::type_name::<FrameworkSelectAllJobFactory<TestApp>>(), 4_096),
-                (
-                    "setInteractionGranularity",
-                    "framework.reserved.setInteractionGranularity.v1",
-                    std::any::TypeId::of::<FrameworkSetInteractionGranularityJobFactory<TestApp>>(),
-                    std::any::type_name::<FrameworkSetInteractionGranularityJobFactory<TestApp>>(),
-                    16_384,
-                ),
-                ("setSelectionMode", "framework.reserved.setSelectionMode.v1", std::any::TypeId::of::<FrameworkSetSelectionModeJobFactory<TestApp>>(), std::any::type_name::<FrameworkSetSelectionModeJobFactory<TestApp>>(), 16_384),
-            ];
-            let joined = platform.action_bus.keys().into_iter().filter(|key| key.controller_id == controller_id).map(|key| key.tool_id).collect::<std::collections::BTreeSet<_>>();
-            let registrations = app.test_framework_tool_registrations();
-            for (tool_id, schema_id, factory_type_id, factory_type_name, maximum) in expected {
-                let (key, registered_schema_id, registered_factory_type_id, registered_factory_type_name, contract) = registrations.get(tool_id).expect("shared framework registration");
-                assert_eq!(key, &ToolFactoryKey::new(&controller_id, tool_id));
-                assert_eq!(registered_schema_id, schema_id);
-                assert_eq!(*registered_factory_type_id, factory_type_id);
-                assert_eq!(*registered_factory_type_name, factory_type_name);
-                assert_eq!(contract.max_raw_wire_bytes, maximum);
-                assert!(joined.contains(tool_id));
-                let exact = vec![0_u8; maximum];
-                let admission = platform.action_bus.admit_exact_wire(&controller_id, tool_id, schema_id, &exact).expect("exact maximum admission");
-                assert_eq!(admission.factory_type_id, factory_type_id);
-                assert_eq!(admission.factory_type_name, factory_type_name);
-                assert!(platform.action_bus.admit_exact_wire(&controller_id, tool_id, schema_id, &vec![0_u8; maximum + 1]).is_err());
-            }
-        }
-
-        #[test]
-        fn shared_framework_job_is_cancellable_resumable_and_boundedly_closeable() {
-            fn context<'a>(cancel: semio_framework_job::CancelToken, preview_sequence: &'a mut u64) -> semio_framework_job::StepContext<'a> {
-                semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(7), semio_framework_job::StepBudget::new(4_096, u64::MAX), cancel, || Some(0), preview_sequence)
-            }
-
-            fn close_payload(mut payload: semio_framework_job::RetainedJobPayload) {
-                while !payload.terminal_is_empty() {
-                    let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                }
-            }
-
-            let cancel_before = semio_framework_job::CancelToken::root_now();
-            cancel_before.cancel_now();
-            let mut cancelled_before = FrameworkSetSelectionModeJob::new(vec![1; 8_193], 1);
-            let mut preview_sequence = 0;
-            assert!(matches!(semio_framework_job::InteractiveJob::step(&mut cancelled_before, &mut context(cancel_before, &mut preview_sequence)), semio_framework_job::StepOutcome::Cancelled));
-
-            let cancel_after = semio_framework_job::CancelToken::root_now();
-            let mut cancelled_after = FrameworkSetSelectionModeJob::new(vec![1; 8_193], 1);
-            let mut preview_sequence = 0;
-            match semio_framework_job::InteractiveJob::step(&mut cancelled_after, &mut context(cancel_after.clone(), &mut preview_sequence)) {
-                semio_framework_job::StepOutcome::PreviewReady(payload) => close_payload(payload),
-                _ => panic!("first retained step must publish preview"),
-            }
-            cancel_after.cancel_now();
-            assert!(matches!(semio_framework_job::InteractiveJob::step(&mut cancelled_after, &mut context(cancel_after, &mut preview_sequence)), semio_framework_job::StepOutcome::Cancelled));
-
-            let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(11), semio_framework_job::Generation(3), 29);
-            let mut retained = ArtifactReservedToolJob::new(FrameworkSetSelectionModeJob::new(vec![2; 8_193], 1));
-            retained.bind_operation(operation).expect("first exact operation authority");
-            assert!(retained.clone().bind_operation(operation).is_err(), "a second factory transfer cannot replace the live operation generation");
-            semio_framework_job::InteractiveJob::begin_close(&mut retained);
-            assert_eq!(semio_framework_job::InteractiveJob::close_step(&mut retained, 0, 0), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            assert_eq!(semio_framework_job::InteractiveJob::close_step(&mut retained, 1, 4_096), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 4_096 });
-            assert_eq!(semio_framework_job::InteractiveJob::close_step(&mut retained, 1, 4_096), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 4_096 });
-            assert_eq!(semio_framework_job::InteractiveJob::close_step(&mut retained, 1, 4_096), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 1 });
-            assert_eq!(semio_framework_job::InteractiveJob::close_step(&mut retained, 1, 4_096), semio_framework_job::InteractiveJobCloseStep::Complete);
-            assert!(semio_framework_job::InteractiveJob::terminal_is_empty(&retained));
-            assert_eq!(semio_framework_job::InteractiveJob::close_step(&mut retained, 1, 4_096), semio_framework_job::InteractiveJobCloseStep::Complete);
-        }
-        //#endregion 🧪️SharedFrameworkActionRouteTests
-
-        #[semio_framework_async_macros::async_test]
-        async fn retained_factory_proof_requires_the_exact_registered_runtime_authority() {
-            test_retained_factory_proof_join::<TestApp, TestRetainedCommandFactory, OtherTestRetainedCommandFactory, CopyDrawApp>(
-                contract_registry().await,
-                TEST_RETAINED_COMMAND_CONTROLLER,
-                TEST_RETAINED_COMMAND_TOOL,
-                TestRetainedCommandFactory::new(),
-            );
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn retained_latest_wins_cancellation_guards_real_store_publication_and_preserves_committed_ack() {
-            test_retained_cancellation_publication_boundaries::<TestApp>().await;
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn retained_latest_wins_reserved_slots_and_ready_publisher_are_fair() {
-            test_retained_latest_wins_slot_and_publication_fairness::<TestApp>().await;
-        }
-
-        #[test]
-        fn retained_latest_wins_raw_capacity_is_not_initialized_byte_retirement() {
-            crate::retained_command::test_raw_allocation_close::<TestApp>();
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close() {
-            test_retained_document_cancellation::<TestApp>(&TestCountOneItemPreparationFactory, || TestMutation::SetCount(SetCount { value: 42 }), |snapshot| snapshot.count).await;
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn copied_app_type_cannot_inherit_same_controller_schema_and_id_proof() {
-            let mut owner = contract_registry().await;
-            let mut declaration = owner.actions.get("noopMutation").expect("fixture action").clone();
-            declaration.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
-            owner.actions.insert("canvasPointerDown".into(), declaration);
-            owner.controller_id = "s.draw.draw@1/*#editor".into();
-            assert!(test_unregistered_tool_job_admission_rejected::<CopyDrawApp>(&owner, &["canvasPointerDown"]));
-
-            let audited_draw_row = ArtifactBoundedFirstStepProof::new::<TestApp>(
-                "owner.rs",
-                "s.draw.draw@1/*#editor",
-                BOUNDED_FIRST_STEP_FACTORY,
-                "canvasPointerDown",
-                "draw.document",
-                ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            );
-            let audited_draw_proof = QualifiedBoundedFirstStepProof { owner: audited_draw_row.owner, row: audited_draw_row };
-            assert!(TypedCommandFullOperationJobFactory::<CopyDrawApp>::from_proof(audited_draw_proof).is_none());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn tool_cancellation_isolated_by_live_instance_with_same_controller_and_document() {
-            let handle = ToolCancellationHandle::default();
-            let first_key = ToolOperationKey {
-                app_instance_id: 41,
-                document: ArtifactDocumentAuthority(41),
-                operation_id: semio_framework_job::allocate_operation_id(),
-                base_revision: semio_framework_job::RevisionId(7),
-                generation: semio_framework_job::Generation(3),
-            };
-            let second_key = ToolOperationKey { app_instance_id: 42, document: ArtifactDocumentAuthority(42), operation_id: semio_framework_job::allocate_operation_id(), ..first_key.clone() };
-            let first_lease = handle.test_begin(first_key).expect("first numeric authority");
-            let second_lease = handle.test_begin(second_key).expect("second numeric authority");
-            let first_token = first_lease.cancel_token();
-            let second_token = second_lease.cancel_token();
-            assert_eq!(handle.active_operation_count(), 2);
-            assert!(handle.cancel_document(ArtifactDocumentAuthority(41)).expect("document cancellation"));
-            assert!(first_token.is_cancelled().await);
-            assert!(!second_token.is_cancelled().await);
-            assert_eq!(handle.active_operation_count(), 1);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn cancellation_supersession_and_saturated_app_close_are_parent_scope_constant_time() {
-            let handle = ToolCancellationHandle::default();
-            let key = ToolOperationKey {
-                app_instance_id: 7,
-                document: ArtifactDocumentAuthority(7),
-                operation_id: semio_framework_job::allocate_operation_id(),
-                base_revision: semio_framework_job::RevisionId(1),
-                generation: semio_framework_job::Generation(1),
-            };
-            let first = handle.test_begin(key.clone()).expect("first generation");
-            let first_token = first.cancel_token();
-            let second = handle.test_begin(ToolOperationKey { operation_id: semio_framework_job::allocate_operation_id(), ..key }).expect("replacement generation");
-            let second_token = second.cancel_token();
-            assert!(first_token.is_cancelled().await);
-            assert!(!second_token.is_cancelled().await);
-            assert_eq!(handle.active_operation_count(), 1);
-            drop(first);
-            assert_eq!(handle.active_operation_count(), 1, "a stale lease must not release the replacement generation");
-            second.finish();
-
-            let mut saturated = Vec::new();
-            for index in 0..1_024u32 {
-                saturated.push(
-                    handle
-                        .test_begin(ToolOperationKey {
-                            app_instance_id: index.saturating_add(100),
-                            document: ArtifactDocumentAuthority(index.saturating_add(100)),
-                            operation_id: semio_framework_job::allocate_operation_id(),
-                            base_revision: semio_framework_job::RevisionId(1),
-                            generation: semio_framework_job::Generation(1),
-                        })
-                        .expect("fixed numeric cancellation slot"),
-                );
-            }
-            let first_saturated = saturated.first().expect("saturated lease").cancel_token();
-            let last_saturated = saturated.last().expect("saturated lease").cancel_token();
-            let generation = handle.scope_generation();
-            handle.cancel_scope_generation();
-            assert_eq!(handle.scope_generation(), generation.saturating_add(1));
-            assert!(second_token.is_cancelled().await);
-            assert!(first_saturated.is_cancelled().await);
-            assert!(last_saturated.is_cancelled().await);
-        }
-
-        #[test]
-        fn cancellation_numeric_authority_rejects_collision_capacity_and_contention_without_blocking() {
-            let handle = ToolCancellationHandle::default();
-            let key = |document: u32| ToolOperationKey {
-                app_instance_id: document,
-                document: ArtifactDocumentAuthority(document),
-                operation_id: semio_framework_job::allocate_operation_id(),
-                base_revision: semio_framework_job::RevisionId(1),
-                generation: semio_framework_job::Generation(1),
-            };
-            let authority = handle.test_begin(key(100_000)).expect("arbitrary fixed-width authority");
-            let collision = handle.test_begin(key(100_000 + TOOL_CANCELLATION_SLOTS as u32));
-            assert_eq!(collision.err().expect("same direct slot must fail closed").code.0, "interactive-job.cancellation-collision");
-            authority.finish();
-            let recycled = handle.test_begin(key(100_000 + TOOL_CANCELLATION_SLOTS as u32)).expect("released direct slot");
-            recycled.finish();
-
-            let state = handle.state.try_lock().expect("test owns cancellation authority");
-            let contended = handle.test_begin(key(77));
-            assert_eq!(contended.err().expect("contention must not wait").code.0, "interactive-job.cancellation-busy");
-            drop(state);
-        }
-
-        #[test]
-        fn poisoned_cancellation_authority_fails_closed_without_recovery_or_waiting() {
-            let handle = ToolCancellationHandle::default();
-            let state = handle.state.clone();
-            let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
-                let _guard = state.lock().expect("test poison guard");
-                panic!("poison fixed cancellation authority");
-            }));
-            let result = handle.test_begin(ToolOperationKey {
-                app_instance_id: 9,
-                document: ArtifactDocumentAuthority(9),
-                operation_id: semio_framework_job::allocate_operation_id(),
-                base_revision: semio_framework_job::RevisionId(1),
-                generation: semio_framework_job::Generation(1),
-            });
-            assert_eq!(result.err().expect("poison must fail closed").code.0, "interactive-job.cancellation-busy");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn segmented_download_remains_addressable_until_terminal_none_is_observed() {
-            let mut app = contract_app_under_test().await;
-            let chunks = ArtifactOutputChunks::new(4);
-            assert_eq!(chunks.push(vec![1, 2, 3, 4]), Ok(4));
-            assert_eq!(chunks.seal(), Ok(4));
-            assert!(app.segmented_downloads.insert(91, ArtifactDownloadOutput::new("exact.bin", "application/octet-stream", None, chunks).expect("bounded segmented output")).is_ok());
-            assert_eq!(app.take_segmented_download_chunk(91).await.expect("last chunk"), Some(vec![1, 2, 3, 4]));
-            assert!(app.segmented_downloads.contains(91));
-            assert_eq!(app.take_segmented_download_chunk(91).await.expect("terminal none"), None);
-            assert!(!app.segmented_downloads.contains(91));
-            assert_eq!(app.take_segmented_download_chunk(91).await.expect_err("terminal none removes authority").code.0, "interactive-job.unknown-segmented-download");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn app_maintenance_reclaims_late_envelope_field_returns_before_close_terminal() {
-            struct ReturnedDecoder {
-                terminal: bool,
-                drops: std::sync::Arc<std::sync::atomic::AtomicUsize>,
-            }
-
-            impl store::ArtifactEnvelopeFieldDecoder<TestSnapshot, TestMutation> for ReturnedDecoder {
-                fn accept_field_token(
-                    &mut self,
-                    _field_id: u16,
-                    _token: store::OwnedSchemaToken,
-                    _terminal: bool,
-                    _source: &store::OwnedSchemaRecordCursor,
-                    _cx: &mut semio_framework_job::StepContext<'_>,
-                ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-                    Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending)
-                }
-
-                fn finish_record(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-                    Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending)
-                }
-
-                fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
-                    if maximum_items == 0 {
-                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                    }
-                    self.terminal = true;
-                    Ok(store::SnapshotRetirementStep::Complete)
-                }
-
-                fn terminal_is_empty(&self) -> bool {
-                    self.terminal
-                }
-            }
-
-            impl Drop for ReturnedDecoder {
-                fn drop(&mut self) {
-                    self.drops.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-                }
-            }
-
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-            let lease = app.envelope_field_decoders.try_admit(Box::new(ReturnedDecoder { terminal: false, drops: drops.clone() })).unwrap_or_else(|_| panic!("app decoder return registry admits one exact owner"));
-            let ticket = lease.ticket();
-            drop(lease);
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
-
-            for _ in 0..4 {
-                app.maintenance_stage = 10;
-                let _ = PluginApp::maintenance_step(&mut app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("production maintenance pumps one returned decoder owner");
-            }
-            assert!(app.envelope_field_decoders.ticket_reclaimed(ticket));
-            assert!(app.envelope_field_decoder_retirements.is_empty());
-            assert!(app.envelope_field_decoders.terminal_is_empty());
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
-            assert_eq!(app.drive_envelope_field_decoder_returns(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, true).expect("close hierarchy observes exact terminal state"), PluginCloseStep::Complete);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn app_maintenance_and_close_retain_completed_envelope_results_until_terminal_empty() {
-            struct CompletedRecordSentinel {
-                remaining: usize,
-                terminal: bool,
-                drops: std::sync::Arc<std::sync::atomic::AtomicUsize>,
-            }
-
-            impl store::ArtifactEnvelopeCompletedRecord<TestSnapshot, TestMutation> for CompletedRecordSentinel {
-                fn try_publish_to(&mut self, _target: &mut dyn store::ArtifactEnvelopeCompletedRecordTarget<TestSnapshot, TestMutation>) -> bool {
-                    false
-                }
-
-                fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-                    if maximum_items == 0 {
-                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                    }
-                    if self.remaining != 0 {
-                        self.remaining -= 1;
-                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-                    }
-                    self.terminal = true;
-                    Ok(store::SnapshotRetirementStep::Complete)
-                }
-
-                fn terminal_is_empty(&self) -> bool {
-                    self.terminal
-                }
-            }
-
-            impl Drop for CompletedRecordSentinel {
-                fn drop(&mut self) {
-                    assert!(self.terminal);
-                    self.drops.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-                }
-            }
-
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-            let owner: Box<dyn store::ArtifactEnvelopeCompletedRecord<TestSnapshot, TestMutation>> = Box::new(CompletedRecordSentinel { remaining: 2, terminal: false, drops: drops.clone() });
-            let ticket = match app.envelope_completed_records.try_admit(owner) {
-                Ok(ticket) => ticket,
-                Err((_fault, mut owner)) => {
-                    while !owner.terminal_is_empty() {
-                        let _ = owner.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("rejected completed owner bounded close");
-                    }
-                    panic!("app completed-record registry must admit one exact owner")
-                }
-            };
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
-            app.maintenance_stage = 11;
-            assert_eq!(PluginApp::maintenance_step(&mut app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("ordinary maintenance preserves unconsumed completed output"), PluginCloseStep::Complete);
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
-            app.envelope_completed_records.try_request_close(ticket).expect("cancelled consumer hands exact completed output to maintenance");
-            for _ in 0..6 {
-                app.maintenance_stage = 11;
-                let _ = PluginApp::maintenance_step(&mut app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("production maintenance pumps one completed-record owner");
-            }
-            match app.envelope_completed_records.try_detach(ticket) {
-                Err(fault) => assert_eq!(fault, store::ArtifactEnvelopeCompletedRecordFault::Stale),
-                Ok(mut owner) => {
-                    while !owner.terminal_is_empty() {
-                        let _ = owner.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("unexpected completed owner bounded close");
-                    }
-                    panic!("maintenance did not reclaim the exact completed record")
-                }
-            }
-            assert!(app.envelope_completed_record_retirements.is_empty());
-            assert!(app.envelope_completed_records.terminal_is_empty());
-            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
-            assert_eq!(app.drive_envelope_completed_record_returns(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, true).expect("close observes exact completed terminal state"), PluginCloseStep::Complete);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn app_close_step_drains_at_most_one_segment_and_one_chunk_budget() {
-            let mut app = contract_app_under_test().await;
-            app.close_started = true;
-            app.close_cancellation_cursor = TOOL_CANCELLATION_SLOTS;
-            app.close_media_cursor = ARTIFACT_LIVE_OUTPUT_SLOTS;
-            app.close_media_cleanup_cursor = ARTIFACT_LIVE_OUTPUT_SLOTS;
-            let chunks = ArtifactOutputChunks::new(ARTIFACT_OUTPUT_CHUNK_BYTES * 2);
-            assert_eq!(chunks.push(vec![1; ARTIFACT_OUTPUT_CHUNK_BYTES]), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES));
-            assert_eq!(chunks.push(vec![2; ARTIFACT_OUTPUT_CHUNK_BYTES]), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES * 2));
-            assert_eq!(chunks.seal(), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES * 2));
-            assert!(app.segmented_downloads.insert(37, ArtifactDownloadOutput::new("close.bin", "application/octet-stream", None, chunks.clone()).expect("sealed close output")).is_ok());
-            assert_eq!(app.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES).expect("first close slice"), PluginCloseStep::Pending { released_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES });
-            assert_eq!(chunks.chunks_remaining(), 1);
-            assert_eq!(app.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES).expect("second close slice"), PluginCloseStep::Pending { released_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES });
-            assert_eq!(chunks.chunks_remaining(), 0);
-            assert_eq!(app.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES).expect("terminal close slice"), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            assert!(!app.segmented_downloads.contains(37));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn artifact_close_final_destructor_is_constant_after_every_owned_field_is_drained() {
-            let snapshot = std::sync::Arc::new(TestSnapshot::default());
-            let config = std::sync::Arc::new(TestConfig::default());
-            let history = std::sync::Arc::new(HistoryView::empty());
-            let mut retirement = ArtifactCacheRetirement::<TestApp> { snapshot: Some(snapshot.clone()), config: Some(config.clone()), history: Some(history.clone()) };
-            assert!(matches!(retirement.close_step(1), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
-            assert_eq!(std::sync::Arc::strong_count(&history), 1);
-            assert_eq!(std::sync::Arc::strong_count(&config), 2);
-            assert_eq!(std::sync::Arc::strong_count(&snapshot), 2);
-            assert!(matches!(retirement.close_step(1), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
-            assert!(matches!(retirement.close_step(1), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
-            assert_eq!(retirement.close_step(1), PluginCloseStep::Complete);
-            assert!(retirement.terminal_is_empty());
-            drop(retirement);
-            assert_eq!(std::sync::Arc::strong_count(&snapshot), 1, "the empty retirement shell's destructor releases no nested owner");
-        }
-
-        #[test]
-        fn retained_field_maximum_and_maximum_plus_one_are_language_neutral() {
-            let mut exact = AppActionRegistry::test_with_controller_id("x".repeat(ARTIFACT_OUTPUT_CHUNK_BYTES));
-            assert!(matches!(exact.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), PluginCloseStep::Pending { released_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES }));
-            assert_eq!(exact.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), PluginCloseStep::Complete);
-            assert!(exact.terminal_is_empty());
-
-            let owner = "y".repeat(ARTIFACT_OUTPUT_CHUNK_BYTES + 1);
-            let owner_pointer = owner.as_ptr();
-            let mut plus_one = AppActionRegistry::test_with_controller_id(owner);
-            assert!(matches!(plus_one.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));
-            assert_eq!(plus_one.controller_id.as_ptr(), owner_pointer, "rejection hands back the exact retained backing owner");
-            assert!(matches!(plus_one.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES + 1), PluginCloseStep::Pending { released_items: 1, released_bytes } if released_bytes == ARTIFACT_OUTPUT_CHUNK_BYTES + 1));
-            assert_eq!(plus_one.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), PluginCloseStep::Complete, "repeated close is idempotent after interruption and resume");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn shared_retained_command_checkpoint_resumes_exact_cursor_and_cancels_with_bounded_close() {
-            let bus = ActionBus::new();
-            bus.register(TestRetainedCommandFactory::new()).expect("test retained command factory");
-            let command = TestCommand::SetLabel { value: "wire".into() };
-            let wire = <TestCommand as protocol::OpBinary>::encode_op(&command).expect("test retained command wire");
-            let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(41), semio_framework_job::RevisionId(2), semio_framework_job::Generation(3), 5);
-            let original_completion = ArtifactToolCompletion::<TestApp>::new();
-            let original_consumer = original_completion.clone();
-            let original_payload = test_retained_command_payload(original_completion).await;
-            let original_spec = ToolOperationSpec::new(TEST_RETAINED_COMMAND_CONTROLLER, TEST_RETAINED_COMMAND_TOOL, TEST_RETAINED_COMMAND_SCHEMA, original_payload, operation);
-            let (original_admission, original_input) = test_retained_wire_input(&bus, &wire);
-            let mut original = match bus.dispatch_wire_retained_with_spec(&original_admission, original_input, None, original_spec) {
-                Ok(dispatch) => dispatch,
-                Err(_) => panic!("test retained command initial dispatch"),
-            };
-            let mut checkpoint_bytes = None;
-            let mut sequence = 0;
-            for _ in 0..64 {
-                let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-                match original.job.step(&mut context) {
-                    semio_framework_job::StepOutcome::PreviewReady(mut payload) => test_close_retained_payload(&mut payload),
-                    semio_framework_job::StepOutcome::CheckpointReady(mut checkpoint) => {
-                        let bytes = checkpoint.state.single_page().expect("single ARC1 checkpoint page");
-                        if bytes.get(4) == Some(&3) && bytes.get(5) == Some(&1) && bytes.get(48) == Some(&1) {
-                            checkpoint_bytes = Some(bytes.to_vec());
-                        }
-                        test_close_retained_payload(&mut checkpoint.state);
-                        if checkpoint_bytes.is_some() {
-                            break;
-                        }
-                    }
-                    semio_framework_job::StepOutcome::Yield => {}
-                    semio_framework_job::StepOutcome::Cancelled => panic!("initial retained command cancelled"),
-                    semio_framework_job::StepOutcome::Complete(_) => panic!("initial retained command completed before its work checkpoint"),
-                    semio_framework_job::StepOutcome::Fault(mut fault) => {
-                        test_close_retained_payload(&mut fault.detail);
-                        panic!("initial retained command faulted");
-                    }
-                }
-            }
-            let checkpoint_bytes = checkpoint_bytes.expect("work checkpoint after one custom cursor step");
-            original.job.begin_close();
-            for _ in 0..64 {
-                if original.job.terminal_is_empty() {
-                    break;
-                }
-                let _ = original.job.close_step(1, usize::MAX);
-            }
-            assert!(original.job.terminal_is_empty(), "interrupted original retires every retained owner incrementally");
-            assert!(original_consumer.take_emit().expect("original completion cell").is_none(), "interrupted original never publishes a result");
-
-            TEST_RETAINED_COMMAND_STEP_CALLS.store(0, std::sync::atomic::Ordering::SeqCst);
-            let resumed_completion = ArtifactToolCompletion::<TestApp>::new();
-            let resumed_consumer = resumed_completion.clone();
-            let resumed_payload = test_retained_command_payload(resumed_completion).await;
-            let resumed_spec = ToolOperationSpec::new(TEST_RETAINED_COMMAND_CONTROLLER, TEST_RETAINED_COMMAND_TOOL, TEST_RETAINED_COMMAND_SCHEMA, resumed_payload, operation);
-            let (resumed_admission, resumed_input) = test_retained_wire_input(&bus, &wire);
-            let (_, resumed_checkpoint) = test_retained_wire_input(&bus, &checkpoint_bytes);
-            let mut resumed = match bus.dispatch_wire_retained_with_spec(&resumed_admission, resumed_input, Some(resumed_checkpoint), resumed_spec) {
-                Ok(dispatch) => dispatch,
-                Err(_) => panic!("test retained command resume dispatch"),
-            };
-            let mut completed = false;
-            for _ in 0..96 {
-                let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-                match resumed.job.step(&mut context) {
-                    semio_framework_job::StepOutcome::PreviewReady(mut payload) => test_close_retained_payload(&mut payload),
-                    semio_framework_job::StepOutcome::CheckpointReady(mut checkpoint) => test_close_retained_payload(&mut checkpoint.state),
-                    semio_framework_job::StepOutcome::Yield => {}
-                    semio_framework_job::StepOutcome::Complete(mut candidate) => {
-                        test_close_retained_payload(&mut candidate.state);
-                        test_close_retained_payload(&mut candidate.output);
-                        completed = true;
-                        break;
-                    }
-                    semio_framework_job::StepOutcome::Cancelled => panic!("resumed retained command cancelled"),
-                    semio_framework_job::StepOutcome::Fault(mut fault) => {
-                        test_close_retained_payload(&mut fault.detail);
-                        panic!("resumed retained command faulted");
-                    }
-                }
-            }
-            assert!(completed, "resumed retained command reaches its commit boundary");
-            assert_eq!(TEST_RETAINED_COMMAND_STEP_CALLS.load(std::sync::atomic::Ordering::SeqCst), 2, "resume continues after cursor one instead of replaying completed custom work");
-            let (result, _) = resumed_consumer.take_emit().expect("resumed completion cell").expect("resumed completion value");
-            assert_eq!(result.expect("resumed command emit").artifact_mutations, vec![TestMutation::SetLabel(SetLabel { value: "resumed".into() })]);
-            resumed.job.begin_close();
-            for _ in 0..64 {
-                if resumed.job.terminal_is_empty() {
-                    break;
-                }
-                let _ = resumed.job.close_step(1, usize::MAX);
-            }
-            assert!(resumed.job.terminal_is_empty(), "completed resume retires every retained owner incrementally");
-
-            let cancelled_completion = ArtifactToolCompletion::<TestApp>::new();
-            let cancelled_consumer = cancelled_completion.clone();
-            let cancelled_payload = test_retained_command_payload(cancelled_completion).await;
-            let cancelled_spec = ToolOperationSpec::new(TEST_RETAINED_COMMAND_CONTROLLER, TEST_RETAINED_COMMAND_TOOL, TEST_RETAINED_COMMAND_SCHEMA, cancelled_payload, operation);
-            let (cancelled_admission, cancelled_input) = test_retained_wire_input(&bus, &wire);
-            let mut cancelled = match bus.dispatch_wire_retained_with_spec(&cancelled_admission, cancelled_input, None, cancelled_spec) {
-                Ok(dispatch) => dispatch,
-                Err(_) => panic!("test retained command cancellation dispatch"),
-            };
-            let cancel = semio_framework_job::root_cancel_token();
-            cancel.cancel_now();
-            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel, || Some(0), &mut sequence);
-            assert!(matches!(cancelled.job.step(&mut context), semio_framework_job::StepOutcome::Cancelled));
-            cancelled.job.begin_close();
-            for _ in 0..64 {
-                if cancelled.job.terminal_is_empty() {
-                    break;
-                }
-                let _ = cancelled.job.close_step(1, usize::MAX);
-            }
-            assert!(cancelled.job.terminal_is_empty(), "cancelled retained command retires every owner incrementally");
-            assert!(cancelled_consumer.take_emit().expect("cancelled completion cell").is_none(), "cancelled retained command never publishes a result");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn retained_command_child_emit_prepublication_close_and_rejected_handoff_are_bounded() {
-            let fixture: Value = serde_json::from_str(include_str!("🧵️retained-command/🧪️fixtures/🧩️child-prepublication-close.json")).expect("language-neutral child close fixture");
-            let expected_ids = fixture["children"].as_array().expect("child close fixture rows").iter().map(|child| child["childId"].as_str().unwrap().to_string()).collect::<Vec<_>>();
-            let expected_order = fixture["expectedRetirementOrder"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>();
-            let build_emit = || {
-                let children = fixture["children"]
-                    .as_array()
-                    .unwrap()
-                    .iter()
-                    .enumerate()
-                    .map(|(index, child)| {
-                        let emitted = ChildEmit::of::<TestSnapshot, _>(child["slot"].as_str().unwrap(), child["childId"].as_str().unwrap(), &[TestMutation::SetCount(SetCount { value: index as i32 + 1 })]);
-                        assert!(emitted.ops.iter().all(|op| !op.is_empty()), "real composite mutation owns nonempty encoded bytes");
-                        emitted
-                    })
-                    .collect();
-                Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: 7 })], child_emits: children, ..Default::default() }
-            };
-            let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(42), semio_framework_job::RevisionId(2), semio_framework_job::Generation(3), 5);
-            let drive_to_publish = |job: &mut crate::retained_command::ArtifactRetainedCommandJob<TestApp>, sequence: &mut u64| {
-                for expected_stage in ["preflight", "work"] {
-                    let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), sequence);
-                    match job.step(&mut context) {
-                        semio_framework_job::StepOutcome::PreviewReady(mut payload) => test_close_retained_payload(&mut payload),
-                        _ => panic!("retained child job failed at {expected_stage}"),
-                    }
-                }
-            };
-            let close_and_observe = |job: &mut crate::retained_command::ArtifactRetainedCommandJob<TestApp>| {
-                let initial = job.test_pending_emit_shape().expect("pre-publication emit owner");
-                assert_eq!(initial, (2, 1, expected_ids.clone()));
-                job.begin_close();
-                assert_eq!(job.close_step(0, fixture["maximumBytes"].as_u64().unwrap() as usize), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                assert_eq!(job.test_pending_emit_shape(), Some(initial.clone()), "zero item grant preserves the exact emit owner");
-                assert_eq!(job.close_step(1, 0), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }, "empty reserved raw allocation retires before produced output");
-                assert_eq!(job.test_pending_emit_shape(), Some(initial.clone()), "raw allocation retirement preserves the exact emit owner");
-                assert_eq!(job.close_step(1, 0), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                assert_eq!(job.test_pending_emit_shape(), Some(initial), "zero byte grant preserves the exact child payload");
-                let mut retired = Vec::new();
-                let mut prior_children = expected_ids.len();
-                for _ in 0..10_000 {
-                    let step = job.close_step(fixture["maximumItems"].as_u64().unwrap() as usize, fixture["maximumBytes"].as_u64().unwrap() as usize);
-                    if let semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } = step {
-                        assert!(released_items <= 1 && released_bytes <= 4);
-                    }
-                    if let Some((children, parents, _)) = job.test_pending_emit_shape() {
-                        assert_eq!(parents, 1, "parent lane remains owned until every child is terminal");
-                        if children < prior_children {
-                            retired.push(fixture["children"][prior_children - 1]["id"].as_str().unwrap());
-                            prior_children = children;
-                        }
-                    } else {
-                        break;
-                    }
-                }
-                assert_eq!(retired, expected_order);
-                for _ in 0..128 {
-                    if job.terminal_is_empty() {
-                        break;
-                    }
-                    let _ = job.close_step(1, 4_096);
-                }
-                assert!(job.terminal_is_empty());
-            };
-
-            let direct_completion = ArtifactToolCompletion::<TestApp>::new();
-            let _direct_consumer = direct_completion.clone();
-            let mut direct = crate::retained_command::ArtifactRetainedCommandJob::new(test_retained_child_command_payload(direct_completion, build_emit()).await);
-            let mut sequence = 0;
-            drive_to_publish(&mut direct, &mut sequence);
-            close_and_observe(&mut direct);
-
-            let duplicate_completion = ArtifactToolCompletion::<TestApp>::new();
-            let duplicate_consumer = duplicate_completion.clone();
-            duplicate_completion.complete(Ok(Emit::default()), EphemeralEmit::default()).expect("prefill completion once");
-            let mut duplicate = crate::retained_command::ArtifactRetainedCommandJob::new(test_retained_child_command_payload(duplicate_completion, build_emit()).await);
-            drive_to_publish(&mut duplicate, &mut sequence);
-            let mut duplicate_context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            match duplicate.step(&mut duplicate_context) {
-                semio_framework_job::StepOutcome::Fault(mut fault) => test_close_retained_payload(&mut fault.detail),
-                _ => panic!("duplicate completion must reject the handoff"),
-            }
-            assert!(duplicate.test_pending_emit_shape().is_some(), "duplicate rejection returns the exact emit owner");
-            close_and_observe(&mut duplicate);
-            let (existing, _) = duplicate_consumer.take_emit().expect("prefilled completion remains readable").expect("prefilled completion remains assigned");
-            assert!(existing.expect("prefilled completion remains successful").child_emits.is_empty());
-
-            let busy_completion = ArtifactToolCompletion::<TestApp>::new();
-            let busy_consumer = busy_completion.clone();
-            let mut busy = crate::retained_command::ArtifactRetainedCommandJob::new(test_retained_child_command_payload(busy_completion.clone(), build_emit()).await);
-            drive_to_publish(&mut busy, &mut sequence);
-            busy_completion.with_busy_test_lock(|| {
-                let mut busy_context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-                match busy.step(&mut busy_context) {
-                    semio_framework_job::StepOutcome::Fault(mut fault) => test_close_retained_payload(&mut fault.detail),
-                    _ => panic!("busy completion must reject the handoff"),
-                }
-            });
-            assert!(busy.test_pending_emit_shape().is_some(), "busy rejection returns the exact emit owner");
-            close_and_observe(&mut busy);
-            assert!(busy_consumer.take_emit().expect("busy completion remains readable").is_none(), "busy completion remains untouched");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn unproved_command_fails_before_an_overrun_reducer_can_start() {
-            let mut app = contract_app_under_test().await;
-            let error = app.dispatch_typed(TestCommand::WatchdogOverrun, &meta()).await.expect_err("an unproved operation must fail before an over-budget reducer starts");
-            assert_eq!(error.code.0, "interactive-job.missing-factory");
-        }
-
-        /// 🧪️ A registry declaring one `HierarchyProvider::Topology` interaction domain ("items", see
-        /// `TestApp::interaction_topology`) — the `🕹️InteractionDispatch` fixture. Auto-injects the six
-        /// framework interaction actions via `interaction_action_definitions` (verified by
-        /// `build_definition_carries_window_interactions_and_injects_framework_actions` above).
-        async fn interaction_registry() -> AppActionRegistry {
-            let app = App::from_builder(
-                App::builder(test_app_surface_id().await, LocalizedLabel::data("Synthetic"))
-                    .await
-                    .document(["state"])
-                    .mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                    .await
-                    .window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                    .await
-                    .interaction(InteractionDefinition {
-                        id: "items".into(),
-                        label: LocalizedLabel::data("Items"),
-                        granularities: vec![GranularityDefinition { id: "item".into(), label: LocalizedLabel::data("Item"), icon_id: IconName::AppWindow }],
-                        hierarchy: HierarchyProvider::Topology,
-                        hover: HoverSpec::default(),
-                        selection: SelectionSpec {
-                            modes: vec![SelectionMode::Multiple, SelectionMode::Single],
-                            methods: vec![SelectionMethod::Pick],
-                            merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
-                            transitive: false,
-                            broadcast: true,
-                        },
-                    })
-                    .await
-                    .window_kind_interactions("main", vec![InteractionRef::new("items")])
-                    .await,
-            )
-            .await;
-            AppActionRegistry::from_definition(&app.definition)
-        }
-
-        async fn interaction_app_under_test() -> VcsArtifactApp<TestApp> {
-            VcsArtifactApp::with_registry(TestApp::<false>::default(), interaction_registry().await).await
-        }
-
-        /// 🧪️ Builds the JSON `args` an `interactionSelect`/`interactionHover` dispatch carries — the
-        /// `targets` arg is itself a JSON-encoded string (an `ActionArgDef::text`, matching
-        /// `interaction_action_definitions`'s declaration), not a nested JSON array.
-        fn interaction_target_args(extra: Value, id: &str) -> DslValue {
-            let targets = serde_json::to_string(&vec![InteractionTarget { granularity: "item".into(), id: id.into() }]).expect("targets serialize");
-            let mut object = DslValue::from(&extra);
-            if let DslValue::Object(entries) = &mut object {
-                entries.retain(|(key, _)| key != "targets");
-                entries.push(("targets".to_string(), DslValue::String(targets)));
-            }
-            object
-        }
-
-        include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime.rs"));
-
-        async fn __semio_plugin_bundle() -> Result<Plugin<TestRuntimeApps>, PluginAssemblyError> {
-            Plugin::<TestRuntimeApps>::builder("test").label("Synthetic").version("0.0.1").package_id("semio:test").document_app::<TestApp>(synthetic_play_app().await).document_app_mutation_roster::<TestApp>().try_build()
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn plugin_builder_builds_bundle_from_fluent_spec() {
-            let bundle = __semio_plugin_bundle().await.expect("synthetic plugin assembly");
-            assert_eq!(bundle.manifest.plugin_id, "test");
-            assert_eq!(bundle.manifest.label.as_str(), "Synthetic");
-            assert_eq!(bundle.manifest.version, "0.0.1");
-            assert!(bundle.manifest.apps.iter().any(|app| app.id == TestApp::<false>::APP_ID));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn test_app_id_matches_its_own_dialect() {
-            assert_eq!(TestApp::<false>::APP_ID, test_app_surface_id().await, "TestApp::<false>::APP_ID must not drift from TEST_APP_DIALECT (contract §1)");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn plugin_builder_wires_app_factory_for_create_app() {
-            let bundle = __semio_plugin_bundle().await.expect("synthetic plugin assembly");
-            let app = bundle.create_app(TestApp::<false>::APP_ID).expect("registered app");
-            assert_eq!(app.app_id().await, TestApp::<false>::APP_ID);
-            assert!(bundle.create_app("unknown-app").is_none());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let before_snapshot = app.test_snapshot().await;
-            let before_edits = app.test_store().await.applied_edit_ids().len();
-
-            let set = crate::plugin_runtime::set_merge_policy_frames(&mut app, 7, protocol::MergePolicy::Vigilant.as_u8()).await.expect("known policy accepts");
-            assert_eq!(set, vec![protocol::AppFrame::Done { in_reply_to: 7 }]);
-            assert_eq!(app.dispatch_report().await.policy, protocol::MergePolicy::Vigilant);
-            assert_eq!(app.test_snapshot().await, before_snapshot, "local policy changes no document state");
-            assert_eq!(app.test_store().await.applied_edit_ids().len(), before_edits, "local policy changes no shared history");
-
-            let invalid_policy = crate::plugin_runtime::set_merge_policy_frames(&mut app, 8, 3).await.expect_err("unknown policy ordinal rejects");
-            assert_eq!(invalid_policy.code.0, "merge.invalid-policy");
-            assert_eq!(app.dispatch_report().await.policy, protocol::MergePolicy::Vigilant, "invalid policy never changes the active policy");
-
-            app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("seed one durable edit");
-            let (mut envelope, applied_edit_ids) = {
-                let store = app.test_store().await;
-                let files = store::print_document_pack(store.envelope()).await.expect("print retained test envelope");
-                (store::parse_document_pack::<TestSnapshot, TestMutation>(&files.pack, &files.spr).await.expect("parse retained test envelope").envelope, store.applied_edit_ids().to_vec())
-            };
-            let kind = protocol::ConflictKind::Degraded { edit_ids: applied_edit_ids.clone() };
-            let timestamp = HybridLogicalTimestamp::new(1, u64::MAX);
-            let mutation_ids: Vec<MutationId> = envelope.vcs.edits.iter().flat_map(|edit| edit.mutation_meta.iter().filter_map(|meta| meta.mutation_id.clone())).collect();
-            let conflict_id = protocol::ConflictId::new(&kind, &ArtifactId(envelope.id.clone()), &mutation_ids, &timestamp).await;
-            envelope.conflicts.push(protocol::Conflict {
-                id: conflict_id.clone(),
-                kind,
-                status: protocol::ConflictStatus::Open,
-                messages: vec![protocol::MutationMessage::warn("mutation.partial", "test conflict").at_op(0)],
-                actors: vec![ActorId("local".into())],
-                timestamp,
-            });
-            app.test_store_mut().await.reset(envelope, applied_edit_ids, Vec::new()).await.expect("seed valid open degraded conflict");
-
-            let read = crate::plugin_runtime::read_conflicts_frames(&app, 9).await;
-            let [protocol::AppFrame::Conflicts { in_reply_to: Some(9), conflicts }] = read.as_slice() else { panic!("read must yield exactly one correlated conflict projection") };
-            let open: Vec<protocol::Conflict> = crate::plugin_runtime::decode_wire_serialized(conflicts).await.expect("conflict payload decodes canonically");
-            assert_eq!(open.len(), 1);
-            assert_eq!(open[0].id, conflict_id);
-            assert_eq!(open[0].status, protocol::ConflictStatus::Open);
-
-            let invalid_resolution = crate::plugin_runtime::resolve_conflict_frames(&mut app, 10, conflict_id.0.clone(), 2).await.expect_err("unknown resolution ordinal rejects");
-            assert_eq!(invalid_resolution.code.0, "merge.invalid-resolution");
-            assert_eq!(app.open_conflicts().await.len(), 1, "invalid resolution never changes conflict state");
-
-            let resolved = crate::plugin_runtime::resolve_conflict_frames(&mut app, 11, conflict_id.0.clone(), 0).await.expect("accept resolves the open degraded conflict");
-            let [protocol::AppFrame::MergeReport { in_reply_to: Some(11), report }, protocol::AppFrame::Conflicts { in_reply_to: Some(11), conflicts }] = resolved.as_slice() else {
-                panic!("resolve must emit correlated merge report then open-conflict projection")
-            };
-            let report: protocol::MergeReport = crate::plugin_runtime::decode_wire_serialized(report).await.expect("merge report payload decodes canonically");
-            assert!(report.accepted);
-            assert_eq!(report.conflict.as_ref(), Some(&conflict_id));
-            let open: Vec<protocol::Conflict> = crate::plugin_runtime::decode_wire_serialized(conflicts).await.expect("post-resolution conflict payload decodes canonically");
-            assert!(open.is_empty(), "accepted conflict leaves the open projection");
-            assert!(app.open_conflicts().await.is_empty());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn operation_action_emits_kernel_op_with_true_inverse() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let result = app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
-            assert_eq!(result.mutations.len(), 1);
-            assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 1 })).unwrap());
-            assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 0 })).unwrap()]));
-            assert_eq!(result.inverse_group.mutations.len(), 1);
-            assert_eq!(app.test_snapshot().await.count, 1);
-        }
-
-        //#region 🔖️EphemeralLaneTests
-        #[semio_framework_async_macros::async_test]
-        async fn a_command_reaches_both_ephemeral_lanes_without_touching_history() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            assert_eq!(app.presence_store.generation().await, 0);
-            assert_eq!(app.transient_store.generation().await, 0);
-
-            app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
-
-            assert_eq!(app.presence_store.generation().await, 1, "presence lane never received the command's emission");
-            assert_eq!(app.transient_store.generation().await, 1, "transient lane never received the command's emission");
-            assert_eq!(
-                app.ephemeral_snapshot().await,
-                EphemeralSnapshot { presence: PublicationPresence { revision: 1 }.encode_pack(), presence_generation: 1, transient_generation: 1, interaction: Vec::new() },
-                "object-safe channel snapshot must carry the typed presence pack, both generations, and (declaring no interaction domain) empty interaction bytes"
-            );
-
-            // 🧾️ Neither ephemeral lane may appear in history: they have no edits, no undo, and no
-            // command-log rows of their own — the document's single edit is the only thing recorded.
-            assert_eq!(app.test_store().await.envelope().vcs.edits.len(), 1, "an ephemeral lane leaked into the document's edit log");
-
-            // ↩️ Undo rolls back the DOCUMENT; the ephemeral lanes are not restored, because they
-            // were never part of the undoable gesture in the first place.
-            app.dispatch_action("undo", None, &meta()).await.expect("undo");
-            assert_eq!(app.test_snapshot().await.count, 0);
-            assert_eq!(app.presence_store.generation().await, 1, "undo must not rewind presence");
-            assert_eq!(app.transient_store.generation().await, 1, "undo must not rewind transient");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn a_command_that_emits_nothing_ephemeral_leaves_both_lanes_untouched() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            app.dispatch_typed(TestCommand::SetLabel { value: "x".into() }, &meta()).await.expect("set label");
-            assert_eq!(app.presence_store.generation().await, 0);
-            assert_eq!(app.transient_store.generation().await, 0);
-        }
-
-        /// 👥️ Contract-freeze §C7.6, "zero app-side code": an app that merely DECLARES an interaction
-        /// domain with `broadcast: true` (nothing app-specific) must see its live selection show up in
-        /// `ephemeral_snapshot().interaction` — assembled purely from `AppDefinition.interactions` plus
-        /// the framework-owned `interaction_store`/`interaction_hover` state.
-        #[semio_framework_async_macros::async_test]
-        async fn ephemeral_snapshot_carries_encoded_interaction_from_declared_broadcast_specs() {
-            let mut app = interaction_app_under_test().await;
-            // 🧪️ `interaction_topology`'s fixture only knows "item-1" once `doc.snapshot.label` is
-            // non-empty (see that fn's own doc comment) — without this seed, `validate_state` prunes
-            // the pick as an unknown id and the domain never shows up in `interaction_state()`.
-            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-            app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
-
-            let snapshot = app.ephemeral_snapshot().await;
-            assert!(!snapshot.interaction.is_empty(), "a broadcasting domain with a live selection must not encode to empty bytes");
-            let mut pos = 0usize;
-            let decoded = protocol::decode_presence_interaction(&snapshot.interaction, &mut pos).await.expect("interaction bytes decode");
-            assert_eq!(decoded.app_id, app.app_id().await);
-            assert_eq!(decoded.domains.len(), 1);
-            assert_eq!(decoded.domains[0].domain, "items");
-            assert_eq!(decoded.domains[0].selected, vec!["item-1".to_string()]);
-        }
-        //#endregion 🔖️EphemeralLaneTests
-
-        //#region 🔖️AdoptPresenceTests
-        fn sample_presence_peer(actor: &str, color: Option<u8>, with_pack: bool) -> PresencePeer {
-            PresencePeer {
-                actor: actor.to_string(),
-                connected_at_ms: 1,
-                label: None,
-                presence_pack: with_pack.then(|| PublicationPresence::default().encode_pack()),
-                user_id: None,
-                role: None,
-                drag_ghost_json: None,
-                interaction: None,
-                color,
-                surface: None,
-                views: Vec::new(),
-                ui: None,
-            }
-        }
-
-        async fn publish_presence_roster(app: &mut VcsArtifactApp<TestApp>, seq: u64, own_color: Option<u8>, peers: &[PresencePeer], now_ms: i64) -> PresenceRosterOutcome {
-            let roster = peers.iter().map(|peer| resolve_ready(encode_presence_peer(peer))).collect::<Vec<_>>();
-            let admission = app.reserve_presence_ingress(seq).expect("reserve roster before decode");
-            let first = roster.iter().next().map(|bytes| bytes.to_vec()).unwrap_or_default();
-            let cursor = protocol::PresenceCommandCursor::admit_page(seq, own_color, roster.len() as u32, FixedCommandPage::try_copy_from(&first).expect("test peer page is fixed-authority"))
-                .map_err(|(error, _)| error)
-                .expect("admit first roster page");
-            let generation = admission.generation();
-            app.admit_presence_ingress(admission, cursor, now_ms);
-            let mut next_page = 1usize;
-            for _ in 0..512 {
-                app.maintenance_stage = 7;
-                let _ = PluginApp::maintenance_step(app, 1, 4096).expect("bounded roster step");
-                if next_page < roster.len() {
-                    let page = FixedCommandPage::try_copy_from(roster.iter().nth(next_page).expect("retained roster page")).expect("test peer page is fixed-authority");
-                    match app.push_presence_ingress(generation, next_page as u32, page) {
-                        Ok(()) => next_page += 1,
-                        Err((_fault, _page)) => {}
-                    }
-                }
-                if let Some(outcome) = app.take_presence_outcome() {
-                    return outcome;
-                }
-            }
-            panic!("retained roster did not reach an observable terminal outcome");
-        }
-
-        /// 👥️ Contract-freeze §C7.6: `adopt_presence` (1) adopts an app-typed `presence_pack` into
-        /// `presence_store` ONLY when one is present, (2) unconditionally upserts `color`/`surface`/
-        /// `interaction` into `peer_presence` for every peer in the roster, and (3) treats the roster
-        /// as the single source of truth — a peer absent from a later call is dropped from BOTH maps.
-        #[semio_framework_async_macros::async_test]
-        async fn retained_presence_fills_presence_store_and_peer_marks_and_drops_left_peers() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let alice = sample_presence_peer("user:alice#s1", Some(3), true);
-            let bob = sample_presence_peer("user:bob#s1", Some(5), false);
-
-            assert!(publish_presence_roster(&mut app, 1, Some(9), &[alice.clone(), bob], 1000).await.fault.is_none());
-            assert_eq!(app.own_color, Some(9));
-            let typed_root = app.presence_store.peers_root();
-            assert_eq!(typed_root.peers().count(), 1, "only the peer carrying a presence_pack adopts into presence_store");
-            assert_eq!(typed_root.peers().next().unwrap().0, "user:alice#s1");
-            assert_eq!(app.peer_presence.len(), 2, "both peers upsert into peer_presence regardless of presence_pack");
-            assert_eq!(app.peer_presence.get("user:alice#s1").unwrap().color, Some(3));
-            assert_eq!(app.peer_presence.get("user:bob#s1").unwrap().color, Some(5));
-
-            // 👋 bob leaves the roster — a second call carrying only alice must drop bob from BOTH maps.
-            assert!(publish_presence_roster(&mut app, 2, Some(9), &[alice], 2000).await.fault.is_none());
-            assert_eq!(app.presence_store.peers_root().peers().count(), 1);
-            assert_eq!(app.peer_presence.len(), 1);
-            assert!(app.peer_presence.contains_key("user:alice#s1"));
-            assert!(!app.peer_presence.contains_key("user:bob#s1"), "an actor absent from the roster must be dropped, not left stale");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let alice = sample_presence_peer("user:alice#s1", Some(3), true);
-            let bob = sample_presence_peer("user:bob#s1", Some(5), false);
-            assert!(publish_presence_roster(&mut app, 1, Some(9), &[alice.clone(), bob], 1000).await.fault.is_none());
-            let captured = std::sync::Arc::clone(&app.peer_presence);
-            let typed_captured = app.presence_store.peers_root();
-            assert!(std::sync::Arc::ptr_eq(&captured, &app.peer_presence), "operation capture clones one peer root Arc");
-
-            assert!(publish_presence_roster(&mut app, 2, Some(9), &[alice], 2000).await.fault.is_none());
-            assert_eq!(captured.len(), 2, "captured roster remains revision-stable");
-            assert_eq!(app.peer_presence.len(), 1, "live roster advances independently");
-            app.maintenance_stage = 5;
-            assert!(matches!(PluginApp::maintenance_step(&mut app, 1, 4096).expect("shared old root blocks"), PluginCloseStep::Blocked { .. }));
-            app.maintenance_stage = 6;
-            let _ = PluginApp::maintenance_step(&mut app, 1, 4096).expect("app-typed retirement selects its displaced entry");
-            app.maintenance_stage = 6;
-            assert!(matches!(PluginApp::maintenance_step(&mut app, 1, 4096).expect("captured app-typed peer blocks"), PluginCloseStep::Blocked { .. }));
-
-            drop(captured);
-            drop(typed_captured);
-            for _ in 0..16 {
-                if app.peer_presence_retirements.is_empty() {
-                    break;
-                }
-                app.maintenance_stage = 5;
-                let _ = PluginApp::maintenance_step(&mut app, 1, 4096).expect("bounded peer root retirement progresses");
-            }
-            assert!(app.peer_presence_retirements.is_empty(), "old peer root reaches terminal-empty without a whole-roster drop");
-            for _ in 0..16 {
-                if app.presence_peer_retirements.is_empty() {
-                    break;
-                }
-                app.maintenance_stage = 6;
-                let _ = PluginApp::maintenance_step(&mut app, 1, 4096).expect("bounded app-typed peer retirement progresses");
-            }
-            assert!(app.presence_peer_retirements.is_empty(), "displaced app-typed peer reaches its domain-owned terminal witness");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority() {
-            let mut saturated = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            for seq in 0..ARTIFACT_LIVE_OUTPUT_SLOTS as u64 {
-                let admission = saturated.reserve_presence_ingress(seq).expect("fixed roster slot admits before decode");
-                let cursor = protocol::PresenceCommandCursor::admit_page(seq, None, 0, FixedCommandPage::try_copy_from(&[]).expect("empty fixed page")).map_err(|(error, _)| error).expect("empty roster cursor");
-                saturated.admit_presence_ingress(admission, cursor, 0);
-            }
-            let saturation = match saturated.reserve_presence_ingress(ARTIFACT_LIVE_OUTPUT_SLOTS as u64) {
-                Ok(_) => panic!("maximum plus one must fail before payload decode"),
-                Err(fault) => fault,
-            };
-            assert_eq!(saturation.code.0, "interactive-job.peer-roster-saturated");
-            for _ in 0..ARTIFACT_LIVE_OUTPUT_SLOTS * 16 {
-                saturated.maintenance_stage = 7;
-                let _ = PluginApp::maintenance_step(&mut saturated, 1, PEER_ROSTER_WIRE_BYTES).expect("one bounded saturation cleanup turn");
-                if saturated.peer_roster_publications.is_empty() {
-                    break;
-                }
-            }
-            assert!(saturated.peer_roster_publications.is_empty(), "every admitted publication reaches its exact outcome slot");
-            for _ in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
-                assert!(saturated.take_presence_outcome().is_some(), "every admitted roster has one ordered outcome");
-            }
-
-            let mut cancelled = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let admission = cancelled.reserve_presence_ingress(1).expect("cancel roster admission");
-            let cancel = admission.cancel.clone();
-            let page = FixedCommandPage::try_copy_from(&[0xA5; 17]).expect("fixed retained peer page");
-            let cursor = protocol::PresenceCommandCursor::admit_page(1, None, 1, page).map_err(|(error, _)| error).expect("cancel cursor");
-            let generation = admission.generation();
-            cancelled.admit_presence_ingress(admission, cursor, 0);
-            cancel.cancel_now();
-            cancelled.maintenance_stage = 7;
-            assert_eq!(
-                PluginApp::maintenance_step(&mut cancelled, 1, 16).expect("sub-page close grant"),
-                PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
-                "interrupted close must retain the exact page when the byte grant is one short"
-            );
-            assert!(cancelled.peer_roster_publications.get(generation).is_some(), "cancelled publication stays mounted until its retained page closes");
-            for _ in 0..64 {
-                cancelled.maintenance_stage = 7;
-                let _ = PluginApp::maintenance_step(&mut cancelled, 1, 17).expect("bounded cancelled roster close");
-                if cancelled.peer_roster_publications.is_empty() {
-                    break;
-                }
-            }
-            let outcome = cancelled.take_presence_outcome().expect("cancelled roster outcome");
-            assert_eq!(outcome.fault.expect("cancel is observable").code.0, "interactive-job.peer-roster-cancelled");
-            assert!(cancelled.peer_presence.is_empty(), "cancelled roster never publishes metadata");
-            assert_eq!(cancelled.presence_store.peers_root().len(), 0, "cancelled roster never publishes app-typed presence");
-
-            let mut stale = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let admission = stale.reserve_presence_ingress(9).expect("stale roster admission");
-            let cursor = protocol::PresenceCommandCursor::admit_page(9, None, 0, FixedCommandPage::try_copy_from(&[]).expect("empty fixed page")).map_err(|(error, _)| error).expect("stale empty roster cursor");
-            stale.admit_presence_ingress(admission, cursor, 0);
-            stale.peer_roster_processed_generation = 1;
-            for _ in 0..64 {
-                stale.maintenance_stage = 7;
-                let _ = PluginApp::maintenance_step(&mut stale, 1, PEER_ROSTER_WIRE_BYTES).expect("bounded stale roster close");
-                if stale.peer_roster_publications.is_empty() {
-                    break;
-                }
-            }
-            let outcome = stale.take_presence_outcome().expect("stale roster outcome");
-            assert_eq!(outcome.fault.expect("stale generation is observable").code.0, "interactive-job.peer-roster-publication-authority");
-            assert!(stale.peer_presence.is_empty(), "stale roster never changes the live peer root");
-            assert_eq!(stale.presence_store.peers_root().len(), 0, "stale roster never changes the typed peer root");
-        }
-        //#endregion 🔖️AdoptPresenceTests
-
-        //#region 🔖️InteractionViewPeersTests
-        #[semio_framework_async_macros::async_test]
-        async fn interaction_view_peers_selecting_returns_actor_and_color() {
-            let mut peers = PeerPresenceRoot::empty();
-            let mark_interaction = |selected: &[&str], hovered: &[&str]| {
-                Some(PresenceInteraction {
-                    app_id: "draw".to_string(),
-                    domains: vec![PresenceDomain { domain: "items".to_string(), granularity: "item".to_string(), selected: selected.iter().map(|id| id.to_string()).collect(), hovered: hovered.iter().map(|id| id.to_string()).collect() }],
-                })
-            };
-            peers.insert("user:zed#s1".to_string(), PeerPresence { color: Some(7), surface: None, interaction: mark_interaction(&["item-1"], &[]) }).expect("zed peer");
-            peers.insert("user:alice#s1".to_string(), PeerPresence { color: Some(2), surface: None, interaction: mark_interaction(&["item-1"], &[]) }).expect("alice peer");
-            peers.insert("user:bob#s1".to_string(), PeerPresence { color: Some(4), surface: None, interaction: mark_interaction(&[], &["item-1"]) }).expect("bob peer");
-
-            let state = InteractionState::default();
-            let hover = InteractionHoverState::new();
-            let view = InteractionView { state: &state, hover: &hover, peers: &peers };
-
-            let selecting = view.peers_selecting("items", "item-1");
-            assert_eq!(selecting.len(), 2, "only alice and zed selected item-1");
-            assert_eq!(selecting[0].actor, "user:alice#s1", "sorted by actor");
-            assert_eq!(selecting[0].color, Some(2));
-            assert_eq!(selecting[1].actor, "user:zed#s1");
-            assert_eq!(selecting[1].color, Some(7));
-            assert!(view.peers_selecting("items", "item-2").is_empty(), "no peer selected item-2");
-
-            let hovering = view.peers_hovering("items", "item-1");
-            assert_eq!(hovering.len(), 1);
-            assert_eq!(hovering[0].actor, "user:bob#s1");
-            assert_eq!(hovering[0].color, Some(4));
-        }
-        //#endregion 🔖️InteractionViewPeersTests
-
-        //#region 🔖️CompositionTests
-        store::space_members! {
-            pub enum TestMembers, TestMembersOpen {
-                Child("s.test.child", "native", "*", "semio.test/v1") => (TestSnapshot, TestMutation),
-            }
-        }
-
-        /// 🧪️ A live child `ArtifactStore<TestSnapshot, TestMutation>`, wrapped as `TestMembers` —
-        /// the shape `VcsArtifactApp::register_child`/`open_child` expect. Built directly (no
-        /// runtime `ChildStoreFactory`/`MemberFactory` registration needed — `TestMembers::open`
-        /// dispatches by kind at compile time) — the SAME `TestSnapshot`/`TestMutation` pair
-        /// `TestApp` itself uses, so a "child" here is just a second, independently-owned instance
-        /// of the identical document shape.
-        async fn new_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
-            let mut envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
-            envelope.dialect = Some(test_child_dialect().await);
-            Ok(TestMembers::Child(store::ArtifactStore::new(envelope).await?))
-        }
-
-        struct TestSnapshotRetirement {
-            snapshot: Option<std::sync::Arc<TestSnapshot>>,
-            lie_about_terminal: bool,
-        }
-
-        impl store::ErasedSnapshotRetirement for TestSnapshotRetirement {
-            fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-                if maximum_items == 0 {
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                }
-                if self.lie_about_terminal {
-                    return Ok(store::SnapshotRetirementStep::Complete);
-                }
-                if self.snapshot.take().is_some() {
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-                }
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-
-            fn terminal_is_empty(&self) -> bool {
-                self.snapshot.is_none()
-            }
-        }
-
-        struct TestSnapshotRetirementFactory {
-            lie_about_terminal: bool,
-        }
-
-        impl store::SnapshotRetirementFactory<TestSnapshot> for TestSnapshotRetirementFactory {
-            fn retire(&self, snapshot: std::sync::Arc<TestSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
-                Box::new(TestSnapshotRetirement { snapshot: Some(snapshot), lie_about_terminal: self.lie_about_terminal })
-            }
-        }
-
-        struct TestOwnedValueRetirement<T: Send + 'static>(Option<T>);
-
-        impl<T: Send + 'static> store::ErasedSnapshotRetirement for TestOwnedValueRetirement<T> {
-            fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-                if maximum_items == 0 {
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                }
-                if self.0.take().is_some() {
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-                }
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-
-            fn terminal_is_empty(&self) -> bool {
-                self.0.is_none()
-            }
-        }
-
-        struct TestOwnedValueRetirementFactory<T>(std::marker::PhantomData<fn() -> T>);
-
-        impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for TestOwnedValueRetirementFactory<T> {
-            fn retire_owned(&self, value: T) -> Box<dyn store::ErasedSnapshotRetirement> {
-                Box::new(TestOwnedValueRetirement(Some(value)))
-            }
-        }
-
-        impl store::MemberStoreOwner<TestMutation> for TestSnapshot {
-            type SnapshotOpen = store::UnsupportedMemberSnapshotOpen<Self>;
-
-            fn member_store_owners() -> store::MemberStoreOwners<Self, TestMutation> {
-                store::MemberStoreOwners::new(
-                    std::sync::Arc::new(TestSnapshotRetirementFactory { lie_about_terminal: false }),
-                    std::sync::Arc::new(TestOwnedValueRetirementFactory::<TestSnapshot>(std::marker::PhantomData)),
-                    std::sync::Arc::new(TestOwnedValueRetirementFactory::<TestMutation>(std::marker::PhantomData)),
-                    Box::new(store::ArtifactStoreCursorDisposer::<TestSnapshot, TestMutation>::new()),
-                )
-            }
-        }
-
-        fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str, lie_about_terminal: bool) {
-            let (_, TestMembers::Child(child)) = app.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child retirement owner");
-            child.install_snapshot_retirement_factory(std::sync::Arc::new(TestSnapshotRetirementFactory { lie_about_terminal })).expect("install exact child snapshot retirement factory once");
-        }
-
-        async fn test_child_dialect() -> ArtifactDialect {
-            ArtifactDialect { artifact_kind: "s.test.child".into(), standard: "native".into(), subset: "*".into() }
-        }
-
-        fn close_member_admission_fixture(member: &mut TestMembers) {
-            for _ in 0..65_536 {
-                match member.close_owned_step(1, 4096).expect("member closes under its exact grant") {
-                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 4096),
-                    store::SnapshotRetirementStep::Blocked => panic!("fixture member has no external owner"),
-                    store::SnapshotRetirementStep::Complete => {
-                        assert!(member.close_owned_terminal_is_empty());
-                        return;
-                    }
-                }
-            }
-            panic!("member admission fixture did not close");
-        }
-
-        fn close_member_admission_app<A: ArtifactApp>(app: &mut VcsArtifactApp<A, TestMembers>) {
-            for _ in 0..100_000 {
-                match app.close_step(1, 4096).expect("app closes under its exact grant") {
-                    PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 4096),
-                    PluginCloseStep::AwaitingInput { reason } => panic!("fixture app close awaited input: {reason}"),
-                    PluginCloseStep::Blocked { reason } => panic!("fixture app has no external owner: {reason}"),
-                    PluginCloseStep::Complete => {
-                        assert!(app.close_terminal_is_empty());
-                        return;
-                    }
-                }
-            }
-            panic!("member admission app did not close");
-        }
-
-        include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧩️composition/🦀️.rs"));
-
-        #[semio_framework_async_macros::async_test]
-        async fn member_factory_closed_dialect_open_failure_retains_pin_and_drains_exact_member() {
-            let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default()).await;
-            let dialect = test_child_dialect().await;
-            let expected = ArtifactRef { artifact_id: "child-1".into(), dialect: dialect.clone() };
-            app.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
-            let parent = ArtifactRef { artifact_id: app.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() };
-            assert_eq!(app.store.envelope().dialect.as_ref(), Some(&parent.dialect));
-            assert!(app.open_child("slot", "child-1", dialect.clone(), &[]).await.is_err());
-            assert!(app.test_child_admission_state(1).children_empty && app.test_child_admission_state(1).content_empty && app.test_child_admission_state(1).abort_empty);
-            assert_eq!(app.test_child_admission_state(1).generation, 0);
-            let mut persisted = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack()).await.unwrap();
-            persisted.set_owner(Some(store::OwnerRef { parent, slot: "slot".into(), child_id: "child-1".into() })).await;
-            let packed = persisted.envelope_pack_bytes().await.expect("persist exact owned child");
-            close_member_admission_fixture(&mut persisted);
-            assert!(app.open_child("slot", "child-1", dialect, &packed).await.is_err());
-            assert!(app.test_child_admission_state(1).children_empty && app.test_child_admission_state(1).content_empty && app.test_child_admission_state(1).roots_retiring_empty);
-            assert_eq!(app.test_child_admission_state(1).generation, 0);
-            assert_eq!(app.pending_child_pins.len(), 1);
-            assert_eq!(app.pending_child_pins[0].checkpoint_id, "missing-checkpoint");
-            assert!(app.composition.graph_mut().await.owner_of("child-1").await.is_none());
-            assert_eq!(app.test_child_admission_state(1).abort_generation, 1);
-            assert!(app.test_child_admission_state(1).requested_abort_retained);
-            for _ in 0..65_536 {
-                app.maintenance_stage = 20;
-                match app.maintenance_step(1, 4096).expect("live failed-member cleanup") {
-                    PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 4096),
-                    PluginCloseStep::AwaitingInput { reason } => panic!("failed member cleanup awaited input: {reason}"),
-                    PluginCloseStep::Blocked { reason } => panic!("failed member must have a real cleanup owner: {reason}"),
-                    PluginCloseStep::Complete => {}
-                }
-                if app.test_child_admission_state(1).abort_empty {
-                    break;
-                }
-            }
-            assert!(app.test_child_admission_state(1).abort_empty);
-            app.maintenance_stage = 20;
-            assert_eq!(app.maintenance_step(1, 4096).unwrap(), PluginCloseStep::Complete);
-            close_member_admission_app(&mut app);
-            eprintln!("[DEBUG] child open: factory rejection is pure; checkpoint rejection retains its pin and closes exactly one admitted member");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn member_factory_closed_dialect_register_rejects_pin_without_mutating_member() {
-            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::<false>::default()).await;
-            let dialect = test_child_dialect().await;
-            let expected = ArtifactRef { artifact_id: "child-1".into(), dialect: dialect.clone() };
-            app.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
-            let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack()).await.unwrap();
-            let before = member.envelope_pack_bytes().await.unwrap();
-            let error = app.register_child("slot", "child-1", dialect, member).await.expect_err("direct transfer must not apply a deferred restore pin");
-            let mut returned = error.member.expect("exact caller member returned");
-            assert_eq!(returned.envelope_pack_bytes().await.unwrap(), before);
-            assert_eq!(returned.artifact_ref().as_ref(), Some(&expected));
-            assert!(returned.owner_ref().is_none());
-            assert!(app.test_child_admission_state(1).children_empty && app.test_child_admission_state(1).content_empty && app.test_child_admission_state(1).abort_empty);
-            assert_eq!(app.test_child_admission_state(1).generation, 0);
-            assert_eq!(app.pending_child_pins.len(), 1);
-            assert!(app.composition.graph_mut().await.owner_of("child-1").await.is_none());
-            close_member_admission_fixture(&mut returned);
-            close_member_admission_app(&mut app);
-            eprintln!("[DEBUG] direct child registration: queued pin rejection returns the byte-identical caller member without publication");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn member_factory_closed_dialect_fresh_register_and_restore_publish_exact_parent_owner() {
-            let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default()).await;
-            let dialect = test_child_dialect().await;
-            let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack()).await.unwrap();
-            app.register_child("slot", "child-1", dialect.clone(), member).await.expect("pure fresh member is adopted");
-            assert_eq!(app.test_child_admission_state(1).generation, 1);
-            let owner = store::OwnerRef { parent: ArtifactRef { artifact_id: app.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() }, slot: "slot".into(), child_id: "child-1".into() };
-            let member = app.child_store("slot", "child-1").await.unwrap();
-            assert_eq!(member.owner_ref(), Some(owner.clone()));
-            let packed = member.envelope_pack_bytes().await.unwrap();
-            let mut restored = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default()).await;
-            restored.open_child("slot", "child-1", dialect, &packed).await.expect("fresh factory restores exact parent owner");
-            assert_eq!(restored.test_child_admission_state(1).generation, 1);
-            assert_eq!(restored.child_store("slot", "child-1").await.unwrap().owner_ref(), Some(owner.clone()));
-            assert_eq!(restored.composition.graph_mut().await.owner_of("child-1").await, Some(owner.parent.artifact_id.as_str()));
-            assert_eq!(restored.composition.graph_mut().await.slot_of("child-1").await, Some("slot"));
-            assert!(restored.child_content_root.typed_read::<TestSnapshot>("slot", "child-1").is_ok());
-            close_member_admission_app(&mut restored);
-            close_member_admission_app(&mut app);
-            eprintln!("[DEBUG] owned child publication: fresh registration and independent restore each publish one exact parent/slot/member root");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn composite_gesture_produces_one_undo_group_spanning_parent_and_child_with_real_handles() {
-            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::<false>::default()).await;
-            app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child seeds ownership");
-
-            let result = app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
-
-            // 🧾️ One `KernelMutation` for the parent's own op, one for the child's — each carrying
-            // its OWN document handle, never the parent's, for the child entry (Task 3's "REAL
-            // target" requirement).
-            assert_eq!(result.mutations.len(), 2);
-            let parent_handle = ArtifactHandle(meta().instance_id as u128);
-            let child_handle = artifact_handle_of("child-1").await;
-            assert_ne!(parent_handle, child_handle);
-            let mutation_documents: std::collections::HashSet<ArtifactHandle> = result.mutations.iter().map(|mutation| mutation.document).collect();
-            assert!(mutation_documents.contains(&parent_handle), "the parent's own edit must carry the parent's handle");
-            assert!(mutation_documents.contains(&child_handle), "the child's edit must carry the CHILD's handle, not the parent's");
-
-            // 🧾️ ONE `UndoGroup` names BOTH documents via `member_edits`.
-            assert_eq!(result.inverse_group.member_edits.len(), 2);
-            let member_documents: std::collections::HashSet<ArtifactHandle> = result.inverse_group.member_edits.iter().map(|edit_ref| edit_ref.document).collect();
-            assert!(member_documents.contains(&parent_handle));
-            assert!(member_documents.contains(&child_handle));
-
-            // The child store actually applied its own op.
-            let (dialect, child_member) = app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("child stays registered after dispatch");
-            assert_eq!(dialect.artifact_kind, "s.test.child");
-            let TestMembers::Child(child_store) = child_member;
-            assert_eq!(child_store.snapshot().expect("child snapshot").count, 7);
-
-            // And the command log recorded the child's edit id under the `config_edit_ids` precedent.
-            let history = app.test_history().await;
-            let row = history.commands.iter().find(|entry| entry.action_id == "compositeEdit").expect("composite edit logged");
-            assert_eq!(row.child_edit_ids.len(), 1);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames() {
-            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::<false>::default()).await;
-            app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
-            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
-
-            // 📤️ Persist exactly what the host would: the parent's document pack plus one
-            // `ChildPackEntry` per live child.
-            let entries = PluginApp::child_packs(&app).await.expect("child packs");
-            assert_eq!(entries.len(), 1);
-            assert_eq!(entries[0].slot, "slot");
-            assert_eq!(entries[0].child_id, "child-1");
-            assert_eq!(entries[0].dialect, test_child_dialect().await.to_coordinate());
-
-            // 📥️ Reload into a FRESH app, the way `LoadDocument` + `LoadChildren` would. Explicit
-            // `TestMembers`: nothing else in this branch constructs one directly to pin `M` for
-            // inference — `open_child`'s `M::open` dispatch is compile-time generic, not a value.
-            let mut reloaded = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::<false>::default()).await;
-            for entry in &entries {
-                let dialect = ArtifactDialect::parse_coordinate(&entry.dialect).expect("dialect round trips");
-                PluginApp::load_child_pack(&mut reloaded, &entry.slot, &entry.child_id, dialect, &entry.envelope_pack).await.expect("load child pack");
-            }
-
-            // The child came back as its OWN live store, at the value its own history ended on —
-            // and reload went through the real factory, not a cache.
-            let child = reloaded.child_store("slot", "child-1").await.expect("child restored");
-            let restored: TestSnapshot = <TestSnapshot as ArtifactPack>::decode_pack(&child.document_pack_bytes().await.expect("child pack")).expect("decode child");
-            assert_eq!(restored.count, 7, "the reloaded child lost its own edit history");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn a_checkpoint_pins_its_children_and_a_checkout_cascades_back_to_them() {
-            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::<false>::default()).await;
-            app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
-            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("first composite edit");
-
-            // 📌️ Checkpoint the parent: the cascade must commit the dirty child first, then pin the
-            // child checkpoint that commit produced.
-            app.dispatch_action("commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta()).await.expect("checkpoint");
-            let pinned_checkpoint = app.test_store().await.current_checkpoint_id().map(str::to_string).expect("parent checkpoint exists");
-            let pins = app.test_store().await.envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == pinned_checkpoint).map(|checkpoint| checkpoint.composition_pins.clone()).expect("checkpoint found");
-            assert_eq!(pins.len(), 1, "a composing document's checkpoint must pin its children");
-            assert_eq!(pins[0].child_ref.artifact_id, "child-1");
-
-            // ⏭️ Move both forward, past the pin.
-            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 42 }, &meta()).await.expect("second composite edit");
-            let live = reads_child_count(&app);
-            assert_eq!(live.await, 42);
-
-            // ⏮️ Checking the parent out to the pinned checkpoint must drag the child back with it —
-            // otherwise a restored composition silently mixes an old parent with a new child.
-            app.dispatch_action("checkoutCheckpoint", Some(&dv(serde_json::json!({ "checkpointId": pinned_checkpoint }))), &meta()).await.expect("checkout");
-            assert_eq!(reads_child_count(&app).await, 7, "checkout did not cascade to the pinned child");
-        }
-
-        /// 🧪️ The child's current `count`, read through the same `ChildContentView` seam an app uses.
-        async fn reads_child_count(app: &VcsArtifactApp<TestApp, TestMembers>) -> i32 {
-            let view = ChildContentView::clone(&app.child_content_root);
-            view.typed_read::<TestSnapshot>("slot", "child-1").expect("child readable through the view").count
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn child_content_publication_path_copies_fixed_pages_and_command_capture_retains_one_root() {
-            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::<false>::default()).await;
-            app.register_child("slot", "child-a", test_child_dialect().await, new_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
-            let admitted = ChildContentView::clone(&app.child_content_root);
-            let admitted_root = admitted.root.as_ref().expect("published root").clone();
-            assert!(std::sync::Arc::ptr_eq(&admitted_root, app.child_content_root.root.as_ref().expect("live root")), "command capture retains exactly one immutable root Arc");
-
-            app.register_child("slot", "child-b", test_child_dialect().await, new_test_child("child-b").await.expect("construct child-b")).await.expect("register child-b");
-            let current_root = app.child_content_root.root.as_ref().expect("advanced root");
-            assert!(!std::sync::Arc::ptr_eq(&admitted_root, current_root), "a child lifecycle event publishes a new root");
-            assert!(admitted.typed_read::<TestSnapshot>("slot", "child-a").is_ok(), "the admitted root remains exact after later publication");
-            assert!(admitted.typed_read::<TestSnapshot>("slot", "child-b").is_err(), "the admitted root never observes a later child");
-            assert!(ChildContentView::clone(&app.child_content_root).typed_read::<TestSnapshot>("slot", "child-b").is_ok());
-            assert!(!app.child_content_retirements.is_empty(), "the replaced nonempty root remains under explicit retirement authority");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn child_snapshot_retirement_rejection_preserves_exact_erased_owner() {
-            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::<false>::default()).await;
-            app.register_child("slot", "child-a", test_child_dialect().await, new_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
-            let generation = app.admit_child_content_publication().expect("admit replacement root");
-            app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
-            app.maintenance_stage = 4;
-            assert!(matches!(PluginApp::maintenance_step(&mut app, 1, 4096).expect("missing factory blocks without losing authority"), PluginCloseStep::Blocked { .. }));
-            let retirement = app.child_content_retirements.get(2).expect("retirement remains registered after rejected transfer");
-            let entry = retirement.pending.as_ref().expect("exact rejected snapshot remains pending");
-            assert!(entry.snapshot.typed::<TestSnapshot>().is_some(), "rejection preserves the exact erased owner and type identity");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn child_root_maintenance_requires_terminal_empty_before_reclaim() {
-            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::<false>::default()).await;
-            app.register_child("slot", "child-a", test_child_dialect().await, new_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
-            install_test_snapshot_retirement(&mut app, "child-a", true);
-            let generation = app.admit_child_content_publication().expect("admit replacement root");
-            app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
-            app.maintenance_stage = 4;
-            assert!(matches!(PluginApp::maintenance_step(&mut app, 1, 4096).expect("transfer retirement authority"), PluginCloseStep::Pending { .. }));
-            app.maintenance_stage = 4;
-            let fault = PluginApp::maintenance_step(&mut app, 1, 4096).expect_err("lying Complete must fail before registry removal");
-            assert_eq!(fault.code.0, "interactive-job.child-snapshot-terminal-not-empty");
-            assert!(!app.child_content_retirements.is_empty(), "terminal witness failure retains the registry authority");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn child_root_maintenance_reclaims_completed_owner_for_later_publication() {
-            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::<false>::default()).await;
-            app.register_child("slot", "child-a", test_child_dialect().await, new_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
-            install_test_snapshot_retirement(&mut app, "child-a", false);
-            let generation = app.admit_child_content_publication().expect("admit replacement root");
-            app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
-            for _ in 0..4 {
-                app.maintenance_stage = 4;
-                let _ = PluginApp::maintenance_step(&mut app, 1, 4096).expect("bounded retirement progress");
-            }
-            assert!(app.child_content_retirements.is_empty(), "terminal-empty retirement is reclaimed while the app remains live");
-            let generation = app.admit_child_content_publication().expect("later publication can reuse the fixed retirement registry");
-            app.publish_child_content_member(generation, "slot", "child-a").await.expect("later publication after bounded reclaim");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn maximum_child_public_dispatch_reaches_first_continuation_without_clone_or_encode() {
-            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::<false>::default()).await;
-            app.register_child("slot", "child-maximum", test_child_dialect().await, new_test_child("child-maximum").await.expect("construct maximum child")).await.expect("register maximum child");
-            let (_, member) = app.children.get_mut(&("slot".to_string(), "child-maximum".to_string())).expect("maximum child");
-            let TestMembers::Child(child) = member;
-            child.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "x".repeat(MAXIMUM_CHILD_PROBE_BYTES) })], description: None }).await.expect("seed maximum child");
-            let publication_generation = app.admit_child_content_publication().expect("admit maximum child publication");
-            app.publish_child_content_member(publication_generation, "slot", "child-maximum").await.expect("publish maximum child root");
-            MAXIMUM_CHILD_CLONES.store(0, std::sync::atomic::Ordering::Release);
-            MAXIMUM_CHILD_ENCODINGS.store(0, std::sync::atomic::Ordering::Release);
-
-            let started = std::time::Instant::now();
-            let result = app.dispatch_action("probeChild", Some(&dv(serde_json::json!({ "slot": "slot", "childId": "child-maximum" }))), &meta()).await.expect("public maximum-child probe");
-            assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum child public dispatch exceeded 8 ms before its first continuation");
-            assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "probeChildContinuation")));
-            assert_eq!(MAXIMUM_CHILD_CLONES.load(std::sync::atomic::Ordering::Acquire), 0, "ChildContentView must clone only the existing Arc, never the maximum snapshot graph");
-            assert_eq!(MAXIMUM_CHILD_ENCODINGS.load(std::sync::atomic::Ordering::Acquire), 0, "ChildContentView must not pack-encode maximum child content during public dispatch");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn the_child_content_view_never_goes_stale_across_undo_and_redo() {
-            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::<false>::default()).await;
-            app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
-            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
-            assert_eq!(reads_child_count(&app).await, 7);
-
-            // ↩️ Store-level undo bypasses `ArtifactApp::handle` entirely — this is exactly where the
-            // `thread_local!` child caches this view replaces used to go stale.
-            app.dispatch_action("undo", None, &meta()).await.expect("undo");
-            assert_eq!(reads_child_count(&app).await, 0, "the view must reflect the child's undone state");
-            app.dispatch_action("redo", None, &meta()).await.expect("redo");
-            assert_eq!(reads_child_count(&app).await, 7, "the view must reflect the child's redone state");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn group_undo_skips_a_foreign_tail_child_but_still_undoes_parent_and_touched_child() {
-            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::<false>::default()).await;
-            app.register_child("slot", "child-a", test_child_dialect().await, new_test_child("child-a").await.expect("construct child")).await.expect("register child seeds ownership");
-            // `child-b` is registered but NEVER targeted by the composite gesture below — its
-            // `tail_group_id()` stays `None`, the textbook "foreign tail" `GroupUndoReport` must
-            // skip rather than abort the whole group over.
-            app.register_child("slot", "child-b", test_child_dialect().await, new_test_child("child-b").await.expect("construct child")).await.expect("register child seeds ownership");
-
-            let before = app.test_snapshot().await;
-            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-a".into(), child_value: 5 }, &meta()).await.expect("composite edit");
-            assert_eq!(app.test_snapshot().await.label, "composite");
-
-            let result = app.dispatch_action("undo", None, &meta()).await.expect("group undo");
-
-            // The parent reverted...
-            assert_eq!(app.test_snapshot().await, before);
-            // ...child-a (the real group member) reverted too...
-            let (_, child_a) = app.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("child-a");
-            let TestMembers::Child(child_a_store) = child_a;
-            assert_eq!(child_a_store.snapshot().expect("child-a snapshot").count, 0);
-            // ...and child-b — a genuine foreign tail, never touched by this group — is reported as
-            // SKIPPED, not silently dropped nor allowed to abort the rest of the group.
-            assert!(!result.diagnostics.is_empty(), "child-b's foreign tail must surface a diagnostic, not vanish silently");
-            assert!(result.diagnostics.iter().any(|diagnostic| diagnostic.message.contains("child-b")), "the skip diagnostic must name the actual skipped member");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn created_children_survive_absorb_into_the_child_store_map() {
-            // 🌱️ Proves `VcsArtifactApp::absorb_created_children` — the mechanism a
-            // `ChildGenesis`-authoring `Emit` constructor (a later wave) will rely on to make a
-            // freshly-minted child reachable at all; per B2's own `GroupReceipt::created_children`
-            // doc comment, skipping this step would make `ChildGenesis` pointless.
-            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::<false>::default()).await;
-            let parent_id = app.store.envelope().id.clone();
-            app.composition.graph_mut().await.insert_owns(&parent_id, "genesisSlot", "genesis-child").await.expect("seed ownership so absorb's slot_of lookup resolves");
-            let target = ArtifactRef { artifact_id: "genesis-child".into(), dialect: test_child_dialect().await };
-            let created: Vec<(ArtifactRef, TestMembers)> = vec![(target, new_test_child("genesis-child").await.expect("construct genesis child"))];
-
-            app.absorb_created_children(created).await.expect("absorb child and publish immutable root");
-
-            let (dialect, member) = app.children.get_mut(&("genesisSlot".to_string(), "genesis-child".to_string())).expect("genesis child absorbed into the live map under its real slot");
-            assert_eq!(dialect.artifact_kind, "s.test.child");
-            assert_eq!(member.document_id().await, "genesis-child");
-        }
-        //#endregion 🔖️CompositionTests
-
-        #[semio_framework_async_macros::async_test]
-        async fn view_action_emits_no_operations() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let result = app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta()).await.expect("select");
-            assert!(result.mutations.is_empty());
-            assert!(result.requested_effects.is_empty());
-            // A view command never advances the document.
-            assert_eq!(app.test_snapshot().await, TestSnapshot::default());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn view_action_with_inverse_is_revertible_and_backwards_restores_app_runtime_state() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            // Keep the two selects from folding into one row by dispatching an unrelated Mutation between them.
-            app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta()).await.expect("select a");
-            app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
-            app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta()).await.expect("select b");
-            assert_eq!(app.test_config().await.selected, Some("b".to_string()));
-
-            let history = app.test_history().await;
-            // 🧾️ Revert-to-command semantics are VCS-consistent (same as the document side): "leave the
-            // TARGET row applied, undo everything after it" — so to land back on `selected == "a"`, target
-            // the "select a" row itself (the one with the SMALLEST seq — `history.commands` is newest-first).
-            let select_a = history.commands.iter().filter(|entry| entry.action_id == "select").min_by_key(|entry| entry.seq).expect("select-a row carrying a config edit id");
-            assert!(select_a.revertible, "a config edit-linked row must be revertible");
-            let seq = select_a.seq;
-            let log_len_before = history.commands.len();
-
-            app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": seq }))), &meta()).await.expect("revertToCommand on a config-edit row");
-
-            assert_eq!(app.test_config().await.selected, Some("a".to_string()), "reverting to the select-a row must leave it applied and undo select-b");
-            let after = app.test_history().await;
-            // 🧾️ Unlike the pre-B1 memory-replay (which redispatched "select" and folded a new row), a
-            // config-store undo-to-position is pure cursor motion on the config store — it appends its own
-            // "revertToCommand" row, exactly like the document-edit branch above it.
-            assert_eq!(after.commands.len(), log_len_before + 1, "the revert appends one History-kind row");
-            assert_eq!(after.commands.first().map(|entry| entry.action_id.as_str()), Some(REVERT_TO_COMMAND_ACTION_ID));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn shell_action_with_inverse_bubbles_a_replay_effect_instead_of_replaying_locally() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } }))), &meta())
-                .await
-                .expect("noteShellCommand with inverse");
-
-            let history = app.test_history().await;
-            let entry = history.commands.first().expect("one logged shell row");
-            assert_eq!(entry.kind, ActionKind::Shell);
-            assert!(entry.revertible, "a Shell row with a stored inverse must be revertible");
-            let seq = entry.seq;
-
-            let result = app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": seq }))), &meta()).await.expect("revertToCommand on a Shell row");
-
-            // The plugin cannot touch shell-owned state itself — it bubbles the inverse out as an effect
-            // instead of replaying anything locally, and does NOT append a new log entry on its own.
-            assert_eq!(result.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: optional_json_to_dsl(Some(json!({ "themeId": "light" }))) }]);
-            assert_eq!(app.test_history().await.commands.len(), history.commands.len(), "bubbling the effect logs nothing new by itself");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn shell_action_emits_host_effect_without_operations() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let result = app.dispatch_typed(TestCommand::Navigate, &meta()).await.expect("navigate");
-            assert!(result.mutations.is_empty());
-            assert_eq!(result.requested_effects, vec![Effect::Navigate { uri: "semio://home".into() }]);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn copy_emits_clipboard_write_effect_with_no_operations() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta()).await.expect("setLabel");
-            let result = app.handle_action("copy", None, &meta()).await.expect("copy");
-            assert!(result.mutations.is_empty(), "copy must not record an undo entry");
-            assert_eq!(result.requested_effects.len(), 1);
-            let Effect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
-            assert_eq!(fragment.dsl_text, "hello");
-            assert_eq!(fragment.source_app, TestApp::<false>::APP_ID);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn copy_on_empty_selection_is_a_benign_no_operation() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let result = app.handle_action("copy", None, &meta()).await.expect("copy");
-            assert!(result.mutations.is_empty());
-            assert!(result.requested_effects.is_empty());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn cut_removes_label_and_emits_clipboard_write_as_one_undo_unit() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta()).await.expect("setLabel");
-            let result = app.handle_action("cut", None, &meta()).await.expect("cut");
-            assert_eq!(app.test_snapshot().await.label, "");
-            assert_eq!(result.requested_effects.len(), 1);
-            assert!(matches!(&result.requested_effects[0], Effect::ClipboardWrite { fragment } if fragment.dsl_text == "hello"));
-            // One undo restores the cut label — cut is a single coalesced edit, not two.
-            app.handle_action("undo", None, &meta()).await.expect("undo");
-            assert_eq!(app.test_snapshot().await.label, "hello");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn paste_materializes_fragment_at_original_anchor() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let fragment = ClipboardFragment {
-                schema: "semio.test/v1".into(),
-                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-                dsl_text: "pasted".into(),
-                pack_bytes: None,
-                source_app: TestApp::<false>::APP_ID.into(),
-                label: "pasted".into(),
-            };
-            let args = dv(json!({ "fragment": fragment, "anchor": "original" }));
-            app.handle_action("paste", Some(&args), &meta()).await.expect("paste");
-            assert_eq!(app.test_snapshot().await.label, "pasted");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn paste_with_non_original_anchor_reaches_the_app_placement() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let fragment = ClipboardFragment {
-                schema: "semio.test/v1".into(),
-                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-                dsl_text: "pasted".into(),
-                pack_bytes: None,
-                source_app: TestApp::<false>::APP_ID.into(),
-                label: "pasted".into(),
-            };
-            let args = dv(json!({ "fragment": fragment, "anchor": "centroid" }));
-            app.handle_action("paste", Some(&args), &meta()).await.expect("paste");
-            assert_eq!(app.test_snapshot().await.label, format!("pasted-{:?}", PasteAnchor::Centroid));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn paste_with_no_fragment_arg_is_a_benign_no_operation() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let result = app.handle_action("paste", None, &meta()).await.expect("paste");
-            assert!(result.mutations.is_empty());
-            assert_eq!(app.test_snapshot().await.label, "");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn copy_cut_paste_are_registered_as_clipboard_kind_actions() {
-            let definition = synthetic_play_app().await.definition;
-            for id in ["copy", "cut", "paste"] {
-                let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == id).unwrap_or_else(|| panic!("{id} must be auto-injected into every app's manifest"));
-                assert_eq!(action.kind, ActionKind::Clipboard);
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn coalesced_operations_amend_a_single_edit() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            for value in ["a", "ab", "abc"] {
-                app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta()).await.expect("setLabel");
-            }
-            assert_eq!(app.test_snapshot().await.label, "abc");
-            // One undo reverts the whole coalesced gesture back to the empty label.
-            app.handle_action("undo", None, &meta()).await.expect("undo");
-            assert_eq!(app.test_snapshot().await.label, "");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn history_actions_round_trip_through_the_store() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc1");
-            app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc2");
-            assert_eq!(app.test_snapshot().await.count, 2);
-
-            let undo = app.handle_action("undo", None, &meta()).await.expect("undo");
-            assert!(undo.mutations.is_empty());
-            assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
-            assert_eq!(app.test_snapshot().await.count, 1);
-
-            app.handle_action("redo", None, &meta()).await.expect("redo");
-            assert_eq!(app.test_snapshot().await.count, 2);
-
-            let checkpoint = app.handle_action("commitCheckpoint", None, &meta()).await.expect("checkpoint");
-            assert!(checkpoint.mutations.is_empty());
-            assert!(checkpoint.events.iter().any(|event| event.kind == "history-changed"));
-        }
-
-        //#region 🔖️CommandLogTests
-        #[semio_framework_async_macros::async_test]
-        async fn an_operation_action_appends_one_command_log_entry_linked_to_its_edit() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
-            let history = app.test_history().await;
-            assert_eq!(history.commands.len(), 1);
-            let entry = &history.commands[0];
-            assert_eq!(entry.action_id, "increment");
-            assert_eq!(entry.label.as_str(), "increment");
-            assert_eq!(entry.kind, ActionKind::Mutation);
-            assert!(entry.edit_id.is_some());
-            assert!(!entry.op_lines.is_empty(), "operation entry must carry printed op-text");
-            assert!(entry.applied && entry.revertible);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn a_coalesced_gesture_appends_exactly_one_command_log_entry() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            for value in ["a", "ab", "abc"] {
-                app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta()).await.expect("setLabel");
-            }
-            let history = app.test_history().await;
-            let set_label_entries: Vec<&CommandView> = history.commands.iter().filter(|entry| entry.action_id == "setLabel").collect();
-            assert_eq!(set_label_entries.len(), 1, "a coalesced gesture must grow one entry's op_lines, not append new entries");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn undo_and_redo_append_entries_and_never_shrink_the_log() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
-            assert_eq!(app.test_history().await.commands.len(), 1);
-            app.handle_action("undo", None, &meta()).await.expect("undo");
-            let after_undo = app.test_history().await;
-            assert_eq!(after_undo.commands.len(), 2, "undo appends, it does not remove the increment entry");
-            assert!(after_undo.commands.iter().any(|entry| entry.action_id == "increment"));
-            app.handle_action("redo", None, &meta()).await.expect("redo");
-            let after_redo = app.test_history().await;
-            assert_eq!(after_redo.commands.len(), 3, "redo appends a third entry");
-            assert!(after_redo.commands.iter().any(|entry| entry.action_id == "undo"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn revert_to_command_restores_the_snapshot_and_appends_one_entry() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc1");
-            app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc2");
-            assert_eq!(app.test_snapshot().await.count, 2);
-            // 🧾️ `commands` is newest-first — take the MINIMUM seq among "increment" entries to target inc1, not inc2.
-            let first_increment_seq = app.test_history().await.commands.iter().filter(|entry| entry.action_id == "increment").map(|entry| entry.seq).min().expect("first increment entry");
-            let before_len = app.test_history().await.commands.len();
-
-            let result = app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first_increment_seq }))), &meta()).await.expect("revertToCommand");
-            assert!(result.events.iter().any(|event| event.kind == "history-changed"));
-            assert_eq!(app.test_snapshot().await.count, 1, "revert leaves the target edit applied, undoing only what came after it");
-            let history = app.test_history().await;
-            assert_eq!(history.commands.len(), before_len + 1, "exactly one entry appended for the revert itself");
-            // 🧾️ `commands` is newest-first — the just-appended revert entry is the FIRST element, not the last.
-            assert_eq!(history.commands.first().map(|entry| entry.action_id.as_str()), Some(REVERT_TO_COMMAND_ACTION_ID));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn ingested_remote_edits_are_backfilled_into_the_command_log() {
-            let mut sender = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let (near, mut far) = MemoryBackbone::pair("mem://doc-history-backfill", "mem://doc-history-backfill").await;
-            sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
-            sender.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
-
-            let mut envelopes = Vec::new();
-            for message in far.receive().await.expect("receive") {
-                if let BackboneMessage::Mutations { envelopes: operations } = message {
-                    envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
-                }
-            }
-            let operations = protocol::encode_envelopes(&envelopes);
-
-            // 🧾️ The receiver never dispatched anything itself — any log entry it has must come from backfill.
-            let mut receiver = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            receiver.ingest_operations(&operations).await.expect("ingest");
-            let history = receiver.test_history().await;
-            assert_eq!(history.commands.len(), 1);
-            assert!(history.commands[0].edit_id.is_some());
-            assert!(!history.commands[0].op_lines.is_empty());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn set_history_command_filter_emits_no_operations_and_updates_the_view() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let result = app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &meta()).await.expect("setHistoryCommandFilter");
-            assert!(result.mutations.is_empty());
-            assert_eq!(app.test_history().await.command_filter, HistoryCommandFilter::OnlyMutations);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn ui_history_panel_filters_rows_and_gates_the_backwards_action() {
-            let history = HistoryView {
-                columns: Vec::new(),
-                can_undo: true,
-                can_redo: false,
-                active_alternative_id: None,
-                current_checkpoint_id: None,
-                commands: vec![
-                    CommandView {
-                        seq: 1,
-                        action_id: "increment".into(),
-                        label: "Increment".into(),
-                        kind: ActionKind::Mutation,
-                        timestamp: "0".into(),
-                        edit_id: Some("e1".into()),
-                        config_edit_id: None,
-                        child_edit_ids: Vec::new(),
-                        op_lines: vec!["set-count value=1".into()],
-                        applied: true,
-                        revertible: true,
-                        count: 1,
-                        inverse: None,
-                    },
-                    CommandView {
-                        seq: 2,
-                        action_id: "undo".into(),
-                        label: "Undo".into(),
-                        kind: ActionKind::History,
-                        timestamp: "1".into(),
-                        edit_id: None,
-                        config_edit_id: None,
-                        child_edit_ids: Vec::new(),
-                        op_lines: Vec::new(),
-                        applied: false,
-                        revertible: false,
-                        count: 1,
-                        inverse: None,
-                    },
-                ],
-                command_filter: HistoryCommandFilter::All,
-            };
-            let all_panel = ui_history_panel(&history, "ctrl", false, false).await.expect("bounded history panel");
-            assert_eq!(all_panel.children.len(), 2, "Actions + Commands sections");
-            let Component::TreeSection(actions_props) = &all_panel.children[0].component else { panic!("expected a TreeSection") };
-            assert_eq!(actions_props.label.as_ref().map(|label| label.0.as_str()), Some("Actions"));
-            assert_eq!(all_panel.children[0].children.len(), 5, "undo/redo/commit/alternative/filter");
-            assert!(all_panel.children[0].children.iter().all(|item| !item.children.is_empty()), "Actions rows carry their control as a child node");
-            let Component::TreeSection(commands_props) = &all_panel.children[1].component else { panic!("expected a TreeSection") };
-            assert_eq!(commands_props.label.as_ref().map(|label| label.0.as_str()), Some("Commands"));
-            assert_eq!(all_panel.children[1].children.len(), 2);
-            let Component::TreeItem(revertible_props) = &all_panel.children[1].children[0].component else { panic!("expected a TreeItem") };
-            assert!(!revertible_props.row_actions.is_empty(), "the revertible entry must offer inverse");
-            let Component::TreeItem(non_revertible_props) = &all_panel.children[1].children[1].component else { panic!("expected a TreeItem") };
-            assert!(non_revertible_props.row_actions.is_empty(), "the non-revertible entry must not offer inverse");
-
-            let only_ops = HistoryView { command_filter: HistoryCommandFilter::OnlyMutations, ..history.clone() };
-            let ops_panel = ui_history_panel(&only_ops, "ctrl", false, false).await.expect("bounded history panel");
-            assert_eq!(ops_panel.children[1].children.len(), 1);
-            assert_eq!(ops_panel.children[1].children[0].key.as_str(), "framework.history.entry.1");
-
-            let without_ops = HistoryView { command_filter: HistoryCommandFilter::WithoutMutations, ..history };
-            let no_ops_panel = ui_history_panel(&without_ops, "ctrl", false, false).await.expect("bounded history panel");
-            assert_eq!(no_ops_panel.children[1].children.len(), 1);
-            assert_eq!(no_ops_panel.children[1].children[0].key.as_str(), "framework.history.entry.2");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn an_op_less_view_action_is_logged_with_edit_id_none_and_count_one() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta()).await.expect("select");
-            let history = app.test_history().await;
-            assert_eq!(history.commands.len(), 1);
-            let entry = &history.commands[0];
-            assert_eq!(entry.action_id, "select");
-            assert_eq!(entry.kind, ActionKind::View);
-            assert!(entry.edit_id.is_none());
-            assert!(entry.config_edit_id.is_some(), "select is a config-op emission");
-            assert_eq!(entry.count, 1);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn consecutive_identical_view_dispatches_are_distinct_history_entries() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            for id in ["node-1", "node-2", "node-3"] {
-                app.dispatch_typed(TestCommand::Select { id: Some(id.into()) }, &meta()).await.expect("select");
-            }
-            let history = app.test_history().await;
-            assert_eq!(history.commands.len(), 3);
-            assert!(history.commands.iter().all(|entry| entry.count == 1));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn view_dispatches_remain_distinct_across_interleaved_entries() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta()).await.expect("select a");
-            app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta()).await.expect("select b");
-            app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
-            app.dispatch_typed(TestCommand::Select { id: Some("c".into()) }, &meta()).await.expect("select c");
-            let history = app.test_history().await;
-            assert_eq!(history.commands.len(), 4);
-            let select_counts: Vec<u32> = history.commands.iter().filter(|entry| entry.action_id == "select").map(|entry| entry.count).collect();
-            assert_eq!(select_counts, vec![1, 1, 1]);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn note_shell_command_is_intercepted_before_the_app_and_records_each_repeat() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let args = dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "detail": "dark" }));
-            app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &meta()).await.expect("noteShellCommand");
-            assert!(app.test_app().await.received_actions.borrow().is_empty(), "interception must happen before the app ever sees noteShellCommand");
-            let history = app.test_history().await;
-            assert_eq!(history.commands.len(), 1);
-            let entry = &history.commands[0];
-            assert_eq!(entry.action_id, "os.setThemeId");
-            assert_eq!(entry.kind, ActionKind::Shell);
-            assert!(entry.label.contains("dark"));
-
-            app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &meta()).await.expect("noteShellCommand again");
-            assert!(app.test_app().await.received_actions.borrow().is_empty());
-            let history = app.test_history().await;
-            assert_eq!(history.commands.len(), 2);
-            assert!(history.commands.iter().all(|entry| entry.count == 1));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn history_delivery_does_not_widen_a_none_ui_scope() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let result = app.dispatch_typed(TestCommand::ViewNoScope, &meta()).await.expect("viewNoScope");
-            assert_eq!(result.ui_scope, UiDirtyScope::None);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn history_delivery_preserves_partial_ui_scope() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let result = app.dispatch_typed(TestCommand::ViewPartialScope, &meta()).await.expect("viewPartialScope");
-            let UiDirtyScope::Partial { window_bodies, panel_bodies, .. } = result.ui_scope else { panic!("expected a Partial scope") };
-            assert_eq!(window_bodies, vec!["some.window".to_string()]);
-            assert!(panel_bodies.is_empty());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn scope_upgrade_full_stays_full() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let result = app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta()).await.expect("select");
-            assert_eq!(result.ui_scope, UiDirtyScope::Full);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn benign_undo_with_nothing_to_undo_stays_unlogged_with_scope_none() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let before_len = app.test_history().await.commands.len();
-            let result = app.handle_action("undo", None, &meta()).await.expect("undo");
-            assert_eq!(result.ui_scope, UiDirtyScope::None, "nothing was logged, so the scope must not be upgraded either");
-            assert_eq!(app.test_history().await.commands.len(), before_len);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn set_history_command_filter_is_never_logged() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let before_len = app.test_history().await.commands.len();
-            app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &meta()).await.expect("setHistoryCommandFilter");
-            assert_eq!(app.test_history().await.commands.len(), before_len, "the filter's own chrome must not fill the list it filters");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn rendering_the_history_body_reflects_a_log_only_change_with_no_store_generation_bump() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::default()).await.expect("render before");
-            app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta()).await.expect("select");
-            let rendered = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::default()).await.expect("render after");
-            assert_eq!(rendered.root.children.len(), 2, "Actions + Commands");
-            assert_eq!(rendered.root.children[1].children.len(), 1, "a log-only cache key change (no store generation bump) must still refresh the rendered panel");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn an_operation_kind_action_with_zero_operations_still_logs_one_entry() {
-            let mut app = contract_app_under_test().await;
-            app.dispatch_typed(TestCommand::NoopMutation, &meta()).await.expect("noopMutation");
-            let history = app.test_history().await;
-            assert_eq!(history.commands.len(), 1);
-            let entry = &history.commands[0];
-            assert_eq!(entry.action_id, "noopMutation");
-            assert_eq!(entry.kind, ActionKind::Mutation);
-            assert!(entry.edit_id.is_none(), "no operations means no VCS edit, even though the action is Mutation-kind");
-            assert_eq!(entry.count, 1);
-        }
-        //#endregion 🔖️CommandLogTests
-
-        #[semio_framework_async_macros::async_test]
-        async fn undo_on_empty_history_is_a_benign_no_operation() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let result = app.handle_action("undo", None, &meta()).await.expect("undo");
-            assert!(result.mutations.is_empty());
-            assert!(result.events.is_empty());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn document_round_trips_through_serialization() {
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc");
-            app.dispatch_typed(TestCommand::SetLabel { value: "hi".into() }, &meta()).await.expect("label");
-            let files = app.document_pack().await.expect("document pack");
-
-            let mut restored = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            restored.load_document_pack(&files).await.expect("load document pack");
-            assert_eq!(restored.test_snapshot().await, TestSnapshot { count: 1, label: "hi".into() });
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn ingest_operations_is_idempotent() {
-            let mut sender = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let (near, mut far) = MemoryBackbone::pair("mem://doc", "mem://doc").await;
-            sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
-            sender.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
-
-            let mut envelopes = Vec::new();
-            for message in far.receive().await.expect("receive") {
-                if let BackboneMessage::Mutations { envelopes: operations } = message {
-                    envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
-                }
-            }
-            assert!(!envelopes.is_empty(), "expected the applied operation to flow onto the channel");
-            let operations = protocol::encode_envelopes(&envelopes);
-
-            let mut receiver = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            receiver.ingest_operations(&operations).await.expect("ingest once");
-            receiver.ingest_operations(&operations).await.expect("ingest twice");
-            assert_eq!(receiver.test_snapshot().await.count, 1, "feeding the same operation twice must not double-apply");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn attach_detach_reattach_resumes_backbone_convergence() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            assert!(app.backbone_ref().is_none(), "default is unattached");
-
-            let (near, mut far) = MemoryBackbone::pair("mem://reattach", "mem://reattach").await;
-            app.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
-            app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment while attached");
-            assert!(!far.receive().await.expect("receive after attach").is_empty(), "attached edits reach the peer");
-
-            app.detach_backbone().await.expect("detach");
-            assert!(app.backbone_ref().is_none());
-            app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment while detached");
-            assert_eq!(app.test_snapshot().await.count, 2, "detached edits still land on the in-memory graph");
-            assert!(far.receive().await.expect("receive while detached").is_empty(), "detached edits never reach the peer");
-
-            let (near_again, mut far_again) = MemoryBackbone::pair("mem://reattach-2", "mem://reattach-2").await;
-            app.attach_backbone(store::Backbones::Memory(near_again)).await.expect("re-attach");
-            assert!(app.backbone_ref().is_some());
-            app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment after re-attach");
-            assert_eq!(app.test_snapshot().await.count, 3);
-            assert!(!far_again.receive().await.expect("receive after re-attach").is_empty(), "re-attaching resumes outbound convergence on the new backbone");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn selection_count_phrase_formats_mixed_selection() {
-            assert_eq!(selection_count_phrase(false, &[(8, "node", "nodes"), (13, "edge", "edges")]), "8 nodes and 13 edges");
-            assert_eq!(selection_count_phrase(false, &[(1, "node", "nodes")]), "1 node");
-            assert_eq!(selection_count_phrase(true, &[(8, "Knoten", "Knoten"), (13, "Kante", "Kanten")]), "8 Knoten und 13 Kanten");
-        }
-
-        /// 🖱️ `PluginApp::context_menu` end-to-end through `VcsArtifactApp`: with an empty label the
-        /// "selection guard" (`Menu::when`) drops the gated command; once a label is set (a stand-in for
-        /// "something is selected"), both rows resolve label/icon from the declared registry entries.
-        #[semio_framework_async_macros::async_test]
-        async fn context_menu_resolves_labels_from_the_registry_and_respects_guards() {
-            let mut app = contract_app_under_test().await;
-            let request = ContextMenuRequest { menu: UiMenuRef { id: "window".into(), args: None }, surface: None, window_instance_id: None, point: None };
-
-            use semio_framework::{catalog_action_icon_id, catalog_command_icon_id};
-
-            let set_label_icon = catalog_action_icon_id("setLabelRequired", ActionKind::Mutation).as_str().to_string();
-            let increment_icon = catalog_command_icon_id("incrementViaCommand").as_str().to_string();
-
-            let empty_label = app.context_menu(&request).await;
-            assert_eq!(empty_label.len(), 1, "the gated command must be absent with no label set: {empty_label:?}");
-            assert_eq!(empty_label[0], ContextMenuItemSpec { id: "setLabelRequired".into(), label: Some("Set Label".into()), icon: Some(set_label_icon), action: Some("setLabelRequired".into()), ..Default::default() });
-
-            app.dispatch_typed(TestCommand::SetLabel { value: "hi".into() }, &meta()).await.expect("set label");
-            let with_label = app.context_menu(&request).await;
-            assert_eq!(with_label.len(), 2, "the guard must open once a label is set: {with_label:?}");
-            assert_eq!(with_label[1], ContextMenuItemSpec { id: "incrementViaCommand".into(), label: Some("Increment".into()), icon: Some(increment_icon), action: Some("incrementViaCommand".into()), ..Default::default() });
-        }
-
-        //#region 🗂️GroupedContextMenu
-        #[semio_framework_async_macros::async_test]
-        async fn action_definition_with_category_sets_the_ribbon_taxonomy_field() {
-            let action = ActionDefinition::bounded_catalog("x", LocalizedLabel::data("X"), ActionKind::Mutation).with_category("view");
-            assert_eq!(action.category.as_deref(), Some("view"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn menu_group_produces_a_group_row_keyed_by_category() {
-            let registry = contract_registry().await;
-            let items = Menu::of(&registry).action("setLabelRequired").group("export", |m| m.command("incrementViaCommand")).build();
-            assert_eq!(items.len(), 2);
-            assert_eq!(items[1].id, "menu.group.export");
-            assert_eq!(items[1].label, None, "group rows travel with no label — the host resolves it via `ribbon_parent_label`");
-            let children: Vec<&str> = items[1].children.as_ref().unwrap().iter().map(|child| child.id.as_str()).collect();
-            assert_eq!(children, vec!["incrementViaCommand"]);
-        }
-
-        /// 🧪️ A registry declaring `setLabelRequired` plus ten `flatLeaf1..10` actions (four carrying a
-        /// `RIBBON_PARENT_CATEGORIES` category via `with_category`) — feeds `TestApp::context_menu`'s
-        /// `"flat-menu-test"` branch below.
-        async fn flat_menu_registry() -> AppActionRegistry {
-            let app = App::from_builder(
-                App::builder(test_app_surface_id().await, LocalizedLabel::data("FlatMenuTest"))
-                    .await
-                    .document(["state"])
-                    .mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                    .await
-                    .window_kind("main", LocalizedLabel::data("Main"), "flat-menu-test.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                    .await
-                    .mutation("setLabelRequired", LocalizedLabel::data("Set Label"))
-                    .await
-                    .action_args("setLabelRequired", vec![ActionArgDef::text("value", LocalizedLabel::data("Value")).required()])
-                    .await
-                    .mutation("flatLeaf1", LocalizedLabel::data("Flat Leaf 1"))
-                    .await
-                    .mutation("flatLeaf2", LocalizedLabel::data("Flat Leaf 2"))
-                    .await
-                    .mutation("flatLeaf3", LocalizedLabel::data("Flat Leaf 3"))
-                    .await
-                    .mutation("flatLeaf4", LocalizedLabel::data("Flat Leaf 4"))
-                    .await
-                    .action_with(ActionDefinition::bounded_catalog("flatLeaf5", LocalizedLabel::data("Flat Leaf 5"), ActionKind::Mutation).with_category("view"))
-                    .await
-                    .action_with(ActionDefinition::bounded_catalog("flatLeaf6", LocalizedLabel::data("Flat Leaf 6"), ActionKind::Mutation).with_category("view"))
-                    .await
-                    .action_with(ActionDefinition::bounded_catalog("flatLeaf7", LocalizedLabel::data("Flat Leaf 7"), ActionKind::Mutation).with_category("export"))
-                    .await
-                    .action_with(ActionDefinition::bounded_catalog("flatLeaf8", LocalizedLabel::data("Flat Leaf 8"), ActionKind::Mutation).with_category("export"))
-                    .await
-                    .mutation("flatLeaf9", LocalizedLabel::data("Flat Leaf 9"))
-                    .await
-                    .mutation("flatLeaf10", LocalizedLabel::data("Flat Leaf 10"))
-                    .await,
-            )
-            .await;
-            AppActionRegistry::from_definition(&app.definition)
-        }
-
-        /// 🖱️ End to end through `VcsArtifactApp::context_menu`: a synthetic emitter's 11 flat leaves come
-        /// back as 5 primaries + 3 taxonomy-sorted `menu.group.<category>` rows — proving the funnel applies
-        /// `organize_context_menu` to every emitter, not just ones that call `Menu::group` themselves.
-        #[semio_framework_async_macros::async_test]
-        async fn context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::with_registry(TestApp::<false>::default(), flat_menu_registry().await).await;
-            app.dispatch_typed(TestCommand::SetLabel { value: "flat-menu-test".into() }, &meta()).await.expect("set label");
-            let request = ContextMenuRequest { menu: UiMenuRef { id: "window".into(), args: None }, surface: None, window_instance_id: None, point: None };
-
-            let organized = app.context_menu(&request).await;
-            let ids: Vec<&str> = organized.iter().map(|item| item.id.as_str()).collect();
-            assert_eq!(
-                ids,
-                vec!["setLabelRequired", "flatLeaf1", "flatLeaf2", "flatLeaf3", "flatLeaf4", "menu.group.view", "menu.group.actions", "menu.group.export"],
-                "5 primaries, then groups in RIBBON_PARENT_CATEGORIES taxonomy order (view < actions < export): {ids:?}"
-            );
-            let view_children: Vec<&str> = organized[5].children.as_ref().unwrap().iter().map(|child| child.id.as_str()).collect();
-            assert_eq!(view_children, vec!["flatLeaf5", "flatLeaf6"]);
-            let actions_children: Vec<&str> = organized[6].children.as_ref().unwrap().iter().map(|child| child.id.as_str()).collect();
-            assert_eq!(actions_children, vec!["flatLeaf9", "flatLeaf10"], "uncategorized overflow leaves default to menu.group.actions");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn context_menu_wire_request_without_view_state_still_parses() {
-            let wire: ContextMenuWireRequest = serde_json::from_str(r#"{"menu":{"id":"window"}}"#).expect("viewState is no longer a required field");
-            assert_eq!(wire.menu.id, "window");
-            assert!(wire.surface.is_none());
-            assert!(wire.window_instance_id.is_none());
-            assert!(wire.point.is_none());
-        }
-        //#endregion 🗂️GroupedContextMenu
-
-        #[semio_framework_async_macros::async_test]
-        async fn view_action_emitting_ops_is_rejected() {
-            let mut app = contract_app_under_test().await;
-            let error = app.dispatch_typed(TestCommand::BadView, &meta()).await.expect_err("a View command emitting operations must be rejected");
-            assert!(error.message.contains("must not emit operations"), "unexpected error: {}", error.message);
-            assert_eq!(app.test_snapshot().await, TestSnapshot::default());
-        }
-
-        //#region 🧪️IntentDispatchTests
-        /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`) acceptance: an Activate intent on a test app
-        /// produces the mutation's document change AND a command-log entry within the SAME
-        /// `handle_intent_frame` call — the reactor's own `poll` never needs a second turn to see it,
-        /// since `plugin_dispatch_intents` (which calls this) runs before the SAME turn's
-        /// `dirty_render` pass.
-        #[semio_framework_async_macros::async_test]
-        async fn activate_intent_dispatches_through_the_typed_command_path_same_turn() {
-            let mut app = contract_app_under_test().await;
-            let intent = UiIntent {
-                surface: SurfaceId::try_from("s").expect("bounded fixture"),
-                revision: UiRevision(0),
-                node: UiNodeId::default(),
-                node_key: UiText::try_from_str("counter").expect("bounded fixture"),
-                trigger: Trigger::Activate,
-                action: ActionId::try_v1("app", "incrementViaCommand").expect("bounded fixture"),
-                args: None,
-                input: None,
-                seq: 1,
-            };
-            let result = app.handle_intent_frame(&intent, &meta()).await.expect("an Activate intent on a Mutation-kind action must dispatch");
-            assert_eq!(app.test_snapshot().await.count, 1, "the mutation must have applied");
-            assert_eq!(result.mutations.len(), 1, "the returned invocation carries the one mutation the intent caused");
-            assert!(result.history_patch.is_some(), "a command-log entry must have been recorded for the intent");
-        }
-
-        /// 🎯️ M1 acceptance: a `View`-kind action arriving as an intent and returning artifact ops
-        /// still hard-faults — kind discipline survives the new intent path unchanged, because
-        /// `handle_intent_frame` routes through the SAME `dispatch_typed_command_inner` every other
-        /// command path uses.
-        #[semio_framework_async_macros::async_test]
-        async fn view_kind_intent_returning_operations_hard_faults() {
-            let mut app = contract_app_under_test().await;
-            let intent = UiIntent {
-                surface: SurfaceId::try_from("s").expect("bounded fixture"),
-                revision: UiRevision(0),
-                node: UiNodeId::default(),
-                node_key: UiText::try_from_str("bad").expect("bounded fixture"),
-                trigger: Trigger::Activate,
-                action: ActionId::try_v1("app", "badView").expect("bounded fixture"),
-                args: None,
-                input: None,
-                seq: 2,
-            };
-            let error = app.handle_intent_frame(&intent, &meta()).await.expect_err("a View-kind intent emitting operations must be rejected");
-            assert!(error.message.contains("must not emit operations"), "unexpected error: {}", error.message);
-            assert_eq!(app.test_snapshot().await, TestSnapshot::default(), "kind discipline must block the mutation");
-        }
-
-        /// 🎯️ M1 decision: `ActionId.version` mismatch returns a `Fault`, never silently dispatches a
-        /// stale contract — the default `command_from_intent` bridge only resolves version 1.
-        #[semio_framework_async_macros::async_test]
-        async fn command_from_intent_rejects_a_non_v1_action_version() {
-            let intent = UiIntent {
-                surface: SurfaceId::try_from("s").expect("bounded fixture"),
-                revision: UiRevision(0),
-                node: UiNodeId::default(),
-                node_key: UiText::try_from_str("counter").expect("bounded fixture"),
-                trigger: Trigger::Activate,
-                action: ActionId::new(UiText::try_from_str("app").expect("bounded fixture"), UiText::try_from_str("incrementViaCommand").expect("bounded fixture"), 2),
-                args: None,
-                input: None,
-                seq: 3,
-            };
-            let error = TestApp::<false>::command_from_intent(&intent).await.expect_err("a non-v1 action must be rejected, never silently dispatched");
-            assert!(error.message.contains("version"), "unexpected error: {}", error.message);
-        }
-        //#endregion 🧪️IntentDispatchTests
-
-        #[semio_framework_async_macros::async_test]
-        async fn set_active_utility_carries_its_value_directly_and_emits_no_operations() {
-            let mut app = contract_app_under_test().await;
-            let result = app.dispatch_typed(TestCommand::SetActiveUtility { utility_id: "brush".into() }, &meta()).await.expect("setActiveUtility is a valid View command");
-            assert!(result.mutations.is_empty(), "utility switching must not create history");
-            let event = result.events.iter().find(|event| event.kind == "active-utility").expect("echoed active utility");
-            assert_eq!(event.payload, dsl::DslValue::from(json!({ "utilityId": "brush" })));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn action_emit_amend_coalesces_while_commit_does_not() {
-            let mut app = contract_app_under_test().await;
-            for value in ["a", "ab", "abc"] {
-                app.dispatch_typed(TestCommand::AmendLabel { value: value.into() }, &meta()).await.expect("amendLabel");
-            }
-            assert_eq!(app.test_snapshot().await.label, "abc");
-            // One undo reverts the whole coalesced amend gesture.
-            app.handle_action("undo", None, &meta()).await.expect("undo amend");
-            assert_eq!(app.test_snapshot().await.label, "");
-
-            for value in ["x", "xy"] {
-                app.dispatch_typed(TestCommand::CommitLabel { value: value.into() }, &meta()).await.expect("commitLabel");
-            }
-            assert_eq!(app.test_snapshot().await.label, "xy");
-            // Each commit is its own edit: one undo only reverts the last commit.
-            app.handle_action("undo", None, &meta()).await.expect("undo commit");
-            assert_eq!(app.test_snapshot().await.label, "x");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn amend_dispatch_reports_only_this_dispatch_new_operations() {
-            // 🪢️ Regression guard for `result_from_last_edit`'s `tail_offset` slicing: even though the
-            // coalesced edit accumulates every amend's operations (3 after this loop), each dispatch's
-            // `InvocationResult` must report only the operation IT just added — never re-serializing the whole
-            // growing edit into every `KernelMutation`/`UndoGroup` on every single dispatch.
-            let mut app = contract_app_under_test().await;
-            app.dispatch_typed(TestCommand::AmendLabel { value: "a".into() }, &meta()).await.expect("amendLabel a");
-            app.dispatch_typed(TestCommand::AmendLabel { value: "ab".into() }, &meta()).await.expect("amendLabel ab");
-            let result = app.dispatch_typed(TestCommand::AmendLabel { value: "abc".into() }, &meta()).await.expect("amendLabel abc");
-            assert_eq!(result.mutations.len(), 1, "must report only this dispatch's new operation, not the whole coalesced edit");
-            assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetLabel(SetLabel { value: "abc".into() })).unwrap());
-            assert_eq!(
-                result.mutations[0].inverse.inverse_diff.payload,
-                protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetLabel(SetLabel { value: "ab".into() })).unwrap()]),
-                "the new operation's own inverse undoes back to the pre-dispatch label, not the whole gesture"
-            );
-            assert_eq!(result.inverse_group.mutations.len(), 1);
-            assert_eq!(result.inverse_group.inverse_mutations.len(), 1);
-            assert_eq!(app.test_snapshot().await.label, "abc");
-            // The narrowed per-dispatch reporting must not affect coalescing/undo semantics.
-            app.handle_action("undo", None, &meta()).await.expect("undo amend");
-            assert_eq!(app.test_snapshot().await.label, "");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn operation_command_emits_kernel_op_with_true_inverse() {
-            let mut app = contract_app_under_test().await;
-            let result = app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect("incrementViaCommand");
-            assert_eq!(result.mutations.len(), 1);
-            assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 1 })).unwrap());
-            assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 0 })).unwrap()]));
-            assert_eq!(app.test_snapshot().await.count, 1);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn manifest_command_dispatch_validates_structural_app_ownership() {
-            use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
-            let mut app = contract_app_under_test().await;
-            let valid = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: "test".into(), app_id: TestApp::<false>::APP_ID.into() }, command_id: "incrementViaCommand".into() }, arguments: Default::default() };
-            app.handle_command(&valid, Some("edit"), &meta()).await.expect("app-owned command");
-            assert_eq!(app.test_snapshot().await.count, 1);
-            let unknown = CommandInvocation { address: CommandAddress { command_id: "nope".into(), ..valid.address }, arguments: Default::default() };
-            let error = app.handle_command(&unknown, Some("edit"), &meta()).await.expect_err("undeclared app command");
-            assert!(error.message.contains("not owned by app"), "unexpected error: {}", error.message);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn ui_dispatch_backstop_rejects_every_non_migrated_action_and_command() {
-            use semio_framework::InteractiveJobClassification::{BatchOnlyPendingRewrite, Deleted, ForbiddenFromUi, Unclassified};
-            use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
-
-            for classification in [Unclassified, BatchOnlyPendingRewrite, ForbiddenFromUi, Deleted] {
-                let mut action_registry = contract_registry().await;
-                action_registry.test_set_action_classification("badView", classification);
-                let mut action_app = VcsArtifactApp::<TestApp>::with_registry(TestApp::<false>::default(), action_registry).await;
-                assert!(!action_app.test_registered_tool_keys().iter().any(|key| key.1 == "badView"));
-                let action_error = action_app.dispatch_typed(TestCommand::BadView, &meta()).await.expect_err("non-migrated action must be rejected before its handler runs");
-                assert_eq!(action_error.code.0, "interactive-job.not-ui-safe");
-                assert_eq!(action_app.test_snapshot().await.count, 0);
-
-                let mut command_registry = contract_registry().await;
-                command_registry.test_set_app_command_classification("incrementViaCommand", classification);
-                let mut command_app = VcsArtifactApp::<TestApp>::with_registry(TestApp::<false>::default(), command_registry).await;
-                assert!(!command_app.test_registered_tool_keys().iter().any(|key| key.1 == "incrementViaCommand"));
-                let invocation =
-                    CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: "test".into(), app_id: TestApp::<false>::APP_ID.into() }, command_id: "incrementViaCommand".into() }, arguments: Default::default() };
-                let command_error = command_app.handle_command(&invocation, Some("edit"), &meta()).await.expect_err("non-migrated command must be rejected before its handler runs");
-                assert_eq!(command_error.code.0, "interactive-job.not-ui-safe");
-                assert_eq!(command_app.test_snapshot().await.count, 0);
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn manifest_mode_command_requires_the_active_structural_owner() {
-            use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
-            let invocation = CommandInvocation {
-                address: CommandAddress { owner: CommandOwnerAddress::Mode { plugin_id: "test".into(), app_id: TestApp::<false>::APP_ID.into(), mode_id: "edit".into() }, command_id: "mode.increment".into() },
-                arguments: Default::default(),
-            };
-            let mut app = contract_app_under_test().await;
-            app.handle_command(&invocation, Some("edit"), &meta()).await.expect("active mode-owned command");
-            assert_eq!(app.test_snapshot().await.count, 1);
-            let error = app.handle_command(&invocation, None, &meta()).await.expect_err("inactive mode command");
-            assert!(error.message.contains("not owned by active mode edit"), "unexpected error: {}", error.message);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn addressed_window_action_injects_the_exact_window_instance_into_the_typed_handler() {
-            use semio_framework::manifest::{ActionAddress, ActionInvocation};
-            let invocation = ActionInvocation {
-                address: ActionAddress { plugin_id: "test".into(), app_id: TestApp::<false>::APP_ID.into(), mode_id: "edit".into(), window_kind_id: "main".into(), window_instance_id: "main-instance-2".into(), action_id: "targetWindow".into() },
-                arguments: Default::default(),
-            };
-            let mut app = contract_app_under_test().await;
-            app.handle_action_invocation(&invocation, Some("edit"), &meta()).await.expect("addressed window action");
-            assert_eq!(app.test_snapshot().await.label, "main-instance-2");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn plugin_command_handler_is_program_owned_across_app_instances() {
-            use semio_framework::kernel::{InvocationId, InvocationResult, UndoGroup};
-            use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
-            use std::sync::{
-                Arc,
-                atomic::{AtomicUsize, Ordering},
-            };
-            let calls = Arc::new(AtomicUsize::new(0));
-            let handler_calls = calls.clone();
-            let plugin: Plugin = Plugin::new("fixture", "Fixture", "0.1.0").plugin_command(
-                CommandDefinition::bounded_catalog("refresh", LocalizedLabel::data("Refresh"), "plugin", ActionKind::Shell),
-                Box::new(move |_, meta| {
-                    handler_calls.fetch_add(meta.instance_id as usize, Ordering::SeqCst);
-                    Ok(InvocationResult {
-                        output: dsl::DslValue::Null,
-                        mutations: Vec::new(),
-                        inverse_group: UndoGroup { invocation_id: InvocationId(String::new()), mutations: Vec::new(), inverse_mutations: Vec::new(), member_edits: Vec::new() },
-                        diagnostics: Vec::new(),
-                        requested_effects: Vec::new(),
-                        events: Vec::new(),
-                        ui_scope: UiDirtyScope::None,
-                        history_patch: None,
-                    })
-                }),
-            );
-            let invocation = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::Plugin { plugin_id: "fixture".into() }, command_id: "refresh".into() }, arguments: Default::default() };
-            plugin.handle_plugin_command(&invocation, &ActionMeta { actor: "a".into(), instance_id: 1 }).expect("first app instance");
-            plugin.handle_plugin_command(&invocation, &ActionMeta { actor: "b".into(), instance_id: 2 }).expect("second app instance");
-            assert_eq!(calls.load(Ordering::SeqCst), 3);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn command_op_records_history_exactly_like_an_operation_action() {
-            let mut app = contract_app_under_test().await;
-            app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect("inc");
-            app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect("inc");
-            assert_eq!(app.test_snapshot().await.count, 2);
-            app.handle_action("undo", None, &meta()).await.expect("undo");
-            assert_eq!(app.test_snapshot().await.count, 1);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn registry_less_construction_rejects_before_the_reducer() {
-            let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let error = app.dispatch_typed(TestCommand::BadView, &meta()).await.expect_err("an empty registry must fail closed");
-            assert_eq!(error.code.0, "interactive-job.unknown-key");
-            assert_eq!(app.test_snapshot().await, TestSnapshot::default());
-        }
-
-        //#region 🔖️InteractionDispatchTests
-        #[semio_framework_async_macros::async_test]
-        async fn interaction_select_replace_persists_through_the_interaction_store() {
-            let mut app = interaction_app_under_test().await;
-            // 🕹️ `interaction_topology` requires a non-empty `label` for "item-1" to exist.
-            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-            app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
-            let selection = app.interaction_state().await.selection.get("items").cloned().expect("items domain selected");
-            assert_eq!(selection.ids, vec!["item-1".to_string()]);
-            assert_eq!(selection.granularity, "item");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn interaction_hover_is_ephemeral_and_never_touches_the_persisted_interaction_store() {
-            let mut app = interaction_app_under_test().await;
-            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-            app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
-            let edits_after_select = app.interaction_store.envelope().vcs.edits.len();
-
-            app.handle_action(INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &meta()).await.expect("interactionHover");
-
-            assert_eq!(app.interaction_store.envelope().vcs.edits.len(), edits_after_select, "hover must never mint a persisted interaction_store edit");
-            assert_eq!(app.interaction_state().await.hover.get("items").map(|hover| hover.ids.clone()), Some(vec!["item-1".to_string()]));
-
-            // 🐁️ Empty targets clears the channel (see `next_hover`'s "empty batch clears" law).
-            app.handle_action(INTERACTION_HOVER_ACTION_ID, Some(&dv(json!({ "domainId": "items", "channel": "pointer", "targets": "[]" }))), &meta()).await.expect("clear hover");
-            assert!(app.interaction_state().await.hover.get("items").is_none(), "an emptied hover channel is removed, not left as an empty entry");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn a_pick_is_never_undoable_the_default_undo_only_ever_walks_the_document_store() {
-            let mut app = interaction_app_under_test().await;
-            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-            app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
-            assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]));
-
-            // 🕰️ The framework-injected "undo" action only ever dispatches against `self.store` (the
-            // DOCUMENT store) — with only the label-seed edit on it, one undo reverts THAT, not the pick.
-            app.handle_action("undo", None, &meta()).await.expect("undo");
-            assert_eq!(app.test_snapshot().await.label, "", "undo must revert the document edit (seeding the label)");
-            assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "the pick itself must survive an unrelated document undo — lane discipline");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn set_selection_mode_and_set_interaction_granularity_persist_immediately() {
-            let mut app = interaction_app_under_test().await;
-            app.handle_action(SET_SELECTION_MODE_ACTION_ID, Some(&dv(json!({ "domainId": "items", "mode": "single" }))), &meta()).await.expect("setSelectionMode");
-            assert_eq!(app.interaction_state().await.active_mode.get("items").copied(), Some(SelectionMode::Single));
-
-            app.handle_action(SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "item" }))), &meta()).await.expect("setInteractionGranularity");
-            assert_eq!(app.interaction_state().await.active_granularity.get("items").map(String::as_str), Some("item"));
-
-            // 🛂️ An undeclared granularity is rejected, not silently accepted.
-            let error = app.handle_action(SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "bogus" }))), &meta()).await.expect_err("undeclared granularity must be rejected");
-            assert!(error.message.contains("bogus"), "unexpected error: {}", error.message);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn clear_selection_and_select_all_apply_across_every_declared_domain() {
-            let mut app = interaction_app_under_test().await;
-            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-
-            app.handle_action(SELECT_ALL_ACTION_ID, None, &meta()).await.expect("selectAll");
-            assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "selectAll must select every id `interaction_topology` reports for the declared granularity");
-
-            app.handle_action(CLEAR_SELECTION_ACTION_ID, None, &meta()).await.expect("clearSelection");
-            assert!(app.interaction_state().await.selection.get("items").is_none_or(|selection| selection.ids.is_empty()), "clearSelection must empty every declared domain's selection");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn validate_state_prunes_a_stale_selection_id_after_the_document_deletes_it() {
-            let mut app = interaction_app_under_test().await;
-            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-            app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
-            assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]));
-
-            // 🧹️ `TestApp::interaction_topology` reports NO ids once `label` is empty again — simulates
-            // "item-1 was deleted from the document" — task 4: revalidated after EVERY artifact dispatch.
-            app.dispatch_typed(TestCommand::SetLabel { value: "".into() }, &meta()).await.expect("delete item-1 (empty label)");
-
-            assert!(app.interaction_state().await.selection.get("items").is_none_or(|selection| selection.ids.is_empty()), "the deleted id must be pruned from selection automatically");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn interaction_verbs_are_recorded_under_the_interaction_action_kind() {
-            let mut app = interaction_app_under_test().await;
-            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-            app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
-            let history = app.test_history().await;
-            let row = history.commands.first().expect("one logged row");
-            assert_eq!(row.action_id, INTERACTION_SELECT_ACTION_ID);
-            assert_eq!(row.kind, ActionKind::Interaction);
-            assert!(!row.revertible, "an Interaction-kind row carries no edit/config_edit/inverse — never revertible");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_definition_rejects_transitive_flat_interaction() {
-            let __base = App::builder("bad-transitive-flat", LocalizedLabel::data("Bad"))
-                .await
-                .document(["state"])
-                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                .await
-                .window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                .await;
-            let outcome = std::panic::catch_unwind(move || {
-                let builder = resolve_ready(__base.interaction(InteractionDefinition {
-                    id: "items".into(),
-                    label: LocalizedLabel::data("Items"),
-                    granularities: vec![GranularityDefinition { id: "item".into(), label: LocalizedLabel::data("Item"), icon_id: IconName::AppWindow }],
-                    hierarchy: HierarchyProvider::Flat,
-                    hover: HoverSpec { transitive: true, ..HoverSpec::default() },
-                    selection: SelectionSpec { modes: vec![SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
-                }));
-                resolve_ready(App::from_builder(builder))
-            });
-            assert!(outcome.is_err(), "build_definition must reject transitive hover paired with HierarchyProvider::Flat");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn ui_tree_stamping_caches_interaction_topology_from_a_domain_bound_tree() {
-            let mut app = interaction_app_under_test().await;
-            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-            app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
-
-            // 👥️ Contract-freeze §C7.6 peer setup — M2 (ticket 26/08/17 `design-unified.md`) makes
-            // this the real presence-derivation fixture the prior packet's own gap note anticipated.
-            app.own_color = Some(9);
-            let mut peer_presence = PeerPresenceRoot::empty();
-            peer_presence
-                .insert(
-                    "user:alice#s1".to_string(),
-                    PeerPresence {
-                        color: Some(3),
-                        surface: None,
-                        interaction: Some(PresenceInteraction {
-                            app_id: "s.test.synthetic@1/*#editor".to_string(),
-                            domains: vec![PresenceDomain { domain: "items".to_string(), granularity: "item".to_string(), selected: vec!["item-1".to_string()], hovered: Vec::new() }],
-                        }),
-                    },
-                )
-                .expect("peer fixture fits fixed root");
-            let previous = std::mem::replace(&mut *app.peer_presence, std::sync::Arc::new(peer_presence));
-            assert!(previous.is_empty());
-            drop(previous);
-
-            // 👥️ M2: `stamp_and_cache_interaction_ui` no longer writes selection/hover back onto the
-            // tree itself (`TreeNode`/`Component::TreeItem` still carry no presence field — see that
-            // method's own doc comment for why "the framework wins" onto the tree is gone for good);
-            // it derives `ui_contract::PresenceUpdate`s into `self.pending_presence` instead, asserted
-            // below.
-            let item = TreeNode::try_new(
-                "item-1",
-                Component::TreeItem(TreeItemProps {
-                    label: Label(UiText::try_from_str("Item 1").expect("bounded fixture")),
-                    description: None,
-                    icon: None,
-                    default_open: None,
-                    draggable: None,
-                    drag_data: None,
-                    dimmed: None,
-                    row_actions: UiFixedList::default(),
-                }),
-            )
-            .expect("bounded fixture");
-            let section = TreeNode::try_new("sec", Component::TreeSection(TreeSectionProps { label: None, default_open: None }))
-                .expect("bounded fixture")
-                .try_with_children([item])
-                .unwrap_or_else(|_| panic!("bounded fixture"));
-            let root = TreeNode::try_new(
-                "root",
-                Component::Tree(TreeProps { interaction_domain: Some(UiText::try_from_str("items").expect("bounded fixture")) }),
-            )
-            .expect("bounded fixture")
-            .try_with_children([section])
-            .unwrap_or_else(|_| panic!("bounded fixture"));
-            let tree = ComponentTree { root };
-            let state = app.interaction_state().await;
-            app.stamp_and_cache_interaction_ui(&tree, &state, "window").await.expect("bounded fixture");
-            let topology = app.interaction_ui_topology.get("items").expect("topology cached for the items domain");
-            assert_eq!(topology.ordered.len(), 1);
-            assert_eq!(topology.ordered[0].id, "item-1");
-
-            // 👥️ M2 acceptance: selecting item-1 (own) with alice ALSO selecting it derives exactly
-            // one `PresenceUpdate` for that node — own.selected true, one peer mark, own color
-            // threaded through, surface addressed by the bare body key (the reactor prefixes the
-            // instance id on drain — see `plugin_take_presence`'s own doc).
-            assert_eq!(app.pending_presence.len(), 1, "expected exactly one dirty presence key, got {:?}", app.pending_presence);
-            let update = &app.pending_presence[0];
-            assert_eq!(update.surface, semio_framework_ui_contract::SurfaceId::try_from("window").expect("bounded fixture"));
-            assert_eq!(update.node_key, "item-1");
-            assert!(update.own.selected, "own selection must be reported");
-            assert!(!update.own.hovered);
-            assert_eq!(update.own.color, Some(9));
-            assert_eq!(update.peers.len(), 1);
-            assert_eq!(update.peers[0].actor, "user:alice#s1");
-            assert_eq!(update.peers[0].color, Some(3));
-            assert!(update.peers[0].selected);
-            assert!(!update.peers[0].hovered);
-        }
-        //#endregion 🔖️InteractionDispatchTests
-
-        //#region 🔖️AsyncTaskTests
-        // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): `⚛️reactor::poll`'s real
-        // event routing (`Event::Completed`, `run_until_idle`, `drain_task_resumes`) is
-        // wasm32-wasip2-only (`wit_bridge`) and cannot run under a native `cargo test`. These tests
-        // exercise the SAME underlying primitives `poll` itself drives — `⚛️reactor::spawn_task`,
-        // `⚛️reactor::test_support::{run_until_idle, resolve_request, pop_task_resume, ...}`, and
-        // `crate::plugin_runtime::plugin_resume_task` — directly, standing in for the wasm-only
-        // glue: `test_support::resolve_request` IS what `Event::Completed` routes to
-        // (`RequestRegistry::resolve`), and `pop_task_resume`/`plugin_resume_task` together ARE
-        // `drain_task_resumes` minus the frame-routing tail (`route_app_frame`, itself untouched by
-        // this packet). An honest, named gap: the wasm-only tail is not exercised natively.
-
-        /// 🌱️ A command spawns a task; the task awaits a REAL `host::storage_read` round trip
-        /// (genuinely parked on `RequestRegistry`, not a synchronously-ready future); an injected
-        /// completion (`test_support::resolve_request`, standing in for `Event::Completed`)
-        /// resolves it; the follow-up `TaskResolution::Command` mutates the store, stamped with
-        /// the task's CLONED originating `ActionMeta`.
-        #[semio_framework_async_macros::async_test]
-        async fn a_spawned_task_awaits_a_real_request_and_its_resume_mutates_the_store_under_the_original_meta() {
-            let instance = 501;
-            let spawn_meta = ActionMeta { actor: "alice".into(), instance_id: instance };
-            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-
-            let result = app.dispatch_typed(TestCommand::SpawnCountTask, &spawn_meta).await.expect("dispatching SpawnCountTask must succeed");
-            assert!(result.mutations.is_empty(), "SpawnCountTask itself must emit no document mutation — only the LATER resume does");
-            // 🪪️ `spawn_task` is keyed off `meta.instance_id` (`dispatch_emit`'s own `meta`, i.e.
-            // `spawn_meta` above, which shares `instance`'s value by construction).
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 1, "dispatch_typed(SpawnCountTask) must have spawned exactly one task");
-
-            // ▶️ First poll: the task runs up to its `.await` on `host.storage_read(..)` and parks —
-            // genuinely pending, not synchronously resolved.
-            let pending = crate::reactor::test_support::run_until_idle(8).await;
-            assert!(pending, "the task must be parked on a real RequestRegistry await, not finished synchronously");
-            assert_eq!(crate::reactor::test_support::pending_request_count().await, 1, "storage_read must have allocated exactly one RequestRegistry slot");
-            assert!(crate::reactor::test_support::pop_task_resume().await.is_none(), "nothing can have resolved yet — the task is still parked");
-
-            // ✅️ Inject the "completion" (`⚛️reactor::poll`'s `Event::Completed` arm calls the exact
-            // same `RequestRegistry::resolve`) — request id 1 is `storage_read`'s, the first (and
-            // only) request this test has allocated.
-            crate::reactor::test_support::resolve_request(1, Ok(42i32.to_le_bytes().to_vec())).await;
-            let pending = crate::reactor::test_support::run_until_idle(8).await;
-            assert!(!pending, "the task must run to completion once its await resolves");
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(spawn_meta.instance_id).await, 0, "TASK_RECORDS must be cleaned up the moment the task's future completes");
-
-            let (resumed_instance, resumed_meta, resumed_input) = crate::reactor::test_support::pop_task_resume().await.expect("the completed task must have queued exactly one resume");
-            assert_eq!(resumed_instance, spawn_meta.instance_id);
-            assert_eq!(resumed_meta.actor, "alice", "the follow-up must carry the task's ORIGINATING actor, not whatever is 'current' at resume time");
-            assert_eq!(resumed_meta.instance_id, spawn_meta.instance_id);
-            let crate::plugin_runtime::TaskResumeInput::Command(command_bytes) = resumed_input.expect("the task resolved Ok, not with a Fault") else {
-                panic!("SpawnCountTask's task resolves TaskResolution::Command, not ::Emit");
-            };
-            let decoded_command = <TestCommand as ::protocol::OpBinary>::decode_op(&command_bytes).expect("must decode back to a TestCommand");
-            assert_eq!(decoded_command, TestCommand::ApplyCountFromTask { value: 42 }, "the resolved command must carry the value the injected completion delivered");
-
-            // 🔀️ Re-enter through the SAME typed-command path a live command would — this IS
-            // `plugin_runtime::plugin_resume_task`'s `TaskResumeInput::Command` arm, exercised
-            // directly rather than through `crate::reactor::drain_task_resumes` (wasm-only).
-            let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
-            crate::plugin_runtime::test_push_instance(&runtime, AppInstance { id: resumed_instance, app: TestRuntimeApps::from(app) }).await;
-            let output = crate::plugin_runtime::plugin_resume_task(&runtime, resumed_instance, &resumed_meta, crate::plugin_runtime::TaskResumeInput::Command(command_bytes)).await;
-            assert_eq!(output.frames.len(), 1, "a successful resume must frame exactly one AppFrame::Emit");
-            let frame = protocol::decode_app_frame(&output.frames[0]).await.expect("must decode back to an AppFrame");
-            let protocol::AppFrame::Emit { document_ops, .. } = frame else { panic!("a resumed Command follow-up must frame as AppFrame::Emit, matching dispatch_emit's own last_emit_wire idiom — got {frame:?}") };
-            let ops = protocol::decode_ops_vec(&document_ops).expect("document_ops must decode as an ops-vec");
-            assert_eq!(ops.len(), 1, "ApplyCountFromTask emits exactly one document mutation");
-            let applied_mutation = <TestMutation as ::protocol::OpBinary>::decode_op(&ops[0]).expect("must decode back to a TestMutation");
-            assert_eq!(applied_mutation, TestMutation::SetCount(SetCount { value: 42 }), "the follow-up dispatch must have applied the SAME mutation ApplyCountFromTask{{value:42}} produces directly");
-        }
-
-        /// 🚫️ The (quota+1)th task on one instance is refused with a typed `Fault` — never a
-        /// silent drop — while earlier tasks and OTHER instances are unaffected.
-        #[semio_framework_async_macros::async_test]
-        async fn spawn_task_quota_gate_faults_the_n_plus_1th_task_and_never_silently_drops_it() {
-            let instance = 502;
-            let meta = ActionMeta { actor: "local".into(), instance_id: instance };
-            crate::reactor::test_support::set_instance_quota(instance, 2).await;
-
-            for label in ["first", "second"] {
-                let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new(label, |_ctx| async move { Ok(TaskResolution::Done) });
-                crate::reactor::spawn_task(instance, &meta, task.await).await.unwrap_or_else(|error| panic!("task '{label}' must be admitted under quota 2: {error:?}"));
-            }
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 2);
-
-            let third = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("third", |_ctx| async move { Ok(TaskResolution::Done) });
-            let error = crate::reactor::spawn_task(instance, &meta, third.await).await.expect_err("the 3rd task must be refused — quota is 2, not a silent drop");
-            assert_eq!(error.code.0, "plugin.task.quota-exceeded");
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 2, "a refused spawn must not have added a 3rd record");
-
-            // 🔓️ A different instance has its OWN quota accounting, unaffected by 502's exhaustion.
-            let other_instance = 503;
-            let other_meta = ActionMeta { actor: "local".into(), instance_id: other_instance };
-            let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("elsewhere", |_ctx| async move { Ok(TaskResolution::Done) });
-            crate::reactor::spawn_task(other_instance, &other_meta, task.await).await.expect("a different instance must not be affected by 502's quota exhaustion");
-        }
-
-        /// 🔑️ Spawning a second task under the SAME `(instance, key)` cancels the first — its
-        /// future is dropped (never runs to completion, never queues a resume) — and the dedupe
-        /// index tracks only the NEW task afterward.
-        #[semio_framework_async_macros::async_test]
-        async fn key_dedupe_cancels_the_previously_live_task_under_the_same_key() {
-            let instance = 504;
-            let meta = ActionMeta { actor: "local".into(), instance_id: instance };
-            let first_ran = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-            let first_ran_inner = first_ran.clone();
-            let first = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("first", move |_ctx| async move {
-                first_ran_inner.store(true, std::sync::atomic::Ordering::SeqCst);
-                Ok(TaskResolution::Done)
-            })
-            .await
-            .keyed("search");
-            crate::reactor::spawn_task(instance, &meta, first.await).await.expect("first must be admitted");
-            assert!(crate::reactor::test_support::task_key_is_live(instance, "search").await);
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 1);
-
-            let second_ran = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-            let second_ran_inner = second_ran.clone();
-            let second = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("second", move |_ctx| async move {
-                second_ran_inner.store(true, std::sync::atomic::Ordering::SeqCst);
-                Ok(TaskResolution::Done)
-            })
-            .await
-            .keyed("search");
-            crate::reactor::spawn_task(instance, &meta, second.await).await.expect("second must be admitted, cancelling the first");
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 1, "the SAME key must never have two live tasks at once");
-
-            crate::reactor::test_support::run_until_idle(8).await;
-            assert!(!first_ran.load(std::sync::atomic::Ordering::SeqCst), "the cancelled first task must never have run its body");
-            assert!(second_ran.load(std::sync::atomic::Ordering::SeqCst), "the surviving second task must have run");
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 0, "the second task completed with TaskResolution::Done — no follow-up, cleaned up");
-        }
-
-        /// 🚫️ `Event::InstanceClose` cancellation: every task an instance owns is dropped from the
-        /// executor (never runs to completion) and its pending `RequestRegistry` slot is gone too
-        /// — no leaked slot — while a DIFFERENT instance's live task/request is untouched.
-        #[semio_framework_async_macros::async_test]
-        async fn instance_close_cancellation_drops_the_instances_tasks_and_leaks_no_registry_slot() {
-            let dying = 505;
-            let survivor = 506;
-            let dying_meta = ActionMeta { actor: "local".into(), instance_id: dying };
-            let survivor_meta = ActionMeta { actor: "local".into(), instance_id: survivor };
-
-            let dying_ran = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-            let dying_ran_inner = dying_ran.clone();
-            let dying_task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("dying", move |ctx: TaskCtx| async move {
-                let _ = ctx.host.storage_read("never-resolved").await; // parks forever in this test
-                dying_ran_inner.store(true, std::sync::atomic::Ordering::SeqCst);
-                Ok(TaskResolution::Done)
-            });
-            crate::reactor::spawn_task(dying, &dying_meta, dying_task.await).await.expect("dying instance's task must spawn");
-
-            let survivor_task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("survivor", move |ctx: TaskCtx| async move {
-                let _ = ctx.host.storage_read("also-never-resolved").await;
-                Ok(TaskResolution::Done)
-            });
-            crate::reactor::spawn_task(survivor, &survivor_meta, survivor_task.await).await.expect("survivor instance's task must spawn");
-
-            let pending = crate::reactor::test_support::run_until_idle(8).await;
-            assert!(pending, "both tasks must have parked on their own storage_read");
-            assert_eq!(crate::reactor::test_support::pending_request_count().await, 2, "one RequestRegistry slot per parked task");
-
-            crate::reactor::cancel_instance_tasks(dying);
-            // 🚫️ `cancel_instance_tasks` alone drops the future (and its parked `RequestFuture`
-            // with it); `RequestRegistry::cancel_instance` is the defense-in-depth sweep `poll`'s
-            // `Event::InstanceClose` arm runs right after — exercised here to prove BOTH steps
-            // together leave no slot behind, matching that call site exactly.
-            let removed = crate::reactor::test_support::cancel_instance_registry_requests(dying);
-            assert_eq!(removed.await, 0, "cancel_instance_tasks already dropped the task's own RequestFuture — nothing left for the registry sweep to remove");
-
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(dying).await, 0, "the dying instance's task record must be gone");
-            assert_eq!(crate::reactor::test_support::pending_request_count().await, 1, "only the SURVIVOR's request may remain pending");
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(survivor).await, 1, "the survivor's task must be untouched");
-
-            let still_pending = crate::reactor::test_support::run_until_idle(8).await;
-            assert!(still_pending, "the survivor's task is still legitimately parked");
-            assert!(!dying_ran.load(std::sync::atomic::Ordering::SeqCst), "the cancelled task must never observe its await resolving, because it never runs again");
-        }
-
-        /// 📸️ A task's `restart` command survives into the checkpoint pack (not the task itself —
-        /// design-abi.md §4) and `restore_now` queues it as an ordinary `Command` resume, ready for
-        /// `plugin_resume_task` on the very next turn — exercised end to end against a fresh
-        /// `TestApp` instance, exactly like a live task's own resume.
-        #[semio_framework_async_macros::async_test]
-        async fn checkpoint_then_restore_requeues_a_restartable_tasks_command_as_a_resume() {
-            let completion: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture/🔣️.json"))).unwrap();
-            let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
-            let instance = 507;
-            let meta = ActionMeta { actor: "local".into(), instance_id: instance };
-            let restart_command = <TestCommand as ::protocol::OpBinary>::encode_op(&TestCommand::ApplyCountFromTask { value: 7 }).expect("must encode");
-            let observed_completion = std::sync::Arc::new(std::sync::Mutex::new(None));
-
-            let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("checkpointed", {
-                let observed_completion = observed_completion.clone();
-                move |ctx: TaskCtx| async move {
-                    let result = ctx.host.storage_read("never-resolved-either").await;
-                    *observed_completion.lock().unwrap() = Some(result);
-                    Ok(TaskResolution::Done)
-                }
-            })
-            .await
-            .restartable(restart_command.clone());
-            crate::reactor::spawn_task(instance, &meta, task.await).await.expect("must spawn");
-            assert!(crate::reactor::test_support::run_until_idle(8).await);
-            let observed_parked_requests = crate::reactor::test_support::pending_request_count().await;
-
-            let packed = crate::reactor::checkpoint_now(&runtime).await.expect("checkpoint must succeed while the task is in flight");
-
-            // 🚫️ The in-flight task (and its parked request) belong to the OLD actor incarnation —
-            // never resumed as though the host round-trip were still live (design-abi.md §4).
-            // `restore_now` below is what re-arms it, as a fresh Command resume, not a revival.
-            crate::reactor::cancel_instance_tasks(instance);
-            crate::reactor::test_support::cancel_instance_registry_requests(instance).await;
-            crate::reactor::cancel_instance_tasks(instance);
-            assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 0);
-            assert_eq!(observed_parked_requests as u64, completion["checkpoint"]["parkedRequests"].as_u64().unwrap(), "checkpoint must observe an actually polled and parked task");
-            assert_eq!(crate::reactor::test_support::pending_request_count().await as u64, completion["checkpoint"]["requestsAfterCancel"].as_u64().unwrap());
-            let fault = observed_completion.lock().unwrap().take().expect("the original retained task completed").expect_err("retired request must not become a successful host response");
-            assert_eq!(fault.code.0, completion["checkpoint"]["completionFaultCode"].as_str().unwrap());
-            assert_eq!(fault.message, completion["checkpoint"]["completionFaultMessage"].as_str().unwrap());
-
-            crate::reactor::restore_now(&runtime, &packed).await.expect("restore must succeed");
-            let (resumed_instance, resumed_meta, resumed_input) = crate::reactor::test_support::pop_task_resume().await.expect("restore must have queued exactly one resume for the restartable task");
-            assert_eq!(resumed_instance, instance);
-            assert_eq!(resumed_meta.instance_id, instance);
-            let crate::plugin_runtime::TaskResumeInput::Command(bytes) = resumed_input.expect("a restart resume is always Command, never Fault") else { panic!("expected Command") };
-            assert_eq!(bytes, restart_command, "restore_now must requeue the EXACT restart bytes the task declared via .restartable(..)");
-
-            let command = <TestCommand as ::protocol::OpBinary>::decode_op(&bytes).expect("the actual restored command must decode");
-            assert_eq!(command, TestCommand::ApplyCountFromTask { value: completion["checkpoint"]["restartValue"].as_i64().unwrap() as i32 });
-            test_restart_publish_and_close(command, &resumed_meta, &completion).await;
-        }
-
-        #[test]
-        fn checkpoint_restart_mode_requires_its_exact_concrete_factory_owner() {
-            let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture/🔣️.json"))).unwrap();
-            assert_eq!(<TestCommand as ::protocol::OpBinary>::TOOL_JOB_IDS, fixture["restartAuthority"]["generatedToolIds"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>());
-            assert_eq!(TestApp::<false>::bounded_first_step_tool_proofs().len() as u64, fixture["restartAuthority"]["defaultProofs"].as_u64().unwrap());
-            assert_eq!(TestApp::<true>::bounded_first_step_tool_proofs().len() as u64, fixture["restartAuthority"]["retainedProofs"].as_u64().unwrap());
-            assert_ne!(ToolOwnerWitness::of::<TestApp<false>>(), ToolOwnerWitness::of::<TestApp<true>>());
-            assert_eq!(std::any::TypeId::of::<<TestRestartFactory<true> as ArtifactOwnedToolJobFactory>::Owner>(), std::any::TypeId::of::<TestApp<true>>());
-            assert_eq!(<TestRestartFactory<true> as ArtifactOwnedToolJobFactory>::TOOL_IDS, &[fixture["restartAuthority"]["tool"].as_str().unwrap()]);
-        }
-        //#endregion 🔖️AsyncTaskTests
-    }
+    include!("🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs");
     // #endregion plugin_runtime
 }
 
@@ -38476,14 +29717,14 @@ pub mod world3d_host {
     use semio_framework::mesh_from_kind;
     use semio_framework_value_derive::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
-    use serde_json::{Value, json};
+    use serde_json::{json, Value};
     use std::f64::consts::PI;
     // 🧬️ M2 fallout (terra-sdk-wire): `scene-surface` relocated `World3dScene`/
     // `world3d_default_selection_json` into `semio-framework-ui-scene`; `world3d_camera_json`/
     // `ActionDescriptor`/`MeasureSelectItem`/`WindowMeasure` were not part of that move and stay here.
-    pub use semio_framework_ui_scene::World3dScene;
     use semio_framework_ui_scene::world3d_default_selection_json;
-    use ui_wgpu::wgpu::{ActionDescriptor, MeasureSelectItem, WindowMeasure, world3d_camera_json};
+    pub use semio_framework_ui_scene::World3dScene;
+    use ui_wgpu::wgpu::{world3d_camera_json, ActionDescriptor, MeasureSelectItem, WindowMeasure};
 
     //#region 🌞️ WorldSunConfig
     /** 🌞️ Plugin-owned directional-light state for a `world-3d` scene; off by default so meshes render flat until a dev opts in via the window-options Sun toggle. */
@@ -39152,91 +30393,7 @@ pub mod world3d_host {
     }
 
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn merge_world_selection_ids_supports_add_toggle_invertive_and_remove() {
-            let a = || SelectionSet::from_ids(vec!["a".into()]);
-            let ab = || SelectionSet::from_ids(vec!["a".into(), "b".into()]);
-            let abc = || SelectionSet::from_ids(vec!["a".into(), "b".into(), "c".into()]);
-            assert_eq!(merge_world_selection_ids(&a(), &["b".into()], "add").await.as_slice(), &["a".to_string(), "b".to_string()]);
-            assert_eq!(merge_world_selection_ids(&ab(), &["b".into(), "c".into()], "toggle").await.as_slice(), &["a".to_string(), "c".to_string()]);
-            assert_eq!(merge_world_selection_ids(&ab(), &["b".into()], "invertive").await.as_slice(), &["a".to_string()]);
-            assert_eq!(merge_world_selection_ids(&a(), &["b".into()], "replace").await.as_slice(), &["b".to_string()]);
-            assert_eq!(merge_world_selection_ids(&abc(), &["b".into()], "remove").await.as_slice(), &["a".to_string(), "c".to_string()]);
-            assert_eq!(merge_world_selection_ids(&abc(), &["b".into()], "subtractive").await.as_slice(), &["a".to_string(), "c".to_string()]);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn selection_set_membership_is_constant_time() {
-            let set = SelectionSet::from_ids((0..100).map(|index| format!("id-{index}")).collect());
-            assert!(set.contains("id-50"));
-            assert!(!set.contains("missing"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn isometric_pose_matches_the_classic_35_264_45_direction() {
-            let mut p = WorldProjectionConfig { kind: "axonometric".into(), axonometric_variant: "isometric".into(), ..WorldProjectionConfig::default() };
-            p.axonometric_quadrant = "ne".into();
-            let (position, up) = world3d_projection_pose(&p, [0.0, 0.0, 0.0], 10.0);
-            assert!((position[2] / 10.0 - 35.264_f64.to_radians().sin()).abs() < 1e-3);
-            assert_eq!(up, [0.0, 0.0, 1.0]);
-            let azimuth = (position[0] / position[1]).atan();
-            assert!((azimuth.to_degrees() - 45.0).abs() < 1e-3);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn projection_spec_json_projects_only_active_kind_fields() {
-            let p = WorldProjectionConfig { kind: "oblique".into(), oblique_variant: "cabinet".into(), oblique_angle: 45.0, oblique_depth: 0.5, ..WorldProjectionConfig::default() };
-            let spec = world3d_projection_spec_json(&p);
-            let mode = spec.get("mode").expect("mode object");
-            assert_eq!(mode.get("kind").and_then(Value::as_str), Some("oblique"));
-            assert_eq!(mode.get("depthScale").and_then(Value::as_f64), Some(0.5));
-            assert!(mode.get("axonometricVariant").is_none());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn apply_action_switches_kind_and_leaves_other_kinds_untouched_for_later_recall() {
-            let mut p = WorldProjectionConfig::default();
-            p.axonometric_angle_a = 22.0;
-            assert!(apply_world3d_projection_action(&mut p, "setProjection", Some(&store::json!({ "field": "obliqueVariant", "value": "military" }))));
-            assert_eq!(p.kind, "oblique");
-            assert_eq!(p.oblique_variant, "military");
-            assert_eq!(p.axonometric_angle_a, 22.0);
-            assert!(apply_world3d_projection_action(&mut p, "setProjectionParam", Some(&store::json!({ "param": "obliqueAngle", "value": 30.0 }))));
-            assert_eq!(p.oblique_angle, 30.0);
-            assert!(!world3d_projection_action_moves_pose("setProjectionParam", Some(&store::json!({ "param": "obliqueAngle" }))));
-            assert!(world3d_projection_action_moves_pose("setProjection", Some(&store::json!({ "field": "obliqueVariant" }))));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn projection_measures_tree_matches_the_requested_taxonomy() {
-            let p = WorldProjectionConfig::default();
-            let tree = world3d_projection_measures("t", &p, |action, args| ActionDescriptor { controller_id: "t".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) });
-            let WindowMeasure::Group { children: families, .. } = &tree else { panic!("expected root group") };
-            assert_eq!(families.len(), 2);
-            let WindowMeasure::Group { label: parallel_label, children: parallel_children, .. } = &families[0] else { panic!("expected parallel group") };
-            assert_eq!(parallel_label, "Parallel");
-            assert_eq!(parallel_children.len(), 3);
-            let WindowMeasure::Group { label: perspective_label, .. } = &families[1] else { panic!("expected perspective group") };
-            assert_eq!(perspective_label, "Perspective");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn world3d_scene_fields_bind_the_domain_while_the_sun_helper_leaves_it_unset() {
-            let sun = WorldSunConfig::default();
-            let mut bound = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
-            bound.domain_id = Some("cad".into());
-            bound.domain_granularity_id = Some("handle".into());
-            assert_eq!(bound.domain_id.as_deref(), Some("cad"));
-            assert_eq!(bound.domain_granularity_id.as_deref(), Some("handle"));
-
-            let unbound = world3d_scene("{}".into(), "[]".into(), "[]".into(), "{}".into(), &sun);
-            assert_eq!(unbound.domain_id, None);
-            assert_eq!(unbound.domain_granularity_id, None);
-        }
-    }
+    include!("🧪️tests/🔬️world3d-host-unit/🦀️.rs");
     // #endregion world3d_host
 }
 
@@ -39291,45 +30448,14 @@ pub mod engagement {
     }
 
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn strip_engagement_prefix_accepts_normalized_and_raw_forms() {
-            assert_eq!(strip_engagement_prefix("Fill20", "fill"), Some("20"));
-            assert_eq!(strip_engagement_prefix("fill 20", "fill"), Some("20"));
-            assert_eq!(strip_engagement_prefix("fill  20", "fill"), Some("20"));
-            assert_eq!(strip_engagement_prefix("Fill", "fill"), Some(""));
-            assert_eq!(strip_engagement_prefix("FILL20", "fill"), Some("20"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn strip_engagement_prefix_preserves_decimal_points() {
-            assert_eq!(strip_engagement_prefix("SetHeight3.5", "set height"), Some("3.5"));
-            assert_eq!(strip_engagement_prefix("set height 3.5", "set height"), Some("3.5"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn strip_engagement_prefix_rejects_non_matching_commands() {
-            assert_eq!(strip_engagement_prefix("Brush", "fill"), None);
-            assert_eq!(strip_engagement_prefix("Filled", "fill"), Some("ed"));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn engagement_token_matches_full_token_only() {
-            assert!(engagement_token_matches("LineNumbers", "line numbers"));
-            assert!(engagement_token_matches("linenumbers", "line numbers"));
-            assert!(!engagement_token_matches("LineNumbers2", "line numbers"));
-            assert!(!engagement_token_matches("Line", "line numbers"));
-        }
-    }
+    include!("🧪️tests/🔬️engagement-unit/🦀️.rs");
     // #endregion engagement
 }
 
 /// 🧩️ Cross-crate closure vocabulary required by `dyn_enum_close!` for `PluginApp`.
 pub mod plugin_app_close_prelude {
-    pub use crate::app::{tree_item, PeerMark};
     pub use crate::app::*;
+    pub use crate::app::{tree_item, PeerMark};
     pub use semio_framework::kernel::ActionId;
     pub use semio_framework::kernel::*;
     pub use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation};
@@ -39341,10 +30467,34 @@ pub mod plugin_app_close_prelude {
     pub use ui_wgpu::wgpu::{ContextMenuItemSpec, ContextMenuRequest, WindowEngagement, WindowMeasure};
 }
 
-pub use app::ActionFactory;
 pub use app::testkit;
+pub use app::ActionFactory;
 pub use app::{
-    ARTIFACT_INFERENCE_WIRE_VERSION,
+    artifact_inference_service,
+    bounded_config_store_disposer,
+    bounded_config_store_owners,
+    bounded_document_store_disposer,
+    bounded_document_store_owners,
+    built_text_node,
+    built_text_to_component_tree,
+    built_to_component_tree,
+    built_to_tree,
+    cancel_artifact_inference,
+    composer_entry_of,
+    deserializer_entry_of,
+    infer_artifact,
+    list_artifact_inference_services,
+    native_artifact_genesis_for_editor,
+    node_graph_delete_selection_spec,
+    publish_document_store_candidate_if_authoritative,
+    register_artifact_inference_service,
+    resolve_ready,
+    scene_surface,
+    selection_count_phrase,
+    selection_domains_from_surface,
+    serializer_entry_of,
+    wire_artifact_infer,
+    wire_list_artifact_inference_services,
     ActionMeta,
     App,
     AppActionRegistry,
@@ -39399,9 +30549,6 @@ pub use app::{
     ArtifactMediaExportJobRequest,
     ArtifactMediaExportPoll,
     ArtifactMediaExportResult,
-    NativeArtifactGenesisFactoryV1,
-    NativeArtifactGenesisFutureV1,
-    native_artifact_genesis_for_editor,
     ArtifactMime,
     ArtifactOutputChunks,
     ArtifactOwnedDisposer,
@@ -39467,6 +30614,8 @@ pub use app::{
     MeshView,
     MeshWindowKit,
     ModeSpec,
+    NativeArtifactGenesisFactoryV1,
+    NativeArtifactGenesisFutureV1,
     NoChildren,
     NoConfig,
     NoConfigMutation,
@@ -39509,32 +30658,9 @@ pub use app::{
     WireArtifactInferenceProvenance,
     WireArtifactInferenceRequest,
     WireArtifactInferenceResult,
-    artifact_inference_service,
-    bounded_config_store_disposer,
-    bounded_config_store_owners,
-    bounded_document_store_disposer,
-    bounded_document_store_owners,
-    built_text_node,
-    built_text_to_component_tree,
-    built_to_component_tree,
-    built_to_tree,
-    cancel_artifact_inference,
-    composer_entry_of,
-    deserializer_entry_of,
-    infer_artifact,
-    list_artifact_inference_services,
-    node_graph_delete_selection_spec,
-    publish_document_store_candidate_if_authoritative,
-    register_artifact_inference_service,
-    resolve_ready,
-    scene_surface,
-    selection_count_phrase,
-    selection_domains_from_surface,
-    serializer_entry_of,
-    wire_artifact_infer,
-    wire_list_artifact_inference_services,
+    ARTIFACT_INFERENCE_WIRE_VERSION,
 };
-pub use app::{LabelAxes, locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable};
+pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 // 🧬️ A2 (design-abi.md §4): `host_port`'s re-export is deleted along with the module (see the
 // "Replace, never wrap" note above `pub mod engagement`). `host::now_ms` replaces `host_now_ms` —
@@ -39542,16 +30668,16 @@ pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 // repointed during its own W3 migration wave, not here (SDK crate stays frozen during W3 per
 // `important.md`'s sequencing constraints).
 pub use plugin_runtime::{
-    ExtensionBundle, ExtensionManifest, extension_activate, extension_deactivate, extension_invoke, extension_manifest, install_extension_bundle, install_plugin_bundle, install_plugin_bundle_result, plugin_attach_backbone,
-    plugin_cancel_media_export, plugin_detach_backbone, plugin_document_pack, plugin_ingest_operations, plugin_load_document_pack, plugin_poll_media_export, plugin_submit_media_export, plugin_take_segmented_download_chunk,
+    extension_activate, extension_deactivate, extension_invoke, extension_manifest, install_extension_bundle, install_plugin_bundle, install_plugin_bundle_result, plugin_attach_backbone, plugin_cancel_media_export, plugin_detach_backbone,
+    plugin_document_pack, plugin_ingest_operations, plugin_load_document_pack, plugin_poll_media_export, plugin_submit_media_export, plugin_take_segmented_download_chunk, ExtensionBundle, ExtensionManifest,
 };
 pub use semio_framework::*;
 pub use semio_framework::{MediaForm, MediaPortDirection, MediaPortSpec};
 pub use semio_framework_ui_contract::{ActionBinding, ActionId, Buildable, Component, HasBase, HasChildren, RowAction, RowActionPlacement, Trigger, UiFixedList, UiFixedMap, UiListBuilder, UiMapBuilder, UiText, UiValue};
 pub use world3d_host::{
-    SelectionSet, WorldProjectionConfig, WorldSunConfig, apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection, merge_world_selection_ids, mesh_kind_from_json, world3d_camera_projection_json, world3d_default_camera,
-    world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures,
-    world3d_projection_pose, world3d_projection_spec_json, world3d_scene, World3dScene, world3d_selection_json, world3d_sun_measures,
+    apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection, merge_world_selection_ids, mesh_kind_from_json, world3d_camera_projection_json, world3d_default_camera, world3d_environment_json, world3d_mesh_id_from_url,
+    world3d_meshes_json_from_kinds, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_projection_spec_json, world3d_scene,
+    world3d_selection_json, world3d_sun_measures, SelectionSet, World3dScene, WorldProjectionConfig, WorldSunConfig,
 };
 // 🧩️ Declarative component model (UiNode, layouts, utilities) — moved into ui_wgpu; re-exported here so
 // apps keep the flat `semio_framework_plugin::*` import surface with zero Cargo.toml churn.
@@ -39668,176 +30794,8 @@ macro_rules! derive_artifact_facets {
 /// `derive_artifact_facets!` is already in scope textually — `macro_rules!` visibility is
 /// definition-order-sensitive within a crate for a bare (non-`$crate`-qualified) invocation.
 #[cfg(test)]
-mod derived_artifact_children_tests {
-    use super::*;
-    use semio_framework_value_derive::{FromValue, ToValue};
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Clone, Debug, Default, PartialEq)]
-    struct ChildrenTestSnapshot;
-
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
-    struct ChildrenTestDiff {}
-
-    impl protocol::MutationDiff<ChildrenTestSnapshot> for ChildrenTestDiff {
-        fn apply(&self, snapshot: &ChildrenTestSnapshot) -> protocol::MutationApplyResult<ChildrenTestSnapshot> {
-            Ok(snapshot.clone())
-        }
-        fn absorb(&mut self, _other: Self) {}
-    }
-
-    //#region 🧬️ChildrenMutationRoster
-    mod mutations {
-        use super::{ChildrenTestDiff, ChildrenTestSnapshot};
-        include!("🧪️tests/🧒️children-fixture/🧬️mutations/🦀️.rs");
-    }
-    use mutations::ChildrenTestMutation;
-    //#endregion 🧬️ChildrenMutationRoster
-
-    #[derive(Clone, Debug)]
-    struct ChildrenTestConstruction(ChildrenTestSnapshot);
-
-    impl ArtifactBuilder for ChildrenTestConstruction {
-        type Snapshot = ChildrenTestSnapshot;
-        type Mutation = ChildrenTestMutation;
-        type Diff = ChildrenTestDiff;
-        fn empty() -> Self {
-            Self(ChildrenTestSnapshot)
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self(snapshot)
-        }
-        fn from_text(_text: &str) -> Result<Self, TextError> {
-            Ok(Self::empty())
-        }
-        fn from_binary(_bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::empty())
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.0);
-            self.0 = <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.0).expect("children test diff applies");
-            (self, outcome)
-        }
-        fn absorb(self, _diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            Ok(self.0)
-        }
-    }
-
-    struct ChildrenTestAnalysis;
-
-    impl ArtifactAnalysis for ChildrenTestAnalysis {
-        type Parts = ();
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.test.children-parent", standard: StandardId("1"), subset: SubsetId::ANY };
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Low
-        }
-        fn analyze(_sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            Analysis { parts: (), dialect: Self::DIALECT, confidence: IoConfidence::Low, diagnostics: Vec::new() }
-        }
-    }
-
-    struct ChildrenTestComposition;
-
-    impl ArtifactComposition for ChildrenTestComposition {
-        type Snapshot = ChildrenTestSnapshot;
-        const WRITES: Dialect = ChildrenTestAnalysis::DIALECT;
-        fn reads() -> &'static [Dialect] {
-            &[]
-        }
-        fn compose(_sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            Err(ComposeError { message: "ChildrenTestComposition::compose is unreachable in this test — only reads()/child routing is exercised".into(), diagnostics: Vec::new() })
-        }
-    }
-
-    const CHILD_SLOTS: &[::semio_framework_schema::ChildSlotSpec] = &[::semio_framework_schema::ChildSlotSpec { name: "primaryMesh", kind: "s.stdio.mesh", many: false }];
-
-    struct ChildrenTestChildren;
-
-    impl ArtifactChildren for ChildrenTestChildren {
-        type Snapshot = ChildrenTestSnapshot;
-        fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {
-            CHILD_SLOTS
-        }
-        fn compose_from_children(parts: &[(ArtifactDialect, Vec<u8>)]) -> Result<Self::Snapshot, ComposeError> {
-            if parts.iter().all(|(dialect, _)| dialect.artifact_kind == "s.stdio.mesh") { Ok(ChildrenTestSnapshot) } else { Err(ComposeError { message: "unexpected child dialect".into(), diagnostics: Vec::new() }) }
-        }
-        fn decompose_to_children(_snapshot: &Self::Snapshot) -> Vec<(ArtifactDialect, Vec<u8>)> {
-            Vec::new()
-        }
-    }
-
-    struct ChildrenTestSpec;
-
-    impl DerivedArtifactSpec for ChildrenTestSpec {
-        type Snapshot = ChildrenTestSnapshot;
-        type Mutation = ChildrenTestMutation;
-        type Diff = ChildrenTestDiff;
-        type Construction = ChildrenTestConstruction;
-        type Analysis = ChildrenTestAnalysis;
-        type Composition = ChildrenTestComposition;
-        type Children = ChildrenTestChildren;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn derived_composer_reads_includes_child_slot_dialects() {
-        let reads = <DerivedArtifactComposer<ChildrenTestSpec> as ArtifactComposer>::reads();
-        assert_eq!(reads.len(), 1, "Composition::reads() is empty here — the ONE entry must be the child slot's synthesized dialect");
-        assert_eq!(reads[0].artifact_kind, "s.stdio.mesh");
-        assert_eq!(reads[0].standard, StandardId("*"));
-        assert_eq!(reads[0].subset, SubsetId::ANY);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn derived_composer_reads_defaults_to_composition_reads_for_a_leaf_with_no_children() {
-        // 🍃️ `NoChildren<S>::slots()` is `&[]` — proves the pre-C1 behavior is byte-identical for
-        // any spec that never names a `children: $ty` (every macro invocation before this wave).
-        struct LeafSpec;
-        impl DerivedArtifactSpec for LeafSpec {
-            type Snapshot = ChildrenTestSnapshot;
-            type Mutation = ChildrenTestMutation;
-            type Diff = ChildrenTestDiff;
-            type Construction = ChildrenTestConstruction;
-            type Analysis = ChildrenTestAnalysis;
-            type Composition = ChildrenTestComposition;
-            type Children = NoChildren<ChildrenTestSnapshot>;
-        }
-        let reads = <DerivedArtifactComposer<LeafSpec> as ArtifactComposer>::reads();
-        assert!(reads.is_empty(), "a leaf spec's reads() must equal Composition::reads() (empty here) exactly");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn derived_composer_compose_routes_matching_sources_through_compose_from_children() {
-        let sources = vec![ComposeSource { dialect: Dialect { artifact_kind: "s.stdio.mesh", standard: StandardId("1"), subset: SubsetId::ANY }, payload: AnalyzeSource::Binary(&[1, 2, 3]) }];
-        let composed = <DerivedArtifactComposer<ChildrenTestSpec> as ArtifactComposer>::compose(&sources).expect("child-slot-matching sources route through compose_from_children");
-        assert_eq!(composed.snapshot, ChildrenTestSnapshot);
-    }
-
-    // 🧬️ Smoke-tests the macro's own `children: $ty` grammar (not just the underlying
-    // `DerivedArtifactComposer` mechanism above) — proves `derive_artifact_facets!` actually parses
-    // and wires the optional field end to end. Plain `//`, not `///`: rustdoc cannot attach a doc
-    // comment to a macro invocation (only to the items it expands to).
-    derive_artifact_facets! {
-        spec ChildrenMacroSpec {
-            construction: ChildrenTestConstruction,
-            analysis: ChildrenTestAnalysis,
-            composition: ChildrenTestComposition,
-            children: ChildrenTestChildren,
-        }
-        builder: ChildrenMacroBuilder,
-        analyzer: ChildrenMacroAnalyzer,
-        composer: ChildrenMacroComposer,
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn derive_artifact_facets_children_arm_wires_the_macro_generated_composer() {
-        let reads = <ChildrenMacroComposer as ArtifactComposer>::reads();
-        assert_eq!(reads.len(), 1);
-        assert_eq!(reads[0].artifact_kind, "s.stdio.mesh");
-    }
-}
+#[path = "🧪️tests/🔬️derived-artifact-children/🦀️.rs"]
+mod derived_artifact_children_tests;
 
 /// 🪆️ Whether a subset owns snapshot/diff/mutation types or derives behavior from a base dialect.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -39985,43 +30943,5 @@ macro_rules! subset {
 }
 
 #[cfg(test)]
-mod subset_macro_tests {
-    use super::*;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
-
-    struct MacroDerivedValidator;
-
-    impl SubsetValidator for MacroDerivedValidator {
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.test.subset-macro", standard: StandardId("1"), subset: SubsetId("derived") };
-
-        async fn validate(_payload: &IoPayload) -> Vec<Diagnostic> {
-            vec![Diagnostic { code: FaultCode::new("test.subset-macro.ok"), severity: Severity::Info, span: TextSpan::at(1, 1), message: "subset! macro derived validator smoke".into(), expected: None, scope: FaultScope::default() }]
-        }
-    }
-
-    subset! {
-        pub derived dialect "s.test.subset-macro" / "1" / "derived" {
-            validator: MacroDerivedValidator,
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn subset_macro_derived_register_is_idempotent() {
-        let completion: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture/🔣️.json"))).unwrap();
-        register_subset().await;
-        register_subset().await;
-        let registered = io::list_registered_subset_validator_dialects().await.expect("registry observation");
-        assert_eq!(registered.iter().filter(|dialect| **dialect == SUBSET_DIALECT).count() as u64, completion["registration"]["registeredEntries"].as_u64().unwrap(), "two completed registrations must install exactly one actual registry entry");
-        let diagnostics = MacroDerivedValidator::validate(&IoPayload::Text(String::new())).await;
-        assert_eq!(diagnostics.len(), 1);
-        assert_eq!(diagnostics[0].code.0, "test.subset-macro.ok");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn subset_macro_derived_kind_and_dialect() {
-        assert_eq!(KIND, SubsetKind::Derived);
-        assert_eq!(SUBSET_DIALECT.artifact_kind, "s.test.subset-macro");
-        assert_eq!(SUBSET_DIALECT.standard.0, "1");
-        assert_eq!(SUBSET_DIALECT.subset.0, "derived");
-    }
-}
+#[path = "🧪️tests/🔬️subset-macro/🦀️.rs"]
+mod subset_macro_tests;

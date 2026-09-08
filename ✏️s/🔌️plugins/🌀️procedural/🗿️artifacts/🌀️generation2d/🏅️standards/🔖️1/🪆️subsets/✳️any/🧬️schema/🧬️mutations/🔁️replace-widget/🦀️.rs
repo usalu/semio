@@ -1,8 +1,8 @@
 //! 🦠️ `🔁️replace-widget` payload and its `MutationKind` impl; diff/inverse delegate to the sibling leaves.
-use crate::diff::Generation2dDiff;
-use crate::mutations::Generation2dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::{widget_id, Generation2dSnapshot};
-use semio_framework_artifact_flow_semio_framework_os_flow::Widget;
+use semio_framework_artifact_flow_flow::Widget;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation

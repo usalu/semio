@@ -69,21 +69,8 @@ pub fn en1990_artifact_inference_descriptor() -> framework_schema::ArtifactInfer
 
 #[cfg(test)]
 //#region 🧪️Tests
-mod tests {
-    use super::*;
-    use protocol::Inference;
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
-        let snapshot = En1990Snapshot::default();
-        assert_eq!(En1990Inference::infer(&snapshot), En1990Inference::infer(&snapshot));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
-        assert_eq!(En1990Inference::infer(&En1990Snapshot::default()), En1990Inference::default());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
@@ -120,29 +107,6 @@ pub fn evaluate(document: &En1990Snapshot) -> CheckReport {
 
 //#region 🧪️ComplianceReportTests
 #[cfg(test)]
-mod compliance_report_tests {
-    use super::*;
-    use crate::standards::v1::subsets::any::schema::{check_combination_set, combination_uls, CombinationRule};
-
-    #[semio_framework_async_macros::async_test]
-    async fn evaluate_accidental_situation_numeric() {
-        let doc = En1990Snapshot::default();
-        let actions = action_set_from_document(&doc);
-        let accidental_ed = combination_uls(&NaDe, DesignSituation::Accidental, CombinationRule::Uls610a, &actions, 0);
-        assert!((accidental_ed - 168.0).abs() < 1e-9);
-        let report = evaluate(&doc);
-        let persistent = check_combination_set(&NaDe, DesignSituation::Persistent, &actions, doc.resistance_kn);
-        let accidental = check_combination_set(&NaDe, DesignSituation::Accidental, &actions, doc.resistance_kn);
-        assert_eq!(report.checks.len(), persistent.checks.len() + accidental.checks.len() + 2);
-        assert!(report.checks.iter().any(|c| (c.computed.value / 1000.0 - accidental_ed).abs() < 1e-6));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn evaluate_seismic_situation_numeric() {
-        let doc = En1990Snapshot::default();
-        let report = evaluate(&doc);
-        let seismic = report.checks.iter().find(|c| c.clause.section == "6.12b").expect("seismic 6.12b check present");
-        assert!((seismic.computed.value / 1000.0 - 155.0).abs() < 1e-9);
-    }
-}
+#[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
+mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests

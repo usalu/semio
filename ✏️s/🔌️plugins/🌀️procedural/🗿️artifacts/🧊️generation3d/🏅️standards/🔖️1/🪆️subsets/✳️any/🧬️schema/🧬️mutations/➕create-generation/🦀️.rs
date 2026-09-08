@@ -1,9 +1,9 @@
 //! ➕ `create-generation` payload — brings a new id-keyed [`FormGeneration`] into existence.
-//! Delegates to `semio_framework_os_flow::playbook`'s existing `GenerationMutation::Add` engine (framework territory,
+//! Delegates to `semio_framework_artifact_playbook_playbook`'s existing `GenerationMutation::Add` engine (framework territory,
 //! out of this facet's writable boundary) via the sibling `🔺️diff`/`↩️inverse` leaves.
 
-use crate::diff::Generation3dDiff;
-use crate::mutations::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -20,11 +20,11 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Crea
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "generation", kind: "create-generation", record: "CreatedGeneration" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::mutations::create_generation::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::create_generation::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-        crate::mutations::create_generation::inverse::inverse(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::create_generation::inverse::inverse(self, base)
     }
 
     fn label(&self) -> String {

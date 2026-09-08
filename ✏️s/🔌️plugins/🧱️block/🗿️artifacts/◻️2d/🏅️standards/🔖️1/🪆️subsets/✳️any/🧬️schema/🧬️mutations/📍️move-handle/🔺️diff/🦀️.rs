@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `MoveHandle`.
 
 use crate::{Block2dHandleTemplate, Block2dSnapshot};
-use crate::diff::{Block2dDiff, Block2dHandlesDelta, Block2dHandlesPatch, Block2dHandlesPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Block2dDiff, Block2dHandlesDelta, Block2dHandlesPatch, Block2dHandlesPatchEntry};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::MoveHandle, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {

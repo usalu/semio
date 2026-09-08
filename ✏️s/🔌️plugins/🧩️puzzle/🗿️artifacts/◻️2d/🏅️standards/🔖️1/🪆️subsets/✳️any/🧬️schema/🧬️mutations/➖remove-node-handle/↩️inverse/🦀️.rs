@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `RemoveNodeHandle` — reconstructs an `add-node-handle` of the captured BASE
 //! handle, then re-`connect-handles`es every edge BASE shows touching it (severed cascade).
 //! Missing target ⇒ `Vec::new()`.
-use crate::mutations::Puzzle2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Inverse
@@ -13,9 +13,9 @@ pub fn inverse(payload: &super::RemoveNodeHandle, base: &Puzzle2dSnapshot) -> Ve
         return Vec::new();
     };
     let index = node.handles.iter().position(|h| h.id == payload.handle_id);
-    let mut mutations = vec![crate::mutations::add_node_handle::add_node_handle(payload.node_id.clone(), handle.clone(), index)];
+    let mut mutations = vec![crate::standards::v1::subsets::any::schema::mutations::add_node_handle::add_node_handle(payload.node_id.clone(), handle.clone(), index)];
     for edge in base.edges.iter().filter(|edge| edge.source == payload.handle_id || edge.target == payload.handle_id) {
-        mutations.push(crate::mutations::connect_handles::connect_handles(
+        mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_handles::connect_handles(
             edge.id.clone(),
             edge.source.clone(),
             edge.target.clone(),

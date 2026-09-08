@@ -21,17 +21,30 @@ class DescribeScript extends BundleScript {
   }
 }
 
+/** 🧬️ Compiles one PascalCase `$defs` export of the `s.vcs` scope-owned draft-07 schema module.
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json */
+async function compileVcsScopeExport(repoRoot: string, exportId: string) {
+  const module = JSON.parse(readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌿️vcs/🧬️schema/🔣️.json"), "utf8"));
+  const { default: Ajv } = await import("ajv");
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(module);
+  return ajv.compile({ $ref: `${module.$id}#/$defs/${exportId}` });
+}
+
 /** 🪤 Independently validates the literal VCS codec identity and its protocol-byte receipt. */
 export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<void> {
   const owner = join(repoRoot, "✏️s/🔌️plugins/🌿️vcs");
   const root = join(owner, "📇️native-codecs");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+  const validate = await compileVcsScopeExport(repoRoot, "VcsNativeCodecs");
   if (!validate(fixture)) throw new Error(`invalid VCS receipt corpus: ${JSON.stringify(validate.errors)}`);
   const documentIdRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️fixtures/🌱️artifact-document-id-v1");
   const documentIds = JSON.parse(readFileSync(join(documentIdRoot, "🔣️.json"), "utf8"));
-  const validateDocumentIds = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(documentIdRoot, "🧬️.schema.json"), "utf8")));
+  const registryModule = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json"), "utf8"));
+  const { default: RegistryAjv } = await import("ajv");
+  const registryAjv = new RegistryAjv({ strict: true, allErrors: true });
+  registryAjv.addSchema(registryModule);
+  const validateDocumentIds = registryAjv.compile({ $ref: `${registryModule.$id}#/$defs/ArtifactDocumentIdV1` });
   if (!validateDocumentIds(documentIds)) throw new Error(`invalid artifact document-id corpus: ${JSON.stringify(validateDocumentIds.errors)}`);
   for (const row of documentIds.cases) if (/^artifact-(?!0{32}$)[0-9a-f]{32}$/u.test(row.documentId) !== row.accepted) throw new Error(`artifact document-id oracle mismatch ${row.id}`);
   const manifest = Bun.TOML.parse(readFileSync(join(owner, "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as any;

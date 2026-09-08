@@ -16,7 +16,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-3d", "dep:semio-framework-async", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-3d", "dep:semio-framework-async", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene", "semio-s-artifact-puzzle-3d/component-app-assembly"]
 
 [dependencies]
 semio-framework = { workspace = true }

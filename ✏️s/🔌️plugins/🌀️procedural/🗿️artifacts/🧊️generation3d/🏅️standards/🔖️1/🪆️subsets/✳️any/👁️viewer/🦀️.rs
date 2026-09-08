@@ -52,7 +52,7 @@ impl ArtifactViewer for Generation3dViewer {
     const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
 
     fn initial_snapshot() -> Generation3dSnapshot {
-        crate::schema::default_snapshot()
+        crate::standards::v1::subsets::any::schema::default_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Generation3dViewCommand::Noop` variant never carries a
@@ -94,19 +94,6 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn create_generation3d_viewer_builds_a_definition_for_the_viewer_role() {
-        let def = create_generation3d_viewer();
-        assert_eq!(def.role, semio_framework::AppRole::Viewer);
-        assert_eq!(def.dialect, GENERATION3D_DIALECT.into());
-    }
-
-    #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
-        assert_eq!(<Generation3dViewer as ArtifactViewer>::DIALECT, GENERATION3D_DIALECT);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

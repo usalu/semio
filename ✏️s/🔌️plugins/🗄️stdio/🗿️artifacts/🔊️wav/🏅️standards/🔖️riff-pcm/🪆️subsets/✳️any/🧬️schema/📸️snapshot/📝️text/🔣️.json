@@ -1,10 +1,20 @@
 {
-  "$id": "https://semio.tech/schema/stdio.wav.snapshot/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/wav/riff-pcm/any/snapshot/text.json",
   "title": "Semio_wav_snapshot",
   "description": "🚧 scaffolded by W1b — generic facet mirror.",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "entries": { "type": "array", "x-semio-state": "artifact", "items": { "type": "object" } }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "entries": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "type": "object"
+      }
+    }
   }
 }

@@ -12,7 +12,7 @@
       ],
       "properties": {
         "InsertVmlPart": {
-          "$ref": "./✒️insert-vml-part/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/strict/mutation/insert-vml-part/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "RemoveConformanceAttribute": {
-          "$ref": "./🚫️remove-conformance-attribute/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/strict/mutation/remove-conformance-attribute/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "RemoveVmlPart": {
-          "$ref": "./🧹️remove-vml-part/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/strict/mutation/remove-vml-part/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "SetConformanceAttribute": {
-          "$ref": "./✅️set-conformance-attribute/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/strict/mutation/set-conformance-attribute/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "SetMainNamespace": {
-          "$ref": "./🌐️set-main-namespace/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/strict/mutation/set-main-namespace/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "SetRelationshipsNamespace": {
-          "$ref": "./🔗️set-relationships-namespace/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/strict/mutation/set-relationships-namespace/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "SetSnapshot": {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/strict/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "SetWorksheetContentType": {
-          "$ref": "./🏷️set-worksheet-content-type/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/strict/mutation/set-worksheet-content-type/schema.json"
         }
       }
     }

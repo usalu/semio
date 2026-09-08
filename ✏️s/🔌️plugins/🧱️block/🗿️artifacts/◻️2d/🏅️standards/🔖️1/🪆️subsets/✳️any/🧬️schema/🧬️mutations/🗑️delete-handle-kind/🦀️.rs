@@ -1,8 +1,8 @@
 //! 🗑️ Block2d mutation — `DeleteHandleKind`: a handle-kind catalog row.
 
 use crate::Block2dSnapshot;
-use crate::diff::Block2dDiff;
-use crate::mutations::Block2dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
 
 //#region 🔖️Mutation
 /// 🗑️ `delete-handle-kind` payload.

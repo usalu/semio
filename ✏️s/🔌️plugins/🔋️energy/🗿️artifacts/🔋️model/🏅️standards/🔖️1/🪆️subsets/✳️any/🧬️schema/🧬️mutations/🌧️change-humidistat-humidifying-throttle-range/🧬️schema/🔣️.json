@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-humidistat-humidifying-throttle-range/schema.json",
+  "$id": "https://semio.tech/schema/s/energy/model/mutation/change-humidistat-humidifying-throttle-range/schema.json",
   "title": "ChangeHumidistatHumidifyingThrottleRange",
   "type": "object",
   "additionalProperties": false,

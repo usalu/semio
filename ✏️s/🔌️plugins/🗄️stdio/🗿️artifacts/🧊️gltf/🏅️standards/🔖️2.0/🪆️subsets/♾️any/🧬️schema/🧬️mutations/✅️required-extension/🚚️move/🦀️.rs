@@ -57,12 +57,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveRequiredE
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod direct_leaf_tests {
-    use super::*;
-
-    #[test]
-    fn semantic_identity_matches_the_language_neutral_descriptor() {
-        assert_eq!(<MoveRequiredExtensionMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "move-required-extension");
-    }
-}
+#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
+mod direct_leaf_tests;
 //#endregion 🧪️Tests

@@ -1,110 +1,83 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/fem/3d/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/fem/fem3d/mutations.json",
   "title": "Fem3dMutation",
   "description": "🧬️ The closed fem3d mutation vocabulary as it travels the wire: an internally tagged union discriminated by `mutation`, one variant per `🧬️mutations/<kind>/🧬️schema/🔣️.json` payload. Kept in the declaration order of the `Fem3dMutation` enum.",
   "oneOf": [
     {
-      "$ref": "./../../../🕸️mesh/🧬️schema/🧬️mutations/⚪️create-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/mesh/mutation/create-node/schema.json"
     },
     {
-      "$ref": "./../../../🕸️mesh/🧬️schema/🧬️mutations/🕳️delete-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/mesh/mutation/delete-node/schema.json"
     },
     {
-      "$ref": "./../../../🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/mesh/mutation/create-element/schema.json"
     },
     {
-      "$ref": "./../../../🕸️mesh/🧬️schema/🧬️mutations/🗑️delete-element/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/mesh/mutation/delete-element/schema.json"
     },
     {
-      "$ref": "./../../../🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/mesh/mutation/replace-element/schema.json"
     },
     {
-      "$ref": "./../../../🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/material/mutation/create-material/schema.json"
     },
     {
-      "$ref": "./../../../🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/material/mutation/delete-material/schema.json"
     },
     {
-      "$ref": "./../../../🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/material/mutation/replace-material/schema.json"
     },
     {
-      "$ref": "./../../../🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/mesh/mutation/create-section/schema.json"
     },
     {
-      "$ref": "./../../../🕸️mesh/🧬️schema/🧬️mutations/✂️delete-section/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/mesh/mutation/delete-section/schema.json"
     },
     {
-      "$ref": "./../../../🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/mesh/mutation/replace-section/schema.json"
     },
     {
-      "$ref": "./../../../🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/boundary/mutation/create-support/schema.json"
     },
     {
-      "$ref": "./../../../🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/boundary/mutation/delete-support/schema.json"
     },
     {
-      "$ref": "./../../../🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/boundary/mutation/replace-support/schema.json"
     },
     {
-      "$ref": "./../../../🕸️mesh/🧬️schema/🧬️mutations/🧊️create-solid/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/mesh/mutation/create-solid/schema.json"
     },
     {
-      "$ref": "./../../../🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-solid/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/mesh/mutation/delete-solid/schema.json"
     },
     {
-      "$ref": "./../../../🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-solid/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/mesh/mutation/replace-solid/schema.json"
     },
     {
-      "$ref": "./../../../🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/load/mutation/create-load-case/schema.json"
     },
     {
-      "$ref": "./../../../🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/load/mutation/delete-load-case/schema.json"
     },
     {
-      "$ref": "./../../../🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/load/mutation/add-load/schema.json"
     },
     {
-      "$ref": "./../../../🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/load/mutation/remove-load/schema.json"
     },
     {
-      "$ref": "./../../../🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/load/mutation/change-load-case-self-weight/schema.json"
     },
     {
-      "$ref": "./../../../🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/load/mutation/create-combination/schema.json"
     },
     {
-      "$ref": "./../../../🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/load/mutation/delete-combination/schema.json"
     },
     {
-      "$ref": "./../../../📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/fem/3d/1/analysis/mutation/update-analysis-settings/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "create-node",
-    "delete-node",
-    "create-element",
-    "delete-element",
-    "replace-element",
-    "create-material",
-    "delete-material",
-    "replace-material",
-    "create-section",
-    "delete-section",
-    "replace-section",
-    "create-support",
-    "delete-support",
-    "replace-support",
-    "create-solid",
-    "delete-solid",
-    "replace-solid",
-    "create-load-case",
-    "delete-load-case",
-    "add-load",
-    "remove-load",
-    "change-load-case-self-weight",
-    "create-combination",
-    "delete-combination",
-    "update-analysis-settings"
   ]
 }

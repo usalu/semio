@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/app/animate/presentation/config.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/animate/presentation/config/schema.json",
   "title": "PresentationConfig",
   "type": "object",
   "additionalProperties": false,

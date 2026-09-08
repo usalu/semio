@@ -8,9 +8,9 @@
 //! `jack_working_scene(base)`, applies its own specific semantics to a clone, and calls
 //! `diff_replace_content`.
 
-use crate::schema::JackEditorSelection;
+use crate::standards::v1::subsets::any::schema::JackEditorSelection;
 use crate::{Camera, JackContentChild};
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff

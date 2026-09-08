@@ -8,7 +8,7 @@ import { runInNewContext } from "node:vm";
 export async function testGraphCoalescing(workspace: string, source?: string): Promise<void> {
   const require = createRequire(join(workspace, "package.json")), fixtureRoot = join(import.meta.dir, "../../🧫️fixtures/graph-coalescing");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-  assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(fixtureRoot, "🧬️schema.json"), "utf8")), fixture));
+  assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(fixtureRoot, "🛂️schema.json"), "utf8")), fixture));
   source ??= readFileSync(require.resolve("nx/src/daemon/server/project-graph-incremental-recomputation"), "utf8");
   const tick = () => new Promise<void>(accept => setImmediate(accept));
   for (const vector of [...fixture.cases, ...fixture.failures.map((failure: string) => ({ name: `${failure}-error-recovery`, failure, phase: "nodes", changes: 0, requests: 1, computations: 1 + Number(["nodes", "dependencies"].includes(failure)) }))]) {

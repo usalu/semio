@@ -5,14 +5,13 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_schema as schema;
 
 // GIS terrain artifact — the document entity the 3d app edits (constitutional: general).
 
 /// 📸️ Persisted GIS terrain snapshot — defined in `📸️ snapshot/🧬️ schema`, re-exported here.
 pub use crate::schema::snapshot::GisTerrainSnapshot;
 
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::semio_framework_geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
 
 //#region 🔹Constants
@@ -189,25 +188,8 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 
 //#region 🔹Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn the_terrain_snapshot_defaults_to_a_flat_unimported_terrain() {
-        let document = GisTerrainSnapshot::default();
-        assert_eq!(document.exaggeration, 0.0);
-        assert!(document.imported_features_json.is_empty());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn the_terrain_snapshot_composes_a_content_addressed_mesh_child() {
-        let document = GisTerrainSnapshot::default();
-        assert!(document.mesh.is_some(), "the terrain always composes a mesh child, even when flat/unimported");
-        let mesh = gis_terrain_mesh_from_snapshot(&document);
-        assert_eq!(mesh.meshes.len(), 1);
-        assert_eq!(mesh.meshes[0].primitives[0].positions.len(), 4, "a flat placeholder quad");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🔹Tests
 
 #[path = "."]
@@ -562,7 +544,7 @@ mod tests {
         pub mod op {
             pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
         }
-        pub mod dsl {
+        pub mod document_dsl {
             pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
         }
         pub mod spr {
@@ -615,7 +597,6 @@ mod tests {
         }
         pub use crate::standards::v1::subsets::any::schema::diff::GisTerrainDiff;
         pub use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
-        pub use crate::standards::v1::subsets::any::schema::snapshot::GisTerrainSnapshot;
 
         #[path = "."]
         pub mod examples {
@@ -624,6 +605,9 @@ mod tests {
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
                 mod component;
                 pub use component::*;
+                #[cfg(test)]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+                mod tests;
             }
         }
 
@@ -654,6 +638,15 @@ pub mod editor {
 
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
             pub mod schema;
+        }
+
+        #[path = "."]
+        pub mod examples {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
+            pub mod demo_session;
+            #[cfg(test)]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️.rs"]
+            mod demo_session_tests;
         }
 
         #[path = "."]

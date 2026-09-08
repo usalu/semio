@@ -6,7 +6,7 @@
 //! document. It still round-trips through a real `ArtifactStore` (with a real `backwards`), so every
 //! edit is VCS'd exactly like document content.
 
-use semio_framework_artifact_flow_semio_framework_os_flow::CameraJson;
+use semio_framework_artifact_flow_flow::CameraJson;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Config
@@ -178,11 +178,11 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
     /// authored leaf directory on disk yet, so every `owner` names a path that does not exist —
     /// the same precedent puzzle3d's own config/presence aggregates set.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "⚙️", aggregate_variant: "Snapshot", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-camera", semantic_kind: "set-camera", display_name: "Set Camera", emoji: "⚙️", aggregate_variant: "SetCamera", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-show-mode", semantic_kind: "set-show-mode", display_name: "Set Show Mode", emoji: "⚙️", aggregate_variant: "SetShowMode", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-generation", semantic_kind: "set-generation", display_name: "Set Generation", emoji: "⚙️", aggregate_variant: "SetGeneration", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "⚙️", aggregate_variant: "SetLocale", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "⚙️", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-camera", semantic_kind: "set-camera", display_name: "Set Camera", emoji: "⚙️", aggregate_variant: "SetCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-show-mode", semantic_kind: "set-show-mode", display_name: "Set Show Mode", emoji: "⚙️", aggregate_variant: "SetShowMode", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-generation", semantic_kind: "set-generation", display_name: "Set Generation", emoji: "⚙️", aggregate_variant: "SetGeneration", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "⚙️", aggregate_variant: "SetLocale", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -220,40 +220,6 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn config_set_camera_round_trips_and_restores() {
-        let base = Generation2dConfig::default();
-        let camera = CameraJson { x: 9.0, y: -3.0, zoom: 2.5 };
-        let forward = Generation2dConfigMutation::SetCamera { camera: camera.clone() }.diff(&base).into_parts().0;
-        assert_eq!(forward.camera, camera);
-    }
-
-    #[test]
-    fn config_set_show_mode_round_trips_and_restores() {
-        let base = Generation2dConfig::default();
-        let forward = Generation2dConfigMutation::SetShowMode { value: "wire".into() }.diff(&base).into_parts().0;
-        assert_eq!(forward.show_mode, "wire");
-    }
-
-    #[test]
-    fn config_set_locale_round_trips_and_restores() {
-        let base = Generation2dConfig::default();
-        let forward = Generation2dConfigMutation::SetLocale { value: "de-DE".into() }.diff(&base).into_parts().0;
-        assert_eq!(forward.locale, "de-DE");
-    }
-
-    #[test]
-    fn config_op_text_round_trips_every_variant() {
-        let config = Generation2dConfig { locale: "de-DE".into(), ..Generation2dConfig::default() };
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation2dConfigMutation::Snapshot { config });
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation2dConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation2dConfigMutation::SetShowMode { value: "generate".into() });
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation2dConfigMutation::SetGeneration { selected_generation_id: None, generation_preview_text: None });
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation2dConfigMutation::SetGeneration { selected_generation_id: Some("g1".into()), generation_preview_text: None });
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation2dConfigMutation::SetLocale { value: "en-US".into() });
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

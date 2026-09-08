@@ -1,8 +1,8 @@
 //! 🌀 Block3d mutation — `CreateVortex`: a new rim-vortex template.
 
 use crate::{Block3dSnapshot, Block3dVortexTemplate};
-use crate::diff::Block3dDiff;
-use crate::mutations::Block3dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
 
 //#region 🔖️Mutation
 /// 🌀 `create-vortex` payload.

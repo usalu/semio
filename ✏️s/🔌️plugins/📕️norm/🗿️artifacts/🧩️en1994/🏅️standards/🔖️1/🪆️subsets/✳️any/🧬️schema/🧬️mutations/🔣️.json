@@ -1,97 +1,73 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1994/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/norm/en1994/mutations.json",
   "title": "En1994Mutation",
   "oneOf": [
     {
-      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "./⭕️change-d-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-d-mm/schema.json"
     },
     {
-      "$ref": "./🪜️change-deck-type/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-deck-type/schema.json"
     },
     {
-      "$ref": "./📊️change-delta-sigma-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-delta-sigma-mpa/schema.json"
     },
     {
-      "$ref": "./🔩️change-delta-tau-stud-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-delta-tau-stud-mpa/schema.json"
     },
     {
-      "$ref": "./🪨️change-e-cm-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-e-cm-mpa/schema.json"
     },
     {
-      "$ref": "./🤝️change-eta/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-eta/schema.json"
     },
     {
-      "$ref": "./🧱️change-f-ck-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-f-ck-mpa/schema.json"
     },
     {
-      "$ref": "./🔁️change-fatigue-detail/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-fatigue-detail/schema.json"
     },
     {
-      "$ref": "./🔥️change-fire-rating/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-fire-rating/schema.json"
     },
     {
-      "$ref": "./💪️change-fu-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-fu-mpa/schema.json"
     },
     {
-      "$ref": "./🏋️change-fy-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-fy-mpa/schema.json"
     },
     {
-      "$ref": "./↕️change-h-sc-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-h-sc-mm/schema.json"
     },
     {
-      "$ref": "./🧯️change-insulation-thickness-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-insulation-thickness-mm/schema.json"
     },
     {
-      "$ref": "./🌀️change-m-ed-knm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-m-ed-knm/schema.json"
     },
     {
-      "$ref": "./🛡️change-m-pl-rd/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-m-pl-rd/schema.json"
     },
     {
-      "$ref": "./🦾️change-m-pla/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-m-pla/schema.json"
     },
     {
-      "$ref": "./🔄️change-n-cycles-stud/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-n-cycles-stud/schema.json"
     },
     {
-      "$ref": "./📏️change-span-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-span-m/schema.json"
     },
     {
-      "$ref": "./✂️change-v-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-v-ed-kn/schema.json"
     },
     {
-      "$ref": "./📌️change-v-ed-per-stud-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-v-ed-per-stud-kn/schema.json"
     },
     {
-      "$ref": "./↔️change-vl-rd/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-vl-rd/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-annex",
-    "change-d-mm",
-    "change-deck-type",
-    "change-delta-sigma-mpa",
-    "change-delta-tau-stud-mpa",
-    "change-e-cm-mpa",
-    "change-eta",
-    "change-f-ck-mpa",
-    "change-fatigue-detail",
-    "change-fire-rating",
-    "change-fu-mpa",
-    "change-fy-mpa",
-    "change-h-sc-mm",
-    "change-insulation-thickness-mm",
-    "change-m-ed-knm",
-    "change-m-pl-rd",
-    "change-m-pla",
-    "change-n-cycles-stud",
-    "change-span-m",
-    "change-v-ed-kn",
-    "change-v-ed-per-stud-kn",
-    "change-vl-rd"
   ]
 }

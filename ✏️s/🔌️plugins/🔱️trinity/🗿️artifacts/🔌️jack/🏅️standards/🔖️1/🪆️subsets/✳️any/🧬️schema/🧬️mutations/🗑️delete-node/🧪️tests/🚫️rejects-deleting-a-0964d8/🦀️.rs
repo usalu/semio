@@ -17,7 +17,7 @@
 //! whose applied path also CASCADES (it severs every incident edge and emits `mutation.cascade`);
 //! rejecting before that point is what keeps the diff empty.
 
-use crate::mutations::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
 use crate::{jack_working_scene, JackDiff, JackSnapshot};
 

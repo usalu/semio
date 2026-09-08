@@ -2,6 +2,83 @@ import { readFileSync, writeFileSync, appendFileSync, existsSync, readdirSync } 
 import { join, resolve, relative, dirname, basename } from "node:path";
 
 const [command, name, filter] = process.argv.slice(2);
+if (["native-start", "native-worker", "native-cancel"].includes(command)) {
+  if (!/^native\d+$/.test(name ?? "")) throw new Error("Expected a unique native build name");
+  const { spawn } = await import("node:child_process");
+  const { mkdirSync, openSync, closeSync } = await import("node:fs");
+  const generated = resolve(import.meta.dir, "🗑️generated");
+  mkdirSync(generated, { recursive: true });
+  const prefix = join(generated, name);
+  const receiptPath = prefix + "-receipt.json";
+  const cancelPath = prefix + "-cancel.json";
+  const reportPath = join(import.meta.dir, "📓️2026-09-08-checks.md");
+  if (command === "native-cancel") {
+    writeFileSync(cancelPath, JSON.stringify({ requestedAt: new Date().toISOString() }));
+    console.log("[DEBUG] Cancellation requested for " + name);
+    process.exit(0);
+  }
+  if (command === "native-start") {
+    if (existsSync(prefix + "-process.json") || existsSync(receiptPath)) throw new Error("Build name already exists: " + name);
+    const stdout = openSync(prefix + "-worker.log", "a");
+    const stderr = openSync(prefix + "-worker.stderr", "a");
+    const worker = spawn(process.execPath, [import.meta.path, "native-worker", name], { cwd: process.cwd(), env: process.env, detached: true, stdio: ["ignore", stdout, stderr] });
+    closeSync(stdout);
+    closeSync(stderr);
+    if (!worker.pid) throw new Error("Native worker did not start");
+    writeFileSync(prefix + "-process.json", JSON.stringify({ pid: worker.pid, script: import.meta.path, cwd: process.cwd(), startedAt: new Date().toISOString() }, null, 2));
+    worker.unref();
+    console.log("[DEBUG] " + name + " worker started: " + worker.pid);
+    process.exit(0);
+  }
+  const startedAt = new Date().toISOString();
+  const env = { ...process.env, CARGO_INCREMENTAL: "0", RUSTC_WRAPPER: "", CARGO_TARGET_DIR: join(generated, "derive-target"), TMPDIR: generated };
+  const run = async (args: string[], stdout: string, stderr: string) => {
+    if (existsSync(cancelPath)) throw new Error("Native build cancelled");
+    const child = Bun.spawn(["cargo", ...args], { env, stdout: Bun.file(stdout), stderr: Bun.file(stderr) });
+    const cancellation = setInterval(() => { if (existsSync(cancelPath)) child.kill("SIGTERM"); }, 1_000);
+    try { return await child.exited; } finally { clearInterval(cancellation); }
+  };
+  writeFileSync(prefix + "-started.json", JSON.stringify({ pid: process.pid, startedAt }, null, 2));
+  try {
+    const metadataPath = prefix + "-metadata.json";
+    const metadataExit = await run(["metadata", "--no-deps", "--format-version=1"], metadataPath, prefix + "-metadata.log");
+    if (metadataExit !== 0) throw new Error("Cargo metadata failed: " + metadataExit);
+    const metadata = JSON.parse(readFileSync(metadataPath, "utf8"));
+    const base = ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", "semio-framework-os-renderer-wgpu"];
+    const packages: string[] = metadata.packages.filter(p => base.includes(p.name) || p.name.startsWith("semio-s-plugin-") || p.name.startsWith("semio-s-artifact-") || p.manifest_path.includes("/🗿️artifacts/") || p.manifest_path.includes("\\🗿️artifacts\\")).map(p => p.name).sort();
+    const args = ["check", "--all-targets", "--features", "semio-framework-os-renderer-wgpu/native-bin", "--message-format=json", "--keep-going", "-j2", ...packages.flatMap(pkg => ["-p", pkg])];
+    writeFileSync(prefix + "-scope.json", JSON.stringify({ packages, args }, null, 2));
+    appendFileSync(reportPath, "\n\n## " + name + " — Retained Native Fleet Check\n\nStarted a detached, cancellable worker under Nx for " + packages.length + " current packages, including plugin and artifact test targets and the native renderer entry point. The worker records its PID, scope, output and final receipt inside this ticket so a task continuation does not terminate the compiler run. Only one compiler validation for this ticket was active at dispatch.\n");
+    console.log("[DEBUG] " + name + " checking " + packages.length + " packages");
+    const exitCode = await run(args, prefix + ".jsonl", prefix + ".log");
+    const diagnostics: unknown[] = [];
+    const counts: Record<string, number> = {};
+    for (const line of readFileSync(prefix + ".jsonl", "utf8").split("\n")) {
+      try {
+        const row = JSON.parse(line);
+        if (row.reason === "compiler-message") {
+          diagnostics.push(row);
+          const code = row.message.code?.code ?? row.message.level;
+          counts[code] = (counts[code] ?? 0) + 1;
+        }
+      } catch {}
+    }
+    const cargoWarnings = [...new Set([prefix + "-metadata.log", prefix + ".log"].flatMap(file => readFileSync(file, "utf8").split("\n").filter(line => /^warning:/.test(line))))];
+    const receipt = { status: existsSync(cancelPath) ? "cancelled" : "complete", exitCode, startedAt, finishedAt: new Date().toISOString(), packages, args, counts, cargoWarnings };
+    writeFileSync(prefix + "-diagnostics.json", JSON.stringify(diagnostics));
+    writeFileSync(receiptPath, JSON.stringify(receipt, null, 2));
+    appendFileSync(reportPath, "\n" + name + " ended with exit code " + exitCode + " and diagnostic counts " + JSON.stringify(counts) + ", plus " + cargoWarnings.length + " distinct Cargo warning lines. A check result does not prove actual links or runtime behavior.\n");
+    console.log("[DEBUG] " + name + " " + JSON.stringify({ exitCode, counts, cargoWarnings }));
+    process.exit(exitCode);
+  } catch (error) {
+    const receipt = { status: existsSync(cancelPath) ? "cancelled" : "failed", startedAt, finishedAt: new Date().toISOString(), error: String(error) };
+    writeFileSync(receiptPath, JSON.stringify(receipt, null, 2));
+    appendFileSync(reportPath, "\n" + name + " failed before completing compiler validation: " + String(error) + ".\n");
+    console.error("[DEBUG] " + name + " " + String(error));
+    process.exit(1);
+  }
+}
+
 if (command === "laws") {
   const { runExactCargoLaws } = await import(resolve(process.cwd(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"));
   const generated = resolve(import.meta.dir, "🗑️generated");

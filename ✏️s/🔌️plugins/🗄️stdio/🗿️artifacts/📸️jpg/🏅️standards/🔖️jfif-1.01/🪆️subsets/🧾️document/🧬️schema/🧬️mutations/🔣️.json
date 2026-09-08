@@ -16,7 +16,7 @@
           "const": "change-jfif-header"
         },
         "payload": {
-          "$ref": "./🪪️change-jfif-header/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/document/mutation/change-jfif-header/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "change-re-encode-quality"
         },
         "payload": {
-          "$ref": "./🎚️change-re-encode-quality/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/document/mutation/change-re-encode-quality/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "change-restart-interval"
         },
         "payload": {
-          "$ref": "./🔁️change-restart-interval/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/document/mutation/change-restart-interval/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "insert-other-segment"
         },
         "payload": {
-          "$ref": "./📥️insert-other-segment/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/document/mutation/insert-other-segment/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "remove-huffman-table"
         },
         "payload": {
-          "$ref": "./🪓️remove-huffman-table/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/document/mutation/remove-huffman-table/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
           "const": "remove-other-segment"
         },
         "payload": {
-          "$ref": "./🗑️remove-other-segment/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/document/mutation/remove-other-segment/schema.json"
         }
       }
     },
@@ -112,7 +112,7 @@
           "const": "remove-quant-table"
         },
         "payload": {
-          "$ref": "./🧹️remove-quant-table/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/document/mutation/remove-quant-table/schema.json"
         }
       }
     },
@@ -128,7 +128,7 @@
           "const": "replace-huffman-table"
         },
         "payload": {
-          "$ref": "./🌳️replace-huffman-table/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/document/mutation/replace-huffman-table/schema.json"
         }
       }
     },
@@ -144,7 +144,7 @@
           "const": "replace-pixels"
         },
         "payload": {
-          "$ref": "./🔲️replace-pixels/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/document/mutation/replace-pixels/schema.json"
         }
       }
     },
@@ -160,7 +160,7 @@
           "const": "replace-quant-table"
         },
         "payload": {
-          "$ref": "./📊️replace-quant-table/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/document/mutation/replace-quant-table/schema.json"
         }
       }
     }

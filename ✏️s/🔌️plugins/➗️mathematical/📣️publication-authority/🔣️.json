@@ -3,14 +3,49 @@
   "owner": "EquationPlayApp",
   "source": "🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
   "routes": [
-    { "id": "setDocument", "lane": "Artifact" },
-    { "id": "setAlgorithm", "lane": "Artifact" },
-    { "id": "setDirected", "lane": "Artifact" },
-    { "id": "nodeGraphEdit", "lane": "Artifact" },
-    { "id": "nodeGraphViewport", "lane": "Config" },
-    { "id": "setPoints", "lane": "Artifact" },
-    { "id": "setLocale", "lane": "Config" }
+    {
+      "id": "setDocument",
+      "lane": "artifact"
+    },
+    {
+      "id": "setAlgorithm",
+      "lane": "artifact"
+    },
+    {
+      "id": "setDirected",
+      "lane": "artifact"
+    },
+    {
+      "id": "nodeGraphEdit",
+      "lane": "artifact"
+    },
+    {
+      "id": "nodeGraphViewport",
+      "lane": "config"
+    },
+    {
+      "id": "setPoints",
+      "lane": "artifact"
+    },
+    {
+      "id": "setLocale",
+      "lane": "config"
+    }
   ],
-  "laws": { "bounded": true, "cancel": true, "replay": true, "freshness": true, "ack": true, "incrementalClose": true },
-  "ui": { "locales": ["en", "de"], "accessibleLabels": true, "customizableUi": true }
+  "laws": {
+    "bounded": true,
+    "cancel": true,
+    "replay": true,
+    "freshness": true,
+    "ack": true,
+    "incrementalClose": true
+  },
+  "ui": {
+    "locales": [
+      "en",
+      "de"
+    ],
+    "accessibleLabels": true,
+    "customizableUi": true
+  }
 }

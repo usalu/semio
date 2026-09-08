@@ -12,7 +12,7 @@
       ],
       "properties": {
         "InsertComment": {
-          "$ref": "./🗨️insert-comment/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/insert-comment/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "InsertTopic": {
-          "$ref": "./📌insert-topic/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/insert-topic/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "InsertViewpoint": {
-          "$ref": "./👁️insert-viewpoint/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/insert-viewpoint/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "RemoveComment": {
-          "$ref": "./🧹remove-comment/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/remove-comment/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "RemoveTopic": {
-          "$ref": "./🗑️remove-topic/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/remove-topic/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "RemoveViewpoint": {
-          "$ref": "./🙈remove-viewpoint/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/remove-viewpoint/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "SetComment": {
-          "$ref": "./✏️set-comment/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/set-comment/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "SetSnapshot": {
-          "$ref": "./🗃️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -108,7 +108,7 @@
       ],
       "properties": {
         "SetTopicMarkup": {
-          "$ref": "./🖊️set-topic-markup/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/set-topic-markup/schema.json"
         }
       }
     },
@@ -120,7 +120,7 @@
       ],
       "properties": {
         "SetVersion": {
-          "$ref": "./🔢set-version/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/set-version/schema.json"
         }
       }
     },
@@ -132,7 +132,7 @@
       ],
       "properties": {
         "SetViewpointCamera": {
-          "$ref": "./📷set-viewpoint-camera/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/set-viewpoint-camera/schema.json"
         }
       }
     },
@@ -144,7 +144,7 @@
       ],
       "properties": {
         "SetViewpointComponents": {
-          "$ref": "./🧱set-viewpoint-components/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/set-viewpoint-components/schema.json"
         }
       }
     },
@@ -156,7 +156,7 @@
       ],
       "properties": {
         "SetViewpointSnapshot": {
-          "$ref": "./📸set-viewpoint-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/set-viewpoint-snapshot/schema.json"
         }
       }
     }

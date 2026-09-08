@@ -26,31 +26,8 @@ pub fn encode_result(indicators: &GltfEntityIndicators) -> dsl::DslValue {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[semio_framework_async_macros::async_test]
-    async fn descriptor_is_versioned_and_cacheable() {
-        assert_eq!(descriptor().id, "s.stdio.gltf.inference.overall-size.v1");
-        assert_eq!(descriptor().algorithm_version, 1);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 #[cfg(test)]
-mod canonical_vectors {
-    #[derive(value_derive::FromValue)]
-    struct Vector {
-        value: Option<f64>,
-        availability: String,
-    }
-    #[derive(value_derive::FromValue)]
-    struct Contract {
-        vectors: Vec<Vector>,
-    }
-    #[semio_framework_async_macros::async_test]
-    async fn shared_analytic_unavailable_and_deterministic_vectors_are_typed() {
-        let contract: Contract = pack::from_json_str(include_str!("🧪️contract/🔣️.json")).unwrap();
-        assert_eq!(contract.vectors[0].value, Some(5.0));
-        assert_eq!(contract.vectors[0].availability, "available");
-        assert_eq!(contract.vectors[1].value, None);
-        assert_eq!(contract.vectors[1].availability, "unavailable");
-    }
-}
+#[path = "🧪️tests/🔬️canonical-vectors/🦀️.rs"]
+mod canonical_vectors;

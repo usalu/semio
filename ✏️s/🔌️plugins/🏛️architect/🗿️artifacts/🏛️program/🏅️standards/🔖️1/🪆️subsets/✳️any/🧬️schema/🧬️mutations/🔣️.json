@@ -1,1074 +1,806 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/architect/program/mutations.json",
   "title": "ProgramMutation",
   "description": "One real per-mutation record per SEMANTIC-MUTATIONS-OVERHAUL — 266 semantic kinds, matching the Rust dispatch enum 1:1 (Wave C rewrite; supersedes the pre-migration whole-snapshot-shaped generic schema).",
   "oneOf": [
     {
-      "$ref": "./🧲️adjacency/🧲️connect/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/connect-adjacency/schema.json"
     },
     {
-      "$ref": "./🧵️trace/🧵️connect/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/connect-trace/schema.json"
     },
     {
-      "$ref": "./🔑️access-rule/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-access-rule/schema.json"
     },
     {
-      "$ref": "./♿️accessibility-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-accessibility-requirement/schema.json"
     },
     {
-      "$ref": "./🏃️activity/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-activity/schema.json"
     },
     {
-      "$ref": "./🔬️analysis-record/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-analysis-record/schema.json"
     },
     {
-      "$ref": "./👍️approval-record/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-approval-record/schema.json"
     },
     {
-      "$ref": "./💭️assumption/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-assumption/schema.json"
     },
     {
-      "$ref": "./📒️audit-event/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-audit-event/schema.json"
     },
     {
-      "$ref": "./🏁️benchmark-record/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-benchmark-record/schema.json"
     },
     {
-      "$ref": "./🔀️change-record/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-change-record/schema.json"
     },
     {
-      "$ref": "./🤝️collaboration-record/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-collaboration-record/schema.json"
     },
     {
-      "$ref": "./📡️communication-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-communication-requirement/schema.json"
     },
     {
-      "$ref": "./🛂️compliance-record/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-compliance-record/schema.json"
     },
     {
-      "$ref": "./⚔️conflict/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-conflict/schema.json"
     },
     {
-      "$ref": "./🚧️constraint-record/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-constraint-record/schema.json"
     },
     {
-      "$ref": "./💰️cost-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-cost-requirement/schema.json"
     },
     {
-      "$ref": "./✅️decision/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-decision/schema.json"
     },
     {
-      "$ref": "./🚚️delivery-constraint/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-delivery-constraint/schema.json"
     },
     {
-      "$ref": "./📃️document/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-document/schema.json"
     },
     {
-      "$ref": "./🌿️environmental-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-environmental-requirement/schema.json"
     },
     {
-      "$ref": "./🛠️equipment/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-equipment/schema.json"
     },
     {
-      "$ref": "./🧩️flexibility-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-flexibility-requirement/schema.json"
     },
     {
-      "$ref": "./🌊️flow-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-flow-requirement/schema.json"
     },
     {
-      "$ref": "./⚙️function/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-function/schema.json"
     },
     {
-      "$ref": "./📈️growth-plan/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-growth-plan/schema.json"
     },
     {
-      "$ref": "./🧠️human-factor-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-human-factor-requirement/schema.json"
     },
     {
-      "$ref": "./ℹ️information-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-information-requirement/schema.json"
     },
     {
-      "$ref": "./🏗️infrastructure-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-infrastructure-requirement/schema.json"
     },
     {
-      "$ref": "./🐛️issue/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-issue/schema.json"
     },
     {
-      "$ref": "./📚️knowledge-record/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-knowledge-record/schema.json"
     },
     {
-      "$ref": "./🗓️meeting-record/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-meeting-record/schema.json"
     },
     {
-      "$ref": "./📋️operational-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-operational-requirement/schema.json"
     },
     {
-      "$ref": "./⚖️option-evaluation/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-option-evaluation/schema.json"
     },
     {
-      "$ref": "./🏢️organizational-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-organizational-requirement/schema.json"
     },
     {
-      "$ref": "./📊️performance-criterion/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-performance-criterion/schema.json"
     },
     {
-      "$ref": "./⭐️priority-record/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-priority-record/schema.json"
     },
     {
-      "$ref": "./🔒️privacy-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-privacy-requirement/schema.json"
     },
     {
-      "$ref": "./🔄️process/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-process/schema.json"
     },
     {
-      "$ref": "./🧱️program-element/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-program-element/schema.json"
     },
     {
-      "$ref": "./💎️quality-record/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-quality-record/schema.json"
     },
     {
-      "$ref": "./🔢️quantity-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-quantity-requirement/schema.json"
     },
     {
-      "$ref": "./📜️regulatory-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-regulatory-requirement/schema.json"
     },
     {
-      "$ref": "./🕸️relationship/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-relationship/schema.json"
     },
     {
-      "$ref": "./📑️report-record/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-report-record/schema.json"
     },
     {
-      "$ref": "./📌️requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-requirement/schema.json"
     },
     {
-      "$ref": "./💪️resilience-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-resilience-requirement/schema.json"
     },
     {
-      "$ref": "./📦️resource/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-resource/schema.json"
     },
     {
-      "$ref": "./⚠️risk/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-risk/schema.json"
     },
     {
-      "$ref": "./🦺️safety-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-safety-requirement/schema.json"
     },
     {
-      "$ref": "./🎬️scenario/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-scenario/schema.json"
     },
     {
-      "$ref": "./📅️schedule-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-schedule-requirement/schema.json"
     },
     {
-      "$ref": "./🔍️search-filter/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-search-filter/schema.json"
     },
     {
-      "$ref": "./🛡️security-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-security-requirement/schema.json"
     },
     {
-      "$ref": "./🛎️service-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-service-requirement/schema.json"
     },
     {
-      "$ref": "./📍️site-context/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-site-context/schema.json"
     },
     {
-      "$ref": "./👥️stakeholder/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-stakeholder/schema.json"
     },
     {
-      "$ref": "./📶️status-record/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-status-record/schema.json"
     },
     {
-      "$ref": "./🗄️storage-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-storage-requirement/schema.json"
     },
     {
-      "$ref": "./🗳️survey/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-survey/schema.json"
     },
     {
-      "$ref": "./♻️sustainability-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-sustainability-requirement/schema.json"
     },
     {
-      "$ref": "./📐️template-record/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-template-record/schema.json"
     },
     {
-      "$ref": "./🧑️user-profile/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-user-profile/schema.json"
     },
     {
-      "$ref": "./✔️validation-record/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-validation-record/schema.json"
     },
     {
-      "$ref": "./🧭️wayfinding-requirement/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-wayfinding-requirement/schema.json"
     },
     {
-      "$ref": "./🎓️workshop/🌱️create/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/create-workshop/schema.json"
     },
     {
-      "$ref": "./🔑️access-rule/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-access-rule/schema.json"
     },
     {
-      "$ref": "./♿️accessibility-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-accessibility-requirement/schema.json"
     },
     {
-      "$ref": "./🏃️activity/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-activity/schema.json"
     },
     {
-      "$ref": "./🔬️analysis-record/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-analysis-record/schema.json"
     },
     {
-      "$ref": "./👍️approval-record/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-approval-record/schema.json"
     },
     {
-      "$ref": "./💭️assumption/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-assumption/schema.json"
     },
     {
-      "$ref": "./📒️audit-event/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-audit-event/schema.json"
     },
     {
-      "$ref": "./🏁️benchmark-record/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-benchmark-record/schema.json"
     },
     {
-      "$ref": "./🔀️change-record/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-change-record/schema.json"
     },
     {
-      "$ref": "./🤝️collaboration-record/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-collaboration-record/schema.json"
     },
     {
-      "$ref": "./📡️communication-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-communication-requirement/schema.json"
     },
     {
-      "$ref": "./🛂️compliance-record/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-compliance-record/schema.json"
     },
     {
-      "$ref": "./⚔️conflict/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-conflict/schema.json"
     },
     {
-      "$ref": "./🚧️constraint-record/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-constraint-record/schema.json"
     },
     {
-      "$ref": "./💰️cost-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-cost-requirement/schema.json"
     },
     {
-      "$ref": "./✅️decision/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-decision/schema.json"
     },
     {
-      "$ref": "./🚚️delivery-constraint/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-delivery-constraint/schema.json"
     },
     {
-      "$ref": "./📃️document/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-document/schema.json"
     },
     {
-      "$ref": "./🌿️environmental-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-environmental-requirement/schema.json"
     },
     {
-      "$ref": "./🛠️equipment/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-equipment/schema.json"
     },
     {
-      "$ref": "./🧩️flexibility-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-flexibility-requirement/schema.json"
     },
     {
-      "$ref": "./🌊️flow-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-flow-requirement/schema.json"
     },
     {
-      "$ref": "./⚙️function/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-function/schema.json"
     },
     {
-      "$ref": "./📈️growth-plan/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-growth-plan/schema.json"
     },
     {
-      "$ref": "./🧠️human-factor-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-human-factor-requirement/schema.json"
     },
     {
-      "$ref": "./ℹ️information-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-information-requirement/schema.json"
     },
     {
-      "$ref": "./🏗️infrastructure-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-infrastructure-requirement/schema.json"
     },
     {
-      "$ref": "./🐛️issue/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-issue/schema.json"
     },
     {
-      "$ref": "./📚️knowledge-record/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-knowledge-record/schema.json"
     },
     {
-      "$ref": "./🗓️meeting-record/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-meeting-record/schema.json"
     },
     {
-      "$ref": "./📋️operational-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-operational-requirement/schema.json"
     },
     {
-      "$ref": "./⚖️option-evaluation/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-option-evaluation/schema.json"
     },
     {
-      "$ref": "./🏢️organizational-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-organizational-requirement/schema.json"
     },
     {
-      "$ref": "./📊️performance-criterion/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-performance-criterion/schema.json"
     },
     {
-      "$ref": "./⭐️priority-record/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-priority-record/schema.json"
     },
     {
-      "$ref": "./🔒️privacy-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-privacy-requirement/schema.json"
     },
     {
-      "$ref": "./🔄️process/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-process/schema.json"
     },
     {
-      "$ref": "./🧱️program-element/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-program-element/schema.json"
     },
     {
-      "$ref": "./💎️quality-record/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-quality-record/schema.json"
     },
     {
-      "$ref": "./🔢️quantity-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-quantity-requirement/schema.json"
     },
     {
-      "$ref": "./📜️regulatory-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-regulatory-requirement/schema.json"
     },
     {
-      "$ref": "./🕸️relationship/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-relationship/schema.json"
     },
     {
-      "$ref": "./📑️report-record/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-report-record/schema.json"
     },
     {
-      "$ref": "./📌️requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-requirement/schema.json"
     },
     {
-      "$ref": "./💪️resilience-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-resilience-requirement/schema.json"
     },
     {
-      "$ref": "./📦️resource/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-resource/schema.json"
     },
     {
-      "$ref": "./⚠️risk/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-risk/schema.json"
     },
     {
-      "$ref": "./🦺️safety-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-safety-requirement/schema.json"
     },
     {
-      "$ref": "./🎬️scenario/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-scenario/schema.json"
     },
     {
-      "$ref": "./📅️schedule-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-schedule-requirement/schema.json"
     },
     {
-      "$ref": "./🔍️search-filter/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-search-filter/schema.json"
     },
     {
-      "$ref": "./🛡️security-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-security-requirement/schema.json"
     },
     {
-      "$ref": "./🛎️service-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-service-requirement/schema.json"
     },
     {
-      "$ref": "./📍️site-context/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-site-context/schema.json"
     },
     {
-      "$ref": "./👥️stakeholder/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-stakeholder/schema.json"
     },
     {
-      "$ref": "./📶️status-record/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-status-record/schema.json"
     },
     {
-      "$ref": "./🗄️storage-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-storage-requirement/schema.json"
     },
     {
-      "$ref": "./🗳️survey/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-survey/schema.json"
     },
     {
-      "$ref": "./♻️sustainability-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-sustainability-requirement/schema.json"
     },
     {
-      "$ref": "./📐️template-record/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-template-record/schema.json"
     },
     {
-      "$ref": "./🧑️user-profile/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-user-profile/schema.json"
     },
     {
-      "$ref": "./✔️validation-record/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-validation-record/schema.json"
     },
     {
-      "$ref": "./🧭️wayfinding-requirement/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-wayfinding-requirement/schema.json"
     },
     {
-      "$ref": "./🎓️workshop/🗑️delete/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/delete-workshop/schema.json"
     },
     {
-      "$ref": "./🧲️adjacency/🫷️disconnect/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/disconnect-adjacency/schema.json"
     },
     {
-      "$ref": "./🧵️trace/✂️disconnect/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/disconnect-trace/schema.json"
     },
     {
-      "$ref": "./🔑️access-rule/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-access-rule/schema.json"
     },
     {
-      "$ref": "./♿️accessibility-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-accessibility-requirement/schema.json"
     },
     {
-      "$ref": "./🏃️activity/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-activity/schema.json"
     },
     {
-      "$ref": "./🔬️analysis-record/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-analysis-record/schema.json"
     },
     {
-      "$ref": "./👍️approval-record/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-approval-record/schema.json"
     },
     {
-      "$ref": "./💭️assumption/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-assumption/schema.json"
     },
     {
-      "$ref": "./📒️audit-event/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-audit-event/schema.json"
     },
     {
-      "$ref": "./🏁️benchmark-record/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-benchmark-record/schema.json"
     },
     {
-      "$ref": "./🔀️change-record/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-change-record/schema.json"
     },
     {
-      "$ref": "./🤝️collaboration-record/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-collaboration-record/schema.json"
     },
     {
-      "$ref": "./📡️communication-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-communication-requirement/schema.json"
     },
     {
-      "$ref": "./🛂️compliance-record/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-compliance-record/schema.json"
     },
     {
-      "$ref": "./⚔️conflict/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-conflict/schema.json"
     },
     {
-      "$ref": "./🚧️constraint-record/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-constraint-record/schema.json"
     },
     {
-      "$ref": "./💰️cost-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-cost-requirement/schema.json"
     },
     {
-      "$ref": "./✅️decision/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-decision/schema.json"
     },
     {
-      "$ref": "./🚚️delivery-constraint/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-delivery-constraint/schema.json"
     },
     {
-      "$ref": "./📃️document/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-document/schema.json"
     },
     {
-      "$ref": "./🌿️environmental-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-environmental-requirement/schema.json"
     },
     {
-      "$ref": "./🛠️equipment/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-equipment/schema.json"
     },
     {
-      "$ref": "./🧩️flexibility-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-flexibility-requirement/schema.json"
     },
     {
-      "$ref": "./🌊️flow-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-flow-requirement/schema.json"
     },
     {
-      "$ref": "./⚙️function/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-function/schema.json"
     },
     {
-      "$ref": "./🏛️governance/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-governance/schema.json"
     },
     {
-      "$ref": "./📈️growth-plan/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-growth-plan/schema.json"
     },
     {
-      "$ref": "./🧠️human-factor-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-human-factor-requirement/schema.json"
     },
     {
-      "$ref": "./ℹ️information-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-information-requirement/schema.json"
     },
     {
-      "$ref": "./🏗️infrastructure-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-infrastructure-requirement/schema.json"
     },
     {
-      "$ref": "./🐛️issue/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-issue/schema.json"
     },
     {
-      "$ref": "./📚️knowledge-record/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-knowledge-record/schema.json"
     },
     {
-      "$ref": "./🗓️meeting-record/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-meeting-record/schema.json"
     },
     {
-      "$ref": "./🏷️meta/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-meta/schema.json"
     },
     {
-      "$ref": "./📋️operational-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-operational-requirement/schema.json"
     },
     {
-      "$ref": "./⚖️option-evaluation/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-option-evaluation/schema.json"
     },
     {
-      "$ref": "./🏢️organizational-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-organizational-requirement/schema.json"
     },
     {
-      "$ref": "./📊️performance-criterion/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-performance-criterion/schema.json"
     },
     {
-      "$ref": "./⭐️priority-record/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-priority-record/schema.json"
     },
     {
-      "$ref": "./🔒️privacy-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-privacy-requirement/schema.json"
     },
     {
-      "$ref": "./🔄️process/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-process/schema.json"
     },
     {
-      "$ref": "./🧱️program-element/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-program-element/schema.json"
     },
     {
-      "$ref": "./🏙️project/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-project/schema.json"
     },
     {
-      "$ref": "./💎️quality-record/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-quality-record/schema.json"
     },
     {
-      "$ref": "./🔢️quantity-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-quantity-requirement/schema.json"
     },
     {
-      "$ref": "./📜️regulatory-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-regulatory-requirement/schema.json"
     },
     {
-      "$ref": "./🕸️relationship/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-relationship/schema.json"
     },
     {
-      "$ref": "./📑️report-record/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-report-record/schema.json"
     },
     {
-      "$ref": "./📌️requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-requirement/schema.json"
     },
     {
-      "$ref": "./💪️resilience-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-resilience-requirement/schema.json"
     },
     {
-      "$ref": "./📦️resource/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-resource/schema.json"
     },
     {
-      "$ref": "./⚠️risk/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-risk/schema.json"
     },
     {
-      "$ref": "./🦺️safety-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-safety-requirement/schema.json"
     },
     {
-      "$ref": "./🎬️scenario/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-scenario/schema.json"
     },
     {
-      "$ref": "./📅️schedule-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-schedule-requirement/schema.json"
     },
     {
-      "$ref": "./🔍️search-filter/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-search-filter/schema.json"
     },
     {
-      "$ref": "./🛡️security-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-security-requirement/schema.json"
     },
     {
-      "$ref": "./🛎️service-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-service-requirement/schema.json"
     },
     {
-      "$ref": "./📍️site-context/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-site-context/schema.json"
     },
     {
-      "$ref": "./👥️stakeholder/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-stakeholder/schema.json"
     },
     {
-      "$ref": "./📶️status-record/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-status-record/schema.json"
     },
     {
-      "$ref": "./🗄️storage-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-storage-requirement/schema.json"
     },
     {
-      "$ref": "./🗳️survey/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-survey/schema.json"
     },
     {
-      "$ref": "./♻️sustainability-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-sustainability-requirement/schema.json"
     },
     {
-      "$ref": "./📐️template-record/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-template-record/schema.json"
     },
     {
-      "$ref": "./🧑️user-profile/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-user-profile/schema.json"
     },
     {
-      "$ref": "./✔️validation-record/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-validation-record/schema.json"
     },
     {
-      "$ref": "./🧭️wayfinding-requirement/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-wayfinding-requirement/schema.json"
     },
     {
-      "$ref": "./🎓️workshop/🏷️rename/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/rename-workshop/schema.json"
     },
     {
-      "$ref": "./🔑️access-rule/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-access-rule/schema.json"
     },
     {
-      "$ref": "./♿️accessibility-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-accessibility-requirement/schema.json"
     },
     {
-      "$ref": "./🏃️activity/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-activity/schema.json"
     },
     {
-      "$ref": "./🔬️analysis-record/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-analysis-record/schema.json"
     },
     {
-      "$ref": "./👍️approval-record/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-approval-record/schema.json"
     },
     {
-      "$ref": "./💭️assumption/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-assumption/schema.json"
     },
     {
-      "$ref": "./📒️audit-event/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-audit-event/schema.json"
     },
     {
-      "$ref": "./🏁️benchmark-record/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-benchmark-record/schema.json"
     },
     {
-      "$ref": "./🔀️change-record/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-change-record/schema.json"
     },
     {
-      "$ref": "./🤝️collaboration-record/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-collaboration-record/schema.json"
     },
     {
-      "$ref": "./📡️communication-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-communication-requirement/schema.json"
     },
     {
-      "$ref": "./🛂️compliance-record/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-compliance-record/schema.json"
     },
     {
-      "$ref": "./⚔️conflict/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-conflict/schema.json"
     },
     {
-      "$ref": "./🚧️constraint-record/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-constraint-record/schema.json"
     },
     {
-      "$ref": "./💰️cost-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-cost-requirement/schema.json"
     },
     {
-      "$ref": "./✅️decision/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-decision/schema.json"
     },
     {
-      "$ref": "./🚚️delivery-constraint/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-delivery-constraint/schema.json"
     },
     {
-      "$ref": "./📃️document/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-document/schema.json"
     },
     {
-      "$ref": "./🌿️environmental-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-environmental-requirement/schema.json"
     },
     {
-      "$ref": "./🛠️equipment/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-equipment/schema.json"
     },
     {
-      "$ref": "./🧩️flexibility-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-flexibility-requirement/schema.json"
     },
     {
-      "$ref": "./🌊️flow-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-flow-requirement/schema.json"
     },
     {
-      "$ref": "./⚙️function/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-function/schema.json"
     },
     {
-      "$ref": "./🏛️governance/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-governance/schema.json"
     },
     {
-      "$ref": "./📈️growth-plan/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-growth-plan/schema.json"
     },
     {
-      "$ref": "./🧠️human-factor-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-human-factor-requirement/schema.json"
     },
     {
-      "$ref": "./ℹ️information-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-information-requirement/schema.json"
     },
     {
-      "$ref": "./🏗️infrastructure-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-infrastructure-requirement/schema.json"
     },
     {
-      "$ref": "./🐛️issue/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-issue/schema.json"
     },
     {
-      "$ref": "./📚️knowledge-record/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-knowledge-record/schema.json"
     },
     {
-      "$ref": "./🗓️meeting-record/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-meeting-record/schema.json"
     },
     {
-      "$ref": "./🏷️meta/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-meta/schema.json"
     },
     {
-      "$ref": "./📋️operational-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-operational-requirement/schema.json"
     },
     {
-      "$ref": "./⚖️option-evaluation/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-option-evaluation/schema.json"
     },
     {
-      "$ref": "./🏢️organizational-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-organizational-requirement/schema.json"
     },
     {
-      "$ref": "./📊️performance-criterion/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-performance-criterion/schema.json"
     },
     {
-      "$ref": "./⭐️priority-record/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-priority-record/schema.json"
     },
     {
-      "$ref": "./🔒️privacy-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-privacy-requirement/schema.json"
     },
     {
-      "$ref": "./🔄️process/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-process/schema.json"
     },
     {
-      "$ref": "./🧱️program-element/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-program-element/schema.json"
     },
     {
-      "$ref": "./🏙️project/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-project/schema.json"
     },
     {
-      "$ref": "./💎️quality-record/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-quality-record/schema.json"
     },
     {
-      "$ref": "./🔢️quantity-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-quantity-requirement/schema.json"
     },
     {
-      "$ref": "./📜️regulatory-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-regulatory-requirement/schema.json"
     },
     {
-      "$ref": "./🕸️relationship/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-relationship/schema.json"
     },
     {
-      "$ref": "./📑️report-record/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-report-record/schema.json"
     },
     {
-      "$ref": "./📌️requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-requirement/schema.json"
     },
     {
-      "$ref": "./💪️resilience-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-resilience-requirement/schema.json"
     },
     {
-      "$ref": "./📦️resource/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-resource/schema.json"
     },
     {
-      "$ref": "./⚠️risk/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-risk/schema.json"
     },
     {
-      "$ref": "./🦺️safety-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-safety-requirement/schema.json"
     },
     {
-      "$ref": "./🎬️scenario/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-scenario/schema.json"
     },
     {
-      "$ref": "./📅️schedule-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-schedule-requirement/schema.json"
     },
     {
-      "$ref": "./🔍️search-filter/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-search-filter/schema.json"
     },
     {
-      "$ref": "./🛡️security-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-security-requirement/schema.json"
     },
     {
-      "$ref": "./🛎️service-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-service-requirement/schema.json"
     },
     {
-      "$ref": "./📍️site-context/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-site-context/schema.json"
     },
     {
-      "$ref": "./👥️stakeholder/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-stakeholder/schema.json"
     },
     {
-      "$ref": "./📶️status-record/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-status-record/schema.json"
     },
     {
-      "$ref": "./🗄️storage-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-storage-requirement/schema.json"
     },
     {
-      "$ref": "./🗳️survey/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-survey/schema.json"
     },
     {
-      "$ref": "./♻️sustainability-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-sustainability-requirement/schema.json"
     },
     {
-      "$ref": "./📐️template-record/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-template-record/schema.json"
     },
     {
-      "$ref": "./🧑️user-profile/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-user-profile/schema.json"
     },
     {
-      "$ref": "./✔️validation-record/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-validation-record/schema.json"
     },
     {
-      "$ref": "./🧭️wayfinding-requirement/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-wayfinding-requirement/schema.json"
     },
     {
-      "$ref": "./🎓️workshop/♻️replace/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/architect/program/mutation/replace-workshop/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "connect-adjacency",
-    "connect-trace",
-    "create-access-rule",
-    "create-accessibility-requirement",
-    "create-activity",
-    "create-analysis-record",
-    "create-approval-record",
-    "create-assumption",
-    "create-audit-event",
-    "create-benchmark-record",
-    "create-change-record",
-    "create-collaboration-record",
-    "create-communication-requirement",
-    "create-compliance-record",
-    "create-conflict",
-    "create-constraint-record",
-    "create-cost-requirement",
-    "create-decision",
-    "create-delivery-constraint",
-    "create-document",
-    "create-environmental-requirement",
-    "create-equipment",
-    "create-flexibility-requirement",
-    "create-flow-requirement",
-    "create-function",
-    "create-growth-plan",
-    "create-human-factor-requirement",
-    "create-information-requirement",
-    "create-infrastructure-requirement",
-    "create-issue",
-    "create-knowledge-record",
-    "create-meeting-record",
-    "create-operational-requirement",
-    "create-option-evaluation",
-    "create-organizational-requirement",
-    "create-performance-criterion",
-    "create-priority-record",
-    "create-privacy-requirement",
-    "create-process",
-    "create-program-element",
-    "create-quality-record",
-    "create-quantity-requirement",
-    "create-regulatory-requirement",
-    "create-relationship",
-    "create-report-record",
-    "create-requirement",
-    "create-resilience-requirement",
-    "create-resource",
-    "create-risk",
-    "create-safety-requirement",
-    "create-scenario",
-    "create-schedule-requirement",
-    "create-search-filter",
-    "create-security-requirement",
-    "create-service-requirement",
-    "create-site-context",
-    "create-stakeholder",
-    "create-status-record",
-    "create-storage-requirement",
-    "create-survey",
-    "create-sustainability-requirement",
-    "create-template-record",
-    "create-user-profile",
-    "create-validation-record",
-    "create-wayfinding-requirement",
-    "create-workshop",
-    "delete-access-rule",
-    "delete-accessibility-requirement",
-    "delete-activity",
-    "delete-analysis-record",
-    "delete-approval-record",
-    "delete-assumption",
-    "delete-audit-event",
-    "delete-benchmark-record",
-    "delete-change-record",
-    "delete-collaboration-record",
-    "delete-communication-requirement",
-    "delete-compliance-record",
-    "delete-conflict",
-    "delete-constraint-record",
-    "delete-cost-requirement",
-    "delete-decision",
-    "delete-delivery-constraint",
-    "delete-document",
-    "delete-environmental-requirement",
-    "delete-equipment",
-    "delete-flexibility-requirement",
-    "delete-flow-requirement",
-    "delete-function",
-    "delete-growth-plan",
-    "delete-human-factor-requirement",
-    "delete-information-requirement",
-    "delete-infrastructure-requirement",
-    "delete-issue",
-    "delete-knowledge-record",
-    "delete-meeting-record",
-    "delete-operational-requirement",
-    "delete-option-evaluation",
-    "delete-organizational-requirement",
-    "delete-performance-criterion",
-    "delete-priority-record",
-    "delete-privacy-requirement",
-    "delete-process",
-    "delete-program-element",
-    "delete-quality-record",
-    "delete-quantity-requirement",
-    "delete-regulatory-requirement",
-    "delete-relationship",
-    "delete-report-record",
-    "delete-requirement",
-    "delete-resilience-requirement",
-    "delete-resource",
-    "delete-risk",
-    "delete-safety-requirement",
-    "delete-scenario",
-    "delete-schedule-requirement",
-    "delete-search-filter",
-    "delete-security-requirement",
-    "delete-service-requirement",
-    "delete-site-context",
-    "delete-stakeholder",
-    "delete-status-record",
-    "delete-storage-requirement",
-    "delete-survey",
-    "delete-sustainability-requirement",
-    "delete-template-record",
-    "delete-user-profile",
-    "delete-validation-record",
-    "delete-wayfinding-requirement",
-    "delete-workshop",
-    "disconnect-adjacency",
-    "disconnect-trace",
-    "rename-access-rule",
-    "rename-accessibility-requirement",
-    "rename-activity",
-    "rename-analysis-record",
-    "rename-approval-record",
-    "rename-assumption",
-    "rename-audit-event",
-    "rename-benchmark-record",
-    "rename-change-record",
-    "rename-collaboration-record",
-    "rename-communication-requirement",
-    "rename-compliance-record",
-    "rename-conflict",
-    "rename-constraint-record",
-    "rename-cost-requirement",
-    "rename-decision",
-    "rename-delivery-constraint",
-    "rename-document",
-    "rename-environmental-requirement",
-    "rename-equipment",
-    "rename-flexibility-requirement",
-    "rename-flow-requirement",
-    "rename-function",
-    "rename-governance",
-    "rename-growth-plan",
-    "rename-human-factor-requirement",
-    "rename-information-requirement",
-    "rename-infrastructure-requirement",
-    "rename-issue",
-    "rename-knowledge-record",
-    "rename-meeting-record",
-    "rename-meta",
-    "rename-operational-requirement",
-    "rename-option-evaluation",
-    "rename-organizational-requirement",
-    "rename-performance-criterion",
-    "rename-priority-record",
-    "rename-privacy-requirement",
-    "rename-process",
-    "rename-program-element",
-    "rename-project",
-    "rename-quality-record",
-    "rename-quantity-requirement",
-    "rename-regulatory-requirement",
-    "rename-relationship",
-    "rename-report-record",
-    "rename-requirement",
-    "rename-resilience-requirement",
-    "rename-resource",
-    "rename-risk",
-    "rename-safety-requirement",
-    "rename-scenario",
-    "rename-schedule-requirement",
-    "rename-search-filter",
-    "rename-security-requirement",
-    "rename-service-requirement",
-    "rename-site-context",
-    "rename-stakeholder",
-    "rename-status-record",
-    "rename-storage-requirement",
-    "rename-survey",
-    "rename-sustainability-requirement",
-    "rename-template-record",
-    "rename-user-profile",
-    "rename-validation-record",
-    "rename-wayfinding-requirement",
-    "rename-workshop",
-    "replace-access-rule",
-    "replace-accessibility-requirement",
-    "replace-activity",
-    "replace-analysis-record",
-    "replace-approval-record",
-    "replace-assumption",
-    "replace-audit-event",
-    "replace-benchmark-record",
-    "replace-change-record",
-    "replace-collaboration-record",
-    "replace-communication-requirement",
-    "replace-compliance-record",
-    "replace-conflict",
-    "replace-constraint-record",
-    "replace-cost-requirement",
-    "replace-decision",
-    "replace-delivery-constraint",
-    "replace-document",
-    "replace-environmental-requirement",
-    "replace-equipment",
-    "replace-flexibility-requirement",
-    "replace-flow-requirement",
-    "replace-function",
-    "replace-governance",
-    "replace-growth-plan",
-    "replace-human-factor-requirement",
-    "replace-information-requirement",
-    "replace-infrastructure-requirement",
-    "replace-issue",
-    "replace-knowledge-record",
-    "replace-meeting-record",
-    "replace-meta",
-    "replace-operational-requirement",
-    "replace-option-evaluation",
-    "replace-organizational-requirement",
-    "replace-performance-criterion",
-    "replace-priority-record",
-    "replace-privacy-requirement",
-    "replace-process",
-    "replace-program-element",
-    "replace-project",
-    "replace-quality-record",
-    "replace-quantity-requirement",
-    "replace-regulatory-requirement",
-    "replace-relationship",
-    "replace-report-record",
-    "replace-requirement",
-    "replace-resilience-requirement",
-    "replace-resource",
-    "replace-risk",
-    "replace-safety-requirement",
-    "replace-scenario",
-    "replace-schedule-requirement",
-    "replace-search-filter",
-    "replace-security-requirement",
-    "replace-service-requirement",
-    "replace-site-context",
-    "replace-stakeholder",
-    "replace-status-record",
-    "replace-storage-requirement",
-    "replace-survey",
-    "replace-sustainability-requirement",
-    "replace-template-record",
-    "replace-user-profile",
-    "replace-validation-record",
-    "replace-wayfinding-requirement",
-    "replace-workshop"
   ]
 }

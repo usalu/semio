@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/procedural/generation2d/1/any/mutation/replace-widget/schema.json",
+  "$id": "https://semio.tech/schema/s/procedural/generation2d/mutation/replace-widget/schema.json",
   "title": "ReplaceWidget",
   "type": "object",
   "additionalProperties": false,

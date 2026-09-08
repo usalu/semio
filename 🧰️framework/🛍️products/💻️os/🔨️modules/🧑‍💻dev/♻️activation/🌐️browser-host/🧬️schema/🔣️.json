@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/dev/activation/browser-host/component.json",
+  "title": "Test Browser Host Staging Contracts",
+  "$defs": {
+    "Sha256Digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "TestBrowserHostStagingV1": {
+      "title": "Test Browser Host Staging Receipt",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "variant",
+        "profile",
+        "moduleSetSha256",
+        "activationReceiptSha256",
+        "host",
+        "selectedGis"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.test-browser-host-staging/v1"
+        },
+        "variant": {
+          "const": "s"
+        },
+        "profile": {
+          "const": "dev"
+        },
+        "moduleSetSha256": {
+          "$ref": "#/$defs/Sha256Digest"
+        },
+        "activationReceiptSha256": {
+          "$ref": "#/$defs/Sha256Digest"
+        },
+        "host": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pluginId",
+            "componentByteLength",
+            "componentSha256",
+            "coreSha256",
+            "descriptorSha256"
+          ],
+          "properties": {
+            "pluginId": {
+              "const": "space"
+            },
+            "componentByteLength": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 67108864
+            },
+            "componentSha256": {
+              "$ref": "#/$defs/Sha256Digest"
+            },
+            "coreSha256": {
+              "$ref": "#/$defs/Sha256Digest"
+            },
+            "descriptorSha256": {
+              "$ref": "#/$defs/Sha256Digest"
+            }
+          }
+        },
+        "selectedGis": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "generationId",
+            "currentSha256"
+          ],
+          "properties": {
+            "generationId": {
+              "$ref": "#/$defs/Sha256Digest"
+            },
+            "currentSha256": {
+              "$ref": "#/$defs/Sha256Digest"
+            }
+          }
+        }
+      }
+    }
+  }
+}

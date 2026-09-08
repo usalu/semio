@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff for `DeleteGeneration`, built directly from `(payload, base)`.
 use super::DeleteGeneration;
-use crate::diff::diff_generation_from_ops;
+use crate::standards::v1::subsets::any::schema::diff::diff_generation_from_ops;
 use crate::{Generation2dDiff, Generation2dSnapshot};
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
 

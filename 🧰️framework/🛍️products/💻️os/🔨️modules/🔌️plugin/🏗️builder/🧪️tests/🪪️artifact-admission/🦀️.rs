@@ -1,6 +1,6 @@
 //! 🪪️ Actual builder admission laws; each registered law runs in an isolated test process.
 
-use crate::app::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDeclaration, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, Plugin, declarations::fixture};
+use crate::app::{declarations::fixture, ArtifactCapability, ArtifactCapabilityKind, ArtifactDeclaration, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, Plugin};
 use store::os_io::ArtifactKindId;
 
 fn definition(kind: &str) -> ArtifactDefinition {

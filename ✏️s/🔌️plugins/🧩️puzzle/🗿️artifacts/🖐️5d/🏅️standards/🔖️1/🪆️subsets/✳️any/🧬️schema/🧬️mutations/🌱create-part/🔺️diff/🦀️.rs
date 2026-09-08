@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreatePart` — a real append-only insert. No-op when the id already
 //! exists in `base`.
-use crate::diff::{Puzzle5dDiff, Puzzle5dPartsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dPartsDelta};
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

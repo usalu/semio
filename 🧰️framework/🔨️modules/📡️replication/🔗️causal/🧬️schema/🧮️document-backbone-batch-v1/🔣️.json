@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/replication/document-backbone-batch-v1.json",
+  "title": "Semio Document Backbone Envelope Batch",
+  "$defs": {
+    "Limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumBytes",
+        "maximumEnvelopes",
+        "maximumDependenciesPerEnvelope",
+        "maximumTotalDependencies",
+        "maximumIdentifierBytes",
+        "maximumSchemaBytes",
+        "maximumPayloadBytes"
+      ],
+      "properties": {
+        "maximumBytes": { "type": "integer", "minimum": 1, "maximum": 262144 },
+        "maximumEnvelopes": { "type": "integer", "minimum": 0, "maximum": 8192 },
+        "maximumDependenciesPerEnvelope": { "type": "integer", "minimum": 0, "maximum": 8192 },
+        "maximumTotalDependencies": { "type": "integer", "minimum": 0, "maximum": 8192 },
+        "maximumIdentifierBytes": { "type": "integer", "minimum": 1, "maximum": 256 },
+        "maximumSchemaBytes": { "type": "integer", "minimum": 0, "maximum": 256 },
+        "maximumPayloadBytes": { "type": "integer", "minimum": 0, "maximum": 262144 }
+      }
+    },
+    "Envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutationId", "documentId", "actor", "dependencies", "diff", "inverse", "timestamp"],
+      "properties": {
+        "mutationId": { "type": "string" },
+        "documentId": { "type": "string" },
+        "actor": { "type": "string" },
+        "dependencies": { "type": "array", "items": { "type": "string" } },
+        "diff": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema", "payloadHex"],
+          "properties": { "schema": { "type": "string" }, "payloadHex": { "type": "string", "pattern": "^([0-9a-f]{2})*$" } }
+        },
+        "inverse": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema", "payloadHex"],
+          "properties": { "schema": { "type": "string" }, "payloadHex": { "type": "string", "pattern": "^([0-9a-f]{2})*$" } }
+        },
+        "timestamp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["actor", "physicalMs", "logical"],
+          "properties": {
+            "actor": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,19})$" },
+            "physicalMs": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,19})$" },
+            "logical": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,19})$" }
+          }
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "rawHex", "limits", "expect"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "rawHex": { "type": "string", "pattern": "^([0-9a-f]{2})*$" },
+        "limits": { "$ref": "#/$defs/Limits" },
+        "expect": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["outcome", "reason", "envelopes"],
+              "properties": {
+                "outcome": { "const": "accepted" },
+                "reason": { "type": "string", "minLength": 1 },
+                "envelopes": { "type": "array", "items": { "$ref": "#/$defs/Envelope" } }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["outcome", "reason"],
+              "properties": {
+                "outcome": { "enum": ["limit", "malformed"] },
+                "reason": { "type": "string", "minLength": 1 }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "wire", "cases"],
+  "properties": {
+    "schema": { "const": "semio.replication.document-backbone-batch.v1" },
+    "wire": { "const": "causal-envelope-batch-v1" },
+    "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Case" } }
+  }
+}

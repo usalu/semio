@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔷insert-face/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/insert-face/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📐insert-normal/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/insert-normal/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧷insert-texcoord/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/insert-texcoord/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➕insert-vertex/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/insert-vertex/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🗑️remove-face/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/remove-face/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🪓remove-group/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/remove-group/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🚫remove-normal/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/remove-normal/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🗃️remove-object/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/remove-object/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🚮remove-texcoord/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/remove-texcoord/schema.json"
         },
         {
           "type": "object",
@@ -169,7 +169,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➖remove-vertex/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/remove-vertex/schema.json"
         },
         {
           "type": "object",
@@ -187,7 +187,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔶set-face/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-face/schema.json"
         },
         {
           "type": "object",
@@ -205,7 +205,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏷️set-group/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-group/schema.json"
         },
         {
           "type": "object",
@@ -223,7 +223,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🎨set-mtllib/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-mtllib/schema.json"
         },
         {
           "type": "object",
@@ -241,7 +241,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧲set-normal/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-normal/schema.json"
         },
         {
           "type": "object",
@@ -259,7 +259,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📦set-object/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-object/schema.json"
         },
         {
           "type": "object",
@@ -277,7 +277,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧵set-smoothing-groups/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-smoothing-groups/schema.json"
         },
         {
           "type": "object",
@@ -295,7 +295,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",
@@ -313,7 +313,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧭set-texcoord/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-texcoord/schema.json"
         },
         {
           "type": "object",
@@ -331,7 +331,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🕳️set-unknown-statements/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-unknown-statements/schema.json"
         },
         {
           "type": "object",
@@ -349,7 +349,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🖌️set-usemtl/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-usemtl/schema.json"
         },
         {
           "type": "object",
@@ -367,7 +367,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📍set-vertex/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-vertex/schema.json"
         },
         {
           "type": "object",

@@ -59,14 +59,6 @@ pub fn engagement(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dL
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::puzzle2d::testkit::*;
-
-    #[test]
-    fn renders_puzzle2d_board_scene() {
-        let mut app = app();
-        assert!(render_body(&mut app, BODY_KEY).contains("board-2d"));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

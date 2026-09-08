@@ -29,9 +29,9 @@ export default defineConfig({
   testMatch: [
     "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️presentation/🧪️tests/🎞️storybook-deck/🟦️.ts",
     "✏️s/🔌️plugins/📐️cad/🧪️tests/🎨️storybook-renderer/🟦️.ts",
-    "🧰️framework/🛜d️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📚️storybook-hosts-no-wasm/🟦️.ts",
-    "🧰️framework/🛜d️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📚️storybook-hosts-wasm/🟦️.ts",
-    "🧰️framework/🛜d️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/📚️storybook-plugins/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📚️storybook-hosts-no-wasm/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📚️storybook-hosts-wasm/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/📚️storybook-plugins/🟦️.ts",
     "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/◻️storybook-2d/🟦️.ts",
     "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧊️storybook-spatial/🟦️.ts",
     "✏️s/🧪️tests/🎭️storybook-end-to-end/🟦️.ts",

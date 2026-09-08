@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `RenameHandleKind`.
 
 use crate::{Block2dHandleKind, Block2dSnapshot};
-use crate::diff::{Block2dDiff, Block2dHandleKindsDelta, Block2dHandleKindsPatch, Block2dHandleKindsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Block2dDiff, Block2dHandleKindsDelta, Block2dHandleKindsPatch, Block2dHandleKindsPatchEntry};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RenameHandleKind, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {

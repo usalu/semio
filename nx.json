@@ -24,7 +24,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"
     ],
-    "production": ["default", "!{projectRoot}/**/?(*.)+(spec|test|e2e|integration|stories|story|mdx).[cmjtshx]?([sx])?(.snap)?", "!{projectRoot}/.storybook/**"],
+    "production": ["default", "!{projectRoot}/**/🧪️tests/**/*", "!{projectRoot}/**/?(*.)+(stories|story|mdx).[cmjtshx]?([sx])?(.snap)?", "!{projectRoot}/.storybook/**"],
     "cargo": ["{projectRoot}/**/*.rs", "{projectRoot}/Cargo.toml", "{workspaceRoot}/Cargo.lock"],
     "go": ["{projectRoot}/**/*.go", "{projectRoot}/go.mod", "{projectRoot}/go.sum", "{workspaceRoot}/go.work", "{workspaceRoot}/go.work.sum"],
     "uv": ["{projectRoot}/**/*.py", "{projectRoot}/pyproject.toml", "{workspaceRoot}/uv.lock"],

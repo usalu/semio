@@ -1,0 +1,85 @@
+mod tests {
+    use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn merge_world_selection_ids_supports_add_toggle_invertive_and_remove() {
+        let a = || SelectionSet::from_ids(vec!["a".into()]);
+        let ab = || SelectionSet::from_ids(vec!["a".into(), "b".into()]);
+        let abc = || SelectionSet::from_ids(vec!["a".into(), "b".into(), "c".into()]);
+        assert_eq!(merge_world_selection_ids(&a(), &["b".into()], "add").await.as_slice(), &["a".to_string(), "b".to_string()]);
+        assert_eq!(merge_world_selection_ids(&ab(), &["b".into(), "c".into()], "toggle").await.as_slice(), &["a".to_string(), "c".to_string()]);
+        assert_eq!(merge_world_selection_ids(&ab(), &["b".into()], "invertive").await.as_slice(), &["a".to_string()]);
+        assert_eq!(merge_world_selection_ids(&a(), &["b".into()], "replace").await.as_slice(), &["b".to_string()]);
+        assert_eq!(merge_world_selection_ids(&abc(), &["b".into()], "remove").await.as_slice(), &["a".to_string(), "c".to_string()]);
+        assert_eq!(merge_world_selection_ids(&abc(), &["b".into()], "subtractive").await.as_slice(), &["a".to_string(), "c".to_string()]);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn selection_set_membership_is_constant_time() {
+        let set = SelectionSet::from_ids((0..100).map(|index| format!("id-{index}")).collect());
+        assert!(set.contains("id-50"));
+        assert!(!set.contains("missing"));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn isometric_pose_matches_the_classic_35_264_45_direction() {
+        let mut p = WorldProjectionConfig { kind: "axonometric".into(), axonometric_variant: "isometric".into(), ..WorldProjectionConfig::default() };
+        p.axonometric_quadrant = "ne".into();
+        let (position, up) = world3d_projection_pose(&p, [0.0, 0.0, 0.0], 10.0);
+        assert!((position[2] / 10.0 - 35.264_f64.to_radians().sin()).abs() < 1e-3);
+        assert_eq!(up, [0.0, 0.0, 1.0]);
+        let azimuth = (position[0] / position[1]).atan();
+        assert!((azimuth.to_degrees() - 45.0).abs() < 1e-3);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn projection_spec_json_projects_only_active_kind_fields() {
+        let p = WorldProjectionConfig { kind: "oblique".into(), oblique_variant: "cabinet".into(), oblique_angle: 45.0, oblique_depth: 0.5, ..WorldProjectionConfig::default() };
+        let spec = world3d_projection_spec_json(&p);
+        let mode = spec.get("mode").expect("mode object");
+        assert_eq!(mode.get("kind").and_then(Value::as_str), Some("oblique"));
+        assert_eq!(mode.get("depthScale").and_then(Value::as_f64), Some(0.5));
+        assert!(mode.get("axonometricVariant").is_none());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn apply_action_switches_kind_and_leaves_other_kinds_untouched_for_later_recall() {
+        let mut p = WorldProjectionConfig::default();
+        p.axonometric_angle_a = 22.0;
+        assert!(apply_world3d_projection_action(&mut p, "setProjection", Some(&store::json!({ "field": "obliqueVariant", "value": "military" }))));
+        assert_eq!(p.kind, "oblique");
+        assert_eq!(p.oblique_variant, "military");
+        assert_eq!(p.axonometric_angle_a, 22.0);
+        assert!(apply_world3d_projection_action(&mut p, "setProjectionParam", Some(&store::json!({ "param": "obliqueAngle", "value": 30.0 }))));
+        assert_eq!(p.oblique_angle, 30.0);
+        assert!(!world3d_projection_action_moves_pose("setProjectionParam", Some(&store::json!({ "param": "obliqueAngle" }))));
+        assert!(world3d_projection_action_moves_pose("setProjection", Some(&store::json!({ "field": "obliqueVariant" }))));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn projection_measures_tree_matches_the_requested_taxonomy() {
+        let p = WorldProjectionConfig::default();
+        let tree = world3d_projection_measures("t", &p, |action, args| ActionDescriptor { controller_id: "t".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) });
+        let WindowMeasure::Group { children: families, .. } = &tree else { panic!("expected root group") };
+        assert_eq!(families.len(), 2);
+        let WindowMeasure::Group { label: parallel_label, children: parallel_children, .. } = &families[0] else { panic!("expected parallel group") };
+        assert_eq!(parallel_label, "Parallel");
+        assert_eq!(parallel_children.len(), 3);
+        let WindowMeasure::Group { label: perspective_label, .. } = &families[1] else { panic!("expected perspective group") };
+        assert_eq!(perspective_label, "Perspective");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn world3d_scene_fields_bind_the_domain_while_the_sun_helper_leaves_it_unset() {
+        let sun = WorldSunConfig::default();
+        let mut bound = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
+        bound.domain_id = Some("cad".into());
+        bound.domain_granularity_id = Some("handle".into());
+        assert_eq!(bound.domain_id.as_deref(), Some("cad"));
+        assert_eq!(bound.domain_granularity_id.as_deref(), Some("handle"));
+
+        let unbound = world3d_scene("{}".into(), "[]".into(), "[]".into(), "{}".into(), &sun);
+        assert_eq!(unbound.domain_id, None);
+        assert_eq!(unbound.domain_granularity_id, None);
+    }
+}

@@ -11,6 +11,6 @@ use semio_framework_plugin::StandardId;
 /// (`reasoning.wires.fixture`) and an extension (`wires`), never a mime type — same documented
 /// shortfall as `🎬️sequence`'s own standard root, see `📓️w4-reasoning-report.md` `## openQuestions`).
 /// `extensions: ["wires"]` is the real, carried-over value.
-pub fn standard() -> StandardDeclaration<crate::plugin::ReasoningApps> {
+pub fn standard<A: crate::WiresApplication>() -> StandardDeclaration<A> {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.wires+json"], extensions: &["wires"] }, subsets: vec![subsets::any::subset()] }
 }

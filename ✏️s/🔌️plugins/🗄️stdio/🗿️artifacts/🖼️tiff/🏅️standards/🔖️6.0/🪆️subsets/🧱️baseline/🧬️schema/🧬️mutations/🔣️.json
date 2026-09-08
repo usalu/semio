@@ -12,7 +12,7 @@
       ],
       "properties": {
         "InsertTileTags": {
-          "$ref": "./🧱️insert-tile-tags/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/insert-tile-tags/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "RemoveStripOffsets": {
-          "$ref": "./✂️remove-strip-offsets/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/remove-strip-offsets/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "RemoveTileTags": {
-          "$ref": "./🗑️remove-tile-tags/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/remove-tile-tags/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "SetBitsPerSample": {
-          "$ref": "./🔢️set-bits-per-sample/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/set-bits-per-sample/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "SetCompression": {
-          "$ref": "./🗜️set-compression/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/set-compression/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "SetPhotometricInterpretation": {
-          "$ref": "./🌈️set-photometric-interpretation/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/set-photometric-interpretation/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "SetSnapshot": {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "SetStripOffsets": {
-          "$ref": "./📍️set-strip-offsets/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/set-strip-offsets/schema.json"
         }
       }
     }

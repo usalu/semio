@@ -1,7 +1,7 @@
 //! 🏷️ `rename-generation` payload — changes a generation's identity `name` field.
 
-use crate::diff::Generation3dDiff;
-use crate::mutations::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::Generation3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️RenameGeneration
@@ -17,11 +17,11 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Rena
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "generation", kind: "rename-generation", record: "RenamedGeneration" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::mutations::rename_generation::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::rename_generation::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-        crate::mutations::rename_generation::inverse::inverse(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::rename_generation::inverse::inverse(self, base)
     }
 
     fn label(&self) -> String {

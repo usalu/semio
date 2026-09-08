@@ -50,45 +50,10 @@ pub fn render(doc: &LayoutSnapshot, config: &LayoutConfig, labels: &LayoutLabels
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::layout::testkit::{layout_app, render as render_body};
-
-    #[semio_framework_async_macros::async_test]
-    async fn the_inspector_always_summarises_the_document() {
-        let mut app = layout_app().await;
-        let json = render_body(&mut app, LAYOUT_PLAY_BODY_INSPECTION).await;
-        assert!(json.contains(LAYOUT_DOCUMENT_SCHEMA));
-        assert!(json.contains("page-1"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
-        let definition = definition();
-        assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_INSPECTION_ID);
-        assert_eq!(definition.body_key.as_deref(), Some(LAYOUT_PLAY_BODY_INSPECTION));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-mod semantic_contract {
-    use super::*;
-    #[test]
-    fn layout_inspection_summary_matches_the_json_oracle() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️summary.json")).expect("neutral inspector vectors");
-        let mut snapshot = crate::schema::default_document();
-        snapshot.name = fixture["name"].as_str().expect("document name").into();
-        snapshot.pages.clear();
-        assert_eq!(snapshot.pages.len(), fixture["pageCount"].as_u64().expect("page count") as usize);
-        for row in fixture["cases"].as_array().expect("locales") {
-            let config = LayoutConfig { locale: row["locale"].as_str().expect("locale").into(), active_page_id: fixture["activePage"].as_str().expect("active page").into(), ..LayoutConfig::default() };
-            let node = render(&snapshot, &config, crate::editor::layout::terminology::layout_labels(&config)).expect("semantic inspector");
-            let projection = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project and retire inspector");
-            let actual: serde_json::Value = serde_json::from_str(&projection).expect("independent semantic JSON oracle");
-            assert_eq!(actual["component"]["label"], row["heading"]);
-            let lines: Vec<_> = actual["children"].as_array().expect("summary lines").iter().map(|child| child["component"]["value"].clone()).collect();
-            assert_eq!(lines, *row["lines"].as_array().expect("expected lines"));
-        }
-    }
-}
+#[path = "🧪️tests/🔬️semantic-contract/🦀️.rs"]
+mod semantic_contract;

@@ -12,7 +12,7 @@
       ],
       "properties": {
         "InsertAlternateContent": {
-          "$ref": "./🔀️insert-alternate-content/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/strict/mutation/insert-alternate-content/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "InsertVmlPart": {
-          "$ref": "./🖼️insert-vml-part/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/strict/mutation/insert-vml-part/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "RemoveAlternateContent": {
-          "$ref": "./🚫️remove-alternate-content/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/strict/mutation/remove-alternate-content/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "RemoveConformanceAttribute": {
-          "$ref": "./🏷️remove-conformance-attribute/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/strict/mutation/remove-conformance-attribute/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "RemoveVmlPart": {
-          "$ref": "./🗑️remove-vml-part/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/strict/mutation/remove-vml-part/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "SetConformanceAttribute": {
-          "$ref": "./🔖️set-conformance-attribute/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/strict/mutation/set-conformance-attribute/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "SetDrawingNamespace": {
-          "$ref": "./🎨️set-drawing-namespace/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/strict/mutation/set-drawing-namespace/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "SetMainNamespace": {
-          "$ref": "./🏛️set-main-namespace/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/strict/mutation/set-main-namespace/schema.json"
         }
       }
     },
@@ -108,7 +108,7 @@
       ],
       "properties": {
         "SetRelationshipBase": {
-          "$ref": "./🔗️set-relationship-base/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/strict/mutation/set-relationship-base/schema.json"
         }
       }
     },
@@ -120,7 +120,7 @@
       ],
       "properties": {
         "SetSnapshot": {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pptx/ecma-376/strict/mutation/set-snapshot/schema.json"
         }
       }
     }

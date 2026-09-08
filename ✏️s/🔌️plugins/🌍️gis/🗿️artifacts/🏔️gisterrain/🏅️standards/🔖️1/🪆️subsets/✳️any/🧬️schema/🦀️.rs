@@ -1,9 +1,9 @@
 //! 🧬️ GIS terrain artifact schema — every field of the artifact with its state class.
 
-use crate::dsl::REUSE_TERRAIN_EXAMPLE_TEXT;
+use crate::document_dsl::REUSE_TERRAIN_EXAMPLE_TEXT;
 use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, GisTerrainSnapshot};
 use semio_framework_surface::terrain::tiles;
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -66,31 +66,31 @@ impl GisTerrainArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.gis.gisterrain` — twenty handcrafted schema leaves.
-pub fn gisterrain_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn gisterrain_artifact_schema_descriptor() -> ::semio_framework_schema::ArtifactSchemaDescriptor {
+    ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.gis.gisterrain",
-        artifact: schema::FacetLeaves {
+        artifact: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -313,46 +313,6 @@ pub fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> String {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod relocated_engine_tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn build_terrain_scene_json_roundtrips_descriptor_fields() {
-        let descriptor = TerrainDescriptorJson {
-            schema: "gis.terrain".to_string(),
-            project_origin: TerrainProjectOrigin { lon: 9.7382, lat: 52.3759 },
-            positions: vec![TerrainPositionData { id: "p1".to_string(), lon: 9.74, lat: 52.38, label: Some("Site".to_string()), icon: None }],
-            exaggeration: 1.5,
-        };
-        let json = build_terrain_scene_json(&descriptor);
-        let value: serde_json::Value = serde_json::from_str(&json).expect("valid json");
-        assert_eq!(value["projectOriginLon"], 9.7382);
-        assert_eq!(value["exaggeration"], 1.5);
-        assert_eq!(value["tileUrlTemplate"], GIS_3D_TERRAIN_TILE_URL_TEMPLATE);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn terrain_descriptor_json_defaults_exaggeration_and_positions_when_absent() {
-        let json = r#"{"schema":"gis.terrain","projectOrigin":{"lon":1.0,"lat":2.0}}"#;
-        let descriptor: TerrainDescriptorJson = dsl::json::from_json_str(json).expect("valid descriptor json");
-        assert_eq!(descriptor.exaggeration, 1.0);
-        assert!(descriptor.positions.is_empty());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn terrain_position_data_omits_none_fields_when_serialized() {
-        let position = TerrainPositionData { id: "p2".to_string(), lon: 1.0, lat: 2.0, label: None, icon: Some("pin".to_string()) };
-        let json = dsl::json::to_json_string(&position);
-        assert!(!json.contains("label"));
-        assert!(json.contains("\"icon\":\"pin\""));
-    }
-
-    /// 🧭️ Relocated from the artifact's `⚙️engine` tests alongside `default_terrain_document`/
-    /// `empty_gis_terrain_snapshot` (`DocumentHelpers` above).
-    #[semio_framework_async_macros::async_test]
-    async fn default_terrain_document_seeds_the_fixture_exaggeration() {
-        assert_eq!(default_terrain_document().exaggeration, 1.5);
-        assert_eq!(empty_gis_terrain_snapshot().exaggeration, 1.0);
-    }
-}
+#[path = "🧪️tests/🔬️relocated-engine/🦀️.rs"]
+mod relocated_engine_tests;
 //#endregion 🧪️Tests

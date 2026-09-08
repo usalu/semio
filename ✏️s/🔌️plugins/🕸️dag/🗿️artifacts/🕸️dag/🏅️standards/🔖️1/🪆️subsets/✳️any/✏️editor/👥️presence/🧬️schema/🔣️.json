@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/app/dag/dag/presence.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/dag/dag/presence/schema.json",
   "title": "DagPresence",
   "type": "object",
   "additionalProperties": false,

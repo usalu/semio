@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/flow/flow/1/any/mutation/reorder-synapses/schema.json",
+  "$id": "https://semio.tech/schema/s/flow/flow/mutation/reorder-synapses/schema.json",
   "title": "ReorderSynapses",
   "type": "object",
   "additionalProperties": false,

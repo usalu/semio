@@ -1,97 +1,73 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/din4108/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/norm/din4108/mutations.json",
   "title": "Din4108Mutation",
   "oneOf": [
     {
-      "$ref": "./🔒️change-airtightness-class/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-airtightness-class/schema.json"
     },
     {
-      "$ref": "./💨️change-airtightness-n50/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-airtightness-n50/schema.json"
     },
     {
-      "$ref": "./🧩️change-application-type/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-application-type/schema.json"
     },
     {
-      "$ref": "./✅️change-bb2-details-conform/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-bb2-details-conform/schema.json"
     },
     {
-      "$ref": "./📇️change-catalog-id/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-catalog-id/schema.json"
     },
     {
-      "$ref": "./🗂️change-category/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-category/schema.json"
     },
     {
-      "$ref": "./🌦️change-climate/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-climate/schema.json"
     },
     {
-      "$ref": "./🏷️change-declared-application-class/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-declared-application-class/schema.json"
     },
     {
-      "$ref": "./📐️change-envelope-area-m2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-envelope-area-m2/schema.json"
     },
     {
-      "$ref": "./🔆️change-irradiance-wm2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-irradiance-wm2/schema.json"
     },
     {
-      "$ref": "./🧊️change-layer-lambda/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-layer-lambda/schema.json"
     },
     {
-      "$ref": "./📏️change-layer-thickness/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-layer-thickness/schema.json"
     },
     {
-      "$ref": "./🧽️change-material-id/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-material-id/schema.json"
     },
     {
-      "$ref": "./🌧️change-moisture-mu-exterior/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-moisture-mu-exterior/schema.json"
     },
     {
-      "$ref": "./💦️change-moisture-mu-interior/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-moisture-mu-interior/schema.json"
     },
     {
-      "$ref": "./🌉️change-psi-times-l-sum/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-psi-times-l-sum/schema.json"
     },
     {
-      "$ref": "./💧️change-rh-int/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-rh-int/schema.json"
     },
     {
-      "$ref": "./☀️change-solar-absorptance/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-solar-absorptance/schema.json"
     },
     {
-      "$ref": "./🌡️change-t-int-c/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/change-t-int-c/schema.json"
     },
     {
-      "$ref": "./➕️insert-layer/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/insert-layer/schema.json"
     },
     {
-      "$ref": "./➖️remove-layer/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/remove-layer/schema.json"
     },
     {
-      "$ref": "./🔀️reorder-layers/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din4108/mutation/reorder-layers/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-airtightness-class",
-    "change-airtightness-n50",
-    "change-application-type",
-    "change-bb2-details-conform",
-    "change-catalog-id",
-    "change-category",
-    "change-climate",
-    "change-declared-application-class",
-    "change-envelope-area-m2",
-    "change-irradiance-wm2",
-    "change-layer-lambda",
-    "change-layer-thickness",
-    "change-material-id",
-    "change-moisture-mu-exterior",
-    "change-moisture-mu-interior",
-    "change-psi-times-l-sum",
-    "change-rh-int",
-    "change-solar-absorptance",
-    "change-t-int-c",
-    "insert-layer",
-    "remove-layer",
-    "reorder-layers"
   ]
 }

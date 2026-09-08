@@ -145,195 +145,16 @@ impl En1994Mutation {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::document::AnnexChoice;
-    use protocol::{Mutation, MutationDiff, SemanticMutation};
-
-    fn round_trip(base: &En1994Snapshot, operation: &En1994Mutation) -> En1994Snapshot {
-        let forward = operation.diff(base).diff().apply(base).expect("valid mutation diff");
-        let backwards = operation.inverse(base);
-        let mut restored = forward.clone();
-        for back in &backwards {
-            restored = back.diff(base).diff().apply(&restored).expect("valid mutation diff");
-        }
-        assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
-        forward
-    }
-
-    /// 🧪️ One representative value per variant — reused by the round-trip law test below and by
-    /// `📝️text/🦀️.rs`'s `OpText`/`OpBinary` round-trip law.
-    pub(crate) fn demo_mutation_cases() -> Vec<En1994Mutation> {
-        vec![
-            En1994Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En }),
-            En1994Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 123.5_f64 }),
-            En1994Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 123.5_f64 }),
-            En1994Mutation::ChangeMPla(change_m_pla::ChangeMPla { new_m_pla: 123.5_f64 }),
-            En1994Mutation::ChangeMPlRd(change_m_pl_rd::ChangeMPlRd { new_m_pl_rd: 123.5_f64 }),
-            En1994Mutation::ChangeEta(change_eta::ChangeEta { new_eta: 123.5_f64 }),
-            En1994Mutation::ChangeVLRd(change_v_l_rd::ChangeVLRd { new_v_l_rd: 123.5_f64 }),
-            En1994Mutation::ChangeInsulationThicknessMm(change_insulation_thickness_mm::ChangeInsulationThicknessMm { new_insulation_thickness_mm: 123.5_f64 }),
-            En1994Mutation::ChangeFireRating(change_fire_rating::ChangeFireRating { new_fire_rating: "fire_rating-demo".to_string() }),
-            En1994Mutation::ChangeDeckType(change_deck_type::ChangeDeckType { new_deck_type: "deck_type-demo".to_string() }),
-            En1994Mutation::ChangeDeltaSigmaMpa(change_delta_sigma_mpa::ChangeDeltaSigmaMpa { new_delta_sigma_mpa: 123.5_f64 }),
-            En1994Mutation::ChangeFatigueDetail(change_fatigue_detail::ChangeFatigueDetail { new_fatigue_detail: "fatigue_detail-demo".to_string() }),
-            En1994Mutation::ChangeDMm(change_d_mm::ChangeDMm { new_d_mm: 123.5_f64 }),
-            En1994Mutation::ChangeHScMm(change_h_sc_mm::ChangeHScMm { new_h_sc_mm: 123.5_f64 }),
-            En1994Mutation::ChangeFCkMpa(change_f_ck_mpa::ChangeFCkMpa { new_f_ck_mpa: 123.5_f64 }),
-            En1994Mutation::ChangeFUMpa(change_f_u_mpa::ChangeFUMpa { new_f_u_mpa: 123.5_f64 }),
-            En1994Mutation::ChangeECmMpa(change_e_cm_mpa::ChangeECmMpa { new_e_cm_mpa: 123.5_f64 }),
-            En1994Mutation::ChangeVEdPerStudKn(change_v_ed_per_stud_kn::ChangeVEdPerStudKn { new_v_ed_per_stud_kn: 123.5_f64 }),
-            En1994Mutation::ChangeSpanM(change_span_m::ChangeSpanM { new_span_m: 123.5_f64 }),
-            En1994Mutation::ChangeFYMpa(change_f_y_mpa::ChangeFYMpa { new_f_y_mpa: 123.5_f64 }),
-            En1994Mutation::ChangeNCyclesStud(change_n_cycles_stud::ChangeNCyclesStud { new_n_cycles_stud: 123.5_f64 }),
-            En1994Mutation::ChangeDeltaTauStudMpa(change_delta_tau_stud_mpa::ChangeDeltaTauStudMpa { new_delta_tau_stud_mpa: 123.5_f64 }),
-        ]
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn every_variant_round_trips_and_restores_base() {
-        let base = En1994Snapshot::default();
-        for mutation in demo_mutation_cases() {
-            round_trip(&base, &mutation);
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn change_annex_round_trips() {
-        let base = En1994Snapshot::default();
-        let mutation = En1994Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En });
-        let after = round_trip(&base, &mutation);
-        assert_eq!(after.annex, AnnexChoice::En);
-        assert_ne!(base.annex, AnnexChoice::En, "fixture default must differ from the new value to exercise a real change");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn change_m_ed_knm_round_trips() {
-        let base = En1994Snapshot::default();
-        let mutation = En1994Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 999.0 });
-        let after = round_trip(&base, &mutation);
-        assert_eq!(after.m_ed_knm, 999.0);
-        let undo = mutation.inverse(&base);
-        assert_eq!(undo, vec![En1994Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: base.m_ed_knm })]);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn change_fire_rating_round_trips() {
-        let base = En1994Snapshot::default();
-        let mutation = En1994Mutation::ChangeFireRating(change_fire_rating::ChangeFireRating { new_fire_rating: "r120".into() });
-        let after = round_trip(&base, &mutation);
-        assert_eq!(after.fire_rating, "r120");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn change_eta_inverse_restores_base_value() {
-        let base = En1994Snapshot { eta: 0.6, ..En1994Snapshot::default() };
-        let mutation = En1994Mutation::ChangeEta(change_eta::ChangeEta { new_eta: 0.9 });
-        let after = round_trip(&base, &mutation);
-        assert_eq!(after.eta, 0.9);
-        let undo = mutation.inverse(&base);
-        assert_eq!(undo, vec![En1994Mutation::ChangeEta(change_eta::ChangeEta { new_eta: 0.6 })]);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn semantic_kinds_cover_every_variant() {
-        assert_eq!(En1994Mutation::kinds().len(), 22);
-        let mutation = En1994Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::De });
-        assert_eq!(mutation.semantics().kind, "change-annex");
-        assert_eq!(mutation.semantics().record, "ChangedAnnex");
-        assert_eq!(mutation.semantics().verb, "change");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn labels_are_human_readable() {
-        let mutation = En1994Mutation::ChangeSpanM(change_span_m::ChangeSpanM { new_span_m: 12.0 });
-        assert_eq!(mutation.label(), "Change span to 12");
-    }
-
-    //#region 🔖️OutcomeLaws
-    /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
-    /// this facet is entirely one verb family (root-scoped `change-<field>`) — see en1992's own
-    /// `🔖️OutcomeLaws` note for why `assert_missing_target_is_error`/`assert_outcome_policy_matrix`
-    /// don't apply/aren't landed yet.
-    #[semio_framework_async_macros::async_test]
-    async fn change_eta_non_finite_is_fatal() {
-        let base = En1994Snapshot::default();
-        let mutation = En1994Mutation::ChangeEta(change_eta::ChangeEta { new_eta: f64::NAN });
-        let outcome = mutation.diff(&base);
-        protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
-        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn change_annex_same_value_is_no_op() {
-        let base = En1994Snapshot::default();
-        let mutation = En1994Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: base.annex });
-        let outcome = mutation.diff(&base);
-        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
-        assert_eq!(outcome.diff(), &En1994Diff::default());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn change_span_m_is_deterministic() {
-        let base = En1994Snapshot::default();
-        let mutation = En1994Mutation::ChangeSpanM(change_span_m::ChangeSpanM { new_span_m: 12.0 });
-        protocol::os_spr::testkit::assert_outcome_deterministic(&base, &mutation).await;
-    }
-    //#endregion 🔖️OutcomeLaws
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 //#region 🧪️FixtureTests
 /// 🧪️ Handcrafted mutation fixtures — one case per `change-*` leaf, each self-wired here so the
 /// shared plugin-root `🦀️.rs` stays untouched while the other norm artifacts land theirs.
 #[cfg(test)]
-#[path = "."]
-mod fixture_tests {
-    #[path = "🌍️change-annex/🧪️tests/🌐️switches-national-91b18f/🦀️.rs"]
-    mod tests_change_annex_switches_national_annex_to_en;
-    #[path = "⭕️change-d-mm/🧪️tests/⭕️thickens-stud-shank-to-22-mm/🦀️.rs"]
-    mod tests_change_d_mm_thickens_stud_shank_to_22_mm;
-    #[path = "🪜️change-deck-type/🧪️tests/↩️switches-deck-to-ce9ea6/🦀️.rs"]
-    mod tests_change_deck_type_switches_deck_to_re_entrant;
-    #[path = "📊️change-delta-sigma-mpa/🧪️tests/📈️raises-steel-a5ded3/🦀️.rs"]
-    mod tests_change_delta_sigma_mpa_raises_steel_stress_range_to_96_mpa;
-    #[path = "🔩️change-delta-tau-stud-mpa/🧪️tests/🔩️raises-stud-91f8fd/🦀️.rs"]
-    mod tests_change_delta_tau_stud_mpa_raises_stud_shear_stress_range_to_110_mpa;
-    #[path = "🪨️change-e-cm-mpa/🧪️tests/🪨️raises-concrete-a4227e/🦀️.rs"]
-    mod tests_change_e_cm_mpa_raises_concrete_modulus_to_35000_mpa;
-    #[path = "🤝️change-eta/🧪️tests/🤝️raises-shear-bb40ac/🦀️.rs"]
-    mod tests_change_eta_raises_shear_connection_degree_to_0_875;
-    #[path = "🧱️change-f-ck-mpa/🧪️tests/🧱️upgrades-concrete-1717de/🦀️.rs"]
-    mod tests_change_f_ck_mpa_upgrades_concrete_cylinder_strength_to_40_mpa;
-    #[path = "🔁️change-fatigue-detail/🧪️tests/🪡️switches-fatigue-2256ac/🦀️.rs"]
-    mod tests_change_fatigue_detail_switches_fatigue_detail_to_flange_butt_weld;
-    #[path = "🔥️change-fire-rating/🧪️tests/🧯️upgrades-fire-6f3869/🦀️.rs"]
-    mod tests_change_fire_rating_upgrades_fire_rating_to_r90;
-    #[path = "💪️change-fu-mpa/🧪️tests/💪️upgrades-stud-843061/🦀️.rs"]
-    mod tests_change_fu_mpa_upgrades_stud_ultimate_strength_to_500_mpa;
-    #[path = "🏋️change-fy-mpa/🧪️tests/🏋️upgrades-steel-613297/🦀️.rs"]
-    mod tests_change_fy_mpa_upgrades_steel_yield_to_460_mpa;
-    #[path = "↕️change-h-sc-mm/🧪️tests/📏️lengthens-stud-to-125-mm/🦀️.rs"]
-    mod tests_change_h_sc_mm_lengthens_stud_to_125_mm;
-    #[path = "🧯️change-insulation-thickness-mm/🧪️tests/🧣️thickens-fire-ee2ab9/🦀️.rs"]
-    mod tests_change_insulation_thickness_mm_thickens_fire_insulation_to_40_mm;
-    #[path = "🌀️change-m-ed-knm/🧪️tests/🌀️raises-design-40fee2/🦀️.rs"]
-    mod tests_change_m_ed_knm_raises_design_moment_to_320_knm;
-    #[path = "🛡️change-m-pl-rd/🧪️tests/🛡️raises-plastic-d24380/🦀️.rs"]
-    mod tests_change_m_pl_rd_raises_plastic_moment_resistance_to_375_knm;
-    #[path = "🦾️change-m-pla/🧪️tests/🦾️raises-steel-plastic-3e24c9/🦀️.rs"]
-    mod tests_change_m_pla_raises_steel_plastic_moment_to_128_knm;
-    #[path = "🔄️change-n-cycles-stud/🧪️tests/🔢️raises-stud-d8a5f8/🦀️.rs"]
-    mod tests_change_n_cycles_stud_raises_stud_cycle_count_to_5000000;
-    #[path = "📏️change-span-m/🧪️tests/📏️lengthens-span-to-12-m/🦀️.rs"]
-    mod tests_change_span_m_lengthens_span_to_12_m;
-    #[path = "✂️change-v-ed-kn/🧪️tests/⬆️raises-design-shear-6aba09/🦀️.rs"]
-    mod tests_change_v_ed_kn_raises_design_shear_to_225_kn;
-    #[path = "📌️change-v-ed-per-stud-kn/🧪️tests/📌️raises-per-stud-64d35c/🦀️.rs"]
-    mod tests_change_v_ed_per_stud_kn_raises_per_stud_shear_to_62_5_kn;
-    #[path = "↔️change-vl-rd/🧪️tests/↔️raises-longitudinal-5e075c/🦀️.rs"]
-    mod tests_change_vl_rd_raises_longitudinal_shear_resistance_to_240_kn;
-}
+#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
+mod fixture_tests;
 //#endregion 🧪️FixtureTests
 
 
@@ -371,25 +192,6 @@ pub fn inverse_en1994_mutation(mutation: &En1994Mutation, base: &En1994Snapshot)
 
 //#region 🧪️KindsCatalog
 #[cfg(test)]
-mod kinds_catalog {
-    use super::*;
-
-    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
-    /// `#[derive(dsl::Mutations)]` assigns, and every one of those spellings must also appear in the
-    /// committed `en1994-1-any` catalog. The framework never parses Rust, so this is the only thing
-    /// standing between a renamed variant and a completeness gate that silently measures the wrong
-    /// set.
-    #[test]
-    fn kinds_match_the_enum_and_the_catalog() {
-        let descriptors = <En1994Mutation as protocol::SemanticMutation<En1994Snapshot>>::kinds();
-        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared En1994Mutation variant");
-        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
-            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
-        }
-        let manifest = include_str!("../../🔮️oracle/🔣️.json");
-        for kind in KINDS {
-            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
-        }
-    }
-}
+#[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
+mod kinds_catalog;
 //#endregion 🧪️KindsCatalog

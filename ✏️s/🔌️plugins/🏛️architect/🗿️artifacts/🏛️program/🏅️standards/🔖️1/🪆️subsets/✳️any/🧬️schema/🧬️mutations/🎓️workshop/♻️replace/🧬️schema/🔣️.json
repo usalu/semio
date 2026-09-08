@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/replace-workshop/schema.json",
+  "$id": "https://semio.tech/schema/s/architect/program/mutation/replace-workshop/schema.json",
   "title": "ReplaceWorkshop",
   "type": "object",
   "additionalProperties": false,

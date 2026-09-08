@@ -1,7 +1,7 @@
 //! 🔺️ Puzzle 5d artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::schema::diff::{Puzzle5dDiff, Puzzle5dFastenersDelta, Puzzle5dPartsDelta};
-use crate::schema::Puzzle5dArtifact;
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dFastenersDelta, Puzzle5dPartsDelta};
+use crate::standards::v1::subsets::any::schema::Puzzle5dArtifact;
 use crate::{Puzzle5dFastener, Puzzle5dPart, Puzzle5dSnapshot};
 use protocol::MutationDiff;
 

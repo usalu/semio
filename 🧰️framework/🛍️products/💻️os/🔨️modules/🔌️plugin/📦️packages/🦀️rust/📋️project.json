@@ -5,6 +5,16 @@
   "projectType": "library",
   "tags": ["lang:rust", "role:framework", "family:os-plugin"],
   "targets": {
+    "document-backbone-binding-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts document-backbone-binding-check", "cwd": "{projectRoot}" }
+    },
+    "document-backbone-binding-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "bun ./📜️script.ts document-backbone-binding-check --native", "cwd": "{projectRoot}" }
+    },
     "cold-document-pair-ingress-check": {
       "executor": "nx:run-commands",
       "cache": false,

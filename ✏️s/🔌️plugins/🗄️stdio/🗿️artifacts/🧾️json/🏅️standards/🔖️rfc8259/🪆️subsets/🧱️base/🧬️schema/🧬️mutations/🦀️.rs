@@ -39,9 +39,5 @@ pub(crate) fn demo_mutation_cases() -> Vec<JsonMutation> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::SemanticMutation;
-    #[test]
-    fn aggregate_roster_is_exact() { assert_eq!(JsonMutation::kinds().len(), 5); }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

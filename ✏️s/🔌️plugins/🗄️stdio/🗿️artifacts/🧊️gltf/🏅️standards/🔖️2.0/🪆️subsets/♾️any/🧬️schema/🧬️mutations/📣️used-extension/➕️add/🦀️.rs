@@ -58,12 +58,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for AddUsedExtens
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod direct_leaf_tests {
-    use super::*;
-
-    #[test]
-    fn semantic_identity_matches_the_language_neutral_descriptor() {
-        assert_eq!(<AddUsedExtensionMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "add-used-extension");
-    }
-}
+#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
+mod direct_leaf_tests;
 //#endregion 🧪️Tests

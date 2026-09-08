@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📜declare-doctype/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/declare-doctype/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏷️declare-entity/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/declare-entity/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🌳rename-document-element/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/rename-document-element/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔗set-external-subset/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/set-external-subset/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📚set-internal-subset/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/set-internal-subset/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏳️set-standalone/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/set-standalone/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./✍️set-text/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/set-text/schema.json"
         },
         {
           "type": "object",

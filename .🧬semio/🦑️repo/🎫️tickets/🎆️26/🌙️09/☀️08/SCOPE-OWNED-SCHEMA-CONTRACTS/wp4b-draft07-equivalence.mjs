@@ -41,7 +41,31 @@ const indexTree = (dir) => {
 indexTree(REPO);
 
 const key = (rel) => `file:///${encodeURI(rel)}`;
-const read = (rel, snapshot) => (snapshot && Object.hasOwn(before, rel) ? before[rel] : JSON.parse(readFileSync(join(REPO, rel), "utf8")));
+
+/** 🩹 Two `$ref`s in the partition already pointed at nothing before this migration (a peer had renamed
+ * the sibling facet module to `📐️schema`, and one id was never updated). The repair landed with the
+ * migration, so the BEFORE side gets the same repair — otherwise the 2020-12 document cannot compile at
+ * all and the closure change would go unmeasured. The repair names the identical definition either way. */
+const REPAIRED_REFS = {
+  "../../../🧬️schema/🔣️.json#/$defs/I32": "../../../📐️schema/🔣️.json#/$defs/I32",
+  "https://semio.dev/schema/plugin/reactor/job-test-mutations/snapshot#/$defs/i32": "../../../📐️schema/🔣️.json#/$defs/i32",
+  "../../../📐️schema/🔣️.json#/$defs/I64": "https://semio.tech/schema/os/spr/command/component.json#/$defs/MutationLawsI64",
+  "../../../📐️schema/🔣️.json#/$defs/U8": "https://semio.tech/schema/os/spr/command/component.json#/$defs/MutationLawsU8",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/index": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/index",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/neuron": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/neuron",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/synapse": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/synapse",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/layout": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/layout",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/tree": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/tree",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/neuralValue": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/neuralValue",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/dictionary": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/dictionary",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/camera": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/camera",
+};
+const repair = (node) => {
+  if (Array.isArray(node)) return node.map(repair);
+  if (node === null || typeof node !== "object") return node;
+  return Object.fromEntries(Object.entries(node).map(([name, value]) => [name, name === "$ref" && typeof value === "string" && Object.hasOwn(REPAIRED_REFS, value) ? REPAIRED_REFS[value] : repair(value)]));
+};
+const read = (rel, snapshot) => repair(snapshot && Object.hasOwn(before, rel) ? before[rel] : JSON.parse(readFileSync(join(REPO, rel), "utf8")));
 
 /** 🔗️ Rewrites every `$ref` of one document to a file key so ajv resolves without a network loader. */
 const rekey = (node, rel, wanted) => {
@@ -145,7 +169,7 @@ const corpus = (values) => {
 
 const ajv2020 = new Ajv2020({ strict: false, allErrors: false, validateFormats: false, logger: false });
 const ajv7 = new Ajv({ strict: false, allErrors: false, validateFormats: false, logger: false });
-let checked = 0, instances = 0, disagreements = 0, uncompilable = [];
+let checked = 0, instances = 0, disagreements = 0, accepted = 0, closureExercised = 0, uncompilable = [];
 const rows = [];
 
 for (const rel of Object.keys(before).sort()) {
@@ -157,6 +181,11 @@ for (const rel of Object.keys(before).sort()) {
   let mismatched = 0;
   for (const instance of cases) {
     instances += 1;
+    if (Boolean(newValidate(instance))) accepted += 1;
+    if (instance !== null && typeof instance === "object" && !Array.isArray(instance) && Object.hasOwn(instance, "unknownAlienKey")) {
+      const { unknownAlienKey, ...without } = instance;
+      if (Boolean(newValidate(without)) && !Boolean(newValidate(instance))) closureExercised += 1;
+    }
     if (Boolean(oldValidate(instance)) !== Boolean(newValidate(instance))) {
       mismatched += 1;
       if (disagreements < 20) console.log(`  DISAGREE ${rel}\n    instance ${JSON.stringify(instance)}\n    2020-12=${Boolean(oldValidate(instance))} draft-07=${Boolean(newValidate(instance))}`);
@@ -168,7 +197,7 @@ for (const rel of Object.keys(before).sort()) {
 }
 
 console.log(`documents compared=${checked} instances=${instances} disagreements=${disagreements}`);
-console.log(`accepted-by-both / rejected-by-both split is per document in the table below`);
+console.log(`instances accepted by both=${accepted} rejected by both=${instances - accepted}; closure actually exercised (accepted without an alien key, rejected with it)=${closureExercised}`);
 for (const row of rows.slice(0, 8)) console.log(`  ${row.cases} instances, ${row.mismatched} disagreements — ${row.rel}`);
 if (uncompilable.length > 0) {
   console.log(`could not compare ${uncompilable.length}:`);

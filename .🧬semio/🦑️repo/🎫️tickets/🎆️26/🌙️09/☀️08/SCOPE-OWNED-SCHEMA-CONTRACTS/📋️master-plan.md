@@ -80,3 +80,35 @@ Relocation review and contract-correction review are separate steps within WP3�
   W7b (leaf `$id` grammar, 61 architect descriptors, framework/os leaves to draft-07), W9b (sqlite client
   ownership), W3b (validator `if/then/else` + full draft-07 keywords + runtime entries dump).
   Routing ledger: `📋️cross-partition-requests.md`. Harness `bun test`: 144 pass / 28 fail, triage queued (row 32).
+- 2026-09-08 · Wave 1 fully landed (W1 harness 61 invariant tests; W6 plugins 57 violations + 12 plugin-root
+  modules; W8 stdio 501 schemas authored / 414 relocated; W10 framework 117 modules / 211 exports).
+  Wave 2 running: W2b, W7b, W8b, W9b, W3b, W10b, W1b, W4b. Queued on partition availability: W5b (os),
+  W6b (plugins), W2c (tooling fix-ups), W10c (framework derive + ui widenings), W8c/W6c build wave
+  (stdio casing + tagging, needs an idle machine). Contract §B gained format-coverage/`x-semio-formats`,
+  fixture dir naming, `$id` grammar, and export-file catalog shape.
+- 2026-09-08 19:30 · Claude Code process restarted; ten in-flight wave-2 workers stopped without reports
+  (W2b, W7b, W4b, W9c, W6b, W3c, W10c, W8c, W5 lanes). Their partial edits are on disk. Relaunched as
+  W2t (📚️library tooling), W2s (root script/launch/package), W7c (mutations non-stdio), W4c (hub),
+  W9d (repo product), W6c (plugins), W3d (framework.schema facet + registry crate split), W10d
+  (value derive + ui widenings), W8d (stdio aggregate refs + facets), W5b (os completion + rows).
+  Each was briefed to assess the on-disk partial state first. Reports: `📓️wp2c-library-tooling`,
+  `📓️wp2c-root-script`, `📓️wp4b-mutations`, `📓️wp4b-hub`, `📓️wp4c-repo-product`, `📓️wp4b-plugins`,
+  `📓️wp3c-framework-schema`, `📓️wp4c-framework-modules`, `📓️wp4c-stdio-mutations`, `📓️wp4b-os`.
+- 2026-09-08 20:40 · Wave 3 (completeness + refs + registration) opened on the first live-tree measurement
+  with a real catalog: 3,493 findings (plugins 1,977 · stdio 691 · os 400 · mutations 135 · library 104 ·
+  framework 103 · hub 68 · mit-bestand 8 · repo 7). Dispatched W4d (hub), W10f (framework excl. ui), W1d
+  (harness rule activation: TS `parse<Export>()`, GraphQL keywords, `schema-ref-broken-internal`, shared code
+  table). Other partitions follow as their wave-2 workers finish. Registry crate `semio-framework-schema-registry`
+  exists (W3d), so every crate can register exports.
+- 2026-09-08 20:25 · Machine rebooted ~18:31 (that killed the wave-2 workers); load 80–90 with 9 peer
+  compilers, ~64 MB free. Stdio build wave (rows 46/49/82/94/110: `rename_all`/`tag` attributes, 569 structs,
+  17+33+17 `rename_all_fields` enums, fixture re-casing, prepared in `wp4b-stdio-rust-changes.md`) stays
+  deferred until the box is idle; JSON-only stdio work is complete (`wp4c-stdio-mutations`: aggregates by
+  absolute `$id`, 38 scaffold facets deleted / 27 kept, `ref-not-catalog-addressable` 2,752 → 121 repo-wide).
+- 2026-09-08 21:05 · Wave 2 relaunch complete for tooling (W2t/W2s), hub (W4c), repo (W9d), stdio (W8d),
+  framework schema (W3d: dependency-free registry crate, `framework.schema` facet), framework modules
+  (W10d), harness (W1c/W1d: 101/102 invariants, TS parser rule live), plugins (W6c). Running: W7c mutations,
+  W5b os (five lanes), W10e ui vocabulary, W4d hub w3, W10f framework w3, W9e repo w3, W2v root, W2u library,
+  W3e entity catalog, W6d plugins w3 (largest). Contract gained: no restated `$defs` across scopes, surface
+  lanes as own scopes, runtime-enum vocabularies, `parse<Export>()` requirement, shared diagnostic-code table,
+  entity-kind catalog owned by `framework.schema`. Queued: W4e, W2w, W5c, W7d, stdio build wave (load-gated).

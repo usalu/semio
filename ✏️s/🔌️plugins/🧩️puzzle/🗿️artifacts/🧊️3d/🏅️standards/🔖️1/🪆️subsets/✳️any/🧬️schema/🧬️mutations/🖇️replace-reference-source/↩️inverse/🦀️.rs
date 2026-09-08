@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `ReplaceReferenceSource` — restores the BASE field value. Missing target ⇒ `Vec::new()`.
-use crate::mutations::Puzzle3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Inverse
@@ -7,6 +7,6 @@ pub fn inverse(payload: &super::mutation::ReplaceReferenceSource, base: &Puzzle3
     let Some(item) = base.references.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
-    vec![crate::mutations::replace_reference_source::mutation::replace_reference_source(item.id.clone(), item.source.clone())]
+    vec![crate::standards::v1::subsets::any::schema::mutations::replace_reference_source::mutation::replace_reference_source(item.id.clone(), item.source.clone())]
 }
 //#endregion 🔖️Inverse

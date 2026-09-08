@@ -5,7 +5,7 @@ import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../.
 class TestScript extends BundleScript {
   run(): void {
     const subset = join(this.repoRoot, "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any");
-    runCmd(process.execPath, ["test", join(subset, "📚️examples/🎬️demo/🧪️tests/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️.ts")]);
+    runCmd(process.execPath, ["test", join(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts")]);
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);

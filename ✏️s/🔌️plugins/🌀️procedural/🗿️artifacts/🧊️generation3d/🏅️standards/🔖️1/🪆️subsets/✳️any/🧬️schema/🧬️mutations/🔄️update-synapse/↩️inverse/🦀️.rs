@@ -1,8 +1,8 @@
 //! ↩️ `update-synapse` inverse — captures the pre-state edge from `base` and re-`update-synapse`s
 //! back to it (self-inverse); missing target ⇒ nothing to undo.
 
-use crate::mutations::update_synapse::UpdateSynapse;
-use crate::mutations::{synapse_index, Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::update_synapse::UpdateSynapse;
+use crate::standards::v1::subsets::any::schema::mutations::{synapse_index, Generation3dMutation};
 use crate::Generation3dSnapshot;
 
 /// ↩️ Missing id in `base` ⇒ `Vec::new()`.

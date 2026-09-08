@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `EditRhs` — the OLD body looked up from BASE.
-use crate::mutations::{edit_rhs, RewriteRuleMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{edit_rhs, RewriteRuleMutation};
 use crate::RewritingSnapshot;
 
 //#region 🔖️Inverse

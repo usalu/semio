@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ChangeLoadCaseSelfWeight` — recovers the pre-mutation flag from `base`.
 use super::ChangeLoadCaseSelfWeight;
-use crate::mutations::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse

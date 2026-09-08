@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio/snapshot.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/snapshot.json",
   "title": "SemioSnapshot",
   "description": "The envelope union over all 13 domain subsets — real mirror of the Rust snapshot. `subset` is a serde-internally-tagged union (tag key `subset`, camelCase tag values) that on the wire flattens the referenced subset's own snapshot fields alongside the tag. JSON Schema's `oneOf` cannot flatten a $ref'd external schema into a sibling-keyed value, so each variant below is a wrapper value carrying the `subset` tag plus a single named field whose value is a cross-file $ref to that subset's own, independently-published snapshot schema (never redeclared here).",
   "type": "value",
@@ -8,114 +9,227 @@
       "oneOf": [
         {
           "type": "value",
-          "required": ["subset", "brep"],
+          "required": [
+            "subset",
+            "brep"
+          ],
           "properties": {
-            "subset": { "const": "brep" },
-            "brep": { "$ref": "https://semio.tech/schema/s.stdio.semio.brep/snapshot.json", "description": "SemioBrepSnapshot (brep subset's own snapshot schema)" }
+            "subset": {
+              "const": "brep"
+            },
+            "brep": {
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/snapshot.json",
+              "description": "SemioBrepSnapshot (brep subset's own snapshot schema)"
+            }
           }
         },
         {
           "type": "value",
-          "required": ["subset", "mesh"],
+          "required": [
+            "subset",
+            "mesh"
+          ],
           "properties": {
-            "subset": { "const": "mesh" },
-            "mesh": { "$ref": "https://semio.tech/schema/s.stdio.semio.mesh/snapshot.json", "description": "SemioMeshSnapshot (mesh subset's own snapshot schema)" }
+            "subset": {
+              "const": "mesh"
+            },
+            "mesh": {
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/mesh/snapshot.json",
+              "description": "SemioMeshSnapshot (mesh subset's own snapshot schema)"
+            }
           }
         },
         {
           "type": "value",
-          "required": ["subset", "model"],
+          "required": [
+            "subset",
+            "model"
+          ],
           "properties": {
-            "subset": { "const": "model" },
-            "model": { "$ref": "https://semio.tech/schema/s.stdio.semio.model/snapshot.json", "description": "SemioModelSnapshot (model subset's own snapshot schema)" }
+            "subset": {
+              "const": "model"
+            },
+            "model": {
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/model/snapshot.json",
+              "description": "SemioModelSnapshot (model subset's own snapshot schema)"
+            }
           }
         },
         {
           "type": "value",
-          "required": ["subset", "value"],
+          "required": [
+            "subset",
+            "value"
+          ],
           "properties": {
-            "subset": { "const": "value" },
-            "value": { "$ref": "https://semio.tech/schema/s.stdio.semio.value/snapshot.json", "description": "SemioValueSnapshot (value subset's own snapshot schema)" }
+            "subset": {
+              "const": "value"
+            },
+            "value": {
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/value/snapshot.json",
+              "description": "SemioValueSnapshot (value subset's own snapshot schema)"
+            }
           }
         },
         {
           "type": "value",
-          "required": ["subset", "document"],
+          "required": [
+            "subset",
+            "document"
+          ],
           "properties": {
-            "subset": { "const": "document" },
-            "document": { "$ref": "https://semio.tech/schema/s.stdio.semio.document/snapshot.json", "description": "SemioDocumentSnapshot (document subset's own snapshot schema)" }
+            "subset": {
+              "const": "document"
+            },
+            "document": {
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/document/snapshot.json",
+              "description": "SemioDocumentSnapshot (document subset's own snapshot schema)"
+            }
           }
         },
         {
           "type": "value",
-          "required": ["subset", "cad"],
+          "required": [
+            "subset",
+            "cad"
+          ],
           "properties": {
-            "subset": { "const": "cad" },
-            "cad": { "$ref": "https://semio.tech/schema/s.stdio.semio.cad/snapshot.json", "description": "SemioCadSnapshot (cad subset's own snapshot schema)" }
+            "subset": {
+              "const": "cad"
+            },
+            "cad": {
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/cad/snapshot.json",
+              "description": "SemioCadSnapshot (cad subset's own snapshot schema)"
+            }
           }
         },
         {
           "type": "value",
-          "required": ["subset", "drawing"],
+          "required": [
+            "subset",
+            "drawing"
+          ],
           "properties": {
-            "subset": { "const": "drawing" },
-            "drawing": { "$ref": "https://semio.tech/schema/s.stdio.semio.drawing/snapshot.json", "description": "SemioDrawingSnapshot (drawing subset's own snapshot schema)" }
+            "subset": {
+              "const": "drawing"
+            },
+            "drawing": {
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json",
+              "description": "SemioDrawingSnapshot (drawing subset's own snapshot schema)"
+            }
           }
         },
         {
           "type": "value",
-          "required": ["subset", "image"],
+          "required": [
+            "subset",
+            "image"
+          ],
           "properties": {
-            "subset": { "const": "image" },
-            "image": { "$ref": "https://semio.tech/schema/s.stdio.semio.image/snapshot.json", "description": "SemioImageSnapshot (image subset's own snapshot schema)" }
+            "subset": {
+              "const": "image"
+            },
+            "image": {
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/image/snapshot.json",
+              "description": "SemioImageSnapshot (image subset's own snapshot schema)"
+            }
           }
         },
         {
           "type": "value",
-          "required": ["subset", "video"],
+          "required": [
+            "subset",
+            "video"
+          ],
           "properties": {
-            "subset": { "const": "video" },
-            "video": { "$ref": "https://semio.tech/schema/s.stdio.semio.video/snapshot.json", "description": "SemioVideoSnapshot (video subset's own snapshot schema)" }
+            "subset": {
+              "const": "video"
+            },
+            "video": {
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/video/snapshot.json",
+              "description": "SemioVideoSnapshot (video subset's own snapshot schema)"
+            }
           }
         },
         {
           "type": "value",
-          "required": ["subset", "audio"],
+          "required": [
+            "subset",
+            "audio"
+          ],
           "properties": {
-            "subset": { "const": "audio" },
-            "audio": { "$ref": "https://semio.tech/schema/s.stdio.semio.audio/snapshot.json", "description": "SemioAudioSnapshot (audio subset's own snapshot schema)" }
+            "subset": {
+              "const": "audio"
+            },
+            "audio": {
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/audio/snapshot.json",
+              "description": "SemioAudioSnapshot (audio subset's own snapshot schema)"
+            }
           }
         },
         {
           "type": "value",
-          "required": ["subset", "animation"],
+          "required": [
+            "subset",
+            "animation"
+          ],
           "properties": {
-            "subset": { "const": "animation" },
-            "animation": { "$ref": "https://semio.tech/schema/s.stdio.semio.animation/snapshot.json", "description": "SemioAnimationSnapshot (animation subset's own snapshot schema)" }
+            "subset": {
+              "const": "animation"
+            },
+            "animation": {
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/animation/snapshot.json",
+              "description": "SemioAnimationSnapshot (animation subset's own snapshot schema)"
+            }
           }
         },
         {
           "type": "value",
-          "required": ["subset", "presentation"],
+          "required": [
+            "subset",
+            "presentation"
+          ],
           "properties": {
-            "subset": { "const": "presentation" },
-            "presentation": { "$ref": "https://semio.tech/schema/s.stdio.semio.presentation/snapshot.json", "description": "SemioPresentationSnapshot (presentation subset's own snapshot schema)" }
+            "subset": {
+              "const": "presentation"
+            },
+            "presentation": {
+              "$ref": "https://semio.tech/schema/s.stdio.semio.presentation/snapshot.json",
+              "description": "SemioPresentationSnapshot (presentation subset's own snapshot schema)"
+            }
           }
         },
         {
           "type": "value",
-          "required": ["subset", "flow"],
+          "required": [
+            "subset",
+            "flow"
+          ],
           "properties": {
-            "subset": { "const": "flow" },
-            "flow": { "$ref": "https://semio.tech/schema/s.stdio.semio.flow/snapshot.json", "description": "SemioFlowSnapshot (flow subset's own snapshot schema)" }
+            "subset": {
+              "const": "flow"
+            },
+            "flow": {
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/flow/snapshot.json",
+              "description": "SemioFlowSnapshot (flow subset's own snapshot schema)"
+            }
           }
         }
       ]
     }
   },
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "subset": { "$ref": "#/definitions/SemioSubsetSnapshot", "x-semio-state": "artifact" }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "subset": {
+      "$ref": "#/definitions/SemioSubsetSnapshot",
+      "x-semio-state": "artifact"
+    }
   },
-  "required": ["schema", "subset"]
+  "required": [
+    "schema",
+    "subset"
+  ]
 }

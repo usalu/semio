@@ -22,13 +22,13 @@ fn inference_descriptors() -> &'static [::framework_schema::ArtifactInferenceDes
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset() -> SubsetDeclaration<crate::VcsApps> {
+pub fn subset<A: crate::VcsApplication>() -> SubsetDeclaration<A> {
     SubsetDeclaration {
         dialect: VCS_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::vcs_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::VcsViewer, crate::VcsApps>(viewer::create_vcs_viewer()),
-        editor: editor_surface::<editor::VcsPlayApp, crate::VcsApps>(editor::create_vcs_app()),
+        viewer: viewer_surface::<viewer::VcsViewer, A>(viewer::create_vcs_viewer()),
+        editor: editor_surface::<editor::VcsPlayApp, A>(editor::create_vcs_app()),
         examples: examples(),
     }
 }

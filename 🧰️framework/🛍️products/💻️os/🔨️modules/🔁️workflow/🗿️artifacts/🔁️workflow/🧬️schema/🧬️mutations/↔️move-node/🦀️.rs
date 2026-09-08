@@ -33,11 +33,5 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for MoveNode {
 //#endregion ⚙️Semantics
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::MutationLeaf;
-    #[test]
-    fn metadata_has_the_canonical_identity() {
-        assert_eq!(<MoveNode as MutationLeaf>::DESCRIPTOR.semantic_kind, "move-node");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

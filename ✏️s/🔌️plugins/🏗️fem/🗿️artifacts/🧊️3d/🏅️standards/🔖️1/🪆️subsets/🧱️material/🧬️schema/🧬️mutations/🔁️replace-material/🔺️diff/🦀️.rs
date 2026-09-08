@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceMaterial`.
 use super::ReplaceMaterial;
-use crate::diff::{Fem3dDiff, Fem3dMaterialsDelta, Fem3dMaterialsPatchEntry};
-use crate::mutations::{id_mismatch, invariant, material_breach};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dMaterialsDelta, Fem3dMaterialsPatchEntry};
+use crate::standards::v1::subsets::any::schema::mutations::{id_mismatch, invariant, material_breach};
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff

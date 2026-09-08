@@ -4,7 +4,7 @@
 //! `🎒️pack`, `📡️spr`. No `⚙️engine` sibling anymore (ticket
 //! 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1e): an artifact is a `🧬️schema` plus a `🚪️io`
 //! system, never an engine — the old `⚙️engine`'s pure/document-only pieces moved into `🧬️schema`
-//! and `🚪️io` (this file's own `declaration()` and `io_registry` shim below), and its genuinely
+//! and `🚪️io` (this file's own `declaration()` and I/O registry), and its genuinely
 //! stateful `BoardHost` facade moved to `🎛️apps/◻️2d/⚙️engine` (since relocated again, ticket
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET, to `✏️editor/⚙️engine` under this artifact's own
 //! `✏️editor` surface).
@@ -14,8 +14,11 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_schema as artifact_schema;
 extern crate semio_framework_value_derive as value_derive;
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "../../🎮️commands/🧵️retained/🦀️.rs"]
+pub mod retained_command;
 
 pub const PUZZLE_2D_SCHEMA: &str = "puzzle.2d.fixture";
 
@@ -528,7 +531,23 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// `ArtifactDeclaration` covers, keyed by a legacy OS-kind string this declaration's own `kind` isn't
 /// — see `🧩️puzzle/🦀️.rs`'s `plugin()` doc for the full judgement.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    #[cfg(feature = "component-app-assembly")]
+pub trait ArtifactApps:
+    semio_framework_plugin::PluginApp
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>>
+{
+}
+
+#[cfg(feature = "component-app-assembly")]
+impl<PA> ArtifactApps for PA where
+    PA: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>>
+{
+}
+
+use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.puzzle.puzzle2d.standard.v1", "standard", "1", &[], None),
@@ -576,10 +595,10 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
 /// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
 #[cfg(feature = "component-app-assembly")]
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::PuzzleApps> {
+pub fn artifact<PA: crate::ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.puzzle.puzzle2d").expect("canonical puzzle2d kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.puzzle.puzzle2d").expect("canonical puzzle2d kind"), localization: &[], standards: vec![crate::standards::v1::standard::<PA>()] }
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -593,28 +612,28 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "puzzle.puzzle2d",
                     extension: Some("puzzle2d"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("puzzle.puzzle2d"),
                 },
                 dsl::LanguageSpec {
                     id: "puzzle.puzzle2d.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("puzzle.puzzle2d.op"),
                 },
                 dsl::LanguageSpec {
                     id: "puzzle.puzzle2d.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("puzzle.puzzle2d.diff"),
@@ -625,8 +644,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("2d.pack"),
                 },
                 dsl::LanguageSpec {
@@ -635,8 +654,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("2d.spr"),
                 },
             ]
@@ -645,100 +664,12 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 }
 //#endregion 🔖️Declaration
 
-pub use crate::op::Puzzle2dPlaySnapshot;
+pub use crate::standards::v1::subsets::any::schema::mutations::text::Puzzle2dPlaySnapshot;
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn puzzle2d_edge_connection_params_default_to_zero() {
-        let edge = Puzzle2dEdge::default();
-        assert_eq!(edge.gap, 0.0);
-        assert_eq!(edge.shift, 0.0);
-        assert_eq!(edge.rise, 0.0);
-        assert_eq!(edge.rotation, 0.0);
-        assert_eq!(edge.turn, 0.0);
-        assert_eq!(edge.tilt, 0.0);
-        assert_eq!(edge.x, 0.0);
-        assert_eq!(edge.y, 0.0);
-    }
-
-    #[test]
-    fn puzzle2d_node_anchor_defaults_to_fixed() {
-        let node = Puzzle2dNode::default();
-        assert_eq!(node.anchor, Puzzle2dNodeAnchor::Fixed);
-    }
-
-    #[test]
-    fn puzzle2d_edge_serde_roundtrips_connection_params() {
-        let edge = Puzzle2dEdge { id: "e1".into(), source: "a".into(), target: "b".into(), gap: 1.0, shift: 2.0, rise: 3.0, rotation: 10.0, turn: 20.0, tilt: 30.0, x: 4.0, y: 5.0, ..Default::default() };
-        let json = serde_json::to_string(&edge).expect("serialize");
-        let back: Puzzle2dEdge = serde_json::from_str(&json).expect("deserialize");
-        assert_eq!(back, edge);
-        assert!(json.contains("\"gap\":1.0") || json.contains("\"gap\":1"));
-        assert!(json.contains("\"rotation\":10"));
-    }
-
-    #[test]
-    fn puzzle2d_kind_compatibility_includes_important() {
-        let row = Puzzle2dKindCompatibility { source: "a".into(), target: "b".into(), bidirectional: true, important: true, specificity: Puzzle2dCompatSpecificity::Handle };
-        let json = serde_json::to_value(&row).expect("serialize");
-        assert_eq!(json["important"], true);
-        assert_eq!(json["bidirectional"], true);
-        assert_eq!(json["specificity"], "handle");
-    }
-
-    #[test]
-    fn puzzle2d_kind_catalogs_serde_roundtrip() {
-        let catalogs = Puzzle2dKindCatalogs {
-            nodes: vec![Puzzle2dCatalogNodeKind {
-                id: "capsule".into(),
-                name: "Capsule".into(),
-                label: "Capsule".into(),
-                description: "d".into(),
-                icon: "i".into(),
-                image: "img".into(),
-                unit: "m".into(),
-                is_abstract: false,
-                base_kinds: vec!["base".into()],
-                representations: vec![Puzzle2dRepresentation { id: "r1".into(), name: "mesh".into(), url: "u".into(), mime: "model/gltf-binary".into(), tags: vec!["lod0".into()], lod: Some("0".into()), description: "rep".into() }],
-                handles: vec![Puzzle2dHandleTemplate {
-                    id: "h0".into(),
-                    name: "bottom".into(),
-                    label: "Bottom".into(),
-                    description: "".into(),
-                    icon: "".into(),
-                    handle_kind: Some("core.rect.bottom".into()),
-                    angle: 0.0,
-                    t: Some(0.5),
-                    mandatory: Some(true),
-                    radius: Some(3.0),
-                }],
-                attributes: vec![Puzzle2dAttribute { id: "a1".into(), key: "k".into(), value: "v".into(), definition: None }],
-                authors: vec![Puzzle2dAuthor { id: "u1".into(), name: "Ada".into(), email: "a@b.c".into(), role: Some("author".into()), rank: Some(1) }],
-            }],
-            handles: vec![Puzzle2dCatalogHandleKind {
-                id: "core.rect.bottom".into(),
-                code: Some("B".into()),
-                label: Some("Bottom".into()),
-                order: Some(0),
-                compatible_with: vec!["core.rect.top".into()],
-                description: "".into(),
-                icon: "".into(),
-                color: "#112233".into(),
-                default_wire_kind: "link.w".into(),
-            }],
-            edges: vec![Puzzle2dCatalogEdgeKind { id: "link.e".into(), name: "Link".into(), label: "Link".into(), description: "".into(), icon: "".into(), color: "#000".into() }],
-            wires: vec![Puzzle2dCatalogWireKind { id: "link.w".into(), name: "W".into(), label: "W".into(), description: "".into(), icon: "".into(), color: "#111".into(), default_edge_kind: "link.e".into() }],
-        };
-        let json = serde_json::to_value(&catalogs).expect("serialize");
-        assert_eq!(json["nodes"][0]["abstract"], false);
-        let back: Puzzle2dKindCatalogs = serde_json::from_value(json).expect("deserialize");
-        assert_eq!(back, catalogs);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[path = "."]
@@ -1496,68 +1427,7 @@ mod tests {
             }
         }
 
-        // ---- Shims: keep pre-migration module paths resolving for external callers ----
-        pub mod schema {
-            pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod io {
-            pub use super::standards::v1::subsets::any::io::*;
-        }
-        pub mod op {
-            pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-        }
-        pub mod dsl {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-        }
-        pub mod spr {
-            pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-        }
-        pub mod diff {
-            pub use crate::standards::v1::subsets::any::schema::diff::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::diff::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::diff::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-            }
-        }
-        pub mod mutations {
-            pub use crate::standards::v1::subsets::any::schema::mutations::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::mutations::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-            }
-        }
-        pub mod snapshot {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-            }
-        }
-        pub use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+                pub use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
         pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
         pub use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 
@@ -1569,6 +1439,19 @@ pub mod editor {
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod examples {
+            #[path = "."]
+            pub mod demo_session {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+        }
 
         #[path = "."]
         pub mod config {

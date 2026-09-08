@@ -4,7 +4,7 @@
 //! at a node and nothing in `Fem3dSnapshot` points back at it, so there is no referrer to protect.
 //! Same for `delete-combination`.
 use super::DeleteSupport;
-use crate::diff::{Fem3dDiff, Fem3dSupportsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSupportsDelta};
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff

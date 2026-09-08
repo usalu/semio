@@ -13,6 +13,7 @@ import {
 } from "../../🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx";
 import hostBootstrapFixture from "../../🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🔣️.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
+import valueResidentSchema from "../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json" with { type: "json" };
 
 describe("renderer quick contracts", () => {
   it("validates the language-neutral renderer resident capacity with the Node oracle", () => {
@@ -21,6 +22,14 @@ describe("renderer quick contracts", () => {
     expect(capacity.bytes - capacity.control.bytes).toBe(residentFixture.data.bytes);
     expect(capacity.slots - capacity.control.slots).toBe(residentFixture.data.slots);
     expect(capacity.owners - capacity.control.owners).toBe(residentFixture.data.owners);
+  });
+
+  it("validates the renderer resident capacity against the owned RendererResidentPolicyV1 export", () => {
+    const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(valueResidentSchema).addSchema(rendererSchema);
+    const policy = ajv.getSchema(`${rendererSchema.$id}#/$defs/RendererResidentPolicyV1`)!;
+    expect(policy(rendererResidentLedger().capacity), JSON.stringify(policy.errors)).toBe(true);
+    expect(policy(residentFixture.capacity), JSON.stringify(policy.errors)).toBe(true);
+    expect(policy({ ...residentFixture.capacity, bytes: residentFixture.capacity.bytes + 1 })).toBe(false);
   });
 
   it("pins one resident ledger identity for the React and WGPU renderer consumers", () => {

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/os/config/mutation/change-merge-policy/schema.json",
+  "$id": "https://semio.tech/schema/os/config/mutation/change-merge-policy/schema.json",
   "title": "ChangeMergePolicy",
   "type": "object",
   "additionalProperties": false,

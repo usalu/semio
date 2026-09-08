@@ -1,7 +1,15 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.text.diff/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/text/diff/text.json",
   "title": "SemioTextDiffDsl",
   "description": "Text-encoding mirror of the diff facet — see ../🔣️.json for the canonical facet schema.",
   "type": "object",
-  "properties": { "runsWire": { "type": ["string", "null"] } }
+  "properties": {
+    "runsWire": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
 }

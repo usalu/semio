@@ -1,7 +1,7 @@
 //! 🕸️ 🕸️ Generation2d play app commands command — `move-media-node`.
 
-use crate::op::Generation2dMutation;
-use crate::schema::host_operations;
+use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
+use crate::standards::v1::subsets::any::schema::host_operations;
 use crate::Generation2dSnapshot;
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use semio_framework_os_flow::FlowEvalSession;

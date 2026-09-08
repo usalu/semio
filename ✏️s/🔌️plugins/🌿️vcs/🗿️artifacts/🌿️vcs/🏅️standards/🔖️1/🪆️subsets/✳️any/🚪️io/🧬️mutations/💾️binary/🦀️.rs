@@ -26,15 +26,6 @@ pub fn decode_op(bytes: &[u8]) -> Result<VcsDemoMutation, protocol::ProtocolErro
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = crate::mutations::change_counter(7);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
-        let bytes = encode_op(&operation).expect("encode");
-        assert_eq!(decode_op(&bytes).expect("decode"), operation);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

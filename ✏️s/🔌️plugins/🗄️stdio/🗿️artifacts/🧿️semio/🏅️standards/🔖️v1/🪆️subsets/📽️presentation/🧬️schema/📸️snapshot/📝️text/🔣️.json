@@ -1,10 +1,19 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/presentation/snapshot/text.json",
   "title": "SemioPresentationSnapshotTextEnvelope",
   "type": "object",
-  "required": ["header", "hexPayload"],
+  "required": [
+    "header",
+    "hexPayload"
+  ],
   "properties": {
-    "header": { "const": "schema stdio.semio.presentation.snapshot" },
-    "hexPayload": { "type": "string", "pattern": "^[0-9a-f]*$" }
+    "header": {
+      "const": "schema stdio.semio.presentation.snapshot"
+    },
+    "hexPayload": {
+      "type": "string",
+      "pattern": "^[0-9a-f]*$"
+    }
   }
 }

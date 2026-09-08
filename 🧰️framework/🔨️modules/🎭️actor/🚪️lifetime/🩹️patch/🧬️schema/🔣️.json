@@ -119,10 +119,10 @@
       ],
       "properties": {
         "lifetime": {
-          "$ref": "https://semio.tech/schema/framework/actor/lifetime/schema.json#/definitions/lifetime"
+          "$ref": "https://semio.tech/schema/framework/actor/lifetime/schema.json#/$defs/InstanceLifetime"
         },
         "patchSequence": {
-          "$ref": "https://semio.tech/schema/framework/actor/lifetime/schema.json#/definitions/u64"
+          "$ref": "https://semio.tech/schema/framework/actor/lifetime/schema.json#/$defs/U64"
         }
       }
     }

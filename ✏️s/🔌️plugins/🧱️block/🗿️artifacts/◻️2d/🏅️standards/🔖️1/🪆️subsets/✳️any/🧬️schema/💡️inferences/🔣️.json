@@ -1,9 +1,12 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/block/block2d/inference.json",
   "title": "Block2dInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["bounds"],
+  "required": [
+    "bounds"
+  ],
   "properties": {
     "bounds": {
       "$ref": "#/$defs/Block2dBounds",
@@ -14,19 +17,51 @@
     "BoundingBox2d": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["min", "max"],
+      "required": [
+        "min",
+        "max"
+      ],
       "properties": {
-        "min": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
-        "max": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+        "min": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "max": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
       }
     },
     "Block2dBounds": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["boundingBox", "vertexCount"],
+      "required": [
+        "boundingBox",
+        "vertexCount"
+      ],
       "properties": {
-        "boundingBox": { "anyOf": [{ "$ref": "#/$defs/BoundingBox2d" }, { "type": "null" }] },
-        "vertexCount": { "type": "integer", "minimum": 0 }
+        "boundingBox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BoundingBox2d"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "vertexCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

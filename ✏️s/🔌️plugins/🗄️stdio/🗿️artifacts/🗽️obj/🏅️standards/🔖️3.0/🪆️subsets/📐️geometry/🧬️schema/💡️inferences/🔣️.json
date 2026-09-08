@@ -1,23 +1,58 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/obj/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/inference.json",
   "title": "ObjInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["bounds"],
+  "required": [
+    "bounds"
+  ],
   "properties": {
-    "bounds": { "$ref": "#/$defs/ObjBounds", "x-semio-derived": true }
+    "bounds": {
+      "$ref": "#/$defs/ObjBounds",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "ObjBounds": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["min", "max", "vertexCount", "faceCount", "groupCount"],
+      "required": [
+        "min",
+        "max",
+        "vertexCount",
+        "faceCount",
+        "groupCount"
+      ],
       "properties": {
-        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-        "vertexCount": { "type": "integer", "minimum": 0 },
-        "faceCount": { "type": "integer", "minimum": 0 },
-        "groupCount": { "type": "integer", "minimum": 0 }
+        "min": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "max": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "vertexCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "faceCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "groupCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

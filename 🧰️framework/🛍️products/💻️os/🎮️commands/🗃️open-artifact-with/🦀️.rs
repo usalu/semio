@@ -15,14 +15,6 @@ pub const LABEL_DE: &str = "Öffnen mit…";
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn open_artifact_with_id_and_labels_are_frozen() {
-        assert_eq!(ID, "os.open-artifact-with");
-        assert_eq!(LABEL_EN, "Open With…");
-        assert_eq!(LABEL_DE, "Öffnen mit…");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

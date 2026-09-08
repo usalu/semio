@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/shooting/shooting/1/any/mutation/set-active-shot/schema.json",
+  "$id": "https://semio.tech/schema/s/shooting/shooting/mutation/set-active-shot/schema.json",
   "title": "SetActiveShot",
   "type": "object",
   "additionalProperties": false,

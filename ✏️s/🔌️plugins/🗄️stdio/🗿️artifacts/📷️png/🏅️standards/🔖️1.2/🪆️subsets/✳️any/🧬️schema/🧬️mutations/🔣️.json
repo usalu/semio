@@ -16,7 +16,7 @@
           "const": "change-background"
         },
         "payload": {
-          "$ref": "./🖼️change-background/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/change-background/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "change-chromaticities"
         },
         "payload": {
-          "$ref": "./🌈️change-chromaticities/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/change-chromaticities/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "change-gamma"
         },
         "payload": {
-          "$ref": "./🌗️change-gamma/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/change-gamma/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "change-header"
         },
         "payload": {
-          "$ref": "./📐️change-header/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/change-header/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "change-physical-dims"
         },
         "payload": {
-          "$ref": "./📏️change-physical-dims/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/change-physical-dims/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
           "const": "change-srgb-intent"
         },
         "payload": {
-          "$ref": "./🖌️change-srgb-intent/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/change-srgb-intent/schema.json"
         }
       }
     },
@@ -112,7 +112,7 @@
           "const": "change-timestamp"
         },
         "payload": {
-          "$ref": "./🕰️change-timestamp/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/change-timestamp/schema.json"
         }
       }
     },
@@ -128,7 +128,7 @@
           "const": "change-transparency"
         },
         "payload": {
-          "$ref": "./👁️change-transparency/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/change-transparency/schema.json"
         }
       }
     },
@@ -144,7 +144,7 @@
           "const": "insert-text-chunk"
         },
         "payload": {
-          "$ref": "./📥️insert-text-chunk/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/insert-text-chunk/schema.json"
         }
       }
     },
@@ -160,7 +160,7 @@
           "const": "insert-unknown-chunk"
         },
         "payload": {
-          "$ref": "./📦️insert-unknown-chunk/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/insert-unknown-chunk/schema.json"
         }
       }
     },
@@ -176,7 +176,7 @@
           "const": "remove-text-chunk"
         },
         "payload": {
-          "$ref": "./🗑️remove-text-chunk/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/remove-text-chunk/schema.json"
         }
       }
     },
@@ -192,7 +192,7 @@
           "const": "remove-unknown-chunk"
         },
         "payload": {
-          "$ref": "./📤️remove-unknown-chunk/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/remove-unknown-chunk/schema.json"
         }
       }
     },
@@ -208,7 +208,7 @@
           "const": "replace-palette"
         },
         "payload": {
-          "$ref": "./🎨️replace-palette/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/replace-palette/schema.json"
         }
       }
     },
@@ -224,7 +224,7 @@
           "const": "replace-pixels"
         },
         "payload": {
-          "$ref": "./🔲️replace-pixels/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/replace-pixels/schema.json"
         }
       }
     },
@@ -240,7 +240,7 @@
           "const": "replace-text-chunk"
         },
         "payload": {
-          "$ref": "./✏️replace-text-chunk/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/replace-text-chunk/schema.json"
         }
       }
     }

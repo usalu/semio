@@ -3,7 +3,10 @@
 import { resolve } from "node:path";
 import Ajv from "ajv";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-type Lane = "HostOnly" | "Artifact" | "Config" | "Draft" | "Presence" | "Transient" | "Child";
+/** 🔤️ The Rust variant name of one kebab lane/disposition from `framework.ui`'s shared vocabulary. */
+const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
+
+type Lane = "artifact" | "config" | "draft" | "presence" | "transient" | "child" | "host-only";
 type AppAuthority = { owner: string; toolIdsConstant: string; source: string; routes: { id: string; lanes: Lane[] }[]; laws: Record<string, boolean>; ui: { locales: ["en", "de"]; accessibleLabels: boolean; customizableUi: boolean } };
 type Fixture = { schema: string; apps: AppAuthority[] };
 
@@ -38,7 +41,7 @@ function appOracle(app: AppAuthority, source: string): boolean {
   const expected = app.routes.map(({ id }) => id);
   return Object.values(app.laws).every(Boolean)
     && app.ui.locales.join(",") === "en,de" && app.ui.accessibleLabels && app.ui.customizableUi
-    && exact(ids, expected) && exact(contracts, app.routes.map(({ id, lanes }) => `${id}:${[...lanes].sort().join("+")}`)) && exact(classifications, expected)
+    && exact(ids, expected) && exact(contracts, app.routes.map(({ id, lanes }) => `${id}:${[...lanes].map(variant).sort().join("+")}`)) && exact(classifications, expected)
     && ANCHORS.every((anchor) => source.includes(anchor));
 }
 
@@ -51,7 +54,7 @@ function hostileSources(app: AppAuthority, source: string): string[] {
   const last = app.routes[app.routes.length - 1]!;
   const second = app.routes[Math.min(1, app.routes.length - 1)]!;
   return [
-    source.replace(`ArtifactToolPublicationContract { tool_id: "${last.id}", lanes: &[${last.lanes.map((lane) => `ArtifactToolPublicationLane::${lane}`).join(", ")}] },`, ""),
+    source.replace(`ArtifactToolPublicationContract { tool_id: "${last.id}", lanes: &[${last.lanes.map((lane) => `ArtifactToolPublicationLane::${variant(lane)}`).join(", ")}] },`, ""),
     source.replaceAll("request.base_revision != request.authority.base_revision()", ""),
     source.replace(`.action_interactive_job("${second.id}", InteractiveJobClassification::Migrated)`, ""),
   ];
@@ -60,14 +63,14 @@ function hostileSources(app: AppAuthority, source: string): string[] {
 class TestScript extends BundleScript {
   async run(): Promise<void> {
     const cases = [
-      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🟦️.ts",
-      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🟦️.ts",
-      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🧪️tests/🟦️.ts",
-      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🟦️.ts",
-      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🧪️tests/🟦️.ts",
-      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🟦️.ts",
-      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🟦️.ts",
-      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/➡️hexagonal-cut-concrete-forest-right/🧪️tests/🟦️.ts",
+      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts",
+      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts",
+      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🧪️tests/🧩️example/🟦️.ts",
+      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts",
+      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🧪️tests/🧩️example/🟦️.ts",
+      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts",
+      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts",
+      "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/➡️hexagonal-cut-concrete-forest-right/🧪️tests/🧩️example/🟦️.ts",
     ];
     runCmd(process.execPath, ["test", ...cases.map(path => resolve(this.repoRoot, path))]);
     const plugin = resolve(this.root, "../..");

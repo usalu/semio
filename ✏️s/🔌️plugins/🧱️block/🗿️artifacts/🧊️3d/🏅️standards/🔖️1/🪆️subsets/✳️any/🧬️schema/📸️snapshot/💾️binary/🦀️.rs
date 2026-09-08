@@ -21,15 +21,6 @@ pub fn decode(bytes: &[u8]) -> Result<Block3dSnapshot, PackError> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn pack_round_trips_representative_document() {
-        let document = Block3dSnapshot::default();
-        store::os_store::test_support::assert_dsl_pack_equivalence(&document);
-        let bytes = encode(&document);
-        assert_eq!(decode(&bytes).expect("decode"), document);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -4,8 +4,8 @@
 //! (`mutation.target-missing`, Error), then the shared `guards::region_geometry` meshability bounds
 //! (`mutation.invariant`, Fatal) — outline arity and area, thickness, mesh size, hole containment.
 use super::CreateRegion;
-use crate::diff::{Fem2dDiff, Fem2dRegionsDelta};
-use crate::mutations::guards;
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dRegionsDelta};
+use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff

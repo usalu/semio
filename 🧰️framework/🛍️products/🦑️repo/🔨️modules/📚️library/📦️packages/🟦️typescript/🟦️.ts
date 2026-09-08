@@ -4,6 +4,8 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
+import { devToolingEnv } from "../../🏃️process/🌿️environment/🟦️.ts";
+export { devToolingEnv };
 import { ephemeralBox } from "@semio-tech/framework";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { type Dirent, chmodSync, closeSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readSync, realpathSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
@@ -11,7 +13,7 @@ import { availableParallelism, devNull, homedir, tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, normalize, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
-import { fixedContractFilename, loadTaxonomy, taxonomyRelativePathIsExcluded } from "../../🔍️discovery/🟦️.ts";
+import { canonicalFilenameForKind, fixedContractFilename, loadTaxonomy, taxonomyRelativePathIsExcluded } from "../../🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
 
 import type { PlaygroundSelection as PlaygroundVariant } from "../../🎮️playground/🟦️.ts";
@@ -1151,6 +1153,75 @@ export function goLevelTestArgs(level: TestLevel = activeTestLevel()): string[] 
   const skipped = levelsAbove(level).map((l) => l[0]!.toUpperCase() + l.slice(1));
   if (skipped.length) args.push("-skip", `^Test(${skipped.join("|")})`);
   return args;
+}
+
+export type CanonicalGoTestPlan = Readonly<{
+  packages: readonly string[];
+  replacements: Readonly<Record<string, string>>;
+}>;
+
+export type CanonicalGoTestLayout = Readonly<{
+  testsDirectory: string;
+  implementationFilename: string;
+}>;
+
+/** 🔣️Resolves Go test layout names from the repository taxonomy. */
+function canonicalGoTestLayout(): CanonicalGoTestLayout {
+  const taxonomy = loadTaxonomy();
+  const goKind = taxonomy.testAdapterFileKinds["🐹️go"];
+  if (!taxonomy.testsDirName || !goKind) throw new Error("The taxonomy must define Go test adapters.");
+  return { testsDirectory: taxonomy.testsDirName, implementationFilename: canonicalFilenameForKind(goKind, taxonomy) };
+}
+
+/** 🐹️Maps canonical authored Go cases to virtual `_test.go` inputs in their owning packages. */
+export function canonicalGoTestPlan(moduleRoot: string, layout: CanonicalGoTestLayout = canonicalGoTestLayout()): CanonicalGoTestPlan {
+  const root = realpathSync(moduleRoot);
+  if (!layout.testsDirectory || layout.testsDirectory.includes("/") || layout.testsDirectory.includes("\\") || !layout.implementationFilename.endsWith(".go") || layout.implementationFilename.includes("/") || layout.implementationFilename.includes("\\")) throw new Error("Invalid canonical Go test layout.");
+  const replacements: Record<string, string> = {};
+  const packages = new Set<string>();
+  const walk = (directory: string): void => {
+    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
+      if (!entry.isDirectory() || entry.isSymbolicLink()) continue;
+      const path = join(directory, entry.name);
+      if (entry.name === layout.testsDirectory) {
+        for (const testCase of readdirSync(path, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
+          if (!testCase.isDirectory() || testCase.isSymbolicLink()) continue;
+          const source = join(path, testCase.name, layout.implementationFilename);
+          if (!existsSync(source) || !lstatSync(source).isFile() || lstatSync(source).isSymbolicLink()) continue;
+          const owner = directory;
+          const ownerRelative = relative(root, owner).split(sep).join("/");
+          if (ownerRelative === ".." || ownerRelative.startsWith("../")) throw new Error(`Go test owner escapes its module: ${owner}`);
+          const id = createHash("sha256").update(relative(root, source).split(sep).join("/")).digest("hex").slice(0, 16);
+          const virtual = join(owner, `zz_semio_${id}_test.go`);
+          if (existsSync(virtual)) throw new Error(`Go test overlay collides with an authored file: ${virtual}`);
+          replacements[virtual] = source;
+          packages.add(ownerRelative ? `./${ownerRelative}` : ".");
+        }
+        continue;
+      }
+      if (entry.name === ".git" || entry.name === "node_modules" || entry.name === "target" || entry.name === "vendor") continue;
+      walk(path);
+    }
+  };
+  walk(root);
+  if (packages.size === 0) throw new Error(`No canonical Go tests found below ${root}`);
+  return { packages: [...packages].sort(), replacements: Object.fromEntries(Object.entries(replacements).sort(([left], [right]) => left.localeCompare(right))) };
+}
+
+/** 🧪️Runs canonical Go cases through the standard toolchain without authored legacy filenames. */
+export async function runCanonicalGoTests(moduleRoot: string, args: string[], opts: { env?: NodeJS.ProcessEnv; budgetMs?: number } = {}): Promise<void> {
+  const plan = canonicalGoTestPlan(moduleRoot);
+  const temporary = mkdtempSync(join(tmpdir(), "semio-go-tests-"));
+  const overlay = join(temporary, "overlay.json");
+  const cleanup = (): void => rmSync(temporary, { recursive: true, force: true });
+  writeFileSync(overlay, `${JSON.stringify({ Replace: plan.replacements }, null, 2)}\n`);
+  process.once("exit", cleanup);
+  try {
+    await runTestBudgeted("go", ["test", `-overlay=${overlay}`, ...args, ...plan.packages], { cwd: moduleRoot, env: opts.env, budgetMs: opts.budgetMs });
+  } finally {
+    process.off("exit", cleanup);
+    cleanup();
+  }
 }
 
 /** ⏱️Vitest per-test/hook/teardown timeouts (ms) for the active level budget. */
@@ -2382,21 +2453,6 @@ export function runCargoLint(packages: string[], cwd: string, extraArgs: string[
 }
 //#endregion 🧹️CargoLint
 
-/** 🧰️Dev tooling env without IDE-injected node options. */
-export function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
-  const env = { ...process.env, ...extra };
-  delete env.NODE_OPTIONS;
-  delete env.VSCODE_INSPECTOR_OPTIONS;
-  env.NX_NATIVE_COMMAND_RUNNER ??= "false";
-  env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT ??= "false";
-  env.NX_TUI ??= "false";
-  env.NX_ISOLATE_PLUGINS = "false";
-  env.NX_VERBOSE_LOGGING ??= "false";
-  env.NX_PERF_LOGGING ??= "false";
-  env.NX_NATIVE_LOGGING ??= "nx=warn";
-  env.RUSTC_WRAPPER ??= "";
-  return env;
-}
 
 //#region ⚙️ViteConfigLoader
 /**

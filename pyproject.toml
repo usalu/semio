@@ -47,16 +47,9 @@ test = [
     "PyNiteFEA>=1.1.6",
 ]
 
-# 🧪️ This Pytest configuration is COMPOSE-SCOPED and must stay that way: `testpaths` names only
-# `compose/py` and `compose/engine`. Non-compose Python tests are NOT discovered through it. They are
-# owned by their language-neutral domain owner as `🧪️tests/<case>/🐍️component.py` adapters and are
-# executed by the repository's own Python host
-# (`🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py`), which loads
-# exactly the adapter the coordinator names and needs no discovery configuration at all. Do not widen
-# `testpaths` to pull non-compose paths back in — see ticket 26/08/23/END-TO-END-TESTING-REFACTOR.
 [tool.pytest.ini_options]
-python_files = ["**/engine/main.py", "**/py/main.py", "test_*.py", "*_test.py", "*.test.py"]
-testpaths = ["compose/py", "compose/engine"]
+python_files = ["🐍️.py"]
+testpaths = ["🧰️framework", "✏️s", "♻️mit-bestand"]
 addopts = "--import-mode=importlib --strict-markers"
 markers = [
     "quick: fast test, included from the quick level upward",
@@ -67,6 +60,3 @@ markers = [
 [tool.coverage.run]
 relative_files = true
 branch = true
-
-[tool.ruff.lint.per-file-ignores]
-"conftest.py" = ["E402", "F401"]

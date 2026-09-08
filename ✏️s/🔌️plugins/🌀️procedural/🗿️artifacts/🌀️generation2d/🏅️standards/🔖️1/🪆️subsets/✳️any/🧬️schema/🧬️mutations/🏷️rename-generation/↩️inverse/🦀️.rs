@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `RenameGeneration`, reconstructed from BASE.
 use super::RenameGeneration;
-use crate::mutations::rename_generation;
-use crate::mutations::Generation2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::rename_generation;
+use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::Generation2dSnapshot;
 
 //#region 🔖️Inverse

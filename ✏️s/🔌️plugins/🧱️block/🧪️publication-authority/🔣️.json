@@ -9,55 +9,55 @@
         {
           "id": "patchNodeKind",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "addHandleKind",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "removeHandleKind",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "addHandle",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "removeHandle",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "addCompatibilityRule",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "removeCompatibilityRule",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "setActiveExample",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "edit",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         }
       ],
@@ -86,140 +86,140 @@
         {
           "id": "patchObjectKind",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "addRepresentation",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "removeRepresentation",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "addVortexKind",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "removeVortexKind",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "addVortex",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "removeVortex",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "setActiveExample",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "edit",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "setActiveRepresentation",
           "lanes": [
-            "Config"
+            "config"
           ]
         },
         {
           "id": "setWindowRepresentations",
           "lanes": [
-            "Config"
+            "config"
           ]
         },
         {
           "id": "toggleWindowRepresentation",
           "lanes": [
-            "Config"
+            "config"
           ]
         },
         {
           "id": "setWindowArrangement",
           "lanes": [
-            "Config"
+            "config"
           ]
         },
         {
           "id": "setWindowSpacing",
           "lanes": [
-            "Config"
+            "config"
           ]
         },
         {
           "id": "setActiveUtility",
           "lanes": [
-            "Config"
+            "config"
           ]
         },
         {
           "id": "setBrushVortexKind",
           "lanes": [
-            "Config"
+            "config"
           ]
         },
         {
           "id": "setBrushRadius",
           "lanes": [
-            "Config"
+            "config"
           ]
         },
         {
           "id": "setBrushFlip",
           "lanes": [
-            "Config"
+            "config"
           ]
         },
         {
           "id": "worldSurfaceHover",
           "lanes": [
-            "Config"
+            "config"
           ]
         },
         {
           "id": "worldSurfaceLeave",
           "lanes": [
-            "Config"
+            "config"
           ]
         },
         {
           "id": "worldSurfacePlace",
           "lanes": [
-            "Artifact",
-            "Config"
+            "artifact",
+            "config"
           ]
         },
         {
           "id": "setCamera",
           "lanes": [
-            "Config"
+            "config"
           ]
         },
         {
           "id": "patchRepresentation",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         }
       ],
@@ -248,43 +248,43 @@
         {
           "id": "patchPartKind",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "addGripKind",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "removeGripKind",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "addGrip",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "removeGrip",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "setActiveExample",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "edit",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         }
       ],

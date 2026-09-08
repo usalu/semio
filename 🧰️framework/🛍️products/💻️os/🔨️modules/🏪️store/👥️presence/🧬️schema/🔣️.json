@@ -4,6 +4,12 @@
   "title": "Store Presence",
   "description": "Presence-owned contracts: peer commit and admission records, presence retirement, and the exact document-scoped runtime keys and surface routes presence is projected through. Renderer elements and the backbone worker are consumers.",
   "$defs": {
+    "I32": {
+      "description": "🔢️ The signed 32-bit value a presence retirement peer carries. Presence retirement mutation leaves reference this export instead of restating the bounds.",
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    },
     "PresencePeerCommitV1": {
       "type": "object",
       "additionalProperties": false,

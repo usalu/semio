@@ -467,7 +467,7 @@
         },
         "lanes": {
           "const": [
-            "hostOnly"
+            "host-only"
           ]
         }
       },
@@ -485,7 +485,7 @@
         },
         "lanes": {
           "const": [
-            "hostOnly"
+            "host-only"
           ]
         }
       },
@@ -573,7 +573,7 @@
                   "admission": {
                     "enum": [
                       "migrated",
-                      "failClosed"
+                      "fail-closed"
                     ]
                   },
                   "feature": {
@@ -644,7 +644,10 @@
           "additionalProperties": false
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

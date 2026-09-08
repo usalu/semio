@@ -1,174 +1,131 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/block/5d/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/block/block5d/mutations.json",
   "title": "Block5dMutation",
   "description": "One of 41 semantic mutation kinds — see x-mutation-kind on each $def.",
   "oneOf": [
     {
-      "$ref": "./🔩add-attribute/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/add-attribute/schema.json"
     },
     {
-      "$ref": "./👤add-author/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/add-author/schema.json"
     },
     {
-      "$ref": "./➕add-compatibility-rule/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/add-compatibility-rule/schema.json"
     },
     {
-      "$ref": "./🧩add-representation-attribute/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/add-representation-attribute/schema.json"
     },
     {
-      "$ref": "./🔖add-representation-tag/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/add-representation-tag/schema.json"
     },
     {
-      "$ref": "./🧷change-grip-grip-kind/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/change-grip-grip-kind/schema.json"
     },
     {
-      "$ref": "./🎨change-grip-kind-color/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/change-grip-kind-color/schema.json"
     },
     {
-      "$ref": "./🪢change-grip-kind-default-rope-kind/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/change-grip-kind-default-rope-kind/schema.json"
     },
     {
-      "$ref": "./🎫change-grip-kind-label/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/change-grip-kind-label/schema.json"
     },
     {
-      "$ref": "./💬change-meta-description/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/change-meta-description/schema.json"
     },
     {
-      "$ref": "./📃️change-part-kind-description/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/change-part-kind-description/schema.json"
     },
     {
-      "$ref": "./🖼️change-part-kind-icon/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/change-part-kind-icon/schema.json"
     },
     {
-      "$ref": "./🏷️change-part-kind-label/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/change-part-kind-label/schema.json"
     },
     {
-      "$ref": "./📐change-part-kind-unit/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/change-part-kind-unit/schema.json"
     },
     {
-      "$ref": "./🔀️change-part-kind-variant/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/change-part-kind-variant/schema.json"
     },
     {
-      "$ref": "./📜change-representation-description/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/change-representation-description/schema.json"
     },
     {
-      "$ref": "./🏔️change-representation-lod/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/change-representation-lod/schema.json"
     },
     {
-      "$ref": "./🌐change-representation-mesh-url/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/change-representation-mesh-url/schema.json"
     },
     {
-      "$ref": "./🌿create-grip/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/create-grip/schema.json"
     },
     {
-      "$ref": "./🌱create-grip-kind/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/create-grip-kind/schema.json"
     },
     {
-      "$ref": "./🧱create-representation/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/create-representation/schema.json"
     },
     {
-      "$ref": "./🕳️delete-grip/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/delete-grip/schema.json"
     },
     {
-      "$ref": "./❌delete-grip-kind/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/delete-grip-kind/schema.json"
     },
     {
-      "$ref": "./🗑️delete-representation/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/delete-representation/schema.json"
     },
     {
-      "$ref": "./🎥move-camera2d/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/move-camera2d/schema.json"
     },
     {
-      "$ref": "./🎬move-camera3d/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/move-camera3d/schema.json"
     },
     {
-      "$ref": "./📍move-grip-2d/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/move-grip2d/schema.json"
     },
     {
-      "$ref": "./🧭move-grip-3d/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/move-grip3d/schema.json"
     },
     {
-      "$ref": "./🚷remove-attribute/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/remove-attribute/schema.json"
     },
     {
-      "$ref": "./🙅remove-author/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/remove-author/schema.json"
     },
     {
-      "$ref": "./✂️remove-compatibility-rule/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/remove-compatibility-rule/schema.json"
     },
     {
-      "$ref": "./➖remove-representation-attribute/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/remove-representation-attribute/schema.json"
     },
     {
-      "$ref": "./🚫remove-representation-tag/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/remove-representation-tag/schema.json"
     },
     {
-      "$ref": "./🖋️rename-grip-kind/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/rename-grip-kind/schema.json"
     },
     {
-      "$ref": "./✏️rename-part-kind/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/rename-part-kind/schema.json"
     },
     {
-      "$ref": "./✒️rename-representation/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/rename-representation/schema.json"
     },
     {
-      "$ref": "./📏resize-grip-3d/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/resize-grip3d/schema.json"
     },
     {
-      "$ref": "./🔍scale-camera2d/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/scale-camera2d/schema.json"
     },
     {
-      "$ref": "./🔎scale-camera3d/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/scale-camera3d/schema.json"
     },
     {
-      "$ref": "./🖌️update-part-2d/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/update-part2d/schema.json"
     },
     {
-      "$ref": "./🧊update-part-3d/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/block/block5d/mutation/update-part3d/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "add-attribute",
-    "add-author",
-    "add-compatibility-rule",
-    "add-representation-attribute",
-    "add-representation-tag",
-    "change-grip-grip-kind",
-    "change-grip-kind-color",
-    "change-grip-kind-default-rope-kind",
-    "change-grip-kind-label",
-    "change-meta-description",
-    "change-part-kind-description",
-    "change-part-kind-icon",
-    "change-part-kind-label",
-    "change-part-kind-unit",
-    "change-part-kind-variant",
-    "change-representation-description",
-    "change-representation-lod",
-    "change-representation-mesh-url",
-    "create-grip",
-    "create-grip-kind",
-    "create-representation",
-    "delete-grip",
-    "delete-grip-kind",
-    "delete-representation",
-    "move-camera2d",
-    "move-camera3d",
-    "move-grip2d",
-    "move-grip3d",
-    "remove-attribute",
-    "remove-author",
-    "remove-compatibility-rule",
-    "remove-representation-attribute",
-    "remove-representation-tag",
-    "rename-grip-kind",
-    "rename-part-kind",
-    "rename-representation",
-    "resize-grip3d",
-    "scale-camera2d",
-    "scale-camera3d",
-    "update-part2d",
-    "update-part3d"
   ]
 }

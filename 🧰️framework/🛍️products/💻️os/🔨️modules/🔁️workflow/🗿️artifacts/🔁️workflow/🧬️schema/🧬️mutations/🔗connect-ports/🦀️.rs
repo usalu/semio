@@ -30,11 +30,5 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for ConnectPorts
 //#endregion ⚙️Semantics
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::MutationLeaf;
-    #[test]
-    fn metadata_has_the_canonical_identity() {
-        assert_eq!(<ConnectPorts as MutationLeaf>::DESCRIPTOR.semantic_kind, "connect-ports");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

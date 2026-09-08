@@ -47,24 +47,24 @@ impl NativeGisCodecReceiptV1 {
 
     fn codec(&self) -> store::ArtifactCodec {
         match self.artifact {
-            GisCodecV1::Map => store::ArtifactCodec::of::<crate::artifacts::gismap::GisMapSnapshot, crate::artifacts::gismap::GisMapMutation>("gis.map"),
-            GisCodecV1::Terrain => store::ArtifactCodec::of::<crate::artifacts::gisterrain::GisTerrainSnapshot, crate::artifacts::gisterrain::GisTerrainMutation>("gis.terrain"),
+            GisCodecV1::Map => store::ArtifactCodec::of::<semio_s_artifact_gis_gismap::GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>("gis.map"),
+            GisCodecV1::Terrain => store::ArtifactCodec::of::<semio_s_artifact_gis_gisterrain::GisTerrainSnapshot, semio_s_artifact_gis_gisterrain::GisTerrainMutation>("gis.terrain"),
         }
     }
 
     /// 🌱️ Returns the exact package-owned editor genesis selected by this receipt.
     fn genesis_factory(&self) -> semio_framework_plugin::NativeArtifactGenesisFactoryV1 {
         match self.artifact {
-            GisCodecV1::Map => semio_framework_plugin::native_artifact_genesis_for_editor::<crate::editor::gis2d::Gis2dPlayApp>,
-            GisCodecV1::Terrain => semio_framework_plugin::native_artifact_genesis_for_editor::<crate::editor::gis3d::Gis3dPlayApp>,
+            GisCodecV1::Map => semio_framework_plugin::native_artifact_genesis_for_editor::<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>,
+            GisCodecV1::Terrain => semio_framework_plugin::native_artifact_genesis_for_editor::<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>,
         }
     }
 
     fn validate(&self) -> Result<(), PluginAssemblyError> {
         let identity = self.identity();
         let declaration = match self.artifact {
-            GisCodecV1::Map => crate::artifacts::gismap::declaration(),
-            GisCodecV1::Terrain => crate::artifacts::gisterrain::declaration(),
+            GisCodecV1::Map => semio_s_artifact_gis_gismap::declaration(),
+            GisCodecV1::Terrain => semio_s_artifact_gis_gisterrain::declaration(),
         }.map_err(PluginAssemblyError::definition)?;
         let definition = declaration.definition();
         let mut codecs = definition.codecs();

@@ -112,21 +112,26 @@
       "oneOf": [
         { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "none" } } },
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["kind", "schema", "codegenPolicy", "path", "byteLength", "sha256", "sourceComponentSha256", "sourceDescriptorByteSha256", "policySha256", "importInterfaces"],
-          "properties": {
-            "kind": { "const": "closed-browser-actor" },
-            "schema": { "const": "semio.os.closed-browser-actor.v1" },
-            "codegenPolicy": { "const": "semio.os.browser-jco-1.27.0-jspi.v1" },
-            "path": { "$ref": "#/$defs/relativePath" },
-            "byteLength": { "type": "integer", "minimum": 1, "maximum": 67108864 },
-            "sha256": { "$ref": "#/$defs/nonzeroDigest" },
-            "sourceComponentSha256": { "$ref": "#/$defs/nonzeroDigest" },
-            "sourceDescriptorByteSha256": { "$ref": "#/$defs/nonzeroDigest" },
-            "policySha256": { "$ref": "#/$defs/nonzeroDigest" },
-            "importInterfaces": { "type": "array", "maxItems": 16, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 128 } }
-          }
+          "allOf": [
+            { "$ref": "https://semio.tech/schema/os/directory/component.json#/$defs/DocumentBrowserActorIdentity" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "byteLength"],
+              "properties": {
+                "kind": {},
+                "schema": {},
+                "codegenPolicy": {},
+                "sha256": {},
+                "sourceComponentSha256": {},
+                "sourceDescriptorByteSha256": {},
+                "policySha256": {},
+                "importInterfaces": {},
+                "path": { "$ref": "#/$defs/relativePath" },
+                "byteLength": { "type": "integer", "minimum": 1, "maximum": 67108864 }
+              }
+            }
+          ]
         }
       ]
     },

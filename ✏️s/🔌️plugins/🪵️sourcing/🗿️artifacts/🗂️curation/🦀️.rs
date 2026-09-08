@@ -12,14 +12,6 @@ extern crate semio_framework_os_kernel as store;
 #[cfg(test)]
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
-// 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<SourcingMutation, SourcingCurationConfigMutation>, Fault>`, the exact signature
-// `ArtifactApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a
-// framework-owned error type; boxing it here would diverge from the trait it must satisfy, and the
-// lint does not fire on the trait impl itself (only on the free functions the taxonomy split
-// creates), so this is a pure artefact of decomposition.
-#[allow(clippy::result_large_err)]
-extern crate self as semio_s_artifact_sourcing_curation;
 
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
@@ -314,11 +306,27 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `declaration()`/`ArtifactDeclaration::builder(...)` channel outright (atomic cutover with the
 /// plugin root edit — no dual registration). `localization: &[]` is a documented shortfall: the
 /// real en/de localized names still live on `definition()`'s kept capability rows (debt D1).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::SourcingApps> {
+pub fn artifact<A: SourcingApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.sourcing.curation").expect("canonical sourcing.curation kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.sourcing.curation").expect("canonical sourcing.curation kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
+
+/// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
+pub trait SourcingApplication:
+    semio_framework_plugin::PluginApp
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::sourcing::SourcingCurationApp>>>
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::sourcing::SourcingViewer>>>
+{
+}
+
+impl<A> SourcingApplication for A where
+    A: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::sourcing::SourcingCurationApp>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::sourcing::SourcingViewer>>>
+{
+}
+
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) — built once and leaked to a
 /// `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. Consumed by
@@ -334,28 +342,28 @@ pub(crate) fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "sourcing.curation",
                     extension: Some("curation"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::document_dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::document_dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("sourcing.curation"),
                 },
                 dsl::LanguageSpec {
                     id: "sourcing.curation.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("sourcing.curation.op"),
                 },
                 dsl::LanguageSpec {
                     id: "sourcing.curation.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("sourcing.curation.diff"),
@@ -366,8 +374,8 @@ pub(crate) fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("curation.pack"),
                 },
                 dsl::LanguageSpec {
@@ -376,8 +384,8 @@ pub(crate) fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("curation.spr"),
                 },
             ]
@@ -394,19 +402,8 @@ pub(crate) fn language_spec(role: dsl::LanguageRole) -> Option<&'static dsl::Lan
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// 🗂️ The manifest-facing `ArtifactKindSpec.schema` ("sourcing.curation") is deliberately NOT
-    /// `SOURCING_CURATION_SCHEMA` ("sourcing.curation/v1") — the former names the artifact kind in the OS
-    /// media catalogue, the latter keys the store envelope. Pinned so a future edit can't silently
-    /// merge them (mirrors `flow`'s identical `artifact_kind` split-schema pin).
-    #[semio_framework_async_macros::async_test]
-    async fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
-        assert_eq!(artifact_kind().schema, "sourcing.curation");
-        assert_eq!(SOURCING_CURATION_SCHEMA, "sourcing.curation/v1");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[path = "."]

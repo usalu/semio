@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `DeleteHandle`.
 
 use crate::Block2dSnapshot;
-use crate::diff::{Block2dDiff, Block2dHandlesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Block2dDiff, Block2dHandlesDelta};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteHandle, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {

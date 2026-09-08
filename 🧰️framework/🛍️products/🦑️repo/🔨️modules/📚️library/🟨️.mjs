@@ -15,6 +15,7 @@ const RUNTIME_COMPONENT_MODULE = "🕸️dependencies/🧩️runtime/🟨️.mjs
 const runtimeRevision = createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).digest("hex");
 const { runtimeComponentClosure } = await import(new URL(`./${RUNTIME_COMPONENT_MODULE}?revision=${runtimeRevision}`, import.meta.url).href);
 const POLICY = JSON.parse(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json"), "utf8"));
+const TAXONOMY = JSON.parse(readFileSync(join(LIBRARY_ROOT, "🔣️taxonomy.json"), "utf8"));
 const IMPLEMENTATION_REVISION = new URL(import.meta.url).searchParams.get("revision") ?? implementationRevision();
 const nxPath = (path) => path.split("\\").join("/");
 const owned = (path, root) => root === "." || path === root || path.startsWith(`${root}/`);
@@ -344,7 +345,9 @@ function nativeDependencies(manifest, workspace) {
 }
 
 /** 🦀️ Resolves Cargo's local compilation inputs, admitting development dependencies only at the selected test root. */
-function nativeDependencyRoots(root, workspaceRoot, tests = false, cache = new Map()) {
+function nativeDependencyRoots(root, workspaceRoot, tests = false, cache = new Map(), closures = new Map()) {
+  const key = `${root}\0${tests}`;
+  if (closures.has(key)) return closures.get(key);
   const read = (path) => { if (!cache.has(path)) cache.set(path, readToml(path)); return cache.get(path); };
   const visited = new Set();
   const visit = (directory, includeTests) => {
@@ -370,12 +373,14 @@ function nativeDependencyRoots(root, workspaceRoot, tests = false, cache = new M
     }
   };
   visit(resolve(workspaceRoot, root), tests);
-  return [...visited].map((path) => nxPath(relative(workspaceRoot, path)) || ".").sort();
+  const result = [...visited].map((path) => nxPath(relative(workspaceRoot, path)) || ".").sort();
+  closures.set(key, result);
+  return result;
 }
 
 /** 🧬️ Selects declared generators across Cargo's compilation closure without scheduling native dependencies twice. */
-function nativePreparation(root, workspaceRoot, contracts, tests = false, cache = new Map()) {
-  const roots = new Set(nativeDependencyRoots(root, workspaceRoot, tests, cache));
+function nativePreparation(root, workspaceRoot, contracts, tests = false, cache = new Map(), closures = new Map()) {
+  const roots = new Set(nativeDependencyRoots(root, workspaceRoot, tests, cache, closures));
   return Object.values(contracts).filter((contract) => {
     if (!contract.nativeConsumers?.some((path) => roots.has(path))) return false;
     if (contract.ownership !== "owned" || !contract.target) throw new Error(`Native prerequisite needs an owned generator: ${root}`);
@@ -384,7 +389,7 @@ function nativePreparation(root, workspaceRoot, contracts, tests = false, cache 
 }
 
 /** 🏗️ Attaches generation to native leaves in the outer task graph, including transitive Cargo consumers. */
-function withNativePreparation(project, workspaceRoot, contracts, cache = new Map(), projectsByRoot = new Map()) {
+function withNativePreparation(project, workspaceRoot, contracts, cache = new Map(), projectsByRoot = new Map(), closures = new Map()) {
   const manifest = join(workspaceRoot, project.root, "Cargo.toml");
   if (!existsSync(manifest) || !readToml(manifest).package) return project;
   const generatorTargets = new Set(Object.values(contracts).flatMap((contract) => [contract.target, contract.previewTarget, contract.checkTarget]));
@@ -392,10 +397,10 @@ function withNativePreparation(project, workspaceRoot, contracts, cache = new Ma
   for (const [name, target] of Object.entries(project.targets)) {
     if (!/^(?:build|check|lint|test|wasm|native|component|extension-package|package|font-tool|bench)(?:-|$)/.test(name) || generatorTargets.has(`${project.name}:${name}`)) continue;
     const tests = /^(?:test|bench)(?:-|$)/.test(name);
-    if (!plans.has(tests)) plans.set(tests, nativePreparation(project.root, workspaceRoot, contracts, tests, cache));
+    if (!plans.has(tests)) plans.set(tests, nativePreparation(project.root, workspaceRoot, contracts, tests, cache, closures));
     const selected = plans.get(tests);
     if (projectsByRoot.size && target.inputs?.some((input) => input === "^nativeSources" || input === "^nativeTestSources")) {
-      const dependencies = nativeDependencyRoots(project.root, workspaceRoot, tests, cache).filter((root) => root !== project.root).map((root) => {
+      const dependencies = nativeDependencyRoots(project.root, workspaceRoot, tests, cache, closures).filter((root) => root !== project.root).map((root) => {
         const name = projectsByRoot.get(root);
         if (!name) throw new Error(`Native dependency has no Nx project owner: ${root}`);
         return name;
@@ -457,7 +462,8 @@ function projectInputs(json, root, workspaceRoot, facts) {
     `{workspaceRoot}/${runner}/⚡️caching/**/*`,
     { runtime: 'node -p "process.platform.concat(process.arch)"' },
   ];
-  const owner = root.includes("/📦️packages/") ? root.split("/📦️packages/")[0] : root;
+  const deliveryOffsets = TAXONOMY.testDeliveryScopeDirectoryNames.map((name) => root.indexOf(`/${name}/`)).filter((index) => index >= 0);
+  const owner = deliveryOffsets.length > 0 ? root.slice(0, Math.min(...deliveryOffsets)) : root;
   if (owner !== root) {
     const extensions = tools.includes("cargo") ? "{rs,toml,json,semio,wit,wgsl,glsl,h,c,cpp}" : tools.includes("go") ? "{go,mod,sum,json,ts}" : tools.includes("dotnet") ? "{cs,fs,vb,csproj,fsproj,vbproj,props,targets,resx,json}" : tools.includes("python") ? "{py,pyi,toml,json}" : "{ts,tsx,js,jsx,mjs,cjs,json,css,scss,html,svg,wit}";
     const native = nativeTests;
@@ -474,8 +480,8 @@ function projectInputs(json, root, workspaceRoot, facts) {
     inputs.push(`!{projectRoot}/**/${directory}/**/*`);
     if (owner !== root) inputs.push(`!{workspaceRoot}/${owner}/**/${directory}/**/*`);
   }
-  inputs.push(`!{workspaceRoot}/${runner}/**/🧪️tests/**/*`, `!{workspaceRoot}/${runner}/**/*.test.ts`);
-  const production = ["default", "!{projectRoot}/**/*.{spec,test}.{ts,tsx,js,jsx,mjs,cjs}", "!{projectRoot}/**/🧪️tests/**/*", "!{projectRoot}/**/🧫️fixtures/**/*", "!{projectRoot}/**/*.feature", "!{projectRoot}/**/*.stories.{ts,tsx}"];
+  if (owner !== runner) inputs.push(`!{workspaceRoot}/${runner}/**/🧪️tests/**/*`);
+  const production = ["default", "!{projectRoot}/**/🧪️tests/**/*", "!{projectRoot}/**/🧫️fixtures/**/*", "!{projectRoot}/**/*.feature", "!{projectRoot}/**/*.stories.{ts,tsx}"];
   if (owner !== root) production.push(`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`, `!{workspaceRoot}/${owner}/**/🧫️fixtures/**/*`);
   const declarations = json.namedInputs ?? {};
   const exclusions = [];
@@ -491,7 +497,12 @@ function projectInputs(json, root, workspaceRoot, facts) {
     }
   }
   const native = (sources) => !tools.includes("cargo") ? ["production"] : [...new Set(sources ? [`{workspaceRoot}/${root}/Cargo.toml`, ...sources] : ["{projectRoot}/**/*", ...(owner !== root ? [`{workspaceRoot}/${owner}/**/*`] : [])]), ...POLICY.generatedDirectories.flatMap((directory) => [`!{projectRoot}/**/${directory}/**/*`, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/${directory}/**/*`] : [])]), ...exclusions];
-  return { ...declarations, default: [...inputs, ...(declarations.default ?? []), ...exclusions], production: [...production, ...(declarations.production ?? [])], nativeSources: [...native(nativeSources), ...(declarations.nativeSources ?? [])], nativeTestSources: [...native(nativeTests), ...(declarations.nativeSources ?? []), ...(declarations.nativeTestSources ?? [])] };
+  const artifactTypeScript = json.tags?.includes("role:artifact") && json.tags.includes("language:typescript") && owner !== root && existsSync(join(workspaceRoot, root, SCRIPT_BASENAME));
+  const artifactSource = join(workspaceRoot, owner, "🟦️.ts");
+  const artifactSources = artifactTypeScript ? [...relativeScriptInputs([artifactSource], workspaceRoot), "{projectRoot}/package.json", ...exclusions] : [];
+  const javascript = POLICY.toolchains.javascript;
+  const artifactCommandSources = artifactTypeScript ? [...relativeScriptInputs([join(workspaceRoot, root, SCRIPT_BASENAME)], workspaceRoot), `{workspaceRoot}/bunfig.toml`, { externalDependencies: ["typescript"] }, ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime })), { runtime: 'node -p "process.platform.concat(process.arch)"' }] : [];
+  return { ...declarations, default: [...inputs, ...(declarations.default ?? []), ...exclusions], production: [...production, ...(declarations.production ?? [])], nativeSources: [...native(nativeSources), ...(declarations.nativeSources ?? [])], nativeTestSources: [...native(nativeTests), ...(declarations.nativeSources ?? []), ...(declarations.nativeTestSources ?? [])], ...(artifactTypeScript ? { artifactSources: [...artifactSources, ...(declarations.artifactSources ?? [])], artifactCommandSources: [...artifactCommandSources, ...(declarations.artifactCommandSources ?? [])] } : {}) };
 }
 
 /**
@@ -536,6 +547,8 @@ function withLeveledTestTargets(targets) {
  */
 function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = {}, facts, commandInputs) {
   const ownsScript = existsSync(join(projectDir, SCRIPT_BASENAME));
+  const nativeProject = existsSync(join(projectDir, "Cargo.toml"));
+  const artifactTypeScript = json.tags?.includes("role:artifact") && json.tags.includes("language:typescript");
   const declared = { ...(root === "." && ownsScript ? rootCommandTargets(join(projectDir, SCRIPT_BASENAME)) : {}), ...cargoTargets(root, workspaceRoot, commandInputs), ...json.targets, ...componentTargets(root, workspaceRoot, commandInputs), ...printDocumentTargets(json, root, workspaceRoot) };
   for (const contract of Object.values(contracts)) {
     if (contract.ownership !== "owned" || contract.ownerPath !== root) continue;
@@ -552,8 +565,12 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
   const normalized = {};
   for (const [name, target] of Object.entries(withLeveledTestTargets(declared))) {
     const policy = targetPolicy(name, targetWithDefaults({ ...(POLICY.targetDefaults?.[name] ?? {}), ...target }, root, ownsScript));
-    if (existsSync(join(projectDir, "Cargo.toml")) && /^(build|wasm|native|test(?:-(?:quick|long|exhaustive))?$|lint|check$)/.test(name)) policy.parallelism ??= false;
-    if (policy.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts")) policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...(commandInputs ?? nativeCommandInputs(workspaceRoot)), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : [])];
+    const nativeTarget = nativeProject && /^(build|wasm|native|test(?:-(?:quick|long|exhaustive))?$|lint|check$)/.test(name) || policy.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts");
+    if (nativeTarget) {
+      policy.parallelism ??= false;
+      policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...(commandInputs ?? nativeCommandInputs(workspaceRoot)), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : [])];
+    }
+    if (artifactTypeScript && /^(?:build|check|test(?:-(?:quick|long|exhaustive))?)$/.test(name)) policy.inputs = ["artifactSources", "artifactCommandSources"];
     normalized[name] = root === "." || json.name === "@semio-tech/repo-test-domain" ? { ...policy, cache: policy.cache === false ? false : target.cache ?? false } : policy;
   }
   return { ...json, name: json.name, root, namedInputs: projectInputs({ ...json, targets: declared }, root, workspaceRoot, facts), targets: normalized };
@@ -770,9 +787,9 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
     const project = { name, root, projectType: "library", tags: ["language:cargo", "discovery:manifest"], targets: { ...targets, ...componentTargets(root, workspaceRoot, commandInputs) } };
     results.push([configFile, { projects: { [name]: { ...project, namedInputs: projectInputs(project, root, workspaceRoot, facts) } } }]);
   }
-  const preparationCache = new Map(), projects = results.flatMap(([, result]) => Object.values(result.projects));
+  const preparationCache = new Map(), dependencyRootsCache = new Map(), projects = results.flatMap(([, result]) => Object.values(result.projects));
   const projectsByRoot = new Map(projects.map((project) => [project.root, project.name]));
-  for (const project of projects) withNativePreparation(project, workspaceRoot, contracts, preparationCache, projectsByRoot);
+  for (const project of projects) withNativePreparation(project, workspaceRoot, contracts, preparationCache, projectsByRoot, dependencyRootsCache);
   if (_options?.analyzeLockfile && existsSync(join(workspaceRoot, "bun.lock"))) results.push(["bun.lock", { externalNodes: readBunLockGraph(workspaceRoot).externalNodes }]);
   return results;
 }

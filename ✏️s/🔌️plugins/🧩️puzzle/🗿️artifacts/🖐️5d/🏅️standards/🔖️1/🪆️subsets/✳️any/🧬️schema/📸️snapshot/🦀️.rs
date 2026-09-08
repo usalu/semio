@@ -1,7 +1,7 @@
 //! 🧬️ Puzzle5d snapshot schema — artifact-lane fields only.
 
 use crate::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, PUZZLE_5D_SCHEMA};
-use artifact_schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Snapshot

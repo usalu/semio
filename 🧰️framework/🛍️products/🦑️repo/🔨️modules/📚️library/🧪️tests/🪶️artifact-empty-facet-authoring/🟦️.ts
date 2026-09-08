@@ -15,14 +15,14 @@ type Options = { progress?: (event: { phase: string; path?: string }) => void };
 type Node = { kind: string; mode: number; device: number; inode: number; bytes?: number; sha256?: string; target?: string };
 const library = resolve(import.meta.dir, "../.."), repoRoot = resolve(library, "../../../../..");
 const inputBytes = readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"), vector = JSON.parse(inputBytes) as Readonly<{ schemaVersion: number; contractId: string; sourceContractId: string; subsetSegments: string[]; leaf: string; customContent: string; customMode: number; directoryMode: number; surfaceLayout: string[]; subsetLayout: string[]; cases: Case[] }>;
-const schema = JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8")), taxonomy = loadCatalogTaxonomy();
+const schema = JSON.parse(readFileSync(join(import.meta.dir, "🛂️schema/🔣️.json"), "utf8")), taxonomy = loadCatalogTaxonomy();
 const contract = taxonomy.semanticOwnedFileProjectionContracts[vector.sourceContractId];
 if (contract?.contractKind !== "semantic-facet-primary-file") throw new Error("The exact authored empty-facet contract is required");
 const registryPath = join(repoRoot, contract.authoringCommand.scriptPath), rootPath = join(repoRoot, "📜️script.ts");
 const ticket = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION"), report = join(ticket, "📓️empty-facet-authoring");
 const hash = (bytes: string | Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
 const sort = (left: string, right: string): number => Buffer.compare(Buffer.from(left), Buffer.from(right));
-const identityPaths = [rootPath, registryPath, ...["🏗️builder/🟦️.ts", "📦️packages/🟦️typescript/🟦️.ts", "🔍️discovery/🟦️.ts", "🧹️normalization/🟦️.ts", "🔣️taxonomy.json"].map((path) => join(library, path)), import.meta.filename, ...["🔣️.json", "🧬️schema/🔣️.json", "📨️request/🔣️.json", "📨️request/🧬️schema/🔣️.json", "📋️registration/🔣️.json", "📋️registration/🧬️schema/🔣️.json"].map((path) => join(import.meta.dir, path))];
+const identityPaths = [rootPath, registryPath, ...["🏗️builder/🟦️.ts", "📦️packages/🟦️typescript/🟦️.ts", "🔍️discovery/🟦️.ts", "🧹️normalization/🟦️.ts", "🔣️taxonomy.json"].map((path) => join(library, path)), import.meta.filename, ...["🔣️.json", "🛂️schema/🔣️.json", "📨️request/🔣️.json", "📨️request/🛂️schema/🔣️.json", "📋️registration/🔣️.json", "📋️registration/🛂️schema/🔣️.json"].map((path) => join(import.meta.dir, path))];
 const identities = (): Record<string, string> => Object.fromEntries(identityPaths.map((path) => [relative(repoRoot, path).replaceAll("\\", "/"), hash(readFileSync(path))]));
 
 test("shared artifact authoring passes the independent strict TypeScript compiler", () => {
@@ -205,7 +205,7 @@ for (const row of vector.cases) test(`actual empty-facet authoring ${row.id}`, a
 const requestInput = JSON.parse(readFileSync(join(import.meta.dir, "📨️request/🔣️.json"), "utf8")) as { schemaVersion: number; contractId: string; readBytes: number; readChunkBytes: number; cases: { id: string; leaves: string[]; action: string; error: string; ownedFiles: number; dryRun: boolean }[] };
 
 test("public authoring requests have independent closed language-neutral authority", () => {
-  const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "📨️request/🧬️schema/🔣️.json"), "utf8")));
+  const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "📨️request/🛂️schema/🔣️.json"), "utf8")));
   expect(validate(requestInput)).toBe(true);
   expect(validate({ ...requestInput, readChunkBytes: 1 })).toBe(false);
   expect(validate({ ...requestInput, cases: requestInput.cases.slice(1) })).toBe(false);
@@ -255,7 +255,7 @@ for (const row of requestInput.cases) test(`public artifact authoring request ${
 
 test("registers empty-facet authoring through its closed canonical route", async () => {
   const directory = join(import.meta.dir, "📋️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), registration = JSON.parse(bytes);
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directory, "🧬️schema/🔣️.json"), "utf8")));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(directory, "🛂️schema/🔣️.json"), "utf8")));
   expect(validate(registration), JSON.stringify(validate.errors)).toBe(true);
   for (const changed of [{ ...registration, source: "🟦️.ts" }, { ...registration, budget: 120000 }, { ...registration, budgetMs: 120000 }, { ...registration, runner: "other" }, { ...registration, launchOrder: 410.199 }]) expect(validate(changed)).toBe(false);
   const errors: ParseError[] = [];

@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/din18599/inference/text.json",
   "title": "Din18599InferenceText",
   "type": "object"

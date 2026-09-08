@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceSolid`.
 use super::ReplaceSolid;
-use crate::diff::{Fem3dDiff, Fem3dSolidsDelta, Fem3dSolidsPatchEntry};
-use crate::mutations::{id_mismatch, invariant, solid_breach};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSolidsDelta, Fem3dSolidsPatchEntry};
+use crate::standards::v1::subsets::any::schema::mutations::{id_mismatch, invariant, solid_breach};
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff

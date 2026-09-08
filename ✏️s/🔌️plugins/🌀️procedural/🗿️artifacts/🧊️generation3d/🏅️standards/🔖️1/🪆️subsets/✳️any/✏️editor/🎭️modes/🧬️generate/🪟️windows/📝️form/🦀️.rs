@@ -4,7 +4,7 @@ use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use semio_framework_os_flow::forms_bridge::flow_fixture_to_form_spec;
 use semio_framework_artifact_playbook_playbook::{selected_generation, GenerationPlayState};
-use semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture;
+use semio_framework_artifact_flow_flow::FlowFixture;
 use semio_framework_plugin::{built_text_node, BuiltNode, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -45,14 +45,6 @@ pub fn render(fixture: &FlowFixture, generation: &GenerationPlayState, labels: &
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::generation3d::testkit::{app, render as render_body};
-
-    #[semio_framework_async_macros::async_test]
-    async fn generate_form_hints_without_a_selected_generation() {
-        let mut app = app().await;
-        assert!(render_body(&mut app, GENERATION_3D_PLAY_BODY_GENERATE_FORM).await.contains("Add a generation"));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

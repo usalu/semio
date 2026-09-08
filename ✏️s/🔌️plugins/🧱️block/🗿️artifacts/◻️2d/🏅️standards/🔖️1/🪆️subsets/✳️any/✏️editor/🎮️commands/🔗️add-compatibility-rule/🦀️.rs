@@ -1,6 +1,6 @@
 //! 🔗️ 🔗️ Block 2D play app commands command — `add-compatibility-rule`.
 
-use crate::op::Block2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Block2dMutation;
 use crate::Block2dSnapshot;
 use crate::editor::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use crate::BlockCompatibilityRule;
@@ -18,7 +18,7 @@ pub fn handle(payload: &AddCompatibilityRule, doc: &ArtifactView<'_, Block2dSnap
     if payload.source.is_empty() || payload.target.is_empty() {
         return Ok(Emit::default());
     }
-    let id = crate::schema::next_id(doc.snapshot.compatibility.iter().map(|rule| rule.id.as_str()), "compat-");
+    let id = crate::standards::v1::subsets::any::schema::next_id(doc.snapshot.compatibility.iter().map(|rule| rule.id.as_str()), "compat-");
     let rule = BlockCompatibilityRule { id, source: payload.source.clone(), target: payload.target.clone(), bidirectional: true };
-    Ok(Emit::mutations(vec![crate::mutations::add_compatibility_rule(rule)]))
+    Ok(Emit::mutations(vec![crate::standards::v1::subsets::any::schema::mutations::add_compatibility_rule(rule)]))
 }

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateNode` — a real append-only insert (never a whole-snapshot
 //! capture). Reads the current scene off `base`, appends the new node to a clone, and replaces the
 //! composed content child wholesale via `diff_replace_content`.
-use crate::diff::{diff_replace_content, JackDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_replace_content, JackDiff};
 use crate::JackSnapshot;
 
 //#region 🔖️Diff

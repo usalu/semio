@@ -87,63 +87,10 @@ pub use mutations::*;
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn imperative_config_default_is_empty_english() {
-        let config = ImperativeConfig::default();
-        assert!(config.run_output_json.is_empty());
-        assert_eq!(config.locale, "en-US");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn imperative_config_dsl_round_trips() {
-        let config = ImperativeConfig { run_output_json: r#"{"counter":1}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
-        store::os_store::test_support::assert_dsl_round_trip(&config);
-        store::os_store::test_support::assert_dsl_pack_equivalence(&config);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn config_operation_snapshot_diff_ignores_base() {
-        let base = ImperativeConfig::default();
-        let mut snapshot = base.clone();
-        snapshot.run_output_json = r#"{"counter":1}"#.into();
-        let operation = ImperativeConfigMutation::ReplaceConfig(ReplaceConfig { config: snapshot.clone() });
-        assert_eq!(protocol::Mutation::diff(&operation, &base).diff(), &snapshot);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn config_operation_set_run_output_and_locale_round_trip() {
-        store::os_store::test_support::assert_op_line_round_trip(&ImperativeConfigMutation::SetRunOutput(SetRunOutput { json: r#"{"counter":1}"#.into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&ImperativeConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-mod contract_vectors {
-    use super::*;
-    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
-    use dsl::os_pack as pack;
-
-    #[test]
-    fn imperative_configuration_contract_vectors_match_the_json_oracle() {
-        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
-        let base: ImperativeConfig = pack::from_json_str(&vectors["base"].to_string()).expect("owned base decoder");
-        assert_eq!(<ImperativeConfigMutation as Mutation<ImperativeConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
-        for vector in vectors["cases"].as_array().expect("cases") {
-            let mutation: ImperativeConfigMutation = pack::from_json_str(&vector["mutation"].to_string()).expect("owned operation decoder");
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).expect("independent operation oracle"), vector["mutation"]);
-            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().expect("semantic kind"));
-            assert_eq!(ImperativeConfigMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
-            assert_eq!(ImperativeConfigMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("binary decode"), mutation);
-            let outcome = mutation.diff(&base);
-            assert!(outcome.messages().is_empty());
-            let next = outcome.diff().apply(&base).expect("apply diff");
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).expect("independent state oracle"), vector["expected"]);
-            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("apply inverse"));
-            assert_eq!(restored, base);
-        }
-    }
-}
+#[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
+mod contract_vectors;

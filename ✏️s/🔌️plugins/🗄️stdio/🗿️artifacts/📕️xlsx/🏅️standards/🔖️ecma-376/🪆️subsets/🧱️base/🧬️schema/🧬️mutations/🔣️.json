@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📥️insert-shared-string/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/base/mutation/insert-shared-string/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➕insert-sheet/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/base/mutation/insert-sheet/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧽️remove-cell/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/base/mutation/remove-cell/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📤️remove-shared-string/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/base/mutation/remove-shared-string/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➖remove-sheet/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/base/mutation/remove-sheet/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏷️rename-sheet/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/base/mutation/rename-sheet/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./✍️set-cell/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/base/mutation/set-cell/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔤️set-shared-string/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/base/mutation/set-shared-string/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/base/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",

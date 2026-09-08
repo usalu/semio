@@ -113,7 +113,10 @@
             }
           ]
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

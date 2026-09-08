@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ReplaceSolid` — recovers the pre-mutation solid from `base`.
 use super::ReplaceSolid;
-use crate::mutations::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse

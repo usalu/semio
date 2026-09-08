@@ -12,7 +12,7 @@
       ],
       "properties": {
         "AddNodePort": {
-          "$ref": "./🔌add-node-port/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/add-node-port/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "AddNodeProperty": {
-          "$ref": "./➕add-node-property/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/add-node-property/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "ChangeNodeKind": {
-          "$ref": "./🔧change-node-kind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/change-node-kind/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "ChangeNodeLabel": {
-          "$ref": "./🖍️change-node-label/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/change-node-label/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "CreateEdge": {
-          "$ref": "./🌉️create-edge/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/create-edge/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "CreateNode": {
-          "$ref": "./🏗️create-node/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/create-node/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "DeleteEdge": {
-          "$ref": "./✂️delete-edge/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/delete-edge/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "DeleteNode": {
-          "$ref": "./🗑️delete-node/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/delete-node/schema.json"
         }
       }
     },
@@ -108,7 +108,7 @@
       ],
       "properties": {
         "MoveNode": {
-          "$ref": "./📍move-node/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/move-node/schema.json"
         }
       }
     },
@@ -120,7 +120,7 @@
       ],
       "properties": {
         "RemoveNodePort": {
-          "$ref": "./🔚remove-node-port/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/remove-node-port/schema.json"
         }
       }
     },
@@ -132,7 +132,7 @@
       ],
       "properties": {
         "RemoveNodeProperty": {
-          "$ref": "./➖remove-node-property/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/remove-node-property/schema.json"
         }
       }
     }

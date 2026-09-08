@@ -1,7 +1,7 @@
 //! 🔺️ `change-generation-value` sparse diff construction.
 
-use crate::diff::{diff_generation_from_ops, Generation3dDiff};
-use crate::mutations::change_generation_value::ChangeGenerationValue;
+use crate::standards::v1::subsets::any::schema::diff::{diff_generation_from_ops, Generation3dDiff};
+use crate::standards::v1::subsets::any::schema::mutations::change_generation_value::ChangeGenerationValue;
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
 

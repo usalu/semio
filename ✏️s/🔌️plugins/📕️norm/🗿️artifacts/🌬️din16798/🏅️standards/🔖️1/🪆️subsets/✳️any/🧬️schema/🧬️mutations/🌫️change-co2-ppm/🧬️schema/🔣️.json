@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/din16798/1/any/mutation/change-co2-ppm/schema.json",
+  "$id": "https://semio.tech/schema/s/norm/din16798/mutation/change-co2-ppm/schema.json",
   "title": "ChangeCo2Ppm",
   "type": "object",
   "additionalProperties": false,

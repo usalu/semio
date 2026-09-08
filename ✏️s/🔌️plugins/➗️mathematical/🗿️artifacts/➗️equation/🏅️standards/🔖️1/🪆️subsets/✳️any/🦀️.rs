@@ -23,13 +23,13 @@ fn inference_descriptors() -> &'static [::framework_schema::ArtifactInferenceDes
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset() -> SubsetDeclaration<crate::MathematicalApps> {
+pub fn subset<A: crate::EquationApplication>() -> SubsetDeclaration<A> {
     SubsetDeclaration {
         dialect: EQUATION_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::equation_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::EquationViewer, crate::MathematicalApps>(viewer::create_equation_viewer()),
-        editor: editor_surface::<editor::EquationPlayApp, crate::MathematicalApps>(editor::create_equation_app()),
+        viewer: viewer_surface::<viewer::EquationViewer, A>(viewer::create_equation_viewer()),
+        editor: editor_surface::<editor::EquationPlayApp, A>(editor::create_equation_app()),
         examples: examples(),
     }
 }

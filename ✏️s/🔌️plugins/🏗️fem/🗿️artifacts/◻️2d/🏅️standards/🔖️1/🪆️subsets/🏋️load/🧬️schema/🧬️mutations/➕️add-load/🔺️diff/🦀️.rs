@@ -6,8 +6,8 @@
 //! load id. The middle guard is what makes the two doors into `loads` agree: the same nodal load on
 //! a missing node is now refused whether it arrives inside a new case or is attached to an old one.
 use super::AddLoad;
-use crate::diff::{Fem2dDiff, Fem2dLoadCasesDelta, Fem2dLoadCasesPatchEntry};
-use crate::mutations::guards;
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasesDelta, Fem2dLoadCasesPatchEntry};
+use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::{load_id, Fem2dSnapshot};
 
 //#region 🔖️Diff

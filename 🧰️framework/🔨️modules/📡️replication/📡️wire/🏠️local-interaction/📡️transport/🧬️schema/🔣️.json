@@ -14,16 +14,16 @@
       ],
       "properties": {
         "requestId": {
-          "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/generation"
+          "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/Generation"
         },
         "queryGeneration": {
-          "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/generation"
+          "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/Generation"
         },
         "identity": {
-          "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/identity"
+          "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/Identity"
         },
         "ordinal": {
-          "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/generation"
+          "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/Generation"
         }
       }
     },
@@ -41,7 +41,7 @@
               "const": "read"
             },
             "requestId": {
-              "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/generation"
+              "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/Generation"
             }
           }
         },
@@ -96,7 +96,7 @@
               "const": "page"
             },
             "page": {
-              "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/page"
+              "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/Page"
             }
           }
         },
@@ -133,7 +133,7 @@
               "const": "rejected"
             },
             "requestId": {
-              "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/generation"
+              "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/Generation"
             },
             "code": {
               "enum": [
@@ -196,7 +196,7 @@
             ],
             "properties": {
               "decimal": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/generation"
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/Generation"
               },
               "hex": {
                 "type": "string",

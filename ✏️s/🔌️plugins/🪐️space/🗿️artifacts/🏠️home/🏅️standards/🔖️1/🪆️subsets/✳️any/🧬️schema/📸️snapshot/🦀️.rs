@@ -1,7 +1,7 @@
 //! 🧬️ S Home snapshot schema — artifact-lane fields only.
 
 use crate::S_HOME_DOCUMENT_SCHEMA;
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted S Home launcher document snapshot (persistent fields of the artifact).

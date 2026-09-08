@@ -1,7 +1,7 @@
 //! ➕ Puzzle2d mutation — `AddNodeHandle`: attaches a new rim port to a node.
 
-use crate::diff::Puzzle2dDiff;
-use crate::mutations::Puzzle2dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::{Puzzle2dHandle, Puzzle2dSnapshot};
 
 //#region 🔖️Mutation

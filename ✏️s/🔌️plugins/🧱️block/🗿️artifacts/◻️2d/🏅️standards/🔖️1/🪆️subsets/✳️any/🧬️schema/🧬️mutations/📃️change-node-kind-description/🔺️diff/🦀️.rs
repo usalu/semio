@@ -2,7 +2,7 @@
 
 use crate::BlockKindIdentity;
 use crate::Block2dSnapshot;
-use crate::diff::Block2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeNodeKindDescription, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {

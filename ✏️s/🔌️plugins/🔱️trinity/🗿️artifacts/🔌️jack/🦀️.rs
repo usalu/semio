@@ -14,7 +14,6 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_schema as schema;
 extern crate semio_framework_value_derive as value_derive;
 
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🦀️.rs"]
@@ -26,6 +25,9 @@ pub mod language_service;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔤️lexer/🦀️.rs"]
 pub mod lexer;
 pub use language_service as core;
+pub use crate::standards::v1::subsets::any::schema::inferences::flat_position::compute_flat_position;
+#[cfg(feature = "component-app-assembly")]
+pub use crate::editor::jack::fixture_to_workflow;
 
 use semio_framework_graph::manifest::{manifest_by_id, GraphManifest, ManifestValidationError, TrinityManifest};
 use std::collections::{BTreeMap, BTreeSet};
@@ -177,8 +179,8 @@ impl From<ManifestValidationError> for TrinityRamError {
 /// instance data now lives in this composed child's own `nodes`/`edges`, not on `JackSnapshot`.
 pub type JackContentChild = store::ArtifactChild<SemioGraphSnapshot>;
 
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::semio_framework_geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::semio_framework_graph::schema::snapshot::{
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{
     GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
 };
 use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
@@ -391,9 +393,6 @@ impl Default for Camera {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
-
-/// 📸️ Persisted jack snapshot — defined in `snapshot::schema`.
-pub use super::snapshot::schema::JackSnapshot;
 
 impl JackSnapshot {
     pub const SCHEMA: &'static str = "trinity.graph";
@@ -685,7 +684,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, fleet-trinity-recipe): the new declaration
 /// tree's `🪆️subsets/✳️any/🦀️.rs` reads these same five `LanguageSpec`s to build its
 /// `NativeCodecs` `LanguagePair`s (see that file's own doc for why it does not delegate to a sibling
-/// `io::io()` the way `🗒️note`/`🖍️draw` do).
+/// `crate::standards::v1::subsets::any::io::io()` the way `🗒️note`/`🖍️draw` do).
 pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
@@ -695,28 +694,28 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "jack.document",
                     extension: Some("trinity"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("jack.document"),
                 },
                 dsl::LanguageSpec {
                     id: "jack.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("jack.op"),
                 },
                 dsl::LanguageSpec {
                     id: "jack.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("jack.diff"),
@@ -727,8 +726,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("jack.pack"),
                 },
                 dsl::LanguageSpec {
@@ -737,8 +736,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("jack.spr"),
                 },
             ]
@@ -755,7 +754,23 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// the plugin root's own narrowed `.setup()`: it registers the `TrinityJackPlayApp` CONFIG/PRESENCE
 /// schema, an app-scope concern neither the old nor the new declaration type has a field for.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    #[cfg(feature = "component-app-assembly")]
+pub trait ArtifactApps:
+    semio_framework_plugin::PluginApp
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::jack::TrinityJackPlayApp>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::jack::TrinityJackViewer>>>
+{
+}
+
+#[cfg(feature = "component-app-assembly")]
+impl<PA> ArtifactApps for PA where
+    PA: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::jack::TrinityJackPlayApp>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::jack::TrinityJackViewer>>>
+{
+}
+
+use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.trinity.jack.standard.v1", "standard", "1", &[], None),
@@ -802,309 +817,17 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// is kept per debt D1, and `artifact_kind()` is kept because this crate's own plugin-root
 /// `.activation(...)` still reads `artifact_kind().id`; neither has any caller left in this function.
 #[cfg(feature = "component-app-assembly")]
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::TrinityApps> {
+pub fn artifact<PA: crate::ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.trinity.jack").expect("canonical jack kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.trinity.jack").expect("canonical jack kind"), localization: &[], standards: vec![crate::standards::v1::standard::<PA>()] }
 }
 //#endregion 🔖️Register
 
 // #region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    trait JackChildOwnerOracle {
-        fn expected() -> pack::JsonValue;
-    }
-
-    struct SerdeJsonJackChildOwnerOracle;
-
-    impl JackChildOwnerOracle for SerdeJsonJackChildOwnerOracle {
-        fn expected() -> pack::JsonValue {
-            pack::parse_json(include_str!("🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Jack child-owner fixture")
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn working_scene_belongs_to_the_exact_content_child() {
-        let owned = jack_content_child_with_owner(Vec::new(), Vec::new());
-        let wire = pack::json_to_string(&pack::json_from_dsl_value(&dsl::to_dsl_value(&owned).expect("Jack child wire identity"))).into_bytes();
-        let reconstructed: JackContentChild = dsl::from_dsl_value(pack::json_to_dsl_value(&pack::parse_json_bytes(&wire).expect("Jack child wire roundtrip"))).expect("Jack child wire roundtrip");
-        let observed = pack::json!({
-            "ownedHasScene": owned.local_owner::<JackWorkingScene>().is_some(),
-            "wireIdentityMatches": owned == reconstructed,
-            "wireHasScene": reconstructed.local_owner::<JackWorkingScene>().is_some(),
-        });
-
-        assert_eq!(observed, SerdeJsonJackChildOwnerOracle::expected());
-    }
-    use crate::mutations::{create_edge, create_node};
-    use crate::op::{dispatch_trinity_graph_mutations, validate_trinity_graph_operation};
-    use store::ArtifactCommand;
-
-    fn mini_fixture() -> JackSnapshot {
-        JackSnapshot::with_content(
-            JackSnapshot::SCHEMA.into(),
-            "mini".into(),
-            Some("nakagin".into()),
-            Manifest::nakagin_default(),
-            Camera::default(),
-            vec![
-                Node {
-                    id: "root".into(),
-                    kind: "Piece".into(),
-                    name: "core".into(),
-                    x: 0.0,
-                    y: 0.0,
-                    width: 80.0,
-                    height: 40.0,
-                    properties: {
-                        let mut p = PropertyBag::new();
-                        let mut pos = BTreeMap::new();
-                        pos.insert("x".into(), PropertyValue::Number(0.0));
-                        pos.insert("y".into(), PropertyValue::Number(0.0));
-                        pos.insert("z".into(), PropertyValue::Number(0.0));
-                        p.insert("position".into(), PropertyValue::Object(pos));
-                        p
-                    },
-                    ports: vec![Port { id: "out-a".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
-                },
-                Node {
-                    id: "child".into(),
-                    kind: "Piece".into(),
-                    name: "capsule".into(),
-                    x: 120.0,
-                    y: 0.0,
-                    width: 80.0,
-                    height: 40.0,
-                    properties: PropertyBag::new(),
-                    ports: vec![Port { id: "in-a".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
-                },
-            ],
-            vec![Edge {
-                id: "e1".into(),
-                kind: "Connection".into(),
-                source: "root@out-a".into(),
-                target: "child@in-a".into(),
-                properties: {
-                    let mut p = PropertyBag::new();
-                    p.insert("u".into(), PropertyValue::Number(1.2));
-                    p.insert("v".into(), PropertyValue::Number(-0.6));
-                    p
-                },
-            }],
-            Some("root".into()),
-        )
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn manifest_nakagin_has_piece_and_connection() {
-        let m = Manifest::nakagin_default();
-        assert!(m.node_kind("Piece").is_some());
-        assert!(m.edge_kind("Connection").is_some());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn fixture_loads_manifest_id_only() {
-        let json = r#"{"schema":"trinity.graph","name":"mini","manifestId":"nakagin","camera":{"x":0,"y":0,"zoom":1},"nodes":[],"edges":[]}"#;
-        let graph = Graph::load_json(json).unwrap();
-        assert!(graph.manifest.node_kind("Piece").is_some());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn fixture_round_trip() {
-        let fixture = mini_fixture();
-        let json = fixture.to_json().unwrap();
-        let back = JackSnapshot::from_json(&json).unwrap();
-        assert_eq!(back.nodes().len(), 2);
-        assert_eq!(back.edges().len(), 1);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn remove_node_cascades_edges() {
-        let mut g = Graph::from_fixture(mini_fixture()).unwrap();
-        assert!(g.remove_node("root"));
-        assert!(g.edges.is_empty());
-        assert!(g.nodes.contains_key("child"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_create_node_and_undo() {
-        let fixture = mini_fixture();
-        let mut store = crate::op::TrinityGraphStore::new(crate::op::create_trinity_graph_envelope("test", fixture)).await.expect("valid artifact store");
-        dispatch_trinity_graph_mutations(&mut store, vec![create_node(Node { id: "new".into(), kind: "Piece".into(), name: "new-piece".into(), x: 200.0, y: 40.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] })]).await
-            .expect("create");
-        assert_eq!(store.snapshot().expect("projection").nodes().len(), 3);
-        store.dispatch(ArtifactCommand::Undo).await.expect("undo");
-        assert_eq!(store.snapshot().expect("projection").nodes().len(), 2);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_dispatch_validates_create_edge_batch_incrementally() {
-        let fixture = mini_fixture();
-        let mut nodes = fixture.nodes();
-        while nodes.len() < 9 {
-            nodes.push(Node { id: format!("pad-{}", nodes.len()), kind: "Piece".into(), name: format!("pad-{}", nodes.len()), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] });
-        }
-        let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, fixture.edges(), fixture.root_node_id.clone());
-        let mut store = crate::op::TrinityGraphStore::new(crate::op::create_trinity_graph_envelope("test", fixture)).await.expect("valid artifact store");
-        dispatch_trinity_graph_mutations(
-            &mut store,
-            vec![
-                create_node(Node {
-                    id: "x-9".into(),
-                    kind: "Piece".into(),
-                    name: "x".into(),
-                    x: 1080.0,
-                    y: 0.0,
-                    width: 80.0,
-                    height: 40.0,
-                    properties: PropertyBag::new(),
-                    ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
-                }),
-                create_node(Node {
-                    id: "y-10".into(),
-                    kind: "Piece".into(),
-                    name: "y".into(),
-                    x: 1200.0,
-                    y: 80.0,
-                    width: 80.0,
-                    height: 40.0,
-                    properties: PropertyBag::new(),
-                    ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
-                }),
-                create_edge(Edge { id: "e-batch".into(), kind: "Connection".into(), source: port_key("x-9", "out"), target: port_key("y-10", "in"), properties: PropertyBag::new() }),
-            ],
-        ).await
-        .expect("batch create edge");
-        let projection = store.snapshot().expect("projection");
-        assert_eq!(projection.nodes().len(), 11);
-        assert_eq!(projection.edges().len(), 2);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_rejects_unknown_node_kind() {
-        let fixture = mini_fixture();
-        let err = validate_trinity_graph_operation(&create_node(Node { id: "new".into(), kind: "Piece2".into(), name: "x".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] }), &fixture)
-            .expect_err("unknown kind");
-        assert!(err.to_string().contains("unknown node kind"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn from_json_rejects_wrong_schema() {
-        let json = r#"{"schema":"bogus","name":"x","camera":{"x":0,"y":0,"zoom":1},"nodes":[],"edges":[]}"#;
-        let err = JackSnapshot::from_json(json).expect_err("schema mismatch");
-        assert!(err.to_string().contains("expected schema trinity.graph"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn resolve_manifest_errors_when_missing_and_empty() {
-        let mut fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "x".into(), None, Manifest::default(), Camera::default(), vec![], vec![], None);
-        let err = fixture.resolve_manifest().expect_err("missing manifest");
-        assert!(matches!(err, TrinityRamError::ManifestMissing));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn resolve_manifest_errors_on_unknown_id() {
-        let mut fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "x".into(), Some("nope".into()), Manifest::default(), Camera::default(), vec![], vec![], None);
-        let err = fixture.resolve_manifest().expect_err("unknown manifest id");
-        assert!(err.to_string().contains("unknown manifest id nope"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_from_fixture_rejects_port_kind_not_declared_on_node_kind() {
-        let fixture = mini_fixture();
-        let mut nodes = fixture.nodes();
-        nodes[0].ports.push(Port { id: "bad".into(), kind: "core circular bottom".into(), direction: PortDirection::Out, properties: PropertyBag::new() });
-        let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, fixture.edges(), fixture.root_node_id.clone());
-        let err = Graph::from_fixture(fixture).expect_err("undeclared port kind");
-        assert!(matches!(err, TrinityRamError::PortKindNotDeclaredOnFixture { .. }));
-        assert!(err.to_string().contains("root"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_accessors_and_mutators() {
-        let mut g = Graph::from_fixture(mini_fixture()).unwrap();
-        assert!(g.node("root").is_some());
-        assert!(g.node("ghost").is_none());
-        assert!(g.edge("e1").is_some());
-        g.node_mut("root").unwrap().name = "renamed".into();
-        assert_eq!(g.node("root").unwrap().name, "renamed");
-
-        g.add_node(Node { id: "extra".into(), kind: "Piece".into(), name: "extra".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, properties: PropertyBag::new(), ports: vec![] });
-        assert!(g.node("extra").is_some());
-
-        g.add_edge(Edge { id: "e2".into(), kind: "Connection".into(), source: "root@out-a".into(), target: "extra@in-a".into(), properties: PropertyBag::new() });
-        assert!(g.edge("e2").is_some());
-        assert!(g.remove_edge("e2"));
-        assert!(!g.remove_edge("e2"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_remove_node_clears_root_node_id() {
-        let mut g = Graph::from_fixture(mini_fixture()).unwrap();
-        assert!(g.remove_node("root"));
-        assert!(g.edges.is_empty());
-        assert!(g.nodes.contains_key("child"));
-        assert!(g.root_node_id.is_none());
-        assert!(!g.remove_node("root"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_set_property_success_and_errors() {
-        let mut g = Graph::from_fixture(mini_fixture()).unwrap();
-        g.set_property(EntityRef::Node("root".into()), "label", PropertyValue::String("hi".into())).expect("set node prop");
-        assert_eq!(g.node("root").unwrap().properties.get("label"), Some(&PropertyValue::String("hi".into())));
-        let err = g.set_property(EntityRef::Node("ghost".into()), "label", PropertyValue::Null).expect_err("missing node");
-        assert!(matches!(err, TrinityRamError::NodeNotFound(_)));
-
-        g.set_property(EntityRef::Edge("e1".into()), "gap", PropertyValue::Number(1.0)).expect("set edge prop");
-        assert_eq!(g.edge("e1").unwrap().properties.get("gap"), Some(&PropertyValue::Number(1.0)));
-        let err = g.set_property(EntityRef::Edge("ghost".into()), "gap", PropertyValue::Null).expect_err("missing edge");
-        assert!(matches!(err, TrinityRamError::EdgeNotFound(_)));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_to_fixture_and_fixture_json() {
-        let g = Graph::from_fixture(mini_fixture()).unwrap();
-        let fixture = g.to_fixture();
-        assert_eq!(fixture.nodes().len(), 2);
-        assert_eq!(fixture.manifest_id.as_deref(), Some("nakagin"));
-        let json = g.fixture_json().expect("fixture json");
-        assert!(json.contains("\"schema\""));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn subgraph_fixture_filters_entities_and_keeps_root_when_included() {
-        let g = Graph::from_fixture(mini_fixture()).unwrap();
-        let node_ids: BTreeSet<String> = ["root".to_string()].into_iter().collect();
-        let sub = g.subgraph_fixture(&node_ids, &BTreeSet::new());
-        assert_eq!(sub.nodes().len(), 1);
-        assert!(sub.edges().is_empty());
-        assert_eq!(sub.root_node_id.as_deref(), Some("root"));
-        assert!(sub.name.contains("subgraph"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn subgraph_fixture_drops_root_when_not_included() {
-        let g = Graph::from_fixture(mini_fixture()).unwrap();
-        let node_ids: BTreeSet<String> = ["child".to_string()].into_iter().collect();
-        let sub = g.subgraph_fixture(&node_ids, &BTreeSet::new());
-        assert!(sub.root_node_id.is_none());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn port_key_helpers_handle_malformed_keys() {
-        assert_eq!(parse_port_key("node@port"), Some(("node", "port")));
-        assert_eq!(parse_port_key("noport"), None);
-        assert_eq!(parse_port_key("@port"), None);
-        assert_eq!(parse_port_key("node@"), None);
-        assert_eq!(port_node_id("node@port"), Some("node"));
-        assert_eq!(port_port_id("node@port"), Some("port"));
-        assert_eq!(port_key("a", "b"), "a@b");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 // #endregion 🧪️Tests
 
 #[path = "."]
@@ -1505,70 +1228,12 @@ mod tests {
             }
         }
 
-        // ---- Shims: keep pre-migration module paths resolving for external callers ----
-        pub mod schema {
-            pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod io {
-            pub use super::standards::v1::subsets::any::io::*;
-        }
-        pub mod op {
-            pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-        }
-        pub mod dsl {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-        }
-        pub mod spr {
-            pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-        }
-        pub mod diff {
-            pub use crate::standards::v1::subsets::any::schema::diff::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::diff::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::diff::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-            }
-        }
-        pub mod mutations {
-            pub use crate::standards::v1::subsets::any::schema::mutations::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::mutations::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-            }
-        }
-        pub mod snapshot {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-            }
-        }
-        pub use crate::standards::v1::subsets::any::schema::diff::JackDiff;
+                pub use crate::standards::v1::subsets::any::schema::diff::JackDiff;
         pub use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
         pub use crate::standards::v1::subsets::any::schema::operations::*;
+        /// 📍️ Cross-artifact node movement constructor used by Rewriting's Jack-backed editor world.
+        pub use crate::standards::v1::subsets::any::schema::mutations::move_node::move_node;
+        /// 📸️ Persisted Jack snapshot shared by the artifact's schema and app surfaces.
         pub use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 
         #[path = "."]
@@ -1589,6 +1254,19 @@ pub mod editor {
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod examples {
+            #[path = "."]
+            pub mod demo_session {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+        }
 
         #[path = "."]
         pub mod config {

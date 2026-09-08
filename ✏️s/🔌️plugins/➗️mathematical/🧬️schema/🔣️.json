@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/mathematical/schema.json",
+  "$defs": {
+    "MathematicalPublicationAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "owner",
+        "source",
+        "routes",
+        "laws",
+        "ui"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.app.publication-authority.v1"
+        },
+        "owner": {
+          "const": "EquationPlayApp"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "routes": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "lane"
+            ],
+            "properties": {
+              "id": {
+                "enum": [
+                  "setDocument",
+                  "setAlgorithm",
+                  "setDirected",
+                  "nodeGraphEdit",
+                  "nodeGraphViewport",
+                  "setPoints",
+                  "setLocale"
+                ]
+              },
+              "lane": {
+                "enum": [
+                  "artifact",
+                  "config"
+                ]
+              }
+            }
+          }
+        },
+        "laws": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bounded",
+            "cancel",
+            "replay",
+            "freshness",
+            "ack",
+            "incrementalClose"
+          ],
+          "properties": {
+            "bounded": {
+              "const": true
+            },
+            "cancel": {
+              "const": true
+            },
+            "replay": {
+              "const": true
+            },
+            "freshness": {
+              "const": true
+            },
+            "ack": {
+              "const": true
+            },
+            "incrementalClose": {
+              "const": true
+            }
+          }
+        },
+        "ui": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "locales",
+            "accessibleLabels",
+            "customizableUi"
+          ],
+          "properties": {
+            "locales": {
+              "const": [
+                "en",
+                "de"
+              ]
+            },
+            "accessibleLabels": {
+              "const": true
+            },
+            "customizableUi": {
+              "const": true
+            }
+          }
+        }
+      },
+      "title": "MathematicalPublicationAuthority",
+      "description": "➗️ The publication-authority law of the Equation play app: its seven routes, their lanes, and the six boolean guarantees the app publishes under."
+    }
+  }
+}

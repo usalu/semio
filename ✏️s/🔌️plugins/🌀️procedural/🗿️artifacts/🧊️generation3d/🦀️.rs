@@ -5,14 +5,19 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_schema as schema;
 #[cfg(test)]
 extern crate semio_framework_geometry as geometry;
 #[cfg(test)]
 extern crate semio_framework_graph as graph_core;
 
-use semio_framework_artifact_flow_semio_framework_os_flow::Widget;
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, EditorApp, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use semio_framework_artifact_flow_flow::Widget;
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "../../🫀️core/🖼️semantic-ui/🦀️.rs"]
+mod semantic_ui;
+#[cfg(feature = "component-app-assembly")]
+pub(crate) use semantic_ui::*;
 
 pub const GENERATION_3D_SCHEMA: &str = "generation.3d";
 
@@ -143,48 +148,18 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 #[cfg(feature = "component-app-assembly")]
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::schema::generation3d_artifact_schema_descriptor())
+        .schema(crate::standards::v1::subsets::any::schema::generation3d_artifact_schema_descriptor())
         .inferences([crate::standards::v1::subsets::any::schema::inferences::generation3d_artifact_inference_descriptor()])
         .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<EditorApp<crate::editor::generation3d::Generation3dPlayApp>>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::generation3d::Generation3dPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn artifact_kind_schema_matches_the_document_schema() {
-        assert_eq!(artifact_kind().schema, GENERATION_3D_SCHEMA);
-    }
-
-    #[test]
-    fn dialect_artifact_kind_matches_the_schema_capability_descriptor() {
-        assert_eq!(GENERATION3D_DIALECT.artifact_kind, "s.procedural.generation3d");
-        assert_eq!(GENERATION3D_DIALECT.standard, StandardId("1"));
-        assert_eq!(GENERATION3D_DIALECT.subset, SubsetId::ANY);
-    }
-
-    #[test]
-    fn widget_id_covers_all_widget_kinds() {
-        let widgets: Vec<Widget> = vec![
-            Widget::Neuron { id: "neuron-1".into(), neuron_kind: "math.add".into(), params: Default::default(), input_ports: vec![], output_ports: vec![], preview: true },
-            Widget::InputSlider { id: "slider-1".into(), label: "Number".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 },
-            Widget::InputNote { id: "note-1".into(), text: String::new() },
-            Widget::InputImage { id: "image-1".into(), src: String::new() },
-            Widget::Variable { id: "variable-1".into(), name: "x".into(), schema: "number".into() },
-            Widget::OutputPreview { id: "preview-1".into(), preview: Default::default(), expanded: Default::default() },
-            Widget::OutputAction { id: "action-1".into(), action: "run".into() },
-            Widget::OutputExport { id: "export-1".into(), format: "gltf".into() },
-            Widget::Cluster { id: "cluster-1".into(), name: "c".into(), tree: Default::default(), flow: Default::default() },
-        ];
-        let ids: Vec<&str> = widgets.iter().map(widget_id).collect();
-        assert_eq!(ids, vec!["neuron-1", "slider-1", "note-1", "image-1", "variable-1", "preview-1", "action-1", "export-1", "cluster-1"]);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[path = "."]
@@ -597,68 +572,7 @@ mod tests {
             }
         }
 
-        // ---- Shims: keep pre-migration module paths resolving for external callers ----
-        pub mod schema {
-            pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod io {
-            pub use super::standards::v1::subsets::any::io::*;
-        }
-        pub mod op {
-            pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-        }
-        pub mod dsl {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-        }
-        pub mod spr {
-            pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-        }
-        pub mod diff {
-            pub use crate::standards::v1::subsets::any::schema::diff::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::diff::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::diff::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-            }
-        }
-        pub mod mutations {
-            pub use crate::standards::v1::subsets::any::schema::mutations::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::mutations::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-            }
-        }
-        pub mod snapshot {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-            }
-        }
-        pub use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
+                pub use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
         pub use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
         pub use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot;
 
@@ -670,6 +584,19 @@ pub mod editor {
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod examples {
+            #[path = "."]
+            pub mod demo_session {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+        }
 
         #[path = "."]
         pub mod config {

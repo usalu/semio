@@ -5,8 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::Puzzle5dMutation;
-use crate::mutations::{apply_puzzle5d_mutation, inverse_puzzle5d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle5d_mutation, inverse_puzzle5d_mutation};
 use crate::Puzzle5dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -94,7 +94,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::diff::Puzzle5dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "add-part-grip/appends-grip-3: committed diff JSON is not canonical");
@@ -104,7 +104,7 @@ fn committed_diff_is_canonical() {
 /// complete description of the change, not a summary of it.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::diff::Puzzle5dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::diff::Puzzle5dDiff as protocol::MutationDiff<Puzzle5dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff as protocol::MutationDiff<Puzzle5dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "add-part-grip/appends-grip-3: committed diff did not carry before to after");
 }

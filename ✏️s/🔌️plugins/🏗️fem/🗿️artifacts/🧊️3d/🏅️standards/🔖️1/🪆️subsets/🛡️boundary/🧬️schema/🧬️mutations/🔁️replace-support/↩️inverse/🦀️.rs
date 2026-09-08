@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ReplaceSupport` — recovers the pre-mutation support from `base`.
 use super::ReplaceSupport;
-use crate::mutations::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse

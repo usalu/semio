@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/delete-sizing-object/schema.json",
+  "$id": "https://semio.tech/schema/s/energy/model/mutation/delete-sizing-object/schema.json",
   "title": "DeleteSizingObject",
   "type": "object",
   "additionalProperties": false,

@@ -6,7 +6,7 @@
   "type": "object",
   "properties": {
     "value": {
-      "$ref": "https://semio.dev/schema/plugin/declarations/std1-strict/snapshot#/$defs/i32"
+      "$ref": "https://semio.tech/schema/os/plugin/tests/declaration-channels/standard-1/strict/component.json#/$defs/I32"
     }
   },
   "required": [

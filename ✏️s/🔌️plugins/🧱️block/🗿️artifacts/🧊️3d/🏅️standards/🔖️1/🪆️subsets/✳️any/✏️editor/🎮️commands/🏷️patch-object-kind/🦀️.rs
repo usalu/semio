@@ -1,6 +1,6 @@
 //! 🏷️ 🏷️ Block 3D play app command command — `patch-object-kind`.
 
-use crate::op::Block3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Block3dMutation;
 use crate::Block3dSnapshot;
 use crate::editor::block3d::config::{Block3dConfig, Block3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -14,7 +14,7 @@ pub struct PatchObjectKind {
 }
 
 pub fn handle(payload: &PatchObjectKind, _doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
-    use crate::mutations as m;
+    use crate::standards::v1::subsets::any::schema::mutations as m;
     let optional = |value: &str| if value.is_empty() { None } else { Some(value.to_string()) };
     let mutation = match payload.field.as_str() {
         "name" => m::rename_object_kind(payload.value.clone()),

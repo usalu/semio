@@ -17,8 +17,8 @@
 //! vocabulary with three guards in a row: target-missing, then a Fatal finiteness invariant, then the
 //! no-op compare. This case pins the third, so the first two must both be shown to pass.
 
-use crate::diff::JackDiff;
-use crate::mutations::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::diff::JackDiff;
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
 use crate::{materialize_jack_content, jack_working_scene, JackSnapshot, Node, PropertyBag};
 

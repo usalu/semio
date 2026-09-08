@@ -527,22 +527,7 @@ export function mergeMeshTransfers(meshes: readonly MeshTransfer[]): MeshTransfe
 
 // #region 🧪️Tests
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-
-  describe("@semio-tech/geometry-brep-js", () => {
-    it("isRenderableMeshTransfer accepts triangle meshes", () => {
-      const mesh: MeshTransfer = {
-        position: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
-        normal: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
-        index: new Uint32Array([0, 1, 2]),
-        edges: new Float32Array(0),
-        faceGroups: [{ start: 0, count: 3, entityId: "face-1" as kernelGeometry.FaceRef }],
-        edgeGroups: [],
-        faceInfos: [],
-        edgeInfos: [],
-      };
-      expect(isRenderableMeshTransfer(mesh)).toBe(true);
-    });
-  });
+  const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-geometry-brep-js/🟦️.ts");
+  await registerTests1(import.meta.vitest, { isRenderableMeshTransfer, kernelGeometry }, { directory: import.meta.dir, url: import.meta.url });
 }
 // #endregion 🧪️Tests

@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `CreateEdge` — always a `delete-edge` of the id it created.
-use crate::mutations::{delete_edge, TrinityGraphMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{delete_edge, TrinityGraphMutation};
 use crate::JackSnapshot;
 
 //#region 🔖️Inverse

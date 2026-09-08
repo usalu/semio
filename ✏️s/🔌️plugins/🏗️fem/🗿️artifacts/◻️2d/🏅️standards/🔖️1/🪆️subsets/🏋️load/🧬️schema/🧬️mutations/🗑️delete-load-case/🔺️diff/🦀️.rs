@@ -3,8 +3,8 @@
 //! Guards, in the order they run: `mutation.target-missing` (Error), then
 //! `mutation.target-referenced` (Error) while any combination still weights this case.
 use super::DeleteLoadCase;
-use crate::diff::{Fem2dDiff, Fem2dLoadCasesDelta};
-use crate::mutations::guards;
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasesDelta};
+use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff

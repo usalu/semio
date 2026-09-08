@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use artifact_schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]

@@ -1,26 +1,64 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/semio/kit/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/inference.json",
   "title": "SemioKitInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["entries"],
+  "required": [
+    "entries"
+  ],
   "properties": {
-    "entries": { "$ref": "#/$defs/SemioKitEntries", "x-semio-derived": true }
+    "entries": {
+      "$ref": "#/$defs/SemioKitEntries",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "SemioKitEntries": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["typeCount", "designCount", "pieceCount", "connectionCount", "objectCount", "modelCount", "hasProperties", "representationCount"],
+      "required": [
+        "typeCount",
+        "designCount",
+        "pieceCount",
+        "connectionCount",
+        "objectCount",
+        "modelCount",
+        "hasProperties",
+        "representationCount"
+      ],
       "properties": {
-        "typeCount": { "type": "integer", "minimum": 0 },
-        "designCount": { "type": "integer", "minimum": 0 },
-        "pieceCount": { "type": "integer", "minimum": 0 },
-        "connectionCount": { "type": "integer", "minimum": 0 },
-        "objectCount": { "type": "integer", "minimum": 0 },
-        "modelCount": { "type": "integer", "minimum": 0 },
-        "hasProperties": { "type": "boolean" },
-        "representationCount": { "type": "integer", "minimum": 0 }
+        "typeCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "designCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pieceCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "connectionCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "objectCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "modelCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hasProperties": {
+          "type": "boolean"
+        },
+        "representationCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

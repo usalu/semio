@@ -20,18 +20,6 @@ pub fn handle(payload: &SetPoints, _doc: &ArtifactView<'_, EquationSnapshot>, _c
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::{EquationGeometry, EquationPoint};
-    use crate::editor::equation::testkit::{dispatch, math_app};
-    use crate::editor::equation::EquationCommand;
-
-    #[semio_framework_async_macros::async_test]
-    async fn set_points_replaces_geometry() {
-        let mut app = math_app().await;
-        let geometry = EquationGeometry { points: vec![EquationPoint { x: 1.0, y: 2.0 }] };
-        dispatch(&mut app, EquationCommand::SetPoints(SetPoints { geometry: geometry.clone() })).await;
-        assert_eq!(crate::equation_geometry(&app.snapshot().expect("projection")), geometry);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

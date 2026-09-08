@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "scope": "framework.interaction",
+  "cases": [
+    { "export": "SelectionMode", "id": "single", "accepted": true, "instance": "single" },
+    { "export": "SelectionMode", "id": "unknown-member", "accepted": false, "instance": "many" },
+    { "export": "SelectionMode", "id": "not-a-string", "accepted": false, "instance": 1 },
+    { "export": "SelectionMethod", "id": "lasso", "accepted": true, "instance": "lasso" },
+    { "export": "SelectionMethod", "id": "unknown-member", "accepted": false, "instance": "brush" },
+    { "export": "MergeMode", "id": "range", "accepted": true, "instance": "range" },
+    { "export": "MergeMode", "id": "unknown-member", "accepted": false, "instance": "union" },
+    { "export": "GranularityDefinition", "id": "exact", "accepted": true, "instance": { "id": "node", "label": { "en": "Node" }, "iconId": "circle" } },
+    { "export": "GranularityDefinition", "id": "missing-icon", "accepted": false, "instance": { "id": "node", "label": { "en": "Node" } } },
+    { "export": "GranularityDefinition", "id": "extra-member", "accepted": false, "instance": { "id": "node", "label": { "en": "Node" }, "iconId": "circle", "color": "red" } },
+    { "export": "GranularityDefinition", "id": "label-not-an-object", "accepted": false, "instance": { "id": "node", "label": "Node", "iconId": "circle" } },
+    { "export": "HierarchyProvider", "id": "flat", "accepted": true, "instance": { "kind": "flat" } },
+    { "export": "HierarchyProvider", "id": "topology", "accepted": true, "instance": { "kind": "topology" } },
+    { "export": "HierarchyProvider", "id": "ui-tree", "accepted": true, "instance": { "kind": "uiTree" } },
+    { "export": "HierarchyProvider", "id": "path-delimited", "accepted": true, "instance": { "kind": "pathDelimited", "delimiter": "/" } },
+    { "export": "HierarchyProvider", "id": "path-delimited-without-delimiter", "accepted": false, "instance": { "kind": "pathDelimited" } },
+    { "export": "HierarchyProvider", "id": "flat-with-delimiter", "accepted": false, "instance": { "kind": "flat", "delimiter": "/" } },
+    { "export": "HierarchyProvider", "id": "unknown-kind", "accepted": false, "instance": { "kind": "graph" } },
+    { "export": "HoverSpec", "id": "exact", "accepted": true, "instance": { "enabled": true, "transitive": false, "channels": ["pointer"], "broadcast": true } },
+    { "export": "HoverSpec", "id": "empty-channels", "accepted": true, "instance": { "enabled": false, "transitive": false, "channels": [], "broadcast": false } },
+    { "export": "HoverSpec", "id": "missing-broadcast", "accepted": false, "instance": { "enabled": true, "transitive": false, "channels": ["pointer"] } },
+    { "export": "HoverSpec", "id": "channel-not-a-string", "accepted": false, "instance": { "enabled": true, "transitive": false, "channels": [7], "broadcast": true } },
+    { "export": "SelectionSpec", "id": "exact", "accepted": true, "instance": { "modes": ["single", "multiple"], "methods": ["pick"], "merges": ["replace", "range"], "transitive": false, "broadcast": true } },
+    { "export": "SelectionSpec", "id": "empty-modes", "accepted": false, "instance": { "modes": [], "methods": ["pick"], "merges": [], "transitive": false, "broadcast": true } },
+    { "export": "SelectionSpec", "id": "unknown-method", "accepted": false, "instance": { "modes": ["single"], "methods": ["brush"], "merges": [], "transitive": false, "broadcast": true } },
+    {
+      "export": "InteractionDefinition",
+      "id": "exact",
+      "accepted": true,
+      "instance": {
+        "id": "graph",
+        "label": { "en": "Graph" },
+        "granularities": [{ "id": "node", "label": { "en": "Node" }, "iconId": "circle" }],
+        "hierarchy": { "kind": "topology" },
+        "hover": { "enabled": true, "transitive": false, "channels": ["pointer"], "broadcast": true },
+        "selection": { "modes": ["single"], "methods": ["pick"], "merges": ["replace"], "transitive": false, "broadcast": true }
+      }
+    },
+    {
+      "export": "InteractionDefinition",
+      "id": "empty-granularities",
+      "accepted": false,
+      "instance": {
+        "id": "graph",
+        "label": { "en": "Graph" },
+        "granularities": [],
+        "hierarchy": { "kind": "topology" },
+        "hover": { "enabled": true, "transitive": false, "channels": ["pointer"], "broadcast": true },
+        "selection": { "modes": ["single"], "methods": ["pick"], "merges": ["replace"], "transitive": false, "broadcast": true }
+      }
+    },
+    {
+      "export": "InteractionDefinition",
+      "id": "hierarchy-not-a-provider",
+      "accepted": false,
+      "instance": {
+        "id": "graph",
+        "label": { "en": "Graph" },
+        "granularities": [{ "id": "node", "label": { "en": "Node" }, "iconId": "circle" }],
+        "hierarchy": { "kind": "graph" },
+        "hover": { "enabled": true, "transitive": false, "channels": ["pointer"], "broadcast": true },
+        "selection": { "modes": ["single"], "methods": ["pick"], "merges": ["replace"], "transitive": false, "broadcast": true }
+      }
+    },
+    { "export": "InteractionTarget", "id": "exact", "accepted": true, "instance": { "granularity": "node", "id": "n1" } },
+    { "export": "InteractionTarget", "id": "extra-member", "accepted": false, "instance": { "granularity": "node", "id": "n1", "label": "N1" } },
+    { "export": "DomainSelection", "id": "without-anchor", "accepted": true, "instance": { "granularity": "node", "ids": ["n1", "n2"] } },
+    { "export": "DomainSelection", "id": "with-anchor", "accepted": true, "instance": { "granularity": "node", "ids": ["n1"], "anchorId": "n1" } },
+    { "export": "DomainSelection", "id": "anchor-not-a-string", "accepted": false, "instance": { "granularity": "node", "ids": ["n1"], "anchorId": 1 } },
+    { "export": "DomainSelection", "id": "ids-not-an-array", "accepted": false, "instance": { "granularity": "node", "ids": "n1" } },
+    { "export": "DomainHover", "id": "exact", "accepted": true, "instance": { "channel": "pointer", "ids": [] } },
+    { "export": "DomainHover", "id": "missing-channel", "accepted": false, "instance": { "ids": [] } },
+    {
+      "export": "InteractionState",
+      "id": "exact",
+      "accepted": true,
+      "instance": { "selection": { "graph": { "granularity": "node", "ids": ["n1"] } }, "hover": { "graph": { "channel": "pointer", "ids": [] } }, "activeMode": { "graph": "single" }, "activeGranularity": { "graph": "node" } }
+    },
+    { "export": "InteractionState", "id": "empty", "accepted": true, "instance": { "selection": {}, "hover": {}, "activeMode": {}, "activeGranularity": {} } },
+    {
+      "export": "InteractionState",
+      "id": "unknown-active-mode",
+      "accepted": false,
+      "instance": { "selection": {}, "hover": {}, "activeMode": { "graph": "many" }, "activeGranularity": {} }
+    },
+    { "export": "InteractionState", "id": "missing-hover", "accepted": false, "instance": { "selection": {}, "activeMode": {}, "activeGranularity": {} } },
+    { "export": "TopologyNode", "id": "root", "accepted": true, "instance": { "id": "n1", "granularity": "node" } },
+    { "export": "TopologyNode", "id": "child", "accepted": true, "instance": { "id": "n2", "granularity": "node", "parent": "n1" } },
+    { "export": "TopologyNode", "id": "parent-not-a-string", "accepted": false, "instance": { "id": "n2", "granularity": "node", "parent": ["n1"] } },
+    { "export": "DomainTopology", "id": "exact", "accepted": true, "instance": { "ordered": [{ "id": "n1", "granularity": "node" }, { "id": "n2", "granularity": "node", "parent": "n1" }] } },
+    { "export": "DomainTopology", "id": "empty", "accepted": true, "instance": { "ordered": [] } },
+    { "export": "DomainTopology", "id": "node-missing-granularity", "accepted": false, "instance": { "ordered": [{ "id": "n1" }] } },
+    { "export": "PresenceDomain", "id": "exact", "accepted": true, "instance": { "domain": "graph", "granularity": "node", "selected": ["n1"], "hovered": [] } },
+    { "export": "PresenceDomain", "id": "missing-hovered", "accepted": false, "instance": { "domain": "graph", "granularity": "node", "selected": ["n1"] } },
+    { "export": "PresenceInteraction", "id": "exact", "accepted": true, "instance": { "appId": "app", "domains": [{ "domain": "graph", "granularity": "node", "selected": [], "hovered": [] }] } },
+    { "export": "PresenceInteraction", "id": "empty-domains", "accepted": true, "instance": { "appId": "app", "domains": [] } },
+    { "export": "PresenceInteraction", "id": "domain-not-an-object", "accepted": false, "instance": { "appId": "app", "domains": ["graph"] } }
+  ]
+}

@@ -128,7 +128,7 @@ fn significant_relative(value: f64, scale: f64) -> Json {
 mod decode {
     use super::{flag, number, numbers};
     use semio_repo_test_host::Json;
-    use semio_s_artifact_fem_3d::{Fem3dSnapshot, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+    use crate::{Fem3dSnapshot, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
     use std::collections::BTreeMap;
 
     /// 🔒️ One degree-of-freedom tag, as this artifact spells it on the wire.
@@ -254,9 +254,9 @@ mod decode {
 mod subject {
     use super::{decode, number, numbers, significant, significant_relative, DOFS, STATIC_TOLERANCE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_fem_3d::standards::v1::subsets::any::schema::mutations::fem3d_mutation_report_json;
-    use semio_s_artifact_fem_3d::Fem3dSnapshot;
-    use semio_s_plugin_fem::model::{Dof, StaticResult};
+    use crate::standards::v1::subsets::any::schema::mutations::fem3d_mutation_report_json;
+    use crate::Fem3dSnapshot;
+    use crate::model::{Dof, StaticResult};
     use semio_s_plugin_stdio_test_oracle::law;
     use std::collections::BTreeMap;
 
@@ -305,9 +305,9 @@ mod subject {
         let mut projected = document.clone();
         projected.solids.clear();
         for case in &mut projected.load_cases {
-            case.loads.retain(|load| !matches!(load, semio_s_artifact_fem_3d::FemLoad::Area { .. }));
+            case.loads.retain(|load| !matches!(load, crate::FemLoad::Area { .. }));
         }
-        let solved = semio_s_plugin_fem::fem3d_engine::fem3d_solve_all(&projected).map_err(|error| error.to_string())?;
+        let solved = crate::fem3d_engine::fem3d_solve_all(&projected).map_err(|error| error.to_string())?;
         Ok(solved.into_iter().collect())
     }
 
@@ -318,7 +318,7 @@ mod subject {
         for (name, answer) in answers {
             let mut squared = 0.0;
             let (mut translation, mut rotation, mut axial) = (0.0f64, 0.0f64, 0.0f64);
-            let mut ordered: Vec<&semio_s_plugin_fem::model::NodeDisplacement> = answer.displacements.iter().collect();
+            let mut ordered: Vec<&crate::model::NodeDisplacement> = answer.displacements.iter().collect();
             ordered.sort_by(|left, right| left.node_id.cmp(&right.node_id));
             for entry in ordered {
                 for (index, value) in entry.values.iter().enumerate() {
@@ -337,7 +337,7 @@ mod subject {
                 }
             }
             for (_, element) in &answer.elements {
-                if let semio_s_plugin_fem::model::ElementResult::Bar { n } = element {
+                if let crate::model::ElementResult::Bar { n } = element {
                     axial = axial.max(n.abs());
                 }
             }
@@ -399,7 +399,7 @@ mod subject {
             let axial = expected.get("axial").cloned().unwrap_or(Json::Object(Vec::new()));
             let axial_scale = member_scale(&axial).max(1e-9);
             for (id, element) in &answer.elements {
-                if let semio_s_plugin_fem::model::ElementResult::Bar { n } = element {
+                if let crate::model::ElementResult::Bar { n } = element {
                     let target = number(&axial, id);
                     if axial.get(id).is_none() {
                         return Err(format!("{scenario}: case {name} reports a bar force for {id} the reference does not"));
@@ -500,7 +500,7 @@ mod subject {
             let (material, section, length) = (&document.materials[0], &document.sections[0], document.nodes[1].x);
             let inertia = if axis == "Tz" { section.iy } else { section.iz };
             let load = match &document.load_cases[0].loads[0] {
-                semio_s_artifact_fem_3d::FemLoad::Nodal { value, .. } => *value,
+                crate::FemLoad::Nodal { value, .. } => *value,
                 other => return Err(format!("the cantilever fixture's load is {other:?}, not a nodal force")),
             };
             let index = DOFS.iter().position(|name| *name == axis).unwrap_or(2);
@@ -522,7 +522,7 @@ mod subject {
             agrees_with_reference(&format!("closed-form-{needle}"), &answers, &reference(ctx)?)?;
             let (material, section, length) = (&document.materials[0], &document.sections[0], document.nodes[1].x);
             let torque = match &document.load_cases[0].loads[0] {
-                semio_s_artifact_fem_3d::FemLoad::Nodal { value, .. } => *value,
+                crate::FemLoad::Nodal { value, .. } => *value,
                 other => return Err(format!("the torsion fixture's load is {other:?}, not a nodal moment")),
             };
             let answer = answers.get("tip").ok_or_else(|| "the torsion fixture declares a `tip` load case".to_string())?;
@@ -542,7 +542,7 @@ mod subject {
             agrees_with_reference(&format!("closed-form-{needle}"), &answers, &reference(ctx)?)?;
             let (material, section, length) = (&document.materials[0], &document.sections[0], document.nodes[2].x);
             let w = match &document.load_cases[0].loads[0] {
-                semio_s_artifact_fem_3d::FemLoad::MemberUdl { wz, .. } => *wz,
+                crate::FemLoad::MemberUdl { wz, .. } => *wz,
                 other => return Err(format!("the simply supported fixture's load is {other:?}, not a member UDL")),
             };
             let answer = answers.get("udl").ok_or_else(|| "the simply supported fixture declares a `udl` load case".to_string())?;

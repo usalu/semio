@@ -16,7 +16,7 @@
           "const": "createSkin"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🦴️skin/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-skin/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "deleteSkin"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🦴️skin/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-skin/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "moveSkin"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🦴️skin/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-skin/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "reorderSkins"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🦴️skin/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-skins/schema.json"
         }
       }
     }

@@ -3,7 +3,7 @@
 import { builtinModules } from "node:module";
 import { resolve } from "node:path";
 import { build, type InlineConfig } from "vite";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBunx, runBundleScriptMain, TEST_LEVELS } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBunx, runBundleScriptMain, runVitest, TEST_LEVELS } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 //#region Build
 const extensionExternals = new Set(["vscode", ...builtinModules, ...builtinModules.map((name) => `node:${name}`)]);
@@ -29,7 +29,7 @@ function extensionBuildConfig(root: string, entry: string, outputDirectory: stri
 /** 🧩️Builds the extension host entry and its extension-host test bundle. */
 async function buildExtension(root: string, watch: boolean): Promise<void> {
   await build(extensionBuildConfig(root, "🟦️.ts", "out", "extension.js", watch));
-  if (!watch) await build(extensionBuildConfig(root, "🧪️extension.test.ts", "out/test", "extension.test.js", false));
+  if (!watch) await build(extensionBuildConfig(root, "../../🧪️tests/🧩️extension/🟦️.ts", "out/test", "extension.test.js", false));
 }
 //#endregion
 
@@ -39,14 +39,12 @@ class DevScript extends BundleScript {
   }
 }
 
-/** ⏱️The extension-host Mocha suite (`js/🧪️extension.test.ts`) can only run inside the VSCode test harness — no fast in-repo unit split without a second test file (disallowed). Runs only at `long` and above. */
+/** ⏱️The `🔬️schema` case runs at every level under vitest; the extension-host Mocha case (`🧪️tests/🧩️extension/🟦️.ts`) can only run inside the VSCode test harness and is added at `long` and above. */
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
-    const { level } = resolveTestLevel(segments);
-    if (TEST_LEVELS.indexOf(level) < TEST_LEVELS.indexOf("long")) {
-      console.log(`[test] @semio-tech/repo-vscode has no ${level}-level suite — run at "long" or above for the extension-host suite.`);
-      return;
-    }
+  async run(segments: string[]): Promise<void> {
+    const { level, rest } = resolveTestLevel(segments);
+    await runVitest(this.root, rest, "vitest.config.ts");
+    if (TEST_LEVELS.indexOf(level) < TEST_LEVELS.indexOf("long")) return;
     runBunx(["vscode-test"], this.root);
   }
 }

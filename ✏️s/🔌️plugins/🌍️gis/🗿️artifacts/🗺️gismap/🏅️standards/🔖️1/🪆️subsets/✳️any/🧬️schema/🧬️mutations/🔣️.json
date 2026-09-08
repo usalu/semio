@@ -1,57 +1,43 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/gis/gismap/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/gis/gismap/mutations.json",
   "title": "GisMapMutation",
   "oneOf": [
     {
-      "$ref": "./🆕create-position/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/create-position/schema.json"
     },
     {
-      "$ref": "./🌐create-region/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/create-region/schema.json"
     },
     {
-      "$ref": "./🛣️create-route/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/create-route/schema.json"
     },
     {
-      "$ref": "./🗑️delete-position/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/delete-position/schema.json"
     },
     {
-      "$ref": "./🧹delete-region/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/delete-region/schema.json"
     },
     {
-      "$ref": "./✂️delete-route/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/delete-route/schema.json"
     },
     {
-      "$ref": "./🔀reorder-positions/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/reorder-positions/schema.json"
     },
     {
-      "$ref": "./🔃reorder-regions/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/reorder-regions/schema.json"
     },
     {
-      "$ref": "./🧭reorder-routes/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/reorder-routes/schema.json"
     },
     {
-      "$ref": "./🔁replace-position-data/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/replace-position-data/schema.json"
     },
     {
-      "$ref": "./🔄replace-region-data/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/replace-region-data/schema.json"
     },
     {
-      "$ref": "./♻️replace-route-data/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/replace-route-data/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "create-position",
-    "create-region",
-    "create-route",
-    "delete-position",
-    "delete-region",
-    "delete-route",
-    "reorder-positions",
-    "reorder-regions",
-    "reorder-routes",
-    "replace-position-data",
-    "replace-region-data",
-    "replace-route-data"
   ]
 }

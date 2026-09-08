@@ -102,3 +102,15 @@ This snapshot uses full offline Cargo resolved metadata after the external consu
 | semio-s-artifact-trinity-rewriting | 1 | 0 |  |
 | semio-s-artifact-vcs-vcs | 444 | 37 | semio-s-plugin-stdio |
 | semio-s-artifact-writer-writer | 482 | 33 | semio-s-plugin-trinity |
+
+## Framework Normal-Dependency Followup
+
+Cargo workspace feature union, runtime edges only (dependency tests are excluded). This metadata audit is not compilation or a package-selected feature proof.
+
+- `semio-framework-artifact-flow-flow`: 446 packages; composition dependencies [].
+- `semio-framework-artifact-infinite-dag`: 176 packages; composition dependencies [].
+- `semio-framework-artifact-playbook-playbook`: 398 packages; composition dependencies [].
+- `semio-framework-artifact-space-collection`: 171 packages; composition dependencies [].
+- `semio-framework-artifact-space-space`: 171 packages; composition dependencies [].
+- `semio-framework-artifact-workflow-run`: 171 packages; composition dependencies [].
+- `semio-framework-artifact-workflow-workflow`: 398 packages; composition dependencies [].

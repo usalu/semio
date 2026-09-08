@@ -16,7 +16,7 @@
           "const": "changeAssetDescriptiveMetadata"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🪪️asset/📝️change-description/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-asset-descriptive-metadata/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "changeAssetExtensionData"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🪪️asset/🧩️change-extensions/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-asset-extension-data/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "changeAssetExtraData"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🪪️asset/🧾️change-extras/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-asset-extra-data/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "changeAssetVersion"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🪪️asset/🔖️version/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-asset-version/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "changeDocumentExtensionData"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/📃️document/🧩️change-extensions/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-document-extension-data/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
           "const": "changeDocumentExtraData"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/📃️document/📝️change-extras/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-document-extra-data/schema.json"
         }
       }
     },
@@ -112,7 +112,7 @@
           "const": "addUsedExtension"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/📣️used-extension/➕️add/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/add-used-extension/schema.json"
         }
       }
     },
@@ -128,7 +128,7 @@
           "const": "moveRequiredExtension"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/✅️required-extension/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-required-extension/schema.json"
         }
       }
     },
@@ -144,7 +144,7 @@
           "const": "moveUsedExtension"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/📣️used-extension/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-used-extension/schema.json"
         }
       }
     },
@@ -160,7 +160,7 @@
           "const": "reorderRequiredExtensions"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/✅️required-extension/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-required-extensions/schema.json"
         }
       }
     },
@@ -176,7 +176,7 @@
           "const": "reorderUsedExtensions"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/📣️used-extension/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-used-extensions/schema.json"
         }
       }
     },
@@ -192,7 +192,7 @@
           "const": "addRequiredExtension"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/✅️required-extension/➕️add/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/add-required-extension/schema.json"
         }
       }
     },
@@ -208,7 +208,7 @@
           "const": "removeRequiredExtension"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/✅️required-extension/➖️remove/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/remove-required-extension/schema.json"
         }
       }
     },
@@ -224,7 +224,7 @@
           "const": "removeUsedExtension"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/📣️used-extension/➖️remove/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/remove-used-extension/schema.json"
         }
       }
     }

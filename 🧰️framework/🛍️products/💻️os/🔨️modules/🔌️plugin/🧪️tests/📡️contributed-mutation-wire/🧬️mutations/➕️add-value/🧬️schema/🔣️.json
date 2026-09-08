@@ -4,7 +4,7 @@
   "title": "AddValue",
   "type": "object",
   "$defs": {
-    "payload": {
+    "Payload": {
       "type": "object",
       "required": [
         "delta"
@@ -20,7 +20,7 @@
   },
   "allOf": [
     {
-      "$ref": "#/$defs/payload"
+      "$ref": "#/$defs/Payload"
     }
   ],
   "propertyNames": {

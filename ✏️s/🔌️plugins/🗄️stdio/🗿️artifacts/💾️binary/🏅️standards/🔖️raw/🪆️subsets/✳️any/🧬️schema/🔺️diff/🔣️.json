@@ -1,19 +1,42 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.binary/diff.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/binary/raw/any/diff.json",
   "title": "BinaryDiff",
   "type": "object",
   "definitions": {
     "ByteSplice": {
       "type": "object",
       "properties": {
-        "offset": { "type": "integer", "minimum": 0 },
-        "removeLen": { "type": "integer", "minimum": 0 },
-        "insert": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "removeLen": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "insert": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
       },
-      "required": ["offset", "removeLen", "insert"]
+      "required": [
+        "offset",
+        "removeLen",
+        "insert"
+      ]
     }
   },
   "properties": {
-    "splices": { "type": "array", "items": { "$ref": "#/definitions/ByteSplice" } }
+    "splices": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ByteSplice"
+      }
+    }
   }
 }

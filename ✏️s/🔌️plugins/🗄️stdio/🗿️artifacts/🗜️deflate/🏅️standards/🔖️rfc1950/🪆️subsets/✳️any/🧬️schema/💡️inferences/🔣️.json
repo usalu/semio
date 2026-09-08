@@ -1,23 +1,53 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/deflate/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/inference.json",
   "title": "DeflateInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["window"],
+  "required": [
+    "window"
+  ],
   "properties": {
-    "window": { "$ref": "#/$defs/DeflateWindow", "x-semio-derived": true }
+    "window": {
+      "$ref": "#/$defs/DeflateWindow",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "DeflateWindow": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["windowSize", "compressionLevelHint", "hasPresetDictionary", "payloadSize", "contentDigest"],
+      "required": [
+        "windowSize",
+        "compressionLevelHint",
+        "hasPresetDictionary",
+        "payloadSize",
+        "contentDigest"
+      ],
       "properties": {
-        "windowSize": { "type": "integer", "minimum": 0 },
-        "compressionLevelHint": { "type": "string", "enum": ["Fastest", "Fast", "Default", "Maximum"] },
-        "hasPresetDictionary": { "type": "boolean" },
-        "payloadSize": { "type": "integer", "minimum": 0 },
-        "contentDigest": { "type": "string" }
+        "windowSize": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "compressionLevelHint": {
+          "type": "string",
+          "enum": [
+            "Fastest",
+            "Fast",
+            "Default",
+            "Maximum"
+          ]
+        },
+        "hasPresetDictionary": {
+          "type": "boolean"
+        },
+        "payloadSize": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "contentDigest": {
+          "type": "string"
+        }
       }
     }
   }

@@ -1,6 +1,6 @@
 //! ➕ Puzzle5d mutation — `AddPartGrip`: attaches a new rim grip to a part.
-use crate::diff::Puzzle5dDiff;
-use crate::mutations::Puzzle5dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::{Puzzle5dGrip, Puzzle5dSnapshot};
 
 //#region 🔖️Mutation

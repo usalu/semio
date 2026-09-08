@@ -1,21 +1,48 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/base/inference.json",
   "title": "Ifc2x3Inference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["bounds"],
+  "required": [
+    "bounds"
+  ],
   "properties": {
-    "bounds": { "$ref": "#/$defs/Ifc2x3Bounds", "x-semio-derived": true }
+    "bounds": {
+      "$ref": "#/$defs/Ifc2x3Bounds",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "Ifc2x3Bounds": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["min", "max", "pointCount"],
+      "required": [
+        "min",
+        "max",
+        "pointCount"
+      ],
       "properties": {
-        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-        "pointCount": { "type": "integer", "minimum": 0 }
+        "min": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "max": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "pointCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

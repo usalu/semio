@@ -1,9 +1,9 @@
 //! 🔺️ `disconnect-synapse` sparse diff construction.
 
-use crate::diff::Generation3dDiff;
-use crate::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::mutations::disconnect_synapse::DisconnectSynapse;
-use crate::mutations::synapse_index;
+use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
+use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse::DisconnectSynapse;
+use crate::standards::v1::subsets::any::schema::mutations::synapse_index;
 use crate::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta severing one synapse edge by id.

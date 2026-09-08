@@ -2,11 +2,14 @@
 import Ajv from "ajv";
 import { strict as assert } from "node:assert";
 import stableStringify from "fast-json-stable-stringify";
+import { flowWasmContract } from "../../🕸️wasm/📦️packages/🟨️javascript/📜️script.ts";
 
 //#region 🔣️SessionOwnership
 const fixture = await Bun.file(new URL("./🔣️.json", import.meta.url)).json();
-const schema = await Bun.file(new URL("./🧬️.schema.json", import.meta.url)).json();
-const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+const schemaDocument = JSON.parse(await Bun.file(new URL("./🧬️schema/🔣️.json", import.meta.url)).text());
+const retirementAjv = new Ajv({ strict: true, allErrors: true });
+retirementAjv.addSchema(schemaDocument);
+const validate = retirementAjv.getSchema(`${schemaDocument.$id}#/$defs/FlowSessionRetirementV1`)!;
 assert(validate(fixture), JSON.stringify(validate.errors));
 const text = fixture.text.text.repeat(fixture.text.repeat); const preview = fixture.preview.text.repeat(fixture.preview.repeat);
 const owners = [text, "{}", "mesh", preview, "pending", "geometry", "output", "label", preview, "label", text];
@@ -42,11 +45,9 @@ console.log("[DEBUG] Flow session-retirement source fixtures=1 hostileRejections
 
 //#region 🧹️BridgeSessionClose
 const sessionClose = await Bun.file(new URL("../../🕸️wasm/🧪️fixtures/🧹️session-close/🔣️.json", import.meta.url)).json();
-const sessionCloseSchema = await Bun.file(new URL("../../🕸️wasm/🧪️fixtures/🧹️session-close/🧬️.schema.json", import.meta.url)).json();
-const validateClose = new Ajv({ strict: true, allErrors: true }).compile(sessionCloseSchema);
-assert(validateClose(sessionClose), JSON.stringify(validateClose.errors));
-const expected = Object.fromEntries(Object.entries(sessionCloseSchema.properties).map(([key, value]) => [key, (value as { const: unknown }).const]));
-assert.equal(stableStringify(sessionClose), stableStringify(expected));
+const validateClose = flowWasmContract("FlowRetainedSessionCloseV1");
+assert(validateClose(sessionClose), "retained session close fixture must satisfy its owned contract");
+assert.deepEqual(JSON.parse(stableStringify(sessionClose)), sessionClose);
 for (const mutant of [
   { ...sessionClose, extra: true },
   { ...sessionClose, browser: { ...sessionClose.browser, terminalBeforeClose: true } },
@@ -58,11 +59,9 @@ console.log("[DEBUG] Flow retained-session close fixture=1 hostileRejections=4 o
 
 //#region 🧑‍🤝‍🧑️BrowserRuntimeLifetime
 const runtimeLifetime = await Bun.file(new URL("../../🕸️wasm/🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json", import.meta.url)).json();
-const runtimeLifetimeSchema = await Bun.file(new URL("../../🕸️wasm/🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🧬️.schema.json", import.meta.url)).json();
-const validateRuntime = new Ajv({ strict: true, allErrors: true }).compile(runtimeLifetimeSchema);
-assert(validateRuntime(runtimeLifetime), JSON.stringify(validateRuntime.errors));
-const runtimeExpected = Object.fromEntries(Object.entries(runtimeLifetimeSchema.properties).map(([key, value]) => [key, (value as { const: unknown }).const]));
-assert.equal(stableStringify(runtimeLifetime), stableStringify(runtimeExpected));
+const validateRuntime = flowWasmContract("FlowBrowserRuntimeLifetimeV1");
+assert(validateRuntime(runtimeLifetime), "browser runtime lifetime fixture must satisfy its owned contract");
+assert.deepEqual(JSON.parse(stableStringify(runtimeLifetime)), runtimeLifetime);
 for (const mutant of [{ ...runtimeLifetime, initialSessions: 1 }, { ...runtimeLifetime, extra: true }, { ...runtimeLifetime, afterCloseA: { ...runtimeLifetime.afterCloseA, globalCloseCalls: 1 } }, { ...runtimeLifetime, receipt: { ...runtimeLifetime.receipt, completion: "control-admitted" } }, { ...runtimeLifetime, openFailure: { ...runtimeLifetime.openFailure, uncertainTransport: { ...runtimeLifetime.openFailure.uncertainTransport, terminal: false } } }]) assert(!validateRuntime(mutant));
 console.log("[DEBUG] Flow browser runtime lifetime fixture=1 hostileRejections=5 oracle=fast-json-stable-stringify runtimeClaims=0");
 //#endregion 🧑‍🤝‍🧑️BrowserRuntimeLifetime

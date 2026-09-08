@@ -11,7 +11,7 @@ class LintScript extends BundleScript {
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runTestBudgeted(process.execPath, ["test", "./🧪️index.test.ts", "./🧬️invariants.test.ts", ...rest], { cwd: this.root });
+    runTestBudgeted(process.execPath, ["test", "./../../🧪️tests/🧪️test-platform/🟦️.ts", "./../../🧪️tests/🧬️schema-invariants/🟦️.ts", "./../../🧪️tests/📐️test-layout/🟦️.ts", ...rest], { cwd: this.root });
   }
 }
 

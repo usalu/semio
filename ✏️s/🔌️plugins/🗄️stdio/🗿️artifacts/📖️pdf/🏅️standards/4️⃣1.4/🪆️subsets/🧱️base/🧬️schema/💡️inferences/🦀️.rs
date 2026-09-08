@@ -79,19 +79,6 @@ pub fn pdf_artifact_inference_descriptor() -> framework_schema::ArtifactInferenc
 
 #[cfg(test)]
 //#region 🧪️Tests
-mod tests {
-    use super::*;
-    use protocol::Inference;
-
-    #[test]
-    fn inference_determinism_law() {
-        let snapshot = PdfSnapshot::default();
-        assert_eq!(PdfInference::infer(&snapshot), PdfInference::infer(&snapshot));
-    }
-
-    #[test]
-    fn inference_default_law() {
-        assert_eq!(PdfInference::infer(&PdfSnapshot::default()), PdfInference::default());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

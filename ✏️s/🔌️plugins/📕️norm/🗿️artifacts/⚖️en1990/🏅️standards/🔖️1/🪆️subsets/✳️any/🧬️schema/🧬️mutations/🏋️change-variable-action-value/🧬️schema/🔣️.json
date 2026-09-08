@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1990/1/any/mutation/change-variable-action-value/schema.json",
+  "$id": "https://semio.tech/schema/s/norm/en1990/mutation/change-variable-action-value/schema.json",
   "title": "ChangeVariableActionValue",
   "type": "object",
   "additionalProperties": false,

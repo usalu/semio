@@ -1,11 +1,20 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.graph.diff/binary.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/diff/binary.json",
   "title": "SemioGraphDiffFrameHeader",
   "description": "Pack-binary diff-frame header mirror — see ../🔣️.json for the canonical facet schema.",
   "type": "object",
   "properties": {
-    "format": { "type": "integer" },
-    "presence": { "type": "integer", "description": "bit0=nodes, bit1=edges" },
-    "payload": { "type": "string", "contentEncoding": "hex" }
+    "format": {
+      "type": "integer"
+    },
+    "presence": {
+      "type": "integer",
+      "description": "bit0=nodes, bit1=edges"
+    },
+    "payload": {
+      "type": "string",
+      "contentEncoding": "hex"
+    }
   }
 }

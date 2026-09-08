@@ -4,7 +4,7 @@
 //! recomputed wholesale (widget/synapse edits are already coarse-grained mutations).
 
 use crate::Generation3dSnapshot;
-use semio_framework_artifact_flow_semio_framework_os_flow::Widget;
+use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::{BTreeMap, VecDeque};
 
@@ -22,7 +22,7 @@ pub struct Generation3dTopology {
     pub cycle_free: bool,
 }
 
-/// 🪪️ A `semio_framework_artifact_flow_semio_framework_os_flow::Widget`'s stable id, across every variant.
+/// 🪪️ A `semio_framework_artifact_flow_flow::Widget`'s stable id, across every variant.
 fn widget_id(widget: &Widget) -> &str {
     match widget {
         Widget::Neuron { id, .. }

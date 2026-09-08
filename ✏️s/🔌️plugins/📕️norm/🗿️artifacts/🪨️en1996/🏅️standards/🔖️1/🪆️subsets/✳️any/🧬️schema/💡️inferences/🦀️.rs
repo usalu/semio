@@ -69,21 +69,8 @@ pub fn en1996_artifact_inference_descriptor() -> framework_schema::ArtifactInfer
 
 #[cfg(test)]
 //#region 🧪️Tests
-mod tests {
-    use super::*;
-    use protocol::Inference;
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
-        let snapshot = En1996Snapshot::default();
-        assert_eq!(En1996Inference::infer(&snapshot), En1996Inference::infer(&snapshot));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
-        assert_eq!(En1996Inference::infer(&En1996Snapshot::default()), En1996Inference::default());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
@@ -144,19 +131,6 @@ pub fn evaluate(document: &En1996Snapshot) -> CheckReport {
 
 //#region 🧪️ComplianceReportTests
 #[cfg(test)]
-mod compliance_report_tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn full_masonry_worked_example() {
-        let report = check_full_masonry(&En1996Snapshot::default());
-        assert_eq!(report.checks.len(), 8);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn evaluate_runs_all_parts() {
-        let report = evaluate(&En1996Snapshot::default());
-        assert_eq!(report.checks.len(), 8);
-    }
-}
+#[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
+mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests

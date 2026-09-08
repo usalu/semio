@@ -1,8 +1,8 @@
 //! 🔺️ `create-generation` sparse diff construction — delegates the generation-field delta to the
 //! existing `semio_framework_artifact_playbook_playbook::GenerationMutation` engine, scoped to a single `Add` op.
 
-use crate::diff::{diff_generation_from_ops, Generation3dDiff};
-use crate::mutations::create_generation::CreateGeneration;
+use crate::standards::v1::subsets::any::schema::diff::{diff_generation_from_ops, Generation3dDiff};
+use crate::standards::v1::subsets::any::schema::mutations::create_generation::CreateGeneration;
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
 

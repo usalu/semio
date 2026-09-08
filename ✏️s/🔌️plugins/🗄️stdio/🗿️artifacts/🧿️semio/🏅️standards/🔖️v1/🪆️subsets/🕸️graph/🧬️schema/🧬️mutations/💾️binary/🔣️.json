@@ -1,11 +1,20 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.graph.mutations/binary.json",
-  "title": "SemioGraphOpFrameHeader",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutations/binary.json",
+  "title": "SemioGraphMutationBinary",
   "description": "Pack-binary op-frame header mirror — see ../🔣️.json for the canonical facet schema.",
   "type": "object",
   "properties": {
-    "format": { "type": "integer" },
-    "tag": { "type": "integer", "description": "variant ordinal, 0-10" },
-    "payload": { "type": "string", "contentEncoding": "hex" }
+    "format": {
+      "type": "integer"
+    },
+    "tag": {
+      "type": "integer",
+      "description": "variant ordinal, 0-10"
+    },
+    "payload": {
+      "type": "string",
+      "contentEncoding": "hex"
+    }
   }
 }

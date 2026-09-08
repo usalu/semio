@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `MoveWidget` — a real id-keyed upsert into the fixture's layout
 //! collection helper (never a whole-snapshot capture).
 
-use crate::diff::{diff_fixture_from_helpers, LayoutDiff, Generation2dDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, Generation2dDiff, SynapsesDiff, WidgetsDiff};
 use crate::{widget_id, Generation2dSnapshot};
 
 pub fn diff(payload: &super::MoveWidget, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {

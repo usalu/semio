@@ -5,8 +5,8 @@
 //! `mutation.no-op` when the settings are already what the payload asks for. The bounds run FIRST
 //! so a document already holding out-of-range settings cannot launder them through as a no-op.
 use super::UpdateAnalysisSettings;
-use crate::diff::Fem2dDiff;
-use crate::mutations::guards;
+use crate::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff

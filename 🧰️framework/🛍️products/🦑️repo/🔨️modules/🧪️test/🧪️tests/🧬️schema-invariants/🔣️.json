@@ -634,7 +634,7 @@
       "unresolvedLocalRef": true,
       "expect": [
         {
-          "code": "schema-ref-unresolved"
+          "code": "schema-ref-broken-internal"
         }
       ]
     },
@@ -702,6 +702,217 @@
           "format": "🔗️graphql"
         }
       ]
+    },
+    {
+      "id": "module-internal-helper-ref-is-never-a-finding",
+      "internalDefinitionsRef": true,
+      "expect": []
+    },
+    {
+      "id": "module-internal-helper-ref-that-lands-on-nothing",
+      "unresolvedInternalRef": true,
+      "expect": [
+        {
+          "code": "schema-ref-broken-internal"
+        }
+      ]
+    },
+    {
+      "id": "cross-document-ref-into-another-modules-definitions",
+      "crossScopeDefinitionsRef": true,
+      "declareDependency": true,
+      "expect": [
+        {
+          "code": "schema-ref-unresolved"
+        }
+      ]
+    },
+    {
+      "id": "mutation-aggregate-branches-reference-leaves-by-absolute-id",
+      "mutationAggregate": true,
+      "declareDependency": true,
+      "expect": []
+    },
+    {
+      "id": "mutation-aggregate-branch-whose-leaf-scope-is-not-declared-as-a-dependency",
+      "mutationAggregate": true,
+      "declareDependency": false,
+      "expect": [
+        {
+          "code": "schema-cross-scope-dependency-forbidden"
+        }
+      ]
+    },
+    {
+      "id": "export-restricted-to-json-schema-needs-no-other-format",
+      "restrictedFormats": [
+        "🔣️jsonschema"
+      ],
+      "dropRustExport": true,
+      "dropTypescriptExport": true,
+      "dropProtoExport": true,
+      "dropGraphqlExport": true,
+      "expect": []
+    },
+    {
+      "id": "export-restricted-to-json-schema-that-a-format-implements-anyway",
+      "restrictedFormats": [
+        "🔣️jsonschema"
+      ],
+      "expect": [
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🦀️rust"
+        },
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🟦️typescript"
+        },
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🔗️graphql"
+        },
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🛰️protobuf"
+        }
+      ]
+    },
+    {
+      "id": "export-missing-from-a-format-it-declared-itself",
+      "restrictedFormats": [
+        "🔣️jsonschema",
+        "🦀️rust"
+      ],
+      "implementRestrictedFormats": [
+        "🔣️jsonschema"
+      ],
+      "expect": [
+        {
+          "code": "schema-export-incomplete",
+          "format": "🦀️rust"
+        }
+      ]
+    },
+    {
+      "id": "export-annotation-naming-a-format-the-taxonomy-does-not-declare",
+      "invalidRestrictedFormats": [
+        "rust"
+      ],
+      "expect": [
+        {
+          "code": "schema-export-formats-annotation-invalid"
+        }
+      ]
+    },
+    {
+      "id": "export-annotation-that-is-not-a-list-of-formats",
+      "invalidRestrictedFormats": "🔣️jsonschema",
+      "expect": [
+        {
+          "code": "schema-export-formats-annotation-invalid"
+        }
+      ]
+    },
+    {
+      "id": "graphql-export-declared-as-an-input",
+      "graphqlKeyword": "input",
+      "expect": []
+    },
+    {
+      "id": "graphql-export-declared-as-an-enum",
+      "graphqlKeyword": "enum",
+      "expect": []
+    },
+    {
+      "id": "graphql-export-declared-as-an-interface",
+      "graphqlKeyword": "interface",
+      "expect": []
+    },
+    {
+      "id": "graphql-export-declared-as-a-union",
+      "graphqlKeyword": "union",
+      "expect": []
+    },
+    {
+      "id": "graphql-export-declared-as-a-scalar",
+      "graphqlKeyword": "scalar",
+      "expect": []
+    },
+    {
+      "id": "typescript-export-without-its-parse-function",
+      "dropTypescriptParser": true,
+      "expect": [
+        {
+          "code": "schema-export-parser-missing",
+          "format": "🟦️typescript"
+        }
+      ]
+    },
+    {
+      "id": "typescript-parse-function-written-as-an-exported-const",
+      "typescriptParserAsConst": true,
+      "expect": []
+    },
+    {
+      "id": "export-annotation-that-omits-the-normative-format",
+      "restrictedFormats": [
+        "🦀️rust"
+      ],
+      "implementRestrictedFormats": [
+        "🦀️rust"
+      ],
+      "expect": [
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🔣️jsonschema"
+        }
+      ]
+    },
+    {
+      "id": "a-format-the-annotation-restricted-away-is-never-asked-for-a-parser",
+      "restrictedFormats": [
+        "🔣️jsonschema",
+        "🦀️rust"
+      ],
+      "dropTypescriptParser": true,
+      "expect": [
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🟦️typescript"
+        },
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🔗️graphql"
+        },
+        {
+          "code": "schema-export-format-undeclared",
+          "format": "🛰️protobuf"
+        }
+      ]
+    }
+  ],
+  "mutationLeafIdCases": [
+    {
+      "id": "single-segment-leaf",
+      "rootModuleId": "https://semio.tech/schema/s/stdio/gltf/2.0/any/artifact.json",
+      "semanticKind": "create-sampler",
+      "leafDirectory": "🎛️sampler/🌱️create",
+      "expected": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-sampler/schema.json"
+    },
+    {
+      "id": "two-segment-leaf-directory-is-keyed-by-its-semantic-kind",
+      "rootModuleId": "https://semio.tech/schema/s/stdio/gltf/2.0/any/artifact.json",
+      "semanticKind": "bind-node-skin",
+      "leafDirectory": "🩻️node-skin/🔗️bind",
+      "expected": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-node-skin/schema.json"
+    },
+    {
+      "id": "a-facet-filename-other-than-artifact-does-not-deepen-the-scope",
+      "rootModuleId": "https://semio.tech/schema/framework/os/config/schema.json",
+      "semanticKind": "set-default-app",
+      "leafDirectory": "🎛️default-app/🖊️set",
+      "expected": "https://semio.tech/schema/framework/os/config/mutation/set-default-app/schema.json"
     }
   ],
   "validationCases": [

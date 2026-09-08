@@ -19,145 +19,145 @@
   "routes": [
     {
       "id": "addNode",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addBar",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addFrame",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addMaterial",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addSection",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addSupport",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addNodalLoad",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addMemberUdl",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addAreaLoad",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addSolid",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addLoadCase",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "addCombination",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "setSelfWeight",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "setAnalysisSettings",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "removeSelection",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "setActiveExample",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "blocker": ""
     },
     {
       "id": "setCamera",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "blocker": ""
     },
     {
       "id": "setResultDisplay",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "blocker": ""
     }

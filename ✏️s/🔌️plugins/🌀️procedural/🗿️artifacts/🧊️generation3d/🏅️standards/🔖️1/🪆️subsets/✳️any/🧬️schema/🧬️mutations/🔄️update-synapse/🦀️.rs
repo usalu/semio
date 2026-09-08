@@ -4,10 +4,10 @@
 //! Directory kept at its pre-migration `🎛set-synapse` path — see `➖remove-widget/🦠️mutation`'s
 //! docstring for why.
 
-use crate::diff::Generation3dDiff;
-use crate::mutations::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::Generation3dSnapshot;
-use semio_framework_artifact_flow_semio_framework_os_flow::SynapseSpec;
+use semio_framework_artifact_flow_flow::SynapseSpec;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️UpdateSynapse
 /// 🔁 The synapse's own `id` addresses the target.
@@ -22,11 +22,11 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Upda
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "synapse", kind: "update-synapse", record: "UpdatedSynapse" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::mutations::update_synapse::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::update_synapse::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-        crate::mutations::update_synapse::inverse::inverse(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::update_synapse::inverse::inverse(self, base)
     }
 
     fn label(&self) -> String {

@@ -216,7 +216,7 @@ test("exact finite consumer route and launch registration preserve the canonical
 
 
 test("language-neutral finite consumer contract is closed and retains all physical proof obligations", () => {
-  const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8")));
+  const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🛂️schema/🔣️.json"), "utf8")));
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
   for (const changed of [{ ...vector, unknown: true }, { ...vector, semantics: { ...vector.semantics, failure: "empty-is-disjoint" } }, { ...vector, cases: [] }]) expect(validate(changed)).toBe(false);
   expect(new Set(vector.cases.map((row: Row) => row.id)).size).toBe(vector.cases.length);

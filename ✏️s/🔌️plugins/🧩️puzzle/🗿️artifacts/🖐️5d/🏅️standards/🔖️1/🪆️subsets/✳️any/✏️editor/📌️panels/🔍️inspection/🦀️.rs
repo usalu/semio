@@ -43,14 +43,6 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framew
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::puzzle5d::testkit::*;
-
-    #[test]
-    fn empty_selection_renders_the_document_summary() {
-        let mut app = app();
-        assert!(render_body(&mut app, BODY_KEY).contains("puzzle5d-play-inspector.empty"));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -159,36 +159,7 @@ export function spawnRawMcp(bin: string, args: readonly string[] = ["stdio"]): R
 
 //#region 🧪️Tests
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-
-  describe("resolveMcpBinaryPath", () => {
-    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🧱️binary-gate.json", import.meta.url), "utf8")) as {
-      pathCases: Array<{ name: string; platform: NodeJS.Platform; repoRoot: string; environment: NodeJS.ProcessEnv; expected: string }>;
-    };
-
-    for (const testCase of fixture.pathCases) {
-      it(testCase.name, () => {
-        expect(resolveMcpBinaryPath(testCase.repoRoot, testCase.environment, testCase.platform)).toBe(testCase.expected);
-      });
-    }
-
-    it("accepts an independently executable process artifact", () => {
-      expect(requireMcpBinary("/", { SEMIO_OS_MCP_BIN: process.execPath })).toBe(process.execPath);
-    });
-
-    it("rejects a missing explicit artifact instead of permitting a skipped suite", () => {
-      expect(() => requireMcpBinary("/workspace/semio", { SEMIO_OS_MCP_BIN: "missing/semio-os-mcp" }, "linux")).toThrow("binary gate failed");
-    });
-
-    it("keeps the staged consumer independent from mutable compiler directories", () => {
-      for (const platform of ["darwin", "linux", "win32"] as const) {
-        const root = platform === "win32" ? "C:\\repo" : "/repo";
-        expect(resolveMcpBinaryPath(root, { CARGO_TARGET_DIR: "scratch/target" }, platform)).toBe(resolveMcpBinaryPath(root, {}, platform));
-        expect(resolveBuiltMcpBinaryPath(root, { CARGO_TARGET_DIR: "scratch/target" }, platform)).not.toBe(resolveMcpBinaryPath(root, {}, platform));
-      }
-    });
-
-  });
-
+  const { registerTests1 } = await import("./🧪️tests/🧪️resolvemcpbinarypath/🟦️.ts");
+  await registerTests1(import.meta.vitest, { readFileSync, requireMcpBinary, resolveBuiltMcpBinaryPath, resolveMcpBinaryPath }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests

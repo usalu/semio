@@ -1,6 +1,6 @@
 //! 🪣️ `set-fill-count` resumable command.
 
-use crate::mutations::{connect_vortices, create_object, delete_object, Puzzle3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{connect_vortices, create_object, delete_object, Puzzle3dMutation};
 use crate::Puzzle3dObject;
 use crate::editor::puzzle3d::config::{Puzzle3dConfig, Puzzle3dConfigMutation};
 use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;

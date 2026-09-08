@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 import Ajv from "ajv";
 
-type Group = { status: "Migrated" | "BatchOnlyPendingRewrite"; lanes: string[]; routes: string[]; blocker?: string };
+type Group = { status: "migrated" | "batch-only-pending-rewrite"; lanes: string[]; routes: string[]; blocker?: string };
 type Fixture = { routeCount: number; retainedRoutes: string[]; frameworkOwnedRoutes: string[]; groups: Group[]; globals: unknown[]; scanThenMonolithRoutes: string[]; laws: Record<string, boolean> };
 
 const root = resolve(import.meta.dir, "..");
@@ -27,13 +27,13 @@ test("Note source and fixture have one exact hostile census", async () => {
   const commands = [...source.matchAll(/^\s*"([^"]+)" as "[^"]+" =>/gm)].map((match) => match[1]!);
   const manifests = new Map([...source.matchAll(/\.action_interactive_job\("([^"]+)",\s*(?:semio_framework_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => [match[1]!, match[2]!]));
   const classified = fixture.groups.flatMap((group) => group.routes);
-  const retained = fixture.groups.filter((group) => group.status === "Migrated").flatMap((group) => group.routes);
+  const retained = fixture.groups.filter((group) => group.status === "migrated").flatMap((group) => group.routes);
   expect(exact(commands, classified)).toBe(true);
   expect(commands.length).toBe(fixture.routeCount);
   expect(exact([...manifests.keys()], classified)).toBe(true);
   expect(exact(fixture.retainedRoutes, retained)).toBe(true);
   expect(fixture.groups.every((group) => group.routes.every((route) => manifests.get(route) === group.status))).toBe(true);
-  expect(fixture.groups.every((group) => !group.lanes.includes("HostOnly") || group.lanes.length === 1)).toBe(true);
+  expect(fixture.groups.every((group) => !group.lanes.includes("host-only") || group.lanes.length === 1)).toBe(true);
   expect(fixture.frameworkOwnedRoutes).toEqual([]);
   expect(fixture.globals).toEqual([]);
   expect(fixture.scanThenMonolithRoutes).toEqual([]);

@@ -16,7 +16,7 @@
           "const": "change-header-fields"
         },
         "payload": {
-          "$ref": "./📐️change-header-fields/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bmp/v3/any/mutation/change-header-fields/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "insert-palette-entry"
         },
         "payload": {
-          "$ref": "./📥️insert-palette-entry/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bmp/v3/any/mutation/insert-palette-entry/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "remove-palette-entry"
         },
         "payload": {
-          "$ref": "./📤️remove-palette-entry/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bmp/v3/any/mutation/remove-palette-entry/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "replace-palette-entry"
         },
         "payload": {
-          "$ref": "./🎨️replace-palette-entry/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bmp/v3/any/mutation/replace-palette-entry/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "replace-pixel-data"
         },
         "payload": {
-          "$ref": "./🔲️replace-pixel-data/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/bmp/v3/any/mutation/replace-pixel-data/schema.json"
         }
       }
     }

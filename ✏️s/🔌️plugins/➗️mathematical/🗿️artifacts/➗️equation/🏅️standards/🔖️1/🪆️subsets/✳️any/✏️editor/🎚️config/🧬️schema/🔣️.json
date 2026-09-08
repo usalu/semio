@@ -1,9 +1,13 @@
 {
-  "$id": "https://semio.tech/schema/app/equation/equation/config.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/equation/equation/config/schema.json",
   "title": "EquationConfig",
   "type": "object",
   "additionalProperties": false,
-  "required": ["camera", "locale"],
+  "required": [
+    "camera",
+    "locale"
+  ],
   "properties": {
     "camera": {
       "$ref": "#/$defs/EquationCamera",
@@ -19,11 +23,24 @@
       "title": "EquationCamera",
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y", "zoom"],
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
       "properties": {
-        "x": { "type": "number", "format": "double" },
-        "y": { "type": "number", "format": "double" },
-        "zoom": { "type": "number", "format": "double" }
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
       }
     }
   }

@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.gltf/artifact.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/artifact.json",
   "title": "GltfArtifact",
   "description": "Full artifact state -- same shape as GltfSnapshot.",
   "$ref": "📸️snapshot/🔣️.json"

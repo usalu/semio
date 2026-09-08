@@ -149,58 +149,10 @@ pub fn snapshot(next: ArchitectConfig) -> Vec<ArchitectConfigMutation> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn active_register_falls_back_to_elements() {
-        assert_eq!(active_register(&ArchitectConfig::default()), "elements");
-        assert_eq!(active_register(&ArchitectConfig { active_register: "risks".into(), ..ArchitectConfig::default() }), "risks");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn a_snapshot_operation_replaces_the_whole_config_and_inverts_to_the_base() {
-        let base = ArchitectConfig::default();
-        let next = ArchitectConfig { search_query: "hall".into(), ..ArchitectConfig::default() };
-        let operation = ArchitectConfigMutation::ReplaceConfig(ReplaceConfig { config: next.clone() });
-        assert_eq!(operation.diff(&base).diff(), &next);
-        assert_eq!(operation.inverse(&base), vec![ArchitectConfigMutation::ReplaceConfig(ReplaceConfig { config: base })]);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn an_empty_active_report_parses_to_none() {
-        assert!(parse_active_report(&ArchitectConfig::default()).is_none());
-        assert!(parse_search_history(&ArchitectConfig::default()).is_empty());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-mod contract_vectors {
-    use super::*;
-    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
-    use dsl::os_pack as pack;
-
-    #[test]
-    fn architect_configuration_contract_vectors_match_the_json_oracle() {
-        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
-        let base: ArchitectConfig = pack::from_json_str(&vectors["base"].to_string()).expect("owned base decoder");
-        assert_eq!(<ArchitectConfigMutation as Mutation<ArchitectConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
-        for vector in vectors["cases"].as_array().expect("cases") {
-            let mutation: ArchitectConfigMutation = pack::from_json_str(&vector["mutation"].to_string()).expect("owned operation decoder");
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).expect("independent operation oracle"), vector["mutation"]);
-            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().expect("semantic kind"));
-            assert_eq!(ArchitectConfigMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
-            assert_eq!(ArchitectConfigMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("binary decode"), mutation);
-            let outcome = mutation.diff(&base);
-            assert!(outcome.messages().is_empty());
-            let next = outcome.diff().apply(&base).expect("apply diff");
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).expect("independent state oracle"), vector["expected"]);
-            let next_for_noop = next.clone();
-            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("apply inverse"));
-            assert_eq!(restored, base);
-            let noop = mutation.diff(&next_for_noop);
-            assert!(!noop.messages().is_empty());
-        }
-    }
-}
+#[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
+mod contract_vectors;

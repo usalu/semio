@@ -54,14 +54,6 @@ pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiAssembl
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn definition_declares_the_board_surface_and_body_key() {
-        let definition = definition();
-        assert_eq!(definition.body_key, BLOCK2D_BODY_BOARD);
-        assert!(matches!(definition.surface_kind, SurfaceKind::Board2d));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

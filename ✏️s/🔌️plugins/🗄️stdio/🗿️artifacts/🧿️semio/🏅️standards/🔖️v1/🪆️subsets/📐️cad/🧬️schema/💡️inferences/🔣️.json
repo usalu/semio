@@ -1,30 +1,54 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/semio/cad/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/cad/inference.json",
   "title": "SemioCadInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["bounds"],
+  "required": [
+    "bounds"
+  ],
   "properties": {
-    "bounds": { "$ref": "#/$defs/SemioCadBounds", "x-semio-derived": true }
+    "bounds": {
+      "$ref": "#/$defs/SemioCadBounds",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "SemioPoint2": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y"],
+      "required": [
+        "x",
+        "y"
+      ],
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" }
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
       }
     },
     "SemioCadBounds": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["min", "max", "entityCount"],
+      "required": [
+        "min",
+        "max",
+        "entityCount"
+      ],
       "properties": {
-        "min": { "$ref": "#/$defs/SemioPoint2" },
-        "max": { "$ref": "#/$defs/SemioPoint2" },
-        "entityCount": { "type": "integer", "minimum": 0 }
+        "min": {
+          "$ref": "#/$defs/SemioPoint2"
+        },
+        "max": {
+          "$ref": "#/$defs/SemioPoint2"
+        },
+        "entityCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

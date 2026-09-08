@@ -7,13 +7,16 @@ import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runV
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "🧪️tests/🟦️.ts");
+    runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 
+/** 🔤️ The Rust variant name of one kebab lane/disposition from `framework.ui`'s shared vocabulary. */
+const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
+
 type PublicationGroup = {
-  status: "Migrated" | "BatchOnlyPendingRewrite";
-  lanes: ("Artifact" | "Config" | "Draft" | "Presence" | "Transient" | "Child" | "HostOnly")[];
+  status: "migrated" | "batch-only-pending-rewrite";
+  lanes: ("artifact" | "config" | "draft" | "presence" | "transient" | "child" | "host-only")[];
   routes: string[];
   blocker?: string;
 };
@@ -67,8 +70,8 @@ function fixtureOracle(fixture: PublicationFixture): boolean {
       group.routes.length > 0
       && group.lanes.length > 0
       && new Set(group.lanes).size === group.lanes.length
-      && (group.status === "Migrated" ? group.blocker === undefined : Boolean(group.blocker))
-      && (!group.lanes.includes("HostOnly") || group.lanes.length === 1),
+      && (group.status === "migrated" ? group.blocker === undefined : Boolean(group.blocker))
+      && (!group.lanes.includes("host-only") || group.lanes.length === 1),
     );
   });
 }
@@ -86,7 +89,7 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
   const pairs = manifestPairs(production);
   const appGroups = owner.groups.map((group) => ({ ...group, routes: group.routes.filter((route) => (owner.owner !== "Puzzle5dPlayApp" || !reserved5d.has(route)) && (owner.owner !== "Puzzle2dPlayApp" || !reserved2d.has(route))) }));
   const appRoutes = appGroups.flatMap((group) => group.routes);
-  const migrated = appGroups.filter((group) => group.status === "Migrated").flatMap((group) => group.routes);
+  const migrated = appGroups.filter((group) => group.status === "migrated").flatMap((group) => group.routes);
   const expectedPairs = new Map(appGroups.flatMap((group) => group.routes.map((route) => [route, group.status])));
   if (!exactArray([...pairs.keys()], appRoutes)) return false;
   if (!appRoutes.every((route) => pairs.get(route) === expectedPairs.get(route))) return false;
@@ -109,7 +112,7 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
     && !production.includes("build_draft_store_one_item_preparation_factory")
     && !production.includes("build_presence_store_one_item_preparation_factory")
     && !production.includes("build_transient_store_one_item_preparation_factory");
-  if (!exactFactory || !exactContracts(contracts, appGroups.filter((group) => group.status === "Migrated")) || !exactArray(proofIds, migrated)) return false;
+  if (!exactFactory || !exactContracts(contracts, appGroups.filter((group) => group.status === "migrated")) || !exactArray(proofIds, migrated)) return false;
   if (owner.owner === "Puzzle3dPlayApp") {
     return production.includes("struct Puzzle3dConfigStorePreparationFactory")
       && production.includes("impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dConfig, Puzzle3dConfigMutation> for Puzzle3dConfigStorePreparationFactory")
@@ -188,8 +191,10 @@ class PublicationAuthorityAuditScript extends BundleScript {
     const onlyOwner = segments[0];
     const puzzleRoot = resolve(this.root, "../..");
     const fixture = await Bun.file(resolve(puzzleRoot, "🔏️publication-authority/🔣️.json")).json() as PublicationFixture;
-    const schema = await Bun.file(resolve(puzzleRoot, "🔏️publication-authority/🧬️.schema.json")).json();
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
+    const module = await Bun.file(resolve(puzzleRoot, "🧬️schema/🔣️.json")).json() as { $id: string };
+    const ajv = new Ajv({ allErrors: true, strict: true });
+    ajv.addSchema(module);
+    const validate = ajv.compile({ $ref: `${module.$id}#/$defs/PuzzlePublicationAuthority` });
     if (!validate(fixture)) throw new Error(`Puzzle publication fixture failed Ajv validation: ${JSON.stringify(validate.errors)}`);
     if (!fixtureOracle(fixture)) throw new Error("Puzzle publication fixture failed the independent semantic oracle");
     const auditedOwners = onlyOwner ? fixture.owners.filter((owner) => owner.owner === onlyOwner) : fixture.owners;
@@ -199,7 +204,7 @@ class PublicationAuthorityAuditScript extends BundleScript {
     for (const owner of auditedOwners) {
       const source = await Bun.file(resolve(puzzleRoot, owner.source)).text();
       if (!ownerOracle(owner, source)) throw new Error(`${owner.owner} publication authority diverged from the fixture`);
-      const blocked = owner.groups.find((group) => group.status === "BatchOnlyPendingRewrite")?.routes[0];
+      const blocked = owner.groups.find((group) => group.status === "batch-only-pending-rewrite")?.routes[0];
       if (blocked) {
         const hostile = source.replace(
           new RegExp(`(\\.action_interactive_job\\("${blocked}",\\s*(?:semio_framework_plugin::)?InteractiveJobClassification::)BatchOnlyPendingRewrite`),
@@ -237,10 +242,10 @@ class PublicationAuthorityAuditScript extends BundleScript {
       { ...fixture, owners: fixture.owners.slice(1) },
       // 🧯️ A `Migrated` group must never carry a blocker — inject one unconditionally so this stays a
       // real hostile mutation for an owner whose first group is already `Migrated` (and therefore has none).
-      { ...fixture, owners: fixture.owners.map((owner, index) => index === 0 ? { ...owner, groups: [{ ...owner.groups[0]!, status: "Migrated", blocker: owner.groups[0]!.blocker ?? "hostile: a Migrated group must carry no blocker" }] } : owner) },
+      { ...fixture, owners: fixture.owners.map((owner, index) => index === 0 ? { ...owner, groups: [{ ...owner.groups[0]!, status: "migrated", blocker: owner.groups[0]!.blocker ?? "hostile: a migrated group must carry no blocker" }] } : owner) },
     ];
     if (hostileFixtures.some((hostile) => Boolean(validate(hostile)) || fixtureOracle(hostile))) throw new Error("Puzzle publication fixture accepted a hostile schema/oracle mutation");
-    const admitted = auditedOwners.flatMap((owner) => owner.groups.filter((group) => group.status === "Migrated").flatMap((group) => group.routes));
+    const admitted = auditedOwners.flatMap((owner) => owner.groups.filter((group) => group.status === "migrated").flatMap((group) => group.routes));
     console.error(`validated Puzzle publication authority; owners=${auditedOwners.map((owner) => owner.owner).join(",")}; admitted=${admitted.join(",")}; schema=Ajv; oracle=independent`);
   }
 }

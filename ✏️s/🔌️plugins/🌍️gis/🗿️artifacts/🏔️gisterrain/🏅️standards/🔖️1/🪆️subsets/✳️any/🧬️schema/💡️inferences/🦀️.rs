@@ -5,7 +5,7 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 
 use crate::GisTerrainSnapshot;
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 
 use super::bounds::{imported_lon_lat_positions, lon_lat_bounds, GisTerrainBounds};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -195,7 +195,7 @@ fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositionData>
 /// bundled fixture's own `gisterrain exaggeration=...` header only ever seeds it once via
 /// `crate::schema::default_terrain_document`.
 pub fn parse_descriptor(document: &GisTerrainSnapshot) -> TerrainDescriptorJson {
-    let mut descriptor = terrain_fixture_text::parse_descriptor(crate::dsl::REUSE_TERRAIN_EXAMPLE_TEXT, crate::GIS_3D_TERRAIN_SCHEMA, document.exaggeration);
+    let mut descriptor = terrain_fixture_text::parse_descriptor(crate::document_dsl::REUSE_TERRAIN_EXAMPLE_TEXT, crate::GIS_3D_TERRAIN_SCHEMA, document.exaggeration);
     descriptor.positions.extend(imported_positions(document));
     descriptor
 }
@@ -204,10 +204,10 @@ pub fn parse_descriptor(document: &GisTerrainSnapshot) -> TerrainDescriptorJson 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.gis.gisterrain.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `gisterrain_artifact_schema_descriptor`'s registration.
-pub fn gisterrain_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn gisterrain_artifact_inference_descriptor() -> ::semio_framework_schema::ArtifactInferenceDescriptor {
+    ::semio_framework_schema::ArtifactInferenceDescriptor {
         id: "s.gis.gisterrain.inference",
-        inference: schema::FacetLeaves {
+        inference: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -220,48 +220,6 @@ pub fn gisterrain_artifact_inference_descriptor() -> schema::ArtifactInferenceDe
 
 #[cfg(test)]
 //#region 🧪️Tests
-mod tests {
-    use super::*;
-    use protocol::Inference;
-
-    //#region 🧪️InferenceLaws
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
-        let snapshot = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: serde_json::json!({ "positions": [{ "id": "p1", "lon": 5.58, "lat": 50.60 }] }).to_string(), ..Default::default() };
-        assert_eq!(GisTerrainInference::infer(&snapshot), GisTerrainInference::infer(&snapshot));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
-        assert_eq!(GisTerrainInference::infer(&GisTerrainSnapshot::default()), GisTerrainInference::default());
-    }
-    //#endregion 🧪️InferenceLaws
-
-    //#region 🧪️FixtureText
-    /// 🧭️ Relocated from the artifact's `⚙️engine` tests alongside `parse_descriptor`
-    /// (`🔖️FixtureText` above).
-    ///
-    /// 📜️ The `.gisterrain` fixture's `gisterrain exaggeration=...` header is parsed twice for two
-    /// different purposes (see `parse_descriptor`/`default_terrain_document`'s docs); this proves the
-    /// scenery-data reader (`terrain_fixture_text`) still recovers the bundled fixture's pins/origin
-    /// after the document-only conversion — i.e. converting the fixture to the DSL didn't lose data.
-    #[semio_framework_async_macros::async_test]
-    async fn terrain_fixture_text_recovers_bundled_scenery_data() {
-        let descriptor = parse_descriptor(&GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: String::new(), ..Default::default() });
-        assert_eq!(descriptor.project_origin.lon, 5.5818);
-        assert_eq!(descriptor.project_origin.lat, 50.603);
-        assert_eq!(descriptor.positions.len(), 2);
-        assert_eq!(descriptor.positions[0].id, "p_institut_de_botanique_ulg_liege");
-    }
-
-    /// 🔌️ `map:in`'s overlay layer renders as extra pins alongside the fixture's own two.
-    #[semio_framework_async_macros::async_test]
-    async fn imported_map_features_render_as_extra_pins() {
-        let document = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: serde_json::json!({ "positions": [{ "id": "imported-1", "lon": 5.58, "lat": 50.60 }] }).to_string(), ..Default::default() };
-        let descriptor = parse_descriptor(&document);
-        assert_eq!(descriptor.positions.len(), 3, "2 fixture pins + 1 imported pin");
-        assert!(descriptor.positions.iter().any(|position| position.id == "imported-1"));
-    }
-    //#endregion 🧪️FixtureText
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

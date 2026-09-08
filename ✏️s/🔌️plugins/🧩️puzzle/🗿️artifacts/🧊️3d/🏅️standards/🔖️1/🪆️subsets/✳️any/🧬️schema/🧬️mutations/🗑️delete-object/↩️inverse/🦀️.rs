@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteObject` — reconstructs a `create-object` of the captured BASE object,
 //! then re-`connect-vortices`es every attraction BASE shows touching one of its vortices (severed
 //! cascade). Missing target ⇒ `Vec::new()`.
-use crate::mutations::Puzzle3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Inverse
@@ -11,9 +11,9 @@ pub fn inverse(payload: &super::mutation::DeleteObject, base: &Puzzle3dSnapshot)
     };
     let index = base.objects.iter().position(|entry| entry.id == payload.id);
     let vortex_ids: Vec<String> = object.vortices.iter().map(|vortex| format!("{}:{}", object.id, vortex.id)).collect();
-    let mut mutations = vec![crate::mutations::create_object::mutation::create_object(object.clone(), index)];
+    let mut mutations = vec![crate::standards::v1::subsets::any::schema::mutations::create_object::mutation::create_object(object.clone(), index)];
     for attraction in base.attractions.iter().filter(|attraction| vortex_ids.contains(&attraction.attracting) || vortex_ids.contains(&attraction.attracted)) {
-        mutations.push(crate::mutations::connect_vortices::mutation::connect_vortices(
+        mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_vortices::mutation::connect_vortices(
             attraction.id.clone(),
             attraction.attracting.clone(),
             attraction.attracted.clone(),

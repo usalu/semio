@@ -1,21 +1,37 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/xml/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/xml/1.0/base/inference.json",
   "title": "XmlInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["outline"],
+  "required": [
+    "outline"
+  ],
   "properties": {
-    "outline": { "$ref": "#/$defs/XmlOutline", "x-semio-derived": true }
+    "outline": {
+      "$ref": "#/$defs/XmlOutline",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "XmlOutline": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["elementCount", "maxDepth", "hasDoctype"],
+      "required": [
+        "elementCount",
+        "maxDepth",
+        "hasDoctype"
+      ],
       "properties": {
-        "elementCount": { "type": "integer" },
-        "maxDepth": { "type": "integer" },
-        "hasDoctype": { "type": "boolean" }
+        "elementCount": {
+          "type": "integer"
+        },
+        "maxDepth": {
+          "type": "integer"
+        },
+        "hasDoctype": {
+          "type": "boolean"
+        }
       }
     }
   }

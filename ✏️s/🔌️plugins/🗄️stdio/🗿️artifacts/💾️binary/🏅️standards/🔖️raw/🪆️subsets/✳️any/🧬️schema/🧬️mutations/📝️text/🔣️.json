@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.binary/mutations/text.json",
-  "title": "BinaryMutationsText",
-  "type": "object"
-}

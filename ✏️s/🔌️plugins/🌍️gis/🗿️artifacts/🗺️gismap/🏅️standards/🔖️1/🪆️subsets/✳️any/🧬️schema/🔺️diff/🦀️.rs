@@ -1,7 +1,7 @@
 //! 🧬️ GIS map diff schema — sparse field delta over the artifact.
 
 use crate::{MapFeature, MapFeaturePatch};
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 use semio_framework_value_derive::{FromValue, ToValue};
 

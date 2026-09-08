@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ConnectHandles` — a real append-only insert (never a
 //! whole-snapshot capture). No-op when the id already exists in `base`.
-use crate::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta};
 use crate::{Puzzle2dEdge, Puzzle2dSnapshot};
 
 //#region 🔖️Diff

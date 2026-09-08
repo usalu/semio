@@ -24,7 +24,8 @@ export const GUESTSLIM_FONT_RELATIVE = "🪞️vendor/🔤️guestslim-typst-fon
 
 /** 🫀️ The generated worker's progress-heartbeat cadence, interpolated into
  * {@link shardWorkerSource}. Its OWNER is the schema-owned liveness policy
- * (`semio.actor.shard-liveness.v1` — `🎭️actor/📮️shard-client/🧬️schema.json` +
+ * (`https://semio.tech/schema/framework/actor/shard-client/schema.json#/$defs/ShardClient` —
+ * `🎭️actor/📮️shard-client/🧬️schema/🔣️.json` +
  * `🧪️fixture/🔣️.json`, mirrored on the host side by `SHARD_LIVENESS_POLICY`); this declaration is
  * held equal to `policy.progressIntervalMs` by that module's own in-source suite, which reads this
  * literal straight out of this file, so editing one alone fails closed.

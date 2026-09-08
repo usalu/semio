@@ -12,7 +12,7 @@
       ],
       "properties": {
         "CreateColumn": {
-          "$ref": "./🏗️create-column/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/create-column/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "DeleteColumn": {
-          "$ref": "./🗑️delete-column/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/delete-column/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "EditCell": {
-          "$ref": "./✏️edit-cell/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/edit-cell/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "InsertRow": {
-          "$ref": "./📥insert-row/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/insert-row/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "RemoveRow": {
-          "$ref": "./➖remove-row/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/remove-row/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "RenameColumn": {
-          "$ref": "./🏷️rename-column/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/rename-column/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "ReorderColumns": {
-          "$ref": "./🔀reorder-columns/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/reorder-columns/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "ReorderRows": {
-          "$ref": "./🔃reorder-rows/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/reorder-rows/schema.json"
         }
       }
     }

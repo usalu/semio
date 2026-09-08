@@ -1,8 +1,8 @@
 //! ↩️ `rename-generation` inverse — old name looked up from BASE, never inverted structurally;
 //! missing target ⇒ nothing to undo.
 
-use crate::mutations::rename_generation::RenameGeneration;
-use crate::mutations::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::rename_generation::RenameGeneration;
+use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::Generation3dSnapshot;
 
 pub fn inverse(payload: &RenameGeneration, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {

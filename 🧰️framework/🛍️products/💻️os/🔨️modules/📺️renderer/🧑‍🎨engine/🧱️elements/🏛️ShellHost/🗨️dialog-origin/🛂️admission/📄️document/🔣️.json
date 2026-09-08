@@ -88,6 +88,7 @@
   ],
   "lateAttachment": ["attach-a", "attached-a", "detach", "attach-b"],
   "successorAttachment": ["attach-a", "detach", "attach-b"],
+  "coldReplacement": ["attach-a", "detach", "load", "bind", "detach"],
   "backgroundSessions": {
     "reuse": ["create-1", "visit-1", "visit-1", "release-1"],
     "replacement": ["create-1", "visit-1", "release-1", "create-2", "visit-2", "release-2"],

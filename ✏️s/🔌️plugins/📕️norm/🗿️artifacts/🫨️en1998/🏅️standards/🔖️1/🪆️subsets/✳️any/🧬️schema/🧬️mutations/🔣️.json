@@ -1,205 +1,154 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1998/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/norm/en1998/mutations.json",
   "title": "En1998Mutation",
   "oneOf": [
     {
-      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "./🎯️change-bearing-d-ed-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-bearing-d-ed-mm/schema.json"
     },
     {
-      "$ref": "./🛑️change-bearing-d-rd-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-bearing-d-rd-mm/schema.json"
     },
     {
-      "$ref": "./🌉️change-bridge-v-rd-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-bridge-v-rd-kn/schema.json"
     },
     {
-      "$ref": "./↔️change-drift-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-drift-mm/schema.json"
     },
     {
-      "$ref": "./🏎️change-en-a-gr/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-en-a-gr/schema.json"
     },
     {
-      "$ref": "./🗺️change-en-ground-type/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-en-ground-type/schema.json"
     },
     {
-      "$ref": "./🌈️change-en-spectrum-type/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-en-spectrum-type/schema.json"
     },
     {
-      "$ref": "./🔲️change-foundation-area-m2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-foundation-area-m2/schema.json"
     },
     {
-      "$ref": "./➡️change-foundation-h-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-foundation-h-ed-kn/schema.json"
     },
     {
-      "$ref": "./🧲️change-foundation-h-rd-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-foundation-h-rd-kn/schema.json"
     },
     {
-      "$ref": "./👇️change-foundation-p-rd-kpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-foundation-p-rd-kpa/schema.json"
     },
     {
-      "$ref": "./🪨️change-ground-type/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-ground-type/schema.json"
     },
     {
-      "$ref": "./↕️change-height-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-height-m/schema.json"
     },
     {
-      "$ref": "./🏛️change-importance-class/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-importance-class/schema.json"
     },
     {
-      "$ref": "./🌀️change-k-foundation/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-k-foundation/schema.json"
     },
     {
-      "$ref": "./🌱️change-k-soil/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-k-soil/schema.json"
     },
     {
-      "$ref": "./⚖️change-mass-t/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-mass-t/schema.json"
     },
     {
-      "$ref": "./🕸️change-multiple-resisting-systems/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-multiple-resisting-systems/schema.json"
     },
     {
-      "$ref": "./⏱️change-period-ratio/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-period-ratio/schema.json"
     },
     {
-      "$ref": "./📥️change-retrofit-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-retrofit-ed-kn/schema.json"
     },
     {
-      "$ref": "./✖️change-retrofit-gamma-el/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-retrofit-gamma-el/schema.json"
     },
     {
-      "$ref": "./🎓️change-retrofit-knowledge-level/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-retrofit-knowledge-level/schema.json"
     },
     {
-      "$ref": "./🚦️change-retrofit-limit-state/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-retrofit-limit-state/schema.json"
     },
     {
-      "$ref": "./💪️change-retrofit-rk-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-retrofit-rk-kn/schema.json"
     },
     {
-      "$ref": "./🫨️change-seismic-zone/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-seismic-zone/schema.json"
     },
     {
-      "$ref": "./🌾️change-silo-height-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-silo-height-m/schema.json"
     },
     {
-      "$ref": "./🗜️change-silo-n-rd-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-silo-n-rd-kn/schema.json"
     },
     {
-      "$ref": "./📊️change-silo-q-nominal/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-silo-q-nominal/schema.json"
     },
     {
-      "$ref": "./⭕️change-silo-radius-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-silo-radius-m/schema.json"
     },
     {
-      "$ref": "./📉️change-silo-v-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-silo-v-ed-kn/schema.json"
     },
     {
-      "$ref": "./🚧️change-silo-v-rd-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-silo-v-rd-kn/schema.json"
     },
     {
-      "$ref": "./🏗️change-structural-system/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-structural-system/schema.json"
     },
     {
-      "$ref": "./🕐️change-t1-s/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-t1-s/schema.json"
     },
     {
-      "$ref": "./🛢️change-tank-height-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-tank-height-m/schema.json"
     },
     {
-      "$ref": "./⚓️change-tank-mass-t/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-tank-mass-t/schema.json"
     },
     {
-      "$ref": "./🥁️change-tank-radius-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-tank-radius-m/schema.json"
     },
     {
-      "$ref": "./🔰️change-tank-v-rd-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-tank-v-rd-kn/schema.json"
     },
     {
-      "$ref": "./🏭️change-tower-is-chimney/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-tower-is-chimney/schema.json"
     },
     {
-      "$ref": "./↪️change-tower-m-ed-knm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-tower-m-ed-knm/schema.json"
     },
     {
-      "$ref": "./🦾️change-tower-m-rd-knm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-tower-m-rd-knm/schema.json"
     },
     {
-      "$ref": "./🗼️change-tower-mass-t/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-tower-mass-t/schema.json"
     },
     {
-      "$ref": "./💨️change-tower-q-nominal/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-tower-q-nominal/schema.json"
     },
     {
-      "$ref": "./🛡️change-v-rd-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-v-rd-kn/schema.json"
     },
     {
-      "$ref": "./🏋️change-wall-h-rd-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-wall-h-rd-kn/schema.json"
     },
     {
-      "$ref": "./🧱️change-wall-height-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-wall-height-m/schema.json"
     },
     {
-      "$ref": "./📐️change-wall-phi-deg/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-wall-phi-deg/schema.json"
     },
     {
-      "$ref": "./🔢️change-wall-r/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-wall-r/schema.json"
     },
     {
-      "$ref": "./🧂️change-wall-soil-gamma-kn-m3/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1998/mutation/change-wall-soil-gamma-kn-m3/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-annex",
-    "change-bearing-d-ed-mm",
-    "change-bearing-d-rd-mm",
-    "change-bridge-v-rd-kn",
-    "change-drift-mm",
-    "change-en-a-gr",
-    "change-en-ground-type",
-    "change-en-spectrum-type",
-    "change-foundation-area-m2",
-    "change-foundation-h-ed-kn",
-    "change-foundation-h-rd-kn",
-    "change-foundation-p-rd-kpa",
-    "change-ground-type",
-    "change-height-m",
-    "change-importance-class",
-    "change-k-foundation",
-    "change-k-soil",
-    "change-mass-t",
-    "change-multiple-resisting-systems",
-    "change-period-ratio",
-    "change-retrofit-ed-kn",
-    "change-retrofit-gamma-el",
-    "change-retrofit-knowledge-level",
-    "change-retrofit-limit-state",
-    "change-retrofit-rk-kn",
-    "change-seismic-zone",
-    "change-silo-height-m",
-    "change-silo-n-rd-kn",
-    "change-silo-q-nominal",
-    "change-silo-radius-m",
-    "change-silo-v-ed-kn",
-    "change-silo-v-rd-kn",
-    "change-structural-system",
-    "change-t1-s",
-    "change-tank-height-m",
-    "change-tank-mass-t",
-    "change-tank-radius-m",
-    "change-tank-v-rd-kn",
-    "change-tower-is-chimney",
-    "change-tower-m-ed-knm",
-    "change-tower-m-rd-knm",
-    "change-tower-mass-t",
-    "change-tower-q-nominal",
-    "change-v-rd-kn",
-    "change-wall-h-rd-kn",
-    "change-wall-height-m",
-    "change-wall-phi-deg",
-    "change-wall-r",
-    "change-wall-soil-gamma-kn-m3"
   ]
 }

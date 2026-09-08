@@ -2,7 +2,7 @@
 
 use crate::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the block5d artifact.
@@ -13,7 +13,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.block.block5d")]
 pub struct Block5dDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::schema::Block5dArtifact>>,
+    pub artifact: Option<Box<crate::standards::v1::subsets::any::schema::Block5dArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

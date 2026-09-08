@@ -1,141 +1,106 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/note/note/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/note/note/mutations.json",
   "title": "NoteMutation",
   "oneOf": [
     {
-      "$ref": "./../../../📜️document/🧬️schema/🧬️mutations/🏷️rename-note/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/document/mutation/rename-note/schema.json"
     },
     {
-      "$ref": "./../../../🎨️canvas/🧬️schema/🧬️mutations/👁️change-grid-visible/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/canvas/mutation/change-grid-visible/schema.json"
     },
     {
-      "$ref": "./../../../🎨️canvas/🧬️schema/🧬️mutations/📏️change-grid-spacing/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/canvas/mutation/change-grid-spacing/schema.json"
     },
     {
-      "$ref": "./../../../🎨️canvas/🧬️schema/🧬️mutations/🔢️change-grid-subdivisions/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/canvas/mutation/change-grid-subdivisions/schema.json"
     },
     {
-      "$ref": "./../../../🎨️canvas/🧬️schema/🧬️mutations/🌫️change-grid-opacity/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/canvas/mutation/change-grid-opacity/schema.json"
     },
     {
-      "$ref": "./../../../🎨️canvas/🧬️schema/🧬️mutations/🧲️change-snap-enabled/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/canvas/mutation/change-snap-enabled/schema.json"
     },
     {
-      "$ref": "./../../../🎨️canvas/🧬️schema/🧬️mutations/📐️change-snap-grid-spacing/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/canvas/mutation/change-snap-grid-spacing/schema.json"
     },
     {
-      "$ref": "./../../../🖋️ink/🧬️schema/🧬️mutations/✏️change-pencil-width/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/ink/mutation/change-pencil-width/schema.json"
     },
     {
-      "$ref": "./../../../🖋️ink/🧬️schema/🧬️mutations/🧽️change-eraser-radius/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/ink/mutation/change-eraser-radius/schema.json"
     },
     {
-      "$ref": "./../../../🖼️asset/🧬️schema/🧬️mutations/🆕️create-asset/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/asset/mutation/create-asset/schema.json"
     },
     {
-      "$ref": "./../../../🖼️asset/🧬️schema/🧬️mutations/🔁️replace-asset-payload/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/asset/mutation/replace-asset-payload/schema.json"
     },
     {
-      "$ref": "./../../../🖼️asset/🧬️schema/🧬️mutations/🗑️delete-asset/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/asset/mutation/delete-asset/schema.json"
     },
     {
-      "$ref": "./../../../🧱️block/🧬️schema/🧬️mutations/➕️create-block/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/block/mutation/create-block/schema.json"
     },
     {
-      "$ref": "./../../../🧱️block/🧬️schema/🧬️mutations/❌️delete-block/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/block/mutation/delete-block/schema.json"
     },
     {
-      "$ref": "./../../../🧱️block/🧬️schema/🧬️mutations/🧹️delete-blocks/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/block/mutation/delete-blocks/schema.json"
     },
     {
-      "$ref": "./../../../🧱️block/🧬️schema/🧬️mutations/📋️duplicate-block/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/block/mutation/duplicate-block/schema.json"
     },
     {
-      "$ref": "./../../../🧱️block/🧬️schema/🧬️mutations/👥️duplicate-blocks/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/block/mutation/duplicate-blocks/schema.json"
     },
     {
-      "$ref": "./../../../🧱️block/🧬️schema/🧬️mutations/🚚️move-block-to-container/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/block/mutation/move-block-to-container/schema.json"
     },
     {
-      "$ref": "./../../../🧱️block/🧬️schema/🧬️mutations/🤏️drag-blocks/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/block/mutation/drag-blocks/schema.json"
     },
     {
-      "$ref": "./../../../🧱️block/🧬️schema/🧬️mutations/🔖️rename-block/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/block/mutation/rename-block/schema.json"
     },
     {
-      "$ref": "./../../../🧱️block/🧬️schema/🧬️mutations/👀️change-block-visible/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/block/mutation/change-block-visible/schema.json"
     },
     {
-      "$ref": "./../../../🧱️block/🧬️schema/🧬️mutations/🔒️change-block-locked/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/block/mutation/change-block-locked/schema.json"
     },
     {
-      "$ref": "./../../../🧱️block/🧬️schema/🧬️mutations/📍️move-block/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/block/mutation/move-block/schema.json"
     },
     {
-      "$ref": "./../../../🧱️block/🧬️schema/🧬️mutations/↔️resize-block/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/block/mutation/resize-block/schema.json"
     },
     {
-      "$ref": "./../../../🧱️block/🧬️schema/🧬️mutations/🔤️change-block-font-size/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/block/mutation/change-block-font-size/schema.json"
     },
     {
-      "$ref": "./../../../📝️text/🧬️schema/🧬️mutations/📝️edit-block-text/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/text/mutation/edit-block-text/schema.json"
     },
     {
-      "$ref": "./../../../🧮️math/🧬️schema/🧬️mutations/🧮️edit-block-math/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/math/mutation/edit-block-math/schema.json"
     },
     {
-      "$ref": "./../../../🖋️ink/🧬️schema/🧬️mutations/🖊️change-block-ink-width/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/ink/mutation/change-block-ink-width/schema.json"
     },
     {
-      "$ref": "./../../../🖋️ink/🧬️schema/🧬️mutations/🎨️edit-block-ink-stroke/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/ink/mutation/edit-block-ink-stroke/schema.json"
     },
     {
-      "$ref": "./../../../📊️table/🧬️schema/🧬️mutations/⬇️insert-table-row/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/table/mutation/insert-table-row/schema.json"
     },
     {
-      "$ref": "./../../../📊️table/🧬️schema/🧬️mutations/⬆️remove-table-row/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/table/mutation/remove-table-row/schema.json"
     },
     {
-      "$ref": "./../../../📊️table/🧬️schema/🧬️mutations/➡️insert-table-column/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/table/mutation/insert-table-column/schema.json"
     },
     {
-      "$ref": "./../../../📊️table/🧬️schema/🧬️mutations/⬅️remove-table-column/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/note/note/1/table/mutation/remove-table-column/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "rename-note",
-    "change-grid-visible",
-    "change-grid-spacing",
-    "change-grid-subdivisions",
-    "change-grid-opacity",
-    "change-snap-enabled",
-    "change-snap-grid-spacing",
-    "change-pencil-width",
-    "change-eraser-radius",
-    "create-asset",
-    "replace-asset-payload",
-    "delete-asset",
-    "create-block",
-    "delete-block",
-    "delete-blocks",
-    "duplicate-block",
-    "duplicate-blocks",
-    "move-block-to-container",
-    "drag-blocks",
-    "rename-block",
-    "change-block-visible",
-    "change-block-locked",
-    "move-block",
-    "resize-block",
-    "change-block-font-size",
-    "edit-block-text",
-    "edit-block-math",
-    "change-block-ink-width",
-    "edit-block-ink-stroke",
-    "insert-table-row",
-    "remove-table-row",
-    "insert-table-column",
-    "remove-table-column"
   ]
 }

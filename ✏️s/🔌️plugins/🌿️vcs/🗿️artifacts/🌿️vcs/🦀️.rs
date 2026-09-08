@@ -4,14 +4,6 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
-// 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault>`, the exact signature
-// `ArtifactApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned
-// error type; boxing it here would diverge from the trait it must satisfy, and the lint does not fire on
-// the trait impl itself (only on the free functions the taxonomy split creates), so this is a pure
-// artefact of decomposition.
-#[allow(clippy::result_large_err)]
-extern crate self as semio_s_artifact_vcs_vcs;
 
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
@@ -87,12 +79,27 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// per debt D1, deleted repo-wide only in W6); wiring them into this field too is real follow-up
 /// work, not required for the tree to register or for any law to hold (mirrors the stdio pilot's
 /// own documented deviation, `📓️w2-p-report.md`).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::VcsApps> {
+pub fn artifact<A: VcsApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.vcs.vcs").expect("canonical vcs.vcs kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.vcs.vcs").expect("canonical vcs.vcs kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 //#endregion 🔖️ArtifactDeclaration
+
+/// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
+pub trait VcsApplication:
+    semio_framework_plugin::PluginApp
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::vcs::VcsPlayApp>>>
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::vcs::VcsViewer>>>
+{
+}
+
+impl<A> VcsApplication for A where
+    A: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::vcs::VcsPlayApp>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::vcs::VcsViewer>>>
+{
+}
 
 #[path = "."]
         pub mod standards {

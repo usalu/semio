@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `RemoveAuthor`.
 
 use crate::Block3dSnapshot;
-use crate::mutations::Block3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::RemoveAuthor, base: &Block3dSnapshot) -> Vec<Block3dMutation> {

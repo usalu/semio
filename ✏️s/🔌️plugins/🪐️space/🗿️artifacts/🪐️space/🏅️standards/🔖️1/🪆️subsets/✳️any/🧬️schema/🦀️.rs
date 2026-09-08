@@ -8,17 +8,17 @@
 /// 🧬️ Descriptor for `s.space.space` — reuses the snapshot/diff/mutations Rust source as the "artifact"
 /// facet's own Rust leaf too (no separate combined struct to source it from); the non-Rust leaves are
 /// intentionally minimal placeholders (see the module doc above).
-pub fn sspace_index_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn sspace_index_schema_descriptor() -> ::semio_framework_schema::ArtifactSchemaDescriptor {
     const PLACEHOLDER_TS: &str = "// s.space.space: no separate non-Rust schema leaf authored this wave.\n";
     const PLACEHOLDER_GRAPHQL: &str = "# s.space.space: no separate non-Rust schema leaf authored this wave.\n";
     const PLACEHOLDER_JSON: &str = "{}";
     const PLACEHOLDER_PROTO: &str = "// s.space.space: no separate non-Rust schema leaf authored this wave.\n";
-    schema::ArtifactSchemaDescriptor {
+    ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.space.space",
-        artifact: schema::FacetLeaves { rust: include_str!("📸️snapshot/🦀️.rs"), typescript: PLACEHOLDER_TS, graphql: PLACEHOLDER_GRAPHQL, json_schema: PLACEHOLDER_JSON, proto: PLACEHOLDER_PROTO },
-        snapshot: schema::FacetLeaves { rust: include_str!("📸️snapshot/🦀️.rs"), typescript: PLACEHOLDER_TS, graphql: PLACEHOLDER_GRAPHQL, json_schema: PLACEHOLDER_JSON, proto: PLACEHOLDER_PROTO },
-        diff: schema::FacetLeaves { rust: include_str!("🔺️diff/🦀️.rs"), typescript: PLACEHOLDER_TS, graphql: PLACEHOLDER_GRAPHQL, json_schema: PLACEHOLDER_JSON, proto: PLACEHOLDER_PROTO },
-        mutations: schema::FacetLeaves { rust: include_str!("🧬️mutations/🦀️.rs"), typescript: PLACEHOLDER_TS, graphql: PLACEHOLDER_GRAPHQL, json_schema: PLACEHOLDER_JSON, proto: PLACEHOLDER_PROTO },
+        artifact: ::semio_framework_schema::FacetLeaves { rust: include_str!("📸️snapshot/🦀️.rs"), typescript: PLACEHOLDER_TS, graphql: PLACEHOLDER_GRAPHQL, json_schema: PLACEHOLDER_JSON, proto: PLACEHOLDER_PROTO },
+        snapshot: ::semio_framework_schema::FacetLeaves { rust: include_str!("📸️snapshot/🦀️.rs"), typescript: PLACEHOLDER_TS, graphql: PLACEHOLDER_GRAPHQL, json_schema: PLACEHOLDER_JSON, proto: PLACEHOLDER_PROTO },
+        diff: ::semio_framework_schema::FacetLeaves { rust: include_str!("🔺️diff/🦀️.rs"), typescript: PLACEHOLDER_TS, graphql: PLACEHOLDER_GRAPHQL, json_schema: PLACEHOLDER_JSON, proto: PLACEHOLDER_PROTO },
+        mutations: ::semio_framework_schema::FacetLeaves { rust: include_str!("🧬️mutations/🦀️.rs"), typescript: PLACEHOLDER_TS, graphql: PLACEHOLDER_GRAPHQL, json_schema: PLACEHOLDER_JSON, proto: PLACEHOLDER_PROTO },
     }
 }
 //#endregion 🔖️Descriptor
@@ -26,18 +26,12 @@ pub fn sspace_index_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#region 🔖️DocumentHelpers
 /// 🔎 Returns whether `s.space.space` is present in the process-local schema registry.
 pub fn artifact_schema_registered() -> bool {
-    ::schema::artifact_schema_descriptor_registered("s.space.space")
+    ::semio_framework_schema::artifact_schema_descriptor_registered("s.space.space")
 }
 //#endregion 🔖️DocumentHelpers
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn descriptor_carries_the_space_index_schema_id() {
-        assert_eq!(sspace_index_schema_descriptor().id, "s.space.space");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteElement`.
 use super::DeleteElement;
-use crate::diff::{Fem3dDiff, Fem3dElementsDelta};
-use crate::mutations::{element_referrers, target_referenced};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dElementsDelta};
+use crate::standards::v1::subsets::any::schema::mutations::{element_referrers, target_referenced};
 use crate::{element_id, Fem3dSnapshot};
 
 //#region 🔖️Diff

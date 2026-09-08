@@ -12,8 +12,8 @@
 //!
 //! A support restrains a NODE's degrees of freedom, so a support on a node that does not exist restrains nothing and is refused.
 
-use crate::mutations::Fem3dMutation;
-use crate::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
 use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -47,7 +47,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 #[test]
 fn the_refusal_is_the_declared_diagnostic() {
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &crate::diff::Fem3dDiff::default(), "create-support/dangling-node-af37e2: a refused mutation must carry the empty diff");
+    assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "create-support/dangling-node-af37e2: a refused mutation must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "create-support/dangling-node-af37e2: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-missing", "create-support/dangling-node-af37e2: the refusal is reported as mutation.target-missing");

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/block/2d/1/any/mutation/add-author/schema.json",
+  "$id": "https://semio.tech/schema/s/block/block2d/mutation/add-author/schema.json",
   "title": "AddAuthor",
   "type": "object",
   "additionalProperties": false,

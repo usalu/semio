@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➕insert-point/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/insert-point/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📥insert-vlr/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/insert-vlr/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➖remove-point/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/remove-point/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📤remove-vlr/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/remove-vlr/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📦set-bounds/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-bounds/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🕰️set-creation-date/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-creation-date/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./✏️set-point/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-point/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔁set-points-by-return/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-points-by-return/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📏set-scale-and-offset/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-scale-and-offset/schema.json"
         },
         {
           "type": "object",
@@ -169,7 +169,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",
@@ -187,7 +187,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🛠️set-software-info/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-software-info/schema.json"
         },
         {
           "type": "object",
@@ -205,7 +205,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏢set-system-identifier/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-system-identifier/schema.json"
         },
         {
           "type": "object",
@@ -223,7 +223,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔢set-version/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-version/schema.json"
         },
         {
           "type": "object",
@@ -241,7 +241,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🗃️set-vlr-data/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-vlr-data/schema.json"
         },
         {
           "type": "object",

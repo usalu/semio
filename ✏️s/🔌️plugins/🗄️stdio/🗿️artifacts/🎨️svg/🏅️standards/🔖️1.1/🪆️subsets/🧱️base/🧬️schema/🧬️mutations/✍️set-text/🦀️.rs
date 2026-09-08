@@ -43,8 +43,5 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetTextMutation
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn semantic_identity_matches_descriptor() { assert_eq!(<SetTextMutation as protocol::MutationKind<SvgSnapshot, super::super::SvgMutation>>::SEMANTICS.kind, "set-text"); }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

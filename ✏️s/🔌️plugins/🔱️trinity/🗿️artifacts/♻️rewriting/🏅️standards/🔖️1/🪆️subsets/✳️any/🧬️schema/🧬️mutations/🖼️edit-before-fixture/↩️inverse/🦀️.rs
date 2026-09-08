@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `EditBeforeFixture` — the OLD body looked up from BASE.
-use crate::mutations::{edit_before_fixture, RewriteRuleMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{edit_before_fixture, RewriteRuleMutation};
 use crate::RewritingSnapshot;
 
 //#region 🔖️Inverse

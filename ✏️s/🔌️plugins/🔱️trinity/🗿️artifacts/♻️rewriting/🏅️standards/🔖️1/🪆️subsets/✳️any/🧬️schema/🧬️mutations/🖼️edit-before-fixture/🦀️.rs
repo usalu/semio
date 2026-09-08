@@ -1,7 +1,7 @@
 //! 🖼️ Direct rewriting mutation — `EditBeforeFixture`: replaces the "before" working-graph body (a whole
 //! `trinity.graph` fixture, authored/computed as JSON).
-use crate::diff::RewritingDiff;
-use crate::mutations::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 
 //#region 🔖️Mutation

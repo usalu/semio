@@ -49,16 +49,7 @@ export function register(): void {
 
 // #region 🧪️Tests
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-  const { runtime } = await import("@semio-tech/cad-js");
-
-  runtime.bootstrapCadModules();
-
-  describe("@semio-tech/cad-js-module-aec-building", () => {
-    it("maps STEP layer names to building typologies", () => {
-      expect(typologyFromStepLayer("Beams", AEC_BUILDING_MODEL_DEFINITION_ID)).toBe("building.building.beam");
-      expect(typologyFromStepLayer("Column", AEC_BUILDING_MODEL_DEFINITION_ID)).toBe("building.building.column");
-    });
-  });
+  const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts");
+  await registerTests1(import.meta.vitest, { AEC_BUILDING_MODEL_DEFINITION_ID, typologyFromStepLayer }, { directory: import.meta.dir, url: import.meta.url });
 }
 // #endregion 🧪️Tests

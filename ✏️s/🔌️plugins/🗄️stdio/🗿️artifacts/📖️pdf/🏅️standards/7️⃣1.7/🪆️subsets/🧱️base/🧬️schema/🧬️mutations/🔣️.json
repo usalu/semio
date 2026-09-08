@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➕️append-page-content/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/append-page-content/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📦️insert-object/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/insert-object/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📥️insert-page/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/insert-page/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔀️move-page/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/move-page/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🚫️remove-dict-entry/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/remove-dict-entry/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧹️remove-object/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/remove-object/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🗑️remove-page/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/remove-page/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧽️remove-trailer-entry/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/remove-trailer-entry/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔑️set-dict-entry/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-dict-entry/schema.json"
         },
         {
           "type": "object",
@@ -169,7 +169,7 @@
     {
       "allOf": [
         {
-          "$ref": "./ℹ️set-info/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-info/schema.json"
         },
         {
           "type": "object",
@@ -187,7 +187,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔧️set-object-value/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-object-value/schema.json"
         },
         {
           "type": "object",
@@ -205,7 +205,7 @@
     {
       "allOf": [
         {
-          "$ref": "./✏️set-page-content/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-page-content/schema.json"
         },
         {
           "type": "object",
@@ -223,7 +223,7 @@
     {
       "allOf": [
         {
-          "$ref": "./✂️set-page-crop-box/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-page-crop-box/schema.json"
         },
         {
           "type": "object",
@@ -241,7 +241,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📐️set-page-media-box/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-page-media-box/schema.json"
         },
         {
           "type": "object",
@@ -259,7 +259,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔄️set-page-rotation/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-page-rotation/schema.json"
         },
         {
           "type": "object",
@@ -277,7 +277,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧳️set-trailer-entry/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-trailer-entry/schema.json"
         },
         {
           "type": "object",

@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/equation/equation/diff.json",
   "title": "EquationDiff",
   "type": "object",
@@ -43,63 +44,116 @@
       "title": "EquationGraph",
       "type": "object",
       "additionalProperties": false,
-      "required": ["directed", "nodes", "edges", "algorithm"],
+      "required": [
+        "directed",
+        "nodes",
+        "edges",
+        "algorithm"
+      ],
       "properties": {
-        "directed": { "type": "boolean" },
+        "directed": {
+          "type": "boolean"
+        },
         "nodes": {
           "type": "array",
-          "items": { "$ref": "#/$defs/EquationNode" }
+          "items": {
+            "$ref": "#/$defs/EquationNode"
+          }
         },
         "edges": {
           "type": "array",
-          "items": { "$ref": "#/$defs/EquationEdge" }
+          "items": {
+            "$ref": "#/$defs/EquationEdge"
+          }
         },
-        "algorithm": { "type": "string" },
-        "algorithmSeed": { "type": "string" }
+        "algorithm": {
+          "type": "string"
+        },
+        "algorithmSeed": {
+          "type": "string"
+        }
       }
     },
     "EquationNode": {
       "title": "EquationNode",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "label", "x", "y"],
+      "required": [
+        "id",
+        "label",
+        "x",
+        "y"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "label": { "type": "string" },
-        "x": { "type": "number", "format": "double" },
-        "y": { "type": "number", "format": "double" }
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
       }
     },
     "EquationEdge": {
       "title": "EquationEdge",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "source", "target"],
+      "required": [
+        "id",
+        "source",
+        "target"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "source": { "type": "string" },
-        "target": { "type": "string" }
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
       }
     },
     "EquationPoint": {
       "title": "EquationPoint",
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y"],
+      "required": [
+        "x",
+        "y"
+      ],
       "properties": {
-        "x": { "type": "number", "format": "double" },
-        "y": { "type": "number", "format": "double" }
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
       }
     },
     "EquationGeometry": {
       "title": "EquationGeometry",
       "type": "object",
       "additionalProperties": false,
-      "required": ["points"],
+      "required": [
+        "points"
+      ],
       "properties": {
         "points": {
           "type": "array",
-          "items": { "$ref": "#/$defs/EquationPoint" }
+          "items": {
+            "$ref": "#/$defs/EquationPoint"
+          }
         }
       }
     }

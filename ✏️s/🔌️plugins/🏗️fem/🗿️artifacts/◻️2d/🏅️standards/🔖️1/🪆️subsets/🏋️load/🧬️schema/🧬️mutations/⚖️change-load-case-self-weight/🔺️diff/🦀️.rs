@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeLoadCaseSelfWeight`.
 use super::ChangeLoadCaseSelfWeight;
-use crate::diff::{Fem2dDiff, Fem2dLoadCasesDelta, Fem2dLoadCasesPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasesDelta, Fem2dLoadCasesPatchEntry};
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff

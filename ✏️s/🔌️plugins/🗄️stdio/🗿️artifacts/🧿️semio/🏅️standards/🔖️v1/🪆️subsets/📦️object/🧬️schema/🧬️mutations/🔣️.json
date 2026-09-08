@@ -12,7 +12,7 @@
       ],
       "properties": {
         "CreateBrep": {
-          "$ref": "./🧱create-brep/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/object/mutation/create-brep/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "CreateMesh": {
-          "$ref": "./🕸️create-mesh/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/object/mutation/create-mesh/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "CreateProperties": {
-          "$ref": "./🏷️create-properties/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/object/mutation/create-properties/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "DeleteBrep": {
-          "$ref": "./💥delete-brep/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/object/mutation/delete-brep/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "DeleteMesh": {
-          "$ref": "./🧨delete-mesh/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/object/mutation/delete-mesh/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "DeleteProperties": {
-          "$ref": "./🚫delete-properties/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/object/mutation/delete-properties/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "MoveObject": {
-          "$ref": "./🚚move-object/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/object/mutation/move-object/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "RotateObject": {
-          "$ref": "./🔄rotate-object/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/object/mutation/rotate-object/schema.json"
         }
       }
     },
@@ -108,7 +108,7 @@
       ],
       "properties": {
         "ScaleObject": {
-          "$ref": "./📏scale-object/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/object/mutation/scale-object/schema.json"
         }
       }
     }

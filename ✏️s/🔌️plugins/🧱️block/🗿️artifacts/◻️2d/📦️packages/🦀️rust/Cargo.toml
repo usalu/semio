@@ -16,6 +16,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
+test-serde = []
 component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract"]
 
 [dependencies]

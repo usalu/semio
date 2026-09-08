@@ -19,7 +19,7 @@
             "required": ["pluginId", "directoryName"],
             "properties": {
               "pluginId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 128 },
-              "directoryName": { "$ref": "semio:installation-directory-v1" }
+              "directoryName": { "$ref": "https://semio.tech/schema/os/extension/component.json#/$defs/InstallationDirectoryV1" }
             }
           }
         }

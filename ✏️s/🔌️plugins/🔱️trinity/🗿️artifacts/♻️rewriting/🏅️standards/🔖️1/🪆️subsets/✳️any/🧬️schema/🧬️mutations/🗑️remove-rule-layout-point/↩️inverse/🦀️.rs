@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `RemoveRuleLayoutPoint` — the OLD point looked up from BASE, restored via
 //! `change-rule-layout-point`. Missing key ⇒ `Vec::new()`.
-use crate::mutations::{change_rule_layout_point, RewriteRuleMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{change_rule_layout_point, RewriteRuleMutation};
 use crate::RewritingSnapshot;
 
 //#region 🔖️Inverse

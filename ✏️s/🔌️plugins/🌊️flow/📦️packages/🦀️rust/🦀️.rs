@@ -45,9 +45,6 @@ pub mod examples {
     pub mod app_flow_demo_session;
     #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
     pub mod art_flow_demo;
-    #[cfg(test)]
-    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
-    mod art_flow_demo_tests;
 }
 //#endregion 📚️Examples
 

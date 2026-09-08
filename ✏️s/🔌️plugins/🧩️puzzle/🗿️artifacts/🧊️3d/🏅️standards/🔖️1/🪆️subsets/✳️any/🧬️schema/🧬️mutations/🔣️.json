@@ -1,149 +1,112 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/puzzle/3d/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle3d/mutations.json",
   "title": "Puzzle3dMutation",
   "oneOf": [
     {
-      "$ref": "./➕add-object-vortex/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/add-object-vortex/schema.json"
     },
     {
-      "$ref": "./🌐change-domain/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/change-domain/schema.json"
     },
     {
-      "$ref": "./⚓change-object-anchor/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/change-object-anchor/schema.json"
     },
     {
-      "$ref": "./👁️change-object-hidden/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/change-object-hidden/schema.json"
     },
     {
-      "$ref": "./🏗️change-object-kind/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/change-object-kind/schema.json"
     },
     {
-      "$ref": "./🔒change-object-locked/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/change-object-locked/schema.json"
     },
     {
-      "$ref": "./🧱change-object-mesh/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/change-object-mesh/schema.json"
     },
     {
-      "$ref": "./👀change-reference-hidden/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/change-reference-hidden/schema.json"
     },
     {
-      "$ref": "./🗝️change-reference-locked/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/change-reference-locked/schema.json"
     },
     {
-      "$ref": "./🙈change-target-volume-hidden/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/change-target-volume-hidden/schema.json"
     },
     {
-      "$ref": "./🔐change-target-volume-locked/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/change-target-volume-locked/schema.json"
     },
     {
-      "$ref": "./🤝connect-kind-compatibility/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/connect-kind-compatibility/schema.json"
     },
     {
-      "$ref": "./🪢️connect-vortices/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/connect-vortices/schema.json"
     },
     {
-      "$ref": "./🌱create-object/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/create-object/schema.json"
     },
     {
-      "$ref": "./🖼️create-reference/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/create-reference/schema.json"
     },
     {
-      "$ref": "./🌍create-target-volume/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/create-target-volume/schema.json"
     },
     {
-      "$ref": "./🗑️delete-object/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/delete-object/schema.json"
     },
     {
-      "$ref": "./🚮delete-reference/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/delete-reference/schema.json"
     },
     {
-      "$ref": "./🪦delete-target-volume/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/delete-target-volume/schema.json"
     },
     {
-      "$ref": "./💔disconnect-kind-compatibility/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/disconnect-kind-compatibility/schema.json"
     },
     {
-      "$ref": "./✂️disconnect-vortices/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/disconnect-vortices/schema.json"
     },
     {
-      "$ref": "./🖋️edit-object-label/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/edit-object-label/schema.json"
     },
     {
-      "$ref": "./📍move-object/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/move-object/schema.json"
     },
     {
-      "$ref": "./🎯move-reference/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/move-reference/schema.json"
     },
     {
-      "$ref": "./🚀move-target-volume/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/move-target-volume/schema.json"
     },
     {
-      "$ref": "./➖remove-object-vortex/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/remove-object-vortex/schema.json"
     },
     {
-      "$ref": "./🧮replace-attraction-geometry/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/replace-attraction-geometry/schema.json"
     },
     {
-      "$ref": "./📚replace-kind-catalogs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/replace-kind-catalogs/schema.json"
     },
     {
-      "$ref": "./🔌replace-object-vortex/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/replace-object-vortex/schema.json"
     },
     {
-      "$ref": "./🖇️replace-reference-source/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/replace-reference-source/schema.json"
     },
     {
-      "$ref": "./📎resize-reference/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/resize-reference/schema.json"
     },
     {
-      "$ref": "./🔃rotate-object/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/rotate-object/schema.json"
     },
     {
-      "$ref": "./🌀rotate-target-volume/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/rotate-target-volume/schema.json"
     },
     {
-      "$ref": "./📏scale-object/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/scale-object/schema.json"
     },
     {
-      "$ref": "./📐scale-target-volume/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/mutation/scale-target-volume/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "add-object-vortex",
-    "change-domain",
-    "change-object-anchor",
-    "change-object-hidden",
-    "change-object-kind",
-    "change-object-locked",
-    "change-object-mesh",
-    "change-reference-hidden",
-    "change-reference-locked",
-    "change-target-volume-hidden",
-    "change-target-volume-locked",
-    "connect-kind-compatibility",
-    "connect-vortices",
-    "create-object",
-    "create-reference",
-    "create-target-volume",
-    "delete-object",
-    "delete-reference",
-    "delete-target-volume",
-    "disconnect-kind-compatibility",
-    "disconnect-vortices",
-    "edit-object-label",
-    "move-object",
-    "move-reference",
-    "move-target-volume",
-    "remove-object-vortex",
-    "replace-attraction-geometry",
-    "replace-kind-catalogs",
-    "replace-object-vortex",
-    "replace-reference-source",
-    "resize-reference",
-    "rotate-object",
-    "rotate-target-volume",
-    "scale-object",
-    "scale-target-volume"
   ]
 }

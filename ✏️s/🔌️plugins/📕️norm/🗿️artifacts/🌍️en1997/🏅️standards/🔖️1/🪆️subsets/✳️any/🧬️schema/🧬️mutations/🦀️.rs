@@ -142,112 +142,8 @@ impl En1997Mutation {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::Mutation;
-    
-
-    /// ⚖️ One value per `En1997Mutation` variant — the closed set the semantics/round-trip
-    /// tests iterate.
-    fn every_mutation() -> Vec<En1997Mutation> {
-        vec![
-            En1997Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 620.0 }),
-            En1997Mutation::ChangeHEdKn(change_h_ed_kn::ChangeHEdKn { new_h_ed_kn: 95.0 }),
-            En1997Mutation::ChangeFootingAreaM2(change_footing_area_m2::ChangeFootingAreaM2 { new_footing_area_m2: 2.4 }),
-            En1997Mutation::ChangePhiDeg(change_phi_deg::ChangePhiDeg { new_phi_deg: 32.0 }),
-            En1997Mutation::ChangeCKpa(change_c_kpa::ChangeCKpa { new_c_kpa: 5.0 }),
-            En1997Mutation::ChangeGammaKnM3(change_gamma_kn_m3::ChangeGammaKnM3 { new_gamma_kn_m3: 19.0 }),
-            En1997Mutation::ChangeBM(change_b_m::ChangeBM { new_b_m: 2.2 }),
-            En1997Mutation::ChangeDFM(change_d_f_m::ChangeDFM { new_d_f_m: 1.8 }),
-            En1997Mutation::ChangeESMpa(change_e_s_mpa::ChangeESMpa { new_e_s_mpa: 32_000.0 }),
-            En1997Mutation::ChangeNu(change_nu::ChangeNu { new_nu: 0.32 }),
-            En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach { new_design_approach: "da2".to_string() }),
-            En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
-            En1997Mutation::ChangeSettlementLimitMm(change_settlement_limit_mm::ChangeSettlementLimitMm { new_settlement_limit_mm: 20.0 }),
-            En1997Mutation::ChangeNPileEdKn(change_n_pile_ed_kn::ChangeNPileEdKn { new_n_pile_ed_kn: 900.0 }),
-            En1997Mutation::ChangeAlphaS(change_alpha_s::ChangeAlphaS { new_alpha_s: 0.75 }),
-            En1997Mutation::ChangePileDM(change_pile_d_m::ChangePileDM { new_pile_d_m: 0.65 }),
-            En1997Mutation::ChangeQSKpa(change_q_s_kpa::ChangeQSKpa { new_q_s_kpa: 90.0 }),
-            En1997Mutation::ChangePileLM(change_pile_l_m::ChangePileLM { new_pile_l_m: 14.0 }),
-            En1997Mutation::ChangeQBKpa(change_q_b_kpa::ChangeQBKpa { new_q_b_kpa: 2700.0 }),
-            En1997Mutation::ChangePileBaseAreaM2(change_pile_base_area_m2::ChangePileBaseAreaM2 { new_pile_base_area_m2: 0.33 }),
-            En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::ChangePileNProfiles { new_pile_n_profiles: 3 }),
-            En1997Mutation::ChangeZInvestigatedM(change_z_investigated_m::ChangeZInvestigatedM { new_z_investigated_m: 10.0 }),
-        ]
-    }
-
-    fn round_trip(base: &En1997Snapshot, mutation: &En1997Mutation) -> En1997Snapshot {
-        let forward = vcs::apply_mutation(base, mutation).expect("valid mutation").0;
-        let mut restored = forward.clone();
-        for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation").0;
-        }
-        assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
-        forward
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn every_variant_registers_an_approved_semantic_descriptor() {
-        for mutation in every_mutation() {
-            let descriptor = protocol::SemanticMutation::semantics(&mutation);
-            assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
-        }
-        assert_eq!(<En1997Mutation as protocol::SemanticMutation<En1997Snapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn every_variant_round_trips_via_inverse() {
-        let base = En1997Snapshot::default();
-        for mutation in every_mutation() {
-            round_trip(&base, &mutation);
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn from_snapshot_round_trips_via_full_document_replacement() {
-        let base = En1997Snapshot::default();
-        let mut target = En1997Snapshot::default();
-        let _ = &mut target;
-        let mut projected = base.clone();
-        for mutation in En1997Mutation::from_snapshot(&target) {
-            projected = vcs::apply_mutation(&projected, &mutation).expect("snapshot mutation applies").0;
-        }
-        assert_eq!(projected, target, "from_snapshot must reconstruct every persistent field");
-    }
-
-    //#region 🧪️MutationLaws
-    /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
-    /// (reachable here as `protocol::os_spr::testkit`), exercised against three structurally distinct
-    /// variants.
-    #[semio_framework_async_macros::async_test]
-    async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
-        let base = En1997Snapshot::default();
-        let mutation = En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
-        let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach { new_design_approach: "da2".to_string() }).diff(&base).diff().clone();
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
-    }
-    #[semio_framework_async_macros::async_test]
-    async fn change_v_ed_kn_satisfies_the_inverse_and_absorb_laws() {
-        let base = En1997Snapshot::default();
-        let mutation = En1997Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 620.0 });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
-        let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::ChangePileNProfiles { new_pile_n_profiles: 3 }).diff(&base).diff().clone();
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
-    }
-    #[semio_framework_async_macros::async_test]
-    async fn change_design_approach_satisfies_the_inverse_and_absorb_laws() {
-        let base = En1997Snapshot::default();
-        let mutation = En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach { new_design_approach: "da2".to_string() });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
-        let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1997Mutation::ChangePhiDeg(change_phi_deg::ChangePhiDeg { new_phi_deg: 32.0 }).diff(&base).diff().clone();
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
-    }
-    //#endregion 🧪️MutationLaws
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 //#region 🧪️FixtureTests
@@ -256,53 +152,8 @@ mod tests {
 /// running concurrently, and a `#[path]` on a module declared at the top level of this non-mod-rs
 /// file already resolves relative to this very directory.
 #[cfg(test)]
-#[path = "."]
-mod fixture_tests {
-    #[path = "🎚️change-alpha-s/🧪️tests/🎚️lowers-the-shaft-ffb6ee/🦀️.rs"]
-    mod tests_change_alpha_s_lowers_the_shaft_resistance_factor_to_0_5;
-    #[path = "🌍️change-annex/🧪️tests/🌍️switches-from-the-a87216/🦀️.rs"]
-    mod tests_change_annex_switches_from_the_german_na_to_the_recommended_en_annex;
-    #[path = "↔️change-bm/🧪️tests/↔️widens-the-footing-to-2-5-m/🦀️.rs"]
-    mod tests_change_bm_widens_the_footing_to_2_5_m;
-    #[path = "🧲️change-c-kpa/🧪️tests/🧲️gives-the-drained-fdaff0/🦀️.rs"]
-    mod tests_change_c_kpa_gives_the_drained_sand_12_5_kpa_of_effective_cohesion;
-    #[path = "🧭️change-design-approach/🧪️tests/🧭️switches-from-c3d1bb/🦀️.rs"]
-    mod tests_change_design_approach_switches_from_design_approach_1_to_design_approach_2;
-    #[path = "⬇️change-dfm/🧪️tests/⬇️deepens-the-founding-09ac35/🦀️.rs"]
-    mod tests_change_dfm_deepens_the_founding_level_to_2_m;
-    #[path = "🌀️change-es-mpa/🧪️tests/🌀️stiffens-the-soil-038ca9/🦀️.rs"]
-    mod tests_change_es_mpa_stiffens_the_soil_modulus_to_45_mpa;
-    #[path = "🦶️change-footing-area-m2/🧪️tests/🦶️enlarges-the-178a17/🦀️.rs"]
-    mod tests_change_footing_area_m2_enlarges_the_footing_area_to_6_25_m2;
-    #[path = "⚖️change-gamma-kn-m3/🧪️tests/⚖️raises-the-soil-027cc0/🦀️.rs"]
-    mod tests_change_gamma_kn_m3_raises_the_soil_unit_weight_to_20_kn_m3;
-    #[path = "➡️change-h-ed-kn/🧪️tests/➡️raises-the-design-9c8583/🦀️.rs"]
-    mod tests_change_h_ed_kn_raises_the_design_horizontal_load_to_120_kn;
-    #[path = "🏗️change-n-pile-ed-kn/🧪️tests/🏗️raises-the-94b477/🦀️.rs"]
-    mod tests_change_n_pile_ed_kn_raises_the_design_pile_axial_load_to_1200_kn;
-    #[path = "🧮️change-nu/🧪️tests/🧮️raises-poissons-ratio-to-0-375/🦀️.rs"]
-    mod tests_change_nu_raises_poissons_ratio_to_0_375;
-    #[path = "📐️change-phi-deg/🧪️tests/📐️raises-the-a2a94f/🦀️.rs"]
-    mod tests_change_phi_deg_raises_the_friction_angle_to_35_degrees;
-    #[path = "🔘️change-pile-base-area-m2/🧪️tests/🔘️doubles-the-pile-c3f8cd/🦀️.rs"]
-    mod tests_change_pile_base_area_m2_doubles_the_pile_base_area_to_0_5_m2;
-    #[path = "⭕️change-pile-dm/🧪️tests/⭕️enlarges-the-pile-e6938b/🦀️.rs"]
-    mod tests_change_pile_dm_enlarges_the_pile_diameter_to_0_75_m;
-    #[path = "📏️change-pile-lm/🧪️tests/📏️lengthens-the-pile-to-15-m/🦀️.rs"]
-    mod tests_change_pile_lm_lengthens_the_pile_to_15_m;
-    #[path = "🗺️change-pile-n-profiles/🧪️tests/🗺️adds-a-third-b8c08f/🦀️.rs"]
-    mod tests_change_pile_n_profiles_adds_a_third_investigated_ground_profile;
-    #[path = "🛡️change-qb-kpa/🧪️tests/🛡️raises-the-unit-3fa840/🦀️.rs"]
-    mod tests_change_qb_kpa_raises_the_unit_base_resistance_to_3200_kpa;
-    #[path = "🪵️change-qs-kpa/🧪️tests/🪵️raises-the-unit-dd22c3/🦀️.rs"]
-    mod tests_change_qs_kpa_raises_the_unit_shaft_resistance_to_120_kpa;
-    #[path = "🚦️change-settlement-limit-mm/🧪️tests/🚦️relaxes-the-bef733/🦀️.rs"]
-    mod tests_change_settlement_limit_mm_relaxes_the_settlement_limit_to_40_mm;
-    #[path = "🏋️change-v-ed-kn/🧪️tests/🏋️raises-the-design-e00fdc/🦀️.rs"]
-    mod tests_change_v_ed_kn_raises_the_design_vertical_load_to_750_kn;
-    #[path = "🔎️change-z-investigated-m/🧪️tests/🔎️deepens-the-2ee42a/🦀️.rs"]
-    mod tests_change_z_investigated_m_deepens_the_investigated_depth_to_12_m;
-}
+#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
+mod fixture_tests;
 //#endregion 🧪️FixtureTests
 
 
@@ -340,25 +191,6 @@ pub fn inverse_en1997_mutation(mutation: &En1997Mutation, base: &En1997Snapshot)
 
 //#region 🧪️KindsCatalog
 #[cfg(test)]
-mod kinds_catalog {
-    use super::*;
-
-    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
-    /// `#[derive(dsl::Mutations)]` assigns, and every one of those spellings must also appear in the
-    /// committed `en1997-1-any` catalog. The framework never parses Rust, so this is the only thing
-    /// standing between a renamed variant and a completeness gate that silently measures the wrong
-    /// set.
-    #[test]
-    fn kinds_match_the_enum_and_the_catalog() {
-        let descriptors = <En1997Mutation as protocol::SemanticMutation<En1997Snapshot>>::kinds();
-        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared En1997Mutation variant");
-        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
-            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
-        }
-        let manifest = include_str!("../../🔮️oracle/🔣️.json");
-        for kind in KINDS {
-            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
-        }
-    }
-}
+#[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
+mod kinds_catalog;
 //#endregion 🧪️KindsCatalog

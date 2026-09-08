@@ -16,7 +16,7 @@ type Vector = Readonly<{
 const library = resolve(import.meta.dir, "../..");
 const root = resolve(library, "../../../../..");
 const normalizerPath = join(library, "🧹️normalization/🟦️.ts");
-const vectorPath = join(import.meta.dir, "../🥒️gherkin-description-inline-code/🔣️.json"), schemaPath = join(import.meta.dir, "../🥒️gherkin-description-inline-code/🧬️schema/🔣️.json");
+const vectorPath = join(import.meta.dir, "../🥒️gherkin-description-inline-code/🔣️.json"), schemaPath = join(import.meta.dir, "../🥒️gherkin-description-inline-code/🛂️schema/🔣️.json");
 const vector: Vector = JSON.parse(readFileSync(vectorPath, "utf8"));
 const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
 const normalizerText = readFileSync(normalizerPath, "utf8");

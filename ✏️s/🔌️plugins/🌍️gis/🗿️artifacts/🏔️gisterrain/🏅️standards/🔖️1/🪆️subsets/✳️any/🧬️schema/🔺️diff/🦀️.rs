@@ -1,6 +1,6 @@
 //! 🧬️ GIS terrain diff schema — sparse field delta over the artifact.
 
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔹Diff

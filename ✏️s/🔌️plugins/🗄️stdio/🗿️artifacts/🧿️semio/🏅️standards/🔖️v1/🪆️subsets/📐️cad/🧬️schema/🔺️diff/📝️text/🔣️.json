@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.cad/diff/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/cad/diff/text.json",
   "title": "SemioCadDiffText",
   "description": "protocol::DiffCodec::print_diff/parse_diff wire text -- no semio envelope; see ../🔣️.json for the decoded diff's real schema.",
   "type": "string"

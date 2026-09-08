@@ -1,9 +1,9 @@
 //! ↩️ `create-widget` inverse — undo of a create is always a `delete-widget` by the created id
 //! (per `📓️taxonomy.md`'s `create ↔ delete` pairing).
 
-use crate::mutations::create_widget::CreateWidget;
-use crate::mutations::delete_widget::DeleteWidget;
-use crate::mutations::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::create_widget::CreateWidget;
+use crate::standards::v1::subsets::any::schema::mutations::delete_widget::DeleteWidget;
+use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::{widget_id, Generation3dSnapshot};
 
 /// ↩️ Undoing a create is deleting the same widget back out, by its own id.

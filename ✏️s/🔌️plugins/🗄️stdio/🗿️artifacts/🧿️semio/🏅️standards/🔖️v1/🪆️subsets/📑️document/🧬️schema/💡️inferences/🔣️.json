@@ -1,30 +1,59 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/semio/document/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/document/inference.json",
   "title": "SemioDocumentInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["outline"],
+  "required": [
+    "outline"
+  ],
   "properties": {
-    "outline": { "$ref": "#/$defs/SemioDocumentOutline", "x-semio-derived": true }
+    "outline": {
+      "$ref": "#/$defs/SemioDocumentOutline",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "SemioDocumentHeadingEntry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["level", "text"],
+      "required": [
+        "level",
+        "text"
+      ],
       "properties": {
-        "level": { "type": "integer", "minimum": 0 },
-        "text": { "type": "string" }
+        "level": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "text": {
+          "type": "string"
+        }
       }
     },
     "SemioDocumentOutline": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sectionOutline", "blockCount", "wordCount"],
+      "required": [
+        "sectionOutline",
+        "blockCount",
+        "wordCount"
+      ],
       "properties": {
-        "sectionOutline": { "type": "array", "items": { "$ref": "#/$defs/SemioDocumentHeadingEntry" } },
-        "blockCount": { "type": "integer", "minimum": 0 },
-        "wordCount": { "type": "integer", "minimum": 0 }
+        "sectionOutline": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioDocumentHeadingEntry"
+          }
+        },
+        "blockCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wordCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

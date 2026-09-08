@@ -16,11 +16,5 @@ pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️.dsl.semio");
 pub fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON) }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[semio_framework_async_macros::async_test]
-    async fn note_source_nonempty() {
-        assert!(!PRIMARY_TEXT.is_empty());
-        let _ = source();
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

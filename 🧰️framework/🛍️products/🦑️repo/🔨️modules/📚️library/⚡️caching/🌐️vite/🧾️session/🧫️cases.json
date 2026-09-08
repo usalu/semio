@@ -16,5 +16,8 @@
     "http://user@127.0.0.1:8080/",
     "http://127.0.0.1:8080/path"
   ],
-  "endpoint": "/__semio/nx-service"
+  "endpoint": "/__semio/nx-service",
+  "mutationLease": { "directory": ".leases", "resource": "sessions" },
+  "mutations": ["open", "publish", "close"],
+  "readinessRace": ["request", "replace-session", "respond", "reject-stale-session"]
 }

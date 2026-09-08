@@ -48,17 +48,8 @@ export function renderTree(view: TreeView): BuiltNode {
 
 //#region 🧪️Tests
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-  describe("renderTree", () => {
-    it("expands nested children recursively", () => {
-      const node = renderTree({ roots: [{ id: "root", label: "Root", children: [{ id: "child", label: "Child" }] }] });
-      if (node.component.type !== "tree") throw new Error("expected tree");
-      expect(node.children.length).toBe(1);
-      const rootItem = node.children[0]!.children[0]!;
-      expect(rootItem.key).toBe("root");
-      expect(rootItem.children[0]?.key).toBe("child");
-    });
-  });
+  const { registerTests1 } = await import("./🧪️tests/🧪️rendertree/🟦️.ts");
+  await registerTests1(import.meta.vitest, { renderTree }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests
 // #endregion 🌳️TreeWindowKit

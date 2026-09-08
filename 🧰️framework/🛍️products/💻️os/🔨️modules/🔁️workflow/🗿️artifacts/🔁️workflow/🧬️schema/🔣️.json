@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/workflow/artifacts/workflow/component.json",
+  "title": "Workflow",
+  "$defs": {
+    "PackageContractV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package",
+        "expected"
+      ],
+      "properties": {
+        "package": {
+          "const": "semio-framework-artifact-workflow-workflow"
+        },
+        "expected": {
+          "type": "object",
+          "required": [
+            "schema",
+            "graph",
+            "parameters",
+            "parameter_bindings",
+            "inputs",
+            "input_bindings",
+            "output_bindings"
+          ],
+          "properties": {
+            "schema": {
+              "const": "os.workflow"
+            },
+            "graph": {
+              "type": "object",
+              "required": [
+                "schema",
+                "nodes",
+                "edges"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "workflow.graph"
+                },
+                "nodes": {
+                  "type": "array"
+                },
+                "edges": {
+                  "type": "array"
+                }
+              }
+            },
+            "parameters": {
+              "type": "array"
+            },
+            "parameter_bindings": {
+              "type": "array"
+            },
+            "inputs": {
+              "type": "array"
+            },
+            "input_bindings": {
+              "type": "array"
+            },
+            "output_bindings": {
+              "type": "array"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -193,55 +193,10 @@ pub mod add_shot {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::shooting::testkit::{dispatch, shooting_app};
-    use crate::editor::shooting::ShootingCommand;
-
-    #[semio_framework_async_macros::async_test]
-    async fn set_active_shot_label_patches_active_shot() {
-        let mut app = shooting_app().await;
-        dispatch(&mut app, ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero Shot".into() })).await;
-        assert_eq!(crate::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label, "Hero Shot");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn add_shot_action_appends_shot() {
-        let mut app = shooting_app().await;
-        dispatch(&mut app, ShootingCommand::AddShot(add_shot::AddShot { format: "svg".into(), shape: "ellipse".into() })).await;
-        assert!(app.snapshot().expect("snapshot").shots.iter().any(|shot| shot.format == "svg" && shot.shape == "ellipse"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn set_active_shot_updates_fixture() {
-        let mut app = shooting_app().await;
-        let second_id = app.snapshot().expect("snapshot").shots.get(1).map(|shot| shot.id.clone()).expect("second shot");
-        dispatch(&mut app, ShootingCommand::SetActiveShot(set_active_shot::SetActiveShot { shot_id: Some(second_id.clone()) })).await;
-        assert_eq!(app.snapshot().expect("snapshot").active_shot_id, second_id);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-mod field_value_contract {
-    use super::*;
-
-    #[test]
-    fn shooting_shot_field_values_match_the_json_oracle() {
-        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔢️field-values.json")).expect("neutral input vectors");
-        let base = crate::schema::default_snapshot();
-        let id = base.shots[0].id.clone();
-        for vector in vectors["cases"].as_array().expect("cases") {
-            let field = vector["field"].as_str().expect("field");
-            let value = Value::String(vector["value"].as_str().expect("input string").into());
-            let mutation = shot_mutation_for_field(id.clone(), field, &value);
-            if vector["expected"].is_null() {
-                assert!(mutation.is_none(), "invalid dimension must reject without truncation");
-            } else {
-                let (next, _) = store::apply_mutation(&base, &mutation.expect("valid input")).expect("apply shot field");
-                let json: serde_json::Value = serde_json::from_str(&dsl::os_pack::to_json_string(&next)).expect("independent snapshot oracle");
-                assert_eq!(json["shots"][0][field], vector["expected"]);
-            }
-        }
-    }
-}
+#[path = "🧪️tests/🔬️field-value-contract/🦀️.rs"]
+mod field_value_contract;

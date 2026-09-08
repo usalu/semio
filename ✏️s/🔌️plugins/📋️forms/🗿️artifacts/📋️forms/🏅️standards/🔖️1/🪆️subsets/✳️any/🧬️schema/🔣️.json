@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/forms/forms/artifact.json",
   "title": "FormsArtifact",
   "type": "object",
@@ -15,21 +16,41 @@
     "contributionsJson"
   ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "id": { "type": "string", "x-semio-state": "artifact" },
-    "version": { "type": "string", "x-semio-state": "artifact" },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "version": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
     "title": {
-      "oneOf": [{ "type": "null" }, { "type": "string" }],
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "steps": {
       "type": "array",
-      "items": { "$ref": "#/$defs/FormStep" },
+      "items": {
+        "$ref": "#/$defs/FormStep"
+      },
       "x-semio-state": "artifact"
     },
     "selectedIds": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "x-semio-state": "presence"
     },
     "currentStepIndex": {
@@ -38,43 +59,85 @@
       "minimum": 0,
       "x-semio-state": "config"
     },
-    "tryValues": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string", "maxLength": 4096 } }, "x-semio-state": "config" },
-    "locale": { "type": "string", "x-semio-state": "config" },
-    "contributionsJson": { "type": "string", "x-semio-state": "config" }
+    "tryValues": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "maxLength": 4096
+        }
+      },
+      "x-semio-state": "config"
+    },
+    "locale": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "contributionsJson": {
+      "type": "string",
+      "x-semio-state": "config"
+    }
   },
   "$defs": {
     "FormStep": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "title", "blocks"],
+      "required": [
+        "id",
+        "title",
+        "blocks"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "title": { "type": "string" },
-        "description": { "type": "string" },
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
         "blocks": {
           "type": "array",
-          "items": { "$ref": "#/$defs/FormQuestion" }
+          "items": {
+            "$ref": "#/$defs/FormQuestion"
+          }
         }
       }
     },
     "FormQuestion": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["id", "label", "kind"],
+      "required": [
+        "id",
+        "label",
+        "kind"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "label": { "type": "string" },
-        "kind": { "type": "string" }
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        }
       }
     },
     "FormsStringList": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["values"],
+      "required": [
+        "values"
+      ],
       "properties": {
         "values": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

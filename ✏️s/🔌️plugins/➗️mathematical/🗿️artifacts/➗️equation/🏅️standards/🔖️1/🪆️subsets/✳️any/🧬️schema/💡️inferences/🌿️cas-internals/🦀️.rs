@@ -153,29 +153,7 @@ pub mod fnkind {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn arity_hand_cases() {
-            assert_eq!(FnKind::Sin.arity(), Some(1));
-            assert_eq!(FnKind::BesselJ.arity(), Some(2));
-            assert_eq!(FnKind::UserFn("f".into()).arity(), None);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn parity_hand_cases() {
-            assert!(FnKind::Cos.is_even());
-            assert!(FnKind::Sin.is_odd());
-            assert!(!FnKind::Exp.is_even() && !FnKind::Exp.is_odd());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn name_hand_cases() {
-            assert_eq!(FnKind::Sin.name(), "sin");
-            assert_eq!(FnKind::UserFn("myFunc".into()).name(), "myFunc");
-        }
-    }
+    include!("🧪️tests/🔬️fnkind-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Fnkind
@@ -669,40 +647,7 @@ pub mod expr {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn structural_equality_ignores_sharing() {
-            let a = Expr::integer(5);
-            let b = Expr::integer(5);
-            assert_eq!(a, b);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn hash_is_deterministic() {
-            let a = Expr::integer(42);
-            let b = Expr::integer(42);
-            assert_eq!(a.hash(), b.hash());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn ord_is_consistent_and_total() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            let one = Expr::integer(1);
-            assert!(one < x);
-            assert!(x < y || y < x);
-            assert!(!(x < y && y < x));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn symbols_with_different_assumptions_are_distinct() {
-            let x1 = Expr::symbol("x");
-            let x2 = Expr::symbol_with("x", AssumeSet::POSITIVE);
-            assert_ne!(x1, x2);
-        }
-    }
+    include!("🧪️tests/🔬️expr-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Expr
@@ -1146,149 +1091,7 @@ mod canon {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn add_folds_numeric_literals() {
-            let e = make_add(vec![Expr::integer(2), Expr::integer(3)]);
-            assert_eq!(e, Expr::integer(5));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn add_collects_like_terms() {
-            let x = Expr::symbol("x");
-            let e = make_add(vec![x.clone(), x.clone()]);
-            let expected = make_mul(vec![Expr::integer(2), x]);
-            assert_eq!(e, expected);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn add_drops_zero() {
-            let x = Expr::symbol("x");
-            let e = make_add(vec![x.clone(), Expr::integer(0)]);
-            assert_eq!(e, x);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn mul_folds_numeric_literals() {
-            let e = make_mul(vec![Expr::integer(2), Expr::integer(3)]);
-            assert_eq!(e, Expr::integer(6));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn mul_combines_like_bases() {
-            let x = Expr::symbol("x");
-            let e = make_mul(vec![x.clone(), x.clone()]);
-            let expected = make_pow(x, Expr::integer(2));
-            assert_eq!(e, expected);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn mul_by_zero_absorbs() {
-            let x = Expr::symbol("x");
-            let e = make_mul(vec![x, Expr::integer(0)]);
-            assert_eq!(e, Expr::integer(0));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn mul_zero_times_complex_infinity_is_undefined() {
-            let e = make_mul(vec![Expr::integer(0), Expr::constant(Constant::ComplexInf)]);
-            assert_eq!(e, Expr::constant(Constant::Undefined));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn mul_nonzero_times_complex_infinity_is_complex_infinity() {
-            let e = make_mul(vec![Expr::integer(5), Expr::constant(Constant::ComplexInf)]);
-            assert_eq!(e, Expr::constant(Constant::ComplexInf));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn pow_identities() {
-            let x = Expr::symbol("x");
-            assert_eq!(make_pow(x.clone(), Expr::integer(0)), Expr::integer(1));
-            assert_eq!(make_pow(x.clone(), Expr::integer(1)), x);
-            assert_eq!(make_pow(Expr::integer(1), x), Expr::integer(1));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn pow_integer_folds_exactly() {
-            assert_eq!(make_pow(Expr::integer(2), Expr::integer(10)), Expr::integer(1024));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn pow_negative_integer_exponent_gives_rational() {
-            let e = make_pow(Expr::integer(2), Expr::integer(-1));
-            assert_eq!(e, make_rational(Rational::from_i64(1, 2).unwrap()));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn radical_partial_extraction_matches_plan_example() {
-            // 8^(1/2) -> 2 * 2^(1/2)
-            let e = make_pow(Expr::integer(8), make_rational(Rational::from_i64(1, 2).unwrap()));
-            let expected = make_mul(vec![Expr::integer(2), make_pow(Expr::integer(2), make_rational(Rational::from_i64(1, 2).unwrap()))]);
-            assert_eq!(e, expected);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn radical_exact_perfect_power_folds_fully() {
-            // 4^(1/2) -> 2
-            let e = make_pow(Expr::integer(4), make_rational(Rational::from_i64(1, 2).unwrap()));
-            assert_eq!(e, Expr::integer(2));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn radical_of_prime_stays_symbolic() {
-            let e = make_pow(Expr::integer(2), make_rational(Rational::from_i64(1, 2).unwrap()));
-            assert!(matches!(e.kind(), Kind::Pow(..)));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn nested_pow_combines_exponents_for_integer_outer_exponent() {
-            let x = Expr::symbol("x");
-            let inner = make_pow(x.clone(), Expr::integer(2));
-            let outer = make_pow(inner, Expr::integer(3));
-            assert_eq!(outer, make_pow(x, Expr::integer(6)));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn i_power_cycles_with_period_four() {
-            let i = Expr::constant(Constant::I);
-            assert_eq!(make_pow(i.clone(), Expr::integer(0)), Expr::integer(1));
-            assert_eq!(make_pow(i.clone(), Expr::integer(1)), i);
-            assert_eq!(make_pow(i.clone(), Expr::integer(2)), Expr::integer(-1));
-            assert_eq!(make_pow(i, Expr::integer(4)), Expr::integer(1));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn func_special_values_fold() {
-            assert_eq!(make_func(FnKind::Sin, vec![Expr::integer(0)]), Expr::integer(0));
-            assert_eq!(make_func(FnKind::Cos, vec![Expr::integer(0)]), Expr::integer(1));
-            assert_eq!(make_func(FnKind::Exp, vec![Expr::integer(0)]), Expr::integer(1));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn canonicalization_is_idempotent_on_a_small_corpus() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            let corpus = vec![
-                make_add(vec![x.clone(), y.clone(), Expr::integer(3)]),
-                make_mul(vec![x.clone(), y, Expr::integer(2)]),
-                make_pow(x.clone(), Expr::integer(5)),
-                make_add(vec![make_mul(vec![Expr::integer(2), x.clone()]), make_mul(vec![Expr::integer(3), x])]),
-            ];
-            for e in corpus {
-                // Rebuilding from the same top-level kind should reproduce exactly the same expression.
-                let rebuilt = match e.kind() {
-                    Kind::Add(terms) => make_add(terms.clone()),
-                    Kind::Mul(factors) => make_mul(factors.clone()),
-                    Kind::Pow(b, ex) => make_pow(b.clone(), ex.clone()),
-                    _ => e.clone(),
-                };
-                assert_eq!(e, rebuilt);
-            }
-        }
-    }
+    include!("🧪️tests/🔬️canon-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Canon
@@ -1622,47 +1425,7 @@ pub mod assume {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn close_propagates_positive_to_real_nonnegative_nonzero() {
-            let closed = AssumeSet::POSITIVE.close();
-            assert!(closed.contains(AssumeSet::REAL));
-            assert!(closed.contains(AssumeSet::NONNEGATIVE));
-            assert!(closed.contains(AssumeSet::NONZERO));
-            assert!(closed.contains(AssumeSet::COMPLEX));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn close_propagates_even_to_integer_rational_real() {
-            let closed = AssumeSet::EVEN.close();
-            assert!(closed.contains(AssumeSet::INTEGER));
-            assert!(closed.contains(AssumeSet::RATIONAL));
-            assert!(closed.contains(AssumeSet::REAL));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        #[should_panic(expected = "contradictory POSITIVE and NEGATIVE")]
-        async fn close_rejects_positive_and_negative() {
-            (AssumeSet::POSITIVE | AssumeSet::NEGATIVE).close();
-        }
-
-        #[semio_framework_async_macros::async_test]
-        #[should_panic(expected = "contradictory EVEN and ODD")]
-        async fn close_rejects_even_and_odd() {
-            (AssumeSet::EVEN | AssumeSet::ODD).close();
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn bound_for_deduces_sign_from_assumption_store() {
-            use number::Rational;
-            let mut assumptions = Assumptions::new();
-            assumptions.assume_bound("x", RelationalOperator::Gt, Rational::from_i64(2, 1).unwrap());
-            assert_eq!(assumptions.bound_for("x"), Some(true));
-            assert_eq!(assumptions.bound_for("y"), None);
-        }
-    }
+    include!("🧪️tests/🔬️assume-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Assume
@@ -1764,43 +1527,7 @@ pub mod visit {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn subs_replaces_matching_subtree() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            let e = Expr::add(vec![x.clone(), Expr::integer(1)]);
-            let result = subs(&e, &x, &y);
-            assert_eq!(result, Expr::add(vec![y, Expr::integer(1)]));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn free_symbols_deduplicates_and_sorts() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            let e = Expr::add(vec![x.clone(), x, y]);
-            let symbols = free_symbols(&e);
-            assert_eq!(symbols.len(), 2);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn node_count_hand_case() {
-            let x = Expr::symbol("x");
-            let e = Expr::add(vec![x, Expr::integer(1)]);
-            assert_eq!(node_count(&e), 3); // Add(x, 1) has 2 children + 1 for itself
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn contains_symbol_detects_nested_occurrence() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            let e = Expr::pow(Expr::add(vec![x.clone(), Expr::integer(1)]), Expr::integer(2));
-            assert!(contains_symbol(&e, &x));
-            assert!(!contains_symbol(&e, &y));
-        }
-    }
+    include!("🧪️tests/🔬️visit-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Visit
@@ -2150,42 +1877,7 @@ pub mod fmt {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn display_simple_polynomial() {
-            let x = Expr::symbol("x");
-            let e = Expr::add(vec![Expr::pow(x, Expr::integer(2)), Expr::integer(1)]);
-            assert_eq!(display_string(&e), "x^2 + 1");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn display_negative_term() {
-            let x = Expr::symbol("x");
-            let e = x - Expr::integer(1);
-            assert_eq!(display_string(&e), "x - 1");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn display_division() {
-            let x = Expr::symbol("x");
-            let e = x / Expr::integer(2);
-            assert_eq!(display_string(&e), "x/2");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn latex_fraction_and_power() {
-            let x = Expr::symbol("x");
-            let e = Expr::pow(x, Expr::integer(2));
-            assert_eq!(to_latex(&e), "{x}^{2}");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn latex_constant_pi() {
-            assert_eq!(to_latex(&Expr::constant(Constant::Pi)), "\\pi");
-        }
-    }
+    include!("🧪️tests/🔬️fmt-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Fmt
@@ -2529,106 +2221,7 @@ pub mod pattern {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-        use crate::cas::expr::Expr;
-
-        #[semio_framework_async_macros::async_test]
-        async fn wildcard_any_matches_anything() {
-            let pattern = wild(0);
-            let subject = Expr::symbol("x");
-            let bindings = match_expr(&pattern, &subject).unwrap();
-            assert_eq!(bindings.get(&0), Some(&Binding::One(subject)));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn wildcard_number_rejects_symbols() {
-            let pattern = wild_num(0);
-            assert!(match_expr(&pattern, &Expr::symbol("x")).is_none());
-            assert!(match_expr(&pattern, &Expr::integer(5)).is_some());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn structural_match_on_pow() {
-            let x = Expr::symbol("x");
-            let pattern = Expr::pow(wild(0), Expr::integer(2));
-            let subject = Expr::pow(x.clone(), Expr::integer(2));
-            let bindings = match_expr(&pattern, &subject).unwrap();
-            assert_eq!(bindings.get(&0), Some(&Binding::One(x)));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn pow_exponent_mismatch_fails() {
-            let x = Expr::symbol("x");
-            let pattern = Expr::pow(wild(0), Expr::integer(2));
-            let subject = Expr::pow(x, Expr::integer(3));
-            assert!(match_expr(&pattern, &subject).is_none());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn ac_match_finds_permuted_assignment() {
-            // pattern: wild(0) + wild(1), subject: y + x -- should match regardless of order.
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            let pattern = Expr::add(vec![wild(0), wild(1)]);
-            let subject = Expr::add(vec![x.clone(), y.clone()]);
-            let bindings = match_expr(&pattern, &subject).unwrap();
-            let matched: std::collections::BTreeSet<Expr> = bindings
-                .values()
-                .map(|b| match b {
-                    Binding::One(e) => e.clone(),
-                    _ => panic!(),
-                })
-                .collect();
-            assert!(matched.contains(&x) && matched.contains(&y));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn seq_wildcard_absorbs_remaining_terms() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            let z = Expr::symbol("z");
-            let pattern = Expr::add(vec![x.clone(), wild_seq(0)]);
-            let subject = Expr::add(vec![x, y.clone(), z.clone()]);
-            let bindings = match_expr(&pattern, &subject).unwrap();
-            match bindings.get(&0) {
-                Some(Binding::Many(items)) => {
-                    let set: std::collections::BTreeSet<Expr> = items.iter().cloned().collect();
-                    assert!(set.contains(&y) && set.contains(&z));
-                }
-                _ => panic!("expected Many binding"),
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn rule_rewrites_matching_expression() {
-            // sin(w)^2 + cos(w)^2 -> 1 (Pythagorean identity, single-term hand case without the +seq form)
-            let w = Expr::symbol("w");
-            let lhs = Expr::add(vec![Expr::pow(Expr::func(crate::cas::fnkind::FnKind::Sin, vec![wild(0)]), Expr::integer(2)), Expr::pow(Expr::func(crate::cas::fnkind::FnKind::Cos, vec![wild(0)]), Expr::integer(2))]);
-            let rule = Rule::new(lhs, Expr::integer(1));
-            let subject = Expr::add(vec![Expr::pow(Expr::func(crate::cas::fnkind::FnKind::Sin, vec![w.clone()]), Expr::integer(2)), Expr::pow(Expr::func(crate::cas::fnkind::FnKind::Cos, vec![w]), Expr::integer(2))]);
-            assert_eq!(rule.try_apply(&subject), Some(Expr::integer(1)));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn ruleset_bottom_up_rewrites_nested_occurrence() {
-            let rule = Rule::new(Expr::pow(wild(0), Expr::integer(2)), Expr::mul(vec![wild(0), wild(0)]));
-            let rs = RuleSet::new(vec![rule]);
-            let x = Expr::symbol("x");
-            let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), Expr::integer(1)]);
-            let result = rs.apply(&e, Strategy::BottomUpOnce);
-            assert_eq!(result, Expr::add(vec![Expr::mul(vec![x.clone(), x]), Expr::integer(1)]));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn free_of_constraint_rejects_expressions_containing_the_symbol() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            let pattern = wild_free(0, "x");
-            assert!(match_expr(&pattern, &y).is_some());
-            assert!(match_expr(&pattern, &x).is_none());
-        }
-    }
+    include!("🧪️tests/🔬️pattern-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Pattern
@@ -2946,77 +2539,7 @@ pub mod polybridge {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn detect_gens_finds_symbols_and_functions() {
-            let x = Expr::symbol("x");
-            let s = Expr::func(crate::cas::fnkind::FnKind::Sin, vec![x.clone()]);
-            let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), s.clone()]);
-            let gens = detect_gens(&e);
-            assert!(gens.contains(&x));
-            assert!(gens.contains(&s));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn as_poly_roundtrips_through_from_poly() {
-            let x = Expr::symbol("x");
-            let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), Expr::mul(vec![Expr::integer(3), x]), Expr::integer(1)]);
-            let (poly, map) = as_poly_auto(&e).unwrap();
-            let rebuilt = from_poly(&poly, &map);
-            assert_eq!(rebuilt, e);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn as_poly_uni_extracts_univariate_polynomial() {
-            let x = Expr::symbol("x");
-            let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(3)), Expr::integer(2)]);
-            let p = as_poly_uni(&e, &x).unwrap();
-            assert_eq!(p.coeff(3), Rational::one());
-            assert_eq!(p.coeff(0), Rational::from_i64(2, 1).unwrap());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn as_poly_uni_fails_for_other_generators() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            let e = Expr::add(vec![x.clone(), y]);
-            assert!(as_poly_uni(&e, &x).is_none());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn as_ratfunc_auto_recovers_together_form() {
-            let x = Expr::symbol("x");
-            // 1/x + 1 -> (x + 1)/x  (structurally: num has x-degree-1 term, den has x^1 term)
-            let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(-1)), Expr::integer(1)]);
-            let (num, den, map) = as_ratfunc_auto(&e).unwrap();
-            assert!(poly_uses_var(&den, gen_index(&x, &map).unwrap()));
-            assert!(!num.is_zero());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn factor_poly_u_recombines_to_the_original() {
-            // (2x - 1)(x + 3) = 2x^2 + 5x - 3, with a rational (non-integer) leading structure once made monic.
-            let f = PolyU::from_coeffs(vec![Rational::from_i64(-3, 1).unwrap(), Rational::from_i64(5, 1).unwrap(), Rational::from_i64(2, 1).unwrap()]);
-            let (overall, factors) = factor_poly_u(&f);
-            let mut recombined = PolyU::constant(overall);
-            for (factor, mult) in &factors {
-                recombined = recombined.mul(&factor.pow(*mult as u64));
-            }
-            assert_eq!(recombined, f);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn build_ratio_folds_constant_denominator() {
-            let x = Expr::symbol("x");
-            let (num, _map) = as_poly(&x, std::slice::from_ref(&x)).unwrap();
-            let den = PolyM::constant(Rational::from_i64(2, 1).unwrap(), 1, MonomialOrder::Lex);
-            let map = PolyMap { gens: vec![x.clone()] };
-            let result = build_ratio(&num, &den, &map);
-            assert_eq!(result, Expr::mul(vec![Expr::from(Rational::from_i64(1, 2).unwrap()), x]));
-        }
-    }
+    include!("🧪️tests/🔬️polybridge-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Polybridge
@@ -3414,99 +2937,7 @@ pub mod simplify {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-        use crate::cas::expr::Expr;
-
-        #[semio_framework_async_macros::async_test]
-        async fn expand_binomial_square() {
-            let x = Expr::symbol("x");
-            let e = Expr::pow(Expr::add(vec![x.clone(), Expr::integer(1)]), Expr::integer(2));
-            let expanded = expand(&e);
-            let expected = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), Expr::mul(vec![Expr::integer(2), x]), Expr::integer(1)]);
-            assert_eq!(expanded, expected);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn expand_distributes_over_function_argument_unchanged() {
-            let x = Expr::symbol("x");
-            let e = Expr::func(crate::cas::fnkind::FnKind::Sin, vec![Expr::add(vec![x, Expr::integer(1)])]);
-            assert_eq!(expand(&e), e);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn collect_groups_like_powers() {
-            let x = Expr::symbol("x");
-            let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), Expr::mul(vec![Expr::integer(3), Expr::pow(x.clone(), Expr::integer(2))]), x.clone()]);
-            let collected = collect(&e, &x);
-            // 4x^2 + x
-            let expected = Expr::add(vec![Expr::mul(vec![Expr::integer(4), Expr::pow(x.clone(), Expr::integer(2))]), x]);
-            assert_eq!(collected, expected);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn together_combines_fractions() {
-            let x = Expr::symbol("x");
-            let e = Expr::add(vec![Expr::pow(x, Expr::integer(-1)), Expr::integer(1)]);
-            let combined = together(&e);
-            // Verify numerically: (1/x + 1) at x=2 should equal the combined form evaluated the same way.
-            assert_ne!(combined, e);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn cancel_removes_common_univariate_factor() {
-            let x = Expr::symbol("x");
-            // (x^2 - 1) / (x - 1) -> x + 1
-            let num = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), Expr::integer(-1)]);
-            let den = Expr::add(vec![x.clone(), Expr::integer(-1)]);
-            let e = Expr::mul(vec![num, Expr::pow(den, Expr::integer(-1))]);
-            let result = cancel(&e);
-            assert_eq!(result, Expr::add(vec![x, Expr::integer(1)]));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn factor_recovers_linear_factors() {
-            let x = Expr::symbol("x");
-            // x^2 - 1 -> (x-1)(x+1) up to ordering/sign; check by expanding back.
-            let e = Expr::add(vec![Expr::pow(x, Expr::integer(2)), Expr::integer(-1)]);
-            let factored = factor(&e);
-            assert_eq!(expand(&factored), e);
-            assert_ne!(factored, e);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn apart_splits_simple_rational_function() {
-            let x = Expr::symbol("x");
-            // 1/((x-1)(x+1)) = (1/2)/(x-1) - (1/2)/(x+1)
-            let den = Expr::mul(vec![Expr::add(vec![x.clone(), Expr::integer(-1)]), Expr::add(vec![x.clone(), Expr::integer(1)])]);
-            let e = Expr::pow(den, Expr::integer(-1));
-            let result = apart(&e, &x);
-            // Recombine via together+cancel-free check: evaluate both sides symbolically by re-expanding the together form.
-            let recombined = together(&result);
-            let original_together = together(&e);
-            assert_eq!(cancel(&recombined), cancel(&original_together));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn denest_sqrt_classic_example() {
-            // sqrt(3 + 2*sqrt(2)) == 1 + sqrt(2)
-            let inner = Expr::add(vec![Expr::integer(3), Expr::mul(vec![Expr::integer(2), Expr::pow(Expr::integer(2), Expr::from(Rational::from_i64(1, 2).unwrap()))])]);
-            let e = Expr::pow(inner, Expr::from(Rational::from_i64(1, 2).unwrap()));
-            let result = denest_sqrt(&e);
-            let expected = Expr::add(vec![Expr::integer(1), Expr::pow(Expr::integer(2), Expr::from(Rational::from_i64(1, 2).unwrap()))]);
-            assert_eq!(result, expected);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn simplify_picks_the_smallest_candidate() {
-            let x = Expr::symbol("x");
-            let num = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(2)), Expr::integer(-1)]);
-            let den = Expr::add(vec![x.clone(), Expr::integer(-1)]);
-            let e = Expr::mul(vec![num, Expr::pow(den, Expr::integer(-1))]);
-            let result = simplify(&e);
-            assert_eq!(result, Expr::add(vec![x, Expr::integer(1)]));
-        }
-    }
+    include!("🧪️tests/🔬️simplify-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Simplify
@@ -3666,77 +3097,7 @@ pub mod trig {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn trig_canon_rewrites_tan_to_sin_over_cos() {
-            let x = Expr::symbol("x");
-            let e = Expr::func(FnKind::Tan, vec![x.clone()]);
-            let result = trig_canon(&e);
-            let expected = Expr::mul(vec![Expr::func(FnKind::Sin, vec![x.clone()]), Expr::pow(Expr::func(FnKind::Cos, vec![x]), Expr::integer(-1))]);
-            assert_eq!(result, expected);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn trig_canon_applies_pythagorean_identity() {
-            let x = Expr::symbol("x");
-            let e = Expr::add(vec![Expr::pow(Expr::func(FnKind::Sin, vec![x.clone()]), Expr::integer(2)), Expr::pow(Expr::func(FnKind::Cos, vec![x]), Expr::integer(2))]);
-            assert_eq!(trig_canon(&e), Expr::integer(1));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn trig_canon_pythagorean_with_extra_terms() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            let e = Expr::add(vec![Expr::pow(Expr::func(FnKind::Sin, vec![x.clone()]), Expr::integer(2)), Expr::pow(Expr::func(FnKind::Cos, vec![x]), Expr::integer(2)), y.clone()]);
-            assert_eq!(trig_canon(&e), Expr::add(vec![Expr::integer(1), y]));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn expand_trig_sin_of_sum() {
-            let a = Expr::symbol("a");
-            let b = Expr::symbol("b");
-            let e = Expr::func(FnKind::Sin, vec![Expr::add(vec![a.clone(), b.clone()])]);
-            let expected = Expr::add(vec![Expr::mul(vec![Expr::func(FnKind::Sin, vec![a.clone()]), Expr::func(FnKind::Cos, vec![b.clone()])]), Expr::mul(vec![Expr::func(FnKind::Cos, vec![a]), Expr::func(FnKind::Sin, vec![b])])]);
-            assert_eq!(expand_trig(&e), expected);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn expand_log_of_product_and_power() {
-            let a = Expr::symbol("a");
-            let b = Expr::symbol("b");
-            let e = Expr::func(FnKind::Ln, vec![Expr::mul(vec![Expr::pow(a.clone(), Expr::integer(2)), b.clone()])]);
-            let expected = Expr::add(vec![Expr::mul(vec![Expr::integer(2), Expr::func(FnKind::Ln, vec![a])]), Expr::func(FnKind::Ln, vec![b])]);
-            assert_eq!(expand_log(&e), expected);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn logcombine_merges_positive_logs() {
-            let a = Expr::symbol_with("a", crate::cas::assume::AssumeSet::POSITIVE);
-            let b = Expr::symbol_with("b", crate::cas::assume::AssumeSet::POSITIVE);
-            let e = Expr::add(vec![Expr::func(FnKind::Ln, vec![a.clone()]), Expr::func(FnKind::Ln, vec![b.clone()])]);
-            let combined = logcombine(&e);
-            assert_eq!(combined, Expr::func(FnKind::Ln, vec![Expr::mul(vec![a, b])]));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn logcombine_skips_unknown_sign_arguments() {
-            let a = Expr::symbol("a");
-            let b = Expr::symbol("b");
-            let e = Expr::add(vec![Expr::func(FnKind::Ln, vec![a]), Expr::func(FnKind::Ln, vec![b])]);
-            assert_eq!(logcombine(&e), e);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn powsimp_combines_same_exponent_factors() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            let e = Expr::mul(vec![Expr::pow(x.clone(), Expr::integer(3)), Expr::pow(y.clone(), Expr::integer(3))]);
-            let expected = Expr::pow(Expr::mul(vec![x, y]), Expr::integer(3));
-            assert_eq!(powsimp(&e), expected);
-        }
-    }
+    include!("🧪️tests/🔬️trig-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Trig
@@ -4005,102 +3366,7 @@ pub mod diff {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn diff_of_constant_is_zero() {
-            assert_eq!(diff(&Expr::integer(5), &Expr::symbol("x")), Some(Expr::integer(0)));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn diff_of_x_is_one() {
-            let x = Expr::symbol("x");
-            assert_eq!(diff(&x, &x), Some(Expr::integer(1)));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn diff_of_other_symbol_is_zero() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            assert_eq!(diff(&y, &x), Some(Expr::integer(0)));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn power_rule() {
-            let x = Expr::symbol("x");
-            let e = Expr::pow(x.clone(), Expr::integer(3));
-            let expected = Expr::mul(vec![Expr::integer(3), Expr::pow(x, Expr::integer(2))]);
-            assert_eq!(diff(&e, &Expr::symbol("x")), Some(expected));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn product_rule() {
-            let x = Expr::symbol("x");
-            let e = Expr::mul(vec![x.clone(), Expr::func(FnKind::Sin, vec![x.clone()])]);
-            let expected = Expr::add(vec![Expr::func(FnKind::Sin, vec![x.clone()]), Expr::mul(vec![x.clone(), Expr::func(FnKind::Cos, vec![x])])]);
-            assert_eq!(diff(&e, &Expr::symbol("x")), Some(expected));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn chain_rule_sin_of_square() {
-            let x = Expr::symbol("x");
-            let e = Expr::func(FnKind::Sin, vec![Expr::pow(x.clone(), Expr::integer(2))]);
-            let expected = Expr::mul(vec![Expr::integer(2), x.clone(), Expr::func(FnKind::Cos, vec![Expr::pow(x, Expr::integer(2))])]);
-            assert_eq!(diff(&e, &Expr::symbol("x")), Some(expected));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn exp_of_x_is_itself() {
-            let x = Expr::symbol("x");
-            assert_eq!(diff(&Expr::func(FnKind::Exp, vec![x.clone()]), &x), Some(Expr::func(FnKind::Exp, vec![x])));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn ln_derivative() {
-            let x = Expr::symbol("x");
-            assert_eq!(diff(&Expr::func(FnKind::Ln, vec![x.clone()]), &x), Some(Expr::pow(x, Expr::integer(-1))));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn general_power_logarithmic_differentiation() {
-            // d/dx x^x = x^x * (ln(x) + 1)
-            let x = Expr::symbol("x");
-            let e = Expr::pow(x.clone(), x.clone());
-            let result = diff(&e, &x).unwrap();
-            let expected = Expr::mul(vec![Expr::pow(x.clone(), x.clone()), Expr::add(vec![Expr::func(FnKind::Ln, vec![x]), Expr::integer(1)])]);
-            assert_eq!(result, expected);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn unknown_function_derivative_is_none() {
-            let x = Expr::symbol("x");
-            let e = Expr::func(FnKind::Zeta, vec![x.clone()]);
-            assert_eq!(diff(&e, &x), None);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn bessel_j_recurrence_derivative() {
-            let x = Expr::symbol("x");
-            let n = Expr::integer(2);
-            let e = Expr::func(FnKind::BesselJ, vec![n, x.clone()]);
-            let expected = Expr::mul(vec![
-                Expr::from(Rational::from_i64(1, 2).unwrap()),
-                Expr::add(vec![Expr::func(FnKind::BesselJ, vec![Expr::integer(1), x.clone()]), Expr::mul(vec![Expr::integer(-1), Expr::func(FnKind::BesselJ, vec![Expr::integer(3), x.clone()])])]),
-            ]);
-            assert_eq!(diff(&e, &x), Some(expected));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn gradient_computes_all_partials() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            let e = Expr::mul(vec![x.clone(), y.clone()]);
-            let grad = gradient(&e, &[x.clone(), y.clone()]).unwrap();
-            assert_eq!(grad[0], y);
-            assert_eq!(grad[1], x);
-        }
-    }
+    include!("🧪️tests/🔬️diff-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Diff
@@ -4190,58 +3456,7 @@ pub mod series {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-        use crate::cas::fnkind::FnKind;
-
-        #[semio_framework_async_macros::async_test]
-        async fn taylor_series_of_exp_matches_known_coefficients() {
-            let x = Expr::symbol("x");
-            let e = Expr::func(FnKind::Exp, vec![x.clone()]);
-            let s = taylor_series(&e, &x, &Expr::integer(0), 4).unwrap();
-            // exp(x) = 1 + x + x^2/2 + x^3/6 + x^4/24
-            assert_eq!(s.coeffs[0], Expr::integer(1));
-            assert_eq!(s.coeffs[1], Expr::integer(1));
-            assert_eq!(s.coeffs[2], Expr::from(number::Rational::from_i64(1, 2).unwrap()));
-            assert_eq!(s.coeffs[3], Expr::from(number::Rational::from_i64(1, 6).unwrap()));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn taylor_series_of_sin_around_zero_has_no_even_terms() {
-            let x = Expr::symbol("x");
-            let e = Expr::func(FnKind::Sin, vec![x.clone()]);
-            let s = taylor_series(&e, &x, &Expr::integer(0), 4).unwrap();
-            assert_eq!(s.coeffs[0], Expr::integer(0));
-            assert_eq!(s.coeffs[1], Expr::integer(1));
-            assert_eq!(s.coeffs[2], Expr::integer(0));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn taylor_series_fails_at_a_pole() {
-            let x = Expr::symbol("x");
-            let e = Expr::pow(x.clone(), Expr::integer(-1));
-            assert!(taylor_series(&e, &x, &Expr::integer(0), 2).is_none());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn leading_term_skips_zero_coefficients() {
-            let x = Expr::symbol("x");
-            let e = Expr::func(FnKind::Sin, vec![x.clone()]);
-            let s = taylor_series(&e, &x, &Expr::integer(0), 3).unwrap();
-            let (order, coeff) = leading_term(&s).unwrap();
-            assert_eq!(order, 1);
-            assert_eq!(coeff, Expr::integer(1));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn series_to_expr_round_trips_a_polynomial() {
-            let x = Expr::symbol("x");
-            let s = Series { x: x.clone(), at: Expr::integer(0), coeffs: vec![Expr::integer(1), Expr::integer(2), Expr::integer(3)] };
-            let e = series_to_expr(&s);
-            let expected = Expr::add(vec![Expr::integer(1), Expr::mul(vec![Expr::integer(2), x.clone()]), Expr::mul(vec![Expr::integer(3), Expr::pow(x, Expr::integer(2))])]);
-            assert_eq!(e, expected);
-        }
-    }
+    include!("🧪️tests/🔬️series-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Series
@@ -4356,54 +3571,7 @@ pub mod limits {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-        use crate::cas::fnkind::FnKind;
-
-        #[semio_framework_async_macros::async_test]
-        async fn direct_substitution_when_defined() {
-            let x = Expr::symbol("x");
-            let e = Expr::pow(x.clone(), Expr::integer(2));
-            assert_eq!(limit(&e, &x, &Expr::integer(3), Direction::Both), Some(Expr::integer(9)));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn classic_sin_x_over_x_at_zero() {
-            let x = Expr::symbol("x");
-            let e = Expr::func(FnKind::Sin, vec![x.clone()]) * Expr::pow(x.clone(), Expr::integer(-1));
-            assert_eq!(limit(&e, &x, &Expr::integer(0), Direction::Both), Some(Expr::integer(1)));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn polynomial_ratio_at_removable_singularity() {
-            // (x^2 - 1)/(x - 1) -> 2 as x -> 1
-            let x = Expr::symbol("x");
-            let num = Expr::pow(x.clone(), Expr::integer(2)) - Expr::integer(1);
-            let den = x.clone() - Expr::integer(1);
-            let e = num * Expr::pow(den, Expr::integer(-1));
-            assert_eq!(limit(&e, &x, &Expr::integer(1), Direction::Both), Some(Expr::integer(2)));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn limit_at_infinity_of_rational_function() {
-            // (2x + 1)/(x + 3) -> 2 as x -> oo
-            let x = Expr::symbol("x");
-            let num = Expr::integer(2) * x.clone() + Expr::integer(1);
-            let den = x.clone() + Expr::integer(3);
-            let e = num * Expr::pow(den, Expr::integer(-1));
-            assert_eq!(limit(&e, &x, &Expr::constant(Constant::Inf), Direction::Both), Some(Expr::integer(2)));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn one_plus_one_over_n_to_the_n_via_lhopital_on_log_form() {
-            // A simpler but still classic L'Hopital case: lim x->0 (1 - cos(x))/x^2 = 1/2
-            let x = Expr::symbol("x");
-            let num = Expr::integer(1) - Expr::func(FnKind::Cos, vec![x.clone()]);
-            let den = Expr::pow(x.clone(), Expr::integer(2));
-            let e = num * Expr::pow(den, Expr::integer(-1));
-            assert_eq!(limit(&e, &x, &Expr::integer(0), Direction::Both), Some(Expr::from(number::Rational::from_i64(1, 2).unwrap())));
-        }
-    }
+    include!("🧪️tests/🔬️limits-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Limits
@@ -4472,29 +3640,7 @@ pub mod rootof {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn real_roots_of_quadratic_gives_two_rootofs() {
-            // x^2 - 2, roots +-sqrt(2)
-            let p = PolyU::from_coeffs(vec![Integer::from_i64(-2), Integer::from_i64(0), Integer::from_i64(1)]);
-            let roots = real_roots_of(&p);
-            assert_eq!(roots.len(), 2);
-            let vals: Vec<f64> = roots.iter().map(|r| root_of_to_f64(r).unwrap()).collect();
-            assert!(vals.iter().any(|v| (v - std::f64::consts::SQRT_2).abs() < 1e-9));
-            assert!(vals.iter().any(|v| (v + std::f64::consts::SQRT_2).abs() < 1e-9));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn root_of_sign_matches_isolation_interval() {
-            let p = PolyU::from_coeffs(vec![Integer::from_i64(-2), Integer::from_i64(0), Integer::from_i64(1)]);
-            let roots = real_roots_of(&p);
-            let signs: Vec<_> = roots.iter().map(root_of_sign).collect();
-            assert!(signs.contains(&Some(std::cmp::Ordering::Less)));
-            assert!(signs.contains(&Some(std::cmp::Ordering::Greater)));
-        }
-    }
+    include!("🧪️tests/🔬️rootof-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Rootof
@@ -4834,108 +3980,7 @@ pub mod solve {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn solve_linear_equation() {
-            let x = Expr::symbol("x");
-            // 2x - 6 = 0 -> x = 3
-            let e = Expr::mul(vec![Expr::integer(2), x.clone()]) - Expr::integer(6);
-            assert_eq!(solve_univariate(&e, &x), SolutionSet::Finite(vec![Expr::integer(3)]));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn solve_quadratic_with_real_roots() {
-            let x = Expr::symbol("x");
-            // x^2 - 5x + 6 = 0 -> {2, 3}
-            let e = Expr::pow(x.clone(), Expr::integer(2)) - Expr::mul(vec![Expr::integer(5), x.clone()]) + Expr::integer(6);
-            let result = solve_univariate(&e, &x);
-            match result {
-                SolutionSet::Finite(mut roots) => {
-                    roots.sort();
-                    assert_eq!(roots, vec![Expr::integer(2), Expr::integer(3)]);
-                }
-                other => panic!("expected Finite, got {other:?}"),
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn solve_quadratic_with_complex_roots() {
-            let x = Expr::symbol("x");
-            // x^2 + 1 = 0 -> {i, -i}
-            let e = Expr::pow(x.clone(), Expr::integer(2)) + Expr::integer(1);
-            let result = solve_univariate(&e, &x);
-            match result {
-                SolutionSet::Finite(roots) => {
-                    assert_eq!(roots.len(), 2);
-                    assert!(roots.contains(&Expr::constant(Constant::I)));
-                }
-                other => panic!("expected Finite, got {other:?}"),
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn solve_high_degree_gives_rootof() {
-            let x = Expr::symbol("x");
-            // x^5 - x - 1 = 0 (irreducible over Q, one real root)
-            let e = Expr::pow(x.clone(), Expr::integer(5)) - x.clone() - Expr::integer(1);
-            let result = solve_univariate(&e, &x);
-            match result {
-                SolutionSet::Finite(roots) => {
-                    assert!(!roots.is_empty());
-                    assert!(roots.iter().all(|r| matches!(r.kind(), Kind::RootOf { .. })));
-                }
-                other => panic!("expected Finite RootOf set, got {other:?}"),
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn solve_exp_equation() {
-            let x = Expr::symbol("x");
-            // 2*exp(x) - 6 = 0 -> x = ln(3)
-            let e = Expr::mul(vec![Expr::integer(2), Expr::func(FnKind::Exp, vec![x.clone()])]) - Expr::integer(6);
-            let result = solve_univariate(&e, &x);
-            assert_eq!(result, SolutionSet::Finite(vec![Expr::func(FnKind::Ln, vec![Expr::integer(3)])]));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn solve_sin_equation_gives_parametric_family() {
-            let x = Expr::symbol("x");
-            let half = Expr::from(Rational::from_i64(1, 2).unwrap());
-            let e = Expr::func(FnKind::Sin, vec![x.clone()]) - half;
-            match solve_univariate(&e, &x) {
-                SolutionSet::Parametric { sols, params } => {
-                    assert_eq!(sols.len(), 2);
-                    assert_eq!(params.len(), 1);
-                }
-                other => panic!("expected Parametric, got {other:?}"),
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn solve_2x2_linear_system() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            // 2x + y = 5, x - y = 1 -> x=2, y=1
-            let eq1 = Expr::mul(vec![Expr::integer(2), x.clone()]) + y.clone() - Expr::integer(5);
-            let eq2 = x.clone() - y.clone() - Expr::integer(1);
-            let result = solve_linear_system(&[eq1, eq2], &[x, y]);
-            assert_eq!(result, SolutionSet::Finite(vec![Expr::integer(2), Expr::integer(1)]));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn solve_inequality_simple_quadratic() {
-            let x = Expr::symbol("x");
-            // x^2 - 1 > 0  ->  x < -1 or x > 1
-            let e = Expr::pow(x.clone(), Expr::integer(2)) - Expr::integer(1);
-            let result = solve_inequality(&e, RelationalOperator::Gt, &x);
-            match result {
-                SolutionSet::Intervals(intervals) => assert_eq!(intervals.len(), 2),
-                other => panic!("expected Intervals, got {other:?}"),
-            }
-        }
-    }
+    include!("🧪️tests/🔬️solve-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Solve
@@ -5164,97 +4209,7 @@ pub mod matrix {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        fn e(v: i64) -> Expr {
-            Expr::integer(v)
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn det_2x2_hand_case() {
-            let m = SymMatrix::from_rows(vec![vec![e(1), e(2)], vec![e(3), e(4)]]);
-            assert_eq!(m.det(), e(-2));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn det_symbolic_2x2() {
-            let a = Expr::symbol("a");
-            let b = Expr::symbol("b");
-            let c = Expr::symbol("c");
-            let d = Expr::symbol("d");
-            let m = SymMatrix::from_rows(vec![vec![a.clone(), b.clone()], vec![c.clone(), d.clone()]]);
-            let expected = a * d - b * c;
-            assert_eq!(m.det(), expected);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn inverse_times_original_is_identity() {
-            let m = SymMatrix::from_rows(vec![vec![e(2), e(1)], vec![e(1), e(1)]]);
-            let inv = m.inverse().unwrap();
-            let product = m.matmul(&inv);
-            for r in 0..2 {
-                for c in 0..2 {
-                    let expected = if r == c { e(1) } else { e(0) };
-                    assert_eq!(crate::cas::simplify::cancel(product.get(r, c)), expected);
-                }
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn singular_matrix_has_no_inverse() {
-            let m = SymMatrix::from_rows(vec![vec![e(1), e(2)], vec![e(2), e(4)]]);
-            assert!(m.inverse().is_none());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn charpoly_and_eigenvalues_of_diagonal_matrix() {
-            let m = SymMatrix::from_rows(vec![vec![e(2), e(0)], vec![e(0), e(5)]]);
-            match m.eigenvalues() {
-                SolutionSet::Finite(mut vals) => {
-                    vals.sort();
-                    assert_eq!(vals, vec![e(2), e(5)]);
-                }
-                other => panic!("expected Finite eigenvalues, got {other:?}"),
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn cayley_hamilton_holds_for_a_3x3_matrix() {
-            // Verify A^2 - tr(A)*A + det(A)*I == 0 for a 2x2 matrix (Cayley-Hamilton).
-            let m = SymMatrix::from_rows(vec![vec![e(1), e(2)], vec![e(3), e(4)]]);
-            let a2 = m.matmul(&m);
-            let tr_a = m.trace();
-            let det_a = m.det();
-            let lhs = a2.sub(&m.scale(&tr_a)).add(&SymMatrix::identity(2).scale(&det_a));
-            for r in 0..2 {
-                for c in 0..2 {
-                    assert_eq!(crate::cas::simplify::simplify(lhs.get(r, c)), e(0));
-                }
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn rank_of_numeric_matrix() {
-            let m = SymMatrix::from_rows(vec![vec![e(1), e(2)], vec![e(2), e(4)]]);
-            assert_eq!(m.rank(), Some(1));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn rref_of_numeric_matrix() {
-            let m = SymMatrix::from_rows(vec![vec![e(2), e(4)], vec![e(1), e(1)]]);
-            let (rref, _pivots, rank) = m.rref().unwrap();
-            assert_eq!(rank, 2);
-            assert_eq!(rref, SymMatrix::identity(2));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn solve_numeric_linear_system() {
-            let m = SymMatrix::from_rows(vec![vec![e(2), e(1)], vec![e(1), e(3)]]);
-            let x = m.solve_numeric(&[e(5), e(10)]).unwrap();
-            assert_eq!(x, vec![e(1), e(3)]);
-        }
-    }
+    include!("🧪️tests/🔬️matrix-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Matrix
@@ -5584,108 +4539,7 @@ pub mod integrate {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        fn diff_matches(e: &Expr, x: &Expr, antideriv: &Expr) -> bool {
-            let d = crate::cas::diff::diff(antideriv, x).unwrap();
-            crate::cas::simplify::simplify(&(d - e.clone())).is_zero_literal()
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn integrate_power_rule() {
-            let x = Expr::symbol("x");
-            let e = Expr::pow(x.clone(), Expr::integer(2));
-            let result = integrate(&e, &x).unwrap();
-            assert!(diff_matches(&e, &x, &result));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn integrate_reciprocal_gives_ln() {
-            let x = Expr::symbol("x");
-            let e = Expr::pow(x.clone(), Expr::integer(-1));
-            let result = integrate(&e, &x).unwrap();
-            assert_eq!(result, Expr::func(FnKind::Ln, vec![Expr::func(FnKind::Abs, vec![x])]));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn integrate_sin_and_cos() {
-            let x = Expr::symbol("x");
-            let sin_result = integrate(&Expr::func(FnKind::Sin, vec![x.clone()]), &x).unwrap();
-            assert!(diff_matches(&Expr::func(FnKind::Sin, vec![x.clone()]), &x, &sin_result));
-            let cos_result = integrate(&Expr::func(FnKind::Cos, vec![x.clone()]), &x).unwrap();
-            assert!(diff_matches(&Expr::func(FnKind::Cos, vec![x.clone()]), &x, &cos_result));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn integrate_polynomial_sum() {
-            let x = Expr::symbol("x");
-            let e = Expr::pow(x.clone(), Expr::integer(2)) + Expr::mul(vec![Expr::integer(3), x.clone()]) + Expr::integer(1);
-            let result = integrate(&e, &x).unwrap();
-            assert!(diff_matches(&e, &x, &result));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn integrate_simple_partial_fraction() {
-            let x = Expr::symbol("x");
-            // 1/((x-1)(x+1)) integrates to (1/2)ln|x-1| - (1/2)ln|x+1| (up to grouping)
-            let den = (x.clone() - Expr::integer(1)) * (x.clone() + Expr::integer(1));
-            let e = Expr::pow(den, Expr::integer(-1));
-            let result = integrate(&e, &x).unwrap();
-            assert!(diff_matches(&e, &x, &result));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn integrate_u_substitution() {
-            let x = Expr::symbol("x");
-            // 2x * cos(x^2) -> sin(x^2)
-            let inner = Expr::pow(x.clone(), Expr::integer(2));
-            let e = Expr::mul(vec![Expr::integer(2), x.clone(), Expr::func(FnKind::Cos, vec![inner])]);
-            let result = integrate(&e, &x).unwrap();
-            assert!(diff_matches(&e, &x, &result));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn integrate_by_parts_x_times_exp() {
-            let x = Expr::symbol("x");
-            let e = Expr::mul(vec![x.clone(), Expr::func(FnKind::Exp, vec![x.clone()])]);
-            let result = integrate(&e, &x).unwrap();
-            assert!(diff_matches(&e, &x, &result));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn integrate_ln_by_parts() {
-            let x = Expr::symbol("x");
-            let e = Expr::func(FnKind::Ln, vec![x.clone()]);
-            let result = integrate(&e, &x).unwrap();
-            assert!(diff_matches(&e, &x, &result));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn integrate_irreducible_quadratic_denominator() {
-            let x = Expr::symbol("x");
-            // 1/(x^2+1) -> atan(x)
-            let e = Expr::pow(Expr::pow(x.clone(), Expr::integer(2)) + Expr::integer(1), Expr::integer(-1));
-            let result = integrate(&e, &x).unwrap();
-            assert!(diff_matches(&e, &x, &result));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn definite_integral_of_power() {
-            let x = Expr::symbol("x");
-            let e = Expr::pow(x.clone(), Expr::integer(2));
-            let result = integrate_definite(&e, &x, &Expr::integer(0), &Expr::integer(3)).unwrap();
-            assert_eq!(result, Expr::integer(9));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn residue_at_simple_pole() {
-            let x = Expr::symbol("x");
-            // 1/(x-2) has residue 1 at x=2
-            let e = Expr::pow(x.clone() - Expr::integer(2), Expr::integer(-1));
-            assert_eq!(residue(&e, &x, &Expr::integer(2)), Some(Expr::integer(1)));
-        }
-    }
+    include!("🧪️tests/🔬️integrate-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Integrate
@@ -5785,47 +4639,7 @@ pub mod sums {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn sum_of_k_from_1_to_n_is_gauss_formula() {
-            let n = Expr::symbol("n");
-            let k = Expr::symbol("k");
-            // sum_{k=1}^{n} k -- but sum_closed evaluates a polynomial in the SAME variable used for the
-            // bound substitution, so pass `k` itself as both the summand's variable and the closed-form target.
-            let result = sum_closed(&k, &k, &Expr::integer(1), &n).unwrap();
-            let expected = crate::cas::simplify::expand(&(n.clone() * (n + Expr::integer(1)) * Expr::from(Rational::from_i64(1, 2).unwrap())));
-            assert_eq!(crate::cas::simplify::expand(&result), expected);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn sum_of_k_squared_matches_known_hand_values() {
-            let k = Expr::symbol("k");
-            // sum_{k=1}^{3} k^2 = 1+4+9 = 14
-            let e = Expr::pow(k.clone(), Expr::integer(2));
-            let result = sum_closed(&e, &k, &Expr::integer(1), &Expr::integer(3)).unwrap();
-            assert_eq!(result, Expr::integer(14));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn sum_geometric_series_hand_case() {
-            let k = Expr::symbol("k");
-            // sum_{k=0}^{3} 2^k = 1+2+4+8 = 15
-            let e = Expr::pow(Expr::integer(2), k.clone());
-            let result = sum_closed(&e, &k, &Expr::integer(0), &Expr::integer(3)).unwrap();
-            assert_eq!(crate::cas::simplify::simplify(&result), Expr::integer(15));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn fourier_coefficients_of_a_polynomial_smoke_test() {
-            let x = Expr::symbol("x");
-            let l = Expr::constant(Constant::Pi);
-            let f = x.clone();
-            let result = fourier_coefficients(&f, &x, &l, 2);
-            assert!(result.is_some());
-        }
-    }
+    include!("🧪️tests/🔬️sums-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Sums
@@ -6062,79 +4876,7 @@ pub mod ode {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        fn satisfies(sol: &Expr, x: &Expr, y: &Expr, rhs_of_ode: &Expr) -> bool {
-            // Substitutes the solution in for y and checks y' == rhs_of_ode(x, sol) structurally after simplify.
-            let dy = crate::cas::diff::diff(sol, x).unwrap();
-            let substituted_rhs = crate::cas::visit::subs(rhs_of_ode, y, sol);
-            crate::cas::simplify::simplify(&(dy - substituted_rhs)).is_zero_literal()
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn separable_ode_y_prime_equals_x_over_y() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            // y' = x/y  =>  y dy = x dx  =>  y^2/2 = x^2/2 + C
-            let f = x.clone() * Expr::pow(y.clone(), Expr::integer(-1));
-            let sol = solve_ode_first_order(&f, &x, &y).unwrap();
-            assert!(matches!(sol.rhs.kind(), Kind::Rel(RelationalOperator::Eq, ..)));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn linear_first_order_ode() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            // y' = y + x  (P = -1 constant, Q = x) -- verify by direct differentiation of the returned solution.
-            let f = y.clone() + x.clone();
-            let sol = solve_ode_first_order(&f, &x, &y).unwrap();
-            assert!(satisfies(&sol.rhs, &x, &y, &f));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn bernoulli_ode() {
-            let x = Expr::symbol("x");
-            let y = Expr::symbol("y");
-            // y' = y/x - y^2  (Bernoulli with n=2, P=1/x, Q=-1)
-            let f = y.clone() * Expr::pow(x.clone(), Expr::integer(-1)) - Expr::pow(y.clone(), Expr::integer(2));
-            let sol = solve_ode_first_order(&f, &x, &y);
-            assert!(sol.is_some());
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn linear_constant_coefficient_second_order_distinct_real_roots() {
-            let x = Expr::symbol("x");
-            // y'' - 3y' + 2y = 0 -> roots 1, 2 -> y = C1*e^x + C2*e^(2x)
-            let coeffs = vec![Rational::from_i64(2, 1).unwrap(), Rational::from_i64(-3, 1).unwrap(), Rational::one()];
-            let sol = solve_linear_constant_coeff_homogeneous(&coeffs, &x).unwrap();
-            assert_eq!(sol.constants.len(), 2);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn linear_constant_coefficient_repeated_root() {
-            let x = Expr::symbol("x");
-            // y'' - 2y' + y = 0 -> repeated root 1 -> y = (C1 + C2*x)*e^x
-            let coeffs = vec![Rational::one(), Rational::from_i64(-2, 1).unwrap(), Rational::one()];
-            let sol = solve_linear_constant_coeff_homogeneous(&coeffs, &x).unwrap();
-            assert_eq!(sol.constants.len(), 2);
-            // verify diff satisfies the ODE for a specific choice C1=1, C2=0: y=e^x, y''-2y'+y=0
-            let y_ex = Expr::func(FnKind::Exp, vec![x.clone()]);
-            let d1 = crate::cas::diff::diff(&y_ex, &x).unwrap();
-            let d2 = crate::cas::diff::diff(&d1, &x).unwrap();
-            let residual = d2 - Expr::integer(2) * d1 + y_ex;
-            assert_eq!(crate::cas::simplify::simplify(&residual), Expr::integer(0));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn linear_constant_coefficient_complex_roots() {
-            let x = Expr::symbol("x");
-            // y'' + y = 0 -> roots +-i -> y = C1*cos(x) + C2*sin(x)
-            let coeffs = vec![Rational::one(), Rational::zero(), Rational::one()];
-            let sol = solve_linear_constant_coeff_homogeneous(&coeffs, &x).unwrap();
-            assert_eq!(sol.constants.len(), 2);
-        }
-    }
+    include!("🧪️tests/🔬️ode-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Ode
@@ -6277,48 +5019,7 @@ pub mod transforms {
 
     // #region 🔖️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn laplace_of_t_to_the_n() {
-            let t = Expr::symbol("t");
-            let s = Expr::symbol("s");
-            // L{t^2} = 2/s^3
-            let e = Expr::pow(t.clone(), Expr::integer(2));
-            let result = laplace_transform(&e, &t, &s).unwrap();
-            assert_eq!(result, Expr::integer(2) * Expr::pow(s, Expr::integer(-3)));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn laplace_of_exp() {
-            let t = Expr::symbol("t");
-            let s = Expr::symbol("s");
-            let e = Expr::func(FnKind::Exp, vec![Expr::integer(3) * t.clone()]);
-            let result = laplace_transform(&e, &t, &s).unwrap();
-            assert_eq!(result, Expr::pow(s - Expr::integer(3), Expr::integer(-1)));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn laplace_linearity() {
-            let t = Expr::symbol("t");
-            let s = Expr::symbol("s");
-            let e = Expr::integer(2) * t.clone() + Expr::integer(3);
-            let result = laplace_transform(&e, &t, &s).unwrap();
-            let expected = Expr::integer(2) * Expr::pow(s.clone(), Expr::integer(-2)) + Expr::integer(3) * Expr::pow(s, Expr::integer(-1));
-            assert_eq!(result, expected);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn laplace_and_inverse_round_trip_for_exp() {
-            let t = Expr::symbol("t");
-            let s = Expr::symbol("s");
-            let e = Expr::func(FnKind::Exp, vec![Expr::integer(-2) * t.clone()]);
-            let transformed = laplace_transform(&e, &t, &s).unwrap();
-            let back = inverse_laplace_transform(&transformed, &s, &t).unwrap();
-            assert_eq!(back, e);
-        }
-    }
+    include!("🧪️tests/🔬️transforms-unit/🦀️.rs");
     // #endregion 🔖️Tests
 }
 // #endregion 🔖️Transforms

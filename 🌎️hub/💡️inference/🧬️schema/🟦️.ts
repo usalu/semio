@@ -349,7 +349,7 @@ export function parseInferenceJobReceiptV1(value: unknown): InferenceJobReceiptV
 
 /** 📃️ The owner-private bounded page a single `events` read returns. */
 export type InferenceEventPageV1 = {
-  readonly schema: "semio.hub.inference-event-page/v1";
+  readonly schema: "semio.hub.inference-job-events/v1";
   readonly jobId: string;
   readonly state: InferenceJobStateV1;
   readonly proposalState: InferenceProposalStateV1;
@@ -364,10 +364,10 @@ export type InferenceEventPageV1 = {
 export function parseInferenceEventPageV1(value: unknown): InferenceEventPageV1 {
   const name = "hub.inference/InferenceEventPageV1";
   const row = rows(value, ["schema", "jobId", "state", "proposalState", "cancelRequested", "stale", "proposalHash", "events", "progress", "nextCursor"], name, ["preview"]);
-  if (row.schema !== "semio.hub.inference-event-page/v1" || !hex(row.jobId, 32) || typeof row.cancelRequested !== "boolean" || typeof row.stale !== "boolean"
+  if (row.schema !== "semio.hub.inference-job-events/v1" || !hex(row.jobId, 32) || typeof row.cancelRequested !== "boolean" || typeof row.stale !== "boolean"
     || (row.proposalHash !== null && !hex(row.proposalHash, 64)) || !Array.isArray(row.events) || row.events.length > 8 || !Array.isArray(row.progress) || row.progress.length > 16 || !uint(row.nextCursor)) return fail(name);
   const page = {
-    schema: "semio.hub.inference-event-page/v1" as const, jobId: row.jobId as string, state: parseInferenceJobStateV1(row.state), proposalState: parseInferenceProposalStateV1(row.proposalState),
+    schema: "semio.hub.inference-job-events/v1" as const, jobId: row.jobId as string, state: parseInferenceJobStateV1(row.state), proposalState: parseInferenceProposalStateV1(row.proposalState),
     cancelRequested: row.cancelRequested, stale: row.stale, proposalHash: row.proposalHash as string | null,
     events: row.events.map(parseInferenceEventV1), progress: row.progress.map(parseInferenceProgressV1), nextCursor: row.nextCursor as number,
   };

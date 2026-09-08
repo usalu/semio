@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭️ Coordinator package router: `bun ./📜️script.ts build|test|policy`. */
 import type { BundleLinter } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { dependencyBoundaryBreachesForBundleDir, getWorkspaceRoot, BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel, runCmd, daemonBudgetOpts, defineLint } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { dependencyBoundaryBreachesForBundleDir, getWorkspaceRoot, BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel, runCmd, daemonBudgetOpts, defineLint, goLevelTestArgs, runCanonicalGoTests } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { dirname, join } from "node:path";
 
 export const policy = defineLint("@repo/server/coordinator-bundle", (l: BundleLinter) => {
@@ -27,8 +27,9 @@ class DevScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { rest } = resolveTestLevel(segments);
-    await runVitest(this.root, rest, "🧪️tests/🟦️.ts");
+    const { level, rest } = resolveTestLevel(segments);
+    await runCanonicalGoTests(join(import.meta.dir, "../.."), [...goLevelTestArgs(level), ...rest]);
+    await runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 

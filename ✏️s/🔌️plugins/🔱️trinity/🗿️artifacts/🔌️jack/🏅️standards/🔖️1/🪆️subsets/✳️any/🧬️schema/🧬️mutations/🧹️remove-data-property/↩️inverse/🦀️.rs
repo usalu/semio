@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `RemoveDataProperty` — the OLD value looked up from BASE, restored via
 //! `change-data-property`. Missing target/key ⇒ `Vec::new()`.
-use crate::mutations::{change_data_property, TrinityGraphMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{change_data_property, TrinityGraphMutation};
 use crate::{EntityRef, JackSnapshot};
 
 //#region 🔖️Inverse

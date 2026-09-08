@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateNode` — a real append-only insert (never a whole-snapshot
 //! capture). No-op when the id already exists in `base`.
-use crate::diff::{Puzzle2dDiff, Puzzle2dNodesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dNodesDelta};
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Diff

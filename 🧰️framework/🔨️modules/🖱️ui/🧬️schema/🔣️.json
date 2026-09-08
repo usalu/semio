@@ -4,14 +4,34 @@
   "title": "Ui Schema Module",
   "definitions": {
     "retainedCommandLane": {
+      "$comment": "One spelling per lane, kebab-case, one member per variant of the runtime enum ArtifactToolPublicationLane (🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs). Owners narrow with const.",
       "enum": [
-        "Artifact",
-        "Config",
-        "HostOnly",
         "artifact",
         "config",
         "host-only",
-        "hostOnly"
+        "draft",
+        "presence",
+        "transient",
+        "child"
+      ]
+    },
+    "retainedCommandDisposition": {
+      "$comment": "One vocabulary for the three route-row spellings of the same axis: disposition, admission and status, kebab-case, one member per variant of the runtime enum InteractiveJobClassification (🧰️framework/🔨️modules/🛂️manifest/🦀️.rs) plus fail-closed, the admission verdict a route carries when no classification admits it. batch-only-pending-rewrite is spelled in full: collapsing it to batch-only would drop the distinction the runtime variant BatchOnlyPendingRewrite makes. Owners narrow with const.",
+      "enum": [
+        "unclassified",
+        "migrated",
+        "batch-only-pending-rewrite",
+        "forbidden-from-ui",
+        "deleted",
+        "fail-closed"
+      ]
+    },
+    "retainedCommandExecution": {
+      "enum": [
+        "bounded-first-step",
+        "bounded",
+        "batch",
+        "resumable"
       ]
     },
     "retainedCommandByteBudget": {
@@ -57,6 +77,14 @@
           "minimum": 0
         },
         "preparationPhases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "artifactStoreBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "decodedItems": {
           "type": "integer",
           "minimum": 0
         }
@@ -214,12 +242,7 @@
           "minLength": 1
         },
         "disposition": {
-          "enum": [
-            "Migrated",
-            "BatchOnlyPendingRewrite",
-            "migrated",
-            "batch-only-pending-rewrite"
-          ]
+          "$ref": "#/definitions/retainedCommandDisposition"
         },
         "lanes": {
           "type": "array",
@@ -250,12 +273,7 @@
           "minLength": 1
         },
         "execution": {
-          "enum": [
-            "bounded-first-step",
-            "bounded",
-            "batch",
-            "resumable"
-          ]
+          "$ref": "#/definitions/retainedCommandExecution"
         },
         "lanes": {
           "type": "array",
@@ -284,24 +302,13 @@
           "minLength": 1
         },
         "execution": {
-          "enum": [
-            "bounded-first-step",
-            "bounded",
-            "batch",
-            "resumable"
-          ]
+          "$ref": "#/definitions/retainedCommandExecution"
         },
         "admission": {
-          "enum": [
-            "failClosed",
-            "migrated"
-          ]
+          "$ref": "#/definitions/retainedCommandDisposition"
         },
         "status": {
-          "enum": [
-            "batch-only",
-            "migrated"
-          ]
+          "$ref": "#/definitions/retainedCommandDisposition"
         },
         "feature": {
           "type": "string",
@@ -429,6 +436,104 @@
         "oracle": {
           "$ref": "#/definitions/retainedCommandOracle"
         }
+      }
+    },
+    "retainedCommandCohortFactory": {
+      "$comment": "The one shared command-job factory a cohort of sibling apps publishes through — an object, unlike retainedCommandDeclaredLimits' single factory string.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "payloadSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maximumRawBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shared": {
+          "type": "boolean"
+        }
+      }
+    },
+    "retainedCommandCohortRoute": {
+      "$comment": "A cohort route separates the lanes a route EMITS from the lanes its publication contract declares; the three retainedCommandRoute dialects collapse both into one `lanes` array.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "emittedLanes",
+        "publicationLanes",
+        "execution"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "emittedLanes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/retainedCommandLane"
+          }
+        },
+        "publicationLanes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/retainedCommandLane"
+          }
+        },
+        "execution": {
+          "$ref": "#/definitions/retainedCommandExecution"
+        },
+        "admission": {
+          "$ref": "#/definitions/retainedCommandDisposition"
+        },
+        "reducer": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "retainedCommandCohortApp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "variant",
+        "controller",
+        "documentSchema"
+      ],
+      "properties": {
+        "variant": {
+          "type": "string",
+          "minLength": 1
+        },
+        "controller": {
+          "type": "string",
+          "minLength": 1
+        },
+        "documentSchema": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "retainedCommandCensus": {
+      "$comment": "Census counts a cohort law asserts about itself (apps, routesPerApp, identities, retained, batchOnlyPendingRewrite, …); every owner narrows the members it declares with const.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
       }
     }
   },
@@ -636,11 +741,68 @@
         }
       ]
     },
+    "RetainedCommandRoute": {
+      "$comment": "One route row, published so an owner can narrow a single route positionally without reaching into definitions.",
+      "$ref": "#/definitions/retainedCommandRoute"
+    },
     "RetainedCommandRoutes": {
       "$comment": "Shared shape for retained-command route tables, standalone or nested in RetainedCommandLimits.",
       "type": "array",
       "items": {
-        "$ref": "#/definitions/retainedCommandRoute"
+        "$ref": "#/$defs/RetainedCommandRoute"
+      }
+    },
+    "RetainedCommandCohort": {
+      "$comment": "The cohort law form: one shared factory and route table published by N sibling apps, plus the census that count implies. retainedCommandDeclaredLimits cannot describe it — its factory is a string and its controller/documentSchema are single-valued, where a cohort carries them per app.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "factory",
+        "publicationContracts",
+        "routes",
+        "apps",
+        "expected",
+        "oracle"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "factory": {
+          "$ref": "#/definitions/retainedCommandCohortFactory"
+        },
+        "publicationContracts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/retainedCommandPublicationContract"
+          }
+        },
+        "routes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/retainedCommandCohortRoute"
+          }
+        },
+        "apps": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/retainedCommandCohortApp"
+          }
+        },
+        "expected": {
+          "$ref": "#/definitions/retainedCommandCensus"
+        },
+        "oracle": {
+          "$ref": "#/definitions/retainedCommandOracle"
+        }
       }
     },
     "RetainedCommandRoutesDocument": {

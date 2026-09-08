@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/block/3d/1/any/mutation/change-vortex-kind-default-cable-kind/schema.json",
+  "$id": "https://semio.tech/schema/s/block/block3d/mutation/change-vortex-kind-default-cable-kind/schema.json",
   "title": "ChangeVortexKindDefaultCableKind",
   "type": "object",
   "additionalProperties": false,

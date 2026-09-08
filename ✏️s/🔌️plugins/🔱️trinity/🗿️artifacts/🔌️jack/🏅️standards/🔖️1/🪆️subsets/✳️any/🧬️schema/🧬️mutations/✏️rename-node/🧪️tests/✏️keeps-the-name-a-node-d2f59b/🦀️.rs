@@ -17,8 +17,8 @@
 //! bag. Its guard order matters and is asserted below: target-missing FIRST, then the no-op compare,
 //! so a node that exists but already carries the requested name lands here and not on the Error path.
 
-use crate::diff::JackDiff;
-use crate::mutations::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::diff::JackDiff;
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
 use crate::{materialize_jack_content, jack_working_scene, JackSnapshot, Node, PropertyBag};
 

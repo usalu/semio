@@ -1,8 +1,8 @@
 //! 🔺️ `rename-generation` sparse diff construction. `FormGeneration.name` is a plain display
 //! label, not a key (`id` is the only key), so no name-collision Fatal check applies here.
 
-use crate::diff::{diff_generation_from_ops, Generation3dDiff};
-use crate::mutations::rename_generation::RenameGeneration;
+use crate::standards::v1::subsets::any::schema::diff::{diff_generation_from_ops, Generation3dDiff};
+use crate::standards::v1::subsets::any::schema::mutations::rename_generation::RenameGeneration;
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
 

@@ -3,8 +3,8 @@
 //! Guards, in the order they run: `mutation.target-missing` (Error), then
 //! `mutation.target-referenced` (Error) while any element still names this cross-section.
 use super::DeleteSection;
-use crate::diff::{Fem2dDiff, Fem2dSectionsDelta};
-use crate::mutations::guards;
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSectionsDelta};
+use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff

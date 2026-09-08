@@ -190,12 +190,12 @@ impl Mutation<DrawingConfig> for DrawingConfigMutation {
     /// ⚠️ PROVISIONAL: no `owner` leaf directory below exists on disk — placeholders that satisfy
     /// `protocol::Mutation`, not real registrations.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⌨️engagement-input", semantic_kind: "engagement-input", display_name: "Set Engagement Input", emoji: "⌨️", aggregate_variant: "SetEngagementInput", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎥️camera", semantic_kind: "camera", display_name: "Set Camera", emoji: "🎥️", aggregate_variant: "SetCamera", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🛠️active-utility", semantic_kind: "active-utility", display_name: "Set Active Utility", emoji: "🛠️", aggregate_variant: "SetActiveUtility", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📶️trace-pointer-progress", semantic_kind: "trace-pointer-progress", display_name: "Set Trace Pointer Progress", emoji: "📶️", aggregate_variant: "SetTracePointerProgress", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🌐️locale", semantic_kind: "locale", display_name: "Set Locale", emoji: "🌐️", aggregate_variant: "SetLocale", payload_schema: "🔣️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⌨️engagement-input", semantic_kind: "engagement-input", display_name: "Set Engagement Input", emoji: "⌨️", aggregate_variant: "SetEngagementInput", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎥️camera", semantic_kind: "camera", display_name: "Set Camera", emoji: "🎥️", aggregate_variant: "SetCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🛠️active-utility", semantic_kind: "active-utility", display_name: "Set Active Utility", emoji: "🛠️", aggregate_variant: "SetActiveUtility", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📶️trace-pointer-progress", semantic_kind: "trace-pointer-progress", display_name: "Set Trace Pointer Progress", emoji: "📶️", aggregate_variant: "SetTracePointerProgress", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🌐️locale", semantic_kind: "locale", display_name: "Set Locale", emoji: "🌐️", aggregate_variant: "SetLocale", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -239,42 +239,6 @@ impl Mutation<DrawingConfig> for DrawingConfigMutation {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn drawing_config_default_matches_ui_selectdirect_utility() {
-        let config = DrawingConfig::default();
-        assert_eq!(config.active_utility_id, "selectDirect");
-        assert_eq!(config.locale, "en-US");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn drawing_config_dsl_round_trips() {
-        let config = DrawingConfig { engagement_input: "Renaming \"layer\"".into(), camera: DrawingCamera { x: 12.0, y: -4.0, zoom: 1.5 }, active_utility_id: "pen".into(), locale: "de-DE".into(), ..Default::default() };
-        store::os_store::test_support::assert_dsl_round_trip(&config);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn drawing_config_operation_round_trips_and_backwards_restores_snapshot() {
-        let base = DrawingConfig { active_utility_id: "selectDirect".into(), ..Default::default() };
-        let operation = DrawingConfigMutation::SetActiveUtility { utility_id: "pen".into() };
-        let forward = operation.diff(&base).diff().clone();
-        assert_eq!(forward.active_utility_id, "pen");
-        let backwards = operation.inverse(&base);
-        assert_eq!(backwards, vec![DrawingConfigMutation::Snapshot { config: base.clone() }]);
-        let restored = backwards[0].diff(&forward).diff().clone();
-        assert_eq!(restored, base);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn drawing_config_operation_op_text_round_trips_every_variant() {
-        store::os_store::test_support::assert_op_line_round_trip(&DrawingConfigMutation::Snapshot { config: DrawingConfig::default() });
-        store::os_store::test_support::assert_op_line_round_trip(&DrawingConfigMutation::SetEngagementInput { value: "New \"Name\"".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&DrawingConfigMutation::SetCamera { camera: DrawingCamera { x: 1.0, y: -2.0, zoom: 3.0 } });
-        store::os_store::test_support::assert_op_line_round_trip(&DrawingConfigMutation::SetActiveUtility { utility_id: "pen".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&DrawingConfigMutation::SetTracePointerProgress { generation: 7, completed_work: 32, pending_work: 4 });
-        store::os_store::test_support::assert_op_line_round_trip(&DrawingConfigMutation::SetLocale { value: "de-DE".into() });
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `AddLoad` — a `remove-load` of the just-added load id, only if the case existed.
 use super::AddLoad;
 use crate::load_id;
-use crate::mutations::{remove_load, Fem2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{remove_load, Fem2dMutation};
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse

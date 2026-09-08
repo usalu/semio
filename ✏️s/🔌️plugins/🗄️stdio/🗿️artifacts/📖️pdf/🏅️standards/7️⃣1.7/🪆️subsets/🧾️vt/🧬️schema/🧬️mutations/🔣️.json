@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔤️embed-font-file/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/embed-font-file/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔒️insert-encryption-dictionary/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/insert-encryption-dictionary/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📜️insert-javascript-action/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/insert-javascript-action/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🚀️insert-launch-action/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/insert-launch-action/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🎬️insert-media-annotation/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/insert-media-annotation/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🗑️remove-dpart-metadata/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/remove-dpart-metadata/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧹️remove-dpart-root/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/remove-dpart-root/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔓️remove-encryption-dictionary/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/remove-encryption-dictionary/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧺️remove-font-file/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/remove-font-file/schema.json"
         },
         {
           "type": "object",
@@ -169,7 +169,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🚫️remove-javascript-action/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/remove-javascript-action/schema.json"
         },
         {
           "type": "object",
@@ -187,7 +187,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🛬️remove-launch-action/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/remove-launch-action/schema.json"
         },
         {
           "type": "object",
@@ -205,7 +205,7 @@
     {
       "allOf": [
         {
-          "$ref": "./⏹️remove-media-annotation/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/remove-media-annotation/schema.json"
         },
         {
           "type": "object",
@@ -223,7 +223,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧽️remove-output-intent/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/remove-output-intent/schema.json"
         },
         {
           "type": "object",
@@ -241,7 +241,7 @@
     {
       "allOf": [
         {
-          "$ref": "./✂️remove-trim-box/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/remove-trim-box/schema.json"
         },
         {
           "type": "object",
@@ -259,7 +259,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏷️set-dpart-metadata/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/set-dpart-metadata/schema.json"
         },
         {
           "type": "object",
@@ -277,7 +277,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🗂️set-dpart-root/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/set-dpart-root/schema.json"
         },
         {
           "type": "object",
@@ -295,7 +295,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏳️set-output-intent/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/set-output-intent/schema.json"
         },
         {
           "type": "object",
@@ -313,7 +313,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📐️set-trim-box/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/set-trim-box/schema.json"
         },
         {
           "type": "object",

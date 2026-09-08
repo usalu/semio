@@ -1,23 +1,44 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.deflate/diff.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/diff.json",
   "title": "DeflateDiff",
   "type": "object",
   "properties": {
-    "compressionMethod": { "type": "integer", "minimum": 0, "maximum": 15 },
-    "windowBits": { "type": "integer", "minimum": 0, "maximum": 15 },
+    "compressionMethod": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 15
+    },
+    "windowBits": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 15
+    },
     "compressionLevelHint": {
       "type": "string",
-      "enum": ["fastest", "fast", "default", "maximum"]
+      "enum": [
+        "fastest",
+        "fast",
+        "default",
+        "maximum"
+      ]
     },
     "dictId": {
       "description": "tri-state: absent=unchanged, null=cleared, number=set",
-      "type": ["integer", "null"],
+      "type": [
+        "integer",
+        "null"
+      ],
       "minimum": 0,
       "maximum": 4294967295
     },
     "payload": {
       "type": "array",
-      "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
     }
   }
 }

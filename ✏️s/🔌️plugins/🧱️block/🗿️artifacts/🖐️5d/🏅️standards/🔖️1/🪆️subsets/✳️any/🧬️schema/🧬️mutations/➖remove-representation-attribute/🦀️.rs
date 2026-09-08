@@ -1,8 +1,8 @@
 //! ➖ Block5d mutation — `RemoveRepresentationAttribute`: a member of a representation's nested `attributes`.
 
 use crate::Block5dSnapshot;
-use crate::diff::Block5dDiff;
-use crate::mutations::Block5dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
 
 //#region 🔖️Mutation
 /// ➖ `remove-representation-attribute` payload.

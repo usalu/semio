@@ -2,11 +2,8 @@
 //! `terra-descriptors` packet, following the `terra-fleet-trinity-recipe` recipe —
 //! `📓️terra-fleet-trinity-recipe-report.md`). Exports `subset() -> SubsetDeclaration`, assembling the
 //! `🧬️schema`/`🚪️io`/`👁️viewer`/`✏️editor`/`📚️examples` children — `crate::editor::fem3d`/
-//! `crate::viewer::fem3d` stay mounted at the plugin's top-level `editor`/`viewer` modules (`🗒️note`/
-//! `🖍️draw` recipe §5 gotcha 1), not here. `examples` is read via the plugin-root SHIM path
-//! `crate::examples::demo` — the deep `standards::v1::subsets::any::examples` path
-//! does not resolve for this plugin (this crate's own `🦀️.rs` only mounts `examples` directly
-//! under `artifacts::fem3d`, same shape trinity's jack/rewrite hit, not note's).
+//! `crate::viewer::fem3d` are mounted at the artifact crate's top-level `editor`/`viewer` modules.
+//! The artifact root also owns the `crate::examples::demo` source used here.
 //!
 //! 🚪️ `io: io::io()` matches the `🗒️note`/`🧱️block` template exactly: the local
 //! `io_declaration()` this file used to carry (with `entries: &[]` and a DEVIATION note explaining
@@ -35,13 +32,13 @@ fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInfere
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset() -> SubsetDeclaration<crate::FemApps> {
+pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
     SubsetDeclaration {
         dialect: FEM3D_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::fem3d_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::Fem3dViewer, crate::FemApps>(viewer::create_fem3d_viewer()),
-        editor: editor_surface::<editor::Fem3dPlayApp, crate::FemApps>(editor::create_fem3d_app()),
+        viewer: viewer_surface::<viewer::Fem3dViewer, PA>(viewer::create_fem3d_viewer()),
+        editor: editor_surface::<editor::Fem3dPlayApp, PA>(editor::create_fem3d_app()),
         examples: examples(),
     }
 }

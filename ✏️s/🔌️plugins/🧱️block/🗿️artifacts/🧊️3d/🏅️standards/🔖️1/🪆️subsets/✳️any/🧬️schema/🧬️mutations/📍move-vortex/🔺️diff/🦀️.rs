@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `MoveVortex`.
 
 use crate::{Block3dSnapshot, Block3dVortexTemplate};
-use crate::diff::{Block3dDiff, Block3dVorticesDelta, Block3dVorticesPatch, Block3dVorticesPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Block3dDiff, Block3dVorticesDelta, Block3dVorticesPatch, Block3dVorticesPatchEntry};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::MoveVortex, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {

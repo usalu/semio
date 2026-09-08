@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/client/vscode/schema.json",
+  "title": "TechnologyCatalog",
+  "description": "🏗️ The `repo.client.vscode` scope: the ordered entity technology catalog (kind → emoji/icon/label/filterable) the VS Code extension owns. The sibling 🗂️technologies.json is the only instance document of this contract; every other consumer (the CLI's Go catalog, the Rust catalog, the generated TypeScript catalog) is a projection of it.",
+  "$ref": "#/$defs/TechnologyCatalog",
+  "$defs": {
+    "TechnologyCatalog": {
+      "title": "TechnologyCatalog",
+      "description": "📚️ The whole catalog, in declaration order. Order is contract: the emoji index the extension builds keeps the FIRST entry of every emoji, so `technology-mono` wins 🌱️ over `interaction-started` and `draft` wins 📝️ over `todo`.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/TechnologyCatalogEntry"
+      }
+    },
+    "TechnologyCatalogEntry": {
+      "title": "TechnologyCatalogEntry",
+      "description": "🏷️ One entity kind of the catalog: the identifier the extension's URI parser and tree providers switch on, the emoji that prefixes its ids in source and ticket text, the icon the tree item renders, the label the filter view shows, and whether the filter view offers it at all.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "emoji", "iconId", "label", "filterable"],
+      "properties": {
+        "id": {
+          "description": "🔑️ Kebab-case entity kind id, unique across the catalog. Multi-part ids are `<family>-<variant>`; the extension reads the family prefix (`isDefinitionEntityId` tests `definition-`) and the filter commands are registered per family.",
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "emoji": {
+          "description": "😀️ VS16-normalized emoji prefix of the kind's ids. NOT unique: two kinds may share one emoji, and the extension's emoji index then resolves it to the first declared kind.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8,
+          "pattern": "^\\S+$"
+        },
+        "iconId": {
+          "description": "🖼️ Kebab-case icon id the tree item renders. Not unique: `pen-tool` and `check-circle-2` each serve two kinds.",
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "label": {
+          "description": "🔤️ Human-readable name shown in the filter and monorepo views, unique across the catalog.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32,
+          "pattern": "^\\S(?:.*\\S)?$"
+        },
+        "filterable": {
+          "description": "🔎️ Whether the filter view offers this kind as a toggle. The six aggregate kinds (`codebase`, `technologies`, `bundles`, `folders`, `files`, `definitions`) are tree roots and are not filterable.",
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

@@ -56,12 +56,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindDefault
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod direct_leaf_tests {
-    use super::*;
-
-    #[test]
-    fn semantic_identity_matches_the_language_neutral_descriptor() {
-        assert_eq!(<UnbindDefaultSceneMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "unbind-default-scene");
-    }
-}
+#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
+mod direct_leaf_tests;
 //#endregion 🧪️Tests

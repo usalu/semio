@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `DeleteNode` — removes the node AND every edge severed by its
 //! removal (real cascade capture, never apply-then-capture) against the current scene off `base`.
-use crate::diff::{diff_replace_content, JackDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_replace_content, JackDiff};
 use crate::JackSnapshot;
 
 //#region 🔖️Diff

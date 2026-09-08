@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.docx/artifact.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/artifact.json",
   "title": "DocxArtifact",
   "type": "object",
   "properties": {

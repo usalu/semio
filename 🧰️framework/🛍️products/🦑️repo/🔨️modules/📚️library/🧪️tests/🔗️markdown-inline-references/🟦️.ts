@@ -22,7 +22,7 @@ type NativeSpan = Readonly<{ value: string; start: number; end: number; raw: str
 const library = resolve(import.meta.dir, "../.."), root = resolve(library, "../../../../..");
 const oracleRequire = createRequire(import.meta.url), MarkdownIt = oracleRequire("markdown-it") as new () => NativeParser;
 const normalizerPath = join(library, "🧹️normalization/🟦️.ts");
-const vectorPath = join(import.meta.dir, "../🔗️markdown-inline-references/🔣️.json"), schemaPath = join(import.meta.dir, "../🔗️markdown-inline-references/🧬️schema/🔣️.json");
+const vectorPath = join(import.meta.dir, "../🔗️markdown-inline-references/🔣️.json"), schemaPath = join(import.meta.dir, "../🔗️markdown-inline-references/🛂️schema/🔣️.json");
 const packagePath = join(library, "📦️packages/🟦️typescript/package.json"), oraclePath = fileURLToPath(import.meta.resolve("markdown-it/package.json")), oracleEntryPath = oracleRequire.resolve("markdown-it");
 const vectorBytes = snapshot(vectorPath), vector: Vector = JSON.parse(vectorBytes.toString("utf8"));
 const inputBytes = new Map([vectorPath, schemaPath, join(import.meta.dir, "../🔗️markdown-inline-references/🟦️.ts"), packagePath, oraclePath, oracleEntryPath, ...["index.mjs", "parser_inline.mjs", "helpers/parse_link_destination.mjs", "rules_inline/link.mjs", "rules_inline/image.mjs", "common/utils.mjs"].map((path) => join(dirname(oraclePath), "lib", path))].map((path) => [path, snapshot(path)]));

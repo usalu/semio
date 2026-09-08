@@ -15,13 +15,13 @@
     "sourceSetSha256": "e70688f49384d8a0898cfc6f574a22ffb02b5bb943d0d3801c3e4072b7c537df",
     "counts": {
       "admittedPackageFiles": 1050,
-      "candidates": 229,
-      "implementation": 209,
+      "candidates": 227,
+      "implementation": 207,
       "unresolved": 20,
-      "authored": 181,
+      "authored": 179,
       "authoredGeneratorInput": 48,
       "generated": 0,
-      "exactDestinationDecisions": 228,
+      "exactDestinationDecisions": 226,
       "blockedWithoutDestination": 1,
       "fallbackSemanticEmoji": 16,
       "targetFirstStructuralPrerequisites": 10,
@@ -29,8 +29,8 @@
       "configurableToolEntries": 4,
       "normalizedRegistrationsAndDeclarations": 24,
       "implementationExtractions": 29,
-      "movedDomainImplementations": 113,
-      "movedTests": 27,
+      "movedDomainImplementations": 112,
+      "movedTests": 26,
       "movedBenchmarks": 1,
       "regeneratedImplementations": 0,
       "collisionRows": 0,
@@ -5099,29 +5099,6 @@
       false
     ],
     [
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🔬️validation.test.ts",
-      "36a9ffb841d3d900034179c8ac98cf4ee4754f32b70005ca23fdb489bbb3d1f0",
-      "implementation",
-      "unmarked:🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
-      "🟦️typescript",
-      "🔬️validation.test.ts",
-      "move-test-implementation",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧪️tests/🧪️validation/🟦️.ts",
-      134,
-      null,
-      "authored",
-      [],
-      [],
-      "test-runner-and-language-module-graph",
-      [
-        "exact-reference-preimage-census"
-      ],
-      false
-    ],
-    [
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🧪️vitest.config.ts",
       "861fd9827063ff246065a714d26e1161ebff3c0b6ec43f8943aa4d0574f3ea28",
       "implementation",
@@ -5182,29 +5159,6 @@
       "move-domain-implementation",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🖥️server-implementations/🟦️.ts",
       133,
-      null,
-      "authored",
-      [],
-      [],
-      "language-module-import-graph",
-      [
-        "exact-reference-preimage-census"
-      ],
-      false
-    ],
-    [
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/✅️validation.ts",
-      "484086a8d8ab9281db10a1232ee7baa0ff031b64c68a388a8b85211f8ddf351b",
-      "implementation",
-      "unmarked:🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
-      "🟦️typescript",
-      "✅️validation.ts",
-      "move-domain-implementation",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧬️validation/🟦️.ts",
-      121,
       null,
       "authored",
       [],
@@ -5802,6 +5756,6 @@
       "owner-semantic-emoji-registration",
       "target-first-package-structural-projection"
     ],
-    "exactBlockedSources": 228
+    "exactBlockedSources": 226
   }
 }

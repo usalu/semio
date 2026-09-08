@@ -15,8 +15,8 @@
 //! its only non-applying branch is the `mutation.no-op` guard for an already-identical body, which is
 //! deliberately NOT what this case pins.
 
-use crate::diff::RewritingDiff;
-use crate::mutations::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
 

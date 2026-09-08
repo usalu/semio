@@ -16,7 +16,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-cross-fem = ["dep:fem"]
+cross-fem = ["dep:semio-s-artifact-fem-2d"]
 
 [dependencies]
 semio-s-artifact-norm-contract = { workspace = true }
@@ -29,9 +29,10 @@ semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 pack = { workspace = true }
 semio-s-artifact-norm-en1992 = { workspace = true }
-fem = { path = "../../../../../🏗️fem/📦️packages/🦀️rust", package = "semio-s-plugin-fem", default-features = false, optional = true }
+semio-s-artifact-fem-2d = { workspace = true, optional = true }
 
 [dev-dependencies]
+semio-s-artifact-norm-contract = { workspace = true, features = ["test-support"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-ui-scene = { workspace = true }
 serde = { workspace = true }

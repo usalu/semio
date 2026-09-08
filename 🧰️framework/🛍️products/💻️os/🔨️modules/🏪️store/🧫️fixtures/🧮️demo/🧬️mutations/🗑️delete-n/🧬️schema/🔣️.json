@@ -4,7 +4,7 @@
   "title": "DeleteN",
   "type": "object",
   "$defs": {
-    "payload": {
+    "Payload": {
       "type": "object",
       "properties": {},
       "required": []
@@ -12,10 +12,8 @@
   },
   "allOf": [
     {
-      "$ref": "#/$defs/payload"
+      "$ref": "#/$defs/Payload"
     }
   ],
-  "propertyNames": {
-    "enum": []
-  }
+  "propertyNames": false
 }

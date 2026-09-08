@@ -12,8 +12,10 @@
   },
   "devDependencies": {
     "@types/node": "^22.19.6",
+    "ajv": "8.20.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
+    "minimatch": "9.0.3",
     "semver": "7.8.5",
     "typescript": "^5.9.3"
   },

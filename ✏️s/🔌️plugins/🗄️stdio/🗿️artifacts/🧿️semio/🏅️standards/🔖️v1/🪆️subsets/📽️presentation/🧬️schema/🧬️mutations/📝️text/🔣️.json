@@ -1,10 +1,43 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "SemioPresentationMutationLine",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/presentation/mutations/text.json",
+  "title": "SemioPresentationMutationText",
   "type": "object",
-  "required": ["keyword"],
+  "required": [
+    "keyword"
+  ],
   "properties": {
-    "keyword": { "enum": ["set-snapshot", "insert-slide", "remove-slide", "set-slide-layout", "set-slide-notes", "insert-shape", "remove-shape", "set-shape-frame", "set-textbox-blocks", "insert-master", "remove-master", "insert-layout", "remove-layout", "set-layout-master"] },
-    "args": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "value": { "type": "string" } } } }
+    "keyword": {
+      "enum": [
+        "set-snapshot",
+        "insert-slide",
+        "remove-slide",
+        "set-slide-layout",
+        "set-slide-notes",
+        "insert-shape",
+        "remove-shape",
+        "set-shape-frame",
+        "set-textbox-blocks",
+        "insert-master",
+        "remove-master",
+        "insert-layout",
+        "remove-layout",
+        "set-layout-master"
+      ]
+    },
+    "args": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
+    }
   }
 }

@@ -13,7 +13,8 @@
 //! from E1's own placeholder.
 
 use semio_framework::{
-    AppDefinition, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, ExecutionProtocol, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest, io, kernel,
+    io, kernel, AppDefinition, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, ExecutionProtocol, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition,
+    PluginManifest,
 };
 
 /// 🗂️ Whether `artifact_kind` is owned by `plugin_id` — every plugin's own IO `Dialect.artifact_kind`
@@ -170,16 +171,36 @@ pub async fn describe_extension_with_apps<PA: crate::app::PluginApp>(runtime: &c
     descriptor.package_id = extension.package_id;
     descriptor.manifest.label = extension.label;
     descriptor.execution = extension.execution;
-    for capability in extension.capabilities { if !descriptor.manifest.capabilities.contains(&capability) { descriptor.manifest.capabilities.push(capability); } }
-    for dependency in extension.dependencies { if !descriptor.manifest.dependencies.contains(&dependency) { descriptor.manifest.dependencies.push(dependency); } }
-    for request in extension.capability_requests { if !descriptor.capability_requests.contains(&request) { descriptor.capability_requests.push(request); } }
+    for capability in extension.capabilities {
+        if !descriptor.manifest.capabilities.contains(&capability) {
+            descriptor.manifest.capabilities.push(capability);
+        }
+    }
+    for dependency in extension.dependencies {
+        if !descriptor.manifest.dependencies.contains(&dependency) {
+            descriptor.manifest.dependencies.push(dependency);
+        }
+    }
+    for request in extension.capability_requests {
+        if !descriptor.capability_requests.contains(&request) {
+            descriptor.capability_requests.push(request);
+        }
+    }
     for contribution in extension.topic_contributions {
-        if !descriptor.manifest.topic_contributions.contains(&contribution) { descriptor.manifest.topic_contributions.push(contribution.clone()); }
-        if !descriptor.contributions.topic_contributions.contains(&contribution) { descriptor.contributions.topic_contributions.push(contribution); }
+        if !descriptor.manifest.topic_contributions.contains(&contribution) {
+            descriptor.manifest.topic_contributions.push(contribution.clone());
+        }
+        if !descriptor.contributions.topic_contributions.contains(&contribution) {
+            descriptor.contributions.topic_contributions.push(contribution);
+        }
     }
     for contribution in extension.contributions {
-        if !descriptor.manifest.contributions.contains(&contribution) { descriptor.manifest.contributions.push(contribution.clone()); }
-        if !descriptor.contributions.artifact_contributions.contains(&contribution) { descriptor.contributions.artifact_contributions.push(contribution); }
+        if !descriptor.manifest.contributions.contains(&contribution) {
+            descriptor.manifest.contributions.push(contribution.clone());
+        }
+        if !descriptor.contributions.artifact_contributions.contains(&contribution) {
+            descriptor.contributions.artifact_contributions.push(contribution);
+        }
     }
     encode_package_descriptor(&descriptor)
 }
@@ -244,31 +265,5 @@ pub async fn describe_extension() -> Vec<u8> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn package_descriptor_advertises_metadata_only_cold_inference_routes() {
-        let metadata = crate::app::ArtifactInferenceServiceMetadata {
-            owner: "describe-routed-inference",
-            artifact_kind: "s.describe.route",
-            artifact_schema: "s.describe.route",
-            artifact_schema_version: 1,
-            document_schema: "s.describe.route",
-            document_schema_version: 1,
-            inference_schema: "s.describe.route.solve",
-            inference_schema_version: 1,
-            algorithm_version: 1,
-            policy_version: 1,
-        };
-        let plugin = crate::app::Plugin::<crate::app::NoPluginApp>::builder(metadata.owner).label("Describe Routed Inference").version("0.1.0").routed_inference(metadata).try_build().expect("routed plugin assembles");
-        let runtime = crate::plugin_runtime::PluginRuntime::new();
-        crate::plugin_runtime::install_plugin_bundle(&runtime, plugin);
-        let value = store::pack_rt::decode_wire_value(&describe_plugin(&runtime).await).expect("descriptor wire decodes");
-        let descriptor: PackageDescriptor = serde_json::from_value(value.into()).expect("descriptor shape decodes");
-        assert_eq!(descriptor.contributions.inference_services.len(), 1);
-        let route = &descriptor.contributions.inference_services[0];
-        assert_eq!((route.owner.as_str(), route.artifact_kind.as_str(), route.inference_schema.as_str()), (metadata.owner, metadata.artifact_kind, metadata.inference_schema));
-        assert!(crate::app::artifact_inference_service(metadata.artifact_kind, metadata.inference_schema).expect("global service lookup").is_none());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

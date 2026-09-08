@@ -1,6 +1,6 @@
 //! 🦠️ `🔢️change-generation-value` payload and its `MutationKind` impl; diff/inverse delegate to the sibling leaves.
-use crate::diff::Generation2dDiff;
-use crate::mutations::Generation2dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};

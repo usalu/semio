@@ -3,11 +3,18 @@ import { randomUUID } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import schema from "./🧬️schema/🔣️.json";
+import { withResourceLeases } from "../../🔒️leases/🟦️.ts";
 
 export type ServiceSession = { readonly schema: "semio.nx.service/v1"; readonly id: string; readonly owner: string; readonly pid: number };
 export const SERVICE_READY_ENDPOINT = "/__semio/nx-service";
 const idPattern = new RegExp(schema.$defs.Session.properties.id.pattern), urlPattern = new RegExp(schema.$defs.Ready.properties.url.pattern);
 const keys = (value: unknown, expected: string): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).sort().join() === expected;
+
+/** 🔐️ Serializes each service record transaction across cooperating Nx processes. */
+function mutateServiceSession<T>(root: string, signal: AbortSignal, operation: () => T): Promise<T> {
+  const contract = schema.$defs.MutationLease.const;
+  return withResourceLeases({ directory: join(root, contract.directory), resources: [{ resource: contract.resource, mode: "exclusive" }], signal }, async () => operation());
+}
 
 /** 🧾️ Validates the owned service generation independently of any process-ID reuse. */
 export function parseServiceSession(value: unknown): ServiceSession {
@@ -45,15 +52,17 @@ export function readServiceSession(root: string, owner: string, pid: number): Se
 }
 
 /** 🆕️ Starts a fresh generation after an uncached Nx preparation prerequisite. */
-export function openServiceSession(root: string, owner: string, pid: number): ServiceSession {
+export async function openServiceSession(root: string, owner: string, pid: number, signal = AbortSignal.timeout(60000)): Promise<ServiceSession> {
   const directory = serviceDirectory(root, pid), session = parseServiceSession({ schema: "semio.nx.service/v1", id: randomUUID(), owner, pid });
-  if (existsSync(directory)) {
-    if (existsSync(join(directory, "session.json"))) readServiceSession(root, owner, pid);
-    else if (readdirSync(directory).length) throw new Error(`Unowned service directory: ${directory}`);
-  }
-  mkdirSync(directory, { recursive: true });
-  publishRecord(directory, "session.json", session);
-  return session;
+  return mutateServiceSession(root, signal, () => {
+    if (existsSync(directory)) {
+      if (existsSync(join(directory, "session.json"))) readServiceSession(root, owner, pid);
+      else if (readdirSync(directory).length) throw new Error(`Unowned service directory: ${directory}`);
+    }
+    mkdirSync(directory, { recursive: true });
+    publishRecord(directory, "session.json", session);
+    return session;
+  });
 }
 
 /** 🛣️ Restricts readiness to an actual loopback TCP listener without credentials or redirects. */
@@ -72,15 +81,18 @@ function parseReady(value: unknown): { session: ServiceSession; url: string } {
 }
 
 /** 📡️ Announces the listener only if its prepared generation remains current. */
-export function publishServiceReady(root: string, session: ServiceSession, url: string): void {
-  const current = readServiceSession(root, session.owner, session.pid), directory = serviceDirectory(root, session.pid);
-  if (current.id !== session.id) throw new Error("Service generation changed before readiness");
+export async function publishServiceReady(root: string, session: ServiceSession, url: string, signal = AbortSignal.timeout(60000)): Promise<void> {
+  parseServiceSession(session);
   serviceUrl(url);
-  if (existsSync(join(directory, "ready.json"))) {
-    const previous = parseReady(readRecord(join(directory, "ready.json"))).session;
-    if (previous.owner !== session.owner || previous.pid !== session.pid) throw new Error("Service readiness owner mismatch");
-  }
-  publishRecord(directory, "ready.json", { schema: "semio.nx.service-ready/v1", session, url });
+  return mutateServiceSession(root, signal, () => {
+    const current = readServiceSession(root, session.owner, session.pid), directory = serviceDirectory(root, session.pid);
+    if (current.id !== session.id) throw new Error("Service generation changed before readiness");
+    if (existsSync(join(directory, "ready.json"))) {
+      const previous = parseReady(readRecord(join(directory, "ready.json"))).session;
+      if (previous.owner !== session.owner || previous.pid !== session.pid) throw new Error("Service readiness owner mismatch");
+    }
+    publishRecord(directory, "ready.json", { schema: "semio.nx.service-ready/v1", session, url });
+  });
 }
 
 /** ⏳️ Requires the current generation's HTTP identity before allowing its consumer to proceed. */
@@ -93,13 +105,18 @@ export async function waitForServiceReady(root: string, session: ServiceSession,
     if (existsSync(path)) {
       const ready = parseReady(readRecord(path));
       if (ready.session.id === session.id && ready.session.owner === session.owner && ready.session.pid === session.pid) {
+        let matches = false;
         try {
           const response = await fetch(new URL(SERVICE_READY_ENDPOINT, ready.url), { signal: AbortSignal.any([signal, AbortSignal.timeout(Math.max(1, Math.min(1000, Math.ceil(deadline - performance.now()))))]), redirect: "error" });
           if (response.ok) {
             const actual = parseServiceSession(await response.json());
-            if (actual.id === session.id && actual.owner === session.owner && actual.pid === session.pid) return ready.url;
+            matches = actual.id === session.id && actual.owner === session.owner && actual.pid === session.pid;
           }
         } catch { signal.throwIfAborted(); }
+        if (matches) {
+          if (readServiceSession(root, session.owner, session.pid).id !== session.id) throw new Error("Service generation changed during readiness response");
+          return ready.url;
+        }
       }
     }
     await delay(Math.max(1, Math.min(40, deadline - performance.now())), undefined, { signal });
@@ -108,11 +125,14 @@ export async function waitForServiceReady(root: string, session: ServiceSession,
 }
 
 /** 🧹️ Removes only this completed generation's records and preserves unrelated or newer state. */
-export function closeServiceSession(root: string, session: ServiceSession): void {
-  const directory = serviceDirectory(root, session.pid), currentPath = join(directory, "session.json");
-  if (!existsSync(currentPath) || readServiceSession(root, session.owner, session.pid).id !== session.id) return;
-  const readyPath = join(directory, "ready.json");
-  if (existsSync(readyPath) && parseReady(readRecord(readyPath)).session.id === session.id) rmSync(readyPath);
-  rmSync(currentPath);
-  try { rmdirSync(directory); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOTEMPTY" && (error as NodeJS.ErrnoException).code !== "EEXIST") throw error; }
+export async function closeServiceSession(root: string, session: ServiceSession, signal = AbortSignal.timeout(5000)): Promise<void> {
+  parseServiceSession(session);
+  return mutateServiceSession(root, signal, () => {
+    const directory = serviceDirectory(root, session.pid), currentPath = join(directory, "session.json");
+    if (!existsSync(currentPath) || readServiceSession(root, session.owner, session.pid).id !== session.id) return;
+    const readyPath = join(directory, "ready.json");
+    if (existsSync(readyPath) && parseReady(readRecord(readyPath)).session.id === session.id) rmSync(readyPath);
+    rmSync(currentPath);
+    try { rmdirSync(directory); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOTEMPTY" && (error as NodeJS.ErrnoException).code !== "EEXIST") throw error; }
+  });
 }

@@ -1,7 +1,7 @@
 //! 🧬️ Fem2d artifact schema — every field of the artifact with its state class.
 
 use crate::{FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Artifact
@@ -118,31 +118,31 @@ impl Fem2dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.fem.fem2d` — twenty handcrafted schema leaves.
-pub fn fem2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn fem2d_artifact_schema_descriptor() -> ::semio_framework_schema::ArtifactSchemaDescriptor {
+    ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.fem.fem2d",
-        artifact: schema::FacetLeaves {
+        artifact: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -215,7 +215,7 @@ pub fn empty_fem2d_snapshot() -> crate::Fem2dSnapshot {
 /// fixture that ever stops parsing degrades to `empty_fem2d_snapshot` rather than faulting the boot,
 /// and says so on the console.
 pub fn default_fem2d_snapshot() -> crate::Fem2dSnapshot {
-    match <crate::Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::dsl::FEM2D_EXAMPLE_TEXT) {
+    match <crate::Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM2D_EXAMPLE_TEXT) {
         Ok(snapshot) => {
             eprintln!(
                 "[DEBUG] fem2d boot snapshot: loaded the bundled example — nodes={} elements={} regions={} materials={} sections={} supports={} loadCases={} combinations={}",

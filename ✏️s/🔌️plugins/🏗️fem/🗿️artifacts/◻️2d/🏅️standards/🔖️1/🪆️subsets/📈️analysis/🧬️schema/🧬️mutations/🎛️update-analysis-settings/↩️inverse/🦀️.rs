@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `UpdateAnalysisSettings` — recovers the pre-mutation settings from `base`.
 use super::UpdateAnalysisSettings;
-use crate::mutations::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse

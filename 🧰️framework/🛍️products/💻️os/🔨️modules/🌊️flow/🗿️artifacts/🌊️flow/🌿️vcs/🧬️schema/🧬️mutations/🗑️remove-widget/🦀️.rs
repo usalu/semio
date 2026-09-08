@@ -29,9 +29,6 @@ impl MutationKind<FlowFixture, FlowMutation> for RemoveWidget {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn direct_leaf_contract() { super::super::super::flow_direct_tests::assert_leaf_contract::<RemoveWidget>(1, FlowMutation::RemoveWidget, include_str!("🔣️.json")); }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

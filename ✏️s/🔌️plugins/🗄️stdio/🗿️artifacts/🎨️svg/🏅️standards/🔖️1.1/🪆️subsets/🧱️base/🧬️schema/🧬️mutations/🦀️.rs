@@ -50,9 +50,5 @@ pub(crate) fn demo_mutation_cases() -> Vec<SvgMutation> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::SemanticMutation;
-    #[test]
-    fn aggregate_roster_is_exact() { assert_eq!(SvgMutation::kinds().len(), 9); }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

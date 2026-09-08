@@ -1,8 +1,8 @@
-# Composable Stdio Artifact Packages
+# Composable Artifact Packages
 
 ## Objective
 
-Give each stdio artifact an independent package boundary and Nx build identity. Package declarations belong under each artifact’s `📦️packages` language directory; implementation stays in the domain taxonomy. Preserve existing behavior and concurrently edited source.
+Give every production artifact an independent package boundary and Nx build identity, starting with stdio. Package declarations belong under each artifact’s `📦️packages` language directory; implementation stays in the domain taxonomy. Preserve existing behavior and concurrently edited source.
 
 ## Fleet
 
@@ -58,3 +58,9 @@ The initial 93 roots were a directory inventory, not a complete schema audit. Ro
 Current execution ownership: artifact_execution finishes stdio default/selected/full conversion gates and the 17 multi-artifact roots, including Block TypeScript packages and a lower Trinity engine API; nx_execution finishes its 24 artifact compile refinement, VCS/writer plugin dependency removal, package contract, Nx cache restoration/invalidation and dynamic launch inventory; registry_execution finishes norm15 then builtin space/collection. Root owns direct consumer imports/manifests, precise Semio conversion feature declarations, workflow/run, workflow/workflow, shared framework Playbook and integration validation.
 
 All Cargo/compilation results in reports refer to actual executed commands. Concurrent edits require a final fresh resolution and audit before completion. Shared Nx graph waits are isolated for verification using the installed Nx binary via `bun x nx` and ticket-owned workspace data; shared worker processes are preserved.
+
+## Final Inventory and Current Ownership
+
+The complete audited scope is 99 production artifacts plus 2 shared contracts, totaling 101 Rust declarations; 39 existing TypeScript entry points are declared separately. The initial 93-root count above was superseded by schema ownership exploration. Root now owns both GIS leaves and the GIS/Block parent composition boundaries alongside all framework artifacts except Space/Collection (registry executor). The artifact executor owns the remaining 15 multi-artifact leaves.
+
+PDF TypeScript cache acceptance passed: baseline task hash `2961489084152580833`, deleted-output restoration at 1/1 local cache hit, relevant PDF source mutation at a cache miss with hash `6201406382484965991`, and unrelated JPG mutation retaining the baseline hit and identical JS/declaration outputs. Temporary source markers were removed. Broader compiler/runtime, Nx aggregate/launch/prerequisite, and final independent audit gates remain open.

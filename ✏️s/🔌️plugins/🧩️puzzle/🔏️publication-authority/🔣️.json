@@ -7,9 +7,9 @@
       "source": "🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "groups": [
         {
-          "status": "Migrated",
+          "status": "migrated",
           "lanes": [
-            "HostOnly"
+            "host-only"
           ],
           "routes": [
             "lodScaleJson",
@@ -17,9 +17,9 @@
           ]
         },
         {
-          "status": "Migrated",
+          "status": "migrated",
           "lanes": [
-            "Artifact"
+            "artifact"
           ],
           "routes": [
             "addNode",
@@ -30,9 +30,9 @@
           ]
         },
         {
-          "status": "Migrated",
+          "status": "migrated",
           "lanes": [
-            "Config"
+            "config"
           ],
           "routes": [
             "brushCancelSlot",
@@ -60,10 +60,10 @@
           ]
         },
         {
-          "status": "Migrated",
+          "status": "migrated",
           "lanes": [
-            "Artifact",
-            "Config"
+            "artifact",
+            "config"
           ],
           "routes": [
             "applyBoardEvents",
@@ -86,9 +86,9 @@
       "source": "🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "groups": [
         {
-          "status": "Migrated",
+          "status": "migrated",
           "lanes": [
-            "HostOnly"
+            "host-only"
           ],
           "routes": [
             "openAddObjectDialog",
@@ -96,9 +96,9 @@
           ]
         },
         {
-          "status": "Migrated",
+          "status": "migrated",
           "lanes": [
-            "Config"
+            "config"
           ],
           "routes": [
             "closeVortexSuggestions",
@@ -145,10 +145,10 @@
           ]
         },
         {
-          "status": "Migrated",
+          "status": "migrated",
           "lanes": [
-            "Artifact",
-            "Config"
+            "artifact",
+            "config"
           ],
           "routes": [
             "acceptSuggestion",
@@ -171,9 +171,9 @@
           ]
         },
         {
-          "status": "Migrated",
+          "status": "migrated",
           "lanes": [
-            "Artifact"
+            "artifact"
           ],
           "routes": [
             "addTargetVolume",
@@ -181,9 +181,9 @@
           ]
         },
         {
-          "status": "BatchOnlyPendingRewrite",
+          "status": "batch-only-pending-rewrite",
           "lanes": [
-            "HostOnly"
+            "host-only"
           ],
           "routes": [
             "transformBegin",
@@ -192,10 +192,10 @@
           "blocker": "the current empty/effect-only completion does not reproduce the route's semantic runtime transition"
         },
         {
-          "status": "BatchOnlyPendingRewrite",
+          "status": "batch-only-pending-rewrite",
           "lanes": [
-            "Artifact",
-            "Config"
+            "artifact",
+            "config"
           ],
           "routes": [
             "setFixtureJson"
@@ -209,9 +209,9 @@
       "source": "🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "groups": [
         {
-          "status": "Migrated",
+          "status": "migrated",
           "lanes": [
-            "HostOnly"
+            "host-only"
           ],
           "routes": [
             "canvasPointerDown",
@@ -222,9 +222,9 @@
           ]
         },
         {
-          "status": "Migrated",
+          "status": "migrated",
           "lanes": [
-            "Artifact"
+            "artifact"
           ],
           "routes": [
             "cut",
@@ -237,18 +237,18 @@
           ]
         },
         {
-          "status": "Migrated",
+          "status": "migrated",
           "lanes": [
-            "Config"
+            "config"
           ],
           "routes": [
             "zoomToSelection"
           ]
         },
         {
-          "status": "BatchOnlyPendingRewrite",
+          "status": "batch-only-pending-rewrite",
           "lanes": [
-            "Artifact"
+            "artifact"
           ],
           "routes": [
             "addBrushObject",
@@ -273,9 +273,9 @@
           "blocker": "artifact-lane completion has no app-owned retained preparation and root-retirement factory"
         },
         {
-          "status": "BatchOnlyPendingRewrite",
+          "status": "batch-only-pending-rewrite",
           "lanes": [
-            "Config"
+            "config"
           ],
           "routes": [
             "cycleBrushCandidate",
@@ -303,9 +303,9 @@
           "blocker": "config-lane completion has no app-owned retained preparation and root-retirement factory"
         },
         {
-          "status": "BatchOnlyPendingRewrite",
+          "status": "batch-only-pending-rewrite",
           "lanes": [
-            "HostOnly"
+            "host-only"
           ],
           "routes": [
             "registerBrushMesh",

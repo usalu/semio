@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `AddObjectVortex` — patches the owner object's `vortices` list.
 //! No-op when the vortex id already exists on that object.
-use crate::diff::{Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta};
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

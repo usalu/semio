@@ -1,5 +1,5 @@
 //! deser generation3d via txt
-//! 🐛️ Pre-migration content here referenced `crate::artifacts::json`/`crate::artifacts::txt`,
+//! 🐛️ Pre-migration content here referenced `semio_s_artifact_stdio_json`/`semio_s_artifact_stdio_txt`,
 //! types that don't exist in this crate (dead code, never mounted by the old glue, never
 //! compiled) -- likely a copy-paste of stdio's own internal json<-txt bridge into the wrong
 //! plugin's txt target folder. Left as an honest stub producing this artifact's own real

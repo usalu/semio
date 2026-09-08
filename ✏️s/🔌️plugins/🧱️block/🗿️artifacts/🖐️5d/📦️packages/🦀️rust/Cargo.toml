@@ -19,6 +19,7 @@ default = []
 component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract"]
 
 [dependencies]
+semio-s-artifact-block-2d = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -34,6 +35,7 @@ semio-framework-dispatch-macros = { workspace = true, optional = true }
 semio-framework-ui-contract = { workspace = true, optional = true }
 
 [dev-dependencies]
+semio-s-artifact-block-2d = { workspace = true, features = ["test-serde"] }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

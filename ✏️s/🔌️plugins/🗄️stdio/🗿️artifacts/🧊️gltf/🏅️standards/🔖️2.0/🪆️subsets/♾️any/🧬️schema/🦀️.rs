@@ -317,36 +317,7 @@ pub mod derived_construction {
 
     //#region 🧪️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn typed_constructors_build_a_decodable_triangle() {
-            let mut b = GltfBuilderConstruction::empty();
-            b.set_asset_version("2.0");
-            let mut bytes = Vec::new();
-            let verts: [[f32; 3]; 3] = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
-            for v in verts {
-                for c in v {
-                    bytes.extend_from_slice(&c.to_le_bytes());
-                }
-            }
-            let buf = b.add_buffer(bytes);
-            let bv = b.add_buffer_view(buf, 0, 36, None, Some(34962));
-            let acc = b.add_accessor(GltfAccessorSpec::new(GltfComponentType::Float, GltfAccessorType::Vec3, 3).with_buffer_view(bv, 0).with_min_max(vec![0.0, 0.0, 0.0], vec![1.0, 1.0, 0.0]));
-            let mat = b.add_material(GltfMaterial { pbr_metallic_roughness: Some(crate::schema::snapshot::GltfPbrMetallicRoughness { base_color_factor: [1.0, 0.0, 0.0, 1.0], ..Default::default() }), ..Default::default() });
-            let mesh = b.add_mesh();
-            b.add_mesh_primitive(mesh, &[("POSITION", acc)], None, Some(mat), None);
-            let node = b.add_node(Some(mesh));
-            let scene = b.add_scene(vec![node], None);
-            b.set_default_scene(scene);
-            let snapshot = b.build().expect("build");
-
-            assert_eq!(snapshot.document.asset.version, "2.0");
-            let decoded = crate::engine::decode_accessor(&snapshot.document, &snapshot.buffers, acc).expect("decode");
-            assert_eq!(decoded.components, vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
-        }
-    }
+    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
     //#endregion 🧪️Tests
 }
 pub use derived_construction::*;
@@ -456,33 +427,7 @@ pub mod derived_analysis {
 
     //#region 🧪️Tests
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[semio_framework_async_macros::async_test]
-        async fn sniff_recognizes_glb_magic() {
-            let mut bytes = vec![b'g', b'l', b'T', b'F'];
-            bytes.extend_from_slice(&2u32.to_le_bytes());
-            bytes.extend_from_slice(&[0u8; 4]);
-            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
-            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a glb")), IoConfidence::Low);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn sniff_recognizes_gltf_json() {
-            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Text(r#"{"asset":{"version":"2.0"}}"#)), IoConfidence::High);
-            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Text("not json")), IoConfidence::Medium);
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn analyze_decodes_real_gltf_json_text_directly() {
-            let text = r#"{"asset":{"version":"2.0"},"scenes":[]}"#;
-            let analysis = GltfAnalyzerAnalysis::analyze(&[AnalyzeSource::Text(text)]);
-            assert_eq!(analysis.confidence, IoConfidence::High);
-            let snap = analysis.parts.snapshot.expect("snapshot");
-            assert_eq!(snap.document.asset.version, "2.0");
-        }
-    }
+    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
     //#endregion 🧪️Tests
 }
 pub use derived_analysis::*;

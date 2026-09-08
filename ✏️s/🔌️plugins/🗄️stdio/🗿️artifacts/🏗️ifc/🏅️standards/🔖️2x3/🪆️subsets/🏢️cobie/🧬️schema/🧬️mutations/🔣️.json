@@ -12,7 +12,7 @@
       ],
       "properties": {
         "SetFacilityName": {
-          "$ref": "./🏢️set-facility-name/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/ifc/2x3/cobie/mutation/set-facility-name/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "SetFloorElevation": {
-          "$ref": "./📏️set-floor-elevation/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/ifc/2x3/cobie/mutation/set-floor-elevation/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "SetSnapshot": {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/ifc/2x3/cobie/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "SetSpace": {
-          "$ref": "./🚪️set-space/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/ifc/2x3/cobie/mutation/set-space/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "SetTypeAssignment": {
-          "$ref": "./🧩️set-type-assignment/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/ifc/2x3/cobie/mutation/set-type-assignment/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "SetViewDefinition": {
-          "$ref": "./👁️set-view-definition/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/ifc/2x3/cobie/mutation/set-view-definition/schema.json"
         }
       }
     }

@@ -186,15 +186,8 @@ pub mod derived_analysis {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn empty_snapshot_matches_schema() {
-        let snapshot = empty_playground_snapshot();
-        assert_eq!(snapshot.schema, crate::PLAYGROUND_DOCUMENT_SCHEMA);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 //#region 🧬️DerivedArtifactFacets

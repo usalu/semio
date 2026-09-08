@@ -4,8 +4,8 @@
 //! `mutation.id-mismatch` (Fatal) when the replacement renames it, the SAME positivity bounds
 //! `create-section` runs (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceSection;
-use crate::diff::{Fem2dDiff, Fem2dSectionsDelta, Fem2dSectionsPatchEntry};
-use crate::mutations::guards;
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSectionsDelta, Fem2dSectionsPatchEntry};
+use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff

@@ -3,14 +3,14 @@
 import { resolve } from "node:path";
 import Ajv from "ajv";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-type Lane = "Artifact" | "Config";
+type Lane = "artifact" | "config";
 type Fixture = { schema: string; owner: "EquationPlayApp"; source: string; routes: { id: string; lane: Lane }[]; laws: Record<string, boolean>; ui: { locales: ["en", "de"]; accessibleLabels: boolean; customizableUi: boolean } };
 
 const exact = (left: string[], right: string[]): boolean => JSON.stringify([...left].sort()) === JSON.stringify([...right].sort()) && new Set(left).size === left.length && new Set(right).size === right.length;
 
 function oracle(fixture: Fixture, source: string): boolean {
   const ids = [...source.match(/EQUATION_TOOL_IDS: &\[&str\] = &\[([^\]]*)\]/s)?.[1]?.matchAll(/"([^"]+)"/g) ?? []].map((match) => match[1]!);
-  const contracts = new Map([...source.matchAll(/ArtifactToolPublicationContract \{ tool_id: "([^"]+)", lanes: &\[ArtifactToolPublicationLane::(Artifact|Config)\] \}/g)].map((match) => [match[1]!, match[2]! as Lane]));
+  const contracts = new Map([...source.matchAll(/ArtifactToolPublicationContract \{ tool_id: "([^"]+)", lanes: &\[ArtifactToolPublicationLane::(Artifact|Config)\] \}/g)].map((match) => [match[1]!, match[2]!.toLowerCase() as Lane]));
   const classifications = [...source.matchAll(/\.action_interactive_job\("([^"]+)", InteractiveJobClassification::Migrated\)/g)].map((match) => match[1]!);
   const expected = fixture.routes.map(({ id }) => id);
   return fixture.schema === "semio.app.publication-authority.v1" && Object.values(fixture.laws).every(Boolean)
@@ -31,8 +31,10 @@ class TestScript extends BundleScript {
     const plugin = resolve(this.root, "../..");
     const authority = resolve(plugin, "📣️publication-authority");
     const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
-    const schema = await Bun.file(resolve(authority, "🧬️.schema.json")).json();
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
+    const module = await Bun.file(resolve(plugin, "🧬️schema/🔣️.json")).json() as { $id: string };
+    const ajv = new Ajv({ allErrors: true, strict: true });
+    ajv.addSchema(module);
+    const validate = ajv.compile({ $ref: `${module.$id}#/$defs/MathematicalPublicationAuthority` });
     if (!validate(fixture)) throw new Error(`Mathematical fixture failed strict Ajv: ${JSON.stringify(validate.errors)}`);
     const source = await Bun.file(resolve(plugin, fixture.source)).text();
     if (!oracle(fixture, source)) throw new Error("Mathematical publication-authority oracle rejected production");
@@ -41,7 +43,7 @@ class TestScript extends BundleScript {
     if (validate({ ...fixture, extra: true })) throw new Error("Mathematical strict schema accepted an extra property");
     console.error(`validated Mathematical publication authority; routes=${fixture.routes.length}; schema=Ajv; oracle=owned; hostile=3`);
     const subset = resolve(plugin, "🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any");
-    runCmd(process.execPath, ["test", resolve(subset, "📚️examples/🎬️demo/🧪️tests/🟦️.ts"), resolve(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️.ts")]);
+    runCmd(process.execPath, ["test", resolve(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"), resolve(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts")]);
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("publication-authority-audit", TestScript);

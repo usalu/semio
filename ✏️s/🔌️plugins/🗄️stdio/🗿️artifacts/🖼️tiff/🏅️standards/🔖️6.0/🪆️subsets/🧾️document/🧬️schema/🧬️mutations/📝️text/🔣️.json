@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/tiff/6.0/document/mutations/text.json",
   "title": "TiffMutationText",
   "type": "string",
   "pattern": "^(?:change-byte-order|insert-ifd|remove-ifd|replace-tag|remove-tag|replace-pixels)(?: |$)"

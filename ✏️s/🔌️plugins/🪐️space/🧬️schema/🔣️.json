@@ -266,7 +266,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "hostOnly"
+                        "host-only"
                       ]
                     }
                   },
@@ -284,7 +284,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "hostOnly"
+                        "host-only"
                       ]
                     }
                   },
@@ -302,7 +302,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "hostOnly"
+                        "host-only"
                       ]
                     }
                   },
@@ -320,7 +320,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "hostOnly"
+                        "host-only"
                       ]
                     }
                   },
@@ -393,7 +393,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "hostOnly"
+                        "host-only"
                       ]
                     }
                   },
@@ -411,7 +411,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "hostOnly"
+                        "host-only"
                       ]
                     }
                   },
@@ -453,7 +453,7 @@
                       "status": {
                         "enum": [
                           "migrated",
-                          "batch-only"
+                          "batch-only-pending-rewrite"
                         ]
                       },
                       "feature": {

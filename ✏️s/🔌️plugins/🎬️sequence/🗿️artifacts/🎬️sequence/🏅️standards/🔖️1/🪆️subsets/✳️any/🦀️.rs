@@ -22,13 +22,13 @@ fn inference_descriptors() -> &'static [::framework_schema::ArtifactInferenceDes
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset() -> SubsetDeclaration<crate::plugin::SequenceApps> {
+pub fn subset<A: crate::SequenceApplication>() -> SubsetDeclaration<A> {
     SubsetDeclaration {
         dialect: SEQUENCE_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::sequence_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::SequenceViewer, crate::plugin::SequenceApps>(viewer::create_sequence_viewer()),
-        editor: editor_surface::<editor::SequencePlayApp, crate::plugin::SequenceApps>(editor::create_sequence_app()),
+        viewer: viewer_surface::<viewer::SequenceViewer, A>(viewer::create_sequence_viewer()),
+        editor: editor_surface::<editor::SequencePlayApp, A>(editor::create_sequence_app()),
         examples: examples(),
     }
 }

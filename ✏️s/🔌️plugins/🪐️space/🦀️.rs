@@ -1,791 +1,208 @@
-//! 🌱️ S Studio plugin — fixtures + document helpers shared by the `home` editor/viewer surfaces AND the
-//! `space` studio app. None of the three owns this content alone (see the master ticket's "shared code
-//! used by ≥2 apps/surfaces of the plugin" rule), so it lives in this plugin-root `🫀️core` kernel
-//! instead of duplicated into any of them.
-//!
-//! 🕳️ The `//#region 🔖️DocumentHelpers` block below (`catalog_port`, `resolve_studio_document`,
-//! `list_all_space_catalog_entries`, …) moved here from `🗿️artifacts/🏠️home/…/✏️editor/🦀️.rs`
-//! (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET W2 packet P7): once `🏠️home` split into an
-//! `✏️editor` and a `👁️viewer`, this catalog-listing code became genuinely needed by THREE call sites
-//! (the editor's own commands, the new viewer's read-only render, and studio's own `🎮️commands/*`) and a
-//! viewer file can never import through `::editor::` (`policyViewerPurityBreaches`) — so plugin root,
-//! reachable as `crate::X` from every module without any role prefix, is the only place all three can
-//! reach it from. The vestigial `&HomeApp`/`_for` parameter the pre-split functions carried was dropped
-//! in the move: every call site always passed `&HomeApp::default()`, so it never varied and coupling this
-//! plugin-root file to `editor::home::HomeApp` for it would have bought nothing.
+//! 🔌️ Space composition of independently packaged Home and Space Index artifacts.
 
-/// 🗺️ Shared lookup of admitted studio backbone ports.
-type SharedStudioPorts = Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>>;
+#![allow(async_fn_in_trait)]
+extern crate infinite_canvas as infinite_board_port_directed_dag;
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
+extern crate semio_framework_value_derive as value_derive;
 
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
-use crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
-use semio_framework_artifact_space_collection::{artifact_backbone_uri, collection_backbone_uri, ArtifactBody, CollectionEntry, CollectionMutation, CollectionSnapshot, S_COLLECTION_SCHEMA};
-use semio_framework_artifact_space_space::{empty_space_snapshot, space_backbone_uri, SpaceKind, SpaceMutation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceVisibility, S_SPACE_SCHEMA};
-use semio_framework_os::{
-    create_backbone_document, decode_backbone_payload, draft_catalog_for, draft_uri, empty_workflow_snapshot, encode_backbone_payload, export_backbone_pack, export_os_space_pack, list_os_space_catalog_entries, load_os_space_document,
-    materialize_backbone_snapshot, register_os_fixture_json, seed_os_space_catalog_if_empty, DraftCatalog, MemoryBackbonePort, OsBackbonePort, OsBackbonePorts, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort,
-    WorkflowMutation, WorkflowSnapshot, OS_SPACE_SCHEMA, S_WORKFLOW_SCHEMA,
-};
-#[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os::{document_backbone_ref, VcsError};
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{app_labels, ExecutionMode, Plugin, PluginApp};
-use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, LazyLock, Mutex, OnceLock};
-use store::{BackbonePorts, LocalStorageBackbonePort};
+use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_os::OS_SPACE_SCHEMA;
+pub use semio_s_artifact_space_space::space_core::*;
 
-//#region 🔖️Constants
-pub const DEMO_STUDIO_ID: &str = "demo-studio";
-pub const DEMO_STUDIO_NAME: &str = "Demo Studio";
-/// 📜️ the demo studio is handcrafted `.s` DSL text (a `WorkflowSnapshot`, see `🔖️DocumentHelpers` —
-/// the dissolved `OsProjection`'s successor), not JSON — it is compiled into the binary, so a parse
-/// failure here is a bug in the bundled fixture.
-pub const DEMO_STUDIO_DSL: &str = include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📚️examples/♻️reuse/🗣️dsls/♻️reuse/🧬️.semio");
-const OS_BOOT_STUDIO_ID: &str = "default";
-//#endregion 🔖️Constants
+//#region ⚙️Engine
+/// 🕳️ `🏠️home` moved out into `✏️editor`/`👁️viewer` above (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET W2 packet P7). `🪐️space` (studio) has no artifact
+/// of its own (`ArtifactApp::Snapshot`/`::Mutation` are the framework-owned `WorkflowSnapshot`/
+/// `WorkflowMutation`, a deliberately OS-owned "peer kernel crate" document per ticket
+/// 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT's `w4b-workflow.md`/`w4b-space.md` — not a
+/// per-subset editor/viewer surface, W2-END packet). Relocated out of the retired `🎛️apps/` taxonomy
+/// dir into this plugin-root `⚙️engine/` facet (mirroring `🏗️fem`'s own plugin-root `⚙️engine/
+/// 🖥️app-surface/` precedent from packet P7b) — same content, same `.document_app()`/
+/// `.foreign_document_codec()` registration, module path only.
+#[path = "."]
+pub mod engine {
+    #[path = "."]
+    pub mod space {
+        #[path = "⚙️engine/🪐️space/🦀️.rs"]
+        mod component;
+        pub use component::*;
 
-//#region 🔖️Fixtures
-/// 🧵️ Registers the draw/writer fixture documents referenced by the demo space's app instances —
-/// shared by the Home editor's catalog seed and the Studio app's media export path, both of which need
-/// these fixtures resolvable before they touch a studio document that references them.
-pub async fn ensure_space_fixtures_registered() {
-    static FIXTURES: LazyLock<()> = LazyLock::new(|| {
-        // 🩹️ draw/writer migrated their fixtures from JSON to a handcrafted DSL (`store::ArtifactDsl`);
-        // this registry is still JSON-shaped (framework/product/os hasn't migrated yet), so
-        // `materialize_os_app_instance_document_json`'s `pack::from_json_str` will fall back to
-        // `json!({})` for these two slugs until then. Non-fatal: seed content is a convenience default,
-        // not required for correctness.
-        register_os_fixture_json("🖍️semio.draw.json", include_str!("../🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio"));
-        register_os_fixture_json("✒️jack.writer.json", include_str!("../✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio"));
-    });
-    let _ = &*FIXTURES;
-}
+        #[path = "."]
+        pub mod config {
+            #[path = "⚙️engine/🪐️space/🎚️config/🦀️.rs"]
+            mod component;
+            pub use component::*;
 
-/// 🌱️ Parses the packaged demo studio fixture into a full `OsWorkflowArtifactDocument` envelope —
-/// shared by the Home editor's catalog seed and the Studio app's `initial_snapshot`. The fixture
-/// holds only the `WorkflowSnapshot` payload (`DEMO_STUDIO_DSL`); the envelope metadata
-/// (schema/id/name, freshly-minted history) is built via `create_backbone_document`.
-pub async fn parse_demo_space_document() -> OsWorkflowArtifactDocument {
-    let initial_snapshot = <WorkflowSnapshot as store::ArtifactDsl>::parse_dsl(DEMO_STUDIO_DSL).expect("bundled example/✏️demo.s is valid WorkflowSnapshot DSL text");
-    create_backbone_document(S_WORKFLOW_SCHEMA, DEMO_STUDIO_ID, DEMO_STUDIO_NAME, initial_snapshot)
-}
-
-pub async fn demo_os_document() -> OsWorkflowArtifactDocument {
-    parse_demo_space_document().await
-}
-
-/// @emoji 🌱️ The demo space's bare `WorkflowSnapshot` — the studio app's `initial_snapshot`, parsed
-/// straight out of the packaged fixture (no envelope/runtime wrapper).
-pub async fn demo_space_projection() -> WorkflowSnapshot {
-    demo_os_document().await.vcs.initial_snapshot
-}
-//#endregion 🔖️Fixtures
-
-//#region 🔖️DocumentHelpers
-/// 🧬️ O1 — enum dispatch, not a trait object: os-host's own `OsBackbonePorts` (the enum its
-/// `list_os_space_catalog_entries`/`seed_os_space_catalog_if_empty`/`load_os_space_document` are now
-/// closed over, `Store(store::BackbonePorts) | Space(..)`) wraps the `store::BackbonePorts` enum this
-/// function actually builds — no `dyn` anywhere, no separate trait-object "view" variable the way the
-/// pre-O1 code kept one.
-async fn catalog_port_concrete() -> Arc<OsBackbonePorts> {
-    ensure_space_fixtures_registered().await;
-    // 🧬️ `::default()`, not `::new()`: `LocalStorageBackbonePort::new()` is `async fn` but defined to
-    // equal `Default::default()` exactly (store's own impl just forwards); using the sync constructor
-    // here avoids a pointless suspension point and keeps this line symmetric with
-    // `temp_catalog_port_concrete()` below, whose `OnceLock::get_or_init` closure cannot be async at all.
-    // 🧬️ `OsBackbonePorts::Store(..)`: os-host's O1 enum-dispatch closed the catalog-facing fns
-    // (`list_os_space_catalog_entries`/`seed_os_space_catalog_if_empty`) over its OWN `OsBackbonePorts`
-    // enum, not `store::BackbonePorts` directly — every real transport still routes through the
-    // `Store` variant's inner `store::BackbonePorts`.
-    let port = Arc::new(OsBackbonePorts::Store(BackbonePorts::LocalStorage(LocalStorageBackbonePort::default())));
-    if list_os_space_catalog_entries(&port).map_or(true, |entries| entries.is_empty()) {
-        // 🧬️ `parse_demo_space_document` yields a `WorkflowSnapshot` (the dissolved `OsProjection`'s
-        // workflow-graph half) — the space CATALOG this boot seed populates needs a `SpaceSnapshot`
-        // manifest instead. `demo_name` still comes from the bundled fixture's own name; the manifest
-        // itself is a fresh space with no workflow artifact wired in yet (`create_os_space`'s own doc: a
-        // space only auto-creates its default collection, never a workflow artifact — that stays a
-        // later, explicit user action).
-        let demo_name = {
-            let demo = parse_demo_space_document().await;
-            if demo.name.trim().is_empty() {
-                "Demo Studio".into()
-            } else {
-                demo.name
-            }
-        };
-        let mut projection = empty_space_snapshot(&demo_name, SpaceKind::Atelier, SpaceVisibility::Private);
-        // 🪪️ Deliberately NOT threaded to a real session identity (unlike
-        // `create_and_register_ephemeral_studio`'s `owner_id`/`owner_name`): this seed runs once, lazily,
-        // from a process-global `static`/`LazyLock` at first catalog access, with no `HomeConfig`/
-        // `ActionMeta` in scope — there is no user session to attribute this bootstrap fixture to.
-        // `"local"` here names the pre-ticket guest sentinel, not a real signed-in user; fabricating one
-        // would misattribute ownership of a system-seeded demo space.
-        projection.users.push(SpaceUser { id: "local".into(), name: demo_name.clone(), avatar: None, role: SpaceRole::Author });
-        let seed: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, OS_BOOT_STUDIO_ID, &demo_name, projection);
-        let _ = seed_os_space_catalog_if_empty(seed, &port);
-    }
-    port
-}
-
-/// 🧬️ Session-local, ephemeral (in-memory only) counterpart to `catalog_port_concrete()`, used by the
-/// os-catalog-facing fallback reads (`resolve_studio_document`/`resolve_backbone_bytes`/
-/// `list_all_space_catalog_entries`) — draft bytes themselves are reached through the SEPARATE
-/// `draft_backbone_port_concrete()` singleton below, not this one (see its own doc for why the two
-/// can't share one allocation). Same `OsBackbonePorts` wrapping as `catalog_port_concrete()` —
-/// `OnceLock::get_or_init`'s closure is plain `FnOnce`, not async, which is the other reason
-/// `::default()` (sync) is used over `::new()`.
-async fn temp_catalog_port_concrete() -> Arc<OsBackbonePorts> {
-    static PORT: OnceLock<Arc<OsBackbonePorts>> = OnceLock::new();
-    PORT.get_or_init(|| Arc::new(OsBackbonePorts::Store(BackbonePorts::Memory(MemoryBackbonePort::default())))).clone()
-}
-
-/// 🧬️ Independent in-memory singleton for draft byte storage — kept as a bare `Arc<store::BackbonePorts>`
-/// (not `Arc<OsBackbonePorts>`) because `draft_catalog_for`/`DraftCatalog::list_drafts_sweeping_expired`/
-/// `DraftCatalog::discard_draft` (framework/modules/space) predate `OsBackbonePorts` and can never depend
-/// on it (os-host depends on space, not the other way; a back-dependency would cycle). `OsBackbonePorts::
-/// Store` owns its inner `store::BackbonePorts` BY VALUE, not by `Arc`, so no wrapper can share this
-/// allocation's identity with `temp_catalog_port_concrete()`'s own singleton above — kept deliberately
-/// separate rather than faked. Every real caller reaches drafts through THIS port (`draft_uri`-prefixed
-/// reads/writes); `temp_catalog_port()`'s fallback-loop reads never see draft entries anyway (they are
-/// never `SPACE_CATALOG_URIS`-tracked), so the divergence is inert in practice.
-async fn draft_backbone_port_concrete() -> Arc<BackbonePorts> {
-    static PORT: OnceLock<Arc<BackbonePorts>> = OnceLock::new();
-    PORT.get_or_init(|| Arc::new(BackbonePorts::Memory(MemoryBackbonePort::default()))).clone()
-}
-
-/// 🚧️ BLOCKER — this process-global mutable payload registry violates the retained-interaction
-/// instance-ownership invariant and keeps Space global-state closure red. `register_studio_port`'s two real callers
-/// (`create_folder_studio`/`bind_studio_file` in the Home editor's `create-studio`/`bind-space-file`
-/// commands) source `port` from `semio_framework_os::open_folder_space_backbone`/
-/// `open_file_space_backbone` — both declared in `🖥️host/🦀️.rs` (out of this packet's owned
-/// path) as returning `Arc<dyn OsBackbonePort>` directly, already type-erased before this file ever
-/// sees the value; there is no concrete type left to recover into a closed enum variant, and no `Any`
-/// bound on `OsBackbonePort` to downcast through even if there were. The correct fix is a host-created,
-/// instance-scoped port-catalog service threaded into Home and Studio operation context; moving the
-/// same map behind another static would remain invalid. This source-only packet cannot install that
-/// host seam, so every route traversing this registry remains fail-closed and the residue is reported.
-async fn shared_studio_ports() -> SharedStudioPorts {
-    static REGISTRY: OnceLock<SharedStudioPorts> = OnceLock::new();
-    REGISTRY.get_or_init(|| Arc::new(Mutex::new(HashMap::new()))).clone()
-}
-
-/// 🌉️ The Home editor's `🎮️commands/*`, the Home viewer's read-only render, and the sibling `🪐️space`
-/// studio app's own commands all resolve studios through this same catalog port.
-pub async fn catalog_port() -> Arc<OsBackbonePorts> {
-    catalog_port_concrete().await
-}
-
-pub(crate) async fn temp_catalog_port() -> Arc<OsBackbonePorts> {
-    temp_catalog_port_concrete().await
-}
-
-/// 🔌️ `Arc<BackbonePorts>` — the concrete `store` enum, NOT `Arc<dyn SpaceBackbonePort>`. Every real
-/// consumer of this return value — `draft_catalog_for`, `DraftCatalog::list_drafts_sweeping_expired`,
-/// `DraftCatalog::discard_draft`, all declared in `🧰️framework/🔨️modules/🪐️space/🦀️.rs` (out
-/// of this packet's owned path) — takes `&Arc<store::BackbonePorts>` directly; `SpaceBackbonePort`'s
-/// blanket impl over `T: store::BackbonePort` covers this enum for free (`SpaceBackbonePort::read`/
-/// `::write`, UFCS-disambiguated below against the sibling `OsBackbonePort` blanket).
-pub(crate) async fn draft_backbone_port() -> Arc<BackbonePorts> {
-    draft_backbone_port_concrete().await
-}
-
-/// 🗄️ The port-keyed `DraftCatalog` for `draft_backbone_port` — every draft studio's bookkeeping (id,
-/// kind, TTL) lives here; `draft_catalog_for` guarantees the SAME instance is returned every call since
-/// `draft_backbone_port` always clones the SAME `draft_backbone_port_concrete()` allocation.
-pub(crate) async fn ephemeral_draft_catalog() -> Arc<DraftCatalog> {
-    draft_catalog_for(&draft_backbone_port().await)
-}
-
-/// 🕰️ Wall-clock millis, reusing `store::now_iso`'s own wasm-safe implementation (its string is
-/// already the millis count as text) rather than duplicating the `cfg(target_arch = "wasm32")`
-/// branching this crate has no `js-sys` dependency to replicate directly.
-async fn now_ms() -> u64 {
-    store::now_iso().parse().unwrap_or(0)
-}
-
-pub(crate) async fn register_studio_port(space_id: &str, port: Arc<dyn OsBackbonePort>) {
-    if let Ok(mut guard) = shared_studio_ports().await.lock() {
-        guard.insert(space_id.into(), port);
-    }
-}
-
-/// @emoji 🆕️ Mints a fresh draft space manifest (empty, no collections) for the default create path — a
-/// `SpaceSnapshot` document registered as a draft (`kind_id = "s.space"`) at `draft_uri(id)` on the
-/// ephemeral port, never on the real catalog port, never tracked as a `space://` catalog entry.
-/// `owner_id`/`owner_name` carry the real signed-in identity (ticket
-/// 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS — `HomeConfig.client_id`/`client_name`,
-/// contract §C3); empty strings fall back to the pre-ticket `"local"` guest identity, which is the
-/// correct behavior when there is no signed-in session (no hub reachable) — the local-only path this
-/// ticket's brief requires stays working unchanged in that case.
-pub(crate) async fn create_and_register_ephemeral_studio(name: &str, owner_id: &str, owner_name: &str) -> String {
-    let owner = SpaceUser { id: if owner_id.is_empty() { "local".into() } else { owner_id.into() }, name: if owner_name.is_empty() { name.into() } else { owner_name.into() }, avatar: None, role: SpaceRole::Author };
-    let mut projection = empty_space_snapshot(name.trim(), SpaceKind::Atelier, SpaceVisibility::Private);
-    projection.users.push(owner);
-    let draft = ephemeral_draft_catalog().await.create_draft("s.space", S_SPACE_SCHEMA, name.trim(), now_ms().await, None);
-    let document: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, &draft.artifact_id, name.trim(), projection);
-    if let Ok(payload) = encode_backbone_payload(&document) {
-        let draft_port = draft_backbone_port().await;
-        let _ = SpaceBackbonePort::write(draft_port.as_ref(), &draft_uri(&draft.artifact_id), &payload);
-    }
-    draft.artifact_id
-}
-
-/// @emoji 📂️ Resolves a studio id against the draft catalog, registered ports, then catalogs.
-pub async fn resolve_studio_document(space_id: &str) -> Option<OsSpaceDocument> {
-    let draft_port = draft_backbone_port().await;
-    if let Ok(payload) = SpaceBackbonePort::read(draft_port.as_ref(), &draft_uri(space_id)) {
-        if !payload.is_empty() {
-            if let Ok(document) = decode_backbone_payload::<SpaceSnapshot, SpaceMutation>(&payload, S_SPACE_SCHEMA) {
-                return Some(document);
-            }
+            #[path = "⚙️engine/🪐️space/🎚️config/🧬️schema/🦀️.rs"]
+            pub mod schema;
         }
-    }
-    if let Ok(guard) = shared_studio_ports().await.lock() {
-        if let Some(port) = guard.get(space_id) {
-            // 🚧️ Same registry blocker as `shared_studio_ports`'s own doc comment: its values are
-            // `Arc<dyn OsBackbonePort>`, which cannot recover into the closed `Arc<OsBackbonePorts>`
-            // `load_os_space_document` now requires (O1 enum dispatch, no `Any` downcast available) —
-            // so this branch reads the manifest bytes straight off the dyn port instead of routing
-            // through that helper, matching what `load_os_space_document` does internally.
-            if let Ok(payload) = port.read(&space_backbone_uri(space_id)) {
-                if !payload.is_empty() {
-                    if let Ok(document) = decode_backbone_payload::<SpaceSnapshot, SpaceMutation>(&payload, S_SPACE_SCHEMA) {
-                        return Some(document);
+
+        #[path = "."]
+        pub mod presence {
+            #[path = "⚙️engine/🪐️space/👥️presence/🦀️.rs"]
+            mod component;
+            pub use component::*;
+
+            #[path = "⚙️engine/🪐️space/👥️presence/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+
+        #[path = "⚙️engine/🪐️space/⚙️engine/🦀️.rs"]
+        pub mod engine;
+        #[path = "⚙️engine/🪐️space/🗣️terminology/🦀️.rs"]
+        pub mod terminology;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "⚙️engine/🪐️space/🎮️commands/➕️add-parameter/🦀️.rs"]
+            pub mod add_parameter;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🔗️bind-parameter-field/🦀️.rs"]
+            pub mod bind_parameter_field;
+            #[path = "⚙️engine/🪐️space/🎮️commands/❎️close-focused-instance/🦀️.rs"]
+            pub mod close_focused_instance;
+            #[path = "⚙️engine/🪐️space/🎮️commands/⌨️compiled-dag-engagement-input/🦀️.rs"]
+            pub mod compiled_dag_engagement_input;
+            #[path = "⚙️engine/🪐️space/🎮️commands/📨️compiled-dag-engagement-submit/🦀️.rs"]
+            pub mod compiled_dag_engagement_submit;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🔌️connect-media-ports/🦀️.rs"]
+            pub mod connect_media_ports;
+            #[path = "⚙️engine/🪐️space/🎮️commands/📋️copy-app-instance/🦀️.rs"]
+            pub mod copy_app_instance;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🗑️delete-selection/🦀️.rs"]
+            pub mod delete_selection;
+            #[path = "⚙️engine/🪐️space/🎮️commands/✂️disconnect-media-edge/🦀️.rs"]
+            pub mod disconnect_media_edge;
+            #[path = "⚙️engine/🪐️space/🎮️commands/👯️duplicate-app-instance/🦀️.rs"]
+            pub mod duplicate_app_instance;
+            #[path = "⚙️engine/🪐️space/🎮️commands/📤️export-media/🦀️.rs"]
+            pub mod export_media;
+            #[path = "⚙️engine/🪐️space/🎮️commands/📜️export-studio-dsl/🦀️.rs"]
+            pub mod export_studio_dsl;
+            #[path = "⚙️engine/🪐️space/🎮️commands/📦️export-studio-pack/🦀️.rs"]
+            pub mod export_studio_pack;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🧭️go-home/🦀️.rs"]
+            pub mod go_home;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🖼️import-media/🦀️.rs"]
+            pub mod import_media;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🧾️import-media-payload/🦀️.rs"]
+            pub mod import_media_payload;
+            #[path = "⚙️engine/🪐️space/🎮️commands/📥️import-space-pack/🦀️.rs"]
+            pub mod import_space_pack;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🧳️import-space-pack-payload/🦀️.rs"]
+            pub mod import_space_pack_payload;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🚚️move-media-node/🦀️.rs"]
+            pub mod move_media_node;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🗺️navigate-virtual-file-system-node/🦀️.rs"]
+            pub mod navigate_virtual_file_system_node;
+            #[path = "⚙️engine/🪐️space/🎮️commands/✏️node-graph-edit/🦀️.rs"]
+            pub mod node_graph_edit;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🖱️node-graph-viewport/🦀️.rs"]
+            pub mod node_graph_viewport;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🔍️open-instance/🦀️.rs"]
+            pub mod open_instance;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🚪️open-space/🦀️.rs"]
+            pub mod open_space;
+            #[path = "⚙️engine/🪐️space/🎮️commands/📌️paste-app-instance/🦀️.rs"]
+            pub mod paste_app_instance;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🩺️patch-app-instances/🦀️.rs"]
+            pub mod patch_app_instances;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🔧️patch-media-nodes/🦀️.rs"]
+            pub mod patch_media_nodes;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🩹️patch-parameter/🦀️.rs"]
+            pub mod patch_parameter;
+            #[path = "⚙️engine/🪐️space/🎮️commands/👥️presence-heartbeat/🦀️.rs"]
+            pub mod presence_heartbeat;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🚮️remove-app-instance/🦀️.rs"]
+            pub mod remove_app_instance;
+            #[path = "⚙️engine/🪐️space/🎮️commands/➖️remove-parameter/🦀️.rs"]
+            pub mod remove_parameter;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🏷️rename-app-instance/🦀️.rs"]
+            pub mod rename_app_instance;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🗂️reorganize-workflow/🦀️.rs"]
+            pub mod reorganize_workflow;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🎬️set-active-example/🦀️.rs"]
+            pub mod set_active_example;
+            #[path = "⚙️engine/🪐️space/🎮️commands/⚙️set-active-panel-tab/🦀️.rs"]
+            pub mod set_active_panel_tab;
+            #[path = "⚙️engine/🪐️space/🎮️commands/📇️set-app-registrations/🦀️.rs"]
+            pub mod set_app_registrations;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🚀️spawn-app/🦀️.rs"]
+            pub mod spawn_app;
+            #[path = "⚙️engine/🪐️space/🎮️commands/🔓️unbind-parameter-field/🦀️.rs"]
+            pub mod unbind_parameter_field;
+            #[path = "⚙️engine/🪐️space/🎮️commands/💬️workflow-engagement-input/🦀️.rs"]
+            pub mod workflow_engagement_input;
+            #[path = "⚙️engine/🪐️space/🎮️commands/✅️workflow-engagement-submit/🦀️.rs"]
+            pub mod workflow_engagement_submit;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod main {
+                #[path = "⚙️engine/🪐️space/🎭️modes/🌐️main/🦀️.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod workflow {
+                        #[path = "⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🔄️workflow/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+
+                        #[path = "."]
+                        pub mod options {
+                            #[path = "⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🔄️workflow/🎚️options/🎯️active-instance/🦀️.rs"]
+                            pub mod active_instance;
+                        }
+                    }
+
+                    #[path = "."]
+                    pub mod media_vfs {
+                        #[path = "⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🗂️media-vfs/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+
+                    #[path = "."]
+                    pub mod compiled_dag {
+                        #[path = "⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️compiled-dag/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
                     }
                 }
             }
         }
-    }
-    for port in [temp_catalog_port().await, catalog_port().await] {
-        if let Ok(document) = load_os_space_document(space_id, &port) {
-            return Some(document);
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "⚙️engine/🪐️space/📌️panels/🛍️catalogue/🦀️.rs"]
+            pub mod catalogue;
+            #[path = "⚙️engine/🪐️space/📌️panels/🔍️inspection/🦀️.rs"]
+            pub mod inspection;
+            #[path = "⚙️engine/🪐️space/📌️panels/🔢️parameters/🦀️.rs"]
+            pub mod parameters;
         }
     }
-    None
 }
-
-/// @emoji 📦️ Pack+spr bytes for `Effect::LoadDocument` / host `loadAppArtifactPack`.
-pub async fn space_document_envelope_pack(document: &OsSpaceDocument) -> Option<store::ArtifactPackFiles> {
-    export_os_space_pack(document).ok()
-}
-
-//#region 🔖️WorkflowArtifactResolution
-/// 🕸️ "Space session -> active workflow artifact" resolution — a space manifest carries no graph of
-/// its own anymore, the graph lives in a separate `s.workflow` artifact document addressed via a
-/// `CollectionEntry` inside one of the space's collections. Searches every collection the resolved
-/// space manifest references, through the SAME port search order `resolve_studio_document` uses, for
-/// the first `CollectionEntry` whose body is an `s.workflow` document.
-async fn resolve_backbone_bytes(uri: &str) -> Option<Vec<u8>> {
-    let draft_port = draft_backbone_port().await;
-    if let Ok(payload) = SpaceBackbonePort::read(draft_port.as_ref(), uri) {
-        if !payload.is_empty() {
-            return Some(payload);
-        }
-    }
-    if let Ok(guard) = shared_studio_ports().await.lock() {
-        for port in guard.values() {
-            if let Ok(payload) = port.read(uri) {
-                if !payload.is_empty() {
-                    return Some(payload);
-                }
-            }
-        }
-    }
-    for port in [temp_catalog_port().await, catalog_port().await] {
-        // 🧬️ `port` is `Arc<OsBackbonePorts>`; the enum's own `impl OsBackbonePort for OsBackbonePorts`
-        // (not the `store::BackbonePort` blanket) is the only trait it satisfies, so UFCS needs the
-        // `&OsBackbonePorts` the `Arc` derefs to, not the `Arc` itself.
-        if let Ok(payload) = OsBackbonePort::read(port.as_ref(), uri) {
-            if !payload.is_empty() {
-                return Some(payload);
-            }
-        }
-    }
-    None
-}
-
-/// 🪆️ Reads a space's `s.space` artifact index (document id `index`, contract §C4) and decodes it —
-/// `None` when no index document has been written yet (older spaces / test fixtures seeded before this
-/// ticket), which is exactly the case `resolve_workflow_artifact_document` falls back on below.
-async fn resolve_space_index_snapshot(space_id: &str) -> Option<SSpaceSnapshot> {
-    let index_uri = artifact_backbone_uri(space_id, "index");
-    let payload = resolve_backbone_bytes(&index_uri).await?;
-    let index_document = decode_backbone_payload::<SSpaceSnapshot, SSpaceMutation>(&payload, S_SPACE_INDEX_DOCUMENT_SCHEMA).ok()?;
-    materialize_backbone_snapshot(&index_document, &index_document.cursor.applied_edit_ids).ok()
-}
-
-/// 🕸️ "Space session -> active workflow artifact" resolution. Index-first (contract §C4: the space's
-/// own `s.space` artifact index is the single source of truth for which artifacts live in a space) —
-/// projects the index onto the framework's `os.collection` shape via `project_space_index_to_collection`
-/// and walks ITS entries first. Falls back to the legacy direct `projection.collections` walk only when
-/// no index document exists yet, so existing `⚙️engine` fixtures that seed a collection directly (never
-/// an index) keep resolving exactly as before — never a silent behavior loss.
-pub async fn resolve_workflow_artifact_document(space_id: &str, space_document: &OsSpaceDocument) -> Option<OsWorkflowArtifactDocument> {
-    if let Some(index_snapshot) = resolve_space_index_snapshot(space_id).await {
-        let collection_projection = project_space_index_to_collection(&index_snapshot).await;
-        if let Some(workflow_snapshot) = find_workflow_snapshot_in_collection(space_id, &collection_projection).await {
-            return Some(workflow_snapshot);
-        }
-    }
-    let projection = materialize_backbone_snapshot(space_document, &space_document.cursor.applied_edit_ids).ok()?;
-    for collection_ref in &projection.collections {
-        let collection_uri = collection_backbone_uri(space_id, &collection_ref.id);
-        let Some(collection_payload) = resolve_backbone_bytes(&collection_uri).await else { continue };
-        let Ok(collection_document) = decode_backbone_payload::<CollectionSnapshot, CollectionMutation>(&collection_payload, S_COLLECTION_SCHEMA) else { continue };
-        let Ok(collection_projection) = materialize_backbone_snapshot(&collection_document, &collection_document.cursor.applied_edit_ids) else { continue };
-        if let Some(workflow_snapshot) = find_workflow_snapshot_in_collection(space_id, &collection_projection).await {
-            return Some(workflow_snapshot);
-        }
-    }
-    None
-}
-
-/// 🔎️ Shared entry-walk: the first `s.workflow`-schema'd entry whose backbone bytes decode cleanly.
-async fn find_workflow_snapshot_in_collection(space_id: &str, collection_projection: &CollectionSnapshot) -> Option<OsWorkflowArtifactDocument> {
-    for entry in &collection_projection.entries {
-        let ArtifactBody::Document { schema, document_id } = entry.body.as_ref() else { continue };
-        if schema != S_WORKFLOW_SCHEMA {
-            continue;
-        }
-        let artifact_uri = artifact_backbone_uri(space_id, document_id);
-        let Some(artifact_payload) = resolve_backbone_bytes(&artifact_uri).await else { continue };
-        if let Ok(workflow_snapshot) = decode_backbone_payload::<WorkflowSnapshot, WorkflowMutation>(&artifact_payload, S_WORKFLOW_SCHEMA) {
-            return Some(workflow_snapshot);
-        }
-    }
-    None
-}
-
-//#region 🔖️SpaceIndexProjection
-/// 🪞️ Projects the space's `s.space` artifact index onto the framework's `os.collection` shape — the
-/// SAME `CollectionSnapshot` type `resolve_workflow_artifact_document`'s legacy walk already understood,
-/// so the index becomes a drop-in single source of truth without widening either reader's contract.
-/// Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C4.
-pub async fn project_space_index_to_collection(index: &SSpaceSnapshot) -> CollectionSnapshot {
-    let entries = index
-        .artifacts
-        .iter()
-        .map(|row| CollectionEntry { id: row.id.clone(), folder_id: None, name: row.name.clone(), kind_id: row.kind_id.clone(), body: Box::new(ArtifactBody::Document { schema: row.schema.clone(), document_id: row.id.clone() }) })
-        .collect();
-    CollectionSnapshot { schema: S_COLLECTION_SCHEMA.into(), name: index.space_id.clone(), folders: Vec::new(), entries }
-}
-//#endregion 🔖️SpaceIndexProjection
-
-/// 🆕️ Mints a fresh, valid, empty `s.workflow` artifact document for a space that has none registered
-/// yet — the "genuinely new/default space" leg of `resolve_workflow_artifact_document`'s three-way
-/// fallback (existing registered artifact / demo fixture / fresh empty document). Not persisted as a
-/// `CollectionEntry` (real artifact-registration UI is a later wave) — the studio editor still gets a
-/// real, decodable `WorkflowSnapshot` pack instead of a broken placeholder, it just starts from a blank
-/// canvas each time until persistence is wired.
-pub async fn empty_workflow_artifact_document(space_id: &str, space_name: &str) -> OsWorkflowArtifactDocument {
-    create_backbone_document(S_WORKFLOW_SCHEMA, space_id, space_name, empty_workflow_snapshot().await)
-}
-
-/// @emoji 📦️ `s.workflow` counterpart of `space_document_envelope_pack` — pack+spr bytes for
-/// `Effect::LoadDocument` / host `loadAppArtifactPack`, sized to what the `🪐️space` studio app's
-/// `ArtifactApp::Snapshot` (`WorkflowSnapshot`) actually decodes.
-pub async fn workflow_artifact_envelope_pack(document: &OsWorkflowArtifactDocument) -> Option<store::ArtifactPackFiles> {
-    export_backbone_pack(document).ok()
-}
-//#endregion 🔖️WorkflowArtifactResolution
-
-/// 🌉️ Not `#[cfg(test)]`: the sibling `🪐️space` studio app's own tests seed a studio through this hook
-/// — a `#[cfg(test)]` gate here would vanish when this module is pulled in as `engine::space`'s ordinary
-/// (non-dev) dependency, since `#[cfg(test)]` only activates for the crate under test itself, not its
-/// dependencies.
-pub async fn register_studio_port_for_test(space_id: &str, port: Arc<dyn OsBackbonePort>) {
-    register_studio_port(space_id, port).await;
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-pub(crate) async fn sync_os_space_document_helper(document: &OsSpaceDocument, backbone_uri: &str, port: &Arc<OsBackbonePorts>) -> Result<(), VcsError> {
-    let mut synced = document.clone();
-    synced.backbone = Some(document_backbone_ref(backbone_uri).await);
-    OsBackbonePort::write(port.as_ref(), backbone_uri, &encode_backbone_payload(&synced)?)
-}
-
-/// 🎯️ The TTL-sweep call site — `list_drafts_sweeping_expired` clears any stale draft bookkeeping (and
-/// best-effort tombstones its bytes) BEFORE this listing is built, so Home's VFS never shows a studio
-/// draft past its deadline. Mirrors the spirit of os-core's own catalog-listing entry points. `pub(crate)`
-/// (not `pub`): only reached from within this crate (Home's editor/viewer main windows).
-pub(crate) async fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpaceCatalogEntry> {
-    let mut seen = HashSet::new();
-    let mut entries = Vec::new();
-    for port in [catalog_port().await, temp_catalog_port().await] {
-        if let Ok(rows) = list_os_space_catalog_entries(&port) {
-            for entry in rows {
-                if seen.insert(entry.id.clone()) {
-                    entries.push(entry);
-                }
-            }
-        }
-    }
-    let draft_port = draft_backbone_port().await;
-    for draft in ephemeral_draft_catalog().await.list_drafts_sweeping_expired(now_ms().await, &draft_port) {
-        if draft.kind_id != "s.space" || !seen.insert(draft.artifact_id.clone()) {
-            continue;
-        }
-        let Ok(payload) = SpaceBackbonePort::read(draft_port.as_ref(), &draft_uri(&draft.artifact_id)) else { continue };
-        if payload.is_empty() {
-            continue;
-        }
-        let Ok(document) = decode_backbone_payload::<SpaceSnapshot, SpaceMutation>(&payload, S_SPACE_SCHEMA) else { continue };
-        let projection = &document.vcs.initial_snapshot;
-        entries.push(semio_framework_os::OsSpaceCatalogEntry {
-            id: draft.artifact_id,
-            name: document.name.clone(),
-            backbone_uri: String::new(),
-            kind: projection.kind,
-            visibility: projection.visibility,
-            collection_count: projection.collections.len(),
-            updated_at: "0".into(),
-        });
-    }
-    entries
-}
-//#endregion 🔖️DocumentHelpers
-
-//#region 🔖️HomeSpaceRows
-// 🏠️ One row of the Home overview table — ticket
-// 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: replaces the pre-ticket virtual-file-
-// system scene with a real table of every space, fed by the event-sourced hub directory read model
-// UNIONED with the local-only catalog. Lives at plugin root (not `editor::home`) for the same reason
-// `list_all_space_catalog_entries` does: the Home viewer renders the SAME rows and a viewer file can
-// never import through `::editor::` (`policyViewerPurityBreaches`).
-app_labels! {
-    /// 🗣️ Table strings shared by the Home editor's AND viewer's main-window render (both surfaces
-    /// render the same 7-column table) — lives here, not in `editor::home::terminology::SHomeLabels`,
-    /// for the same reason `home_space_rows` does: a viewer file can never import through `::editor::`.
-    pub struct HomeTableLabels {
-        empty_message: native_en "No studios yet. Create one from the navbar.", native_de "Noch keine Studios vorhanden. Erstelle eines über die Navigationsleiste.",
-            reuse_en "No studios yet. Create one from the navbar.", reuse_de "Noch keine Studios vorhanden. Erstelle eines über die Navigationsleiste.";
-        column_name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
-        column_kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
-        column_visibility: native_en "Visibility", native_de "Sichtbarkeit", reuse_en "Visibility", reuse_de "Sichtbarkeit";
-        column_members: native_en "Members", native_de "Mitglieder", reuse_en "Members", reuse_de "Mitglieder";
-        column_updated: native_en "Updated", native_de "Aktualisiert", reuse_en "Updated", reuse_de "Aktualisiert";
-        column_origin: native_en "Origin", native_de "Herkunft", reuse_en "Origin", reuse_de "Herkunft";
-        column_actions: native_en "Actions", native_de "Aktionen", reuse_en "Actions", reuse_de "Aktionen";
-        origin_hub: native_en "hub", native_de "Hub", reuse_en "hub", reuse_de "Hub";
-        origin_local: native_en "local", native_de "lokal", reuse_en "local", reuse_de "lokal";
-    }
-}
-
-pub struct HomeSpaceRow {
-    pub id: String,
-    pub name: String,
-    pub kind: String,
-    pub visibility: String,
-    pub members: String,
-    pub updated: String,
-    pub origin: &'static str,
-    /// 🛂️ The CALLING client's current membership role in this space, as folded from hub-confirmed
-    /// directory events — `None` for a space the caller is not a member of (a public row) and for
-    /// every local-only catalog row. The Home renderer hides author-only affordances on this and
-    /// never on `origin`; the authoritative capability still comes from the administration page.
-    pub role: Option<DirectorySpaceRole>,
-}
-
-/// 🛂️ The caller's role in one folded space, or `None` when they are not a current member.
-pub use store::os_directory::DirectorySpaceRole;
-
-fn caller_role(space: &store::os_directory::DirectorySpace, client_id: &str) -> Option<DirectorySpaceRole> {
-    if client_id.is_empty() {
-        return None;
-    }
-    space.members.iter().find(|member| member.user_id == client_id).map(|member| member.role)
-}
-
-async fn directory_kind_str(kind: store::os_directory::DirectorySpaceKind) -> &'static str {
-    match kind {
-        store::os_directory::DirectorySpaceKind::Atelier => "atelier",
-        store::os_directory::DirectorySpaceKind::Studio => "studio",
-        store::os_directory::DirectorySpaceKind::Archive => "archive",
-    }
-}
-
-async fn directory_visibility_str(visibility: store::os_directory::DirectorySpaceVisibility) -> &'static str {
-    match visibility {
-        store::os_directory::DirectorySpaceVisibility::Private => "private",
-        store::os_directory::DirectorySpaceVisibility::Public => "public",
-    }
-}
-
-async fn local_kind_str(kind: &SpaceKind) -> &'static str {
-    match kind {
-        SpaceKind::Atelier => "atelier",
-        SpaceKind::Studio => "studio",
-        SpaceKind::Archive => "archive",
-    }
-}
-
-async fn local_visibility_str(visibility: &SpaceVisibility) -> &'static str {
-    match visibility {
-        SpaceVisibility::Private => "private",
-        SpaceVisibility::Public => "public",
-    }
-}
-
-/// 🪞️ Home table rows: every hub-directory space (`origin: "hub"`) UNIONED with the local-only catalog
-/// (`origin: "local"`) — a hub row wins on an id collision (a space promoted from local to hub keeps
-/// its hub-confirmed data, never a stale local shadow). Contract §C0 row-id grammar for the e2e is
-/// `space:<id>`; callers building the table's `data-row-id` prepend that prefix to `HomeSpaceRow.id`.
-pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel, client_id: &str) -> Vec<HomeSpaceRow> {
-    let mut seen = HashSet::new();
-    let mut rows = Vec::new();
-    for (id, space) in &directory.spaces {
-        seen.insert(id.clone());
-        rows.push(HomeSpaceRow {
-            id: id.clone(),
-            name: space.view.name.clone(),
-            kind: directory_kind_str(space.view.kind).await.into(),
-            visibility: directory_visibility_str(space.view.visibility).await.into(),
-            members: space.view.member_count.to_string(),
-            updated: space.view.updated_at_ms.to_string(),
-            origin: "hub",
-            role: caller_role(space, client_id),
-        });
-    }
-    for entry in list_all_space_catalog_entries().await {
-        if seen.contains(&entry.id) {
-            continue;
-        }
-        rows.push(HomeSpaceRow {
-            id: entry.id.clone(),
-            name: entry.name.clone(),
-            kind: local_kind_str(&entry.kind).await.into(),
-            visibility: local_visibility_str(&entry.visibility).await.into(),
-            // 🧑️ The local-only catalog carries no membership roster (single-user by construction);
-            // "1" (the implicit owner) is the honest synthesis, not a directory-sourced count.
-            members: "1".into(),
-            updated: entry.updated_at.clone(),
-            origin: "local",
-            // 🏠️ The local-only catalog is single-user by construction and carries no directory
-            // membership; a local row therefore never offers a directory-owned affordance.
-            role: None,
-        });
-    }
-    rows
-}
-//#endregion 🔖️HomeSpaceRows
-
-//#region 🧵️RetainedStore
-/// 🧬️ Builds the single `protocol::Edit<M>` one retained publication step commits. Home, the space
-/// index and the studio differ only in `M`, the edit-id prefix and the byte ceiling, so one authority
-/// serves every lane of all three apps.
-fn space_retained_edit<M>(prefix: &'static str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
-    let id = format!("{prefix}-{}", authority.next_sequence_number());
-    protocol::Edit {
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-        }],
-        description,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
-fn space_retained_mutation_bytes<M: ::protocol::OpBinary>(mutation: &M) -> Result<usize, String> {
-    ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "s.space.retained.mutation-encode".to_string())
-}
-
-fn admit_space_retained_mutation<M: ::protocol::OpBinary>(mutation: &M, maximum_bytes: usize) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    let retained_bytes = space_retained_mutation_bytes(mutation)?;
-    if retained_bytes > maximum_bytes {
-        return Err("s.space.retained.mutation-envelope".into());
-    }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
-}
-
-fn prepare_space_retained_one_item<P, M>(base: &P, mutation: M, maximum_bytes: usize) -> Result<(P, Vec<M>, M), String>
-where
-    M: ::protocol::Mutation<P> + ::protocol::OpBinary,
-{
-    admit_space_retained_mutation(&mutation, maximum_bytes)?;
-    let inverse = ::protocol::Mutation::inverse(&mutation, base);
-    let diff = ::protocol::Mutation::diff(&mutation, base).into_parts().0;
-    let post = ::protocol::MutationDiff::apply(&diff, base).map_err(|_| "s.space.retained.diff-apply".to_string())?;
-    Ok((post, inverse, mutation))
-}
-
-/// 🏭️ The exact one-item Store preparation authority every migrated `🪐️space` tool needs: a
-/// publication lane a tool declares is refused at app construction
-/// (`interactive-job.publication-contract`) unless its lane factory exists.
-pub struct SpaceOneItemPreparationFactory<P, M> {
-    prefix: &'static str,
-    maximum_bytes: usize,
-    lane: std::marker::PhantomData<fn() -> (P, M)>,
-}
-
-impl<P, M> SpaceOneItemPreparationFactory<P, M> {
-    pub const fn new(prefix: &'static str, maximum_bytes: usize) -> Self {
-        Self { prefix, maximum_bytes, lane: std::marker::PhantomData }
-    }
-}
-
-struct SpaceOneItemPreparation<P, M> {
-    prefix: &'static str,
-    maximum_bytes: usize,
-    base: Option<store::SnapshotRead<P>>,
-    mutation: Option<M>,
-    description: Option<String>,
-    authority: Option<Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
-    retained_bytes: usize,
-    cancelled: bool,
-    closing: bool,
-}
-
-impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for SpaceOneItemPreparationFactory<P, M>
-where
-    P: Send + Sync + 'static,
-    M: ::protocol::Mutation<P> + ::protocol::OpBinary + Send + 'static,
-{
-    fn preflight(&self, mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("s.space.retained.lane-or-description-envelope".into());
-        }
-        admit_space_retained_mutation(mutation, self.maximum_bytes)
-    }
-
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
-        let retained_bytes = space_retained_mutation_bytes(&request.mutation).unwrap_or(self.maximum_bytes.saturating_add(1));
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-            || retained_bytes > self.maximum_bytes
-        {
-            return Err(request);
-        }
-        Ok(Box::new(SpaceOneItemPreparation {
-            prefix: self.prefix,
-            maximum_bytes: self.maximum_bytes,
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            description: request.description,
-            authority: Some(request.authority),
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            retained_bytes,
-            cancelled: false,
-            closing: false,
-        }))
-    }
-}
-
-impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for SpaceOneItemPreparation<P, M>
-where
-    P: Send + Sync + 'static,
-    M: ::protocol::Mutation<P> + ::protocol::OpBinary + Send + 'static,
-{
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled || self.closing {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
-        }
-        if grant.maximum_bytes < self.retained_bytes {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        let base = self.base.as_ref().ok_or_else(|| "s.space.retained.base-owner-missing".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "s.space.retained.mutation-owner-missing".to_string())?;
-        let (post, inverse, forward) = prepare_space_retained_one_item(base.get(), mutation, self.maximum_bytes)?;
-        let authority = self.authority.as_ref().ok_or_else(|| "s.space.retained.authority-missing".to_string())?;
-        let edit = space_retained_edit(self.prefix, forward, inverse, self.description.take(), authority);
-        let prepared = authority.prepare_one_item(edit, Arc::new(post))?;
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
-    }
-
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> {
-        self.prepared.as_ref()
-    }
-
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> {
-        self.prepared.take()
-    }
-
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Blocked);
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
-        }
-        if self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err("s.space.retained.base-retirement-rejected".into());
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.authority.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
-    }
-}
-
-/// 📬️ One lane's `Artifact`/`Config` store override, addressed by its edit-id prefix and byte ceiling.
-pub fn space_retained_store_preparation<P, M>(prefix: &'static str, maximum_bytes: usize) -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<P, M>>>
-where
-    P: Send + Sync + 'static,
-    M: ::protocol::Mutation<P> + ::protocol::OpBinary + Send + 'static,
-{
-    Some(Arc::new(SpaceOneItemPreparationFactory::<P, M>::new(prefix, maximum_bytes)))
-}
-//#endregion 🧵️RetainedStore
+//#endregion ⚙️Engine
 
 //#region 🔌️Registration
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the home, space-index, and studio surfaces.
     pub enum SpaceApps: PluginApp {
-        HomeEditor(VcsArtifactApp<EditorApp<crate::editor::home::HomeApp>>),
-        HomeViewer(VcsArtifactApp<ViewerApp<crate::viewer::home::HomeViewer>>),
-        SpaceIndexEditor(VcsArtifactApp<EditorApp<crate::editor::space_index::SpaceIndexEditor>>),
-        SpaceIndexViewer(VcsArtifactApp<ViewerApp<crate::viewer::space_index::SpaceIndexViewer>>),
+        HomeEditor(VcsArtifactApp<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp>>),
+        HomeViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_space_home::viewer::home::HomeViewer>>),
+        SpaceIndexEditor(VcsArtifactApp<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor>>),
+        SpaceIndexViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_space_space::viewer::space_index::SpaceIndexViewer>>),
         Studio(VcsArtifactApp<crate::engine::space::SpaceApp>),
     }
 }
@@ -811,20 +228,20 @@ pub fn plugin() -> Result<Plugin<SpaceApps>, PluginAssemblyError> {
         .version("0.1.0")
         .package_id("semio:space")
         .local_backbone_storage()
-        .artifact(resolve_ready(crate::artifacts::home::declaration()).map_err(PluginAssemblyError::definition)?)
-        .editor::<crate::editor::home::HomeApp>(resolve_ready(crate::editor::home::create_home_app()))
-        .editor_mutation_roster::<crate::editor::home::HomeApp>()
-        .viewer::<crate::viewer::home::HomeViewer>(resolve_ready(crate::viewer::home::create_home_viewer()))
-        .viewer_mutation_roster::<crate::viewer::home::HomeViewer>()
-        .artifact(crate::artifacts::space::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor::<crate::editor::space_index::SpaceIndexEditor>(crate::editor::space_index::create_space_index_editor())
-        .editor_mutation_roster::<crate::editor::space_index::SpaceIndexEditor>()
-        .viewer::<crate::viewer::space_index::SpaceIndexViewer>(crate::viewer::space_index::create_space_index_viewer())
-        .viewer_mutation_roster::<crate::viewer::space_index::SpaceIndexViewer>()
+        .artifact(resolve_ready(semio_s_artifact_space_home::declaration()).map_err(PluginAssemblyError::definition)?)
+        .editor::<semio_s_artifact_space_home::editor::home::HomeApp>(resolve_ready(semio_s_artifact_space_home::editor::home::create_home_app()))
+        .editor_mutation_roster::<semio_s_artifact_space_home::editor::home::HomeApp>()
+        .viewer::<semio_s_artifact_space_home::viewer::home::HomeViewer>(resolve_ready(semio_s_artifact_space_home::viewer::home::create_home_viewer()))
+        .viewer_mutation_roster::<semio_s_artifact_space_home::viewer::home::HomeViewer>()
+        .artifact(semio_s_artifact_space_space::declaration().map_err(PluginAssemblyError::definition)?)
+        .editor::<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor>(semio_s_artifact_space_space::editor::space_index::create_space_index_editor())
+        .editor_mutation_roster::<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor>()
+        .viewer::<semio_s_artifact_space_space::viewer::space_index::SpaceIndexViewer>(semio_s_artifact_space_space::viewer::space_index::create_space_index_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_space_space::viewer::space_index::SpaceIndexViewer>()
         .document_app::<crate::engine::space::SpaceApp>(resolve_ready(crate::engine::space::create_space_app()))
         .foreign_document_codec::<crate::engine::space::SpaceApp>(OS_SPACE_SCHEMA)
-        .activation(ActivationEvent::OnArtifactKind { kind: resolve_ready(crate::artifacts::home::artifact_kind()).id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::space::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: resolve_ready(semio_s_artifact_space_home::artifact_kind()).id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_space_space::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist home/space-index edits to the open document".into(), optional: false })
         .try_build()
@@ -833,357 +250,21 @@ pub fn plugin() -> Result<Plugin<SpaceApps>, PluginAssemblyError> {
 
 //#region 🧪️SurfaceTests
 #[cfg(test)]
-mod surface_tests {
-    //! 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.5 — the real
-    //! `semio_framework_plugin::testkit::{assert_viewer_never_mutates, assert_editor_and_viewer_share_dialect,
-    //! new_viewer}` (closed by w0-f, gap 2), used directly rather than local stand-ins.
-    use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
-
-    #[semio_framework_async_macros::async_test]
-    async fn home_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::home::HomeViewer>().await;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn home_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::home::HomeApp, crate::viewer::home::HomeViewer>().await;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn space_index_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::space_index::SpaceIndexViewer>().await;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn space_index_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::space_index::SpaceIndexEditor, crate::viewer::space_index::SpaceIndexViewer>().await;
-    }
-}
+#[path = "🧪️tests/🔬️surface/🦀️.rs"]
+mod surface_tests;
 //#endregion 🧪️SurfaceTests
 
 //#region 🧪️SpaceIndexProjectionTests
 #[cfg(test)]
-mod space_index_projection_tests {
-    use super::*;
-    use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{empty_space_index_snapshot, SpaceArtifactDialect, SpaceArtifactRow};
-
-    #[semio_framework_async_macros::async_test]
-    async fn projects_every_row_into_a_root_level_collection_entry() {
-        let mut index = empty_space_index_snapshot("space-1");
-        index.artifacts.push(SpaceArtifactRow {
-            id: "artifact-1".into(),
-            name: "First".into(),
-            kind_id: "space.sdraw".into(),
-            schema: S_WORKFLOW_SCHEMA.into(),
-            dialect: SpaceArtifactDialect { artifact_kind: "s.workflow".into(), standard: "1".into(), subset: "*".into() },
-            created_at_ms: 1,
-            created_by: "user:1".into(),
-            updated_at_ms: 1,
-            updated_by: "user:1".into(),
-        });
-        let collection = project_space_index_to_collection(&index).await;
-        assert_eq!(collection.name, "space-1");
-        assert_eq!(collection.entries.len(), 1);
-        let entry = &collection.entries[0];
-        assert_eq!(entry.id, "artifact-1");
-        assert!(entry.folder_id.is_none());
-        let ArtifactBody::Document { schema, document_id } = entry.body.as_ref() else { panic!("expected a document body") };
-        assert_eq!(schema, S_WORKFLOW_SCHEMA);
-        assert_eq!(document_id, "artifact-1");
-    }
-}
+#[path = "🧪️tests/🔬️space-index-projection/🦀️.rs"]
+mod space_index_projection_tests;
 //#endregion 🧪️SpaceIndexProjectionTests
 
 //#region 🧪️InteractiveJobCatalogTests
 #[cfg(test)]
-mod interactive_job_catalog_tests {
-    //! 🧵️ One walk over every app definition this plugin registers, proving that each id the
-    //! studio/home/space-index surfaces declare carries the disposition its language-neutral fixture
-    //! declares, and that every `Migrated` id is backed by an owned bounded tool-job factory whose
-    //! tool set, publication contract and execution contract are the exact ones the app's proof
-    //! catalog is joined against at construction time.
-    use super::*;
-    use semio_framework::InteractiveJobClassification;
-    use semio_framework_plugin::{ArtifactApp, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactToolPublicationLane, EditorApp};
-    use std::collections::{BTreeMap, BTreeSet};
-
-    const STUDIO_FIXTURE: &str = include_str!("⚙️engine/🪐️space/🧪️fixtures/🧫️retained-command-limits/🔣️.json");
-    const HOME_FIXTURE: &str = include_str!("🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧫️retained-command-limits/🔣️.json");
-    const SPACE_INDEX_FIXTURE: &str = include_str!("🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧫️retained-command-limits/🔣️.json");
-    const COMPONENT_MANIFEST: &str = include_str!("📦️packages/🦀️rust/Cargo.toml");
-    const IDENTITY_FIXTURE: &str = include_str!("🧪️fixtures/🧫️plugin-identity/🔣️.json");
-    const DEPLOYMENT_CATALOG: &str = include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json");
-    const GENERATED_REGISTRY: &str = include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
-
-    /// 🚦️ Every id the app declares on any surface an interactive dispatch can address, with the
-    /// disposition `validate_ui_dispatch_classification` will read for it.
-    fn declared_dispositions(definition: &AppDefinition) -> BTreeMap<String, InteractiveJobClassification> {
-        let mut declared = BTreeMap::new();
-        for action in definition.window_kinds.iter().flat_map(|window| window.actions.iter()) {
-            declared.insert(action.id.clone(), action.semantics.execution.interactive_job);
-        }
-        for command in definition.commands.iter().chain(definition.modes.iter().flat_map(|mode| mode.commands.iter())) {
-            declared.insert(command.id.clone(), command.semantics.execution.interactive_job);
-        }
-        declared
-    }
-
-    /// 📜️ The `execution`/`status` fixture shape (studio, space index): ids whose status is
-    /// `migrated`, plus the tool ids whose sole publication lane is `hostOnly`.
-    fn migrated_and_host_only(fixture: &str) -> (BTreeSet<String>, BTreeSet<String>) {
-        let document: pack::JsonValue = pack::parse_json(fixture).expect("language-neutral retained catalog fixture");
-        let migrated = document
-            .get("routes")
-            .and_then(pack::JsonValue::as_array)
-            .expect("routes array")
-            .iter()
-            .filter(|route| route.get("status").and_then(pack::JsonValue::as_str) == Some("migrated"))
-            .filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string))
-            .collect::<BTreeSet<_>>();
-        let host_only = document
-            .get("publicationContracts")
-            .and_then(pack::JsonValue::as_array)
-            .expect("publication contracts array")
-            .iter()
-            .filter(|contract| contract.get("lanes").and_then(pack::JsonValue::as_array).is_some_and(|lanes| lanes.as_slice() == [pack::JsonValue::String("hostOnly".into())]))
-            .filter_map(|contract| contract.get("toolId").and_then(pack::JsonValue::as_str).map(str::to_string))
-            .collect::<BTreeSet<_>>();
-        (migrated, host_only)
-    }
-
-    /// 📜️ The `disposition`/`lanes` fixture shape (home).
-    fn migrated_and_host_only_rows(fixture: &str) -> (BTreeSet<String>, BTreeSet<String>) {
-        let document: pack::JsonValue = pack::parse_json(fixture).expect("language-neutral retained catalog fixture");
-        let routes = document.get("routes").and_then(pack::JsonValue::as_array).expect("routes array");
-        let migrated = routes
-            .iter()
-            .filter(|route| route.get("disposition").and_then(pack::JsonValue::as_str) == Some("Migrated"))
-            .filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string))
-            .collect::<BTreeSet<_>>();
-        let host_only = routes
-            .iter()
-            .filter(|route| route.get("lanes").and_then(pack::JsonValue::as_array).is_some_and(|lanes| lanes.as_slice() == [pack::JsonValue::String("HostOnly".into())]))
-            .filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string))
-            .collect::<BTreeSet<_>>();
-        (migrated, host_only)
-    }
-
-    fn factory_tool_ids<F: ArtifactOwnedToolJobFactory>() -> BTreeSet<String> {
-        F::TOOL_IDS.iter().map(|id| (*id).to_string()).collect()
-    }
-
-    fn factory_host_only_ids<F: ArtifactOwnedToolJobFactory>() -> BTreeSet<String> {
-        F::PUBLICATION_CONTRACTS.iter().filter(|contract| contract.lanes == [ArtifactToolPublicationLane::HostOnly]).map(|contract| contract.tool_id.to_string()).collect()
-    }
-
-    fn factory_contract_ids<F: ArtifactOwnedToolJobFactory>() -> BTreeSet<String> {
-        F::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id.to_string()).collect()
-    }
-
-    fn migrated_ids(definition: &AppDefinition) -> BTreeSet<String> {
-        declared_dispositions(definition).into_iter().filter(|(_, disposition)| *disposition == InteractiveJobClassification::Migrated).map(|(id, _)| id).collect()
-    }
-
-    fn unclassified_ids(definition: &AppDefinition) -> BTreeSet<String> {
-        declared_dispositions(definition).into_iter().filter(|(_, disposition)| *disposition == InteractiveJobClassification::Unclassified).map(|(id, _)| id).collect()
-    }
-
-    /// 🧩️ Framework-injected ids (history, clipboard, interaction, tutorial) are dispatched through
-    /// `dispatch_framework_reserved_action`, never through an app-owned factory, so an app's own
-    /// proof catalog covers exactly the app-declared migrated ids.
-    fn app_owned(ids: BTreeSet<String>, owned: &BTreeSet<String>) -> BTreeSet<String> {
-        ids.into_iter().filter(|id| owned.contains(id)).collect()
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn studio_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_factory() {
-        let definition = crate::engine::space::create_space_app().await.definition;
-        let (fixture_migrated, fixture_host_only) = migrated_and_host_only(STUDIO_FIXTURE);
-        let owned = factory_tool_ids::<crate::engine::space::SpaceCommandJobFactory>();
-        assert!(unclassified_ids(&definition).is_empty(), "an unclassified id aborts build_definition at runtime");
-        assert_eq!(app_owned(migrated_ids(&definition), &owned), fixture_migrated, "the studio's migrated ids must equal its fixture's");
-        assert_eq!(owned, fixture_migrated, "the owned factory must claim exactly the migrated ids");
-        assert_eq!(factory_contract_ids::<crate::engine::space::SpaceCommandJobFactory>(), owned, "every claimed tool needs a publication contract");
-        assert_eq!(factory_host_only_ids::<crate::engine::space::SpaceCommandJobFactory>(), fixture_host_only);
-        assert_eq!(<crate::engine::space::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), owned.len());
-        for tool in ["setAppRegistrations", "openSpace", "openInstance", "importSpacePackPayload", "spawnApp"] {
-            assert!(owned.contains(tool), "the shell dispatches {tool} on every studio session");
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn home_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_factory() {
-        let definition = crate::editor::home::create_home_app().await;
-        let (fixture_migrated, fixture_host_only) = migrated_and_host_only_rows(HOME_FIXTURE);
-        let owned = factory_tool_ids::<crate::editor::home::HomeRetainedCommandJobFactory>();
-        assert!(unclassified_ids(&definition).is_empty());
-        assert_eq!(app_owned(migrated_ids(&definition), &owned), fixture_migrated);
-        assert_eq!(owned, fixture_migrated);
-        assert_eq!(factory_contract_ids::<crate::editor::home::HomeRetainedCommandJobFactory>(), owned);
-        assert_eq!(factory_host_only_ids::<crate::editor::home::HomeRetainedCommandJobFactory>(), fixture_host_only);
-        assert_eq!(<EditorApp<crate::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), owned.len());
-        for tool in ["importSpace", "foldDirectoryEvents", "createStudio", "deleteVirtualFileSystemNode", "renameSpace", "bindSpaceFile"] {
-            assert!(owned.contains(tool), "Home's own rows and the shell dispatch {tool}");
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn space_index_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_factory() {
-        let definition = crate::editor::space_index::create_space_index_editor();
-        let (fixture_migrated, fixture_host_only) = migrated_and_host_only(SPACE_INDEX_FIXTURE);
-        let owned = factory_tool_ids::<crate::editor::space_index::SpaceIndexRetainedCommandJobFactory>();
-        assert!(unclassified_ids(&definition).is_empty());
-        assert_eq!(app_owned(migrated_ids(&definition), &owned), fixture_migrated);
-        assert_eq!(owned, fixture_migrated);
-        assert_eq!(factory_contract_ids::<crate::editor::space_index::SpaceIndexRetainedCommandJobFactory>(), owned);
-        assert_eq!(factory_host_only_ids::<crate::editor::space_index::SpaceIndexRetainedCommandJobFactory>(), fixture_host_only);
-        assert_eq!(<EditorApp<crate::editor::space_index::SpaceIndexEditor> as ArtifactApp>::bounded_first_step_tool_proofs().len(), owned.len());
-    }
-
-    /// 🧾️ `validate_tool_job_rows` joins each proof row's `controller_id`/`document_schema` against
-    /// the runtime surface app id and `A::DOCUMENT_SCHEMA`, and each row's contract against the
-    /// registered factory's — the proof macro can only take literals, so the literals are pinned here.
-    #[semio_framework_async_macros::async_test]
-    async fn tool_proof_catalogs_match_the_runtime_identity_they_are_joined_against() {
-        assert_eq!(crate::engine::space::S_PLAY_APP_ID, "s.space.studio@1/*#editor");
-        assert_eq!(<crate::engine::space::SpaceApp as ArtifactApp>::DOCUMENT_SCHEMA, "os.workflow");
-        assert_eq!(<crate::editor::home::HomeApp as ArtifactEditor>::DIALECT.artifact_kind, "s.space.home");
-        assert_eq!(<crate::editor::home::HomeApp as ArtifactEditor>::DOCUMENT_SCHEMA, "s.home");
-        assert_eq!(<crate::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DIALECT.artifact_kind, "s.space.space");
-        assert_eq!(<crate::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DOCUMENT_SCHEMA, "s.space");
-        assert_eq!(<crate::engine::space::SpaceCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <crate::engine::space::SpaceApp as ArtifactApp>::DOCUMENT_SCHEMA);
-        assert_eq!(<crate::editor::home::HomeRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <crate::editor::home::HomeApp as ArtifactEditor>::DOCUMENT_SCHEMA);
-        assert_eq!(<crate::editor::space_index::SpaceIndexRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <crate::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DOCUMENT_SCHEMA);
-    }
-
-    /// 🪪️ Builder id, `package_id` and the Cargo component package must be the same identity.
-    /// `PluginBuilder::try_build` already rejects any `package_id` that is not exactly
-    /// `semio:<plugin_id>` in canonical lowercase form
-    /// (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️.rs:639-643`), and it is the ONLY
-    /// producer of `Plugin::manifest`, so asserting a successful assembly whose `plugin_id` equals the
-    /// Cargo `[package.metadata.component] package` suffix pins all three literals at once. A guest
-    /// that fails here mints the `assembly-failed` stub descriptor instead, which `describeBuiltPlugin`
-    /// rejects — 90 minutes of wasm build after the fact.
-    #[semio_framework_async_macros::async_test]
-    async fn manifest_plugin_id_matches_the_cargo_component_package() {
-        let declared = COMPONENT_MANIFEST
-            .lines()
-            .skip_while(|line| line.trim() != "[package.metadata.component]")
-            .find_map(|line| line.split_once('=').filter(|(key, _)| key.trim() == "package").map(|(_, value)| value.trim().trim_matches('"').to_string()))
-            .expect("[package.metadata.component] package");
-        let (namespace, id) = declared.split_once(':').expect("component package is <namespace>:<id>");
-        assert_eq!(namespace, "semio");
-        assert_eq!(assembled_plugin().manifest.plugin_id, id);
-        assert_eq!(assembled_plugin().manifest.plugin_id, identity_fixture()["pluginId"].as_str().expect("fixture pluginId"));
-    }
-
-    /// 🪪️ The language-agnostic identity tuple, read once and shared by every authority assertion below.
-    fn identity_fixture() -> Value {
-        serde_json::from_str(IDENTITY_FIXTURE).expect("plugin-identity fixture is JSON")
-    }
-
-    /// 🪪️ Every authority that names this plugin must name the SAME identity: the Cargo component
-    /// package, the root `builder(…)`/`package_id(…)` pair through the assembled manifest, the
-    /// hand-authored deployment catalog row (id + physical module directory), the generated registry row
-    /// (`pluginId`/`packageId`/`packageName`/`host`) and the canonical `s.<plugin>.<kind>` owner segment
-    /// the assembly gate `plugin-assembly.surface-dependency-gate` derives via `ArtifactKindId::plugin()`.
-    /// The playground VARIANT that selects this plugin is deliberately a different name and is pinned
-    /// separately, so a future rename can never silently conflate the two again (the 2026-09-05 regression:
-    /// `builder("space")` in Rust alone against a registry/host/deployment catalog still saying `s`).
-    #[semio_framework_async_macros::async_test]
-    async fn plugin_identity_is_the_same_in_every_authority() {
-        let fixture = identity_fixture();
-        let plugin_id = fixture["pluginId"].as_str().expect("fixture pluginId");
-        let package_id = fixture["packageId"].as_str().expect("fixture packageId");
-        assert_eq!(package_id, format!("semio:{plugin_id}"));
-
-        let manifest = assembled_plugin().manifest;
-        assert_eq!(manifest.plugin_id, plugin_id);
-        assert!(COMPONENT_MANIFEST.contains(&format!("package = \"{package_id}\"")), "Cargo component package is not {package_id}");
-        assert!(COMPONENT_MANIFEST.contains(&format!("name = \"{}\"", fixture["packageName"].as_str().expect("fixture packageName"))));
-        assert!(
-            COMPONENT_MANIFEST.contains(&format!("variant = \"{}\"", fixture["playgroundVariant"].as_str().expect("fixture playgroundVariant"))),
-            "the playground variant row is the OTHER name and must stay declared"
-        );
-
-        let prefix = fixture["artifactKindPrefix"].as_str().expect("fixture artifactKindPrefix");
-        assert_eq!(prefix, format!("s.{plugin_id}."));
-        for app in &manifest.apps {
-            assert!(app.id.starts_with(prefix), "{} is not owned by {plugin_id} under the canonical s.<plugin>.<kind> grammar", app.id);
-        }
-
-        let catalog: Value = serde_json::from_str(DEPLOYMENT_CATALOG).expect("deployment catalog is JSON");
-        let row = catalog["modules"]
-            .as_array()
-            .expect("deployment catalog modules")
-            .iter()
-            .find(|entry| entry["pluginId"] == plugin_id)
-            .unwrap_or_else(|| panic!("deployment catalog has no row for {plugin_id}"));
-        assert_eq!(row["directoryName"], fixture["moduleDirectoryName"]);
-
-        let registry: Value = serde_json::from_str(GENERATED_REGISTRY).expect("generated registry is JSON");
-        let entry = registry
-            .as_array()
-            .expect("generated registry rows")
-            .iter()
-            .find(|entry| entry["pluginId"] == plugin_id)
-            .unwrap_or_else(|| panic!("generated registry has no row for {plugin_id}"));
-        assert_eq!(entry["packageId"], package_id);
-        assert_eq!(entry["packageName"], fixture["packageName"]);
-        assert_eq!(entry["host"], fixture["host"]);
-    }
-
-    /// 🏗️ The whole guest assembly, named. `plugin()` runs `build_definition` for every registered
-    /// surface — which is where `validate_interactive_job_classification` rejects an `Unclassified`
-    /// id — plus the package-identity and artifact-declaration preflights.
-    fn assembled_plugin() -> Plugin<SpaceApps> {
-        match plugin() {
-            Ok(plugin) => plugin,
-            Err(error) => panic!("plugin assembly rejected: {error:?}"),
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn plugin_assembly_succeeds_and_registers_all_five_surfaces() {
-        let plugin = assembled_plugin();
-        let ids = plugin.manifest.apps.iter().map(|app| app.id.clone()).collect::<BTreeSet<_>>();
-        assert_eq!(
-            ids,
-            ["s.space.home@1/*#editor", "s.space.home@1/*#viewer", "s.space.space@1/*#editor", "s.space.space@1/*#viewer", "s.space.studio@1/*#editor"]
-                .iter()
-                .map(|id| (*id).to_string())
-                .collect::<BTreeSet<_>>()
-        );
-    }
-
-    /// 🧰️ The build-time completeness gate, run for real: `VcsArtifactApp::with_registry` calls
-    /// `tool_job_registration`, which joins every migrated id to a live registered factory by owner
-    /// witness, controller id, document schema and exact contract equality, and every declared
-    /// publication lane to its installed store preparation factory. A mismatch is a panic here, the
-    /// same panic the guest takes on its first turn.
-    #[semio_framework_async_macros::async_test]
-    async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
-        let mut studio = VcsArtifactApp::<crate::engine::space::SpaceApp>::with_registry(
-            Default::default(),
-            AppActionRegistry::from_definition(&crate::engine::space::create_space_app().await.definition),
-        )
-        .await;
-        let mut home = VcsArtifactApp::<EditorApp<crate::editor::home::HomeApp>>::with_registry(
-            Default::default(),
-            AppActionRegistry::from_definition(&crate::editor::home::create_home_app().await),
-        )
-        .await;
-        let mut index = VcsArtifactApp::<EditorApp<crate::editor::space_index::SpaceIndexEditor>>::with_registry(
-            Default::default(),
-            AppActionRegistry::from_definition(&crate::editor::space_index::create_space_index_editor()),
-        )
-        .await;
-        assert_eq!(<crate::engine::space::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), 15);
-        assert_eq!(<EditorApp<crate::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 18);
-        assert_eq!(<EditorApp<crate::editor::space_index::SpaceIndexEditor> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 14);
-        testkit::close_registered_fixture_app(&mut studio);
-        testkit::close_registered_fixture_app(&mut home);
-        testkit::close_registered_fixture_app(&mut index);
-    }
-}
+#[path = "🧪️tests/🔬️interactive-job-catalog/🦀️.rs"]
+mod interactive_job_catalog_tests;
 //#endregion 🧪️InteractiveJobCatalogTests
+
+#[cfg(feature = "plugin-entry")]
+semio_framework_plugin::plugin_exports!(plugin, SpaceApps);

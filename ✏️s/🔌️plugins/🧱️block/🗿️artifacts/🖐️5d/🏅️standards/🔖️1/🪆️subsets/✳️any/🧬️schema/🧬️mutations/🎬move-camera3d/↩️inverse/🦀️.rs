@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `MoveCamera3d`.
 
 use crate::Block5dSnapshot;
-use crate::mutations::Block5dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &super::MoveCamera3d, base: &Block5dSnapshot) -> Vec<Block5dMutation> {

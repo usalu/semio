@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteLoadCase`.
 use super::DeleteLoadCase;
-use crate::diff::{Fem3dDiff, Fem3dLoadCasesDelta};
-use crate::mutations::{load_case_referrers, target_referenced};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dLoadCasesDelta};
+use crate::standards::v1::subsets::any::schema::mutations::{load_case_referrers, target_referenced};
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff

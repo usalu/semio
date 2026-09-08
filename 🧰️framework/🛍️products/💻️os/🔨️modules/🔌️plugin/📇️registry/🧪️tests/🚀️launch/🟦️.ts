@@ -71,8 +71,8 @@ describe("WASI codegen profile policy", () => {
     const root = getWorkspaceRoot();
     const fixtureRoot = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🦀️wasm-profile-policy/🧬️v1");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
-    expect(new Ajv({ strict: true, allErrors: true }).compile(schema)(fixture)).toBe(true);
+    const schema = JSON.parse(readFileSync(join(fixtureRoot, "../../../🧬️schema/🔣️.json"), "utf8"));
+    expect(new Ajv({ strict: true, allErrors: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/WasiProfilePolicyV1`)!(fixture)).toBe(true);
     for (const vector of fixture.cases) {
       const independent = vector.override === null ? vector.mode === "dev" ? "wasm-dev" : "wasm-release" : fixture.runtimeDirectories.includes(vector.override) ? vector.override : null;
       expect(independent).toBe(vector.expectedProfile);

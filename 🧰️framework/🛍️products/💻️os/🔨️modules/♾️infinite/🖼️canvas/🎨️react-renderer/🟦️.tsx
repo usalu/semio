@@ -225,25 +225,7 @@ export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
 
 // #region 🔖️Vitest
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-
-  describe("CanvasEventBindingController", () => {
-    it("disposes registered listeners", () => {
-      const ctrl = new CanvasEventBindingController();
-      let count = 0;
-      const target = {
-        addEventListener: () => {
-          count += 1;
-        },
-        removeEventListener: () => {
-          count -= 1;
-        },
-      };
-      ctrl.listen(target, "pointermove", () => {});
-      expect(count).toBe(1);
-      ctrl.dispose();
-      expect(count).toBe(0);
-    });
-  });
+  const { registerTests1 } = await import("./🧪️tests/🧪️canvaseventbindingcontroller/🟦️.tsx");
+  await registerTests1(import.meta.vitest, { CanvasEventBindingController }, { directory: import.meta.dir, url: import.meta.url });
 }
 // #endregion 🔖️Vitest

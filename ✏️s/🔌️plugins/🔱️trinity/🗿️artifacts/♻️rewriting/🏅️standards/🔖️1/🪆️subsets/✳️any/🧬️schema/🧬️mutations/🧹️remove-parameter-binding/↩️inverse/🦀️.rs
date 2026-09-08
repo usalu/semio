@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `RemoveParameterBinding` — the OLD value looked up from BASE, restored via
 //! `change-parameter-binding`. Missing key ⇒ `Vec::new()`.
-use crate::mutations::{change_parameter_binding, RewriteRuleMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{change_parameter_binding, RewriteRuleMutation};
 use crate::RewritingSnapshot;
 
 //#region 🔖️Inverse

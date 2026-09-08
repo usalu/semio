@@ -1,8 +1,8 @@
 //! 🔍 Block5d mutation — `ScaleCamera2d`: the 2D-projection window camera's `zoom` level.
 
 use crate::Block5dSnapshot;
-use crate::diff::Block5dDiff;
-use crate::mutations::Block5dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
 
 //#region 🔖️Mutation
 /// 🔍 `scale-camera2d` payload.

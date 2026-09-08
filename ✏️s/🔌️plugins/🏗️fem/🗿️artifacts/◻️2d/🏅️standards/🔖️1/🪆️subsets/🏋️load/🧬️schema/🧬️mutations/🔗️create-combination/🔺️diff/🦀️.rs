@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateCombination`.
 use super::CreateCombination;
-use crate::diff::{Fem2dCombinationsDelta, Fem2dDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dCombinationsDelta, Fem2dDiff};
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff

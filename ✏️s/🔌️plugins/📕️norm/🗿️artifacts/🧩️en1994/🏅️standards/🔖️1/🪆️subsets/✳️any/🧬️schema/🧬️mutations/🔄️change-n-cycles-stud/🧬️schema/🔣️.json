@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1994/1/any/mutation/change-n-cycles-stud/schema.json",
+  "$id": "https://semio.tech/schema/s/norm/en1994/mutation/change-n-cycles-stud/schema.json",
   "title": "ChangeNCyclesStud",
   "type": "object",
   "additionalProperties": false,

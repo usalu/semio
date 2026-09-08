@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeleteCombination` — recreates the captured combination from `base`.
 use super::DeleteCombination;
-use crate::mutations::{create_combination, Fem2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{create_combination, Fem2dMutation};
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse

@@ -220,14 +220,6 @@ pub fn render(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, 
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::puzzle5d::testkit::*;
-
-    #[test]
-    fn renders_the_world_scene() {
-        let mut app = app();
-        assert!(render_body(&mut app, BODY_KEY).contains("world-3d"));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

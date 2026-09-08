@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/block/5d/1/any/mutation/change-part-kind-icon/schema.json",
+  "$id": "https://semio.tech/schema/s/block/block5d/mutation/change-part-kind-icon/schema.json",
   "title": "ChangePartKindIcon",
   "type": "object",
   "additionalProperties": false,

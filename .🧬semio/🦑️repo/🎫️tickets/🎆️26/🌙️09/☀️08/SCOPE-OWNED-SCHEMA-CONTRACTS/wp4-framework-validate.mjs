@@ -21,7 +21,7 @@ const walk = (dir, out = []) => {
 const REGISTRY = "🧰️framework/🔨️modules/🧬️schema/🔣️.json";
 const modules = walk(ROOT).filter(path => !path.includes("🧬️mutations") && path !== REGISTRY).sort();
 const ajv = new Ajv({ strict: true, allErrors: true, validateSchema: true });
-for (const keyword of ["x-semio-binary", "x-semio-state"]) ajv.addKeyword({ keyword, metaSchema: {} });
+for (const keyword of ["x-semio-binary", "x-semio-state", "x-semio-formats"]) ajv.addKeyword({ keyword, metaSchema: {} });
 const documents = new Map();
 let dialect = 0, ids = 0, defs = 0;
 const problems = [];

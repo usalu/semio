@@ -299,24 +299,6 @@ export function useAdminT(): (key: AdminI18nKey, vars?: Record<string, string | 
 //#endregion 🔖️Context
 
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-
-  describe("admin i18n", () => {
-    it("has an identical key set in en and de", () => {
-      const enKeys = Object.keys(ADMIN_I18N.en).sort();
-      const deKeys = Object.keys(ADMIN_I18N.de).sort();
-      expect(deKeys).toEqual(enKeys);
-    });
-
-    it("covers every admin.* namespace the app renders", () => {
-      const namespaces = ["nav", "session", "overview", "spaces", "users", "connections", "documents", "events"];
-      for (const namespace of namespaces) {
-        expect(Object.keys(ADMIN_I18N.en).some((key) => key.startsWith(`admin.${namespace}.`))).toBe(true);
-      }
-    });
-
-    it("substitutes {placeholder} vars", () => {
-      expect(ADMIN_I18N.en["admin.overview.rebuildSuccess"].replace("{count}", "3")).toBe("Replayed 3 events.");
-    });
-  });
+  const { registerTests1 } = await import("./🧪️tests/🧪️admin-i18n/🟦️.tsx");
+  await registerTests1(import.meta.vitest, { ADMIN_I18N, de, en }, { directory: import.meta.dir, url: import.meta.url });
 }

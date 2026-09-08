@@ -1,19 +1,64 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.epw/artifact.epw",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/epw/energyplus/any/artifact.json",
   "title": "EpwArtifact",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "location", "designConditions", "typicalExtremePeriods", "groundTemperatures", "holidaysDst", "comments1", "comments2", "dataPeriods", "records"],
+  "required": [
+    "schema",
+    "location",
+    "designConditions",
+    "typicalExtremePeriods",
+    "groundTemperatures",
+    "holidaysDst",
+    "comments1",
+    "comments2",
+    "dataPeriods",
+    "records"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "location": { "$ref": "https://semio.tech/schema/s.stdio.epw/snapshot.epw#/$defs/EpwLocation", "x-semio-state": "artifact" },
-    "designConditions": { "type": "string", "x-semio-state": "artifact" },
-    "typicalExtremePeriods": { "type": "string", "x-semio-state": "artifact" },
-    "groundTemperatures": { "type": "string", "x-semio-state": "artifact" },
-    "holidaysDst": { "type": "string", "x-semio-state": "artifact" },
-    "comments1": { "type": "string", "x-semio-state": "artifact" },
-    "comments2": { "type": "string", "x-semio-state": "artifact" },
-    "dataPeriods": { "$ref": "https://semio.tech/schema/s.stdio.epw/snapshot.epw#/$defs/EpwDataPeriods", "x-semio-state": "artifact" },
-    "records": { "type": "array", "x-semio-state": "artifact", "items": { "$ref": "https://semio.tech/schema/s.stdio.epw/snapshot.epw#/$defs/EpwRecord" } }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "location": {
+      "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/snapshot.json#/$defs/EpwLocation",
+      "x-semio-state": "artifact"
+    },
+    "designConditions": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "typicalExtremePeriods": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "groundTemperatures": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "holidaysDst": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "comments1": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "comments2": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "dataPeriods": {
+      "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/snapshot.json#/$defs/EpwDataPeriods",
+      "x-semio-state": "artifact"
+    },
+    "records": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/snapshot.json#/$defs/EpwRecord"
+      }
+    }
   }
 }

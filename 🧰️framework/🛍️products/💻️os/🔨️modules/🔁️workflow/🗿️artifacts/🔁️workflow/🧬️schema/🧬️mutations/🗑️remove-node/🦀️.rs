@@ -40,11 +40,5 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RemoveNode {
 //#endregion ⚙️Semantics
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::MutationLeaf;
-    #[test]
-    fn metadata_has_the_canonical_identity() {
-        assert_eq!(<RemoveNode as MutationLeaf>::DESCRIPTOR.semantic_kind, "remove-node");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

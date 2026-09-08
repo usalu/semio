@@ -7,8 +7,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::diff::Generation2dDiff;
-use crate::mutations::{apply_generation2d_mutation, inverse_generation2d_mutation, Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_generation2d_mutation, inverse_generation2d_mutation, Generation2dMutation};
 use crate::Generation2dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

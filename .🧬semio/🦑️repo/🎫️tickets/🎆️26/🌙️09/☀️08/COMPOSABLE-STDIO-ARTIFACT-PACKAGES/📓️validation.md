@@ -22,3 +22,7 @@ The Nx executor ran `bun '✏️s/🔌️plugins/🗄️stdio/📜️script.ts' 
 ## Direct Consumer Nx Check
 
 `NX_DAEMON=false CARGO_TARGET_DIR=<ticket>/🗑️generated/cargo SEMIO_TEST_ARTIFACT_DIR=<ticket>/🗑️generated/consumer-forms bun nx run @semio-tech/forms-plugin:check --output-style=static` failed before running forms check. Its framework-graph generation prerequisite rejected two current taxonomy contracts: `print-latex-tokens` and `report-actor-network` previewTarget did not route exactly to their declared owner script invocation. Nx exited130 and explicitly marked forms check not run. Entity and styling generation prerequisites ran first. No consumer compile success is claimed. Raw evidence: `🗑️generated/consumer-forms-check.txt`.
+
+## Framework Artifact Runtime Results
+
+The final combined native command selected `semio-framework-artifact-flow-flow`, `semio-framework-artifact-playbook-playbook`, `semio-framework-artifact-space-space`, and `semio-framework-artifact-space-collection`, with `cargo test --offline --lib --no-fail-fast -- --nocapture` and the ticket Cargo target. It exited 0: Flow 37/37, Playbook 14/14, Space 4/4, Collection 4/4; 59 tests total. The existing independent serde oracle comparisons and console fixture confirmations ran. Raw evidence was `🗑️generated/framework-four-artifacts-runtime-test-4.txt`. Final Nx integration remains a separate gate.

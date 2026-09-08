@@ -3196,95 +3196,11 @@ pub(crate) fn demo_diff_cases() -> Vec<DocxDiff> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod handcrafted_diff_codec_tests {
-    use super::*;
-    use protocol::DiffCodec;
-
-    /// 🧪️ F6: `DiffCodec` round-trip laws over the hand-rolled `DocxDiff` grammar — exercises the
-    /// recursive enum tree (`DocxBlockDiff`'s `Paragraph`/`Table` variants, incl. a nested
-    /// table-cell block list), both `style`/`based_on` tri-states, the OPC layer's content-types/
-    /// parts/relationships-by-owner triples, and every removed/modified/added flavor via a real
-    /// `between()` result in both directions.
-    #[semio_framework_async_macros::async_test]
-    async fn diff_codec_text_binary_roundtrip_law() {
-        let a = snapshot_a();
-        let b = snapshot_b();
-        let cases = vec![DocxDiff::default(), DocxDiff::between(&a, &b), DocxDiff::between(&b, &a), DocxDiff::between(&a, &a)];
-        for d in cases {
-            let printed = d.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = DocxDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
-            assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
-
-            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = DocxDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
-            assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
-        }
-
-        // Field sweep: confirm every collection flavor and both tri-states actually got exercised
-        // above, not just "it round-trips" (an all-`None`/empty diff would round-trip trivially).
-        let diff_ab = DocxDiff::between(&a, &b);
-        let opc_diff = diff_ab.opc.as_ref().expect("opc diff present");
-        assert!(opc_diff.content_types.as_ref().expect("content_types diff present").defaults.as_ref().expect("defaults diff present").added.len() > 0);
-        let parts = opc_diff.parts.as_ref().expect("parts diff present");
-        assert!(!parts.removed.is_empty() && !parts.modified.is_empty() && !parts.added.is_empty(), "opc.parts: not every flavor exercised");
-        let rels = opc_diff.relationships.as_ref().expect("relationships diff present");
-        assert!(!rels.removed.is_empty() && !rels.added.is_empty(), "opc.relationships: owner removed/added not exercised");
-        let doc_diff = diff_ab.document.as_ref().expect("document diff present");
-        let body_diff = doc_diff.body.as_ref().expect("body diff present");
-        assert!(!body_diff.removed.is_empty(), "body: removed not exercised");
-        assert_eq!(body_diff.modified.len(), 1);
-        let DocxBlockDiff::Paragraph(p_diff) = &body_diff.modified[0].diff else { panic!("expected paragraph diff") };
-        assert_eq!(p_diff.style, Some(Some("keep".to_string())), "style tri-state Some(Some(_)) not exercised");
-        let runs_diff = p_diff.runs.as_ref().expect("runs diff present");
-        assert!(!runs_diff.modified.is_empty() && !runs_diff.added.is_empty(), "runs: modified/added not exercised");
-        let styles_diff = doc_diff.styles.as_ref().expect("styles diff present");
-        assert!(!styles_diff.removed.is_empty() && !styles_diff.added.is_empty(), "styles: removed/added not exercised");
-        let style_mod = styles_diff.modified.iter().find(|m| m.key == "keep").expect("keep style modified");
-        assert_eq!(style_mod.diff.based_on, Some(None), "based_on tri-state Some(None) not exercised");
-    }
-}
+#[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
+mod handcrafted_diff_codec_tests;
 //#endregion 🧪️Tests
 //#endregion 🔖️HandcraftedDiffCodec
 
 #[cfg(test)]
-mod result_apply_tests {
-    use super::*;
-
-    /// 🧪️ `SetSnapshot` is a TOTAL replacement, so `DocxDiff::between(base, next)` applied to
-    /// `base` has to land on `next` EXACTLY — the ORDER of the name-keyed style list included,
-    /// because `w:styles`' declaration order is what `semantic-docx-ecma-376-mutate-v1` projects
-    /// by index. Until wave 14 the named triple was order-blind (survivors kept their base order,
-    /// additions were appended), so undoing `set-snapshot` on the real `📜️example-readme.docx`
-    /// returned all seven real styles with six of them in the wrong place — 12 differences
-    /// against the `zip`+`quick-xml` oracle in `mutate-docx-ecma-376::inverse-set-snapshot`. The
-    /// fixture's own seven styles and the case's own three-style `set-snapshot` target are used
-    /// here verbatim, so this test fails for the same reason the case did.
-    #[test]
-    fn set_snapshot_and_its_inverse_reproduce_the_exact_style_order() {
-        let of = |ids: &[&str]| DocxSnapshot::from_parts(OpcPackage::empty(), DocxDocument { body: Vec::new(), styles: ids.iter().map(|id| DocxStyle { id: (*id).into(), name: (*id).into(), based_on: None }).collect() });
-        let base = of(&["Normal", "Title", "Heading1", "Heading2", "Heading3", "Code", "TableCell"]);
-        let next = of(&["Normal", "Heading1", "TableCell"]);
-
-        let forward = DocxDiff::between(&base, &next);
-        assert_eq!(forward.apply(&base).expect("the forward diff applies"), next, "set-snapshot must land on exactly the snapshot it carries");
-        assert_eq!(forward.inverse(&base).apply(&next).expect("the inverse applies"), base, "undoing set-snapshot must restore the style order it found");
-
-        // A pure REORDER carries no removal, no modification and no addition whatsoever, so the
-        // order field is the only thing in the triple that can express it at all.
-        let shuffled = of(&["TableCell", "Normal", "Heading1"]);
-        let reorder = DocxDiff::between(&next, &shuffled);
-        assert!(!reorder.is_empty(), "a pure reorder must not diff to nothing");
-        assert_eq!(reorder.apply(&next).expect("the reorder applies"), shuffled);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn rejects_missing_style_target_without_mutating_base() {
-        let base = DocxSnapshot::default();
-        let diff =
-            DocxDiff { document: Some(DocxDocumentDiff { styles: Some(DocxStylesDiff { modified: vec![NamedModified { key: "missing".into(), diff: DocxStyleDiff::default() }], ..Default::default() }), ..Default::default() }), ..Default::default() };
-        let result = diff.apply(&base);
-        assert_eq!(result.unwrap_err().code, "mutation.apply.missing-target");
-        assert_eq!(base, DocxSnapshot::default());
-    }
-}
+#[path = "🧪️tests/🔬️result-apply/🦀️.rs"]
+mod result_apply_tests;

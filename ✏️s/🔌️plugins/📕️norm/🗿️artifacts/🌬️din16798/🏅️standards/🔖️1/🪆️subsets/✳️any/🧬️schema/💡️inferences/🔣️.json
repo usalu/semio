@@ -1,21 +1,40 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/din16798/inference.json",
   "title": "Din16798Inference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["outline"],
+  "required": [
+    "outline"
+  ],
   "properties": {
-    "outline": { "$ref": "#/$defs/Din16798Outline", "x-semio-derived": true }
+    "outline": {
+      "$ref": "#/$defs/Din16798Outline",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "Din16798Outline": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sectionOutline", "fieldCount", "entryCount"],
+      "required": [
+        "sectionOutline",
+        "fieldCount",
+        "entryCount"
+      ],
       "properties": {
-        "sectionOutline": { "type": "array", "items": { "type": "string" } },
-        "fieldCount": { "type": "integer" },
-        "entryCount": { "type": "integer" }
+        "sectionOutline": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fieldCount": {
+          "type": "integer"
+        },
+        "entryCount": {
+          "type": "integer"
+        }
       }
     }
   }

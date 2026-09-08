@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/remove-electrical-load-center-pv/schema.json",
+  "$id": "https://semio.tech/schema/s/energy/model/mutation/remove-electrical-load-center-pv/schema.json",
   "title": "RemoveElectricalLoadCenterPv",
   "type": "object",
   "additionalProperties": false,

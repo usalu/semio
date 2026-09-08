@@ -1,12 +1,12 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/os/workflow/run/mutations.json",
+  "$id": "https://semio.tech/schema/os/workflow/artifacts/run/mutations.json",
   "type": "object",
   "oneOf": [
     {
       "allOf": [
         {
-          "$ref": "🚀️start-run/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/workflow/artifacts/run/mutation/start-run/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -36,7 +36,7 @@
     {
       "allOf": [
         {
-          "$ref": "▶️start-run-node/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/workflow/artifacts/run/mutation/start-run-node/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -60,7 +60,7 @@
     {
       "allOf": [
         {
-          "$ref": "✅️finish-run-node/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/workflow/artifacts/run/mutation/finish-run-node/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -84,7 +84,7 @@
     {
       "allOf": [
         {
-          "$ref": "🪵️append-run-log/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/workflow/artifacts/run/mutation/append-run-log/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -111,7 +111,7 @@
     {
       "allOf": [
         {
-          "$ref": "🔏️seal-run/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/workflow/artifacts/run/mutation/seal-run/schema.json#/$defs/Payload"
         },
         {
           "type": "object",

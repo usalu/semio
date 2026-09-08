@@ -10,7 +10,7 @@
   ],
   "properties": {
     "delta": {
-      "$ref": "https://semio.dev/schema/plugin/reactor/job-test-mutations/snapshot#/$defs/i32"
+      "$ref": "https://semio.tech/schema/os/plugin/reactor/jobs/mutation-plan/tests/job-test-mutations/component.json#/$defs/I32"
     }
   }
 }

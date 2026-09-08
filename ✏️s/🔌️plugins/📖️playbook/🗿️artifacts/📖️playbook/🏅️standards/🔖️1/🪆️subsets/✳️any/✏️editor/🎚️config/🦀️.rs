@@ -90,77 +90,10 @@ pub use mutations::*;
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn playbook_config_default_matches_the_existing_runtime_defaults() {
-        let config = PlaybookConfig::default();
-        assert_eq!(config.locale, "en-US");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn playbook_config_dsl_round_trips_default_and_populated() {
-        store::os_store::test_support::assert_config_round_trip(&PlaybookConfig::default());
-        let populated = PlaybookConfig { locale: "de-DE".into(), contributions_json: "[]".into() };
-        store::os_store::test_support::assert_config_round_trip(&populated);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn playbook_config_pack_round_trips() {
-        let config = PlaybookConfig { locale: "de-DE".into(), contributions_json: "[]".into() };
-        let bytes = store::ArtifactPack::encode_pack(&config);
-        let decoded = <PlaybookConfig as store::ArtifactPack>::decode_pack(&bytes).expect("decode playbook config pack");
-        assert_eq!(decoded, config);
-    }
-
-    fn config_round_trip(base: &PlaybookConfig, operation: &PlaybookConfigMutation) -> PlaybookConfig {
-        let forward = operation.diff(base).diff().clone();
-        let backwards = operation.inverse(base);
-        let mut restored = forward.clone();
-        for back in &backwards {
-            restored = back.diff(&restored).diff().clone();
-        }
-        assert_eq!(&restored, base, "backwards() must exactly restore the pre-operation config");
-        forward
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn config_mutations_apply_and_restore_every_field() {
-        let base = PlaybookConfig::default();
-        assert_eq!(config_round_trip(&base, &PlaybookConfigMutation::SetLocale(SetLocale { value: "de-DE".into() })).locale, "de-DE");
-        assert_eq!(config_round_trip(&base, &PlaybookConfigMutation::SetContributions(SetContributions { json: "[]".into() })).contributions_json, "[]");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn playbook_config_operation_binary_matches_text() {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
-        store::os_store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::ReplaceConfig(ReplaceConfig { config: PlaybookConfig::default() }));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-mod contract_vectors {
-    use super::*;
-    use dsl::os_pack as pack;
-    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
-
-    #[test]
-    fn configuration_and_presence_contract_vectors_match_the_json_oracle() {
-        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).unwrap();
-        let base: PlaybookConfig = pack::from_json_str(&vectors["base"].to_string()).unwrap();
-        assert_eq!(<PlaybookConfigMutation as Mutation<PlaybookConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().unwrap().len());
-        for vector in vectors["cases"].as_array().unwrap() {
-            let mutation: PlaybookConfigMutation = pack::from_json_str(&vector["mutation"].to_string()).unwrap();
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).unwrap(), vector["mutation"]);
-            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());
-            let next = mutation.diff(&base).diff().apply(&base).unwrap();
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).unwrap(), vector["expected"]);
-            assert_eq!(PlaybookConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
-            assert_eq!(PlaybookConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
-            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
-            assert_eq!(restored, base);
-        }
-    }
-}
+#[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
+mod contract_vectors;

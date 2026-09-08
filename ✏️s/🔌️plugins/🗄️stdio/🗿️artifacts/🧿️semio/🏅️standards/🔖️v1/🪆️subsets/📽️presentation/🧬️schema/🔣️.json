@@ -1,12 +1,26 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/presentation/artifact.json",
   "title": "SemioPresentationArtifact",
   "type": "object",
-  "required": ["schema", "masters", "layouts", "slides"],
+  "required": [
+    "schema",
+    "masters",
+    "layouts",
+    "slides"
+  ],
   "properties": {
-    "schema": { "type": "string" },
-    "masters": { "type": "array" },
-    "layouts": { "type": "array" },
-    "slides": { "type": "array" }
+    "schema": {
+      "type": "string"
+    },
+    "masters": {
+      "type": "array"
+    },
+    "layouts": {
+      "type": "array"
+    },
+    "slides": {
+      "type": "array"
+    }
   }
 }

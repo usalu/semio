@@ -88,58 +88,10 @@ impl store::ArtifactPack for DagSnapshot {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::document_dsl as dsl;
-
-    #[semio_framework_async_macros::async_test]
-    async fn pack_round_trips_and_agrees_with_dsl() {
-        let document = dsl::parse_dsl(dsl::DAG_EXAMPLE_TEXT).expect("parse default fixture");
-        store::os_store::test_support::assert_dsl_pack_equivalence(&document);
-        let bytes = encode(&document);
-        assert_eq!(decode(&bytes).expect("decode"), document);
-    }
-
-    //#region 🔖️CommandEnvelopeTests
-    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
-    /// `DagMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
-    /// existing dsl/pack round-trip law (same pattern as `mathematical`'s own
-    /// `command_envelope_round_trip_holds_for_an_applied_operation`).
-    #[semio_framework_async_macros::async_test]
-    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::op::DagMutation;
-        use crate::DAG_DOCUMENT_SCHEMA;
-        use protocol::{ArtifactId, Edit, SchemaId};
-        use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
-
-        let document = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), content: crate::dag_content_child_with_owner(Vec::new(), Vec::new()) };
-        let mut store: ArtifactStore<DagSnapshot, DagMutation> = ArtifactStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag-demo", document, None)).await.expect("valid artifact store fixture");
-        let node = crate::schema::default_node_for_kind("note", "node-1", 0.0, 0.0);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::mutations::create_node(node)], description: None }).await.expect("apply");
-        let edit: &Edit<DagMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
-    }
-    //#endregion 🔖️CommandEnvelopeTests
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-mod semio_protocol_conformance {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn component_protocol_semio_is_protocol_dialect() {
-        let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
-        assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
-        assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
-        let _ = COMPONENT_PROTOCOL_PATH;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn verify_protocol_bytes_against_encoded_pack() {
-        let document = crate::document_dsl::parse_dsl(crate::document_dsl::DAG_EXAMPLE_TEXT).expect("parse fixture");
-        let bytes = encode(&document);
-        let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
-        ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes pack bytes");
-    }
-}
+#[path = "🧪️tests/🔬️semio-protocol-conformance/🦀️.rs"]
+mod semio_protocol_conformance;

@@ -11,7 +11,7 @@
 
 use crate::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild, MapFeature};
 use dsl::{FromValue, ToValue};
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 
 //#region 🔹Snapshot

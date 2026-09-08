@@ -44,8 +44,5 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for RemoveMemberM
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn semantic_identity_matches_descriptor() { assert_eq!(<RemoveMemberMutation as protocol::MutationKind<JsonSnapshot, super::super::JsonMutation>>::SEMANTICS.kind, "remove-member"); }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

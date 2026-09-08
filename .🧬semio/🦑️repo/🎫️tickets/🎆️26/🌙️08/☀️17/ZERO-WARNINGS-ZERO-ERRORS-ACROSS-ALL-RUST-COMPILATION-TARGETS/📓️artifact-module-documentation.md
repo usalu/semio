@@ -18,3 +18,9 @@ Pass 498 applies 9 exact compiler suggestions across 2 Process3d decoder and ini
 
 
 Pass 499 applies 18 exact compiler suggestions across 3 retained decoder and initialization files: dereferencing ManuallyDrop before clearing its inner Option. Full source lines, UTF-8 offsets and file contents were checked before mutation; 9 stale diagnostics were skipped. Only E0308 diagnostics with an expected ManuallyDrop<Option<...>> type were eligible. The existing retirement and terminal handoff branches retain their inner value disposal behavior. Native and WASI checks remain required.
+
+
+Pass 517 applies 63 exact compiler suggestions across 3 Rust files from native pass512: unnecessary crate qualification and unnecessary mutability. Full source lines, UTF-8 offsets and file contents were checked before mutation; 0 stale diagnostics were skipped. Unused-import diagnostics from failed macro expansion were deliberately excluded because the newly supplied dispatch macro dependency can make those imports live. Native and WASI checks remain required.
+
+
+Pass 521 applies 2 exact compiler suggestions across 2 Rust files from the completed native pass512: unnecessary crate qualification and unnecessary mutability. Full source lines, UTF-8 offsets and file contents were checked before mutation; 202 stale diagnostics were skipped. Unused-import diagnostics from failed macro expansion were deliberately excluded because the newly supplied dispatch macro dependency can make those imports live. Native and WASI checks remain required.

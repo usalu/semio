@@ -16,7 +16,7 @@
           "const": "collapse-page-size"
         },
         "payload": {
-          "$ref": "./📉️collapse-page-size/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.4/x/mutation/collapse-page-size/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "set-page-size"
         },
         "payload": {
-          "$ref": "./📐️set-page-size/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.4/x/mutation/set-page-size/schema.json"
         }
       }
     }

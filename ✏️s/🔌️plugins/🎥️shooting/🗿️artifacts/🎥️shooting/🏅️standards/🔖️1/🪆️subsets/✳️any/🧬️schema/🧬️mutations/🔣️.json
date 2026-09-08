@@ -1,133 +1,100 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/shooting/shooting/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/shooting/shooting/mutations.json",
   "title": "ShootingMutation",
   "oneOf": [
     {
-      "$ref": "./🌐️change-asset-url/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/change-asset-url/schema.json"
     },
     {
-      "$ref": "./🔅️change-scene-ambient-intensity/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/change-scene-ambient-intensity/schema.json"
     },
     {
-      "$ref": "./🪨️change-scene-material-roughness/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/change-scene-material-roughness/schema.json"
     },
     {
-      "$ref": "./🌑️change-scene-shadow-enabled/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/change-scene-shadow-enabled/schema.json"
     },
     {
-      "$ref": "./🧭️change-scene-sun-azimuth/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/change-scene-sun-azimuth/schema.json"
     },
     {
-      "$ref": "./🌅️change-scene-sun-elevation/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/change-scene-sun-elevation/schema.json"
     },
     {
-      "$ref": "./☀️change-scene-sun-enabled/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/change-scene-sun-enabled/schema.json"
     },
     {
-      "$ref": "./💡️change-scene-sun-intensity/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/change-scene-sun-intensity/schema.json"
     },
     {
-      "$ref": "./🖼️change-shot-format/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/change-shot-format/schema.json"
     },
     {
-      "$ref": "./📐️change-shot-height/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/change-shot-height/schema.json"
     },
     {
-      "$ref": "./✂️change-shot-shape/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/change-shot-shape/schema.json"
     },
     {
-      "$ref": "./📏️change-shot-width/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/change-shot-width/schema.json"
     },
     {
-      "$ref": "./➕️create-asset/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/create-asset/schema.json"
     },
     {
-      "$ref": "./🎥️create-saved-camera/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/create-saved-camera/schema.json"
     },
     {
-      "$ref": "./📸️create-shot/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/create-shot/schema.json"
     },
     {
-      "$ref": "./🗑️delete-asset/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/delete-asset/schema.json"
     },
     {
-      "$ref": "./🧹️delete-saved-camera/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/delete-saved-camera/schema.json"
     },
     {
-      "$ref": "./🚮️delete-shot/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/delete-shot/schema.json"
     },
     {
-      "$ref": "./↔️drag-assets/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/drag-assets/schema.json"
     },
     {
-      "$ref": "./✏️rename-asset/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/rename-asset/schema.json"
     },
     {
-      "$ref": "./🪪️rename-saved-camera/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/rename-saved-camera/schema.json"
     },
     {
-      "$ref": "./🏷️rename-shot/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/rename-shot/schema.json"
     },
     {
-      "$ref": "./🔀️reorder-assets/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/reorder-assets/schema.json"
     },
     {
-      "$ref": "./🔁️reorder-saved-cameras/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/reorder-saved-cameras/schema.json"
     },
     {
-      "$ref": "./🔃️reorder-shots/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/reorder-shots/schema.json"
     },
     {
-      "$ref": "./🎞️replace-saved-camera-view/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/replace-saved-camera-view/schema.json"
     },
     {
-      "$ref": "./📷️replace-shot-camera/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/replace-shot-camera/schema.json"
     },
     {
-      "$ref": "./🔄️rotate-assets/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/rotate-assets/schema.json"
     },
     {
-      "$ref": "./↕️scale-assets/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/scale-assets/schema.json"
     },
     {
-      "$ref": "./📌️set-active-asset/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/set-active-asset/schema.json"
     },
     {
-      "$ref": "./🎯️set-active-shot/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/mutation/set-active-shot/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-asset-url",
-    "change-scene-ambient-intensity",
-    "change-scene-material-roughness",
-    "change-scene-shadow-enabled",
-    "change-scene-sun-azimuth",
-    "change-scene-sun-elevation",
-    "change-scene-sun-enabled",
-    "change-scene-sun-intensity",
-    "change-shot-format",
-    "change-shot-height",
-    "change-shot-shape",
-    "change-shot-width",
-    "create-asset",
-    "create-saved-camera",
-    "create-shot",
-    "delete-asset",
-    "delete-saved-camera",
-    "delete-shot",
-    "drag-assets",
-    "rename-asset",
-    "rename-saved-camera",
-    "rename-shot",
-    "reorder-assets",
-    "reorder-saved-cameras",
-    "reorder-shots",
-    "replace-saved-camera-view",
-    "replace-shot-camera",
-    "rotate-assets",
-    "scale-assets",
-    "set-active-asset",
-    "set-active-shot"
   ]
 }

@@ -16,7 +16,7 @@
           "const": "createBuffer"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💿️buffer/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-buffer/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "createBufferView"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-buffer-view/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "deleteBuffer"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💿️buffer/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-buffer/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "deleteBufferView"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-buffer-view/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "moveBuffer"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💿️buffer/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-buffer/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
           "const": "moveBufferView"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-buffer-view/schema.json"
         }
       }
     },
@@ -112,7 +112,7 @@
           "const": "reorderBufferViews"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-buffer-views/schema.json"
         }
       }
     },
@@ -128,7 +128,7 @@
           "const": "reorderBuffers"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💿️buffer/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-buffers/schema.json"
         }
       }
     }

@@ -36,21 +36,6 @@ pub fn render(_cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> semio_framework_p
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::gis2d::testkit::{app, render as render_body};
-
-    #[semio_framework_async_macros::async_test]
-    async fn document_lists_map_layers() {
-        let mut app = app().await;
-        assert!(render_body(&mut app, GIS2D_PLAY_BODY_DOCUMENT).await.contains("gis2d-play-document.layer.raster"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn the_definition_binds_the_framework_document_tab_to_this_body() {
-        let definition = definition();
-        assert!(matches!(definition.kind, PanelTabKind::App(ref id) if id == FRAMEWORK_PANEL_TAB_ARTIFACT_ID));
-        assert_eq!(definition.body_key.as_deref(), Some(GIS2D_PLAY_BODY_DOCUMENT));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➕insert-block/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/insert-block/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🖌️insert-style/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/insert-style/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➖remove-block/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/remove-block/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🗑️remove-part/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/remove-part/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧹remove-style/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/remove-style/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./✍️set-block-content/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/set-block-content/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📦set-part/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/set-part/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🎨set-run-formatting/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/set-run-formatting/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔤set-run-text/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/set-run-text/schema.json"
         },
         {
           "type": "object",
@@ -169,7 +169,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",
@@ -187,7 +187,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🌳️set-style-based-on/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/set-style-based-on/schema.json"
         },
         {
           "type": "object",
@@ -205,7 +205,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏷️set-style-name/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/mutation/set-style-name/schema.json"
         },
         {
           "type": "object",

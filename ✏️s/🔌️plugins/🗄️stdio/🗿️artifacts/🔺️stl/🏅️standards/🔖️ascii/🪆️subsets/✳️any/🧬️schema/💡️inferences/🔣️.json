@@ -1,21 +1,48 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/stl/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/stl/ascii/any/inference.json",
   "title": "StlInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["bounds"],
+  "required": [
+    "bounds"
+  ],
   "properties": {
-    "bounds": { "$ref": "#/$defs/StlBounds", "x-semio-derived": true }
+    "bounds": {
+      "$ref": "#/$defs/StlBounds",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "StlBounds": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["min", "max", "triangleCount"],
+      "required": [
+        "min",
+        "max",
+        "triangleCount"
+      ],
       "properties": {
-        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
-        "triangleCount": { "type": "integer", "minimum": 0 }
+        "min": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "max": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "triangleCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

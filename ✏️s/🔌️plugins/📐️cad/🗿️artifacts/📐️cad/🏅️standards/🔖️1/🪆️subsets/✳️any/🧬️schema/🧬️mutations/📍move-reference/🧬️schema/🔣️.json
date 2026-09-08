@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/cad/cad/1/any/mutation/move-reference/schema.json",
+  "$id": "https://semio.tech/schema/s/cad/cad/mutation/move-reference/schema.json",
   "title": "MoveReference",
   "type": "object",
   "additionalProperties": false,

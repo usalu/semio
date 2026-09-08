@@ -47,7 +47,7 @@ class TestScript extends BundleScript {
       expect(contract?.toolId === route.id, `publication contract ${index} is ${contract?.toolId}, expected ${route.id}`);
       expect(JSON.stringify(contract?.lanes) === JSON.stringify(route.publicationLanes), `route ${route.id} publication lanes diverge from its contract`);
       expect(route.publicationLanes.length > 0, `route ${route.id} declares no publication lane`);
-      expect(!route.publicationLanes.includes("HostOnly") || route.publicationLanes.length === 1, `route ${route.id} pairs HostOnly with another lane`);
+      expect(!route.publicationLanes.includes("host-only") || route.publicationLanes.length === 1, `route ${route.id} pairs host-only with another lane`);
     }
 
     const editors = new Map(descriptor.manifest.apps.filter((app) => app.role === "editor").map((app) => [app.id, app]));
@@ -101,7 +101,7 @@ class TestScript extends BundleScript {
     ] as const;
     const tests = examples.flatMap(([artifact, example]) => {
       const subset = join(plugin, "🗿️artifacts", artifact, "🏅️standards/🔖️1/🪆️subsets/✳️any");
-      return [join(subset, "📚️examples", example, "🧪️tests/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️.ts")];
+      return [join(subset, "📚️examples", example, "🧪️tests/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts")];
     });
     runCmd(process.execPath, ["test", ...tests]);
   }

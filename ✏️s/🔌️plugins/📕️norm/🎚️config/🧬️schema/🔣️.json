@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/app/norm/norm/config.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/norm/norm/config/schema.json",
   "title": "NormConfig",
   "type": "object",
   "additionalProperties": false,

@@ -33,7 +33,7 @@ ports = { react = 6018, wgpu = 6118 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [features]
 # 🔌️ The WASM component entry point (`plugin_exports!` → `#[no_mangle]`
@@ -45,6 +45,9 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-s-artifact-procedural-assembly = { workspace = true }
+semio-s-artifact-procedural-generation2d = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-procedural-generation3d = { workspace = true, features = ["component-app-assembly"] }
 semio-framework-artifact-playbook-playbook = { workspace = true }
 # 🚦️ O1 de-dyn: `#[dyn_enum]`/`dyn_enum_close!` generate `Constraints` (⛓️constraint), replacing
 # the crate's 12 `Box<dyn Constraint>`/`&dyn SoftConstraint` seams — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME.

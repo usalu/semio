@@ -6,7 +6,7 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "🔢️set-n/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/framework/os/store/fixtures/validated/mutation/set-n/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -31,7 +31,7 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "↩️restore-n/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/framework/os/store/fixtures/validated/mutation/restore-n/schema.json#/$defs/Payload"
         },
         {
           "type": "object",

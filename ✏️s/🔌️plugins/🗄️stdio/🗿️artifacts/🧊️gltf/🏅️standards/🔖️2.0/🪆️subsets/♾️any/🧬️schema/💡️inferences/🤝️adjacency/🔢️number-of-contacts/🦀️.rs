@@ -51,12 +51,5 @@ pub fn encode_result(indicators: &GltfEntityIndicators) -> dsl::DslValue {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn descriptor_is_versioned_and_cacheable() {
-        assert_eq!(descriptor().id, "s.stdio.gltf.inference.number-of-contacts.v1");
-        assert_eq!(descriptor().algorithm_version, 1);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/dev/activation/component.json",
+  "title": "Development Activation Contracts",
+  "$defs": {
+    "DevActivationV1": {
+      "title": "Completed Development Activation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "variant",
+        "profile",
+        "plugins"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.dev.activation/v1"
+        },
+        "variant": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "profile": {
+          "enum": [
+            "dev",
+            "release"
+          ]
+        },
+        "plugins": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "pluginId",
+              "artifactSha256",
+              "rebuiltAt"
+            ],
+            "properties": {
+              "pluginId": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "artifactSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "rebuiltAt": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

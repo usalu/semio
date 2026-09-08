@@ -7,8 +7,8 @@
 //! itself (reading `jack_working_scene(base)`, applying its specific semantics to a clone) and calls
 //! `diff_replace_content`.
 
-use crate::schema::diff::JackDiff;
-use crate::schema::JackArtifact;
+use crate::standards::v1::subsets::any::schema::diff::JackDiff;
+use crate::standards::v1::subsets::any::schema::JackArtifact;
 use crate::{Edge, JackSnapshot, Node};
 use protocol::MutationDiff;
 
@@ -168,15 +168,6 @@ pub fn diff_replace_content(nodes: Vec<Node>, edges: Vec<Edge>) -> JackDiff {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn jack_diff_absorb_merges_content() {
-        let mut diff = JackDiff::default();
-        let other = diff_replace_content(vec![Node { id: "x".into(), kind: "Piece".into(), name: "x".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, properties: Default::default(), ports: vec![] }], vec![]);
-        diff.absorb(other.clone());
-        assert_eq!(diff.content, other.content);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion ️Tests

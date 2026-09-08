@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/reasoning/wires/1/any/editor/config/mutation/set-drag/schema.json",
+  "$id": "https://semio.tech/schema/app/reasoning/wires/config/mutation/set-drag/schema.json",
   "title": "SetDrag",
   "type": "object",
   "properties": {

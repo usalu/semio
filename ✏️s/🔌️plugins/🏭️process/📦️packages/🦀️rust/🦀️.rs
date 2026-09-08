@@ -46,13 +46,5 @@ mod plugin;
 #[cfg(feature = "plugin-entry")]
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ProcessApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[cfg(test)]
-    #[path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
-    mod art_process3d_demo_tests;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

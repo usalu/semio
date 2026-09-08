@@ -17,7 +17,7 @@ pub struct SetActiveUtility {
 /// document-op the FSM would produce — `UtilityChanged` never carries one).
 pub fn handle(payload: &SetActiveUtility, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, DrawingConfig>, session: &mut DrawingSession) -> Result<Emit<DrawingMutation, DrawingConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let mut config = cfg.snapshot.clone();
+    let config = cfg.snapshot.clone();
     let operation = doc.operation()?;
     session.cancel_trace_pointer(operation.app_instance_id, &operation.parent_document_id, config.trace_pointer_generation);
     session.step_gesture(crate::editor::drawing::commands::canvas_pointer_down::drawing_gesture::Event::UtilityChanged, document, &config);

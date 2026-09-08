@@ -10,7 +10,7 @@ import ts from "typescript";
 const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization/🟦️.ts");
 const source = readFileSync(sourcePath, "utf8"), tree = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🚚️readme-move-source-authority/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(import.meta.dir, "../🚚️readme-move-source-authority/🧬️schema/🔣️.json"), "utf8"));
+const schema = JSON.parse(readFileSync(join(import.meta.dir, "../🚚️readme-move-source-authority/🛂️schema/🔣️.json"), "utf8"));
 const sha = (value: string | Uint8Array): string => createHash("sha256").update(value).digest("hex");
 const compilers = [
   { name: "Bun", compile: (code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code) },

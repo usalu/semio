@@ -7,11 +7,6 @@
       "type": "string",
       "pattern": "^(?:[0-9a-f]{2})*$"
     },
-    "transportRequestSequence": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 9007199254740991
-    },
     "transportFault": {
       "enum": [
         "requestRefused",
@@ -35,10 +30,10 @@
           ]
         },
         "activationGeneration": {
-          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/definitions/u64"
+          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/U64"
         },
         "transportRequestSequence": {
-          "$ref": "#/definitions/transportRequestSequence"
+          "$ref": "#/$defs/TransportRequestSequence"
         }
       }
     },
@@ -56,13 +51,13 @@
           "const": "result"
         },
         "activationGeneration": {
-          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/definitions/u64"
+          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/U64"
         },
         "transportRequestSequence": {
-          "$ref": "#/definitions/transportRequestSequence"
+          "$ref": "#/$defs/TransportRequestSequence"
         },
         "result": {
-          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/definitions/result"
+          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/Result"
         }
       }
     },
@@ -80,10 +75,10 @@
           "const": "fault"
         },
         "activationGeneration": {
-          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/definitions/u64"
+          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/U64"
         },
         "transportRequestSequence": {
-          "$ref": "#/definitions/transportRequestSequence"
+          "$ref": "#/$defs/TransportRequestSequence"
         },
         "fault": {
           "$ref": "#/definitions/transportFault"
@@ -181,7 +176,7 @@
                 "$ref": "#/definitions/hex"
               },
               "header": {
-                "$ref": "https://semio.tech/schema/framework/actor/return/response/schema.json#/definitions/header"
+                "$ref": "#/definitions/header"
               },
               "bodyValid": {
                 "const": false
@@ -241,6 +236,11 @@
           "$ref": "#/definitions/fault"
         }
       ]
+    },
+    "TransportRequestSequence": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
     }
   }
 }

@@ -16,7 +16,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-os-flow", "dep:semio-framework-os-infinite", "dep:semio-framework-ui", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-styling"]
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-os-flow", "dep:semio-framework-os-infinite", "dep:semio-framework-ui", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-styling"]
 
 [dependencies]
 semio-framework = { workspace = true }
@@ -32,7 +32,7 @@ semio-s-artifact-stdio-semio = { workspace = true }
 pack = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-dispatch-macros = { workspace = true, optional = true }
+semio-framework-dispatch-macros = { workspace = true }
 semio-framework-os-flow = { workspace = true, optional = true }
 semio-framework-os-infinite = { workspace = true, optional = true }
 semio-framework-ui = { workspace = true, optional = true }

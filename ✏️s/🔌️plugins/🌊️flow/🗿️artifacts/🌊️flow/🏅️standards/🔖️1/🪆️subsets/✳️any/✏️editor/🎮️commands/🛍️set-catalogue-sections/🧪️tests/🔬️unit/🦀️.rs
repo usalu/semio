@@ -1,0 +1,11 @@
+
+use super::*;
+use crate::editor::flow::FlowCommand;
+use crate::editor::flow::testkit::{dispatch, flow_app};
+
+#[semio_framework_async_macros::async_test]
+async fn setting_catalogue_sections_emits_no_artifact_mutations() {
+    let mut app = flow_app().await;
+    let result = dispatch(&mut app, FlowCommand::SetCatalogueSections(SetCatalogueSections { sections_json: "[]".into() })).await;
+    assert!(result.mutations.is_empty());
+}

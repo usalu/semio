@@ -7,12 +7,12 @@
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/{◻2d,🧊️3d}`. This file dispatches and stitches.
 //!
 //! 🌉️ `ArtifactApp::Snapshot` is the `Puzzle5dPlaySnapshot` newtype over a bare
-//! `serde_json::Value` document (see `crate::op`'s `🔖️ValueBridge`), not the
+//! `serde_json::Value` document (see `crate::standards::v1::subsets::any::schema::mutations::text`'s `🔖️ValueBridge`), not the
 //! typed `Puzzle5dSnapshot` — the `Puzzle5dDocument` model below is this app's own structural twin
 //! of it, and each action emits the granular typed operation delta
 //! (`puzzle5d_operations_from_document_change`) turning the old document into the new one.
 
-use crate::op::{puzzle5d_document_delta_operations, Puzzle5dMutation, Puzzle5dPlaySnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::text::{puzzle5d_document_delta_operations, Puzzle5dMutation, Puzzle5dPlaySnapshot};
 use crate::Puzzle5dSnapshot;
 use crate::editor::puzzle5d::commands::{
     add_brush_part, add_node, add_part_kind, apply_board_events, apply_sun, create_fastener, cycle_brush_candidate, delete_fastener, delete_selection, duplicate_selection, edit_fastener, engagement_abort, engagement_control_select, engagement_input,
@@ -80,9 +80,9 @@ pub const PUZZLE5D_GRANULARITY_FASTENER: &str = "fastener";
 /// `crate::Puzzle5dSnapshot` — see that artifact's `🔖️ValueBridge` region — so
 /// the DSL-text example fixtures are parsed once into the typed projection and re-serialized to the
 /// JSON string this module's `document_from_json`/`.example(...)` call sites expect.
-pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::dsl::PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest"));
-pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::dsl::PUZZLE5D_NAKAGIN_EXAMPLE_TEXT, "nakagin"));
-pub static CAPSULE_DREAM_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::dsl::PUZZLE5D_CAPSULE_DREAM_EXAMPLE_TEXT, "capsule-dream"));
+pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest"));
+pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE5D_NAKAGIN_EXAMPLE_TEXT, "nakagin"));
+pub static CAPSULE_DREAM_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE5D_CAPSULE_DREAM_EXAMPLE_TEXT, "capsule-dream"));
 static CONCRETE_FOREST_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(|| document_from_json(CONCRETE_FOREST_EXAMPLE_JSON.as_str()));
 static NAKAGIN_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(|| document_from_json(NAKAGIN_EXAMPLE_JSON.as_str()));
 static CAPSULE_DREAM_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(|| document_from_json(CAPSULE_DREAM_EXAMPLE_JSON.as_str()));
@@ -501,7 +501,7 @@ fn puzzle5d_patch_fastener_operations(before: &Value, after_document: &Puzzle5dD
         if field == "fastenerKind" {
             let old = previous.and_then(|entry| entry.get("fastenerKind")).and_then(Value::as_str);
             if old != fastener.fastener_kind.as_deref() {
-                operations.push(crate::mutations::change_fastener_kind::change_fastener_kind(fastener.id.clone(), fastener.fastener_kind.clone()));
+                operations.push(crate::standards::v1::subsets::any::schema::mutations::change_fastener_kind::change_fastener_kind(fastener.id.clone(), fastener.fastener_kind.clone()));
             }
         } else if matches!(field, "gap" | "shift" | "rise" | "rotation" | "turn" | "tilt" | "x" | "y") {
             let old = previous.and_then(|entry| entry.get(field)).and_then(Value::as_f64).unwrap_or(0.0);
@@ -517,7 +517,7 @@ fn puzzle5d_patch_fastener_operations(before: &Value, after_document: &Puzzle5dD
                 _ => old,
             };
             if old != new {
-                operations.push(crate::mutations::replace_fastener_semio_framework_geometry::replace_fastener_geometry(crate::mutations::ReplaceFastenerGeometry { id: fastener.id.clone(), new_gap: fastener.gap, new_shift: fastener.shift, new_rise: fastener.rise, new_rotation: fastener.rotation, new_turn: fastener.turn, new_tilt: fastener.tilt, new_x: fastener.x, new_y: fastener.y }));
+                operations.push(crate::standards::v1::subsets::any::schema::mutations::replace_fastener_semio_framework_geometry::replace_fastener_geometry(crate::standards::v1::subsets::any::schema::mutations::ReplaceFastenerGeometry { id: fastener.id.clone(), new_gap: fastener.gap, new_shift: fastener.shift, new_rise: fastener.rise, new_rotation: fastener.rotation, new_turn: fastener.turn, new_tilt: fastener.tilt, new_x: fastener.x, new_y: fastener.y }));
             }
         }
     }
@@ -1564,353 +1564,8 @@ fn puzzle5d_retire_json_step(value: &mut serde_json::Value, key: &mut [u8; PUZZL
 }
 
 #[cfg(test)]
-mod puzzle5d_retained_retirement_laws {
-    use super::*;
-
-    fn strict_import_source(source: &str) -> bool {
-        [
-            "Puzzle5dImportStage::CensusParts",
-            "Puzzle5dImportStage::ReserveCatalogParts",
-            "Puzzle5dImportStage::ReserveMutations",
-            "Puzzle5dImportStage::LoadCatalogParts",
-            "Puzzle5dImportStage::PartReserve",
-            "Puzzle5dImportStage::PartVortices",
-            "Puzzle5dImportStage::PartPublish",
-            "Puzzle5dImportStage::CatalogMutation",
-            "PUZZLE5D_IMPORT_SEMANTIC_ITEMS",
-            "part_index: Vec<(String, usize)>",
-            "compatibility_index: Vec<((String, String), usize)>",
-            "puzzle5d_import_checkpoint(self.stage as u8, self.cursor, self.nested_cursor, self.decoded_items, self.progress, cx)",
-            "puzzle5d_retire_part_kind_step",
-            "puzzle5d_retire_catalogs_step",
-            "puzzle5d_retire_import_mutation_step",
-            "puzzle5d_decode_import_fragment",
-        ]
-        .into_iter()
-        .all(|marker| source.contains(marker))
-            && source.matches("Puzzle5dImportStage::PartVortices").count() == 2
-            && source.matches("Puzzle5dImportStage::CatalogMutation").count() == 2
-            && source.matches("puzzle5d_retire_part_kind_step").count() == 4
-            && !source.contains("self.initial_catalogs")
-            && !source.contains("self.compatibility_mutations")
-            && !source.contains("part_index: HashMap")
-            && !source.contains("compatibility_index: HashMap")
-            && !source.contains("self.rows(\"objectKinds\").get(self.cursor).cloned()")
-            && !source.contains("pop_owner!(self.catalogs.parts)")
-    }
-
-    #[test]
-    fn recursive_json_zero_and_key_max_plus_one_preserve_exact_owner_before_incremental_close() {
-        let oversized_key = "k".repeat(PUZZLE5D_JSON_RETIREMENT_KEY_BYTES + 1);
-        let mut value = serde_json::json!({ oversized_key.clone(): { "nested": ["payload"] } });
-        let before = value.clone();
-        let mut key = [0; PUZZLE5D_JSON_RETIREMENT_KEY_BYTES];
-        assert!(puzzle5d_retire_json_step(&mut value, &mut key, 0).is_err());
-        assert_eq!(value, before);
-        let nested = value.as_object_mut().and_then(|object| object.get_mut(&oversized_key)).and_then(serde_json::Value::as_object_mut).and_then(|object| object.get_mut("nested")).and_then(serde_json::Value::as_array_mut).and_then(|array| array.last_mut());
-        if let Some(nested) = nested {
-            *nested = serde_json::Value::Null;
-        }
-        assert!(puzzle5d_retire_json_step(&mut value, &mut key, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).is_err());
-        assert!(value.get(&oversized_key).is_some());
-    }
-
-    #[test]
-    fn empty_vector_backing_requires_exact_byte_credit_and_retires_once() {
-        let mut owners = Vec::<u64>::with_capacity(17);
-        let admitted = owners.capacity();
-        let bytes = admitted * size_of::<u64>();
-        assert!(puzzle5d_retire_vec_backing(&mut owners, bytes - 1).is_err());
-        assert_eq!(owners.capacity(), admitted);
-        assert!(matches!(puzzle5d_retire_vec_backing(&mut owners, bytes), Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes })) if released_bytes == bytes));
-        assert_eq!(owners.capacity(), 0);
-        assert!(matches!(puzzle5d_retire_vec_backing(&mut owners, bytes), Ok(None)));
-    }
-
-    #[test]
-    fn reserved_wire_exact_max_and_plus_one_preflight_return_the_original_owner() {
-        let maximum = vec![7; PUZZLE5D_RESERVED_RAW_BYTES];
-        let maximum_identity = maximum.as_ptr();
-        let admitted = puzzle5d_preflight_reserved_wire(maximum, PUZZLE5D_RESERVED_RAW_BYTES).expect("exact maximum is admitted");
-        assert_eq!(admitted.as_ptr(), maximum_identity, "exact maximum preserves the original fixed-page source owner");
-
-        let plus_one = vec![9; PUZZLE5D_RESERVED_RAW_BYTES + 1];
-        let plus_one_identity = plus_one.as_ptr();
-        let (_, rejected) = puzzle5d_preflight_reserved_wire(plus_one, PUZZLE5D_RESERVED_RAW_BYTES).expect_err("maximum plus one is rejected before copy");
-        assert_eq!(rejected.as_ptr(), plus_one_identity, "maximum plus one returns the exact rejected wire owner");
-    }
-
-    #[test]
-    fn import_media_exact_parse_cap_and_plus_one_are_preflighted_under_one_turn_budget() {
-        let prefix = r#"{"objectKinds":[],"vortexKinds":[{"id":"grip","name":"Grip","label":""#;
-        let suffix = r##"","color":"#fff","defaultCableKind":""}],"kindCompatibility":[]}"##;
-        let label = "x".repeat(PUZZLE5D_IMPORT_MEDIA_BYTES.checked_sub(prefix.len() + suffix.len()).expect("fixture shell fits import cap"));
-        let maximum = format!("{prefix}{label}{suffix}");
-        assert_eq!(maximum.len(), PUZZLE5D_IMPORT_MEDIA_BYTES);
-        let started = std::time::Instant::now();
-        let parsed = puzzle5d_decode_import_fragment(&maximum).expect("exact import-media cap parses");
-        let elapsed = started.elapsed();
-        assert!(elapsed < std::time::Duration::from_micros(7_500), "bounded import-media serde turn exceeded 7.5 ms: {elapsed:?}");
-        assert!(puzzle5d_import_keys_are(&parsed, &["objectKinds", "vortexKinds", "kindCompatibility"]));
-        let maximum_plus_one = format!("{maximum} ");
-        assert_eq!(maximum_plus_one.len(), PUZZLE5D_IMPORT_MEDIA_BYTES + 1);
-        assert!(puzzle5d_decode_import_fragment(&maximum_plus_one).is_err());
-
-        let canonical = dsl::json!({
-            "schema": "manifest",
-            "objectKinds": [],
-            "vortexKinds": [],
-            "cableKinds": [],
-            "attractionKinds": [],
-            "kindCompatibility": [],
-        });
-        assert!(puzzle5d_import_keys_are(&canonical, &["schema", "objectKinds", "vortexKinds", "cableKinds", "attractionKinds", "kindCompatibility"]));
-        let hostile = dsl::json!({ "objectKinds": [], "legacyRows": [] });
-        assert!(!puzzle5d_import_keys_are(&hostile, &["schema", "objectKinds", "vortexKinds", "cableKinds", "attractionKinds", "kindCompatibility"]));
-    }
-
-    #[test]
-    fn import_media_typed_close_retires_nested_owners_one_bounded_unit_per_turn() {
-        let mut owner = crate::Puzzle5dCatalogPartKind {
-            id: "part-ä".repeat(64),
-            name: "Part".into(),
-            label: "Teil".into(),
-            representations: vec![crate::Puzzle5dRepresentation { id: "mesh".into(), name: "Mesh".into(), url: "mesh.glb".into(), mime: "model/gltf-binary".into(), tags: vec!["tag-ß".repeat(64)], ..Default::default() }],
-            grips: vec![crate::Puzzle5dGripTemplate { id: "g0".into(), name: "socket".into(), label: "Socket".into(), grip_kind: Some("socket".into()), ..Default::default() }],
-            ..Default::default()
-        };
-        let mut turns = 0usize;
-        loop {
-            match puzzle5d_retire_part_kind_step(&mut owner, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).expect("bounded typed close") {
-                Some(PluginCloseStep::Pending { released_items, released_bytes }) => {
-                    assert!(released_items <= 1);
-                    assert!(released_bytes <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                    turns += 1;
-                }
-                Some(PluginCloseStep::AwaitingInput { .. } | PluginCloseStep::Blocked { .. }) => panic!("closed typed fixture unexpectedly requires input"),
-                Some(PluginCloseStep::Complete) => panic!("nested owner helper cannot publish outer completion"),
-                None => break,
-            }
-            assert!(turns < 100_000, "typed close did not converge");
-        }
-        assert!(turns > 8, "nested close was collapsed into an unbounded row drop");
-        assert!(owner.id.is_empty() && owner.id.capacity() == 0);
-        assert!(owner.representations.is_empty() && owner.representations.capacity() == 0);
-        assert!(owner.grips.is_empty() && owner.grips.capacity() == 0);
-
-        let mut mutation = crate::mutations::replace_kind_catalogs(Some(crate::Puzzle5dKindCatalogs {
-            parts: vec![crate::Puzzle5dCatalogPartKind { id: "cancelled-part".into(), ..Default::default() }],
-            ..Default::default()
-        }));
-        let mut mutation_turns = 0usize;
-        loop {
-            match puzzle5d_retire_import_mutation_step(&mut mutation, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).expect("bounded preassembled mutation close") {
-                Some(PluginCloseStep::Pending { released_items, released_bytes }) => {
-                    assert!(released_items <= 1);
-                    assert!(released_bytes <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                    mutation_turns += 1;
-                }
-                Some(PluginCloseStep::AwaitingInput { .. } | PluginCloseStep::Blocked { .. }) => panic!("closed typed fixture unexpectedly requires input"),
-                Some(PluginCloseStep::Complete) => panic!("mutation helper cannot publish outer completion"),
-                None => break,
-            }
-            assert!(mutation_turns < 100_000, "preassembled mutation close did not converge");
-        }
-        assert!(matches!(mutation, Puzzle5dMutation::ReplaceKindCatalogs(value) if value.new_catalogs.is_none()));
-    }
-
-    #[test]
-    fn import_media_exact_semantic_backings_fit_one_native_or_wasm_close_page() {
-        fn exact_backing_bytes<T>(items: usize) -> usize {
-            let mut owner = Vec::<T>::new();
-            owner.try_reserve_exact(items).expect("fixed-page descriptor reserve");
-            owner.capacity().checked_mul(size_of::<T>()).expect("fixed-page descriptor extent")
-        }
-
-        let page = semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
-        assert!(exact_backing_bytes::<crate::Puzzle5dCatalogPartKind>(PUZZLE5D_IMPORT_SEMANTIC_ITEMS) <= page);
-        assert!(exact_backing_bytes::<crate::Puzzle5dCatalogGripKind>(PUZZLE5D_IMPORT_SEMANTIC_ITEMS) <= page);
-        assert!(exact_backing_bytes::<crate::Puzzle5dCatalogFastenerKind>(PUZZLE5D_IMPORT_SEMANTIC_ITEMS) <= page);
-        assert!(exact_backing_bytes::<crate::Puzzle5dCatalogRopeKind>(PUZZLE5D_IMPORT_SEMANTIC_ITEMS) <= page);
-        assert!(exact_backing_bytes::<crate::Puzzle5dKindCompatibility>(PUZZLE5D_IMPORT_SEMANTIC_ITEMS) <= page);
-        assert!(exact_backing_bytes::<crate::Puzzle5dGripTemplate>(PUZZLE5D_IMPORT_SEMANTIC_ITEMS) <= page);
-        assert!(exact_backing_bytes::<(String, usize)>(PUZZLE5D_IMPORT_SEMANTIC_ITEMS) <= page);
-        assert!(exact_backing_bytes::<((String, String), usize)>(PUZZLE5D_IMPORT_SEMANTIC_ITEMS) <= page);
-        for page_index in 0..PUZZLE5D_IMPORT_MUTATION_PAGES {
-            let remaining = PUZZLE5D_IMPORT_MUTATION_ITEMS.saturating_sub(page_index * PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE);
-            let items = remaining.min(PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE);
-            assert!(exact_backing_bytes::<Puzzle5dMutation>(items) <= page);
-        }
-        assert_eq!(PUZZLE5D_IMPORT_DECODED_ITEMS, 1_184);
-        assert_eq!(PUZZLE5D_IMPORT_MUTATION_ITEMS, 65);
-        assert_eq!(PUZZLE5D_IMPORT_MUTATION_PAGES, 2);
-    }
-
-    #[test]
-    fn import_media_checkpoint_preserves_outer_nested_census_and_progress_cursors() {
-        let state = puzzle5d_import_checkpoint_bytes(23, usize::MAX, usize::MAX - 1, usize::MAX - 2, u64::MAX - 3);
-        assert_eq!(state.len(), 33);
-        assert_eq!(state[0], 23);
-        assert_eq!(u64::from_le_bytes(state[1..9].try_into().expect("outer cursor slice")), usize::MAX as u64);
-        assert_eq!(u64::from_le_bytes(state[9..17].try_into().expect("nested cursor slice")), (usize::MAX - 1) as u64);
-        assert_eq!(u64::from_le_bytes(state[17..25].try_into().expect("census slice")), (usize::MAX - 2) as u64);
-        assert_eq!(u64::from_le_bytes(state[25..33].try_into().expect("progress slice")), u64::MAX - 3);
-        assert_ne!(state, puzzle5d_import_checkpoint_bytes(23, usize::MAX, usize::MAX - 2, usize::MAX - 2, u64::MAX - 3));
-    }
-
-    #[test]
-    fn import_media_source_requires_schema_census_reserve_nested_cursor_and_recursive_close() {
-        let source = include_str!("🦀️.rs");
-        let import = source.rsplit_once("enum Puzzle5dImportStage").and_then(|(_, suffix)| suffix.split_once("//#endregion 🧵️ReservedJobs").map(|(import, _)| import)).expect("import source region");
-        assert!(strict_import_source(import));
-        assert!(!strict_import_source(&import.replacen("Puzzle5dImportStage::PartVortices", "Puzzle5dImportStage::Parts", 1)));
-        assert!(!strict_import_source(&import.replacen("puzzle5d_retire_part_kind_step", "unbounded_drop", 1)));
-        assert!(!strict_import_source(&import.replacen("Puzzle5dImportStage::CatalogMutation", "Puzzle5dImportStage::Complete", 1)));
-        assert!(!strict_import_source(&import.replacen("self.nested_cursor, self.decoded_items", "0, 0", 1)));
-    }
-
-    fn completion_rejection(kind: Puzzle5dCompletionOwnerKind, emit: Emit<Puzzle5dMutation, Puzzle5dConfigMutation, NoDraftMutation>) -> Puzzle5dPendingCompletionRejection {
-        let mut fault = Fault::from("injected completion rejection");
-        fault.scope.plugin_id = Some("s.puzzle".repeat(32));
-        Puzzle5dPendingCompletionRejection::new(
-            kind,
-            ArtifactToolCompletionRejection {
-                emit: Ok(emit),
-                ephemeral: EphemeralEmit {
-                    presence: vec![Puzzle5dPresenceMutation::Snapshot { presence: Puzzle5dPresence { active_utility_id: "select".repeat(32), ..Default::default() } }],
-                    transient: Vec::new(),
-                },
-                fault,
-            },
-        )
-    }
-
-    fn close_completion_rejection(owner: &mut Puzzle5dPendingCompletionRejection) -> usize {
-        assert!(matches!(owner.close_step(0, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })));
-        assert!(owner.owner.is_some(), "zero-item close must preserve the exact rejection owner");
-        let mut turns = 0usize;
-        loop {
-            match owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).expect("bounded completion rejection close") {
-                PluginCloseStep::Pending { released_items, released_bytes } => {
-                    assert!(released_items <= 1);
-                    assert!(released_bytes <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                    turns += 1;
-                }
-                PluginCloseStep::Complete => break,
-                PluginCloseStep::Blocked { reason } => panic!("completion rejection close blocked: {reason}"),
-                PluginCloseStep::AwaitingInput { .. } => panic!("completion rejection close cannot await input"),
-            }
-            assert!(turns < 100_000, "completion rejection close did not converge");
-        }
-        assert!(owner.owner.is_none());
-        turns
-    }
-
-    #[test]
-    fn copy_completion_rejection_retains_and_incrementally_closes_clipboard_ephemeral_and_fault_owners() {
-        let fragment = ClipboardFragment {
-            schema: PUZZLE5D_SCHEMA.repeat(32),
-            media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Design },
-            dsl_text: "part".repeat(256),
-            pack_bytes: Some(vec![7; 31]),
-            source_app: PUZZLE5D_PLAY_APP_ID.repeat(32),
-            label: "copy".repeat(32),
-        };
-        let mut owner = completion_rejection(Puzzle5dCompletionOwnerKind::Copy, Emit { effects: vec![Effect::ClipboardWrite { fragment }], ..Default::default() });
-        assert!(close_completion_rejection(&mut owner) > 100, "clipboard strings must not collapse into one owner drop");
-    }
-
-    #[test]
-    fn cut_completion_rejection_retains_and_incrementally_closes_exact_cut_mutations() {
-        let emit = Emit {
-            artifact_mutations: vec![
-                crate::mutations::disconnect_grips("fastener".repeat(64)),
-                crate::mutations::delete_part("part".repeat(64)),
-            ],
-            ..Default::default()
-        };
-        let mut owner = completion_rejection(Puzzle5dCompletionOwnerKind::Cut, emit);
-        assert!(close_completion_rejection(&mut owner) > 100);
-    }
-
-    #[test]
-    fn paste_completion_rejection_retains_original_flattened_mutation_vector_until_bounded_close() {
-        let part = crate::Puzzle5dPart {
-            id: "part".repeat(64),
-            part_kind: Some("kind".repeat(64)),
-            part_2d: crate::Puzzle5dPart2d { text: Some("text".repeat(64)), ..Default::default() },
-            grips: vec![crate::Puzzle5dGrip {
-                id: "grip".repeat(64),
-                grip_kind: Some("socket".repeat(64)),
-                grip_2d: Default::default(),
-                grip_3d: Default::default(),
-            }],
-            ..Default::default()
-        };
-        let emit = Emit::mutations(vec![
-            crate::mutations::create_part(part, None),
-            crate::mutations::connect_grips(
-                "fastener".repeat(64),
-                "part:source".repeat(32),
-                "part:target".repeat(32),
-                Some("fixed".repeat(32)),
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-            ),
-        ]);
-        let original = emit.artifact_mutations.as_ptr();
-        let mut owner = completion_rejection(Puzzle5dCompletionOwnerKind::Paste, emit);
-        let retained = owner.owner.as_ref().and_then(|rejected| rejected.emit.as_ref().ok()).expect("retained paste emit");
-        assert_eq!(retained.artifact_mutations.as_ptr(), original, "paste must retain the completion-returned mutation vector without reconstruction");
-        assert!(close_completion_rejection(&mut owner) > 100);
-    }
-
-    #[test]
-    fn import_completion_rejection_never_repages_and_closes_catalog_mutations_incrementally() {
-        let emit = Emit::mutations(vec![
-            crate::mutations::connect_kind_compatibility(
-                "source".repeat(64),
-                "target".repeat(64),
-                true,
-                true,
-                crate::Puzzle5dCompatSpecificity::General,
-            ),
-            crate::mutations::replace_kind_catalogs(Some(crate::Puzzle5dKindCatalogs {
-                parts: vec![crate::Puzzle5dCatalogPartKind { id: "catalog-part".repeat(64), ..Default::default() }],
-                ..Default::default()
-            })),
-        ]);
-        let original = emit.artifact_mutations.as_ptr();
-        let mut owner = completion_rejection(Puzzle5dCompletionOwnerKind::Import, emit);
-        let retained = owner.owner.as_ref().and_then(|rejected| rejected.emit.as_ref().ok()).expect("retained import emit");
-        assert_eq!(retained.artifact_mutations.as_ptr(), original, "import must retain the completion-returned flattened vector rather than re-page it");
-        assert!(close_completion_rejection(&mut owner) > 100);
-    }
-
-    #[test]
-    fn completion_rejection_guards_precede_all_four_prepare_and_publish_paths() {
-        let source = include_str!("🦀️.rs");
-        for (job, next, guard) in [
-            ("\nstruct Puzzle5dCopyJob {", "\nstruct Puzzle5dCutJob {", "puzzle5d copy completion remains rejected"),
-            ("\nstruct Puzzle5dCutJob {", "\nenum Puzzle5dPasteStage {", "puzzle5d cut completion remains rejected"),
-            ("\nstruct Puzzle5dPasteJob {", "\nenum Puzzle5dImportStage {", "puzzle5d paste completion remains rejected"),
-            ("\nstruct Puzzle5dImportJob {", "\n//#endregion 🧵️ReservedJobs", "puzzle5d import completion remains rejected"),
-        ] {
-            let region = source.split_once(job).and_then(|(_, suffix)| suffix.split_once(next).map(|(region, _)| region)).expect("reserved job region");
-            let guard = region.find(guard).expect("pending rejection replay guard");
-            let prepare = region.find("commit.prepare").expect("commit prepare");
-            let retain = region.find("pending_completion_rejection = Some").expect("exact rejection handoff");
-            assert!(guard < prepare && prepare < retain, "{job} must stop replay before preparing or publishing");
-            assert!(!region.contains("if let Err(error) = completion.complete"));
-        }
-    }
-}
+#[path = "🧪️tests/🔬️puzzle5d-retained-retirement-laws/🦀️.rs"]
+mod puzzle5d_retained_retirement_laws;
 
 struct Puzzle5dClipboardWork {
     raw: Vec<u8>,
@@ -2287,8 +1942,8 @@ impl InteractiveJob for Puzzle5dCutJob {
                         Err(error) => return puzzle5d_job_fault(cx, error),
                         Ok(true) => {}
                     }
-                    let mut mutations = self.work.scan.fasteners.iter().map(|fastener| crate::mutations::disconnect_grips(fastener.id.clone())).collect::<Vec<_>>();
-                    mutations.extend(self.work.scan.parts.iter().map(|part| crate::mutations::delete_part(part.id.clone())));
+                    let mut mutations = self.work.scan.fasteners.iter().map(|fastener| crate::standards::v1::subsets::any::schema::mutations::disconnect_grips(fastener.id.clone())).collect::<Vec<_>>();
+                    mutations.extend(self.work.scan.parts.iter().map(|part| crate::standards::v1::subsets::any::schema::mutations::delete_part(part.id.clone())));
                     let effects = self.work.fragment().map(|fragment| vec![Effect::ClipboardWrite { fragment }]).unwrap_or_default();
                     let emit = Emit { artifact_mutations: mutations, effects, ..Default::default() };
                     let Some(completion) = self.work.completion.as_ref() else { return puzzle5d_job_fault(cx, "puzzle5d cut lost its completion authority") };
@@ -2528,7 +2183,7 @@ impl InteractiveJob for Puzzle5dPasteJob {
                         Ok(typed) => typed,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
-                    self.mutations.push(crate::mutations::create_part(typed, None));
+                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::create_part(typed, None));
                 } else {
                     self.stage = Puzzle5dPasteStage::MaterializeFasteners;
                     self.cursor = 0;
@@ -2542,7 +2197,7 @@ impl InteractiveJob for Puzzle5dPasteJob {
                         Ok(fastener) => fastener,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
-                    self.mutations.push(crate::mutations::connect_grips(
+                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(
                         self.fresh_ids.next_fastener(),
                         rewrite_grip_ref_local(&fastener.source, &self.id_map),
                         rewrite_grip_ref_local(&fastener.target, &self.id_map),
@@ -3777,16 +3432,16 @@ impl InteractiveJob for Puzzle5dImportJob {
                     match self.compatibility_index.iter().find_map(|(candidate, index)| (candidate == &key).then_some(*index)) {
                         Some(index) if self.compatibility[index] == parsed => {}
                         Some(index) => {
-                            if let Err(error) = self.push_mutation(crate::mutations::disconnect_kind_compatibility(parsed.source.clone(), parsed.target.clone())) {
+                            if let Err(error) = self.push_mutation(crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(parsed.source.clone(), parsed.target.clone())) {
                                 return puzzle5d_job_fault(cx, error);
                             }
-                            if let Err(error) = self.push_mutation(crate::mutations::connect_kind_compatibility(parsed.source.clone(), parsed.target.clone(), parsed.bidirectional, parsed.important, parsed.specificity)) {
+                            if let Err(error) = self.push_mutation(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(parsed.source.clone(), parsed.target.clone(), parsed.bidirectional, parsed.important, parsed.specificity)) {
                                 return puzzle5d_job_fault(cx, error);
                             }
                             self.compatibility[index] = parsed;
                         }
                         None => {
-                            if let Err(error) = self.push_mutation(crate::mutations::connect_kind_compatibility(parsed.source.clone(), parsed.target.clone(), parsed.bidirectional, parsed.important, parsed.specificity)) {
+                            if let Err(error) = self.push_mutation(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(parsed.source.clone(), parsed.target.clone(), parsed.bidirectional, parsed.important, parsed.specificity)) {
                                 return puzzle5d_job_fault(cx, error);
                             }
                             self.compatibility_index.push((key, self.compatibility.len()));
@@ -3800,7 +3455,7 @@ impl InteractiveJob for Puzzle5dImportJob {
             }
             Puzzle5dImportStage::CatalogMutation => {
                 if self.catalog_changed {
-                    let mutation = crate::mutations::replace_kind_catalogs(Some(std::mem::take(&mut self.catalogs)));
+                    let mutation = crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(Some(std::mem::take(&mut self.catalogs)));
                     if let Err(error) = self.push_mutation(mutation) {
                         return puzzle5d_job_fault(cx, error);
                     }
@@ -4759,12 +4414,12 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 let mutation = match self.tool_id {
                     "translateSelection" => {
                         let origin = part_3d.and_then(|part| part.get("origin")).and_then(puzzle5d_value_as_f64_3).unwrap_or_default();
-                        crate::mutations::move_part_3d(id.to_string(), [origin[0] + Self::axis(command, "dx", 0.0), origin[1] + Self::axis(command, "dy", 0.0), origin[2] + Self::axis(command, "dz", 0.0)])
+                        crate::standards::v1::subsets::any::schema::mutations::move_part_3d(id.to_string(), [origin[0] + Self::axis(command, "dx", 0.0), origin[1] + Self::axis(command, "dy", 0.0), origin[2] + Self::axis(command, "dz", 0.0)])
                     }
                     "rotateSelection" => {
                         let orientation = part_3d.and_then(|part| part.get("orientation")).and_then(puzzle5d_value_as_f64_4).unwrap_or([0.0, 0.0, 0.0, 1.0]);
                         let delta = quat_from_axis_angle(Self::axis(command, "ax", 0.0), Self::axis(command, "ay", 0.0), Self::axis(command, "az", 0.0), Self::axis(command, "angle", 0.0));
-                        crate::mutations::rotate_part_3d(id.to_string(), Some(quat_mul(delta, orientation)))
+                        crate::standards::v1::subsets::any::schema::mutations::rotate_part_3d(id.to_string(), Some(quat_mul(delta, orientation)))
                     }
                     "scaleSelection" => {
                         let scale = part_3d.and_then(|part| part.get("scale"));
@@ -4773,7 +4428,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                             Some(Value::Array(values)) => [values.first().and_then(Value::as_f64).unwrap_or(1.0), values.get(1).and_then(Value::as_f64).unwrap_or(1.0), values.get(2).and_then(Value::as_f64).unwrap_or(1.0)],
                             _ => [1.0; 3],
                         };
-                        crate::mutations::scale_part_3d(
+                        crate::standards::v1::subsets::any::schema::mutations::scale_part_3d(
                             id.to_string(),
                             Some(crate::Puzzle5dScale::Vec3([current[0] * Self::axis(command, "sx", 1.0), current[1] * Self::axis(command, "sy", 1.0), current[2] * Self::axis(command, "sz", 1.0)])),
                         )
@@ -5649,25 +5304,25 @@ impl Puzzle5dPatchPartWork {
         let delta = args.get("delta");
         let text = value.and_then(Value::as_str);
         match field {
-            "partKind" => text.map(|text| crate::mutations::change_part_kind(part.id.clone(), Some(text.to_string()))),
+            "partKind" => text.map(|text| crate::standards::v1::subsets::any::schema::mutations::change_part_kind(part.id.clone(), Some(text.to_string()))),
             "anchor" => text.map(|text| {
                 let anchor = match text.to_ascii_lowercase().as_str() {
                     "derived" | "connected" => crate::Puzzle5dPartAnchor::Derived,
                     _ => crate::Puzzle5dPartAnchor::Fixed,
                 };
-                crate::mutations::change_part_anchor(part.id.clone(), anchor)
+                crate::standards::v1::subsets::any::schema::mutations::change_part_anchor(part.id.clone(), anchor)
             }),
-            "text" => text.map(|text| crate::mutations::edit_part_2d_text(part.id.clone(), Some(text.to_string()))),
-            "label" => Some(crate::mutations::edit_part_3d_label(part.id.clone(), text.filter(|text| !text.is_empty()).map(str::to_string))),
-            "meshUrl" => Some(crate::mutations::change_part_3d_mesh(part.id.clone(), text.filter(|text| !text.is_empty()).map(str::to_string))),
-            "x" => puzzle5d_resolve_number_edit(part.part_2d.x, value, delta).map(|updated| crate::mutations::move_part_2d(part.id.clone(), updated, part.part_2d.y)),
-            "y" => puzzle5d_resolve_number_edit(part.part_2d.y, value, delta).map(|updated| crate::mutations::move_part_2d(part.id.clone(), part.part_2d.x, updated)),
+            "text" => text.map(|text| crate::standards::v1::subsets::any::schema::mutations::edit_part_2d_text(part.id.clone(), Some(text.to_string()))),
+            "label" => Some(crate::standards::v1::subsets::any::schema::mutations::edit_part_3d_label(part.id.clone(), text.filter(|text| !text.is_empty()).map(str::to_string))),
+            "meshUrl" => Some(crate::standards::v1::subsets::any::schema::mutations::change_part_3d_mesh(part.id.clone(), text.filter(|text| !text.is_empty()).map(str::to_string))),
+            "x" => puzzle5d_resolve_number_edit(part.part_2d.x, value, delta).map(|updated| crate::standards::v1::subsets::any::schema::mutations::move_part_2d(part.id.clone(), updated, part.part_2d.y)),
+            "y" => puzzle5d_resolve_number_edit(part.part_2d.y, value, delta).map(|updated| crate::standards::v1::subsets::any::schema::mutations::move_part_2d(part.id.clone(), part.part_2d.x, updated)),
             _ => {
                 let axis = puzzle5d_axis_index(field, "origin")?;
                 let updated = puzzle5d_resolve_number_edit(part.part_3d.origin[axis], value, delta)?;
                 let mut origin = part.part_3d.origin;
                 origin[axis] = updated;
-                Some(crate::mutations::move_part_3d(part.id.clone(), origin))
+                Some(crate::standards::v1::subsets::any::schema::mutations::move_part_3d(part.id.clone(), origin))
             }
         }
     }
@@ -5796,7 +5451,7 @@ impl Puzzle5dPatchFastenerWork {
         let value = args.get("value");
         let delta = args.get("delta");
         if field == "fastenerKind" {
-            return Some(crate::mutations::change_fastener_kind(fastener.id.clone(), value.and_then(Value::as_str).filter(|text| !text.is_empty()).map(str::to_string)));
+            return Some(crate::standards::v1::subsets::any::schema::mutations::change_fastener_kind(fastener.id.clone(), value.and_then(Value::as_str).filter(|text| !text.is_empty()).map(str::to_string)));
         }
         let mut geometry = [fastener.gap, fastener.shift, fastener.rise, fastener.rotation, fastener.turn, fastener.tilt, fastener.x, fastener.y];
         let index = match field {
@@ -5811,7 +5466,7 @@ impl Puzzle5dPatchFastenerWork {
             _ => return None,
         };
         geometry[index] = puzzle5d_resolve_number_edit(geometry[index], value, delta)?;
-        Some(crate::mutations::replace_fastener_geometry(crate::mutations::ReplaceFastenerGeometry { id: fastener.id.clone(), new_gap: geometry[0], new_shift: geometry[1], new_rise: geometry[2], new_rotation: geometry[3], new_turn: geometry[4], new_tilt: geometry[5], new_x: geometry[6], new_y: geometry[7] }))
+        Some(crate::standards::v1::subsets::any::schema::mutations::replace_fastener_geometry(crate::standards::v1::subsets::any::schema::mutations::ReplaceFastenerGeometry { id: fastener.id.clone(), new_gap: geometry[0], new_shift: geometry[1], new_rise: geometry[2], new_rotation: geometry[3], new_turn: geometry[4], new_tilt: geometry[5], new_x: geometry[6], new_y: geometry[7] }))
     }
 }
 
@@ -5992,7 +5647,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             Puzzle5dEditFastenerStage::Kind => {
                 let Some(fastener) = self.fastener.as_ref() else { return Err(Fault::from("puzzle5d-edit-fastener-owner")) };
                 if let Some(kind) = Self::updated_kind(command, fastener) {
-                    self.mutations.push(crate::mutations::change_fastener_kind(fastener.id.clone(), kind));
+                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::change_fastener_kind(fastener.id.clone(), kind));
                 }
                 self.stage = Puzzle5dEditFastenerStage::Geometry;
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-edit-fastener-kind", "Updating fastener kind", "Verbindungsart wird aktualisiert"))
@@ -6000,7 +5655,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             Puzzle5dEditFastenerStage::Geometry => {
                 let Some(fastener) = self.fastener.as_ref() else { return Err(Fault::from("puzzle5d-edit-fastener-owner")) };
                 if let Some(geometry) = Self::updated_geometry(command, fastener) {
-                    self.mutations.push(crate::mutations::replace_fastener_geometry(crate::mutations::ReplaceFastenerGeometry { id: fastener.id.clone(), new_gap: geometry[0], new_shift: geometry[1], new_rise: geometry[2], new_rotation: geometry[3], new_turn: geometry[4], new_tilt: geometry[5], new_x: geometry[6], new_y: geometry[7] }));
+                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::replace_fastener_geometry(crate::standards::v1::subsets::any::schema::mutations::ReplaceFastenerGeometry { id: fastener.id.clone(), new_gap: geometry[0], new_shift: geometry[1], new_rise: geometry[2], new_rotation: geometry[3], new_turn: geometry[4], new_tilt: geometry[5], new_x: geometry[6], new_y: geometry[7] }));
                 }
                 self.stage = Puzzle5dEditFastenerStage::Complete;
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() }))
@@ -6219,13 +5874,13 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             }
             Puzzle5dRetargetFastenerStage::Disconnect => {
                 let id = self.fastener.as_ref().map(|fastener| fastener.id.clone()).ok_or_else(|| Fault::from("puzzle5d-retarget-fastener-owner"))?;
-                self.mutations.push(crate::mutations::disconnect_grips(id));
+                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_grips(id));
                 self.stage = Puzzle5dRetargetFastenerStage::Connect;
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-retarget-connect", "Connecting retargeted fastener", "Neu ausgerichtete Verbindung wird erstellt"))
             }
             Puzzle5dRetargetFastenerStage::Connect => {
                 let fastener = self.fastener.as_ref().ok_or_else(|| Fault::from("puzzle5d-retarget-fastener-owner"))?;
-                self.mutations.push(crate::mutations::connect_grips(
+                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(
                     fastener.id.clone(),
                     self.source.as_ref().cloned().ok_or_else(|| Fault::from("puzzle5d-retarget-source-owner"))?,
                     self.target.as_ref().cloned().ok_or_else(|| Fault::from("puzzle5d-retarget-target-owner"))?,
@@ -6479,7 +6134,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 let target = self.moved_id.as_ref().cloned().ok_or_else(|| Fault::from("puzzle5d-proximity-target-owner"))?;
                 let arg = |key: &str| command.args().and_then(|args| args.get(key)).and_then(Value::as_f64).unwrap_or(0.0);
                 let kind = command.args().and_then(|args| args.get("fastenerKind").or_else(|| args.get("edgeKind"))).and_then(Value::as_str).filter(|kind| !kind.is_empty()).map(str::to_string);
-                self.mutations.push(crate::mutations::connect_grips(id, source, target, kind, arg("gap"), arg("shift"), arg("rise"), arg("rotation"), arg("turn"), arg("tilt"), arg("x"), arg("y")));
+                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(id, source, target, kind, arg("gap"), arg("shift"), arg("rise"), arg("rotation"), arg("turn"), arg("tilt"), arg("x"), arg("y")));
                 self.clear_candidate();
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"))
             }
@@ -6639,7 +6294,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 let full_id = puzzle5d_grip_full_id(part_id, &grip.id);
                 if self.selected.contains(&full_id) && Self::patch(command, &mut grip) {
                     let grip_id = grip.id.clone();
-                    self.mutations.push(crate::mutations::replace_part_grip(part_id.to_string(), grip_id, grip));
+                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::replace_part_grip(part_id.to_string(), grip_id, grip));
                 }
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-patch-grip", "Patching grip", "Griff wird geändert"))
             }
@@ -6712,7 +6367,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         self.cursor += 1;
         if target == row.get("id").and_then(Value::as_str) {
             if let Some(id) = target {
-                self.mutations.push(crate::mutations::disconnect_grips(id.to_string()));
+                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_grips(id.to_string()));
             }
         }
         Ok(Puzzle5dPatchPartWork::progress("puzzle5d-delete-fastener", "Scanning fastener", "Verbindung wird geprüft"))
@@ -6851,7 +6506,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     part_3d: crate::Puzzle5dPart3d { origin, mesh_url: self.mesh_url.take(), orientation: Some([0.0, 0.0, 0.0, 1.0]), ..Default::default() },
                     grips: std::mem::take(&mut self.grips),
                 };
-                self.mutation = Some(crate::mutations::create_part(part, None));
+                self.mutation = Some(crate::standards::v1::subsets::any::schema::mutations::create_part(part, None));
                 self.stage = Puzzle5dAddNodeStage::Complete;
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: self.mutation.take().into_iter().collect(), ui_scope: UiDirtyScope::Full, ..Default::default() }))
             }
@@ -7083,7 +6738,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     grips: std::mem::take(&mut self.grips),
                 };
                 self.created_id = Some(id);
-                self.mutations.push(crate::mutations::create_part(part, None));
+                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::create_part(part, None));
                 self.stage = Puzzle5dAddBrushPartStage::Connect;
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-brush-create", "Creating brush part", "Pinselteil wird erstellt"))
             }
@@ -7094,7 +6749,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                         self.fresh_cursor = self.fresh_cursor.saturating_add(1);
                         id
                     });
-                    self.mutations.push(crate::mutations::connect_grips(id, source.clone(), puzzle5d_grip_full_id(part, grip), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(id, source.clone(), puzzle5d_grip_full_id(part, grip), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
                 }
                 self.stage = Puzzle5dAddBrushPartStage::Complete;
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() }))
@@ -7389,7 +7044,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     }
                     Some("edgeDelete") => {
                         if let Some(id) = payload.get("id").and_then(Value::as_str).filter(|id| !id.is_empty()) {
-                            self.push(crate::mutations::disconnect_grips(id.to_string()))?;
+                            self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_grips(id.to_string()))?;
                         }
                         self.next_event();
                     }
@@ -7432,7 +7087,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     let x = self.pending_move_x.unwrap_or_else(|| current.and_then(|value| value.get("x")).and_then(Value::as_f64).unwrap_or_default());
                     let y = self.pending_move_y.unwrap_or_else(|| current.and_then(|value| value.get("y")).and_then(Value::as_f64).unwrap_or_default());
                     let id = self.pending_move_id.take().expect("matched move id");
-                    self.push(crate::mutations::move_part_2d(id, x, y))?;
+                    self.push(crate::standards::v1::subsets::any::schema::mutations::move_part_2d(id, x, y))?;
                     self.stage = if self.drag_moves.is_some() { Puzzle5dBoardEventsStage::DragMove } else { Puzzle5dBoardEventsStage::Scan };
                 }
                 Ok(Self::progress("puzzle5d-board-move", "Finding board node", "Board-Knoten wird gesucht"))
@@ -7456,7 +7111,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 let source = self.pending_source.take().expect("preflighted edge source");
                 let target = self.pending_target.take().expect("preflighted edge target");
                 let kind = self.pending_edge_kind.take();
-                self.push(crate::mutations::connect_grips(id, source, target, kind, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))?;
+                self.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(id, source, target, kind, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))?;
                 self.next_event();
                 Ok(Self::progress("puzzle5d-board-edge", "Creating board edge", "Board-Kante wird erstellt"))
             }
@@ -7471,13 +7126,13 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                         || fastener.get("target").and_then(Value::as_str).is_some_and(|grip| grip.split_once(':').is_some_and(|(part_id, _)| part_id == id));
                     if incident {
                         if let Some(fastener_id) = fastener.get("id").and_then(Value::as_str) {
-                            self.push(crate::mutations::disconnect_grips(fastener_id.to_string()))?;
+                            self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_grips(fastener_id.to_string()))?;
                         }
                     }
                     return Ok(Self::progress("puzzle5d-board-delete-edge", "Removing attached edge", "Verbundene Kante wird entfernt"));
                 }
                 let id = self.pending_delete_id.take().expect("preflighted deleted part");
-                self.push(crate::mutations::delete_part(id))?;
+                self.push(crate::standards::v1::subsets::any::schema::mutations::delete_part(id))?;
                 self.next_event();
                 Ok(Self::progress("puzzle5d-board-delete", "Deleting board node", "Board-Knoten wird gelöscht"))
             }
@@ -7761,7 +7416,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             Puzzle5dCreateFastenerStage::Emit => {
                 let id = command.args().and_then(|args| args.get("id").or_else(|| args.get("fastenerId"))).and_then(Value::as_str).filter(|id| !id.is_empty()).map_or_else(|| format!("fastener-{:016x}-0", self.operation_nonce), str::to_string);
                 let fastener_kind = command.args().and_then(|args| args.get("fastenerKind").or_else(|| args.get("edgeKind"))).and_then(Value::as_str).filter(|kind| !kind.is_empty()).map(str::to_string);
-                self.mutation = Some(crate::mutations::connect_grips(
+                self.mutation = Some(crate::standards::v1::subsets::any::schema::mutations::connect_grips(
                     id,
                     source.to_string(),
                     target.to_string(),
@@ -7918,7 +7573,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                         return Err(Fault::from("puzzle5d-world-relocate-grip-capacity"));
                     }
                     part.part_3d.origin = position;
-                    self.mutations.push(crate::mutations::move_part_3d(part.id.clone(), position));
+                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::move_part_3d(part.id.clone(), position));
                     if let Some(grip) = part.grips.first() {
                         self.source = Some(Puzzle5dWorldRelocateSource { part_id: part.id.clone(), grip_id: puzzle5d_grip_full_id(&part.id, &grip.id), world_position: world_grip_position(&part, grip) });
                     }
@@ -7984,7 +7639,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 let source = self.source.as_ref().ok_or_else(|| Fault::from("puzzle5d-world-relocate-source-owner"))?;
                 let candidate = self.candidate.take().ok_or_else(|| Fault::from("puzzle5d-world-relocate-candidate-owner"))?;
                 let id = Self::fastener_id(&source.grip_id, &candidate.grip_id);
-                self.mutations.push(crate::mutations::connect_grips(id, source.grip_id.clone(), candidate.grip_id.clone(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(id, source.grip_id.clone(), candidate.grip_id.clone(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
                 self.existing.insert(Self::edge(&source.grip_id, &candidate.grip_id));
                 self.stage = Puzzle5dWorldRelocateStage::CandidateGrip;
                 Ok(Self::progress("puzzle5d-world-relocate-publish", "Connecting nearby grip", "Naher Griff wird verbunden"))
@@ -8116,7 +7771,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             Puzzle5dSetActiveExampleStage::ClearFasteners => {
                 if let Some(id) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.cursor)).and_then(|fastener| fastener.get("id")).and_then(Value::as_str) {
                     self.cursor += 1;
-                    self.push(crate::mutations::disconnect_grips(id.to_string()))?;
+                    self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_grips(id.to_string()))?;
                     return Ok(Self::progress("puzzle5d-example-clear-fastener", "Removing old fastener", "Alte Verbindung wird entfernt"));
                 }
                 self.cursor = 0;
@@ -8126,7 +7781,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             Puzzle5dSetActiveExampleStage::ClearParts => {
                 if let Some(id) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.cursor)).and_then(|part| part.get("id")).and_then(Value::as_str) {
                     self.cursor += 1;
-                    self.push(crate::mutations::delete_part(id.to_string()))?;
+                    self.push(crate::standards::v1::subsets::any::schema::mutations::delete_part(id.to_string()))?;
                     return Ok(Self::progress("puzzle5d-example-clear-part", "Removing old part", "Altes Teil wird entfernt"));
                 }
                 self.cursor = 0;
@@ -8134,18 +7789,18 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-example-label", "Updating document label", "Dokumenttitel wird aktualisiert"))
             }
             Puzzle5dSetActiveExampleStage::Label => {
-                self.push(crate::mutations::rename_puzzle5d(target.label.clone()))?;
+                self.push(crate::standards::v1::subsets::any::schema::mutations::rename_puzzle5d(target.label.clone()))?;
                 self.stage = Puzzle5dSetActiveExampleStage::Domain;
                 Ok(Self::progress("puzzle5d-example-domain", "Updating document domain", "Dokumentdomäne wird aktualisiert"))
             }
             Puzzle5dSetActiveExampleStage::Domain => {
-                self.push(crate::mutations::change_domain(target.domain.clone()))?;
+                self.push(crate::standards::v1::subsets::any::schema::mutations::change_domain(target.domain.clone()))?;
                 self.stage = Puzzle5dSetActiveExampleStage::Description;
                 Ok(Self::progress("puzzle5d-example-description", "Updating description", "Beschreibung wird aktualisiert"))
             }
             Puzzle5dSetActiveExampleStage::Description => {
                 let description = target.meta.as_ref().and_then(|meta| meta.get("description")).and_then(serde_json::Value::as_str).unwrap_or("");
-                self.push(crate::mutations::change_description(description.to_string()))?;
+                self.push(crate::standards::v1::subsets::any::schema::mutations::change_description(description.to_string()))?;
                 self.stage = Puzzle5dSetActiveExampleStage::ClearCompatibility;
                 Ok(Self::progress("puzzle5d-example-clear-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"))
             }
@@ -8154,7 +7809,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     self.cursor += 1;
                     let source = row.get("source").and_then(Value::as_str).unwrap_or("").to_string();
                     let target = row.get("target").and_then(Value::as_str).unwrap_or("").to_string();
-                    self.push(crate::mutations::disconnect_kind_compatibility(source, target))?;
+                    self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(source, target))?;
                     return Ok(Self::progress("puzzle5d-example-clear-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"));
                 }
                 self.cursor = 0;
@@ -8165,7 +7820,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 if let Some(row) = Self::compatibility_rows(target).get(self.cursor).cloned() {
                     self.cursor += 1;
                     let row: crate::Puzzle5dKindCompatibility = <crate::Puzzle5dKindCompatibility as dsl::FromValue>::from_value(dsl::DslValue::from(&row)).map_err(|_| Fault::from("puzzle5d-set-active-example-compatibility-malformed"))?;
-                    self.push(crate::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity))?;
+                    self.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity))?;
                     return Ok(Self::progress("puzzle5d-example-add-compatibility", "Adding compatibility", "Kompatibilität wird hinzugefügt"));
                 }
                 self.cursor = 0;
@@ -8174,7 +7829,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             }
             Puzzle5dSetActiveExampleStage::Catalogs => {
                 let catalogs = target.kind_catalogs.as_ref().map(|catalogs| <crate::Puzzle5dKindCatalogs as dsl::FromValue>::from_value(dsl::DslValue::from(catalogs))).transpose().map_err(|_| Fault::from("puzzle5d-set-active-example-catalogs-malformed"))?;
-                self.push(crate::mutations::replace_kind_catalogs(catalogs))?;
+                self.push(crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(catalogs))?;
                 self.stage = Puzzle5dSetActiveExampleStage::AddParts;
                 Ok(Self::progress("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"))
             }
@@ -8183,7 +7838,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     self.cursor += 1;
                     let value = serde_json::to_value(part).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
                     let part = <crate::Puzzle5dPart as dsl::FromValue>::from_value(dsl::DslValue::from(&value)).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
-                    self.push(crate::mutations::create_part(part, None))?;
+                    self.push(crate::standards::v1::subsets::any::schema::mutations::create_part(part, None))?;
                     return Ok(Self::progress("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"));
                 }
                 self.cursor = 0;
@@ -8193,7 +7848,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             Puzzle5dSetActiveExampleStage::AddFasteners => {
                 if let Some(fastener) = target.fasteners.get(self.cursor) {
                     self.cursor += 1;
-                    self.push(crate::mutations::connect_grips(
+                    self.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(
                         fastener.id.clone(),
                         fastener.source.clone(),
                         fastener.target.clone(),
@@ -8971,7 +8626,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     /// puzzle's plugin root used to reach `.setup()` for — `register_document_app`/`document_app`
     /// now call this automatically the moment `Puzzle5dPlayApp` is bound to a plugin, exactly like
     /// `🗒️note`'s own `app_schema` override.
-    fn app_schema() -> Option<artifact_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::puzzle5d::config::schema::app_schema_descriptor())
     }
 
@@ -9432,1008 +9087,12 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
 /// 🧪️ The one puzzle5d-app test harness — every other taxonomy node's `🧪️Tests` region builds on it
 /// instead of re-deriving a store/dispatch/render scaffold of its own.
 #[cfg(test)]
-pub(crate) mod testkit {
-    use super::*;
-    use semio_framework_plugin::{testkit, ActionMeta, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
-
-    /// ✏️ `Puzzle5dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
-    /// `ArtifactApp` — `EditorApp<Puzzle5dPlayApp>` (SDK adapter, contract §2.1) is the real
-    /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
-    /// `PluginBuilder::editor::<Puzzle5dPlayApp>` builds it.
-    pub type Puzzle5dApp = VcsArtifactApp<EditorApp<Puzzle5dPlayApp>>;
-
-    pub fn meta(actor: &str) -> ActionMeta {
-        testkit::meta(actor)
-    }
-
-    pub fn app() -> Puzzle5dApp {
-        semio_framework::io::resolve_ready(testkit::new_app::<EditorApp<Puzzle5dPlayApp>>())
-    }
-
-    /// ✏️ Adapts `create_puzzle5d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
-    /// examples }` shape `testkit::new_app_with_registry` still expects — framework testkit gap, not
-    /// modifiable here (`🧰️framework/**` is outside this packet's lease).
-    pub fn puzzle5d_app_manifest_for_testkit() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_puzzle5d_app(), examples: Vec::new() }
-    }
-
-    /// 🧰️ A registry-backed app so kind discipline (View actions must emit no operations) and the
-    /// utility contract are enforced exactly as in production.
-    pub fn app_with_registry() -> Puzzle5dApp {
-        semio_framework::io::resolve_ready(testkit::new_app_with_registry::<EditorApp<Puzzle5dPlayApp>>(puzzle5d_app_manifest_for_testkit))
-    }
-
-    /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
-    /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
-    /// `Self::Command` channel). Reconstructs the `Puzzle5dCommand` from the same
-    /// `(action, args, window_id)` triple every pre-migration test already passed.
-    pub fn dispatch(app: &mut Puzzle5dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
-        // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…/the six interaction verbs) stay on
-        // `handle_action` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM added
-        // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
-        // setInteractionGranularity to this reserved set.
-        if matches!(
-            action,
-            "undo"
-                | "redo"
-                | "checkpoint"
-                | "alternative"
-                | "revertToCommand"
-                | "historyFilter"
-                | "noteShellCommand"
-                | "copy"
-                | "cut"
-                | "paste"
-                | "interactionSelect"
-                | "interactionHover"
-                | "clearSelection"
-                | "selectAll"
-                | "setSelectionMode"
-                | "setInteractionGranularity"
-        ) {
-            let dsl_args = args.map(dsl::os_pack::json::to_dsl_value);
-            return semio_framework::io::resolve_ready(app.handle_action(action, dsl_args.as_ref(), &meta("local")));
-        }
-        semio_framework::io::resolve_ready(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &meta("local")))
-    }
-
-    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
-    /// for one `(granularity, id)` pair in the `vortex` domain — the test-side replacement for the
-    /// deleted `setSelection` action.
-    pub fn select_id(app: &mut Puzzle5dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
-        let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
-        dispatch(app, "interactionSelect", Some(&dsl::json!({ "domainId": PUZZLE5D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None)
-    }
-
-    /// 🖼️ The rendered body, as a JSON string — every panel/window assertion greps this value.
-    pub fn render_body(app: &mut Puzzle5dApp, body_key: &str) -> String {
-        let tree = semio_framework::io::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render");
-        let mut scene_json = None;
-        let mut stack = vec![&tree.root];
-        while let Some(node) = stack.pop() {
-            if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
-                let scene = match surface.doc_schema.as_str() {
-                    schema if schema == <semio_framework_ui_scene::Board2dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA => {
-                        serde_json::to_value(semio_framework_ui_scene::decode::<semio_framework_ui_scene::Board2dScene>(surface).expect("decode board scene"))
-                    }
-                    schema if schema == <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA => {
-                        serde_json::to_value(semio_framework_ui_scene::decode::<semio_framework_ui_scene::World3dScene>(surface).expect("decode world scene"))
-                    }
-                    _ => continue,
-                }
-                .expect("serialize scene");
-                scene_json = Some(serde_json::json!({ "schema": surface.doc_schema, "scene": scene }).to_string());
-                break;
-            }
-            stack.extend(node.children.iter());
-        }
-        let projected = testkit::project_and_retire_fixture_tree(tree).expect("retire rendered node");
-        scene_json.unwrap_or(projected)
-    }
-
-    pub fn projection_of(app: &Puzzle5dApp) -> Value {
-        parse(&app.snapshot().expect("projection").0.to_string()).expect("snapshot JSON")
-    }
-
-    pub fn part_count(app: &Puzzle5dApp) -> usize {
-        projection_of(app).get("parts").and_then(|value| value.as_array()).map_or(0, Vec::len)
-    }
-
-    pub fn first_part_id(app: &Puzzle5dApp) -> String {
-        projection_of(app).get("parts").and_then(Value::as_array).and_then(|parts| parts.first()).and_then(|part| part.get("id")).and_then(Value::as_str).expect("first part id").to_string()
-    }
-
-    /// 🎯️ Top-level utility tag of a `WindowMeasure::Group` by id, or `None` when the group is absent.
-    pub fn measure_group_tag(measures: &[WindowMeasure], group_id: &str) -> Option<Option<String>> {
-        measures.iter().find_map(|measure| match measure {
-            WindowMeasure::Group { id, active_utility_id, .. } if id == group_id => Some(active_utility_id.clone()),
-            _ => None,
-        })
-    }
-
-    /// 🔍️ Depth-first search for a `WindowMeasure::Slider`'s presence by id, descending into groups.
-    pub fn has_measure_slider(measures: &[WindowMeasure], slider_id: &str) -> bool {
-        measures.iter().any(|measure| match measure {
-            WindowMeasure::Slider { id, .. } => id == slider_id,
-            WindowMeasure::Group { children, .. } => has_measure_slider(children, slider_id),
-            _ => false,
-        })
-    }
-}
+#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
+pub(crate) mod testkit;
 //#endregion 🧪️Testkit
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::testkit::*;
-    use super::*;
-    
-    use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, PluginApp, UiMenuRef};
-
-    #[test]
-    fn retained_publication_contracts_are_an_exact_nonempty_tool_bijection() {
-        let exact = |contracts: &[ArtifactToolPublicationContract]| {
-            let ids = contracts.iter().map(|contract| contract.tool_id).collect::<std::collections::BTreeSet<_>>();
-            ids == PUZZLE5D_RETAINED_TOOL_IDS.iter().copied().collect()
-                && ids.len() == contracts.len()
-                && contracts.iter().all(|contract| !contract.lanes.is_empty() && (!contract.lanes.contains(&ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1))
-        };
-        let contracts = <Puzzle5dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
-        assert!(exact(contracts));
-        assert!(!exact(&contracts[..contracts.len() - 1]));
-        let mut duplicate = contracts.to_vec();
-        let copied = duplicate[1];
-        duplicate[0] = copied;
-        assert!(!exact(&duplicate));
-        let reserved = [
-            <Puzzle5dCopyJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS[0],
-            <Puzzle5dCutJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS[0],
-            <Puzzle5dPasteJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS[0],
-            <Puzzle5dImportJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS[0],
-        ];
-        assert_eq!(reserved.iter().map(|contract| contract.tool_id).collect::<Vec<_>>(), vec!["copy", "cut", "paste", "import-media"]);
-        assert_eq!(reserved[0].lanes, &[ArtifactToolPublicationLane::HostOnly]);
-        assert!(reserved[1..].iter().all(|contract| contract.lanes == &[ArtifactToolPublicationLane::Artifact]));
-    }
-
-    #[test]
-    fn retained_import_media_has_no_live_synchronous_fallback() {
-        let source = include_str!("🦀️.rs");
-        let production = source.split_once("//#region 🧪️Testkit").map(|(production, _)| production).expect("production prefix");
-        let fallback = production.split_once("fn import_media(_port:").and_then(|(_, suffix)| suffix.split_once("fn render(").map(|(fallback, _)| fallback)).expect("closed synchronous import callback");
-        assert!(fallback.contains("Err(MediaError::NotImplemented)"));
-        assert!(!fallback.contains("serde_json::from_str"));
-        assert!(!fallback.contains("artifact_mutations"));
-        let hostile = fallback.replace("Err(MediaError::NotImplemented)", "serde_json::from_str(\"{}\").map(|_| Emit::default()).map_err(|_| MediaError::NotImplemented)");
-        assert!(hostile.contains("serde_json::from_str"));
-    }
-
-    fn precompute_routes_are_cursorized(source: &str) -> bool {
-        [
-            r#""cycleBrushCandidate" | "registerBrushMesh" | "setFillCount" => Box::new(Puzzle5dPrecomputeCommandWork::new(tool_id))"#,
-            "Puzzle5dPrecomputeCommandStage::Parts",
-            "Puzzle5dPrecomputeCommandStage::Grips",
-            "Puzzle5dPrecomputeCommandStage::Fasteners",
-            "Puzzle5dPrecomputeCommandStage::CatalogParts",
-            "Puzzle5dPrecomputeCommandStage::CatalogGrips",
-            "Puzzle5dPrecomputeCommandStage::Positions",
-            "Puzzle5dPrecomputeCommandStage::Indices",
-            "Puzzle5dPrecomputeCommandStage::FillCount",
-            "Puzzle5dPrecomputeCommandStage::BoardUtility",
-            "Puzzle5dPrecomputeCommandStage::WorldUtility",
-            "Puzzle5dPrecomputeCommandStage::Publish",
-        ]
-        .into_iter()
-        .all(|marker| source.contains(marker))
-            && !source.contains(r#""cycleBrushCandidate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-            && !source.contains(r#""registerBrushMesh" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-            && !source.contains(r#""setFillCount" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-    }
-
-    #[test]
-    fn precompute_hostile_static_law_rejects_one_grant_reducers_and_missing_boundaries() {
-        let source = include_str!("🦀️.rs");
-        assert!(precompute_routes_are_cursorized(source));
-        let direct = source.replace(
-            r#""cycleBrushCandidate" | "registerBrushMesh" | "setFillCount" => Box::new(Puzzle5dPrecomputeCommandWork::new(tool_id))"#,
-            r#""cycleBrushCandidate" | "registerBrushMesh" | "setFillCount" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
-        );
-        assert!(!precompute_routes_are_cursorized(&direct));
-        for marker in [
-            "Puzzle5dPrecomputeCommandStage::Parts",
-            "Puzzle5dPrecomputeCommandStage::Grips",
-            "Puzzle5dPrecomputeCommandStage::Fasteners",
-            "Puzzle5dPrecomputeCommandStage::CatalogParts",
-            "Puzzle5dPrecomputeCommandStage::CatalogGrips",
-            "Puzzle5dPrecomputeCommandStage::Positions",
-            "Puzzle5dPrecomputeCommandStage::Indices",
-            "Puzzle5dPrecomputeCommandStage::FillCount",
-            "Puzzle5dPrecomputeCommandStage::BoardUtility",
-            "Puzzle5dPrecomputeCommandStage::WorldUtility",
-            "Puzzle5dPrecomputeCommandStage::Publish",
-        ] {
-            assert!(!precompute_routes_are_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing retained boundary was falsely accepted: {marker}");
-        }
-    }
-
-    fn complex_retained_route_is_cursorized(source: &str) -> bool {
-        source.contains("\"applyBoardEvents\" => Box::new(Puzzle5dBoardEventsWork::default())")
-            && source.contains("struct Puzzle5dBoardEventsWork")
-            && source.contains("self.scan_one(source)?")
-            && source.contains("Puzzle5dBoardEventsStage::FindMovePart")
-            && source.contains("Puzzle5dBoardEventsStage::ScanEdge")
-            && source.contains("Puzzle5dBoardEventsStage::ScanDeleteEdges")
-            && source.contains("Puzzle5dBoardEventsStage::Brush")
-            && source.contains("Puzzle5dBoardEventsStage::CloseBrush")
-            && !source.contains("\"applyBoardEvents\" => Box::new(crate::retained_command::BoundedFirstStepCommandWork")
-    }
-
-    #[test]
-    fn apply_board_events_hostile_static_law_rejects_the_old_one_grant_reducer() {
-        let source = include_str!("🦀️.rs");
-        assert!(complex_retained_route_is_cursorized(source));
-        let direct = source
-            .replace("\"applyBoardEvents\" => Box::new(Puzzle5dBoardEventsWork::default())", "\"applyBoardEvents\" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))");
-        assert!(!complex_retained_route_is_cursorized(&direct), "hostile old-reducer replacement must fail closed");
-        for marker in ["self.scan_one(source)?", "Puzzle5dBoardEventsStage::FindMovePart", "Puzzle5dBoardEventsStage::ScanEdge", "Puzzle5dBoardEventsStage::ScanDeleteEdges", "Puzzle5dBoardEventsStage::CloseBrush"] {
-            assert!(!complex_retained_route_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing cursor marker was falsely accepted: {marker}");
-        }
-    }
-
-    fn focus_selection_route_is_cursorized(source: &str) -> bool {
-        source.contains(r#""focusSelection" => Box::new(Puzzle5dFocusSelectionWork::default())"#)
-            && source.contains("Puzzle5dFocusSelectionStage::Selection")
-            && source.contains("Puzzle5dFocusSelectionStage::Parts")
-            && source.contains("Puzzle5dFocusSelectionStage::Publish")
-            && source.contains("self.part_cursor += 1")
-            && !source.contains(r#""focusSelection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-    }
-
-    #[test]
-    fn focus_selection_hostile_static_law_rejects_whole_selection_reducers() {
-        let source = include_str!("🦀️.rs");
-        assert!(focus_selection_route_is_cursorized(source));
-        let direct = source
-            .replace(r#""focusSelection" => Box::new(Puzzle5dFocusSelectionWork::default())"#, r#""focusSelection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#);
-        assert!(!focus_selection_route_is_cursorized(&direct));
-        for marker in ["Puzzle5dFocusSelectionStage::Selection", "Puzzle5dFocusSelectionStage::Parts", "Puzzle5dFocusSelectionStage::Publish", "self.part_cursor += 1"] {
-            assert!(!focus_selection_route_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing focus cursor marker was falsely accepted: {marker}");
-        }
-    }
-
-    fn scalar_config_routes_are_direct(source: &str) -> bool {
-        source.contains("struct Puzzle5dScalarConfigWork")
-            && source.contains(
-                r#""setCamera"
-            | "setCamera2d"
-            | "setCamera3d""#,
-            )
-            && source.contains(r#"| "setSunIntensity" => Box::new(Puzzle5dScalarConfigWork::new(tool_id))"#)
-            && source.contains(
-                r#"| "engagementInput"
-            | "toggleSun""#,
-            )
-            && source.contains("Puzzle5dConfigMutation::SetCamera2d")
-            && source.contains("Puzzle5dConfigMutation::SetBrushCandidateIndex")
-            && source.contains("Puzzle5dConfigMutation::SetEngagementInput")
-            && source.contains("Puzzle5dConfigMutation::SetGridFactor")
-            && source.contains("Puzzle5dConfigMutation::SetOverlapBudget")
-            && source.contains("Puzzle5dConfigMutation::SetSun")
-            && !source.contains(r#""setCamera" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-            && !source.contains(r#""setSunIntensity" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-    }
-
-    #[test]
-    fn scalar_config_hostile_static_law_rejects_old_reducer_and_missing_exact_mutations() {
-        let source = include_str!("🦀️.rs");
-        assert!(scalar_config_routes_are_direct(source));
-        for marker in [
-            "struct Puzzle5dScalarConfigWork",
-            "Puzzle5dConfigMutation::SetCamera2d",
-            "Puzzle5dConfigMutation::SetBrushCandidateIndex",
-            "Puzzle5dConfigMutation::SetEngagementInput",
-            "Puzzle5dConfigMutation::SetGridFactor",
-            "Puzzle5dConfigMutation::SetOverlapBudget",
-            "Puzzle5dConfigMutation::SetSun",
-        ] {
-            assert!(!scalar_config_routes_are_direct(&source.replacen(marker, "route-removed", 1)), "missing scalar route marker was falsely accepted: {marker}");
-        }
-        let direct = source.replace(
-            r#"| "setSunIntensity" => Box::new(Puzzle5dScalarConfigWork::new(tool_id))"#,
-            r#"| "setSunIntensity" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
-        );
-        assert!(!scalar_config_routes_are_direct(&direct), "hostile scalar old-reducer replacement must fail closed");
-    }
-
-    fn engagement_abort_route_is_cursorized(source: &str) -> bool {
-        source.contains(r#""engagementAbort" => Box::new(Puzzle5dEngagementAbortWork::default())"#)
-            && source.contains("Puzzle5dEngagementAbortStage::Input")
-            && source.contains("Puzzle5dEngagementAbortStage::BoardUtility")
-            && source.contains("Puzzle5dEngagementAbortStage::WorldUtility")
-            && source.contains("Puzzle5dEngagementAbortStage::Publish")
-            && source.contains("self.effects[0].take()")
-            && source.contains("self.effects[1].take()")
-            && !source.contains(r#""engagementAbort" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-    }
-
-    #[test]
-    fn engagement_abort_hostile_static_law_rejects_old_reducer_and_missing_transfer_boundaries() {
-        let source = include_str!("🦀️.rs");
-        assert!(engagement_abort_route_is_cursorized(source));
-        for marker in ["Puzzle5dEngagementAbortStage::Input", "Puzzle5dEngagementAbortStage::BoardUtility", "Puzzle5dEngagementAbortStage::WorldUtility", "Puzzle5dEngagementAbortStage::Publish", "self.effects[0].take()", "self.effects[1].take()"] {
-            assert!(!engagement_abort_route_is_cursorized(&source.replacen(marker, "route-removed", 1)), "missing engagement abort marker was falsely accepted: {marker}");
-        }
-        let direct = source.replace(
-            r#""engagementAbort" => Box::new(Puzzle5dEngagementAbortWork::default())"#,
-            r#""engagementAbort" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
-        );
-        assert!(!engagement_abort_route_is_cursorized(&direct));
-    }
-
-    fn add_part_kind_route_is_cursorized(source: &str) -> bool {
-        source.contains(r#""addBrushPart" | "addBrushObject" | "addPartKind" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id))"#)
-            && source.contains("Puzzle5dAddBrushPartStage::Catalog")
-            && source.contains("Puzzle5dAddBrushPartStage::Grips")
-            && source.contains("Puzzle5dAddBrushPartStage::Target")
-            && source.contains("Puzzle5dAddBrushPartStage::Create")
-            && source.contains("Puzzle5dAddBrushPartStage::Connect")
-            && !source.contains(r#""addPartKind" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-    }
-
-    #[test]
-    fn add_part_kind_hostile_static_law_rejects_old_brush_reducer_and_missing_cursors() {
-        let source = include_str!("🦀️.rs");
-        assert!(add_part_kind_route_is_cursorized(source));
-        let direct = source.replace(
-            r#""addBrushPart" | "addBrushObject" | "addPartKind" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id))"#,
-            r#""addBrushPart" | "addBrushObject" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id)),
-            "addPartKind" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
-        );
-        assert!(!add_part_kind_route_is_cursorized(&direct));
-    }
-
-    fn kind_weight_route_is_cursorized(source: &str) -> bool {
-        source.contains(r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id))"#)
-            && source.contains("Puzzle5dKindWeightStage::Catalog")
-            && source.contains("Puzzle5dKindWeightStage::InferParts")
-            && source.contains("Puzzle5dKindWeightStage::InferGrips")
-            && source.contains("Puzzle5dKindWeightStage::Validate")
-            && source.contains("Puzzle5dKindWeightStage::SumOthers")
-            && source.contains("Puzzle5dKindWeightStage::Build")
-            && source.contains("Puzzle5dConfigMutation::SetObjectKindWeights")
-            && source.contains("Puzzle5dConfigMutation::SetVortexKindWeights")
-            && !source.contains(r#""setObjectKindWeight" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-    }
-
-    #[test]
-    fn kind_weight_hostile_static_law_rejects_whole_normalizer_and_missing_cursors() {
-        let source = include_str!("🦀️.rs");
-        assert!(kind_weight_route_is_cursorized(source));
-        let direct = source.replace(
-            r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id))"#,
-            r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
-        );
-        assert!(!kind_weight_route_is_cursorized(&direct));
-        assert!(!source.contains("puzzle5d_normalize_kind_weight_group(self.weights"));
-    }
-
-    fn engagement_submit_route_is_cursorized(source: &str) -> bool {
-        source.contains(r#""engagementSubmit" => Box::new(Puzzle5dEngagementSubmitWork::default())"#)
-            && source.contains("Puzzle5dEngagementSubmitStage::Parse")
-            && source.contains("Puzzle5dEngagementSubmitStage::BoardConfig")
-            && source.contains("Puzzle5dEngagementSubmitStage::WorldConfig")
-            && source.contains("Puzzle5dEngagementSubmitStage::BoardEffect")
-            && source.contains("Puzzle5dEngagementSubmitStage::WorldEffect")
-            && source.contains("Puzzle5dEngagementSubmitStage::Input")
-            && source.contains("Puzzle5dEngagementSubmitStage::Publish")
-            && source.contains("Puzzle5dConfigMutation::SetActiveUtility")
-            && source.contains("Puzzle5dConfigMutation::SetEngagementInput")
-            && !source.contains(r#""engagementSubmit" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-    }
-
-    #[test]
-    fn engagement_submit_hostile_static_law_rejects_old_reducer_and_missing_transfers() {
-        let source = include_str!("🦀️.rs");
-        assert!(engagement_submit_route_is_cursorized(source));
-        for marker in [
-            "Puzzle5dEngagementSubmitStage::Parse",
-            "Puzzle5dEngagementSubmitStage::BoardConfig",
-            "Puzzle5dEngagementSubmitStage::WorldConfig",
-            "Puzzle5dEngagementSubmitStage::BoardEffect",
-            "Puzzle5dEngagementSubmitStage::WorldEffect",
-            "Puzzle5dEngagementSubmitStage::Input",
-            "Puzzle5dEngagementSubmitStage::Publish",
-        ] {
-            assert!(!engagement_submit_route_is_cursorized(&source.replacen(marker, "route-removed", 1)), "missing engagement submit marker was falsely accepted: {marker}");
-        }
-        let direct = source.replace(
-            r#""engagementSubmit" => Box::new(Puzzle5dEngagementSubmitWork::default())"#,
-            r#""engagementSubmit" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
-        );
-        assert!(!engagement_submit_route_is_cursorized(&direct));
-    }
-
-    fn world_relocate_route_is_cursorized(source: &str) -> bool {
-        source.contains(r#""worldRelocate" => Box::new(Puzzle5dWorldRelocateWork::default())"#)
-            && source.contains("struct Puzzle5dWorldRelocateWork")
-            && source.contains("Puzzle5dWorldRelocateStage::SourcePart")
-            && source.contains("Puzzle5dWorldRelocateStage::ExistingFasteners")
-            && source.contains("Puzzle5dWorldRelocateStage::CandidatePart")
-            && source.contains("Puzzle5dWorldRelocateStage::CandidateGrip")
-            && source.contains("Puzzle5dWorldRelocateStage::PublishFastener")
-            && source.contains("PUZZLE5D_RELOCATE_GRIPS_PER_PART")
-            && !source.contains(r#""worldRelocate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-    }
-
-    #[test]
-    fn world_relocate_hostile_static_law_rejects_whole_proximity_scans() {
-        let source = include_str!("🦀️.rs");
-        assert!(world_relocate_route_is_cursorized(source));
-        let direct = source
-            .replace(r#""worldRelocate" => Box::new(Puzzle5dWorldRelocateWork::default())"#, r#""worldRelocate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#);
-        assert!(!world_relocate_route_is_cursorized(&direct), "hostile old-reducer replacement must fail closed");
-        for marker in ["Puzzle5dWorldRelocateStage::ExistingFasteners", "Puzzle5dWorldRelocateStage::CandidatePart", "Puzzle5dWorldRelocateStage::CandidateGrip", "Puzzle5dWorldRelocateStage::PublishFastener", "PUZZLE5D_RELOCATE_GRIPS_PER_PART"] {
-            assert!(!world_relocate_route_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing world-relocate marker was falsely accepted: {marker}");
-        }
-    }
-
-    //#region 🔖️Rendering
-    #[semio_framework_async_macros::async_test]
-    async fn renders_paired_board_and_world_scenes() {
-        let mut app = app();
-        assert!(render_body(&mut app, board2d::BODY_KEY).contains("board-2d"));
-        assert!(render_body(&mut app, world3d::BODY_KEY).contains("world-3d"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn initial_snapshot_is_the_concrete_forest_document() {
-        let app = app();
-        assert_eq!(projection_of(&app).get("schema").and_then(|value| value.as_str()), Some(PUZZLE5D_SCHEMA));
-        assert!(part_count(&app) > 0, "the concrete-forest default document ships with parts");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn document_panel_renders() {
-        let mut app = app();
-        assert!(!render_body(&mut app, document_panel::BODY_KEY).is_empty());
-    }
-    //#endregion 🔖️Rendering
-
-    //#region 🔖️ContextMenu
-    /// 🗂️ GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS: the selection context menu stays a shallow,
-    /// disclosed list (top-level verbs + a handful of taxonomy groups) rather than a flat wall of rows,
-    /// and the known destructive `deleteSelection` action stays the trailing group's last item.
-    #[semio_framework_async_macros::async_test]
-    async fn context_menu_is_grouped_and_keeps_delete_selection_last() {
-        let mut app = app_with_registry();
-        let part_id = first_part_id(&app);
-        select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &part_id).expect("select part");
-        let request = ContextMenuRequest {
-            menu: UiMenuRef { id: "world3d".into(), args: None },
-            surface: Some(ContextMenuSurfaceTarget { surface_id: world3d::WINDOW_KIND_ID.into(), kind: "world3d".into(), hits: vec![], selection: vec![ContextMenuSelectionGroup { domain: "part".into(), ids: vec![part_id] }], text: None }),
-            window_instance_id: None,
-            point: None,
-        };
-        let menu = semio_framework::io::resolve_ready(app.context_menu(&request));
-        assert!(menu.len() <= 9, "top-level context menu should stay progressively disclosed: {menu:?}");
-        let last = menu.last().expect("selection context menu should not be empty");
-        let last_is_destructive_leaf = last.action.as_deref() == Some("deleteSelection") && last.destructive == Some(true);
-        let last_is_group_ending_in_destructive = last.children.as_ref().and_then(|children| children.last()).is_some_and(|child| child.action.as_deref() == Some("deleteSelection") && child.destructive == Some(true));
-        assert!(last_is_destructive_leaf || last_is_group_ending_in_destructive, "known destructive deleteSelection must stay last: {menu:?}");
-    }
-    //#endregion 🔖️ContextMenu
-
-    //#region 🔖️Pack
-    /// 📦️ `Puzzle5dPlaySnapshot`'s pack encoding round-trips through the same `(RecordSpec,
-    /// RecordValue)` pair its `parse_dsl`/`print_dsl` do (both delegate to the underlying
-    /// `serde_json::Value` bridge impls), reusing the default concrete-forest fixture.
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle5d_play_projection_pack_round_trips() {
-        let app = app();
-        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
-    }
-    //#endregion 🔖️Pack
-
-    //#region 🔖️Operations
-    #[semio_framework_async_macros::async_test]
-    async fn set_active_example_swaps_the_document_and_undo_restores_it() {
-        let mut app = app();
-        let loaded = part_count(&app);
-        assert!(loaded > 0);
-        dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "" })), None).expect("empty");
-        assert_eq!(part_count(&app), 0, "empty example clears the parts");
-        semio_framework::io::resolve_ready(app.handle_action("undo", None, &meta("local"))).expect("undo");
-        assert_eq!(part_count(&app), loaded, "undo restores the concrete-forest parts");
-        semio_framework::io::resolve_ready(app.handle_action("redo", None, &meta("local"))).expect("redo");
-        assert_eq!(part_count(&app), 0);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn patch_fastener_updates_transform_offsets_and_undoes() {
-        let mut app = app();
-        dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin (has fasteners)");
-        let projection = projection_of(&app);
-        let fastener_id = projection["fasteners"][0]["id"].as_str().expect("seeded fastener").to_string();
-        dispatch(&mut app, "patchFastener", Some(&dsl::json!({ "fastenerId": fastener_id, "field": "gap", "value": 2.5 })), None).expect("patch gap");
-        let after = projection_of(&app);
-        let fastener = after["fasteners"].as_array().unwrap().iter().find(|entry| entry["id"] == fastener_id).expect("fastener");
-        assert_eq!(fastener["gap"], 2.5);
-        assert_eq!(fastener["shift"], 0.0);
-        dispatch(&mut app, "patchFastener", Some(&dsl::json!({ "fastenerId": fastener_id, "field": "rotation", "value": 30.0 })), None).expect("patch rotation");
-        let after2 = projection_of(&app);
-        let fastener2 = after2["fasteners"].as_array().unwrap().iter().find(|entry| entry["id"] == fastener_id).expect("fastener");
-        assert_eq!(fastener2["gap"], 2.5, "earlier gap edit must survive a later rotation edit");
-        assert_eq!(fastener2["rotation"], 30.0);
-        semio_framework::io::resolve_ready(app.handle_action("undo", None, &meta("local"))).expect("undo");
-        let undone = projection_of(&app);
-        let fastener3 = undone["fasteners"].as_array().unwrap().iter().find(|entry| entry["id"] == fastener_id).expect("fastener");
-        assert_eq!(fastener3["rotation"], 0.0, "undo restores the pre-rotation-edit value");
-        assert_eq!(fastener3["gap"], 2.5, "undo of rotation edit must not also revert the earlier gap edit");
-    }
-    //#endregion 🔖️Operations
-
-    //#region 🔖️CommandEnvelopeTests
-    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
-    /// `Puzzle5dMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s. Deliberately
-    /// dispatches through a standalone typed `Puzzle5dStore` — NOT through `Puzzle5dPlayApp`/
-    /// `Puzzle5dPlaySnapshot` (the `🔖️ValueBridge` `serde_json::Value` wrapper this app's real
-    /// `ArtifactApp` still uses) — since `Puzzle5dMutation`'s canonical `Mutation<Puzzle5dSnapshot>`
-    /// impl (not its `Mutation<Value>` bridge impl) is what the CW7 law is about.
-    #[semio_framework_async_macros::async_test]
-    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::spr::Puzzle5dStore;
-        use crate::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE_5D_SCHEMA};
-        use protocol::{ArtifactId, Edit, SchemaId};
-        use store::create_document_envelope;
-
-        let mut store = semio_framework::io::resolve_ready(Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None))).expect("store");
-        let part = Puzzle5dPart { id: "p1".into(), part_kind: None, anchor: Default::default(), part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
-        semio_framework::io::resolve_ready(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::create_part(part, None)], description: None })).expect("apply");
-        let envelope = store.envelope();
-        let edit: &Edit<Puzzle5dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-        semio_framework::io::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
-    }
-    //#endregion 🔖️CommandEnvelopeTests
-
-    //#region 🔖️Clipboard
-    #[semio_framework_async_macros::async_test]
-    async fn copy_emits_clipboard_fragment_for_the_closed_selection() {
-        let mut app = app_with_registry();
-        dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
-        let first_part_id = first_part_id(&app);
-        select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
-        let result = semio_framework::io::resolve_ready(app.handle_action("copy", None, &meta("local"))).expect("copy");
-        assert!(result.mutations.is_empty(), "copy must not record an undo entry");
-        assert_eq!(result.requested_effects.len(), 1);
-        let Effect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
-        assert_eq!(fragment.source_app, PUZZLE5D_PLAY_APP_ID);
-        let fragment_value: serde_json::Value = serde_json::from_str(&fragment.dsl_text).expect("fragment dsl_text is JSON");
-        assert_eq!(fragment_value["parts"].as_array().expect("parts").len(), 1);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn copy_with_no_selection_is_a_benign_no_operation() {
-        let mut app = app();
-        let result = semio_framework::io::resolve_ready(app.handle_action("copy", None, &meta("local"))).expect("copy");
-        assert!(result.mutations.is_empty());
-        assert!(result.requested_effects.is_empty());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn cut_removes_selected_part_and_undo_restores_it() {
-        let mut app = app_with_registry();
-        dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
-        let before_count = part_count(&app);
-        let first_part_id = first_part_id(&app);
-        select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
-        let result = semio_framework::io::resolve_ready(app.handle_action("cut", None, &meta("local"))).expect("cut");
-        assert_eq!(result.requested_effects.len(), 1, "cut must also copy to the clipboard");
-        assert_eq!(part_count(&app), before_count - 1);
-        let after = projection_of(&app);
-        assert!(!after["parts"].as_array().unwrap().iter().any(|part| part["id"] == first_part_id));
-        semio_framework::io::resolve_ready(app.handle_action("undo", None, &meta("local"))).expect("undo");
-        assert_eq!(part_count(&app), before_count, "one undo restores the cut part as a single edit");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn paste_materializes_fragment_parts_at_original_anchor_with_fresh_ids() {
-        let mut app = app_with_registry();
-        dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
-        let projection = projection_of(&app);
-        let first_part_id = first_part_id(&app);
-        select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
-        let copy_result = semio_framework::io::resolve_ready(app.handle_action("copy", None, &meta("local"))).expect("copy");
-        let Effect::ClipboardWrite { fragment } = &copy_result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
-        let before_count = part_count(&app);
-        let before_ids: HashSet<String> = projection["parts"].as_array().unwrap().iter().map(|part| part["id"].as_str().unwrap_or_default().to_string()).collect();
-        let paste_args: dsl::DslValue = serde_json::json!({ "fragment": fragment, "anchor": "original", "position": [10.0, 0.0, 0.0] }).into();
-        semio_framework::io::resolve_ready(app.handle_action("paste", Some(&paste_args), &meta("local"))).expect("paste");
-        assert_eq!(part_count(&app), before_count + 1);
-        let after = projection_of(&app);
-        let pasted_parts: Vec<&Value> = after["parts"].as_array().unwrap().iter().filter(|part| !before_ids.contains(part["id"].as_str().unwrap_or_default())).collect();
-        assert_eq!(pasted_parts.len(), 1);
-        // "original" anchor uses the raw position override verbatim as the 2D delta.
-        let original_x = projection["parts"][0]["2d"]["x"].as_f64().unwrap_or(0.0);
-        assert_eq!(pasted_parts[0]["2d"]["x"].as_f64().unwrap(), original_x + 10.0);
-        semio_framework::io::resolve_ready(app.handle_action("undo", None, &meta("local"))).expect("undo");
-        assert_eq!(part_count(&app), before_count, "one undo removes the whole pasted fragment");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn paste_with_no_fragment_arg_is_a_benign_no_operation() {
-        let mut app = app();
-        let before_count = part_count(&app);
-        let result = semio_framework::io::resolve_ready(app.handle_action("paste", None, &meta("local"))).expect("paste");
-        assert!(result.mutations.is_empty());
-        assert_eq!(part_count(&app), before_count);
-    }
-    //#endregion 🔖️Clipboard
-
-    //#region 🔖️Manifest
-    #[semio_framework_async_macros::async_test]
-    async fn app_definition_has_the_paired_windows() {
-        let definition = create_puzzle5d_app();
-        let ids: Vec<&str> = definition.window_kinds.iter().map(|window| window.id.as_str()).collect();
-        assert!(ids.contains(&board2d::WINDOW_KIND_ID) && ids.contains(&world3d::WINDOW_KIND_ID));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn window_kind_actions_scope_transform_to_3d_only() {
-        let definition = create_puzzle5d_app();
-        let resolve = |window_id: &str| -> Vec<String> {
-            let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap();
-            semio_framework_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
-        };
-        let board = resolve(board2d::WINDOW_KIND_ID);
-        let world = resolve(world3d::WINDOW_KIND_ID);
-        for transform_operation in ["translateSelection", "rotateSelection", "scaleSelection", "worldRelocate", "setCamera3d"] {
-            assert!(world.contains(&transform_operation.to_string()), "3D must expose {transform_operation}");
-            assert!(!board.contains(&transform_operation.to_string()), "2D must NOT expose {transform_operation}");
-        }
-        assert!(board.contains(&"applyBoardEvents".to_string()), "2D must expose applyBoardEvents");
-        assert!(!world.contains(&"applyBoardEvents".to_string()), "3D must NOT expose applyBoardEvents");
-        for shared in ["addBrushPart", "deleteSelection"] {
-            assert!(board.contains(&shared.to_string()) && world.contains(&shared.to_string()), "{shared} stays on both windows");
-        }
-    }
-
-    /// 📑️ The three declared panel tabs must survive the `panel_tab_def` stitch. Asserts PRESENCE
-    /// only — the framework injects tabs of its own, so a total count would be brittle.
-    #[semio_framework_async_macros::async_test]
-    async fn app_definition_declares_its_three_panel_tabs() {
-        let definition = create_puzzle5d_app();
-        let body_keys: Vec<&str> = definition.panel_tabs.iter().filter_map(|tab| tab.body_key.as_deref()).collect();
-        for body_key in [document_panel::BODY_KEY, catalogue::BODY_KEY, inspection::BODY_KEY] {
-            assert!(body_keys.contains(&body_key), "panel tab {body_key} must be declared, got {body_keys:?}");
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn window_engagements_cover_both_windows() {
-        let mut app = app();
-        let engagements = semio_framework::io::resolve_ready(app.window_engagements());
-        assert!(engagements.contains_key(board2d::WINDOW_KIND_ID));
-        assert!(engagements.contains_key(world3d::WINDOW_KIND_ID));
-    }
-
-    /// 🎯️ Every action id `dispatch_puzzle5d_action` matches on must have a `Puzzle5dCommand` variant
-    /// under the SAME literal — the two lists are the whole app's dispatch contract and drift between
-    /// them is silent. (Deliberately NOT the framework's own
-    /// `assert_declared_actions_bridge_to_commands`, which probes `command_from_action`, the
-    /// string-dispatch path this app does not implement — its commands carry an opaque `args: Value`,
-    /// see the `🔖️Puzzle5dCommand` macro.)
-    #[semio_framework_async_macros::async_test]
-    async fn every_dispatched_action_bridges_to_a_command() {
-        for action in [
-            "setFixtureJson",
-            "setActiveExample",
-            "importComposeKit",
-            "selectSameKindSelection",
-            "selectSameKind",
-            "addNode",
-            "addPartKind",
-            "deleteSelection",
-            "duplicateSelection",
-            "setSelectionFlag",
-            "patchPart",
-            "patchGrip",
-            "patchFastener",
-            "setCamera",
-            "setCamera2d",
-            "setCamera3d",
-            "zoomToSelection",
-            "focusSelection",
-            "toggleSun",
-            "setSunAzimuth",
-            "setSunElevation",
-            "setSunIntensity",
-            "setLodMode",
-            "setGridSnapEnabled",
-            "setGridFactor",
-            "addBrushPart",
-            "addBrushObject",
-            "cycleBrushCandidate",
-            "registerBrushMesh",
-            "setBrushPlacementOverlapBudget",
-            "setObjectKindWeight",
-            "setVortexKindWeight",
-            "engagementControlSelect",
-            "setSuggestionOffset",
-            "setFillCount",
-            "engagementInput",
-            "engagementSubmit",
-            "engagementAbort",
-            "translateSelection",
-            "rotateSelection",
-            "scaleSelection",
-            "worldRelocate",
-            "applyBoardEvents",
-            "worldPointerDown",
-            "canvasPointerDown",
-            SET_ACTIVE_UTILITY_ACTION_ID,
-        ] {
-            assert_eq!(Puzzle5dCommand::from_action(action, None, None).action_id(), action, "dispatched action {action} must have a Puzzle5dCommand variant");
-        }
-    }
-    //#endregion 🔖️Manifest
-
-    //#region 🧰️ Window Actions & Utilities contract
-    #[semio_framework_async_macros::async_test]
-    async fn add_part_kind_materializes_the_declared_kind_default() {
-        // 📝️ P1 arg form: addPartKind with no args materializes the declared `partKind` default and adds a part.
-        let mut app = app_with_registry();
-        dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "" })), None).expect("empty");
-        let before = part_count(&app);
-        let result = dispatch(&mut app, "addPartKind", None, None).expect("addPartKind");
-        assert!(!result.mutations.is_empty(), "addPartKind is a Mutation that emits mutations");
-        assert_eq!(part_count(&app), before + 1, "the materialized default kind adds exactly one part");
-        let projection = projection_of(&app);
-        let kind = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.last()).and_then(|part| part.get("partKind")).and_then(Value::as_str);
-        assert_eq!(kind, Some("Part"), "the declared partKind default was materialized host-side");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn set_active_utility_emits_no_ops_and_no_history_entry() {
-        // 🧰️ Switching utilities is the framework View action: no document operations, no undo entry, no re-emitted effect.
-        let mut app = app_with_registry();
-        let before = projection_of(&app);
-        let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&dsl::json!({ "utilityId": "brush" })), None).expect("switch utility");
-        assert!(result.mutations.is_empty(), "utility switching never emits document operations");
-        assert!(result.requested_effects.is_empty(), "a user utility switch does not re-emit SetActiveUtility");
-        assert_eq!(projection_of(&app), before, "utility switching does not mutate the document");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn set_camera_actions_write_runtime_and_emit_no_operations() {
-        // 📷️ Camera pose is session-only view state (`ActionKind::View`): `setCamera2d`/`setCamera3d`
-        // must mutate the app's runtime (visible via the rendered scene) without ever touching the
-        // VCS-tracked document or emitting an operation.
-        let mut app = app();
-        let before = projection_of(&app);
-        let camera2d_result = dispatch(&mut app, "setCamera2d", Some(&dsl::json!({ "camera": { "x": 12.5, "y": -6.5, "zoom": 3.5 } })), None).expect("setCamera2d");
-        assert!(camera2d_result.mutations.is_empty(), "setCamera2d is a View action and must never emit a document operation");
-        assert_eq!(projection_of(&app), before, "setCamera2d must not mutate the document");
-        let board = render_body(&mut app, board2d::BODY_KEY);
-        assert!(board.contains("12.5") && board.contains("-6.5"), "the new 2D camera pose must be reflected in the rendered runtime state");
-        let camera3d_result = dispatch(&mut app, "setCamera3d", Some(&dsl::json!({ "camera": { "position": [42.5, 7.5, 3.5], "target": [1.5, 2.5, 3.5], "zoom": 5.5 } })), None).expect("setCamera3d");
-        assert!(camera3d_result.mutations.is_empty(), "setCamera3d is a View action and must never emit a document operation");
-        assert_eq!(projection_of(&app), before, "setCamera3d must not mutate the document");
-        let world = render_body(&mut app, world3d::BODY_KEY);
-        assert!(world.contains("42.5") && world.contains("7.5") && world.contains("1.5"), "the new 3D camera pose must be reflected in the rendered runtime state");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn engagements_expose_no_utility_switch_options_for_either_window() {
-        // 🧰️ select/brush/fill switching lives only on the framework utility bar; neither the 2D nor the 3D
-        // engagement HUD may duplicate it as options.
-        let mut app = app();
-        let engagements = semio_framework::io::resolve_ready(app.window_engagements());
-        for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
-            assert!(engagements.get(window).expect("engagement").options.is_none(), "the {window} engagement must not re-expose utility switching as options");
-        }
-    }
-
-    /// 🎯️ D-3 follow-up: the fill-count slider and brush placement picker are tagged `WindowMeasure::Group`s
-    /// in each window's `window_measures` (surfaced by `partition_window_measures` only for their active
-    /// utility), never `WindowEngagementControl`s on the HUD — for both the 2D and 3D windows.
-    #[semio_framework_async_macros::async_test]
-    async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
-        let labels = puzzle5d_labels(&Puzzle5dConfig::default()).expect("default puzzle5d axes are explicit");
-        let session = Puzzle5dPrecomputeSession::new();
-        // 🪣️ Fill utility: the fill-count slider lives in a "fill"-tagged Utility Options group (per window),
-        // NOT the engagement HUD.
-        let fill_runtime = Puzzle5dRuntime { fill_count: 3, ..Default::default() };
-        let fill_scene = Puzzle5dScene { document: default_document(), runtime: fill_runtime, active_utility: "fill".into() };
-        for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
-            let measures = if window == board2d::WINDOW_KIND_ID { board2d::window_measures(&fill_scene, &session, labels) } else { world3d::window_measures(&fill_scene, &session, labels) };
-            assert_eq!(measure_group_tag(&measures, "puzzle5d-play-utility-options-fill"), Some(Some("fill".into())), "{window} fill Utility Options must be tagged for the fill utility");
-            assert!(has_measure_slider(&measures, "puzzle5d-fill-count"), "{window} fill Utility Options must carry the fill-count slider");
-            let fill_hud = edit::puzzle5d_engagement(&fill_scene, window, labels);
-            assert!(fill_hud.control.is_none() && fill_hud.controls.is_none(), "{window} fill engagement HUD must no longer carry the relocated control");
-        }
-        // 🖌️ Brush utility: with no candidates to place, the "brush"-tagged group still surfaces (matching the
-        // old gate), and the engagement HUD is likewise bare.
-        let brush_scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: "brush".into() };
-        for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
-            let measures = if window == board2d::WINDOW_KIND_ID { board2d::window_measures(&brush_scene, &session, labels) } else { world3d::window_measures(&brush_scene, &session, labels) };
-            assert_eq!(measure_group_tag(&measures, "puzzle5d-play-utility-options-brush"), Some(Some("brush".into())), "{window} brush Utility Options surfaces even without candidates");
-            let brush_hud = edit::puzzle5d_engagement(&brush_scene, window, labels);
-            assert!(brush_hud.control.is_none() && brush_hud.controls.is_none(), "{window} brush engagement HUD must no longer carry the relocated control");
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn engagement_submit_switches_utility_via_host_effect_for_both_windows() {
-        // 🧰️ Reconciled dual entry point: the engagement token drives the same host-owned utility switch, once per window.
-        let mut app = app();
-        let result = dispatch(&mut app, "engagementSubmit", Some(&dsl::json!({ "window": world3d::WINDOW_KIND_ID, "value": "brush" })), None).expect("submit");
-        let windows: Vec<&str> = result
-            .requested_effects
-            .iter()
-            .filter_map(|effect| match effect {
-                Effect::SetActiveUtility { window_id, utility_id } if utility_id == "brush" => Some(window_id.as_str()),
-                _ => None,
-            })
-            .collect();
-        assert!(windows.contains(&board2d::WINDOW_KIND_ID) && windows.contains(&world3d::WINDOW_KIND_ID), "brush switch is pushed to both windows, got {windows:?}");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn gumball_translate_drag_coalesces_into_one_edit() {
-        // 🌀️ Coalescing regression: three translate ticks with the same key are ONE undoable edit.
-        let mut app = app();
-        let part_id = first_part_id(&app);
-        let origin_x = |app: &Puzzle5dApp| -> f64 {
-            projection_of(app)
-                .get("parts")
-                .and_then(Value::as_array)
-                .and_then(|parts| parts.iter().find(|part| part.get("id").and_then(Value::as_str) == Some(part_id.as_str())).cloned())
-                .and_then(|part| part.pointer("/3d/origin/0").and_then(Value::as_f64))
-                .unwrap_or(0.0)
-        };
-        let start = origin_x(&app);
-        for dx in [1.0, 2.0, 3.0] {
-            dispatch(&mut app, "translateSelection", Some(&dsl::json!({ "ids": [part_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), None).expect("drag tick");
-        }
-        assert!((origin_x(&app) - start - 6.0).abs() < 1e-9, "three ticks accumulate 1+2+3 on x");
-        semio_framework::io::resolve_ready(app.handle_action("undo", None, &meta("local"))).expect("undo");
-        assert!((origin_x(&app) - start).abs() < 1e-9, "one undo restores the whole coalesced gumball drag");
-    }
-    //#endregion 🧰️ Window Actions & Utilities contract
-
-    //#region 🔖️KitInPort
-    #[semio_framework_async_macros::async_test]
-    async fn kit_in_retained_import_media_dispatches_the_exact_factory_and_applies_canonical_output() {
-        let mut app = app_with_registry();
-        let before = projection_of(&app);
-        let fragment = serde_json::json!({
-            "schema": "manifest",
-            "objectKinds": [{
-                "id": "retained-capsule",
-                "name": "retained-capsule",
-                "label": "Retained Capsule",
-                "meshUrl": "/mesh/retained-capsule.glb",
-                "vortices": [{ "id": "v0", "vortexKind": "retained-door", "position": [0.0, 0.0, 0.0], "direction": [0.0, 1.0, 0.0], "radius": 0.3 }],
-            }],
-            "vortexKinds": [{ "id": "retained-door", "name": "retained-door", "label": "Retained Door", "color": "#ff0000", "defaultCableKind": "" }],
-            "cableKinds": [],
-            "attractionKinds": [],
-            "kindCompatibility": [{ "source": "retained-door", "target": "retained-door", "bidirectional": true }],
-        });
-        let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
-        let result = app.import_media("kit:in", media, &meta("local")).await.expect("retained kit:in dispatch");
-        assert!(!result.mutations.is_empty(), "exact retained import must publish document mutations");
-        let after = projection_of(&app);
-        assert_ne!(after, before, "exact retained import must apply its completion output");
-        let snapshot: Puzzle5dSnapshot = dsl::json::from_json_str(&after.to_string()).expect("retained projection deserializes");
-        let catalogs = crate::kind_catalogs_of(&snapshot.kind_catalogs, &snapshot.kind_catalogs_extra).expect("retained catalog replacement applied");
-        let part = catalogs.parts.iter().find(|part| part.id == "retained-capsule").expect("retained part catalog row");
-        assert_eq!(part.grips.first().and_then(|grip| grip.grip_kind.as_deref()), Some("retained-door"));
-        assert!(catalogs.grips.iter().any(|grip| grip.id == "retained-door"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn kit_in_retained_import_media_enforces_exact_media_max_plus_one_before_decode() {
-        let prefix = r#"{"objectKinds":[],"vortexKinds":[{"id":"grip","name":"Grip","label":""#;
-        let suffix = r##"","color":"#fff","defaultCableKind":""}],"kindCompatibility":[]}"##;
-        let label = "x".repeat(PUZZLE5D_IMPORT_MEDIA_BYTES.checked_sub(prefix.len() + suffix.len()).expect("retained max fixture shell"));
-        let maximum = format!("{prefix}{label}{suffix}");
-        assert_eq!(maximum.len(), PUZZLE5D_IMPORT_MEDIA_BYTES);
-        let mut app = app_with_registry();
-        let exact = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: maximum.clone() } };
-        app.import_media("kit:in", exact, &meta("local")).await.expect("exact media maximum retained dispatch");
-        let after_exact = projection_of(&app);
-        let plus_one = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: format!("{maximum} ") } };
-        let error = app.import_media("kit:in", plus_one, &meta("local")).await.expect_err("media maximum plus one must fail before Serde");
-        assert!(error.message.contains("predecode cap"));
-        assert_eq!(projection_of(&app), after_exact, "rejected plus-one media must not mutate the document");
-    }
-
-    /// 🔌️ The flagship `kit:in` seam: feeding a `kit.catalog` fragment shaped exactly like
-    /// block3d's `puzzle3d_catalog_fragment` (`objectKinds`/`vortexKinds`, camelCase) through
-    /// `Puzzle5dPlayApp::import_media` must normalize `objectKinds` into the typed
-    /// `kindCatalogs.parts` (with each per-object `vortices[]` entry becoming a grip template) and
-    /// `vortexKinds` into `kindCatalogs.grips`, and land both after applying the returned operations.
-    #[semio_framework_async_macros::async_test]
-    async fn kit_in_retained_import_media_upserts_part_and_grip_kinds_into_kind_catalogs() {
-        let mut app = app_with_registry();
-        let fragment = serde_json::json!({
-            "schema": "manifest",
-            "objectKinds": [{
-                "id": "capsule",
-                "name": "capsule",
-                "label": "Capsule",
-                "meshUrl": "/mesh/capsule.glb",
-                "vortices": [{ "id": "v0", "vortexKind": "door", "position": [0.0, 0.0, 0.0], "direction": [0.0, 1.0, 0.0], "radius": 0.3 }],
-            }],
-            "vortexKinds": [{ "id": "door", "name": "door", "label": "Door", "color": "#ff0000", "defaultCableKind": "" }],
-            "cableKinds": [],
-            "attractionKinds": [],
-            "kindCompatibility": [{ "source": "door", "target": "door", "bidirectional": true }],
-        });
-        let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
-
-        let result = app.import_media("kit:in", media, &meta("local")).await.expect("retained kit:in import succeeds");
-        assert!(!result.mutations.is_empty(), "importing a non-empty fragment must emit real operations");
-        let next_projection = projection_of(&app);
-
-        // 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W4d: `next_projection`'s raw
-        // `kindCatalogs` key is now the composed `{childId,target}` handle, not the embedded
-        // `{parts:[...],...}` shape a JSON pointer could probe directly — reassemble the full
-        // `Puzzle5dKindCatalogs` through the typed snapshot + `kind_catalogs_of` accessor instead
-        // (same pattern `sourcing`'s `stock_of` established for its own composed catalog field).
-        let next_snapshot: Puzzle5dSnapshot = dsl::json::from_json_str(&next_projection.to_string()).expect("next_projection deserializes as Puzzle5dSnapshot");
-        let catalogs = crate::kind_catalogs_of(&next_snapshot.kind_catalogs, &next_snapshot.kind_catalogs_extra).expect("parts catalog present");
-        let capsule = catalogs.parts.iter().find(|entry| entry.id == "capsule").expect("the imported part kind must appear in kindCatalogs.parts");
-        assert_eq!(capsule.representations.first().map(|representation| representation.url.as_str()), Some("/mesh/capsule.glb"));
-        assert_eq!(capsule.grips.first().and_then(|grip| grip.grip_kind.as_deref()), Some("door"), "the per-part grip template keeps its gripKind after normalization");
-        assert_eq!(capsule.grips.first().map(|grip| grip.point), Some([0.0, 0.0, 0.0]));
-        assert_eq!(capsule.grips.first().map(|grip| grip.direction), Some([0.0, 1.0, 0.0]));
-        assert_eq!(capsule.grips.first().and_then(|grip| grip.radius), Some(0.3));
-
-        let door = catalogs.grips.iter().find(|entry| entry.id == "door").expect("the imported grip kind must appear in kindCatalogs.grips");
-        assert_eq!(door.default_rope_kind.as_str(), "", "defaultCableKind maps onto defaultRopeKind (a naming judgment call — see import_media's doc comment)");
-
-        let compatibility = next_projection.pointer("/kindCompatibility").and_then(Value::as_array).expect("kind compatibility present");
-        assert!(compatibility.iter().any(|entry| entry.get("source").and_then(Value::as_str) == Some("door") && entry.get("target").and_then(Value::as_str) == Some("door")));
-    }
-
-    /// 🔁️ Re-importing the SAME fragment (simulating a second producer edge, or a redelivered
-    /// message on a `multiplicity: Many` port) must upsert idempotently — no duplicate rows.
-    #[semio_framework_async_macros::async_test]
-    async fn kit_in_retained_import_media_is_idempotent_on_repeated_delivery() {
-        let mut app = app_with_registry();
-        let fragment = serde_json::json!({
-            "objectKinds": [{ "id": "capsule", "name": "capsule", "label": "Capsule", "meshUrl": "/mesh/capsule.glb", "vortices": [] }],
-            "vortexKinds": [],
-            "cableKinds": [],
-            "attractionKinds": [],
-            "kindCompatibility": [],
-        });
-        let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
-
-        for _ in 0..2 {
-            app.import_media("kit:in", media.clone(), &meta("local")).await.expect("retained kit:in import succeeds");
-        }
-
-        let current = projection_of(&app);
-        let current_snapshot: Puzzle5dSnapshot = dsl::json::from_json_str(&current.to_string()).expect("current deserializes as Puzzle5dSnapshot");
-        let catalogs = crate::kind_catalogs_of(&current_snapshot.kind_catalogs, &current_snapshot.kind_catalogs_extra).expect("parts catalog present");
-        assert_eq!(catalogs.parts.iter().filter(|entry| entry.id == "capsule").count(), 1, "repeated delivery of the same fragment must upsert, never duplicate");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn kit_in_port_is_declared_on_the_app_io() {
-        let io = Puzzle5dPlayApp::io().expect("puzzle5d declares an AppIo");
-        let kit_in = io.ports.iter().find(|port| port.id == "kit:in").expect("kit:in port declared");
-        assert_eq!(kit_in.kind_id.as_deref(), Some("kit.catalog"));
-        assert_eq!(kit_in.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
-        assert!(matches!(kit_in.multiplicity, PortMultiplicity::Many));
-        let design_out = io.ports.iter().find(|port| port.id == "design:out").expect("design:out port declared");
-        assert_eq!(design_out.kind_id.as_deref(), Some("5d.puzzle"));
-        assert_eq!(design_out.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Design });
-        assert!(matches!(design_out.multiplicity, PortMultiplicity::Many));
-    }
-    //#endregion 🔖️KitInPort
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -21,13 +21,6 @@ pub fn parse(text: &str) -> Result<EmbedFontFile, String> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn owned_payload_round_trips() {
-        let payload = EmbedFontFile { descriptor_ordinal: 0, key: "FontFile2".to_string(), program: crate::standards::v1_7::subsets::base::schema::snapshot::ObjRef { num: 1, gen: 0 } };
-        assert_eq!(parse(&print(&payload).unwrap()).unwrap(), payload);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

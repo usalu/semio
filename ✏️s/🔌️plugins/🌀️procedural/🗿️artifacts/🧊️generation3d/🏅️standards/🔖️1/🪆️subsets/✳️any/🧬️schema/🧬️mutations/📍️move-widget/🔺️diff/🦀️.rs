@@ -1,9 +1,9 @@
 //! 🔺️ `move-widget` sparse diff construction.
 
-use crate::diff::Generation3dDiff;
-use crate::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::mutations::move_widget::MoveWidget;
-use crate::mutations::widget_index;
+use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
+use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::mutations::move_widget::MoveWidget;
+use crate::standards::v1::subsets::any::schema::mutations::widget_index;
 use crate::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta upserting one widget's position.

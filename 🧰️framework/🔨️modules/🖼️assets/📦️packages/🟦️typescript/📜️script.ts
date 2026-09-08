@@ -958,12 +958,7 @@ const router = new ScriptRouter(import.meta.dir)
 if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "build" });
 
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-  describe("metabolism icon codegen", () => {
-    it("maps metabolism stems to Rust variants", () => {
-      expect(iconIdToRustVariant("capsule_J")).toBe("CapsuleJ");
-      expect(iconIdToRustVariant("cylindric-tambour_first-storey")).toBe("CylindricTambourFirstStorey");
-    });
-  });
+  const { registerTests1 } = await import("../../🧪️tests/🧪️metabolism-icon-codegen/🟦️.ts");
+  await registerTests1(import.meta.vitest, { iconIdToRustVariant }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🚀️Commands

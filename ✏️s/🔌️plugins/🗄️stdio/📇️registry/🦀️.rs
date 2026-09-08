@@ -45,12 +45,8 @@ pub(crate) fn component_package_id() -> Result<&'static str, PluginAssemblyError
 }
 
 #[cfg(all(test, feature = "full-artifact-catalog"))]
-mod component_package_id_tests {
-    #[test]
-    fn component_package_identity_comes_from_the_canonical_cargo_contract() {
-        assert_eq!(super::component_package_id().expect("stdio component package identity"), "semio:stdio");
-    }
-}
+#[path = "🧪️tests/🔬️component-package-id/🦀️.rs"]
+mod component_package_id_tests;
 
 #[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
 #[value(deny_unknown_fields)]
@@ -267,7 +263,7 @@ pub fn native_codec_artifact_kinds() -> Vec<semio_framework_plugin::ArtifactKind
 
 #[cfg(feature = "full-artifact-catalog")]
 fn validate_native_openable_projection(receipts: &[NativeCodecFactoryReceipt]) -> Result<(), PluginAssemblyError> {
-    let provider: NativeOpenableProviderSourceV1 = pack::from_json_str(include_str!("🧬️schema/📜️native-codec-factories.json")).map_err(|error| failure(format!("cannot parse native codec receipt projection: {error}")))?;
+    let provider: NativeOpenableProviderSourceV1 = pack::from_json_str(include_str!("📜️native-codec-factories.json")).map_err(|error| failure(format!("cannot parse native codec receipt projection: {error}")))?;
     if provider.schema != "semio.stdio.native-openable-catalog-provider/v1" || provider.provider_id != "stdio/native-codecs/v1" || provider.plugin_id != "stdio" || provider.package_id != "semio:stdio" || provider.receipts.len() != receipts.len() {
         return Err(failure("native codec receipt projection identity or closure is invalid"));
     }
@@ -472,51 +468,8 @@ fn preflight_native_catalog_projection(assemblies: &[ArtifactAssembly], receipts
 }
 
 #[cfg(all(test, feature = "full-artifact-catalog"))]
-mod catalog_projection_budget_tests {
-    use super::*;
-
-    #[test]
-    fn catalog_projection_budget_matches_serde_and_refuses_before_overdraw() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📇️native-catalog-surface/🧪️budget.json")).unwrap();
-        for row in fixture["cases"].as_array().unwrap() {
-            let value = row["text"].as_str().unwrap();
-            let mut budget = NativeCatalogProjectionBudget::new();
-            budget.string(&[value], 16384).unwrap();
-            let expected = row["encodedBytes"].as_u64().unwrap() as usize;
-            assert_eq!(serde_json::to_vec(value).unwrap().len(), expected, "{}", row["id"]);
-            assert_eq!(budget.projection, expected, "{}", row["id"]);
-        }
-        for row in fixture["aggregateCases"].as_array().unwrap() {
-            let mut budget = NativeCatalogProjectionBudget::new();
-            let projection = row["projectionCharges"].as_array().unwrap();
-            let descriptors = row["descriptorCharges"].as_array().unwrap();
-            let independent =
-                projection.iter().map(|v| v.as_u64().unwrap()).sum::<u64>() <= fixture["projectionLimitBytes"].as_u64().unwrap() && descriptors.iter().map(|v| v.as_u64().unwrap()).sum::<u64>() <= fixture["descriptorLimitBytes"].as_u64().unwrap();
-            let result = projection.iter().try_for_each(|value| budget.charge(value.as_u64().unwrap() as usize)).and_then(|()| descriptors.iter().try_for_each(|value| budget.descriptor(value.as_u64().unwrap() as usize)));
-            assert_eq!(independent, row["accepted"].as_bool().unwrap(), "{}", row["id"]);
-            assert_eq!(result.is_ok(), independent, "{}", row["id"]);
-            assert!(budget.projection <= 2 * 1024 * 1024 && budget.descriptors <= 16 * 1024 * 1024);
-        }
-        let mut budget = NativeCatalogProjectionBudget::new();
-        assert!(budget.charge(usize::MAX).is_err());
-        assert_eq!(budget.projection, 0);
-        assert!(budget.descriptor(usize::MAX).is_err());
-        assert_eq!(budget.descriptors, 0);
-        assert!(budget.string(&[""], 16).is_err());
-        assert!(budget.string(&["éé"], 3).is_err());
-    }
-
-    #[test]
-    fn catalog_projection_preflight_matches_actual_serde_payload_bytes() {
-        let assemblies = artifact_assemblies().unwrap();
-        let receipts = native_codec_factory_receipts().unwrap();
-        let expected = preflight_native_catalog_projection(&assemblies, &receipts).unwrap();
-        let contribution = artifact_catalog_contribution(&assemblies).unwrap();
-        let payload = serde_json::to_value(&contribution).unwrap()["payload"].clone();
-        assert_eq!(serde_json::to_vec(&payload).unwrap().len(), expected.projection);
-        assert!(expected.descriptors > 0);
-    }
-}
+#[path = "🧪️tests/🔬️catalog-projection-budget/🦀️.rs"]
+mod catalog_projection_budget_tests;
 
 #[cfg(feature = "full-artifact-catalog")]
 fn native_artifact_catalog(assemblies: &[ArtifactAssembly]) -> Result<NativeArtifactCatalogV1, PluginAssemblyError> {
@@ -720,25 +673,5 @@ pub fn native_codec_factory_receipts() -> Result<Vec<NativeCodecFactoryReceipt>,
 //#endregion NativeCodecFactoryReceipts
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn selected_contribution_identities_are_unique_and_schema_owned() {
-        let contributions = selected_contributions();
-        validate_catalog(&contributions).expect("selected contribution catalog");
-        assert_eq!(contributions.iter().map(|item| item.identity).collect::<BTreeSet<_>>().len(), expected_artifact_count());
-    }
-
-    #[cfg(feature = "full-artifact-catalog")]
-    #[test]
-    fn full_catalog_preserves_definition_codec_and_ledger_counts() {
-        assert_eq!(artifact_assemblies().expect("artifact assemblies").len(), 36);
-        assert_eq!(native_codec_factory_receipts().expect("native codec receipts").len(), 26);
-        let ledger = capability_ledger().expect("capability ledger");
-        assert_eq!(ledger.declared, CapabilityCounts { codecs: 32, mutations: 3, inferences: 67 });
-        assert_eq!(ledger.registered, CapabilityCounts { codecs: 26, mutations: 3, inferences: 67 });
-        assert_eq!(ledger.implemented, CapabilityCounts { codecs: 26, mutations: 0, inferences: 0 });
-        assert_eq!(ledger.verified, CapabilityCounts::default());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

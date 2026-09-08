@@ -338,7 +338,7 @@
       ],
       "properties": {
         "declaredBytes": {
-          "$ref": "https://semio.tech/schema/framework/actor/page/schema.json#/definitions/word",
+          "$ref": "https://semio.tech/schema/framework/actor/page/schema.json#/$defs/Word",
           "description": "Neutral canonical decimal integer domain from zero through u64::MAX. This field length is not byte-page, allocation or release authority."
         },
         "destinationPageBytes": {

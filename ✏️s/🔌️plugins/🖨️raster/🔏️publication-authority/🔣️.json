@@ -7,14 +7,37 @@
       "source": "🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "groups": [
         {
-          "status": "Migrated",
-          "lanes": ["Artifact"],
-          "routes": ["addLayer", "deleteLayer", "dropLayerKind", "duplicateLayer", "moveLayer", "patchLayer", "patchLayers", "setActiveExample", "setLayerVisible", "toggleLayerVisible"]
+          "status": "migrated",
+          "lanes": [
+            "artifact"
+          ],
+          "routes": [
+            "addLayer",
+            "deleteLayer",
+            "dropLayerKind",
+            "duplicateLayer",
+            "moveLayer",
+            "patchLayer",
+            "patchLayers",
+            "setActiveExample",
+            "setLayerVisible",
+            "toggleLayerVisible"
+          ]
         },
         {
-          "status": "Migrated",
-          "lanes": ["Config"],
-          "routes": ["setActiveUtility", "setBrushOpacity", "setBrushSize", "setCamera", "setCameraZoom", "setCompositeViewport", "setLocale"]
+          "status": "migrated",
+          "lanes": [
+            "config"
+          ],
+          "routes": [
+            "setActiveUtility",
+            "setBrushOpacity",
+            "setBrushSize",
+            "setCamera",
+            "setCameraZoom",
+            "setCompositeViewport",
+            "setLocale"
+          ]
         }
       ]
     }

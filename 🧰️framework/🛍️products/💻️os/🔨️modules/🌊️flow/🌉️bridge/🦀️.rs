@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use neural::{cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Neuron, OperatorInfo, Value as NeuralValue, INPUT_KIND, OUTPUT_KIND};
 
 use crate::artifact::*;
-use crate::host::*;
+use semio_framework_artifact_flow_flow::widget_id_for;
 
 // #region 🔖️EvalBridge
 /// 🔌️ Native eval-bridge callback: operator kind id + input dictionary in, evaluated dictionary or `EvalError` out.

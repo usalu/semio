@@ -22,13 +22,6 @@ pub fn decode(bytes: &[u8]) -> Result<SetStructTreeRoot, String> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn owned_payload_round_trips() {
-        let payload = SetStructTreeRoot {  };
-        assert_eq!(decode(&encode(&payload).unwrap()).unwrap(), payload);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

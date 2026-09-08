@@ -2,7 +2,7 @@
 
 use crate::BlockRepresentation;
 use crate::Block3dSnapshot;
-use crate::diff::{Block3dDiff, Block3dRepresentationsDelta, Block3dRepresentationsPatch, Block3dRepresentationsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Block3dDiff, Block3dRepresentationsDelta, Block3dRepresentationsPatch, Block3dRepresentationsPatchEntry};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RemoveRepresentationTag, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {

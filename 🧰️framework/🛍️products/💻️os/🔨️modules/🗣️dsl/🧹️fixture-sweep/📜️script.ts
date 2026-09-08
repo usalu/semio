@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
 
 const read = (path: string): string => readFileSync(path, "utf8");
 const sha = (text: string): string => createHash("sha256").update(text).digest("hex");
@@ -58,7 +58,10 @@ function exampleInventory(root: string): { directories: string[]; files: string[
 export async function testFixtureSweepExtraction(): Promise<void> {
   const root = repoRoot();
   const fixture = JSON.parse(read(join(import.meta.dir, "🧫️fixture/🔣️.json")));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(read(join(import.meta.dir, "🧬️schema/🔣️.json"))));
+  const document = JSON.parse(read(join(import.meta.dir, "🧬️schema/🔣️.json")));
+  const sweepAjv = new Ajv({ strict: true, allErrors: true });
+  sweepAjv.addSchema(document);
+  const validate = sweepAjv.getSchema(`${document.$id}#/$defs/DslFixtureSweepExtractionV1`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
   const oldKernel = read(join(root, kernelPath, "Cargo.toml"));
   const retained = read(join(import.meta.dir, "🦀️.rs"));
@@ -85,7 +88,7 @@ export async function testFixtureSweepExtraction(): Promise<void> {
     dependencies: fixture.dependencies.map((dependency: object) => ({ ...dependency, optional: false })),
     kernelDependencies: ["semio-framework-async-macros"], kernelFeature: false, kernelMount: true, ignored: false,
   };
-  const exact = new Ajv2020({ strict: true }).compile({ const: expected });
+  const exact = new Ajv({ strict: true }).compile({ const: expected });
   assert.deepEqual(observed, expected, "entire fleet registry, test/discovery bytes, dependencies and kernel-only tests are preserved");
   assert(exact(observed));
   for (const [name, text, digest] of [["fleet", body, fixture.moduleSha256], ["kernel", retainedBody, fixture.retainedSha256]]) {

@@ -190,14 +190,14 @@ impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
     /// every entry is a metadata placeholder to satisfy `protocol::Mutation`, matching puzzle's
     /// `🖐️5d` and stdio's `🔊️wav`/`🏗️ifc` precedent for enums in the same situation.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔍️set-filter-query", semantic_kind: "set-filter-query", display_name: "Set Filter Query", emoji: "🔍️", aggregate_variant: "SetFilterQuery", payload_schema: "🧬️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧩️set-filter-modules", semantic_kind: "set-filter-modules", display_name: "Set Filter Modules", emoji: "🧩️", aggregate_variant: "SetFilterModules", payload_schema: "🧬️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🌳️set-filter-typology", semantic_kind: "set-filter-typology", display_name: "Set Filter Typology", emoji: "🌳️", aggregate_variant: "SetFilterTypology", payload_schema: "🧬️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️set-filter-min-availability", semantic_kind: "set-filter-min-availability", display_name: "Set Filter Min Availability", emoji: "📦️", aggregate_variant: "SetFilterMinAvailability", payload_schema: "🧬️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/↕️set-sort", semantic_kind: "set-sort", display_name: "Set Sort", emoji: "↕️", aggregate_variant: "SetSort", payload_schema: "🧬️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🗣️set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "🗣️", aggregate_variant: "SetLocale", payload_schema: "🧬️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🤝️set-contributions", semantic_kind: "set-contributions", display_name: "Set Contributions", emoji: "🤝️", aggregate_variant: "SetContributions", payload_schema: "🧬️.schema.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔍️set-filter-query", semantic_kind: "set-filter-query", display_name: "Set Filter Query", emoji: "🔍️", aggregate_variant: "SetFilterQuery", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧩️set-filter-modules", semantic_kind: "set-filter-modules", display_name: "Set Filter Modules", emoji: "🧩️", aggregate_variant: "SetFilterModules", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🌳️set-filter-typology", semantic_kind: "set-filter-typology", display_name: "Set Filter Typology", emoji: "🌳️", aggregate_variant: "SetFilterTypology", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️set-filter-min-availability", semantic_kind: "set-filter-min-availability", display_name: "Set Filter Min Availability", emoji: "📦️", aggregate_variant: "SetFilterMinAvailability", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/↕️set-sort", semantic_kind: "set-sort", display_name: "Set Sort", emoji: "↕️", aggregate_variant: "SetSort", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🗣️set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "🗣️", aggregate_variant: "SetLocale", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🤝️set-contributions", semantic_kind: "set-contributions", display_name: "Set Contributions", emoji: "🤝️", aggregate_variant: "SetContributions", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -241,67 +241,6 @@ impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::SortDirection;
-
-    #[semio_framework_async_macros::async_test]
-    async fn sourcing_curation_config_default_matches_the_prior_document_defaults() {
-        let config = SourcingCurationConfig::default();
-        assert_eq!(config.filters, Filters::default());
-        assert_eq!(config.locale, "en-US");
-    }
-
-    fn sample_config() -> SourcingCurationConfig {
-        SourcingCurationConfig {
-            filters: Filters {
-                query: "glulam".into(),
-                module_ids: vec!["beams".into()],
-                typology_path: vec!["beams".into(), "steel".into()],
-                min_availability: 5,
-                sort: Some(TableSort { column_id: "availability".into(), direction: SortDirection::Desc }),
-            },
-            locale: "de-DE".into(),
-            contributions_json: "[]".into(),
-        }
-    }
-
-    /// 🎞️ Every variant's `backwards()` must exactly restore the pre-operation config.
-    fn round_trip(config: &SourcingCurationConfig, operation: &SourcingCurationConfigMutation) -> SourcingCurationConfig {
-        let forward = operation.diff(config).into_parts().0;
-        let backwards = operation.inverse(config);
-        let mut restored = forward.clone();
-        for back in &backwards {
-            restored = back.diff(&restored).into_parts().0;
-        }
-        assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");
-        forward
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn config_mutations_round_trip_every_variant() {
-        let config = sample_config();
-        round_trip(&config, &SourcingCurationConfigMutation::SetFilterQuery { value: "kvh".into() });
-        round_trip(&config, &SourcingCurationConfigMutation::SetFilterModules { module_ids: vec!["windows".into(), "slabs".into()] });
-        round_trip(&config, &SourcingCurationConfigMutation::SetFilterTypology { path: vec!["slabs".into()] });
-        round_trip(&config, &SourcingCurationConfigMutation::SetFilterMinAvailability { value: 12 });
-        round_trip(&config, &SourcingCurationConfigMutation::SetSort { sort: None });
-        round_trip(&config, &SourcingCurationConfigMutation::SetLocale { value: "en-US".into() });
-        round_trip(&config, &SourcingCurationConfigMutation::SetContributions { json: "[]".into() });
-        let snapshot = round_trip(&config, &SourcingCurationConfigMutation::Snapshot { config: SourcingCurationConfig::default() });
-        assert_eq!(snapshot, SourcingCurationConfig::default());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn config_op_text_round_trips_every_variant() {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::Snapshot { config: sample_config() });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterQuery { value: "kvh".into() });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterModules { module_ids: vec!["beams".into(), "slabs".into()] });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterTypology { path: vec!["beams".into(), "steel".into()] });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterMinAvailability { value: 7 });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetSort { sort: Some(TableSort { column_id: "name".into(), direction: SortDirection::Asc }) });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetSort { sort: None });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetLocale { value: "de-DE".into() });
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

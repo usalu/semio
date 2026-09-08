@@ -1,6 +1,7 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.document/mutations.text.json",
-  "title": "SemioDocumentMutationOpText",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/document/mutations/text.json",
+  "title": "SemioDocumentMutationText",
   "description": "`keyword arg=value ...` (space-separated).",
   "type": "string",
   "pattern": "^[a-z-]+( [a-z-]+=\\S*)*$"

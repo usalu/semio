@@ -1,0 +1,28 @@
+mod tests {
+    use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn null_inspector_observes_nothing_observable() {
+        // Compile-only smoke test: NullInspector must be constructible and callable
+        // without a concrete Machine — exercised indirectly by kernel tests.
+        let _inspector = NullInspector;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn trace_inspector_records_one_microstep_per_transition() {
+        use super::super::kernel::{init, macrostep};
+        use super::super::testing::support::{UnitToggleEvent, UnitToggleMachine};
+
+        let mut sink = Vec::new();
+        let mut snapshot = init::<UnitToggleMachine>((), &mut sink);
+        let mut inspector = TraceInspector::<UnitToggleMachine>::default();
+        macrostep(&mut snapshot, UnitToggleEvent::Flip, &mut sink, &mut inspector);
+        macrostep(&mut snapshot, UnitToggleEvent::Flip, &mut sink, &mut inspector);
+
+        assert_eq!(inspector.entries.len(), 2);
+        assert_eq!(inspector.entries[0].exited, vec![NodeId(1)]);
+        assert_eq!(inspector.entries[0].entered, vec![NodeId(2)]);
+        assert_eq!(inspector.entries[1].exited, vec![NodeId(2)]);
+        assert_eq!(inspector.entries[1].entered, vec![NodeId(1)]);
+    }
+}

@@ -7,7 +7,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::schema::mutations::text::Block3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Block3dMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `Block3dMutation` to its binary command form.
@@ -22,26 +22,6 @@ pub fn decode_op(bytes: &[u8]) -> Result<Block3dMutation, protocol::ProtocolErro
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::{Block3dSnapshot, BLOCK_3D_SCHEMA};
-    use store::{create_document_envelope, ArtifactCommand};
-
-    #[semio_framework_async_macros::async_test]
-    async fn block3d_document_vcs_replays_granular_operations() {
-        use crate::schema::mutations::{self as m, Block3dStore};
-
-        let mut store = Block3dStore::new(create_document_envelope(BLOCK_3D_SCHEMA, "block3d", Block3dSnapshot::default(), None)).await.expect("valid initial state");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![m::rename_object_kind("o1".into())], description: None }).await.expect("apply");
-        let projection = store.snapshot().expect("snapshot");
-        assert_eq!(projection.object_kind.name, "o1");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn block3d_operation_binary_round_trips() {
-        let operation = crate::schema::mutations::delete_vortex("v0".into());
-        let bytes = encode_op(&operation).expect("encode");
-        assert_eq!(decode_op(&bytes).expect("decode"), operation);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

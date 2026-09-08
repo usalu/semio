@@ -3,7 +3,10 @@
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-type Lane = "HostOnly" | "Artifact" | "Config" | "Draft" | "Presence" | "Transient" | "Child";
+/** 🔤️ The Rust variant name of one kebab lane/disposition from `framework.ui`'s shared vocabulary. */
+const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
+
+type Lane = "artifact" | "config" | "draft" | "presence" | "transient" | "child" | "host-only";
 type Route = { id: string; lanes: Lane[]; frameworkInjected?: true };
 type AppAuthority = { owner: string; toolIdsConstants: string[]; source: string; routes: Route[]; laws: Record<string, boolean>; ui: { locales: ["en", "de"]; accessibleLabels: boolean; customizableUi: boolean } };
 type Fixture = { schema: string; apps: AppAuthority[] };
@@ -49,8 +52,8 @@ function appOracle(app: AppAuthority, source: string): boolean {
   const authored = app.routes.filter((route) => route.frameworkInjected !== true).map(({ id }) => id);
   return Object.values(app.laws).every(Boolean)
     && app.ui.locales.join(",") === "en,de" && app.ui.accessibleLabels && app.ui.customizableUi
-    && app.routes.every((route) => route.lanes.length > 0 && (!route.lanes.includes("HostOnly") || route.lanes.length === 1))
-    && exact(ids, expected) && exact(contracts, app.routes.map(({ id, lanes }) => `${id}:${[...lanes].sort().join("+")}`)) && exact(classifications, authored)
+    && app.routes.every((route) => route.lanes.length > 0 && (!route.lanes.includes("host-only") || route.lanes.length === 1))
+    && exact(ids, expected) && exact(contracts, app.routes.map(({ id, lanes }) => `${id}:${[...lanes].map(variant).sort().join("+")}`)) && exact(classifications, authored)
     && ANCHORS.every((anchor) => source.includes(anchor));
 }
 
@@ -74,7 +77,7 @@ function hostileSources(app: AppAuthority, source: string): string[] {
 class TestScript extends BundleScript {
   async run(): Promise<void> {
     const subset = join(this.repoRoot, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any");
-    runCmd(process.execPath, ["test", join(subset, "📚️examples/🎬️demo/🧪️tests/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️.ts")]);
+    runCmd(process.execPath, ["test", join(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts")]);
     const plugin = resolve(this.root, "../..");
     const authority = resolve(plugin, "🧪️publication-authority");
     const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;

@@ -16,11 +16,11 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
+component-app-assembly = ["dep:semio-framework", "dep:semio-framework-surface", "semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
 
 [dependencies]
-semio-framework = { workspace = true }
-semio-framework-geometry = { workspace = true }
+semio-framework-surface = { path = "../../../../../../../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface", default-features = false, optional = true }
+semio-framework = { workspace = true, optional = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
@@ -42,6 +42,7 @@ semio-framework-ui-contract = { workspace = true, optional = true }
 semio-framework-ui-scene = { workspace = true, optional = true }
 
 [dev-dependencies]
+geo = { version = "0.31.0", default-features = false }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

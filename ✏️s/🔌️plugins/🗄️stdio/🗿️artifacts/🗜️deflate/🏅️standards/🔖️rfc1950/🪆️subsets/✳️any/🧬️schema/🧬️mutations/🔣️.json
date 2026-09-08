@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧮set-compression-params/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/mutation/set-compression-params/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📦set-payload/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/mutation/set-payload/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📖set-preset-dictionary/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/mutation/set-preset-dictionary/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",

@@ -68,13 +68,13 @@
                       "uniqueItems": true,
                       "items": {
                         "enum": [
-                          "HostOnly",
-                          "Artifact",
-                          "Config",
-                          "Draft",
-                          "Presence",
-                          "Transient",
-                          "Child"
+                          "host-only",
+                          "artifact",
+                          "config",
+                          "draft",
+                          "presence",
+                          "transient",
+                          "child"
                         ]
                       }
                     }

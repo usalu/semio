@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/stdio.html/mutations/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/html/5/any/mutations/text.json",
   "title": "HtmlMutationText",
   "description": "Hand-rolled 'keyword arg=value ...' grammar per the sibling ../📖️.grammar.semio -- not JSON.",
   "type": "string"

@@ -1,8 +1,8 @@
 //! 🔢 Direct `change-catalog-generation` mutation owner: pins the counter that forces
 //! a re-materialize of the studio list after a create/import/delete side-effect on the catalog
 //! port. Single root-scalar setter — no `id` addressing (whole-artifact scope).
-use crate::diff::SHomeDiff;
-use crate::mutations::SHomeMutation;
+use crate::standards::v1::subsets::any::schema::diff::SHomeDiff;
+use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 
 //#region 🔖️Mutation

@@ -2,13 +2,13 @@
   "name": "@semio-tech/drawing-fsm-macros",
   "$schema": "../../../../../../../../../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/**/*.rs", "{projectRoot}/**/*"]
+    "default": ["{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust",
+        "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
@@ -16,7 +16,7 @@
     "test-quick": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust",
+        "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test quick",
         "forwardAllArgs": true
       }
@@ -24,7 +24,7 @@
     "test-long": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust",
+        "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test long",
         "forwardAllArgs": true
       }
@@ -32,7 +32,7 @@
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust",
+        "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test exhaustive",
         "forwardAllArgs": true
       }

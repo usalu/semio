@@ -12,7 +12,7 @@
       ],
       "properties": {
         "SetFileSchema": {
-          "$ref": "./🏷️set-file-schema/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/cc6/mutation/set-file-schema/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "SetProductIdentity": {
-          "$ref": "./🪪set-product-identity/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/cc6/mutation/set-product-identity/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "SetShapeRepresentation": {
-          "$ref": "./🪜set-shape-representation/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/cc6/mutation/set-shape-representation/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "SetSnapshot": {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/cc6/mutation/set-snapshot/schema.json"
         }
       }
     }

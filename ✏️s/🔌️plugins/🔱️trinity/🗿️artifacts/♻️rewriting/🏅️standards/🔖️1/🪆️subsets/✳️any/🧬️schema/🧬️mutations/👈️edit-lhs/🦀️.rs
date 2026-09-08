@@ -1,6 +1,6 @@
 //! 🔍️ Direct rewriting mutation — `EditLhs`: replaces the authored LHS match-pattern body (JSON).
-use crate::diff::RewritingDiff;
-use crate::mutations::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 
 //#region 🔖️Mutation

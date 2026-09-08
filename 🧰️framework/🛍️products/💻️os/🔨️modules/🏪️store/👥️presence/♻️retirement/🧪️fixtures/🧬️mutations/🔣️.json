@@ -6,7 +6,7 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "🔢️set-value/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/framework/os/store/presence/retirement/fixtures/mutation/set-value/schema.json#/$defs/Payload"
         },
         {
           "type": "object",

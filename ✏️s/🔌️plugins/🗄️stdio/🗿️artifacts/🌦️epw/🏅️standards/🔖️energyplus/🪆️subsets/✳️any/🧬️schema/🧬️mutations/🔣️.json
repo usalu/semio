@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📥insert-record/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/insert-record/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📤remove-record/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/remove-record/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./💬set-comments1/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-comments1/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🗨️set-comments2/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-comments2/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📅set-data-periods/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-data-periods/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🌡️set-design-conditions/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-design-conditions/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🌍set-ground-temperatures/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-ground-temperatures/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🎉set-holidays-dst/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-holidays-dst/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📍set-location/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-location/schema.json"
         },
         {
           "type": "object",
@@ -169,7 +169,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🎚️set-record-field/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-record-field/schema.json"
         },
         {
           "type": "object",
@@ -187,7 +187,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",
@@ -205,7 +205,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📆set-typical-extreme-periods/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-typical-extreme-periods/schema.json"
         },
         {
           "type": "object",

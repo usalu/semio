@@ -2426,12 +2426,16 @@
         "schema-format-unavailable",
         "schema-file-missing",
         "schema-ref-unresolved",
+        "schema-ref-broken-internal",
         "schema-cross-scope-dependency-forbidden",
         "schema-placement-forbidden-filename",
         "schema-placement-outside-module",
         "schema-contracts-directory-forbidden",
         "schema-owner-ineligible",
         "schema-export-incomplete",
+        "schema-export-parser-missing",
+        "schema-export-format-undeclared",
+        "schema-export-formats-annotation-invalid",
         "schema-dialect-not-draft-07",
         "schema-module-id-missing",
         "schema-fixture-defines-schema",
@@ -2440,7 +2444,7 @@
         "schema-fixture-parse-failed",
         "schema-instance-invalid"
       ],
-      "description": "🩺️ One code per distinguishable failure. \"It did not resolve\" is not actionable; \"the catalog declares no scope s.writer.absent\" is."
+      "description": "🩺️ One code per distinguishable failure. \"It did not resolve\" is not actionable; \"the catalog declares no scope s.writer.absent\" is. This enum is the protocol half of the single code table the harness exports as `SCHEMA_DIAGNOSTIC_CODE_TABLE`; the two are held equal by the invariants suite."
     },
     "SchemaDiagnostic": {
       "type": "object",
@@ -2507,11 +2511,31 @@
           }
         },
         "exports": {
-          "type": "array",
-          "items": {
+          "type": "object",
+          "description": "📚️ Export id → the module-relative file that CARRIES it and the facet that file belongs to. A scope's `formats` names the module root only, while a facet child (`🔺️diff/`, `📸️snapshot/`, `💡️inferences/`, `🧬️mutations/`, and their nested `📝️text`/`💾️binary` children) declares exports of the same scope.",
+          "propertyNames": {
             "$ref": "#/$defs/SchemaExportId"
           },
-          "uniqueItems": true
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "file",
+              "facet"
+            ],
+            "properties": {
+              "file": {
+                "type": "string",
+                "minLength": 1,
+                "description": "📄️ Module-relative path of the normative document declaring the export, nested facet directories included."
+              },
+              "facet": {
+                "type": "string",
+                "minLength": 1,
+                "description": "🏷️ The facet the carrier belongs to. A label for humans and reports; the path comes from `file`."
+              }
+            }
+          }
         },
         "dependsOn": {
           "type": "array",
@@ -2764,10 +2788,11 @@
         "treeCases",
         "resolutionCases",
         "catalogCases",
+        "mutationLeafIdCases",
         "validationCases",
         "pipelineCases"
       ],
-      "description": "🧬️ The language-agnostic vector every implementation of the scope-owned schema contract is measured against: who may own a contract, where a definition may live, how `schema://` resolves, what a draft-07 validator must decide, and which stage a bound fixture fails at.",
+      "description": "🧬️ The language-agnostic vector every implementation of the scope-owned schema contract is measured against: who may own a contract, where a definition may live, how `schema://` resolves, what a mutation leaf's `$id` reads, what a draft-07 validator must decide, and which stage a bound fixture fails at.",
       "properties": {
         "$schema": {
           "type": "string"
@@ -2982,6 +3007,58 @@
               "dropGraphqlExport": {
                 "type": "boolean"
               },
+              "dropTypescriptParser": {
+                "type": "boolean",
+                "description": "🚪️ The TypeScript file declares the exported type and no `parse<Export>()` entry point."
+              },
+              "typescriptParserAsConst": {
+                "type": "boolean",
+                "description": "🚪️ The TypeScript entry point is written as `export const parse<Export> = …`, the arrow form."
+              },
+              "graphqlKeyword": {
+                "enum": [
+                  "type",
+                  "input",
+                  "enum",
+                  "interface",
+                  "union",
+                  "scalar"
+                ],
+                "description": "🔗️ The GraphQL type-system keyword the export is declared with."
+              },
+              "internalDefinitionsRef": {
+                "type": "boolean",
+                "description": "🔗️ The module keeps a helper in `definitions` and references it as `#/definitions/<helper>` — module-internal, never export-addressed, never a finding."
+              },
+              "unresolvedInternalRef": {
+                "type": "boolean",
+                "description": "🔗️ A `#/definitions/<helper>` pointer that lands on nothing."
+              },
+              "crossScopeDefinitionsRef": {
+                "type": "boolean",
+                "description": "🔗️ A cross-document reference into another module's private `definitions`, which addresses no export."
+              },
+              "mutationAggregate": {
+                "type": "boolean",
+                "description": "🧬️ A mutation aggregate whose branches reference their leaves by absolute leaf `$id`, the leaf being its own scope."
+              },
+              "restrictedFormats": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/SchemaFormatId"
+                },
+                "description": "🏷️ `x-semio-formats` written onto the export, declaring restricted format support."
+              },
+              "invalidRestrictedFormats": {
+                "description": "🏷️ A malformed `x-semio-formats` value, written verbatim onto the export."
+              },
+              "implementRestrictedFormats": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/SchemaFormatId"
+                },
+                "description": "🏗️ The formats whose files actually declare the export, when that must differ from what it declared."
+              },
               "expect": {
                 "type": "array",
                 "items": {
@@ -3002,6 +3079,44 @@
               },
               "rootExport": {
                 "type": "boolean"
+              }
+            }
+          }
+        },
+        "mutationLeafIdCases": {
+          "type": "array",
+          "minItems": 1,
+          "description": "🧬️ The `$id` a mutation leaf's schema module carries: `<root module $id scope path>/mutation/<semanticKind>/schema.json`. The semantic kind keys the leaf, never its directory path — a two-segment leaf directory is still one leaf with one id.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "rootModuleId",
+              "semanticKind",
+              "leafDirectory",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/Slug"
+              },
+              "rootModuleId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "semanticKind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "leafDirectory": {
+                "type": "string",
+                "minLength": 1,
+                "description": "📁️ The leaf directory relative to the root module's `🧬️mutations/`, one or two segments. It is recorded so a case states what the id is NOT derived from."
+              },
+              "expected": {
+                "type": "string",
+                "minLength": 1
               }
             }
           }
@@ -3089,6 +3204,114 @@
           }
         }
       }
+    },
+    "TestLayoutCases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "cases",
+        "filenameOracle"
+      ],
+      "description": "📐️ The neutral test-layout vector every layout-scan implementation is measured against: each case names the sources it plants and the findings they must produce, and `filenameOracle` pins the canonical implementation filenames the scan recognises. It lives here, in the owning module, because a case directory holds examples and never the contract they are examples of.",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "sources",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sources": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "path",
+                    "source"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "expected": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "code",
+                    "path",
+                    "line"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "path": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "line": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "minimum": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "filenameOracle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pattern",
+            "paths"
+          ],
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "minLength": 1
+            },
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
     }
   },
   "oneOf": [
@@ -3130,6 +3353,9 @@
     },
     {
       "$ref": "#/$defs/ContributionDirectoryOwnershipCases"
+    },
+    {
+      "$ref": "#/$defs/TestLayoutCases"
     }
   ]
 }

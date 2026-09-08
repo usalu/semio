@@ -85,88 +85,10 @@ pub use mutations::*;
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn presentation_config_default_matches_the_existing_runtime_defaults() {
-        let config = PresentationConfig::default();
-        assert!(config.engagement_input.is_empty());
-        assert_eq!(config.locale, "en-US");
-    }
-
-    #[test]
-    fn presentation_config_dsl_round_trips() {
-        let config = PresentationConfig { engagement_input: "2x2".into(), locale: "de-DE".into() };
-        let text = store::ArtifactDsl::print_dsl(&config);
-        let parsed = <PresentationConfig as store::ArtifactDsl>::parse_dsl(&text).expect("config dsl round trip");
-        assert_eq!(parsed, config);
-    }
-
-    #[test]
-    fn presentation_config_pack_round_trips() {
-        let config = PresentationConfig { engagement_input: "add".into(), locale: "en-US".into() };
-        let bytes = store::ArtifactPack::encode_pack(&config);
-        let decoded = <PresentationConfig as store::ArtifactPack>::decode_pack(&bytes).expect("config pack round trip");
-        assert_eq!(decoded, config);
-    }
-
-    //#region 🔖️ConfigMutationTests
-    fn round_trip_config(config: &PresentationConfig, operation: &PresentationConfigMutation) -> PresentationConfig {
-        let forward = operation.diff(config).diff().clone();
-        let backwards = operation.inverse(config);
-        assert_eq!(backwards.len(), 1);
-        let restored = backwards[0].diff(&forward).diff().clone();
-        assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");
-        forward
-    }
-
-    #[test]
-    fn config_set_engagement_input_round_trips() {
-        let config = PresentationConfig::default();
-        let next = round_trip_config(&config, &PresentationConfigMutation::SetEngagementInput(SetEngagementInput { value: "2x2".into() }));
-        assert_eq!(next.engagement_input, "2x2");
-    }
-
-    #[test]
-    fn config_set_locale_round_trips() {
-        let config = PresentationConfig::default();
-        let next = round_trip_config(&config, &PresentationConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
-        assert_eq!(next.locale, "de-DE");
-    }
-
-    #[test]
-    fn config_op_text_round_trips_every_variant() {
-        store::os_store::test_support::assert_op_line_round_trip(&PresentationConfigMutation::SetEngagementInput(SetEngagementInput { value: "add".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&PresentationConfigMutation::SetLocale(SetLocale { value: "en-US".into() }));
-    }
-    //#endregion 🔖️ConfigMutationTests
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-mod contract_vectors {
-    use super::*;
-    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
-    use dsl::os_pack as pack;
-
-    #[test]
-    fn presentation_configuration_contract_vectors_match_the_json_oracle() {
-        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
-        let base: PresentationConfig = pack::from_json_str(&vectors["base"].to_string()).expect("owned base decoder");
-        assert_eq!(<PresentationConfigMutation as Mutation<PresentationConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
-        for vector in vectors["cases"].as_array().expect("cases") {
-            let mutation: PresentationConfigMutation = pack::from_json_str(&vector["mutation"].to_string()).expect("owned operation decoder");
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).expect("independent operation oracle"), vector["mutation"]);
-            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().expect("semantic kind"));
-            assert_eq!(PresentationConfigMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
-            assert_eq!(PresentationConfigMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("binary decode"), mutation);
-            let outcome = mutation.diff(&base);
-            assert!(outcome.messages().is_empty());
-            let next = outcome.diff().apply(&base).expect("apply diff");
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).expect("independent state oracle"), vector["expected"]);
-            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("apply inverse"));
-            assert_eq!(restored, base);
-        }
-    }
-}
+#[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
+mod contract_vectors;

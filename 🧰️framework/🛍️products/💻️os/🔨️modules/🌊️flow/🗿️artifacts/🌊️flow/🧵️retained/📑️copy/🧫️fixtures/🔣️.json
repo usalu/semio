@@ -1,6 +1,6 @@
 {
   "schema": "semio.flow.typed-copy.v1",
-  "sourceFixture": "../🧪️fixture/🔣️s.json",
+  "sourceFixture": "../../🧫️fixtures/🔣️.json",
   "allocationAdmission": {
     "singleBytes": 16777216,
     "totalBytes": 33554432,

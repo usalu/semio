@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/sequence/sequence/1/any/editor/config/mutation/set-camera/schema.json",
+  "$id": "https://semio.tech/schema/app/sequence/sequence/config/mutation/set-camera/schema.json",
   "title": "SetCamera",
   "type": "object",
   "properties": {

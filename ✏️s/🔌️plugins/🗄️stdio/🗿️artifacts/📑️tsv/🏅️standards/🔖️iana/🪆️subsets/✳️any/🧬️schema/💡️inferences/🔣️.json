@@ -1,20 +1,33 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/tsv/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/tsv/iana/any/inference.json",
   "title": "TsvInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["outline"],
+  "required": [
+    "outline"
+  ],
   "properties": {
-    "outline": { "$ref": "#/$defs/TsvOutline", "x-semio-derived": true }
+    "outline": {
+      "$ref": "#/$defs/TsvOutline",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "TsvOutline": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["recordCount", "columnCount"],
+      "required": [
+        "recordCount",
+        "columnCount"
+      ],
       "properties": {
-        "recordCount": { "type": "integer" },
-        "columnCount": { "type": "integer" }
+        "recordCount": {
+          "type": "integer"
+        },
+        "columnCount": {
+          "type": "integer"
+        }
       }
     }
   }

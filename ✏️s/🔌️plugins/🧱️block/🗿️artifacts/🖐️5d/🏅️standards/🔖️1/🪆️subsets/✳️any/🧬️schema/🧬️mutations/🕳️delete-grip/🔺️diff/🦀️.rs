@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `DeleteGrip`.
 
 use crate::Block5dSnapshot;
-use crate::diff::{Block5dDiff, Block5dGripsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Block5dDiff, Block5dGripsDelta};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteGrip, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {

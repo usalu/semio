@@ -85,3 +85,11 @@ Full offline Cargo metadata resolution passes after extraction. Nx tests use the
 The root `bun nx` wrapper explicitly overwrites NX_WORKSPACE_DATA_DIRECTORY at 📜script.ts:668. The two owned waiting Nx processes were interrupted after checking their exact commands and open task log files. Verification now uses the installed Nx binary through `bun x nx run-many` with the ticket workspace-data override; shared Nx processes/caches remain untouched. This is still the same declared Nx test targets.
 
 The first standalone test run completed **11 passed, 3 failed**. All failures exposed the old bare `playbook` DSL envelope id, which the current semio envelope contract rejects. The derive now declares the canonical `playbook.playbook` id already used by authored Playbook assets. No compatibility path was added. A fresh test run is required.
+
+## Runtime Codec Correction
+
+The standalone package gate compiled and ran 14 tests; 13 passed and the populated dynamic-value DSL test failed because integral floating-point values printed as integer tokens (5.0 became 5). The shared dynamic-value printer now preserves the floating lexical form, including negative zero, while statically typed float fields retain their existing compact formatting. The language-neutral package fixture now contains integral, negative-zero and fractional dynamic floats and is checked against the independent serde_json oracle. The corrected gate is pending.
+
+Additional source: `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs`.
+
+The final native runtime check passed all 14 Playbook artifact tests, including the language-neutral fixture round trip with integral floating-point and negative-zero values.

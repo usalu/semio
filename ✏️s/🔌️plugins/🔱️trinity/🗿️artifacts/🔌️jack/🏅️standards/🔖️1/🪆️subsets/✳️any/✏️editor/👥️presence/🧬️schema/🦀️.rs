@@ -1,6 +1,6 @@
 //! 🧬️ schema leaf
 use crate::Camera;
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

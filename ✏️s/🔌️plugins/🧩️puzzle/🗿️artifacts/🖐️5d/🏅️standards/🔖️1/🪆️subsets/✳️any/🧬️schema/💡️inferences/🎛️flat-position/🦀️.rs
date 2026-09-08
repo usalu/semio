@@ -12,15 +12,14 @@
 //! `Snapshot -> Value` manifest-projection pure fn living in `🧬️schema/💡️inferences/`), so the math
 //! belongs here beside its one real consumer instead of behind an engine facade.
 
-use semio_s_artifact_puzzle_3d::schema::inferences::flatten::{self, DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS, DIAGRAM_VERTICAL_V_EXTRA};
-use semio_s_artifact_puzzle_3d::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dVortex};
+use semio_s_artifact_puzzle_3d::{flatten_objects, Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dVortex, DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS, DIAGRAM_VERTICAL_V_EXTRA};
 use crate::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale, Puzzle5dSnapshot};
 use std::collections::HashMap;
 
 // 🔗️ Kept public (the pre-relocation shim's own surface): the result TYPES stay owned by
 // puzzle3d's own low-level geometry, re-exported here so `flat_position::FlattenPose`/`FlattenPlane`
 // keep resolving for any caller reaching through this slug's own name.
-pub use semio_s_artifact_puzzle_3d::schema::inferences::flatten::{FlattenPlane, FlattenPose};
+pub use semio_s_artifact_puzzle_3d::{FlattenPlane, FlattenPose};
 
 //#region 🔖️SnapshotToObjectGraph
 fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
@@ -90,7 +89,7 @@ pub fn flatten_snapshot_inplace(snapshot: &mut Puzzle5dSnapshot) {
     let objects: Vec<Puzzle3dObject> = snapshot.parts.iter().map(part_to_object).collect();
     let attractions: Vec<Puzzle3dAttraction> = snapshot.fasteners.iter().map(fastener_to_attraction).collect();
     let seed_centers: HashMap<String, [f64; 2]> = snapshot.parts.iter().map(|part| (part.id.clone(), [part.part_2d.x, part.part_2d.y])).collect();
-    let poses = flatten::flatten_objects(&objects, &attractions, Some(&seed_centers));
+    let poses = flatten_objects(&objects, &attractions, Some(&seed_centers));
     // Recompute diagram centers with grip `t` from 2d angle (3d vortices do not carry t).
     let centers = diagram_centers_with_grip_t(snapshot, &poses);
     for part in &mut snapshot.parts {
@@ -109,7 +108,7 @@ pub fn flatten_snapshot(snapshot: &Puzzle5dSnapshot) -> HashMap<String, FlattenP
     let objects: Vec<Puzzle3dObject> = snapshot.parts.iter().map(part_to_object).collect();
     let attractions: Vec<Puzzle3dAttraction> = snapshot.fasteners.iter().map(fastener_to_attraction).collect();
     let seed_centers: HashMap<String, [f64; 2]> = snapshot.parts.iter().map(|part| (part.id.clone(), [part.part_2d.x, part.part_2d.y])).collect();
-    let mut poses = flatten::flatten_objects(&objects, &attractions, Some(&seed_centers));
+    let mut poses = flatten_objects(&objects, &attractions, Some(&seed_centers));
     let centers = diagram_centers_with_grip_t(snapshot, &poses);
     for (id, center) in centers {
         if let Some(pose) = poses.get_mut(&id) {
@@ -189,54 +188,6 @@ fn diagram_centers_with_grip_t(snapshot: &Puzzle5dSnapshot, seed_poses: &HashMap
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dSnapshot};
-
-    #[test]
-    fn flatten_writes_diagram_offsets_onto_part_2d() {
-        let mut snapshot = Puzzle5dSnapshot {
-            schema: "puzzle.5d".into(),
-            domain: "architecture".into(),
-            label: None,
-            meta: Puzzle5dMeta { description: String::new() },
-            kind_catalogs: None,
-            kind_catalogs_extra: None,
-            kind_compatibility: Vec::new(),
-            parts: vec![
-                Puzzle5dPart {
-                    id: "p".into(),
-                    part_kind: None,
-                    anchor: Puzzle5dPartAnchor::Fixed,
-                    part_2d: Puzzle5dPart2d { x: 10.0, y: 20.0, shape: None, radius: None, width: None, height: None, text: None, icon_kind: None, hidden: None, locked: None },
-                    part_3d: Puzzle5dPart3d { origin: [0.0, 0.0, 0.0], mesh_url: None, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, label: None },
-                    grips: vec![Puzzle5dGrip {
-                        id: "top".into(),
-                        grip_kind: None,
-                        grip_2d: Puzzle5dGrip2d { angle: 0.0, grip_kind: None, radius: None },
-                        grip_3d: Puzzle5dGrip3d { position: [0.0, 0.0, 1.0], direction: Some([0.0, 0.0, 1.0]), radius: None, label: None },
-                    }],
-                },
-                Puzzle5dPart {
-                    id: "c".into(),
-                    part_kind: None,
-                    anchor: Puzzle5dPartAnchor::Derived,
-                    part_2d: Puzzle5dPart2d { x: 0.0, y: 0.0, shape: None, radius: None, width: None, height: None, text: None, icon_kind: None, hidden: None, locked: None },
-                    part_3d: Puzzle5dPart3d { origin: [0.0, 0.0, 0.0], mesh_url: None, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, label: None },
-                    grips: vec![Puzzle5dGrip {
-                        id: "bottom".into(),
-                        grip_kind: None,
-                        grip_2d: Puzzle5dGrip2d { angle: 0.0, grip_kind: None, radius: None },
-                        grip_3d: Puzzle5dGrip3d { position: [0.0, 0.0, -1.0], direction: Some([0.0, 0.0, -1.0]), radius: None, label: None },
-                    }],
-                },
-            ],
-            fasteners: vec![Puzzle5dFastener { id: "f".into(), source: "p:top".into(), target: "c:bottom".into(), fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 1.5, y: 2.5 }],
-        };
-        flatten_snapshot_inplace(&mut snapshot);
-        let child = snapshot.parts.iter().find(|part| part.id == "c").expect("c");
-        assert_eq!(child.part_2d.x, 10.0 + 1.5);
-        assert_eq!(child.part_2d.y, 20.0 + 2.5 + DIAGRAM_VERTICAL_V_EXTRA);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

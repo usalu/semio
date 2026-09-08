@@ -4,7 +4,8 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::{schema, Block2dSnapshot, BLOCK2D_DIALECT, BLOCK_2D_SCHEMA};
+use crate::{Block2dSnapshot, BLOCK2D_DIALECT, BLOCK_2D_SCHEMA};
+use crate::standards::v1::subsets::any::schema;
 use crate::viewer::block2d::modes::view;
 use crate::viewer::block2d::modes::view::windows::board;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
@@ -37,7 +38,7 @@ pub struct Block2dViewer;
 
 impl ArtifactViewer for Block2dViewer {
     type Snapshot = Block2dSnapshot;
-    type Mutation = crate::op::Block2dMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::text::Block2dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -52,7 +53,7 @@ impl ArtifactViewer for Block2dViewer {
     /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document so the view board
     /// renders real handle kinds/handles instead of two bare header lines — the artifact-side
     /// `default_block2d_snapshot` the editor boots on too (no editor import: this is
-    /// `crate::schema`).
+    /// `crate::standards::v1::subsets::any::schema`).
     fn initial_snapshot() -> Block2dSnapshot {
         schema::default_block2d_snapshot()
     }
@@ -96,19 +97,6 @@ pub fn create_block2d_viewer() -> semio_framework_plugin::AppDefinition {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn create_block2d_viewer_builds_a_definition_for_the_viewer_role() {
-        let def = create_block2d_viewer();
-        assert_eq!(def.role, semio_framework::AppRole::Viewer);
-        assert_eq!(def.dialect, BLOCK2D_DIALECT.into());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn viewer_dialect_matches_the_artifact_coordinate() {
-        assert_eq!(<Block2dViewer as ArtifactViewer>::DIALECT, BLOCK2D_DIALECT);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

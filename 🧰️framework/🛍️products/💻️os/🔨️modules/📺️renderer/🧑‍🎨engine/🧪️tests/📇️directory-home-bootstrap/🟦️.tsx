@@ -84,7 +84,7 @@ async function ownerFor(
 
 describe("retained visible Home directory bootstrap", () => {
   it("validates the language-neutral receipt and hostile vectors with AJV and the independent parser", () => {
-    const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(directorySchema);
+    const ajv = new Ajv({ strict: true, allErrors: true }).addKeyword("discriminator").addSchema(directorySchema);
     const receipt = ajv.compile({ $ref: `${directorySchema.$id}#/$defs/DirectoryProjectionReceiptV1` });
     const identity = ajv.compile({ $ref: `${directorySchema.$id}#/$defs/DirectoryHomeIdentityV1` });
     const step = ajv.compile({ $ref: `${directorySchema.$id}#/$defs/DirectoryHomeBootstrapStepV1` });

@@ -5,7 +5,7 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 
 use crate::Fem3dSnapshot;
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -54,10 +54,10 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Fem3dBuild
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.fem.fem3d.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `fem3d_artifact_schema_descriptor`'s registration.
-pub fn fem3d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn fem3d_artifact_inference_descriptor() -> ::semio_framework_schema::ArtifactInferenceDescriptor {
+    ::semio_framework_schema::ArtifactInferenceDescriptor {
         id: "s.fem.fem3d.inference",
-        inference: schema::FacetLeaves {
+        inference: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -70,37 +70,6 @@ pub fn fem3d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescrip
 
 #[cfg(test)]
 //#region 🧪️Tests
-mod tests {
-    use super::*;
-    use crate::FemNode;
-    use protocol::Inference;
-
-    //#region 🧸️Fixtures
-    fn sample_snapshot() -> Fem3dSnapshot {
-        Fem3dSnapshot { nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 4.0, y: 0.0, z: 0.0 }, FemNode { id: "n3".into(), x: 4.0, y: 3.0, z: 2.0 }], ..Default::default() }
-    }
-    //#endregion 🧸️Fixtures
-
-    //#region 🧪️InferenceLaws
-    #[test]
-    fn inference_determinism_law() {
-        let snapshot = sample_snapshot();
-        assert_eq!(Fem3dInference::infer(&snapshot), Fem3dInference::infer(&snapshot));
-    }
-
-    #[test]
-    fn inference_default_law() {
-        assert_eq!(Fem3dInference::infer(&Fem3dSnapshot::default()), Fem3dInference::default());
-    }
-
-    #[test]
-    fn bounds_matches_node_extent() {
-        let snapshot = sample_snapshot();
-        let inferred = Fem3dInference::infer(&snapshot);
-        assert_eq!(inferred.bounds.node_count, 3);
-        assert_eq!(inferred.bounds.bounding_box.min, [0.0, 0.0, 0.0]);
-        assert_eq!(inferred.bounds.bounding_box.max, [4.0, 3.0, 2.0]);
-    }
-    //#endregion 🧪️InferenceLaws
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

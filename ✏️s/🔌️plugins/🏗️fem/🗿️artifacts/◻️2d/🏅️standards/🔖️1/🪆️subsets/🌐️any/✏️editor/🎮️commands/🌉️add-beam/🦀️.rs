@@ -1,6 +1,6 @@
 //! 🧱️ 🧱️ Fem2d play app commands command — `add-beam`.
 
-use crate::op::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use crate::{element_id, FemElement};
 use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -42,5 +42,5 @@ pub fn handle(payload: &AddBeam, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &C
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.elements.iter().map(|e| element_id(e).to_string()), "e");
     let element = FemElement::Beam { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone() };
-    Ok(Emit::mutations(vec![Fem2dMutation::CreateElement(crate::mutations::create_element::CreateElement { element: Box::new(element) })]))
+    Ok(Emit::mutations(vec![Fem2dMutation::CreateElement(crate::standards::v1::subsets::any::schema::mutations::create_element::CreateElement { element: Box::new(element) })]))
 }

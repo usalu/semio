@@ -1,8 +1,8 @@
 //! 🔧 `change-generation-value` payload — sets one answer value within a generation's form-values
 //! map (single-field setter on a nested-addressed target, per `📓️taxonomy.md`'s `change` row).
 
-use crate::diff::Generation3dDiff;
-use crate::mutations::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::Generation3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -21,11 +21,11 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Chan
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "generation-value", kind: "change-generation-value", record: "ChangedGenerationValue" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::mutations::change_generation_value::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::change_generation_value::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-        crate::mutations::change_generation_value::inverse::inverse(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::change_generation_value::inverse::inverse(self, base)
     }
 
     fn label(&self) -> String {

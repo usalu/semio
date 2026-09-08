@@ -4,6 +4,6 @@
   "artifact": "collection",
   "directory": "🗂️collection",
   "rust_package": "semio-framework-artifact-space-collection",
-  "nx_project": "@semio-tech/space-collection-rs",
+  "nx_project": "@semio-tech/framework-space-collection-rs",
   "dependencies": []
 }

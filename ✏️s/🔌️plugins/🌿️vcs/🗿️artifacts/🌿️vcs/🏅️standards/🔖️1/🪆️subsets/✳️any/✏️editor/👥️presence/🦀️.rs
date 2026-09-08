@@ -75,7 +75,7 @@ impl Mutation<VcsDemoPresence> for VcsDemoPresenceMutation {
         display_name: "Noop",
         emoji: "⏸️",
         aggregate_variant: "Noop",
-        payload_schema: "🔣️.schema.json",
+        payload_schema: "🧬️schema/🔣️.json",
         text_opcode: None,
         binary_tag: None,
         invertibility: protocol::MutationInvertibility::SelfInvertible,
@@ -137,14 +137,5 @@ impl protocol::OpBinary for VcsDemoPresenceMutation {
 //#endregion 🔖️PresenceMutation
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn vcs_demo_presence_noop_has_exact_mutation_metadata() {
-        let descriptor = VcsDemoPresenceMutation::Noop.descriptor();
-        assert_eq!(<VcsDemoPresenceMutation as Mutation<VcsDemoPresence>>::DESCRIPTORS, &[descriptor.clone()]);
-        assert_eq!((descriptor.semantic_kind, descriptor.aggregate_variant), ("noop", "Noop"));
-        assert_eq!(VcsDemoPresenceMutation::Noop.diff(&VcsDemoPresence::default()).diff(), &VcsDemoPresence::default());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

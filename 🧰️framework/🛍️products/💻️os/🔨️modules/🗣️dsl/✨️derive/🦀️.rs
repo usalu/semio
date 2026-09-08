@@ -342,271 +342,12 @@ fn mutation_authority_relative(root: &Path, path: &Path) -> Result<String, Strin
 }
 
 #[cfg(test)]
-mod mutation_source_authority_tests {
-    use super::*;
-
-    pub(super) fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧪️tests/🛂️mutation-source-authority/🧫️fixtures/🔣️.json")).unwrap() }
-
-    fn link_file(target: &Path, link: &Path) {
-        #[cfg(unix)] std::os::unix::fs::symlink(target, link).unwrap();
-        #[cfg(windows)] std::os::windows::fs::symlink_file(target, link).unwrap();
-    }
-
-    fn link_dir(target: &Path, link: &Path) {
-        #[cfg(unix)] std::os::unix::fs::symlink(target, link).unwrap();
-        #[cfg(windows)] std::os::windows::fs::symlink_dir(target, link).unwrap();
-    }
-
-    fn fixture_workspace(case: &str) -> PathBuf {
-        let base = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(PathBuf::from).unwrap_or_else(std::env::temp_dir);
-        fs::create_dir_all(&base).unwrap();
-        fs::canonicalize(base).unwrap().join(format!("semio-source-authority-{case}-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()))
-    }
-
-    pub(super) fn materialize(case: &str, fixture: &serde_json::Value) -> (PathBuf, PathBuf, PathBuf) {
-        let workspace = fixture_workspace(case);
-        let mutation_root = workspace.join("domain/🧬️mutations");
-        let owner = mutation_root.join("🆕️insert-page");
-        let source = owner.join("🦀️.rs");
-        let descriptor = owner.join("🔣️.json");
-        let taxonomy = workspace.join("authority/🔣️taxonomy.json");
-        fs::create_dir_all(&owner).unwrap();
-        fs::create_dir_all(taxonomy.parent().unwrap()).unwrap();
-        fs::write(workspace.join("nx.json"), "{}").unwrap();
-        fs::write(&source, "pub struct Probe;").unwrap();
-        let owner_text = mutation_authority_relative(&workspace, &owner).unwrap();
-        let mut descriptor_value = fixture["descriptor"].clone();
-        descriptor_value["owner"] = serde_json::Value::String(owner_text);
-        fs::write(&descriptor, serde_json::to_vec(&descriptor_value).unwrap()).unwrap();
-        fs::write(&taxonomy, r#"{"fileKinds":{"rust":{"emoji":"🦀️","extensionChains":[".rs"]},"json":{"emoji":"🔣️","extensionChains":[".json"]}},"mutationComponentFileKindId":"rust","mutationDescriptorFileKindId":"json","mutationBehaviorFacetDirs":["🦠️mutation","🔺️diff","↩️inverse"],"semanticCollections":{"🧬️mutations":{"kind":"mutation"}}}"#).unwrap();
-        fs::write(workspace.join("📋️project.json"), r#"{"metadata":{"semio":{"taxonomy":"authority/🔣️taxonomy.json"}}}"#).unwrap();
-        match case {
-            "missing-locator" => fs::write(workspace.join("📋️project.json"), r#"{"metadata":{"semio":{}}}"#).unwrap(),
-            "malformed-locator" => fs::write(workspace.join("📋️project.json"), r#"{"metadata":{"semio":{"taxonomy":"../authority/🔣️taxonomy.json"}}}"#).unwrap(),
-            "wrong-root-pair" => fs::remove_file(workspace.join("nx.json")).unwrap(),
-            "wrong-primary-filename" => { const HISTORICAL_PRIMARY_FILENAME: &str = "component.rs"; let wrong = owner.join(HISTORICAL_PRIMARY_FILENAME); fs::rename(&source, &wrong).unwrap(); return (workspace.clone(), workspace, wrong); },
-            "owner-mismatch" => fs::write(&descriptor, r#"{"owner":"other/🧬️mutations/🆕️insert-page"}"#).unwrap(),
-            "valid-behavior-facet" => { let facet = owner.join("🦠️mutation"); fs::create_dir_all(&facet).unwrap(); let nested = facet.join("🦀️.rs"); fs::rename(&source, &nested).unwrap(); return (workspace.clone(), workspace, nested); },
-            "wrong-behavior-facet" => { let facet = owner.join("🔺️diff"); fs::create_dir_all(&facet).unwrap(); let nested = facet.join("🦀️.rs"); fs::rename(&source, &nested).unwrap(); return (workspace.clone(), workspace, nested); },
-            "nested-behavior-facet" => { let nested = owner.join("🦠️mutation/nested"); fs::create_dir_all(&nested).unwrap(); let nested = nested.join("🦀️.rs"); fs::rename(&source, &nested).unwrap(); return (workspace.clone(), workspace, nested); },
-            "symlink-parent" => { let actual = mutation_root.join("actual-owner"); fs::rename(&owner, &actual).unwrap(); link_dir(&actual, &owner); },
-            "symlink-source" => { let actual = owner.join("🦀️actual.rs"); fs::rename(&source, &actual).unwrap(); link_file(&actual, &source); },
-            "symlink-descriptor" => { let actual = owner.join("🔣️actual.json"); fs::rename(&descriptor, &actual).unwrap(); link_file(&actual, &descriptor); },
-            "symlink-taxonomy" => { let actual = workspace.join("authority/🔣️actual.json"); fs::rename(&taxonomy, &actual).unwrap(); link_file(&actual, &taxonomy); },
-            "nested-nx-anchor" => { let nested = workspace.join("nested"); fs::create_dir_all(&nested).unwrap(); fs::write(nested.join("nx.json"), "{}").unwrap(); fs::rename(workspace.join("domain"), nested.join("domain")).unwrap(); return (workspace.clone(), workspace, nested.join("domain/🧬️mutations/🆕️insert-page/🦀️.rs")); },
-            "symlink-ancestor" => { let link = workspace.join("domain-link"); link_dir(&workspace.join("domain"), &link); return (workspace.clone(), workspace, link.join("🧬️mutations/🆕️insert-page/🦀️.rs")); },
-            "symlink-parent-erasure" => { let link = workspace.join("erased"); link_dir(&workspace.join("domain"), &link); return (workspace.clone(), workspace, PathBuf::from("erased/../domain/🧬️mutations/🆕️insert-page/🦀️.rs")); },
-            "virtual-compose" => return (workspace.clone(), workspace.clone(), workspace.join("compose/🧬️mutations/🆕️insert-page/🦀️.rs")),
-            "raw-case-folded-compose-parent" => return (workspace.clone(), workspace, PathBuf::from("consumer/../COMPOSE/../domain/🧬️mutations/🆕️insert-page/🦀️.rs")),
-            "file-parent-erasure" => { fs::write(workspace.join("not-a-directory"), "file").unwrap(); return (workspace.clone(), workspace, PathBuf::from("not-a-directory/../domain/🧬️mutations/🆕️insert-page/🦀️.rs")); },
-            "raw-nonutf8" => {
-                #[cfg(unix)] { use std::os::unix::ffi::OsStringExt; return (workspace.clone(), workspace, PathBuf::from(std::ffi::OsString::from_vec(b"consumer/\xff".to_vec()))); }
-                #[cfg(windows)] { use std::os::windows::ffi::OsStringExt; return (workspace.clone(), workspace, PathBuf::from(std::ffi::OsString::from_wide(&[0xD800]))); }
-            },
-            "valid-relative-parent" => { fs::create_dir_all(workspace.join("consumer")).unwrap(); return (workspace.clone(), workspace, PathBuf::from("consumer/../domain/🧬️mutations/🆕️insert-page/🦀️.rs")); },
-            _ => {},
-        }
-        (workspace.clone(), workspace, source)
-    }
-
-    #[test]
-    fn validates_mutation_source_authority_fixture() {
-        let fixture = fixture();
-        assert_eq!(fixture["schemaVersion"], 1);
-        let mut descriptor_keys: Vec<&str> = fixture["descriptor"].as_object().unwrap().keys().map(String::as_str).collect(); descriptor_keys.sort_unstable(); assert_eq!(descriptor_keys, ["aggregateVariant", "binaryTag", "composition", "diffParticipation", "displayName", "emoji", "invertibility", "outcomeClasses", "owner", "payloadSchema", "requiredLanguageSurfaces", "schemaVersion", "semanticKind", "textOpcode"]);
-        for vector in fixture["cases"].as_array().unwrap() {
-            let name = vector["name"].as_str().unwrap();
-            let (workspace, compiler_cwd, source) = materialize(name, &fixture);
-            let result = mutation_source_authority(&source, &compiler_cwd);
-            assert_eq!(result.is_ok(), vector["accepted"].as_bool().unwrap(), "{name}: {result:?}");
-            #[cfg(any(unix, windows))] if name == "raw-nonutf8" { assert!(result.as_ref().unwrap_err().contains("not UTF-8")); }
-            if name == "nested-nx-anchor" { assert!(result.as_ref().unwrap_err().contains("lacks paired")); }
-            if name == "file-parent-erasure" { assert_eq!(fs::metadata(compiler_cwd.join(&source)).unwrap_err().kind(), std::io::ErrorKind::NotADirectory); }
-            if let Ok(facts) = result { assert_eq!(facts.workspace_root, workspace); assert!(facts.mutation_root.ends_with("domain/🧬️mutations")); assert!(facts.owner.ends_with("🆕️insert-page")); assert_eq!(facts.source_path.file_name().and_then(|name| name.to_str()), Some("🦀️.rs")); assert_eq!(facts.descriptor_path.file_name().and_then(|name| name.to_str()), Some("🔣️.json")); assert!(facts.taxonomy_path.ends_with("authority/🔣️taxonomy.json")); }
-        }
-    }
-
-    #[test]
-    fn validates_exact_domain_mutation_source_authority_fixture() {
-        fn string_literals(tokens: proc_macro2::TokenStream) -> Vec<String> {
-            tokens.into_iter().flat_map(|token| match token {
-                proc_macro2::TokenTree::Group(group) => string_literals(group.stream()),
-                proc_macro2::TokenTree::Literal(literal) => syn::parse_str::<syn::LitStr>(&literal.to_string()).map(|value| vec![value.value()]).unwrap_or_default(),
-                _ => Vec::new(),
-            }).collect()
-        }
-        let domain_fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🛂️mutation-source-authority/🧫️fixtures/🧭️domains.json")).unwrap();
-        for vector in domain_fixture["cases"].as_array().unwrap() {
-            let (workspace, _, _) = materialize(vector["name"].as_str().unwrap(), &fixture());
-            let mutation_root = workspace.join(domain_fixture["mutationRoot"].as_str().unwrap());
-            let owner = mutation_root.join(vector["owner"].as_str().unwrap());
-            let source = owner.join(vector["source"].as_str().unwrap());
-            fs::create_dir_all(source.parent().unwrap()).unwrap();
-            fs::write(&source, "pub struct Probe;").unwrap();
-            let mut descriptor = fixture()["descriptor"].clone();
-            descriptor["owner"] = mutation_authority_relative(&workspace, &owner).unwrap().into();
-            descriptor["semanticKind"] = vector["semanticKind"].clone();
-            fs::write(owner.join("🔣️.json"), serde_json::to_vec(&descriptor).unwrap()).unwrap();
-            let taxonomy_path = workspace.join("authority/🔣️taxonomy.json");
-            let mut taxonomy: serde_json::Value = serde_json::from_slice(&fs::read(&taxonomy_path).unwrap()).unwrap();
-            let mut domains = domain_fixture["domains"].clone();
-            let mut root = domain_fixture["mutationRoot"].as_str().unwrap();
-            match vector["fault"].as_str() {
-                Some("duplicate-identity") => domains["🎥️camera"]["🌱️create"] = "reorder-cameras".into(),
-                Some("empty-registry") => domains = serde_json::json!({}),
-                Some("wrong-registry-root") => root = "foreign/🧬️mutations",
-                Some("symlink-domain") => {
-                    let actual = mutation_root.join("actual-domain");
-                    fs::rename(mutation_root.join("🎥️camera"), &actual).unwrap();
-                    link_dir(&actual, &mutation_root.join("🎥️camera"));
-                }
-                None => (),
-                Some(other) => panic!("unknown domain fixture fault {other}"),
-            }
-            taxonomy["mutationDomainOwners"] = serde_json::json!({ root: domains });
-            fs::write(&taxonomy_path, serde_json::to_vec(&taxonomy).unwrap()).unwrap();
-            let result = mutation_source_authority(&source, &workspace);
-            assert_eq!(result.is_ok(), vector["accepted"].as_bool().unwrap(), "{}: {result:?}", vector["name"]);
-            if let Ok(authority) = result {
-                assert_eq!(authority.mutation_root, mutation_root);
-                assert_eq!(authority.owner, descriptor["owner"].as_str().unwrap());
-                assert_eq!(authority.source_path, source);
-                let aggregate_source = mutation_root.join("🦀️.rs");
-                fs::write(&aggregate_source, "pub enum Operations {}").unwrap();
-                let aggregate = mutation_aggregate_source_authority(&aggregate_source, &workspace).unwrap();
-                let operations = aggregate.domain_operations.as_ref().expect("explicit domain roster");
-                assert_eq!(operations.len(), 4);
-                assert!(operations.iter().any(|(owner, identity)| owner == &authority.owner && identity == descriptor["semanticKind"].as_str().unwrap()));
-                let input: DeriveInput = syn::parse_str("#[mutations(snapshot = Snapshot, diff = Diff, schema = \"probe\")] enum Operations { CreateCamera(Create), ReorderCameras(Reorder), ChangeNodeName(ChangeName), BindNodeCamera(BindCamera) }").unwrap();
-                let tokens = expand_mutations(&input, &aggregate).unwrap();
-                syn::parse2::<syn::File>(tokens.clone()).expect("independent syntax validates emitted domain scope");
-                let emitted = tokens.to_string();
-                assert!(emitted.contains("MutationOwnerLayout :: DomainOperations"));
-                assert!(!emitted.contains("MutationOwnerLayout :: Flat"));
-                let literals = string_literals(tokens);
-                for (owner, identity) in operations {
-                    assert!(literals.contains(owner), "missing owner {owner}");
-                    assert!(literals.contains(identity), "missing identity {identity}");
-                }
-            }
-        }
-    }
-}
+#[path = "🧪️tests/🔬️mutation-source-authority/🦀️.rs"]
+mod mutation_source_authority_tests;
 
 #[cfg(test)]
-mod mutation_aggregate_source_authority_tests {
-    use super::*;
-
-    fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧪️tests/🏛️mutation-aggregate-source-authority/🧫️fixtures/🔣️.json")).unwrap() }
-
-    fn link_file(target: &Path, link: &Path) {
-        #[cfg(unix)] std::os::unix::fs::symlink(target, link).unwrap();
-        #[cfg(windows)] std::os::windows::fs::symlink_file(target, link).unwrap();
-    }
-
-    fn link_dir(target: &Path, link: &Path) {
-        #[cfg(unix)] std::os::unix::fs::symlink(target, link).unwrap();
-        #[cfg(windows)] std::os::windows::fs::symlink_dir(target, link).unwrap();
-    }
-
-    fn materialize(name: &str) -> (PathBuf, PathBuf, PathBuf, PathBuf) {
-        let leaf_fixture = mutation_source_authority_tests::fixture();
-        let (workspace, _, leaf) = mutation_source_authority_tests::materialize("valid", &leaf_fixture);
-        let mutation_root = leaf.parent().unwrap().parent().unwrap().to_path_buf();
-        let aggregate = mutation_root.join("🦀️.rs");
-        fs::write(&aggregate, "pub enum Probe {}").unwrap();
-        match name {
-            "compiler-relative" => { fs::create_dir_all(workspace.join("consumer")).unwrap(); return (workspace.clone(), workspace.clone(), PathBuf::from("consumer/../domain/🧬️mutations/🦀️.rs"), leaf); },
-            "parent-mounted" => { let cwd = workspace.parent().unwrap().to_path_buf(); return (workspace.clone(), cwd, PathBuf::from(workspace.file_name().unwrap()).join("domain/🧬️mutations/🦀️.rs"), leaf); },
-            "leaf-primary" => return (workspace.clone(), workspace, leaf.clone(), leaf),
-            "historical-primary" => { const HISTORICAL_PRIMARY_FILENAME: &str = "component.rs"; let historical = mutation_root.join(HISTORICAL_PRIMARY_FILENAME); fs::rename(&aggregate, &historical).unwrap(); return (workspace.clone(), workspace, historical, leaf); },
-            "outside-root" => { let outside_root = workspace.join("outside"); let outside = outside_root.join("🦀️.rs"); fs::create_dir_all(&outside_root).unwrap(); fs::write(&outside, "pub enum Probe {}").unwrap(); return (workspace, outside_root, outside, leaf); },
-            "virtual-compose" => { let source = workspace.join("compose/🧬️mutations/🦀️.rs"); return (workspace.clone(), workspace, source, leaf); },
-            "nested-nx-anchor" => { let nested = workspace.join("nested"); fs::create_dir_all(&nested).unwrap(); fs::write(nested.join("nx.json"), "{}").unwrap(); fs::rename(workspace.join("domain"), nested.join("domain")).unwrap(); return (workspace.clone(), workspace, nested.join("domain/🧬️mutations/🦀️.rs"), leaf); },
-            "taxonomy-filename-change" => { let changed = mutation_root.join("🐹️.go"); fs::rename(&aggregate, &changed).unwrap(); fs::write(workspace.join("authority/🔣️taxonomy.json"), r#"{"fileKinds":{"go":{"emoji":"🐹️","extensionChains":[".go"]},"json":{"emoji":"🔣️","extensionChains":[".json"]}},"mutationComponentFileKindId":"go","mutationDescriptorFileKindId":"json","mutationBehaviorFacetDirs":["🦠️mutation","🔺️diff","↩️inverse"],"semanticCollections":{"🧬️mutations":{"kind":"mutation"}}}"#).unwrap(); return (workspace.clone(), workspace, changed, leaf); },
-            "symlink-source" => { let actual = mutation_root.join("🦀️actual.rs"); fs::rename(&aggregate, &actual).unwrap(); link_file(&actual, &aggregate); },
-            "symlink-root" => { let actual = workspace.join("domain/actual-mutations"); fs::rename(&mutation_root, &actual).unwrap(); link_dir(&actual, &mutation_root); },
-            _ => {},
-        }
-        (workspace.clone(), workspace, aggregate, leaf)
-    }
-
-    #[test]
-    fn validates_schema_first_aggregate_authority_fixture() {
-        let fixture = fixture();
-        assert_eq!(fixture["schemaVersion"], 1);
-        for vector in fixture["cases"].as_array().unwrap() {
-            let name = vector["name"].as_str().unwrap();
-            let (workspace, cwd, source, _) = materialize(name);
-            let result = mutation_aggregate_source_authority(&source, &cwd);
-            assert_eq!(result.is_ok(), vector["accepted"].as_bool().unwrap(), "{name}: {result:?}");
-            if let Some(diagnostic) = vector.get("diagnostic").and_then(serde_json::Value::as_str) { assert!(result.as_ref().unwrap_err().contains(diagnostic), "{name}: {result:?}"); }
-            if let Ok(facts) = result { assert_eq!(facts.workspace_root, workspace); assert!(facts.mutation_root.ends_with("domain/🧬️mutations")); assert!(facts.source_path.ends_with(facts.source_filename.as_str())); assert!(!facts.descriptor_filename.is_empty()); assert!(facts.taxonomy_path.ends_with("authority/🔣️taxonomy.json")); }
-        }
-    }
-
-    #[test]
-    fn aggregate_and_leaf_authority_share_workspace_taxonomy_names_and_token() {
-        let (workspace, cwd, aggregate_source, leaf_source) = materialize("direct-canonical");
-        let aggregate = mutation_aggregate_source_authority(&aggregate_source, &cwd).unwrap();
-        let leaf = mutation_source_authority(&leaf_source, &cwd).unwrap();
-        let leaf_common = mutation_authority_common(&leaf_source, &cwd).unwrap();
-        assert_eq!(aggregate.workspace_root, leaf.workspace_root); assert_eq!(aggregate.mutation_root, leaf.mutation_root); assert_eq!(aggregate.taxonomy_path, leaf.taxonomy_path); assert_eq!(aggregate.source_filename, leaf_common.source_filename); assert_eq!(aggregate.descriptor_filename, leaf_common.descriptor_filename);
-        assert_eq!(mutation_authority_workspace_token(&aggregate.workspace_root, &aggregate.taxonomy_path).unwrap(), mutation_leaf_workspace_token(&leaf).unwrap());
-        let (_, other_cwd, other_aggregate_source, _) = materialize("direct-canonical");
-        let other = mutation_aggregate_source_authority(&other_aggregate_source, &other_cwd).unwrap();
-        assert_ne!(mutation_authority_workspace_token(&aggregate.workspace_root, &aggregate.taxonomy_path).unwrap(), mutation_authority_workspace_token(&other.workspace_root, &other.taxonomy_path).unwrap());
-        assert!(workspace.exists());
-    }
-
-    #[test]
-    fn validates_explicit_aggregate_component_sources() {
-        fn literals(tokens: proc_macro2::TokenStream) -> Vec<String> {
-            tokens.into_iter().flat_map(|token| match token {
-                proc_macro2::TokenTree::Group(group) => literals(group.stream()),
-                proc_macro2::TokenTree::Literal(literal) => syn::parse_str::<syn::LitStr>(&literal.to_string()).map(|value| vec![value.value()]).unwrap_or_default(),
-                _ => Vec::new(),
-            }).collect()
-        }
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🏛️mutation-aggregate-source-authority/🧫️fixtures/🧩️sources.json")).unwrap();
-        for vector in fixture["cases"].as_array().unwrap() {
-            let name = vector["name"].as_str().unwrap();
-            let (workspace, cwd, source, _) = materialize("direct-canonical");
-            for root in fixture["sources"].as_array().unwrap() { fs::create_dir_all(workspace.join(root.as_str().unwrap())).unwrap(); }
-            let mut sources = fixture["sources"].clone();
-            let mut aggregate = fixture["aggregate"].as_str().unwrap();
-            match name {
-                "empty-sources" => sources = serde_json::json!([]),
-                "duplicate-source" => sources[1] = sources[0].clone(),
-                "unsafe-source" => sources[0] = "graph/../foreign/🧬️mutations".into(),
-                "non-mutation-source" => sources[0] = "graph".into(),
-                "missing-source" => sources[0] = "missing/🧬️mutations".into(),
-                "symlink-source" => {
-                    fs::rename(workspace.join("graph/🧬️mutations"), workspace.join("graph/actual")).unwrap();
-                    link_dir(&workspace.join("graph/actual"), &workspace.join("graph/🧬️mutations"));
-                }
-                "non-array-sources" => sources = serde_json::json!({}),
-                "non-string-source" => sources[0] = 1.into(),
-                "unsafe-aggregate" => aggregate = "../domain/🧬️mutations",
-                "explicit-sources" => (),
-                _ => panic!("unknown component source fixture {name}"),
-            }
-            let taxonomy_path = workspace.join("authority/🔣️taxonomy.json");
-            let mut taxonomy: serde_json::Value = serde_json::from_slice(&fs::read(&taxonomy_path).unwrap()).unwrap();
-            taxonomy["mutationAggregateSources"] = serde_json::json!({ aggregate: sources });
-            fs::write(&taxonomy_path, serde_json::to_vec(&taxonomy).unwrap()).unwrap();
-            let result = mutation_aggregate_source_authority(&source, &cwd);
-            assert_eq!(result.is_ok(), vector["accepted"].as_bool().unwrap(), "{name}: {result:?}");
-            if let Ok(authority) = result {
-                let input: DeriveInput = syn::parse_str("#[mutations(snapshot = Snapshot, diff = Diff, schema = \"probe\")] enum Operations { CreateNode(Create), MovePoint(Move) }").unwrap();
-                let tokens = expand_mutations(&input, &authority).unwrap();
-                syn::parse2::<syn::File>(tokens.clone()).expect("independent Rust parser accepts emitted component scopes");
-                let emitted = literals(tokens);
-                for root in fixture["sources"].as_array().unwrap() { assert!(emitted.iter().any(|value| value == root.as_str().unwrap()), "missing explicit source {root}"); }
-            }
-        }
-    }
-}
+#[path = "🧪️tests/🔬️mutation-aggregate-source-authority/🦀️.rs"]
+mod mutation_aggregate_source_authority_tests;
 //#endregion 🔖️MutationSourceAuthority
 
 //#region 🔣️MutationLeafJson
@@ -756,22 +497,8 @@ fn emit_mutation_leaf_descriptor(contract: &syn::Path, descriptor: &MutationLeaf
 }
 
 #[cfg(test)]
-mod mutation_leaf_json_tests {
-    use super::*;
-    fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧪️tests/🔣️mutation-leaf-json/🧫️fixtures/🔣️.json")).unwrap() }
-    fn authority(owner: &str) -> MutationSourceAuthority { MutationSourceAuthority { workspace_root: PathBuf::new(), mutation_root: PathBuf::new(), owner: owner.to_string(), expected_semantic_kind: None, source_path: PathBuf::new(), descriptor_path: PathBuf::new(), taxonomy_path: PathBuf::new() } }
-    #[test]
-    fn parses_mutation_leaf_json_fixture() {
-        let fixture = fixture(); let authority = authority(fixture["authorityOwner"].as_str().unwrap());
-        for vector in fixture["cases"].as_array().unwrap() { let result = parse_mutation_leaf_descriptor(vector["raw"].as_str().unwrap().as_bytes(), &authority); assert_eq!(result.is_ok(), vector["parserAccepted"].as_bool().unwrap(), "{}: {result:?}", vector["name"]); if let Err(error) = result { assert!(error.contains(vector["diagnostic"].as_str().unwrap()), "{}: {error}", vector["name"]); } }
-    }
-    #[test]
-    fn emits_all_core_descriptor_fields() {
-        let fixture = fixture(); let authority = authority(fixture["authorityOwner"].as_str().unwrap()); let descriptor = parse_mutation_leaf_descriptor(fixture["cases"][0]["raw"].as_str().unwrap().as_bytes(), &authority).unwrap(); let contract: syn::Path = syn::parse_str("::protocol").unwrap(); let emitted = emit_mutation_leaf_descriptor(&contract, &descriptor).to_string();
-        for field in ["schema_version", "owner", "semantic_kind", "display_name", "emoji", "aggregate_variant", "payload_schema", "text_opcode", "binary_tag", "invertibility", "diff_participation", "outcome_classes", "composition", "required_language_surfaces"] { assert!(emitted.contains(field), "missing {field}: {emitted}"); }
-        assert!(emitted.contains("MutationLeafDescriptor") && emitted.contains("ExplicitMutation") && emitted.contains("JsonSchema"));
-    }
-}
+#[path = "🧪️tests/🔬️mutation-leaf-json/🦀️.rs"]
+mod mutation_leaf_json_tests;
 //#endregion 🔣️MutationLeafJson
 
 //#region 🪪️MutationLeaf
@@ -852,40 +579,8 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
 //#endregion 🪪️MutationLeaf
 
 #[cfg(test)]
-mod mutation_leaf_derive_tests {
-    use super::*;
-    use sha2::Digest;
-
-    #[test]
-    fn parses_strict_mutation_leaf_fixture() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/✨️mutation-leaf-derive/🧫️fixtures/🔣️.json")).unwrap();
-        for case in fixture["attributes"].as_array().unwrap() {
-            let input: DeriveInput = match syn::parse_str(&format!("{} #[derive(MutationLeaf)] struct Probe;", case["attribute"].as_str().unwrap())) { Ok(input) => input, Err(_) => { assert!(!case["accepted"].as_bool().unwrap(), "{}", case["name"]); continue; } };
-            let result = parse_mutation_leaf_attrs(&input);
-            assert_eq!(result.is_ok(), case["accepted"].as_bool().unwrap(), "{}", case["name"]);
-            if let Some(diagnostic) = case["diagnostic"].as_str() { assert!(result.unwrap_err().to_string().contains(diagnostic), "{}", case["name"]); }
-        }
-    }
-
-    #[test]
-    fn hashes_workspace_provenance_with_sha2_oracle() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🛂️mutation-source-authority/🧫️fixtures/🔣️.json")).unwrap();
-        let (workspace, compiler_cwd, source) = mutation_source_authority_tests::materialize("valid", &fixture);
-        let authority = mutation_source_authority(&source, &compiler_cwd).unwrap();
-        let first = mutation_leaf_workspace_token(&authority).unwrap();
-        let second = mutation_leaf_workspace_token(&authority).unwrap();
-        let workspace = mutation_leaf_portable_path(&fs::canonicalize(workspace).unwrap()).unwrap();
-        let taxonomy = mutation_authority_relative(&authority.workspace_root, &authority.taxonomy_path).unwrap();
-        let mut input = b"semio.mutation-source-provenance/v1\0".to_vec();
-        for value in [workspace.as_bytes(), taxonomy.as_bytes()] { input.extend_from_slice(&(value.len() as u64).to_be_bytes()); input.extend_from_slice(value); }
-        let expected: [u8; 32] = sha2::Sha256::digest(&input).into();
-        assert_eq!(first, second);
-        assert_eq!(first, expected);
-        let (_, other_cwd, other_source) = mutation_source_authority_tests::materialize("valid", &fixture);
-        let other = mutation_leaf_workspace_token(&mutation_source_authority(&other_source, &other_cwd).unwrap()).unwrap();
-        assert_ne!(first, other);
-    }
-}
+#[path = "🧪️tests/🔬️mutation-leaf-derive/🦀️.rs"]
+mod mutation_leaf_derive_tests;
 
 //#region 🔖️Attrs
 #[derive(Default, Clone)]
@@ -1896,20 +1591,8 @@ fn parse_mutations_attrs(input: &DeriveInput) -> syn::Result<MutationsAttrs> {
 }
 
 #[cfg(test)]
-mod mutation_attrs_tests {
-    use super::*;
-    #[test]
-    fn parses_mutation_fixture_exactly() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🏷️mutation-attributes/🧫️fixtures/🔣️.json")).unwrap();
-        for case in fixture["cases"].as_array().unwrap().iter().filter(|case| case["attribute"].as_str().unwrap().contains("mutations")) {
-            let attribute = case["attribute"].as_str().unwrap();
-            let input: DeriveInput = syn::parse_str(&format!("{} #[derive(Mutations)] enum Probe {{ Item(Item) }}", attribute)).unwrap();
-            let result = parse_mutations_attrs(&input);
-            assert_eq!(result.is_ok(), case["accepted"].as_bool().unwrap(), "{}", attribute);
-            if let Some(diagnostic) = case["diagnostic"].as_str() { assert!(result.err().unwrap().to_string().contains(diagnostic), "{}", attribute); }
-        }
-    }
-}
+#[path = "🧪️tests/🔬️mutation-attrs/🦀️.rs"]
+mod mutation_attrs_tests;
 
 pub fn expand_derive_mutations(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -2148,80 +1831,8 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
 
 //#region 🧪️MandatoryMutations
 #[cfg(test)]
-mod mandatory_mutations_tests {
-    use super::*;
-
-    #[test]
-    fn expanded_aggregate_matches_neutral_contract_and_syn_ast() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧬️mandatory-mutations/🔣️.json")).unwrap();
-        let leaf_fixture = mutation_source_authority_tests::fixture();
-        let (workspace, cwd, leaf) = mutation_source_authority_tests::materialize("valid", &leaf_fixture);
-        let source = leaf.parent().unwrap().parent().unwrap().join("🦀️.rs");
-        fs::write(&source, "pub enum Probe {}").unwrap();
-        let authority = mutation_aggregate_source_authority(&source, &cwd).unwrap();
-        for case in fixture["cases"].as_array().unwrap() {
-            let input: DeriveInput = syn::parse_str(case["source"].as_str().unwrap()).unwrap();
-            let result = expand_mutations(&input, &authority);
-            assert_eq!(result.is_ok(), case["accepted"].as_bool().unwrap(), "{}", case["name"]);
-            let Ok(tokens) = result else { continue; };
-            let syntax: syn::File = syn::parse2(tokens.clone()).unwrap();
-            let implementations: Vec<&syn::ItemImpl> = syntax.items.iter().filter_map(|item| if let syn::Item::Impl(item) = item { Some(item) } else { None }).collect();
-            let mutation = implementations.iter().find(|item| item.trait_.as_ref().unwrap().1.segments.last().unwrap().ident == "Mutation").unwrap();
-            let names: Vec<String> = mutation.items.iter().filter_map(|item| match item {
-                syn::ImplItem::Const(item) => Some(item.ident.to_string()),
-                syn::ImplItem::Fn(item) => Some(item.sig.ident.to_string()),
-                _ => None,
-            }).collect();
-            assert!(names.iter().any(|name| name == "DESCRIPTORS"));
-            assert!(names.iter().any(|name| name == "descriptor"));
-            assert!(names.iter().any(|name| name == "timestamp"));
-            let conversions = implementations.iter().filter(|item| item.trait_.as_ref().unwrap().1.segments.last().unwrap().ident == "From").count();
-            assert_eq!(conversions, case["leaves"].as_u64().unwrap() as usize);
-            let timestamp = mutation.items.iter().find_map(|item| match item {
-                syn::ImplItem::Fn(item) if item.sig.ident == "timestamp" => Some(item),
-                _ => None,
-            }).unwrap();
-            let Some(syn::Stmt::Expr(syn::Expr::Match(dispatch), _)) = timestamp.block.stmts.last() else { panic!("timestamp must directly delegate by leaf") };
-            assert_eq!(dispatch.arms.len(), conversions);
-            for arm in &dispatch.arms {
-                let syn::Expr::Call(call) = arm.body.as_ref() else { panic!("timestamp must call the leaf hook") };
-                assert_eq!(call.args.len(), 1);
-                assert!(matches!(&call.func.as_ref(), syn::Expr::Path(path) if path.path.segments.last().unwrap().ident == "timestamp"));
-                assert!(matches!(&call.args[0], syn::Expr::Path(path) if path.path.is_ident("payload")));
-            }
-            assert_eq!(!mutation.generics.params.is_empty(), case["generic"].as_bool().unwrap());
-            if case["generic"] == true { assert!(mutation.generics.where_clause.is_some()); }
-            let expanded = tokens.to_string();
-            assert_eq!(expanded.matches("validate_leaf").count(), conversions);
-            assert_eq!(expanded.matches("validate_mutation_leaf_descriptor_roster_uniqueness").count(), 1);
-            assert_eq!(expanded.matches("include_str !").count(), 3);
-            assert!(!expanded.contains("include !"));
-            assert!(expanded.contains("MutationLeaf > :: DESCRIPTOR"));
-            assert!(expanded.contains("MutationLeaf > :: PROVENANCE"));
-            let registration = syntax.items.iter().find_map(|item| match item {
-                syn::Item::Fn(item) if item.sig.ident.to_string().starts_with("register_") => Some(item),
-                _ => None,
-            }).unwrap();
-            assert_eq!(registration.sig.inputs.len(), 1);
-            assert!(matches!(&registration.sig.output, syn::ReturnType::Type(_, ty) if matches!(ty.as_ref(), Type::Path(path) if path.path.segments.last().unwrap().ident == "Result")));
-            assert_eq!(registration.sig.generics, mutation.generics);
-            let descriptors = registration.block.stmts.iter().find_map(|statement| match statement {
-                syn::Stmt::Local(local) if matches!(&local.pat, syn::Pat::Ident(name) if name.ident == "descriptors") => Some(local.init.as_ref().unwrap().expr.as_ref()),
-                _ => None,
-            }).unwrap();
-            let syn::Expr::Array(descriptors) = descriptors else { panic!("registration must preconstruct the complete descriptor array") };
-            assert_eq!(descriptors.elems.len(), conversions);
-            for descriptor in &descriptors.elems {
-                let syn::Expr::Try(checked) = descriptor else { panic!("descriptor errors must propagate") };
-                let syn::Expr::Call(constructor) = checked.expr.as_ref() else { panic!("expected complete descriptor constructor") };
-                assert_eq!(constructor.args.len(), 5);
-            }
-            assert_eq!(expanded.matches("register_mutation_descriptors").count(), 1);
-            assert!(!expanded.contains("with_semantics"));
-        }
-        assert!(workspace.exists());
-    }
-}
+#[path = "🧪️tests/🔬️mandatory-mutations/🦀️.rs"]
+mod mandatory_mutations_tests;
 //#endregion 🧪️MandatoryMutations
 
 //#region 🔖️CompositeMutation
@@ -2255,20 +1866,8 @@ fn parse_composite_attrs(input: &DeriveInput) -> syn::Result<CompositeAttrs> {
 }
 
 #[cfg(test)]
-mod composite_attrs_tests {
-    use super::*;
-    #[test]
-    fn parses_composite_fixture_exactly() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🏷️mutation-attributes/🧫️fixtures/🔣️.json")).unwrap();
-        for case in fixture["cases"].as_array().unwrap().iter().filter(|case| case["attribute"].as_str().unwrap().contains("composite")) {
-            let attribute = case["attribute"].as_str().unwrap();
-            let input: DeriveInput = syn::parse_str(&format!("{} #[derive(CompositeMutation)] struct Probe;", attribute)).unwrap();
-            let result = parse_composite_attrs(&input);
-            assert_eq!(result.is_ok(), case["accepted"].as_bool().unwrap(), "{}", attribute);
-            if let Some(diagnostic) = case["diagnostic"].as_str() { assert!(result.err().unwrap().to_string().contains(diagnostic), "{}", attribute); }
-        }
-    }
-}
+#[path = "🧪️tests/🔬️composite-attrs/🦀️.rs"]
+mod composite_attrs_tests;
 
 pub fn expand_derive_composite_mutation(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -2324,29 +1923,8 @@ fn expand_composite_mutation(input: &DeriveInput) -> syn::Result<proc_macro2::To
 
 //#region 🧪️CompositeTimestamp
 #[cfg(test)]
-mod composite_timestamp_tests {
-    use super::*;
-
-    #[test]
-    fn composite_timestamp_expansion_preserves_the_authored_leaf_hook() {
-        let input: DeriveInput = syn::parse_str("#[composite(snapshot = Doc, op = Ops)] struct ApplyBatch { clock: Option<Clock> }").unwrap();
-        let syntax: syn::File = syn::parse2(expand_composite_mutation(&input).unwrap()).unwrap();
-        let implementation = syntax.items.iter().find_map(|item| match item {
-            syn::Item::Impl(item) if item.trait_.as_ref().is_some_and(|(_, path, _)| path.segments.last().unwrap().ident == "MutationKind") => Some(item),
-            _ => None,
-        }).unwrap();
-        let timestamp = implementation.items.iter().find_map(|item| match item {
-            syn::ImplItem::Fn(item) if item.sig.ident == "timestamp" => Some(item),
-            _ => None,
-        }).unwrap();
-        assert_eq!(timestamp.block.stmts.len(), 1);
-        let syn::Stmt::Expr(syn::Expr::Call(call), _) = &timestamp.block.stmts[0] else { panic!("composite timestamp must delegate directly") };
-        let syn::Expr::Path(function) = call.func.as_ref() else { panic!("expected composite timestamp hook") };
-        assert_eq!(function.path.segments.iter().map(|segment| segment.ident.to_string()).collect::<Vec<_>>(), ["semio_framework_os_kernel", "CompositeMutationKind", "timestamp"]);
-        assert_eq!(call.args.len(), 1);
-        assert!(matches!(&call.args[0], syn::Expr::Path(path) if path.path.is_ident("self")));
-    }
-}
+#[path = "🧪️tests/🔬️composite-timestamp/🦀️.rs"]
+mod composite_timestamp_tests;
 //#endregion 🧪️CompositeTimestamp
 
 //#region 🔖️VariantHelpers

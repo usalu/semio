@@ -23,38 +23,24 @@ pub enum ModelError {
     #[cfg(test)]
     DuplicateRelation(crate::wfc_engine::ids::RelationId),
     /// 🚨️ A weight failed validation (`NaN`, infinite, or negative).
-    InvalidWeight {
-        pattern_index: usize,
-        value: f64,
-    },
+    InvalidWeight { pattern_index: usize, value: f64 },
     /// 🚨️ `allowed[r][a].get(b) != allowed[inv(r)][b].get(a)` — the declared inverse relation is
     /// not actually the transpose of the forward relation's compatibility table.
     #[cfg(test)]
-    AsymmetricInverse {
-        relation: crate::wfc_engine::ids::RelationId,
-    },
+    AsymmetricInverse { relation: crate::wfc_engine::ids::RelationId },
     /// 🚨️ A checked multiplication/addition needed to size an internal table overflowed.
     #[cfg(test)]
-    CapacityOverflow {
-        what: &'static str,
-    },
+    CapacityOverflow { what: &'static str },
     /// 🚨️ A symmetry transform did not close under composition/inverse (generator set is broken).
     #[cfg(test)]
-    InvalidSymmetryGroup {
-        reason: &'static str,
-    },
+    InvalidSymmetryGroup { reason: &'static str },
     /// 🚨️ A socket rule referenced a socket label that was never declared compatible with anything.
     #[cfg(test)]
-    IncompatibleSocketRule {
-        reason: &'static str,
-    },
+    IncompatibleSocketRule { reason: &'static str },
     /// 🚨️ A `SourceModelDoc`'s schema version does not match this build's. No
     /// migration — this crate has no users yet, so an unrecognized version is simply rejected.
     #[cfg(test)]
-    SchemaVersionMismatch {
-        expected: u32,
-        actual: u32,
-    },
+    SchemaVersionMismatch { expected: u32, actual: u32 },
 }
 
 impl core::fmt::Display for ModelError {
@@ -234,31 +220,6 @@ impl std::error::Error for SolveError {}
 
 // #region 🔖️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn display_messages_are_human_readable() {
-        let e = ModelError::InvalidWeight { pattern_index: 3, value: -1.0 };
-        assert_eq!(e.to_string(), "invalid weight at pattern index 3: -1");
-
-        let t = TopologyError::ZeroDimension { axis: "width" };
-        assert_eq!(t.to_string(), "grid dimension `width` must be nonzero");
-
-        let c = ConstraintError::EmptyTupleTable;
-        assert_eq!(c.to_string(), "tuple-table constraint has zero tuples");
-
-        let s = SolveError::CheckpointVersionMismatch { expected: 1, actual: 2 };
-        assert_eq!(s.to_string(), "checkpoint version mismatch: expected 1, found 2");
-    }
-
-    #[test]
-    fn errors_are_std_error() {
-        fn assert_std_error<E: std::error::Error>(_e: &E) {}
-        assert_std_error(&ModelError::EmptyPatternUniverse);
-        assert_std_error(&TopologyError::SizeOverflow);
-        assert_std_error(&ConstraintError::EmptyTupleTable);
-        assert_std_error(&SolveError::SeedMissingInStrictMode);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 // #endregion 🔖️Tests

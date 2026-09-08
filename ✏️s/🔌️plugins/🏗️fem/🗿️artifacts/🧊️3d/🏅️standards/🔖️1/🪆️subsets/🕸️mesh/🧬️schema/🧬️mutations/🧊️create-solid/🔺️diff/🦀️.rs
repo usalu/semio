@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateSolid`.
 use super::CreateSolid;
-use crate::diff::{Fem3dDiff, Fem3dSolidsDelta};
-use crate::mutations::{invariant, solid_breach};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSolidsDelta};
+use crate::standards::v1::subsets::any::schema::mutations::{invariant, solid_breach};
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff

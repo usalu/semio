@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/forms/forms/1/any/editor/config/mutation/discard-try-value-staging/schema.json",
+  "$id": "https://semio.tech/schema/app/forms/forms/config/mutation/discard-try-value-staging/schema.json",
   "title": "DiscardTryValueStaging",
   "type": "object",
   "properties": {

@@ -1,6 +1,6 @@
 //! 👁️ 👁️ Generation2d play app commands command — `set-show-mode`.
 
-use crate::op::Generation2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
 use crate::Generation2dSnapshot;
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use semio_framework_os_flow::FlowEvalSession;
@@ -19,17 +19,6 @@ pub fn handle(payload: &SetShowMode, _doc: &ArtifactView<'_, Generation2dSnapsho
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::generation2d::testkit::{app, dispatch};
-    use crate::editor::generation2d::Generation2dCommand;
-
-    #[semio_framework_async_macros::async_test]
-    async fn set_show_mode_is_config_only() {
-        let mut app = app().await;
-        let before = app.snapshot().expect("snapshot");
-        dispatch(&mut app, Generation2dCommand::SetShowMode(SetShowMode { value: "wire".into() })).await;
-        assert_eq!(app.snapshot().expect("snapshot"), before);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

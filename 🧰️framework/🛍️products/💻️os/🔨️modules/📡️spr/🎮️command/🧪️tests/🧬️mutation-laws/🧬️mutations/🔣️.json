@@ -14,7 +14,7 @@
       },
       "allOf": [
         {
-          "$ref": "➕️add-counter/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/framework/os/spr/command/tests/mutation-laws/mutation/add-counter/schema.json#/$defs/Payload"
         }
       ],
       "propertyNames": {
@@ -36,7 +36,7 @@
       },
       "allOf": [
         {
-          "$ref": "✌️add-counter-twice/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-twice/schema.json#/$defs/Payload"
         }
       ],
       "propertyNames": {
@@ -58,7 +58,7 @@
       },
       "allOf": [
         {
-          "$ref": "4️⃣add-counter-four-times/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-four-times/schema.json#/$defs/Payload"
         }
       ],
       "propertyNames": {
@@ -80,7 +80,7 @@
       },
       "allOf": [
         {
-          "$ref": "🌐️add-counter-then-notify-foreign/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-then-notify-foreign/schema.json#/$defs/Payload"
         }
       ],
       "propertyNames": {
@@ -103,7 +103,7 @@
       },
       "allOf": [
         {
-          "$ref": "🔢️add-counter-sequence/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-sequence/schema.json#/$defs/Payload"
         }
       ],
       "propertyNames": {

@@ -3,12 +3,6 @@
 
 extern crate self as flow_extension_sdk;
 
-//#region 🔖️KernelCrateAliases
-/// 🧬️ Derive macros (`DslRecord`/`DslArtifact`/`DslOps`) resolve `dsl`/`store`/`pack`/`spr` as crate roots.
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as store;
-//#endregion 🔖️KernelCrateAliases
-
 //#region 🔖️KernelModuleAliases
 pub use semio_framework_os_kernel::os_dsl;
 pub use semio_framework_os_kernel::os_pack;
@@ -32,8 +26,7 @@ pub use neural_engine as neural;
 
 use semio_framework_artifact_playbook_playbook as playbook;
 
-use semio_framework_artifact_flow_flow::{artifact, graph_parameter, retained};
-use semio_framework_artifact_flow_flow::*;
+use semio_framework_artifact_flow_flow::{artifact, retained};
 
 #[path = "../../🗂️catalogue/🦀️.rs"]
 pub mod catalogue;

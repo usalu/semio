@@ -16,15 +16,16 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
+component-app-assembly = ["dep:semio-framework", "dep:semio-s-artifact-gis-gismap", "semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
 
 [dependencies]
-semio-framework-geometry = { workspace = true }
+semio-framework = { workspace = true, optional = true }
+semio-s-artifact-gis-gismap = { workspace = true, optional = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
-semio-framework-surface = { workspace = true }
+semio-framework-surface = { path = "../../../../../../../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface", default-features = false }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }

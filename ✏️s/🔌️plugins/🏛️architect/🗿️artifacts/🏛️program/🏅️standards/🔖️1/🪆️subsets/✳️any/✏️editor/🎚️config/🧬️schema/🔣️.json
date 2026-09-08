@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/app/architect/architect/config.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/architect/architect/config/schema.json",
   "title": "ArchitectConfig",
   "type": "object",
   "additionalProperties": false,
@@ -41,7 +42,12 @@
     },
     "adjacencyKindFilter": {
       "type": "string",
-      "enum": ["required", "preferred", "optional", "prohibited"],
+      "enum": [
+        "required",
+        "preferred",
+        "optional",
+        "prohibited"
+      ],
       "x-semio-state": "config"
     },
     "graphCameraX": {

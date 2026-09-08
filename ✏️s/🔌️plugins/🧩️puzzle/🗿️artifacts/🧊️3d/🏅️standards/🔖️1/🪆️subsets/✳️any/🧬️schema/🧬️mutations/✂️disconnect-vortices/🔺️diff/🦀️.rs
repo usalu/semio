@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `DisconnectVortices` — a real removal, never a whole-snapshot capture.
-use crate::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff};
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

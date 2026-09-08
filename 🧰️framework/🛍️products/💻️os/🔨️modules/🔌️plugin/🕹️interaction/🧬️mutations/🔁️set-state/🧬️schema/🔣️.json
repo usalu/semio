@@ -14,13 +14,13 @@
     "selection": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "#/$defs/selection"
+        "$ref": "#/$defs/Selection"
       }
     },
     "hover": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "#/$defs/hover"
+        "$ref": "#/$defs/Hover"
       }
     },
     "activeMode": {
@@ -40,7 +40,7 @@
     }
   },
   "$defs": {
-    "selection": {
+    "Selection": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -62,7 +62,7 @@
         }
       }
     },
-    "hover": {
+    "Hover": {
       "type": "object",
       "additionalProperties": false,
       "required": [

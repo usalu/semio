@@ -1,12 +1,12 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/os/infinite/dag/vcs/mutations.json",
+  "$id": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutations.json",
   "type": "object",
   "oneOf": [
     {
       "allOf": [
         {
-          "$ref": "➕️create-node/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/create-node/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -31,7 +31,7 @@
     {
       "allOf": [
         {
-          "$ref": "🗑️delete-node/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/delete-node/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -55,7 +55,7 @@
     {
       "allOf": [
         {
-          "$ref": "✏️rename-node/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/rename-node/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -80,7 +80,7 @@
     {
       "allOf": [
         {
-          "$ref": "🔤️change-node-name/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/change-node-name/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -105,7 +105,7 @@
     {
       "allOf": [
         {
-          "$ref": "↔️move-node/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/move-node/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -131,7 +131,7 @@
     {
       "allOf": [
         {
-          "$ref": "📐️resize-node/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/resize-node/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -157,7 +157,7 @@
     {
       "allOf": [
         {
-          "$ref": "🖼️change-node-icon/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/change-node-icon/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -182,7 +182,7 @@
     {
       "allOf": [
         {
-          "$ref": "🔡️change-node-abbreviation/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/change-node-abbreviation/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -207,7 +207,7 @@
     {
       "allOf": [
         {
-          "$ref": "🧮️change-node-operator-kind/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/change-node-operator-kind/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -232,7 +232,7 @@
     {
       "allOf": [
         {
-          "$ref": "🔁️replace-node-kind/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/replace-node-kind/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -257,7 +257,7 @@
     {
       "allOf": [
         {
-          "$ref": "🗃️replace-node-properties/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/replace-node-properties/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -282,7 +282,7 @@
     {
       "allOf": [
         {
-          "$ref": "🔀️reorder-nodes/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/reorder-nodes/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -306,7 +306,7 @@
     {
       "allOf": [
         {
-          "$ref": "🔗️connect-nodes/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/connect-nodes/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -335,7 +335,7 @@
     {
       "allOf": [
         {
-          "$ref": "✂️disconnect-nodes/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/disconnect-nodes/schema.json#/$defs/Payload"
         },
         {
           "type": "object",

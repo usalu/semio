@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/app/puzzle/puzzle3d/config.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/puzzle/puzzle3d/config/schema.json",
   "title": "Puzzle3dConfig",
   "type": "object",
   "additionalProperties": false,

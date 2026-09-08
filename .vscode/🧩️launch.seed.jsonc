@@ -10847,6 +10847,72 @@
       }
     },
     {
+      "name": "📦️build🦀️@semio-tech/schema-registry-rs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/schema-registry-rs:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 501.523
+      }
+    },
+    {
+      "name": "🔎️check🦀️@semio-tech/schema-registry-rs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/schema-registry-rs:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 501.524
+      }
+    },
+    {
+      "name": "🧪️test🦀️@semio-tech/schema-registry-rs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/schema-registry-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 501.525
+      }
+    },
+    {
+      "name": "🧪️test quick🦀️@semio-tech/schema-registry-rs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/schema-registry-rs:test-quick",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 501.526
+      }
+    },
+    {
+      "name": "🧪️test long🦀️@semio-tech/schema-registry-rs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/schema-registry-rs:test-long",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 501.527
+      }
+    },
+    {
+      "name": "🧪️test exhaustive🦀️@semio-tech/schema-registry-rs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/schema-registry-rs:test-exhaustive",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 501.528
+      }
+    },
+    {
       "name": "📦️build🦀️@semio-tech/sequence-plugin",
       "type": "node-terminal",
       "request": "launch",
@@ -13333,10 +13399,10 @@
       }
     },
     {
-      "name": "📦️build🦀️semio-s-artifact-stdio-contract",
+      "name": "📦️build🦀️@semio-tech/stdio-artifact-contract-rs",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run semio-s-artifact-stdio-contract:build",
+      "command": "bun nx run @semio-tech/stdio-artifact-contract-rs:build",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -13344,10 +13410,10 @@
       }
     },
     {
-      "name": "🔎️check🦀️semio-s-artifact-stdio-contract",
+      "name": "🔎️check🦀️@semio-tech/stdio-artifact-contract-rs",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run semio-s-artifact-stdio-contract:check",
+      "command": "bun nx run @semio-tech/stdio-artifact-contract-rs:check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -13355,10 +13421,10 @@
       }
     },
     {
-      "name": "🧪️test🦀️semio-s-artifact-stdio-contract",
+      "name": "🧪️test🦀️@semio-tech/stdio-artifact-contract-rs",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run semio-s-artifact-stdio-contract:test",
+      "command": "bun nx run @semio-tech/stdio-artifact-contract-rs:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",

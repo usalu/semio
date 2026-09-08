@@ -69,8 +69,8 @@
             "properties": {
               "status": {
                 "enum": [
-                  "Migrated",
-                  "BatchOnlyPendingRewrite"
+                  "migrated",
+                  "batch-only-pending-rewrite"
                 ]
               },
               "lanes": {
@@ -79,13 +79,13 @@
                 "uniqueItems": true,
                 "items": {
                   "enum": [
-                    "Artifact",
-                    "Config",
-                    "Draft",
-                    "Presence",
-                    "Transient",
-                    "Child",
-                    "HostOnly"
+                    "artifact",
+                    "config",
+                    "draft",
+                    "presence",
+                    "transient",
+                    "child",
+                    "host-only"
                   ]
                 }
               },
@@ -108,7 +108,7 @@
                 "if": {
                   "properties": {
                     "status": {
-                      "const": "BatchOnlyPendingRewrite"
+                      "const": "batch-only-pending-rewrite"
                     }
                   }
                 },

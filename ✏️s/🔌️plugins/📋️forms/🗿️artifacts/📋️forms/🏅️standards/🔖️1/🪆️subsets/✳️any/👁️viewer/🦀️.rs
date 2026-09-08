@@ -82,19 +82,6 @@ pub fn create_forms_viewer() -> semio_framework_plugin::AppDefinition {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn create_forms_viewer_builds_a_definition_for_the_viewer_role() {
-        let def = create_forms_viewer();
-        assert_eq!(def.role, semio_framework::AppRole::Viewer);
-        assert_eq!(def.dialect, FORMS_DIALECT.into());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn viewer_dialect_matches_the_artifact_coordinate() {
-        assert_eq!(<FormsViewer as ArtifactViewer>::DIALECT, FORMS_DIALECT);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

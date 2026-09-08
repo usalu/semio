@@ -2,9 +2,9 @@
 
 use crate::editor::rewriting::config::RewritingConfigMutation;
 use semio_s_artifact_trinity_jack::{Graph, JackSnapshot, PropertyValue};
-use crate::schema::{ParameterKind, Rhs};
+use crate::standards::v1::subsets::any::schema::{ParameterKind, Rhs};
 use crate::rewriting_snapshot_mutations;
-use crate::op::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use semio_framework_plugin::{Emit, Fault};
 
@@ -65,7 +65,7 @@ fn remove_at<T>(items: &mut Vec<T>, index: usize) -> bool {
     }
 }
 fn add_rule_clause(state: &mut RewritingSnapshot, clause_kind: &str) -> bool {
-    let Ok(mut lhs) = pack::from_json_str::<crate::schema::Lhs>(&state.lhs_json) else {
+    let Ok(mut lhs) = pack::from_json_str::<crate::standards::v1::subsets::any::schema::Lhs>(&state.lhs_json) else {
         return false;
     };
     let Ok(mut rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {
@@ -82,15 +82,15 @@ fn add_rule_clause(state: &mut RewritingSnapshot, clause_kind: &str) -> bool {
             }
         }
         "create" => {
-            rhs.create.push(crate::schema::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
+            rhs.create.push(crate::standards::v1::subsets::any::schema::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
             true
         }
         "merge" => {
-            rhs.merge.push(crate::schema::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
+            rhs.merge.push(crate::standards::v1::subsets::any::schema::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
             true
         }
         "set" => {
-            rhs.set.push(crate::schema::AssignmentJson { var: left_var, prop: "label".into(), value: PropertyValue::String(String::new()) });
+            rhs.set.push(crate::standards::v1::subsets::any::schema::AssignmentJson { var: left_var, prop: "label".into(), value: PropertyValue::String(String::new()) });
             true
         }
         "delete" => {
@@ -100,7 +100,7 @@ fn add_rule_clause(state: &mut RewritingSnapshot, clause_kind: &str) -> bool {
         "parameter" => {
             let name = format!("param{}", rhs.parameters.len());
             state.parameter_bindings.insert(name.clone(), PropertyValue::String(String::new()));
-            rhs.parameters.push(crate::schema::ParameterSpec { name, kind: ParameterKind::String, default: PropertyValue::String(String::new()) });
+            rhs.parameters.push(crate::standards::v1::subsets::any::schema::ParameterSpec { name, kind: ParameterKind::String, default: PropertyValue::String(String::new()) });
             true
         }
         _ => false,
@@ -189,7 +189,7 @@ pub(crate) fn delete_rule_clause(state: &mut RewritingSnapshot, node_id: &str) -
     let Some(clause_ref) = parse_clause_ref(node_id) else {
         return false;
     };
-    let Ok(mut lhs) = pack::from_json_str::<crate::schema::Lhs>(&state.lhs_json) else {
+    let Ok(mut lhs) = pack::from_json_str::<crate::standards::v1::subsets::any::schema::Lhs>(&state.lhs_json) else {
         return false;
     };
     let Ok(mut rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {

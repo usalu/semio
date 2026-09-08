@@ -1,6 +1,6 @@
 //! 🧱️ 🧱️ FEM 3D app commands command — `add-solid`.
 
-use crate::op::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
 use crate::Fem3dSnapshot;
 use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -38,5 +38,5 @@ pub fn handle(payload: &AddSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &
         mesh_size: payload.mesh_size.unwrap_or(0.5),
         material_id: payload.material_id.clone(),
     };
-    Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::mutations::create_solid::CreateSolid { solid })]))
+    Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid })]))
 }

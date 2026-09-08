@@ -16,7 +16,7 @@
           "const": "changeMaterialAlphaMode"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💎️material/🌫️change-alpha/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-material-alpha-mode/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "changeMaterialDoubleSided"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💎️material/🪞️change-sides/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-material-double-sided/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "createImage"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🖼️image/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-image/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "createMaterial"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💎️material/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-material/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "createSampler"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎛️sampler/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-sampler/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
           "const": "createTexture"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎨️texture/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-texture/schema.json"
         }
       }
     },
@@ -112,7 +112,7 @@
           "const": "deleteImage"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🖼️image/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-image/schema.json"
         }
       }
     },
@@ -128,7 +128,7 @@
           "const": "deleteMaterial"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💎️material/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-material/schema.json"
         }
       }
     },
@@ -144,7 +144,7 @@
           "const": "deleteSampler"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎛️sampler/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-sampler/schema.json"
         }
       }
     },
@@ -160,7 +160,7 @@
           "const": "deleteTexture"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎨️texture/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-texture/schema.json"
         }
       }
     },
@@ -176,7 +176,7 @@
           "const": "moveImage"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🖼️image/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-image/schema.json"
         }
       }
     },
@@ -192,7 +192,7 @@
           "const": "moveMaterial"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💎️material/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-material/schema.json"
         }
       }
     },
@@ -208,7 +208,7 @@
           "const": "moveSampler"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎛️sampler/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-sampler/schema.json"
         }
       }
     },
@@ -224,7 +224,7 @@
           "const": "moveTexture"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎨️texture/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-texture/schema.json"
         }
       }
     },
@@ -240,7 +240,7 @@
           "const": "reorderImages"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🖼️image/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-images/schema.json"
         }
       }
     },
@@ -256,7 +256,7 @@
           "const": "reorderMaterials"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/💎️material/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-materials/schema.json"
         }
       }
     },
@@ -272,7 +272,7 @@
           "const": "reorderSamplers"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎛️sampler/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-samplers/schema.json"
         }
       }
     },
@@ -288,7 +288,7 @@
           "const": "reorderTextures"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎨️texture/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-textures/schema.json"
         }
       }
     }

@@ -23,8 +23,8 @@ mod subject {
     use super::{DERIVED_ASSET, DSL_ASSET};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
-    use semio_s_artifact_fem_2d::standards::v1::subsets::any::schema::mutations::fem2d_mutation_report_json;
-    use semio_s_artifact_fem_2d::standards::v1::subsets::any::schema::snapshot::fem2d_identity_report_json;
+    use crate::standards::v1::subsets::any::schema::mutations::fem2d_mutation_report_json;
+    use crate::standards::v1::subsets::any::schema::snapshot::fem2d_identity_report_json;
 
     fn member<'a>(report: &'a Json, key: &str) -> Result<&'a Json, String> {
         report.get(key).ok_or_else(|| format!("the report carries no {key:?} member"))

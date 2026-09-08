@@ -18,6 +18,21 @@ export const COORDINATOR_SCHEMA_ID = "https://semio.tech/schema/repo/server/coor
 /** 🎁️ Outcome of one parse, free of any implementation-specific error type. */
 export type ParseResult<T> = { readonly success: true; readonly data: T } | { readonly success: false; readonly error: { readonly message: string } };
 
+/** ⏱️ RFC-3339 instant, the spelling every `*_at` column serialises to. */
+export type Timestamp = string;
+
+/** ⏱️ A `Timestamp` column that is nullable in the DDL. */
+export type NullableTimestamp = Timestamp | null;
+
+/** 🔤️ A `text` column that is nullable in the DDL. */
+export type NullableString = string | null;
+
+/** 🔢️ An `integer` column that is nullable in the DDL. */
+export type NullableInteger = number | null;
+
+/** 📧️ A developer's e-mail address, the natural key of the auth endpoints. */
+export type EmailAddress = string;
+
 export type DeveloperRole = "developer" | "admin" | "owner";
 export type TicketStatus = "open" | "closed";
 export type ScopeKind = "file" | "section" | "definition";
@@ -33,8 +48,8 @@ export interface StatusResponse {
 
 export interface AuthWhoAmIResponse {
   readonly id: string;
-  readonly email: string;
-  readonly github_login: string | null;
+  readonly email: EmailAddress;
+  readonly github_login: NullableString;
   readonly display_name: string;
   readonly role: DeveloperRole;
   readonly trusted: boolean;
@@ -42,15 +57,15 @@ export interface AuthWhoAmIResponse {
 
 export interface Developer {
   readonly id: string;
-  readonly email: string;
-  readonly github_login: string | null;
+  readonly email: EmailAddress;
+  readonly github_login: NullableString;
   readonly display_name: string;
   readonly trusted: boolean;
   readonly active: boolean;
   readonly role: DeveloperRole;
-  readonly discord_user_id: string | null;
-  readonly created_at: string;
-  readonly revoked_at: string | null;
+  readonly discord_user_id: NullableString;
+  readonly created_at: Timestamp;
+  readonly revoked_at: NullableTimestamp;
 }
 
 export interface DeveloperApiKey {
@@ -58,14 +73,14 @@ export interface DeveloperApiKey {
   readonly developer_id: string;
   readonly key_hash: string;
   readonly label: string;
-  readonly created_at: string;
-  readonly last_used_at: string | null;
-  readonly revoked_at: string | null;
+  readonly created_at: Timestamp;
+  readonly last_used_at: NullableTimestamp;
+  readonly revoked_at: NullableTimestamp;
 }
 
 export interface CreateDeveloperRequest {
   readonly action: "create-developer";
-  readonly email: string;
+  readonly email: EmailAddress;
   readonly github_login: string;
   readonly display_name: string;
   readonly trusted: boolean;
@@ -74,7 +89,7 @@ export interface CreateDeveloperRequest {
 
 export interface CreateKeyRequest {
   readonly action: "create-key";
-  readonly developer_email: string;
+  readonly developer_email: EmailAddress;
   readonly label: string;
 }
 
@@ -100,9 +115,9 @@ export interface Ticket {
   readonly author: string;
   readonly github_issue: string;
   readonly goal: string;
-  readonly parent: string | null;
-  readonly created_at: string;
-  readonly closed_at: string | null;
+  readonly parent: NullableString;
+  readonly created_at: Timestamp;
+  readonly closed_at: NullableTimestamp;
 }
 
 export interface TicketOpenRequest {
@@ -149,7 +164,7 @@ export interface Scope {
   readonly definition_name: string;
   readonly start_line: number;
   readonly end_line: number;
-  readonly updated_at: string;
+  readonly updated_at: Timestamp;
 }
 
 export type ScopeListResponse = readonly Scope[];
@@ -161,8 +176,8 @@ export interface Warning {
   readonly message: string;
   readonly ticket_id: string;
   readonly scope_id: string;
-  readonly created_at: string;
-  readonly acknowledged_at: string | null;
+  readonly created_at: Timestamp;
+  readonly acknowledged_at: NullableTimestamp;
   readonly ack_by: string;
 }
 
@@ -174,14 +189,14 @@ export interface Breach {
   readonly priority: string;
   readonly scope_id: string;
   readonly file_path: string;
-  readonly line: number | null;
-  readonly col: number | null;
+  readonly line: NullableInteger;
+  readonly col: NullableInteger;
   readonly summary: string;
   readonly excerpt: string;
   readonly autofixable: boolean;
-  readonly detected_at: string;
+  readonly detected_at: Timestamp;
   readonly ticket_id: string;
-  readonly resolved_at: string | null;
+  readonly resolved_at: NullableTimestamp;
 }
 
 export type BreachListResponse = readonly Breach[];
@@ -222,7 +237,7 @@ export interface Event {
   readonly kind: string;
   readonly source: string;
   readonly payload_json: unknown;
-  readonly created_at: string;
+  readonly created_at: Timestamp;
 }
 
 export type EventListResponse = readonly Event[];

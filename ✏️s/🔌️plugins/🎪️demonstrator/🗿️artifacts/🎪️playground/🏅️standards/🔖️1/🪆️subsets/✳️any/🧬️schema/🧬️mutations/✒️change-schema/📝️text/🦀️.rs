@@ -90,13 +90,6 @@ impl protocol::OpText for PlaygroundMutation {
 
 //#region 🧪️RoundTrip
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn text_wire_form_round_trips() {
-        let operation = PlaygroundMutation::ChangeSchema(ChangeSchema { new_schema: "playground custom".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&operation);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️RoundTrip

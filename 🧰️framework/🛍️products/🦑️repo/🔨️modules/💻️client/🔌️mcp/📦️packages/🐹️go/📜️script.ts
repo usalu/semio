@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, goLevelTestArgs, resolveTestLevel, runBundleScriptMain, runCmd, runTestBudgeted } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, goLevelTestArgs, resolveTestLevel, runBundleScriptMain, runCanonicalGoTests, runCmd } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class BuildScript extends BundleScript {
   run(): void {
@@ -18,7 +18,7 @@ class DevScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(args);
-    await runTestBudgeted("go", ["test", "./...", ...goLevelTestArgs(level), ...rest], { cwd: join(this.root, "../..") });
+    await runCanonicalGoTests(join(this.root, "../.."), [...goLevelTestArgs(level), ...rest]);
   }
 }
 

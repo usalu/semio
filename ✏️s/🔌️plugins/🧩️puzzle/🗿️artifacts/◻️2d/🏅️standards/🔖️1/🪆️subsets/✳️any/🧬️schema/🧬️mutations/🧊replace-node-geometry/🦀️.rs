@@ -2,8 +2,8 @@
 //! `shape`+`radius`+`width`+`height` together are the node's one geometric representation, the
 //! same grouping cad's `replace-object-geometry` uses for `mesh_url`+`extent`+`solid_handle`.
 
-use crate::diff::Puzzle2dDiff;
-use crate::mutations::Puzzle2dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation

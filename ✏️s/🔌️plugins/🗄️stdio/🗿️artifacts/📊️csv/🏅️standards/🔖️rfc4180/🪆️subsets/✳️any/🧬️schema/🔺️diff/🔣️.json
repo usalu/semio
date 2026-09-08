@@ -1,19 +1,28 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.csv/diff.csv",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/csv/rfc4180/any/diff.json",
   "title": "CsvDiff",
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "hasHeader": { "type": "boolean" },
-    "records": { "$ref": "#/$defs/CsvRecordsDiff" }
+    "hasHeader": {
+      "type": "boolean"
+    },
+    "records": {
+      "$ref": "#/$defs/CsvRecordsDiff"
+    }
   },
   "$defs": {
     "CsvFieldDiff": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "value": { "type": "string" },
-        "quoted": { "type": "boolean" }
+        "value": {
+          "type": "string"
+        },
+        "quoted": {
+          "type": "boolean"
+        }
       }
     },
     "CsvRecordDiff": {
@@ -22,35 +31,76 @@
       "properties": {
         "fields": {
           "type": "array",
-          "items": { "anyOf": [{ "$ref": "#/$defs/CsvFieldDiff" }, { "type": "null" }] }
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CsvFieldDiff"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
         }
       }
     },
     "CsvRecordModified": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["index", "diff"],
+      "required": [
+        "index",
+        "diff"
+      ],
       "properties": {
-        "index": { "type": "integer", "minimum": 0 },
-        "diff": { "$ref": "#/$defs/CsvRecordDiff" }
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "diff": {
+          "$ref": "#/$defs/CsvRecordDiff"
+        }
       }
     },
     "CsvRecordAdded": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["index", "record"],
+      "required": [
+        "index",
+        "record"
+      ],
       "properties": {
-        "index": { "type": "integer", "minimum": 0 },
-        "record": { "$ref": "https://semio.tech/schema/s.stdio.csv/snapshot.csv#/$defs/CsvRecord" }
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "record": {
+          "$ref": "https://semio.tech/schema/s/stdio/csv/rfc4180/any/snapshot.json#/$defs/CsvRecord"
+        }
       }
     },
     "CsvRecordsDiff": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
-        "modified": { "type": "array", "items": { "$ref": "#/$defs/CsvRecordModified" } },
-        "added": { "type": "array", "items": { "$ref": "#/$defs/CsvRecordAdded" } }
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CsvRecordModified"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CsvRecordAdded"
+          }
+        }
       }
     }
   }

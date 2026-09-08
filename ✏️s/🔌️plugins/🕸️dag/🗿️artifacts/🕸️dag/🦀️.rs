@@ -12,8 +12,11 @@ extern crate infinite_canvas as infinite_board_port_directed_dag;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+mod art_dag_demo_tests;
 extern crate semio_framework_schema as framework_schema;
-extern crate self as semio_s_artifact_dag_dag;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 #[cfg(test)]
@@ -266,65 +269,33 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `.declare_artifact(artifact())` call is the ONLY registration channel for this artifact.
 /// `definition()` (old `ArtifactDefinition`/capability rows) is KEPT per debt D1 — not deleted
 /// repo-wide until W6 — but has zero callers left from this file.
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::DagApps> {
+pub fn artifact<A: DagApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.dag.dag").expect("canonical dag kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
 }
+
+/// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
+pub trait DagApplication:
+    semio_framework_plugin::PluginApp
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::dag::DagPlayApp>>>
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::dag::DagViewer>>>
+{
+}
+
+impl<A> DagApplication for A where
+    A: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::dag::DagPlayApp>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::dag::DagViewer>>>
+{
+}
+
 //#endregion 🔖️Register
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    trait DagChildOwnerOracle {
-        fn expected() -> serde_json::Value;
-    }
-
-    struct SerdeJsonDagChildOwnerOracle;
-
-    impl DagChildOwnerOracle for SerdeJsonDagChildOwnerOracle {
-        fn expected() -> serde_json::Value {
-            serde_json::from_str(include_str!("🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral DAG child-owner fixture")
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn artifact_kind_declares_the_graph_dag_component_kind() {
-        assert_eq!(artifact_kind().id, "graph.dag");
-        assert_eq!(artifact_kind().schema, DAG_DOCUMENT_SCHEMA);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn default_snapshot_matches_document_schema() {
-        assert_eq!(default_snapshot().schema, DAG_DOCUMENT_SCHEMA);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn node_edge_content_round_trips_through_the_composed_child_snapshot() {
-        let document = default_snapshot();
-        let scene = dag_working_scene(&document);
-        let content = dag_content_snapshot_from_working(&scene.nodes, &scene.edges);
-        let (nodes, edges) = working_from_dag_content_snapshot(&content);
-        assert_eq!(nodes, scene.nodes);
-        assert_eq!(edges, scene.edges);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn dag_working_scene_is_owned_by_the_exact_snapshot_child() {
-        let owned = dag_content_child_with_owner(Vec::new(), Vec::new());
-        let wire = dsl::json::to_json_string(&owned);
-        let reconstructed: DagContentChild = dsl::json::from_json_str(&wire).expect("DAG child wire roundtrip");
-        let observed = serde_json::json!({
-            "ownedHasScene": owned.local_owner::<DagWorkingScene>().is_some(),
-            "wireIdentityMatches": owned == reconstructed,
-            "wireHasScene": reconstructed.local_owner::<DagWorkingScene>().is_some(),
-        });
-
-        assert_eq!(observed, SerdeJsonDagChildOwnerOracle::expected());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[path = "."]

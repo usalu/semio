@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `RemoveParameterBinding` — `None` signals a clear.
-use crate::diff::RewritingDiff;
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
 use crate::RewritingSnapshot;
 use std::collections::BTreeMap;
 

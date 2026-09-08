@@ -5,7 +5,7 @@
 //! or draft mutation. MUST NOT import anything from the sibling editor module
 //! (`policyViewerPurityBreaches`).
 
-use crate::op::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
 use crate::{RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
 use crate::viewer::rewriting::modes::view;
 use crate::viewer::rewriting::modes::view::windows::rule;
@@ -99,19 +99,6 @@ pub fn create_trinity_rewriting_viewer() -> semio_framework_plugin::AppDefinitio
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn create_trinity_rewriting_viewer_builds_a_definition_for_the_viewer_role() {
-        let def = create_trinity_rewriting_viewer();
-        assert_eq!(def.role, semio_framework::AppRole::Viewer);
-        assert_eq!(def.dialect, TRINITY_REWRITING_DIALECT.into());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn viewer_dialect_matches_the_artifact_coordinate() {
-        assert_eq!(<TrinityRewritingViewer as ArtifactViewer>::DIALECT, TRINITY_REWRITING_DIALECT);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

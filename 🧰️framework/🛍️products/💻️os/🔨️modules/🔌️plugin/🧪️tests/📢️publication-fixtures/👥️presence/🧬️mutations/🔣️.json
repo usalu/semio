@@ -12,7 +12,7 @@
       "const": "changePublicationPresence"
     },
     "payload": {
-      "$ref": "📝️change-publication-presence/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/framework/os/plugin/tests/publication-fixtures/presence/mutation/change-publication-presence/schema.json"
     }
   }
 }

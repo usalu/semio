@@ -36,6 +36,10 @@ serde = { version = "1.0.219", features = ["derive"] }
 semio-framework-replication = { workspace = true }
 # 🧬️ Proc-macro for `#[derive(ToValue, FromValue)]` — leaf crate (syn/quote/proc-macro2 only).
 semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
+# 📇️ `register_scope_schema_exports` for the `framework.ui.contract` scope. The registry/resolver
+# crate is dependency-free by construction (`🧬️schema/📇️registry`), which is exactly why the scope
+# split exists — `semio-framework-schema` itself carries the os-kernel edge this crate forbids.
+semio-framework-schema-registry = { workspace = true }
 
 [dev-dependencies]
 serde_json = { version = "1.0.140" }

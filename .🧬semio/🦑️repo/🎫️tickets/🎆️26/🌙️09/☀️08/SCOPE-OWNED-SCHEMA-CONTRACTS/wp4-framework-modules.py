@@ -29,9 +29,13 @@ def pas(s):
     return "".join(p[:1].upper() + p[1:] for p in re.split(r"[-_.\s]+", s) if p)
 
 
-# owner hoists: 🧱️elements/* is not an eligible scope owner level (contract §A)
+# owner hoists: 🧱️elements/*, 🎯️targets/*, 📦️packages/* and 🧫️*/🧪️* are not eligible scope owner
+# levels (contract §A); the contract goes to the nearest eligible owner above.
 MODULE_HOIST = {
     MODROOT + "🖱️ui/🧱️elements/📨️UIDialog": MODROOT + "🖱️ui",
+    MODROOT + "🖱️ui/🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust": MODROOT + "🖱️ui/🖌️render",
+    MODROOT + "🖱️ui/🖌️render/🎯️targets/🧊️webgpu": MODROOT + "🖱️ui/🖌️render",
+    MODROOT + "📡️replication/🧫️fixtures/👥️presence-peer-codec-v1": MODROOT + "📡️replication",
 }
 
 FIXDIRS = {

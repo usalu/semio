@@ -7903,13 +7903,10 @@
         "📷️set-camera-applied",
         "🌐️set-locale-applied",
         "🛣️retained-command-routes.json",
-        "🧬️retained-command-routes.schema.json",
         "✍️retained-edit-limits",
         "💠️lowpoly-snapshot.json",
         "👑️playbook-scene-owner-law.json",
-        "🎬️playbook-scene-owner.schema.json",
-        "👁️playbook-view-command-limits.json",
-        "🎚️playbook-view-command-limits.schema.json"
+        "👁️playbook-view-command-limits.json"
       ],
       "source": "registry"
     },
@@ -8557,7 +8554,6 @@
         "📮️requests",
         "📸️checkpoint",
         "🔌️ports",
-        "🔗️graphql",
         "🔨️bin",
         "🕸️graph",
         "🖼️image",
@@ -12677,52 +12673,6 @@
           "fixedFilenameContractId": "root-script"
         },
         {
-          "sourcePathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "packages",
-              "literal": "📦️packages"
-            },
-            {
-              "kindId": "rust-language",
-              "literal": "🦀️rust"
-            }
-          ],
-          "destinationPathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "packages",
-              "literal": "📦️packages"
-            },
-            {
-              "kindId": "rust-language",
-              "literal": "🦀️rust"
-            },
-            {
-              "kindId": "library",
-              "literal": "📚️library"
-            }
-          ],
-          "nodeType": "file",
-          "configurableEntry": {
-            "contractId": "rust-library-entry",
-            "sourceFilename": "🦀️.rs",
-            "configurationReferences": [
-              {
-                "fixedFilenameContractId": "cargo-manifest",
-                "adapter": "toml",
-                "structuredLocation": "lib.path"
-              }
-            ]
-          }
-        },
-        {
           "pathSegments": [
             {
               "kindId": "fsm",
@@ -12856,67 +12806,13 @@
           ],
           "nodeType": "file",
           "fixedFilenameContractId": "root-script"
-        },
-        {
-          "sourcePathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "macros",
-              "literal": "✨️macros"
-            },
-            {
-              "kindId": "packages",
-              "literal": "📦️packages"
-            },
-            {
-              "kindId": "rust-language",
-              "literal": "🦀️rust"
-            }
-          ],
-          "destinationPathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "macros",
-              "literal": "✨️macros"
-            },
-            {
-              "kindId": "packages",
-              "literal": "📦️packages"
-            },
-            {
-              "kindId": "rust-language",
-              "literal": "🦀️rust"
-            },
-            {
-              "kindId": "library",
-              "literal": "📚️library"
-            }
-          ],
-          "nodeType": "file",
-          "configurableEntry": {
-            "contractId": "rust-library-entry",
-            "sourceFilename": "🦀️.rs",
-            "configurationReferences": [
-              {
-                "fixedFilenameContractId": "cargo-manifest",
-                "adapter": "toml",
-                "structuredLocation": "lib.path"
-              }
-            ]
-          }
         }
       ],
       "exclusiveAlternatives": [],
-      "realizedNodeCount": 20,
+      "realizedNodeCount": 16,
       "pathBudgetReserve": {
         "derivation": "longest-canonical-descendant-suffix",
-        "bytes": 78
+        "bytes": 72
       }
     }
   },
@@ -24646,7 +24542,7 @@
       "inputPatterns": [
         "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
-        "🧰️framework/🔨️modules/🧬️schema/🔣️.json"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🗂️technologies.json"
       ],
       "outputRoots": [
         {
@@ -24658,7 +24554,7 @@
           "inclusion": "ignored"
         },
         {
-          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/⚡️implementations/🐹️go/🐹️entity_kinds.g.go",
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🐹️entity_kinds.g.go",
           "inclusion": "ignored"
         }
       ],
@@ -25550,9 +25446,22 @@
       },
       "mutation-leaf": {
         "pathPatterns": [
-          "**/🧬️schema/🧬️mutations/*"
+          "**/🧬️schema/🧬️mutations/*",
+          "**/🧬️schema/🧬️mutations/*/*"
         ],
-        "reason": "mutationPayloadSchemaAuthority makes the leaf the authority for its own payload; aggregates are $ref unions."
+        "reason": "mutationPayloadSchemaAuthority makes the leaf the authority for its own payload; aggregates are $ref unions. A leaf directory is one segment, or two where the descriptor splits domain and verb."
+      },
+      "plugin-extension": {
+        "pathPatterns": [
+          "✏️s/🔌️plugins/*/🧩️extensions/*"
+        ],
+        "reason": "A plugin extension is a separately deployable unit of a plugin and owns the contracts only it publishes."
+      },
+      "plugin-submodule": {
+        "pathPatterns": [
+          "✏️s/🔌️plugins/*/*"
+        ],
+        "reason": "A plugin submodule that is neither the artifact container, the extension container nor a package boundary owns the contracts of the plugin-wide service it implements."
       }
     },
     "excludedOwnerPathPatterns": [
@@ -25563,7 +25472,9 @@
       "**/📦️packages",
       "**/📦️packages/**",
       "**/🧬️contracts",
-      "**/🧬️contracts/**"
+      "**/🧬️contracts/**",
+      "**/🗿️artifacts",
+      "**/🧩️extensions"
     ],
     "fixtureOwnerPathPatterns": [
       "**/🧪️*",
@@ -25571,16 +25482,23 @@
       "**/🧫️*",
       "**/🧫️*/**"
     ],
-    "fixtureOwnerReason": "A 🧪️/🧫️ tree carries test data and the authority schema of that data. It can never own a contract scope, so its schema modules and its retired-placement filenames are fixture inputs, not findings."
+    "fixtureOwnerReason": "A 🧪️/🧫️ tree is a collection of examples, so it can never own a contract scope. A schema document inside one is a schema-fixture-defines-schema finding: the contract belongs in the owner module, and only a case that declares the file under inertSchemaData keeps a schema-shaped parser input silent.",
+    "moduleMemberDirName": "🔨️modules",
+    "mutationsFacetDirName": "🧬️mutations",
+    "inertSchemaDataKeyword": "inertSchemaData"
   },
   "schemaExportResolution": {
-    "uriScheme": "schema",
-    "uriPattern": "^schema://(?<scope>[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)*)/(?<export>[A-Z][A-Za-z0-9]*)$",
-    "idBase": "https://semio.tech/schema/",
-    "idFacetFilenamePattern": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.json$",
-    "scopeIdSeparator": ".",
-    "scopeIdPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)*$",
+    "catalogContractId": "schema-scope-catalog-v1",
+    "catalogDocumentPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md",
+    "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
     "exportIdPattern": "^[A-Z][A-Za-z0-9]*$",
+    "exportsKeyword": "$defs",
+    "forbiddenPlacementPatterns": [
+      "**/*.schema.json",
+      "**/🧬️schema.json",
+      "**/🧬️contracts",
+      "**/🧬️contracts/**"
+    ],
     "formatIds": {
       "🦀️rust": "rust",
       "🟦️typescript": "typescript",
@@ -25588,22 +25506,19 @@
       "🔣️jsonschema": "jsonschema",
       "🛰️protobuf": "protobuf"
     },
-    "rustEntriesContractId": "schema-export-registry-entries-v1",
-    "mutationScopeSegment": "mutation",
-    "mutationLeafFacetFilename": "schema.json",
-    "rootExportKeyword": "title",
-    "exportsKeyword": "$defs",
-    "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
-    "catalogDocumentPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md",
-    "catalogContractId": "schema-scope-catalog-v1",
     "generator": "bun ./📜️script.ts schema generate",
-    "forbiddenPlacementPatterns": [
-      "**/*.schema.json",
-      "**/🧬️schema.json",
-      "**/🧬️contracts",
-      "**/🧬️contracts/**"
-    ],
-    "placementExceptions": {}
+    "idBase": "https://semio.tech/schema/",
+    "idFacetFilenamePattern": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.json$",
+    "mutationAggregateFacetFilename": "mutations.json",
+    "mutationLeafFacetFilename": "schema.json",
+    "mutationScopeSegment": "mutation",
+    "placementExceptions": {},
+    "rootExportKeyword": "title",
+    "rustEntriesContractId": "schema-export-registry-entries-v1",
+    "scopeIdPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)*$",
+    "scopeIdSeparator": ".",
+    "uriPattern": "^schema://(?<scope>[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)*)/(?<export>[A-Z][A-Za-z0-9]*)$",
+    "uriScheme": "schema"
   },
   "artifactComponentDirs": [
     "🧬️schema",
@@ -25881,6 +25796,7 @@
   "testJavaScriptFrameworkModules": [
     "@jest/globals",
     "@playwright/test",
+    "@storybook/test",
     "ava",
     "bun:test",
     "jest",
@@ -26207,7 +26123,8 @@
     "🧰️framework": "clean",
     "🌎️hub": "clean",
     "♻️mit-bestand": "clean",
-    "🧰️framework/🛍️products/🦑️repo": "clean"
+    "🧰️framework/🛍️products/🦑️repo": "clean",
+    ".🧬semio/🦑️repo/🎫️tickets": "exempt"
   },
   "_areaLayerComment": "🏛️ Dependency direction. `repo-wide` code (the root router, root manifests) and `framework` code may be depended UPON by an implementation, never the reverse: deleting an `implementation` area must leave every `repo-wide` and `framework` file correct and up to date. An implementation-specific rule therefore belongs in that implementation's own 📜️script.ts, which the policy plugin already discovers, not in the root router. Enforced by `bun ./📜️script.ts verify layering` against the shrink-only baseline 🧅️layering.json.",
   "areaLayers": {

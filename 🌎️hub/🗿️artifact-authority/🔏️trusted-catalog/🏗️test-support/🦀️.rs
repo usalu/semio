@@ -145,9 +145,9 @@ pub async fn verified_gis_map_test_profile(root: &Path) -> Result<VerifiedGisMap
             "nativeCodecs": native_codecs, "openTargets": [target]
         }, stdio_record]
     });
-    let decoded: super::Bundle = serde_json::from_value(bundle.clone()).map_err(|error| AuthorityError::Catalog(format!("test-support bundle shape invalid: {error}")))?;
+    let decoded: super::TrustedBundleV1 = serde_json::from_value(bundle.clone()).map_err(|error| AuthorityError::Catalog(format!("test-support bundle shape invalid: {error}")))?;
     bundle["profiles"][0]["selectedClosureSha256"] = hex_lower(&super::selected_closure_digest(&decoded.profiles[0].selected_closure)?).into();
-    let regenerated: super::Bundle = serde_json::from_value(bundle.clone()).map_err(|error| AuthorityError::Catalog(format!("test-support bundle shape invalid: {error}")))?;
+    let regenerated: super::TrustedBundleV1 = serde_json::from_value(bundle.clone()).map_err(|error| AuthorityError::Catalog(format!("test-support bundle shape invalid: {error}")))?;
     bundle["profiles"][0]["generationId"] = super::trusted_profile_generation(&regenerated, &regenerated.profiles[0])?.into();
     let bundle_path = root.join("trusted-catalog.json");
     std::fs::write(&bundle_path, serde_json::to_vec_pretty(&bundle).map_err(|error| AuthorityError::Catalog(format!("bundle encode failed: {error}")))?).map_err(|error| AuthorityError::Catalog(format!("bundle write failed: {error}")))?;

@@ -17,7 +17,8 @@
 //!    `wasm32-wasip2` guests and `wasm32-unknown-unknown` browsers by construction, and a CI
 //!    `cargo tree` assertion keeps it so.
 
-#[cfg(feature = "typegen")]
+/// 🧬️ This scope's schema leaf: `register_scope_exports()` unconditionally, the versioned
+/// TypeScript projection behind `feature = "typegen"` inside the file itself.
 #[path = "../../🧬️schema/🦀️.rs"]
 pub mod schema_metadata;
 

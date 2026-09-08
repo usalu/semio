@@ -1,8 +1,8 @@
 //! 🔌 Puzzle2d mutation — `ReplaceNodeHandle`: whole-value swap of one handle's presentation
 //! fields (kind/angle/radius/color/icon/scale/visible/locked together, one property-panel gesture).
 
-use crate::diff::Puzzle2dDiff;
-use crate::mutations::Puzzle2dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::{Puzzle2dHandle, Puzzle2dSnapshot};
 
 //#region 🔖️Mutation

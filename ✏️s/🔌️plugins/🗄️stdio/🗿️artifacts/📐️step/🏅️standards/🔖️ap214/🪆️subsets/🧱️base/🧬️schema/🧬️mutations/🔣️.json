@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧩insert-entity/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/mutation/insert-entity/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➕insert-entity-arg/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/mutation/insert-entity-arg/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🗑️remove-entity/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/mutation/remove-entity/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➖remove-entity-arg/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/mutation/remove-entity-arg/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔧set-entity-arg/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/mutation/set-entity-arg/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./✏️set-entity-name/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/mutation/set-entity-name/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📋️set-file-description/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/mutation/set-file-description/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📛set-file-name/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/mutation/set-file-name/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏷️set-file-schema/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/mutation/set-file-schema/schema.json"
         },
         {
           "type": "object",
@@ -169,7 +169,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",

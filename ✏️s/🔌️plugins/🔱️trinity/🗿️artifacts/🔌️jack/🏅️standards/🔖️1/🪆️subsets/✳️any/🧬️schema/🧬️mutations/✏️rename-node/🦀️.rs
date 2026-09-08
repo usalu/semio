@@ -1,6 +1,6 @@
 //! ✏️ TrinityGraph mutation — `RenameNode`: changes a node's identity `name` field.
-use crate::diff::JackDiff;
-use crate::mutations::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::diff::JackDiff;
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::JackSnapshot;
 
 //#region 🔖️Mutation

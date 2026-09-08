@@ -3,7 +3,7 @@
 use crate::widget_id;
 use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use semio_framework_artifact_flow_semio_framework_os_flow::{FlowFixture, Widget};
+use semio_framework_artifact_flow_flow::{FlowFixture, Widget};
 use semio_framework_plugin::plugin_app_close_prelude::{field, input, Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::{tree_item, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
@@ -107,15 +107,6 @@ pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Gene
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::generation3d::testkit::{app, render as render_body};
-
-    #[semio_framework_async_macros::async_test]
-    async fn inspector_shows_no_selection_by_default() {
-        let _serial = crate::editor::generation3d::test_support::lock();
-        let mut app = app().await;
-        assert!(render_body(&mut app, GENERATION_3D_PLAY_BODY_INSPECTION).await.contains("Schema:"));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

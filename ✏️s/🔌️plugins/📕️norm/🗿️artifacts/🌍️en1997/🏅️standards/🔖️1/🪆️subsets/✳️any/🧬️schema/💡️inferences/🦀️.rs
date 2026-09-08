@@ -69,21 +69,8 @@ pub fn en1997_artifact_inference_descriptor() -> framework_schema::ArtifactInfer
 
 #[cfg(test)]
 //#region 🧪️Tests
-mod tests {
-    use super::*;
-    use protocol::Inference;
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
-        let snapshot = En1997Snapshot::default();
-        assert_eq!(En1997Inference::infer(&snapshot), En1997Inference::infer(&snapshot));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
-        assert_eq!(En1997Inference::infer(&En1997Snapshot::default()), En1997Inference::default());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
@@ -173,21 +160,6 @@ pub fn evaluate(document: &En1997Snapshot) -> CheckReport {
 
 //#region 🧪️ComplianceReportTests
 #[cfg(test)]
-mod compliance_report_tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn full_geotechnical_worked_example() {
-        let report = check_full_geotechnical(500.0, 80.0, 2.0, 30.0, 0.0, 18.0, 2.0, 1.5, 30_000.0, 0.3, DesignApproach::Da1Str, AnnexChoice::De, 25.0, 800.0, 0.7, 0.6, 80.0, 12.0, 2500.0, 0.28, 1, 8.0);
-        assert_eq!(report.checks.len(), 5);
-        assert!(report.checks[3].utilization < 1.0);
-        assert_eq!(report.checks[4].status, crate::document::CheckStatus::Pass);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn evaluate_runs_all_parts() {
-        let report = evaluate(&En1997Snapshot::default());
-        assert_eq!(report.checks.len(), 5);
-    }
-}
+#[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
+mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests

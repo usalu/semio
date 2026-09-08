@@ -16,7 +16,7 @@
           "const": "insertArrayElement"
         },
         "payload": {
-          "$ref": "./📥️insert-array-element/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/base/mutation/insert-array-element/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "removeArrayElement"
         },
         "payload": {
-          "$ref": "./📤️remove-array-element/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/base/mutation/remove-array-element/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "removeMember"
         },
         "payload": {
-          "$ref": "./🗑️remove-member/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/base/mutation/remove-member/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "setMember"
         },
         "payload": {
-          "$ref": "./✏️set-member/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/base/mutation/set-member/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "setScalar"
         },
         "payload": {
-          "$ref": "./🔢️set-scalar/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/base/mutation/set-scalar/schema.json"
         }
       }
     }

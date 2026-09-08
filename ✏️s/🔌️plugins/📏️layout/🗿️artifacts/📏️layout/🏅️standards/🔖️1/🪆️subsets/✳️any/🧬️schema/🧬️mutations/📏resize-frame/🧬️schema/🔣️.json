@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/layout/layout/1/any/mutation/resize-frame/schema.json",
+  "$id": "https://semio.tech/schema/s/layout/layout/mutation/resize-frame/schema.json",
   "title": "ResizeFrame",
   "type": "object",
   "additionalProperties": false,

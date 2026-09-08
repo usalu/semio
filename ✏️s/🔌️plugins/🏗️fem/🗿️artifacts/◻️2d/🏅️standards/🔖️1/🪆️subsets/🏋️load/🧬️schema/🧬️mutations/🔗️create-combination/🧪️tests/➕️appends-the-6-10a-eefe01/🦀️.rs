@@ -12,8 +12,8 @@
 //!
 //! ➕️ EN 1990 expression 6.10a over the dead and snow cases. Every term is validated against the load cases AND the existing combinations, so a nested combination is legal.
 
-use crate::mutations::Fem2dMutation;
-use crate::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -126,7 +126,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-combination/appends-the-6-10a-eefe01: committed diff JSON is not canonical");
@@ -135,7 +135,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed delta on `before` must reproduce the committed `after`.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::standards::v1::subsets::any::schema::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-combination/appends-the-6-10a-eefe01: committed diff did not carry before to after");
 }

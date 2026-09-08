@@ -88,6 +88,8 @@ import { TurnScheduler, type Lane } from "../../../../../../../🔨️modules/�
 import { wireExtensionInvocation } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts";
 import { type PluginManifest, type ViewModel } from "../🐚️Shell/🟦️.tsx";
 import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../📤️SegmentedDownload/🟦️.ts";
+import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, decodeBackboneMessage } from "@semio-tech/framework-os";
+import { ActorDocumentBindingV1, type ActorDocumentMessagePortV1, type ActorDocumentSourceV1, encodeDocumentBackboneControlV1 } from "./📡️backbone/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️plugin-runtime
@@ -99,6 +101,13 @@ export interface PluginExtensionCompletion {
   assertActive(): void;
   complete(outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array }): Promise<InvocationResponse>;
 }
+
+export type PluginDocumentBindingV1 = ActorDocumentSourceV1 & Readonly<{
+  current(): boolean;
+  send(payload: Uint8Array): void;
+  prepared?(port: ActorDocumentMessagePortV1): void;
+  merge?(conflicts: readonly Conflict[] | null, report: MergeReport | null): void;
+}>;
 
 export type PluginWasmHandle = {
   readonly pluginId: string;
@@ -135,8 +144,7 @@ export type PluginWasmHandle = {
   readonly readAppDocumentPack?: (instanceId: number) => Promise<{ readonly pack: Uint8Array; readonly spr: Uint8Array } | null>;
   /** 📂️ Binary pack+spr document load (`AppCommand::LoadDocument`) — the Wave-1 channel-native path. */
   readonly loadAppDocumentPack?: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
-  readonly attachBackbone?: (instanceId: number, uri: string) => Promise<void>;
-  readonly detachBackbone?: (instanceId: number) => Promise<void>;
+  readonly bindDocumentPort?: (instanceId: number, binding: PluginDocumentBindingV1) => Promise<ActorDocumentMessagePortV1>;
   /** 👥️ `interaction` (contract-freeze §C7.6) is the app's own declared-broadcast selection/hover
    * slice — `encode_presence_interaction` output, empty when no domain is declared or broadcasting
    * right now. */
@@ -1026,7 +1034,7 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
     commandIngress: results.at(-1)?.commandIngress,
   };
 }
-async function settleAcknowledgedPluginTurns(actorId: string, results: readonly WireTurnResult[], acknowledgements: readonly ShardEventEnvelope[]): Promise<WireTurnResult> {
+async function settleAcknowledgedPluginTurns(actorId: string, results: readonly WireTurnResult[], acknowledgements: readonly ShardEventEnvelope[], activation?: ShardActorActivationLease): Promise<WireTurnResult> {
   const initial: WireTurnResult = {
     uiPatches: [],
     effects: [],
@@ -1034,7 +1042,7 @@ async function settleAcknowledgedPluginTurns(actorId: string, results: readonly 
     commandIngress: results.at(-1)?.commandIngress,
     status: results.at(-1)?.status,
   };
-  const continued = await settlePluginTurn(actorId, initial, "Interactive", new Set(), (turn) => turn === initial ? acknowledgements : patchAckEvents(turn, retainTurnUiPatches(actorId, turn)), true);
+  const continued = await settlePluginTurn(actorId, initial, "Interactive", new Set(), (turn) => turn === initial ? acknowledgements : patchAckEvents(turn, retainTurnUiPatches(actorId, turn)), true, activation);
   return {
     ...continued,
     uiPatches: [...results.flatMap((turn) => turn.uiPatches), ...continued.uiPatches],
@@ -1116,13 +1124,16 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   notePluginLoadProgress(pluginId);
   const shardClient = getShardClient();
   const actorIdByInstance = new Map<number, string>();
+  const closingInstances = new Set<number>();
+  const documentBindings = new Map<number, ActorDocumentBindingV1>();
+  const documentBindingGenerations = new Map<number, bigint>();
   /** 🚪️ One captured lifecycle owner per live instance — `createApp` opens through it so the guest
    * receives the `activation-generation`/`request-sequence` authority its own wire decoder demands. */
   const lifecycleByInstance = new Map<number, ShardInstanceLifecycleLease>();
   let eventSeq = 0;
   const requireActorId = (instanceId: number): string => {
     const actorId = actorIdByInstance.get(instanceId);
-    if (!actorId) throw new Error(`[DEBUG] program ${pluginId}: no actor for instance ${instanceId} (createApp not called, or already destroyed)`);
+    if (!actorId || closingInstances.has(instanceId)) throw new Error(`[DEBUG] program ${pluginId}: no actor for instance ${instanceId} (createApp not called, or already destroyed)`);
     return actorId;
   };
   /** 🚦 `lane`/`coalesceKey` forward to {@link submitPluginTurn} — see that function's own doc for the
@@ -1141,6 +1152,20 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
    * `AppChannelClient` (`💻️os/🟦️.ts`) filters to its own `instanceId`. */
   const turnOutcomes = createTurnOutcomeBroadcast<TurnOutcome>();
 
+  const hotBytes = (raw: unknown): Uint8Array => {
+    const length = raw instanceof Uint8Array || Array.isArray(raw) ? raw.length : 0;
+    if (!length || length > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES || (Array.isArray(raw) && raw.some(value => !Number.isInteger(value) || value < 0 || value > 255))) throw new Error("actor-document-port.message-size");
+    const bytes = raw instanceof Uint8Array ? raw : Uint8Array.from(raw as number[]);
+    if (decodeBackboneMessage(bytes).kind === "snapshot") throw new Error("actor-document-port.snapshot-requires-cold-pair");
+    return bytes;
+  };
+  const routeDocumentEffects = (effects: readonly WireVariant[], port: ActorDocumentMessagePortV1 | undefined): WireVariant[] => effects.filter(effect => {
+    const value = effect.val as { target?: WireVariant; payload?: unknown } | undefined;
+    if (effect.tag !== "send-message" || value?.target?.tag !== "backbone") return true;
+    if (port && value.target.val === port.uri) port.send(port.uri, hotBytes(value.payload));
+    return false;
+  });
+
   /** 🔀️ The real turn-submission body `enqueue` used to run synchronously inline and return — now
    * run fire-and-forget from `enqueue`, pushing its settlement onto {@link turnOutcomes} instead of
    * resolving a caller's promise directly (a caller's own promise now lives one layer up, in
@@ -1150,7 +1175,10 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   const runQueuedTurn = async (instanceId: number, events: readonly Uint8Array[]): Promise<void> => {
     try {
       const actorId = requireActorId(instanceId);
+      const activation = shardClient.captureActorActivation(actorId);
+      const documentPort = documentBindings.get(instanceId)?.port;
       const result = await serializeCommandIngressForActor(actorId, async (): Promise<WireTurnResult> => {
+        activation.assertActive();
         const results: WireTurnResult[] = [];
         let acknowledgements: readonly ShardEventEnvelope[] = [];
         const acceptTurn = (turn: WireTurnResult) => {
@@ -1168,24 +1196,26 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
             seq: BigInt(eventSeq),
             command: events[commandIndex]!,
           });
-          for (const commandPage of pages) acceptTurn(await submitTurn(actorId, acknowledgements, { commandPage }));
+          for (const commandPage of pages) acceptTurn(await submitTurn(actorId, acknowledgements, { commandPage, activation }));
           let terminal = results.at(-1)?.commandIngress?.tag;
           const observedStatuses = new Set([terminal ?? "missing"]);
           for (let continuation = 0; terminal !== "command-complete" && continuation < 1_024; continuation += 1) {
             if (terminal === "fault") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress fault: ${commandIngressFaultDisplay(results.at(-1)?.commandIngress)}`);
             if (terminal === "backpressure") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress backpressure after serialized submission`);
-            const continued = await submitTurn(actorId, acknowledgements);
+            const continued = await submitTurn(actorId, acknowledgements, { activation });
             acceptTurn(continued);
             terminal = continued.commandIngress?.tag;
             observedStatuses.add(terminal ?? "missing");
           }
           if (terminal !== "command-complete") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress did not complete within 1024 continuations (observed statuses: ${[...observedStatuses].join(", ")})`);
         }
-        return settleAcknowledgedPluginTurns(actorId, results, acknowledgements);
+        return settleAcknowledgedPluginTurns(actorId, results, acknowledgements, activation);
       });
+      requireActorId(instanceId);
+      activation.assertActive();
       const outFrames: Uint8Array[] = [];
       const leftover: WireVariant[] = [];
-      for (const effect of result.effects) {
+      for (const effect of routeDocumentEffects(result.effects, documentPort)) {
         const frame = shellFrameBytes(effect, instanceId);
         if (frame) outFrames.push(frame);
         else leftover.push(effect);
@@ -1222,12 +1252,21 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     destroyApp: async (instanceId) => {
       const actorId = actorIdByInstance.get(instanceId);
       if (!actorId) return;
-      actorIdByInstance.delete(instanceId);
-      lifecycleByInstance.delete(instanceId);
-      retainedWindowByActor.delete(actorId);
-      pendingTurnEffects.delete(instanceId);
-      teardownPluginActor(actorId);
-      shardClient.dispose(actorId);
+      closingInstances.add(instanceId);
+      try {
+        await documentBindings.get(instanceId)?.port.retire();
+      } finally {
+        if (actorIdByInstance.get(instanceId) === actorId) {
+          documentBindings.delete(instanceId);
+          documentBindingGenerations.delete(instanceId);
+          actorIdByInstance.delete(instanceId);
+          lifecycleByInstance.delete(instanceId);
+          retainedWindowByActor.delete(actorId);
+          pendingTurnEffects.delete(instanceId);
+          teardownPluginActor(actorId);
+          shardClient.dispose(actorId);
+        }
+      }
     },
     takeSegmentedDownloadChunk: (instanceId, operationId) => shardClient.takeSegmentedDownloadChunk(requireActorId(instanceId), instanceId, operationId),
     enqueue: (instanceId, events) => {
@@ -1235,13 +1274,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     },
     outcomes: turnOutcomes.stream,
     dispose: () => {
-      for (const actorId of actorIdByInstance.values()) {
-        retainedWindowByActor.delete(actorId);
-        teardownPluginActor(actorId);
-        shardClient.dispose(actorId);
-      }
-      actorIdByInstance.clear();
-      lifecycleByInstance.clear();
+      for (const instanceId of actorIdByInstance.keys()) void handle.destroyApp(instanceId).catch(error => console.error("[DEBUG] plugin document retirement failed", error));
       turnOutcomes.complete();
     },
   };
@@ -1258,30 +1291,31 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     const bodyKeys = uiRefreshBodyKeys(request);
     if (bodyKeys.length === 0) return {};
     const actorId = requireActorId(instanceId);
+    const activation = shardClient.captureActorActivation(actorId);
+    const documentPort = documentBindings.get(instanceId)?.port;
     eventSeq += 1;
     const retainedBeforeRefresh = retainedWindowByActor.get(actorId);
     const missingSurfaceIds = new Set(bodyKeys.map((bodyKey) => retainedSurfaceId(instanceId, bodyKey)).filter((surfaceId) => !retainedBeforeRefresh?.has(surfaceId)));
-    // 🎯️ H1-react (terra-web-plugin-runtime) — a pointer-move-driven redraw burst hits this call
-    // repeatedly for the SAME actor; "UserVisible" (below "Interactive", above "Background") lets a
-    // real command preempt it, and the `"surface-visible"` coalesce key collapses the burst to the
-    // single latest probe rather than queuing every intermediate one (see `submitPluginTurn`'s doc).
     const result = await serializeCommandIngressForActor(actorId, async () => {
       const settled = await settlePluginTurn(
         actorId,
         await submitTurn(
           actorId,
           bodyKeys.map((bodyKey) => ({ kind: "surface-visible", payload: { surface: pluginSurfaceRef(instanceId, bodyKey) } })),
-          { lane: "UserVisible", coalesceKey: "surface-visible" },
+          { lane: "UserVisible", activation },
         ),
         "UserVisible",
         missingSurfaceIds,
         (turn) => patchAckEvents(turn, retainTurnUiPatches(actorId, turn)),
         true,
+        activation,
       );
       return settled;
     });
     const retained = retainedWindowByActor.get(actorId);
-    return retainedUiRefreshResponse(instanceId, request, retained ?? new Map(), result.effects);
+    requireActorId(instanceId);
+    activation.assertActive();
+    return retainedUiRefreshResponse(instanceId, request, retained ?? new Map(), routeDocumentEffects(result.effects, documentPort));
   };
 
   /** 🔁️ Retains one completion's exact activation across evaluation, queueing and publication. */
@@ -1289,6 +1323,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     if (typeof req !== "bigint" || req <= 0n || req > 0xffffffffffffffffn) throw new Error("extension.request-id-invalid");
     const actorId = requireActorId(instanceId);
     const activation = shardClient.captureActorActivation(actorId);
+    const documentPort = documentBindings.get(instanceId)?.port;
     let submitted = false;
     const assertActive = (): void => { requireActorId(instanceId); activation.assertActive(); };
     const complete = async (outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array }): Promise<InvocationResponse> => {
@@ -1309,7 +1344,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         assertActive();
         const frames: Uint8Array[] = [];
         const effects: WireVariant[] = [];
-        for (const effect of settled.effects) {
+        for (const effect of routeDocumentEffects(settled.effects, documentPort)) {
           const frame = shellFrameBytes(effect, instanceId);
           if (frame) frames.push(frame);
           else effects.push(effect);
@@ -1321,7 +1356,67 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     return Object.freeze({ instanceId, req, assertActive, complete });
   };
 
-  return { ...richHandle, refreshUi, captureExtensionCompletion };
+  const bindDocumentPort = async (instanceId: number, source: PluginDocumentBindingV1): Promise<ActorDocumentMessagePortV1> => {
+    const identity = Object.freeze({ runtimeKey: source.runtimeKey, clientInstanceId: source.clientInstanceId, scope: source.scope === null ? null : Object.freeze({ ...source.scope }) });
+    const { current: sourceCurrent, send, merge: receiveMerge, prepared } = source;
+    const actorId = requireActorId(instanceId);
+    const activation = shardClient.captureActorActivation(actorId);
+    const previous = documentBindings.get(instanceId);
+    if (previous && !previous.port.closing) throw new Error("actor-document-control.binding-live");
+    if (previous) await previous.port.retire();
+    if (documentBindings.get(instanceId) !== previous) throw new Error("actor-document-control.binding-collision");
+    requireActorId(instanceId);
+    activation.assertActive();
+    const bindingGeneration = (documentBindingGenerations.get(instanceId) ?? 0n) + 1n;
+    const current = () => !closingInstances.has(instanceId) && actorIdByInstance.get(instanceId) === actorId && sourceCurrent();
+    const settle = (events: readonly ShardEventEnvelope[]) => serializeCommandIngressForActor(actorId, async () => {
+      activation.assertActive();
+      return settlePluginTurn(actorId, await submitTurn(actorId, events, { activation }), "Interactive", new Set(), turn => patchAckEvents(turn, retainTurnUiPatches(actorId, turn)), true, activation);
+    });
+    const binding = new ActorDocumentBindingV1({ ...identity, actorId, activationGeneration: activation.activationGeneration, instanceId }, bindingGeneration, {
+      current,
+      assertActive: () => activation.assertActive(),
+      limits: { messageBytes: BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, pendingBytes: 4 * 1024 * 1024, pendingMessages: 64 },
+      send,
+      exchange: async command => {
+        const result = await settle([{ kind: "message", payload: { source: { tag: "shell", val: String(instanceId) }, payload: Array.from(encodeDocumentBackboneControlV1(command)) } }]);
+        return result.effects.flatMap(effect => {
+          const bytes = shellFrameBytes(effect, instanceId);
+          if (bytes) return [bytes];
+          if (effect.tag === "send-message" && (effect.val as { target?: WireVariant } | undefined)?.target?.tag === "backbone") throw new Error("actor-document-control.data-before-receipt");
+          return [];
+        });
+      },
+      deliver: async payload => {
+        const result = await settle([{ kind: "message", payload: { source: { tag: "backbone", val: binding.port.uri }, payload: Array.from(hotBytes(payload)) } }]);
+        if (!current()) return;
+        const frames = routeDocumentEffects(result.effects, binding.port).flatMap(effect => {
+          const bytes = shellFrameBytes(effect, instanceId);
+          return bytes ? [bytes] : [];
+        });
+        const values = frames.map(decodeAppFrame);
+        const failed = values.find(value => "Error" in value);
+        if (failed && "Error" in failed) throw new Error(faultDisplayMessage(failed.Error.fault, decodePackValue));
+        const merge = values.find(value => "MergeReport" in value);
+        const conflicts = values.find(value => "Conflicts" in value);
+        if (merge || conflicts) receiveMerge?.(conflicts && "Conflicts" in conflicts ? decodeConflictsFromWire(conflicts.Conflicts.conflicts, decodePackValue) : null, merge && "MergeReport" in merge ? decodeMergeReportFromWire(merge.MergeReport.report, decodePackValue) : null);
+        turnOutcomes.push({ instanceId, frames });
+      },
+    });
+    documentBindings.set(instanceId, binding);
+    documentBindingGenerations.set(instanceId, bindingGeneration);
+    try {
+      prepared?.(binding.port);
+      await binding.bind();
+      return binding.port;
+    } catch (error) {
+      await binding.port.retire();
+      if (documentBindings.get(instanceId) === binding) documentBindings.delete(instanceId);
+      throw error;
+    }
+  };
+
+  return { ...richHandle, refreshUi, captureExtensionCompletion, bindDocumentPort };
 }
 
 /** 🩹️ A patch acknowledgement carries the guest's own publication receipt: the guest rejects an ack
@@ -1538,16 +1633,6 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
       if (errorFrame) throw new Error(`[DEBUG] loadAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
     },
-    // 🚧️ Channel v12 (A4-channel) retired `AppChannelClient.attachBackbone`/`detachBackbone`/`drain` —
-    // backbone attach/detach collapses into event-driven `Event::Message`/`subscribe` (design-abi.md
-    // §2/§4), and the old empty-batch drain call has no replacement (guests are woken by events/timers/
-    // `next-wake` now). `EffectBackbone` (the per-instance replacement) has not landed — flagged as a
-    // still-open critical-path gap in `📓️status.md`'s "A2-abi-sdk — honest partial" entry, confirmed
-    // still open as of `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s native twin (H3-wgpu-native), which stubs the
-    // identical three methods with explicit errors rather than guessing a wire format. Left `undefined`
-    // here — every real call site in `🏛️ShellHost/🟦️.tsx` already optional-chains these.
-    attachBackbone: undefined,
-    detachBackbone: undefined,
     // 🚧️ Same channel-v12 retirement as `attachBackbone`/`detachBackbone` above: the old
     // `AppFrame::Ephemeral` poll was the literal empty-batch drain design-abi.md §4 names as
     // retired outright — `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s native twin (`ephemeral_snapshot`) stubs the
@@ -2105,8 +2190,8 @@ if (import.meta.vitest) {
 
   it("RendererResidentComposition shares one exact ledger and preserves both consumers' charges", async () => {
     const { rendererResidentLedger } = await import("../../💾️resident/🟦️.ts"); const { default: fixture } = await import("../../💾️resident/🧪️fixture/🔣️.json");
-    const { default: schema } = await import("../../💾️resident/🧬️schema.json"); const { default: resident } = await import("../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
-    expect(new Ajv({ strict: true }).addSchema(resident).compile(schema)(fixture.capacity)).toBe(true);
+    const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json"); const { default: resident } = await import("../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
+    expect(new Ajv({ strict: true }).addSchema(resident).addSchema(rendererModule).getSchema(`${rendererModule.$id}#/$defs/RendererResidentPolicyV1`)!(fixture.capacity)).toBe(true);
     const react = rendererResidentLedger(); const wgpu = rendererResidentLedger(); expect(react === wgpu).toBe(fixture.sameLedger); expect(react.capacity).toEqual(fixture.capacity);
     expect({ bytes: react.capacity.bytes - react.capacity.control.bytes, slots: react.capacity.slots - react.capacity.control.slots, owners: react.capacity.owners - react.capacity.control.owners }).toEqual(fixture.data);
     const grant = { maxItems: 1, maxBytes: 4096 }; const firstOwner = {}; const secondOwner = {};
@@ -2214,6 +2299,42 @@ if (import.meta.vitest) {
         expect(submitted).toEqual([[{ kind: "completed", payload: { req, outcome: { tag: "ok", val: Array.from(outcome.ok) } } }], [], [{ kind: "patch-ack", payload: { receipt: completionPatchReceipt, surface: pluginSurfaceRef(instance, fixture.completion.surface), revision: 1n } }]]);
         expect(response).toMatchObject({ output: fixture.response, requestedEffects: [{ notify: { message: fixture.completion.notification } }], uiScope: fixture.completion.uiScope, historyPatch: fixture.completion.historyPatch });
         expect(retainedWindowByActor.get(`extension-requester#${instance}`)?.get(retainedSurfaceId(instance, fixture.completion.surface))?.revision).toBe(fixture.completion.revision);
+      });
+    });
+
+    it("binds the actual actor document port and retires it before guest disposal", async () => {
+      const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("./📡️backbone/🟦️.ts");
+      const { encodeBackboneMessage } = await import("@semio-tech/framework-os");
+      const outgoing = encodeBackboneMessage({ kind: "ack", opIds: ["operation"] });
+      const commands: string[] = [], delivered: number[][] = [], sent: number[][] = [];
+      let instance = 0;
+      await withRequester(async (_actor, events) => {
+        const effects: WireVariant[] = [];
+        for (const event of events) {
+          if (event.kind !== "message") continue;
+          const value = event.payload as { source: { tag: string; val: string }; payload: number[] };
+          if (value.source.tag === "shell") {
+            const command = decodeDocumentBackboneControlV1(Uint8Array.from(value.payload));
+            commands.push(command.operation);
+            effects.push({ tag: "send-message", val: { target: { tag: "shell", val: instance }, payload: encodeDocumentBackboneControlV1({ ...command, schema: "semio.plugin.document-backbone-binding-receipt.v1", operation: command.operation === "bind" ? "bound" : "retired" }) } });
+          } else {
+            delivered.push([...value.payload]);
+            effects.push({ tag: "send-message", val: { target: { tag: "backbone", val: "actor://map" }, payload: outgoing } });
+          }
+        }
+        return { uiPatches: [], effects, nextWake: null, status: { tag: "idle" } };
+      }, async (handle, opened, activation) => {
+        instance = opened;
+        const source = { runtimeKey: "map", clientInstanceId: "client-a", scope: null };
+        const port = await handle.bindDocumentPort!(instance, { ...source, current: () => true, send: payload => { sent.push([...payload]); } });
+        expect(commands).toEqual(["bind"]);
+        expect(await port.receive(source, outgoing)).toBe(true);
+        expect(delivered).toEqual([[...outgoing]]);
+        expect(sent).toEqual([[...outgoing]]);
+        expect(activation.guardedTurns()).toBeGreaterThanOrEqual(2);
+        await handle.destroyApp(instance);
+        expect(commands).toEqual(["bind", "retire"]);
+        expect(await port.receive(source, outgoing)).toBe(false);
       });
     });
 
@@ -2831,10 +2952,11 @@ if (import.meta.vitest) {
   describe("PluginRuntime documentPack/transaction wire adapter", () => {
     it("keeps the exact channel subscribed through refused close and releases only that channel after retry", async () => {
       const { default: fixture } = await import("./🧪️fixtures/🔒️channel-close.json");
-      const { default: schema } = await import("./🧪️fixtures/🛡️channel-close.schema.json");
+      const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json");
+      const schema = { $ref: `${rendererModule.$id}#/$defs/PluginRuntimeChannelCloseV1` };
       const { default: Ajv } = await import("ajv");
       const { produce } = await import("immer");
-      expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+      expect(new Ajv({ strict: true }).addSchema(rendererModule).compile(schema)(fixture)).toBe(true);
       const returned: number[] = [];
       let subscriptions = 0;
       let rejectClose!: (reason: unknown) => void;
@@ -3025,10 +3147,11 @@ if (import.meta.vitest) {
     it("schedules captured lifecycle work through the original owner after operation revocation", async () => {
       const { default: Ajv } = await import("ajv");
       const { default: fixture } = await import("./🧪️fixtures/⏱️lifecycle-scheduler.json");
-      const { default: schema } = await import("./🧪️fixtures/📐️lifecycle-scheduler.schema.json");
+      const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json");
+      const schema = { $ref: `${rendererModule.$id}#/$defs/PluginRuntimeLifecycleSchedulerV1` };
       const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
       const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
-      expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+      expect(new Ajv({ strict: true }).addSchema(rendererModule).compile(schema)(fixture)).toBe(true);
       const sent: Array<{ kind: string; requestId: string; events?: readonly ShardEventEnvelope[] }> = [];
       const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as typeof sent[number]); }, terminate() {} };
       const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
@@ -3144,8 +3267,9 @@ if (import.meta.vitest) {
       const { default: Ajv } = await import("ajv");
       const { default: equal } = await import("fast-deep-equal");
       const { default: settlement } = await import("./🧪️fixtures/📬️typed-operation-settlement.json");
-      const { default: schema } = await import("./🧪️fixtures/📐️typed-operation-settlement.schema.json");
-      expect(new Ajv({ strict: true }).compile(schema)(settlement)).toBe(true);
+      const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json");
+      const schema = { $ref: `${rendererModule.$id}#/$defs/PluginRuntimeTypedOperationSettlementV1` };
+      expect(new Ajv({ strict: true }).addSchema(rendererModule).compile(schema)(settlement)).toBe(true);
       const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/🔣️.json");
       const token = Buffer.alloc(25);
       token.writeUInt32LE(fixture.wire.receiver, 0);

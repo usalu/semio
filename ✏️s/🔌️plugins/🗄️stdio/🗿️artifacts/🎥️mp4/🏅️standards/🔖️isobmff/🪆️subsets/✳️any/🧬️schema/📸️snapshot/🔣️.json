@@ -1,30 +1,105 @@
 {
-  "$id": "https://semio.tech/schema/stdio.mp4.snapshot.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/mp4/isobmff/any/snapshot.json",
   "title": "Mp4Snapshot",
   "description": "ISO-BMFF logical movie, AVC tracks, and semantic encoded samples.",
   "type": "object",
-  "required": ["schema", "ftyp", "tracks"],
+  "required": [
+    "schema",
+    "ftyp",
+    "tracks"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
     "ftyp": {
-      "type": "object", "x-semio-state": "artifact",
-      "properties": { "majorBrand": { "type": "string" }, "minorVersion": { "type": "integer" }, "compatibleBrands": { "type": "array", "items": { "type": "string" } } }
+      "type": "object",
+      "x-semio-state": "artifact",
+      "properties": {
+        "majorBrand": {
+          "type": "string"
+        },
+        "minorVersion": {
+          "type": "integer"
+        },
+        "compatibleBrands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     },
     "tracks": {
-      "type": "array", "x-semio-state": "artifact",
+      "type": "array",
+      "x-semio-state": "artifact",
       "items": {
         "type": "object",
         "properties": {
-          "trackId": { "type": "integer" }, "timescale": { "type": "integer" },
-          "codec": { "oneOf": [
-            { "type": "object", "properties": { "codec": { "const": "avc" }, "sps": { "type": "array" }, "pps": { "type": "array" }, "nalLengthSize": { "type": "integer" } } }
-          ] },
-          "width": { "type": "integer" }, "height": { "type": "integer" },
-          "chunkSampleCounts": { "type": "array", "items": { "type": "integer" } },
-          "samples": { "type": "array", "items": {
-            "type": "object",
-            "properties": { "data": { "type": "array", "items": { "type": "integer" } }, "duration": { "type": "integer" }, "ctsOffset": { "type": "integer" }, "sync": { "type": "boolean" } }
-          } }
+          "trackId": {
+            "type": "integer"
+          },
+          "timescale": {
+            "type": "integer"
+          },
+          "codec": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "codec": {
+                    "const": "avc"
+                  },
+                  "sps": {
+                    "type": "array"
+                  },
+                  "pps": {
+                    "type": "array"
+                  },
+                  "nalLengthSize": {
+                    "type": "integer"
+                  }
+                }
+              }
+            ]
+          },
+          "width": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "chunkSampleCounts": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "samples": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "duration": {
+                  "type": "integer"
+                },
+                "ctsOffset": {
+                  "type": "integer"
+                },
+                "sync": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
         }
       }
     }

@@ -285,11 +285,11 @@
                       "const": "addNode"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "blocker": {
@@ -311,11 +311,11 @@
                       "const": "addBar"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "blocker": {
@@ -337,11 +337,11 @@
                       "const": "addFrame"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "blocker": {
@@ -363,11 +363,11 @@
                       "const": "addMaterial"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "blocker": {
@@ -389,11 +389,11 @@
                       "const": "addSection"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "blocker": {
@@ -415,11 +415,11 @@
                       "const": "addSupport"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "blocker": {
@@ -441,11 +441,11 @@
                       "const": "addNodalLoad"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "blocker": {
@@ -467,11 +467,11 @@
                       "const": "addMemberUdl"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "blocker": {
@@ -493,11 +493,11 @@
                       "const": "addAreaLoad"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "blocker": {
@@ -519,11 +519,11 @@
                       "const": "addSolid"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "blocker": {
@@ -545,11 +545,11 @@
                       "const": "addLoadCase"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "blocker": {
@@ -571,11 +571,11 @@
                       "const": "addCombination"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "blocker": {
@@ -597,11 +597,11 @@
                       "const": "setSelfWeight"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "blocker": {
@@ -623,11 +623,11 @@
                       "const": "setAnalysisSettings"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "blocker": {
@@ -649,11 +649,11 @@
                       "const": "removeSelection"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Artifact"
+                        "artifact"
                       ]
                     },
                     "blocker": {
@@ -675,11 +675,11 @@
                       "const": "setActiveExample"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Config"
+                        "config"
                       ]
                     },
                     "blocker": {
@@ -701,11 +701,11 @@
                       "const": "setCamera"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Config"
+                        "config"
                       ]
                     },
                     "blocker": {
@@ -727,11 +727,11 @@
                       "const": "setResultDisplay"
                     },
                     "disposition": {
-                      "const": "Migrated"
+                      "const": "migrated"
                     },
                     "lanes": {
                       "const": [
-                        "Config"
+                        "config"
                       ]
                     },
                     "blocker": {
@@ -792,7 +792,10 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

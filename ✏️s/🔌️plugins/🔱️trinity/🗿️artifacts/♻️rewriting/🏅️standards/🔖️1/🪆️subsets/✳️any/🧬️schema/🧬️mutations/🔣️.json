@@ -1,37 +1,28 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/trinity/rewriting/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/trinity/rewriting/mutations.json",
   "title": "RewriteRuleMutation",
   "oneOf": [
     {
-      "$ref": "./🔧️change-parameter-binding/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/trinity/rewriting/mutation/change-parameter-binding/schema.json"
     },
     {
-      "$ref": "./📐️change-rule-layout-point/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/trinity/rewriting/mutation/change-rule-layout-point/schema.json"
     },
     {
-      "$ref": "./🖼️edit-before-fixture/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/trinity/rewriting/mutation/edit-before-fixture/schema.json"
     },
     {
-      "$ref": "./👈️edit-lhs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/trinity/rewriting/mutation/edit-lhs/schema.json"
     },
     {
-      "$ref": "./👉️edit-rhs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/trinity/rewriting/mutation/edit-rhs/schema.json"
     },
     {
-      "$ref": "./🧹️remove-parameter-binding/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/trinity/rewriting/mutation/remove-parameter-binding/schema.json"
     },
     {
-      "$ref": "./🗑️remove-rule-layout-point/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/trinity/rewriting/mutation/remove-rule-layout-point/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-parameter-binding",
-    "change-rule-layout-point",
-    "edit-before-fixture",
-    "edit-lhs",
-    "edit-rhs",
-    "remove-parameter-binding",
-    "remove-rule-layout-point"
   ]
 }

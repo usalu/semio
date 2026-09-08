@@ -8,8 +8,10 @@ import { mutationDomainOwnersProblems, mutationOwnerIdentity, loadCatalogTaxonom
 type LayoutCase = { readonly name: string; readonly accepted: boolean; readonly relativeSource?: string };
 
 const fixture = await Bun.file(new URL("./🧫️fixtures/🔣️.json", import.meta.url)).json();
-const schema = await Bun.file(new URL("./🛂️schema/🔣️.json", import.meta.url)).json();
-const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+const document = await Bun.file(new URL("../../🧬️schema/🔣️.json", import.meta.url)).json();
+const ajv = new Ajv({ strict: true, allErrors: true });
+ajv.addSchema(document);
+const validate = ajv.getSchema(`${document.$id}#/$defs/MutationSourceAuthorityV1`)!;
 assert(validate(fixture), JSON.stringify(validate.errors));
 
 const acceptsLayout = (source: string): boolean => {
@@ -32,8 +34,7 @@ assert(!acceptsLayout("domain/🧬️mutations/🆕️insert-page/🦠️mutatio
 console.log(`[DEBUG] mutation-source-authority layoutCases=${layoutCases.length} accepted=${layoutCases.filter((item) => item.accepted).length} rejected=${layoutCases.filter((item) => !item.accepted).length} ajv=true hostileRejections=4`);
 
 const domainFixture = await Bun.file(new URL("./🧫️fixtures/🧭️domains.json", import.meta.url)).json();
-const domainSchema = await Bun.file(new URL("./🛂️schema/🧭️domains.json", import.meta.url)).json();
-const validateDomains = new Ajv({ strict: true, allErrors: true }).compile(domainSchema);
+const validateDomains = ajv.getSchema(`${document.$id}#/$defs/MutationSourceAuthorityDomainsV1`)!;
 assert(validateDomains(domainFixture), JSON.stringify(validateDomains.errors));
 const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [domainFixture.mutationRoot]: domainFixture.domains } };
 assert.deepEqual(mutationDomainOwnersProblems(taxonomy.mutationDomainOwners), []);

@@ -1,10 +1,10 @@
 //! 🔺️ Generation2d artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::schema::diff::*;
-use crate::schema::Generation2dArtifact;
+use crate::standards::v1::subsets::any::schema::diff::*;
+use crate::standards::v1::subsets::any::schema::Generation2dArtifact;
 use crate::{widget_id, Generation2dSnapshot};
 use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, GenerationMutation, GenerationPlayState};
-use semio_framework_artifact_flow_semio_framework_os_flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
+use semio_framework_artifact_flow_flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use protocol::MutationDiff;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 📖️SemioGrammar
@@ -62,7 +62,7 @@ pub(crate) fn apply_synapses_diff(synapses: &mut Vec<SynapseSpec>, diff: &Synaps
     }
 }
 
-fn apply_layout_diff(layout: &mut semio_framework_artifact_flow_semio_framework_os_flow::OrderedMap<WidgetLayout>, diff: &LayoutDiff) {
+fn apply_layout_diff(layout: &mut semio_framework_artifact_flow_flow::OrderedMap<WidgetLayout>, diff: &LayoutDiff) {
     for id in &diff.removed {
         layout.remove(id);
     }
@@ -190,37 +190,6 @@ pub fn diff_generation_from_ops(base: &Generation2dSnapshot, ops: Vec<Generation
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::schema::empty_generation2d_snapshot;
-
-    #[test]
-    fn diff_absorb_prefers_incoming_fixture_and_scalars() {
-        let base = empty_generation2d_snapshot();
-        let mut first = diff_fixture_from_helpers(&base, WidgetsDiff { removed: vec!["w1".into()], set: vec![] }, SynapsesDiff::default(), LayoutDiff::default(), Some(CameraJson { x: 1.0, y: 1.0, zoom: 1.0 }), None);
-        let second = Generation2dDiff { show_mode: Some("wire".into()), locale: Some("de-DE".into()), ..Generation2dDiff::default() };
-        first.absorb(second);
-        assert!(first.fixture.is_some());
-        assert_eq!(first.show_mode.as_deref(), Some("wire"));
-        assert_eq!(first.locale.as_deref(), Some("de-DE"));
-    }
-
-    #[test]
-    fn diff_apply_updates_fixture_widgets() {
-        let snapshot = empty_generation2d_snapshot();
-        let existing_id = widget_id(&snapshot.fixture.widgets[1]).to_string();
-        let diff = diff_fixture_from_helpers(
-            &snapshot,
-            WidgetsDiff { removed: vec![], set: vec![(0, Widget::InputNote { id: existing_id.clone(), text: "replaced".into() }), (999, Widget::InputNote { id: "brand-new".into(), text: "new".into() })] },
-            SynapsesDiff::default(),
-            LayoutDiff::default(),
-            None,
-            None,
-        );
-        let next = diff.apply(&snapshot).expect("valid mutation diff");
-        assert_eq!(next.fixture.widgets.len(), snapshot.fixture.widgets.len() + 1);
-        let replaced = next.fixture.widgets.iter().find(|w| widget_id(w) == existing_id.as_str()).expect("replaced");
-        assert_eq!(replaced, &Widget::InputNote { id: existing_id, text: "replaced".into() });
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

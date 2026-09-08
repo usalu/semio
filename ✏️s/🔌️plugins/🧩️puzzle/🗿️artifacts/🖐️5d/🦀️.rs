@@ -11,8 +11,11 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_schema as artifact_schema;
 extern crate semio_framework_value_derive as value_derive;
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "../../🎮️commands/🧵️retained/🦀️.rs"]
+pub mod retained_command;
 
 //#region ⚠️ Errors
 /// 🧯️ Puzzle 5d precompute session errors — delegates entirely to `puzzle_3d`'s own precompute-session error.
@@ -1093,7 +1096,23 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// field — same OS media-host 14-function family flagged on puzzle2d's `declaration()` doc — so it
 /// stays wired through `🧩️puzzle/🦀️.rs`'s own `.setup()`, not here.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    #[cfg(feature = "component-app-assembly")]
+pub trait ArtifactApps:
+    semio_framework_plugin::PluginApp
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>>
+{
+}
+
+#[cfg(feature = "component-app-assembly")]
+impl<PA> ArtifactApps for PA where
+    PA: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>>
+{
+}
+
+use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.puzzle.puzzle5d.standard.v1", "standard", "1", &[], None),
@@ -1140,10 +1159,10 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
 /// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
 #[cfg(feature = "component-app-assembly")]
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::PuzzleApps> {
+pub fn artifact<PA: crate::ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.puzzle.puzzle5d").expect("canonical puzzle5d kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.puzzle.puzzle5d").expect("canonical puzzle5d kind"), localization: &[], standards: vec![crate::standards::v1::standard::<PA>()] }
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -1160,28 +1179,28 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "puzzle.puzzle5d",
                     extension: Some("puzzle5d"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("puzzle.puzzle5d"),
                 },
                 dsl::LanguageSpec {
                     id: "puzzle.puzzle5d.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("puzzle.puzzle5d.op"),
                 },
                 dsl::LanguageSpec {
                     id: "puzzle.puzzle5d.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("puzzle.puzzle5d.diff"),
@@ -1192,8 +1211,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("5d.pack"),
                 },
                 dsl::LanguageSpec {
@@ -1202,8 +1221,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("5d.spr"),
                 },
             ]
@@ -1212,128 +1231,12 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 }
 //#endregion 🔖️Declaration
 
-pub use crate::op::Puzzle5dPlaySnapshot;
+pub use crate::standards::v1::subsets::any::schema::mutations::text::Puzzle5dPlaySnapshot;
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn fastener_defaults_include_diagram_xy() {
-        let fastener: Puzzle5dFastener = serde_json::from_value(serde_json::json!({
-            "id": "f1",
-            "source": "p1:g0",
-            "target": "p2:g0"
-        }))
-        .unwrap();
-        assert_eq!(fastener.gap, 0.0);
-        assert_eq!(fastener.x, 0.0);
-        assert_eq!(fastener.y, 0.0);
-        assert_eq!(fastener.rotation, 0.0);
-    }
-
-    #[test]
-    fn fastener_round_trips_eight_transform_params() {
-        let fastener = Puzzle5dFastener { id: "f1".into(), source: "p1:g0".into(), target: "p2:g0".into(), fastener_kind: Some("fk".into()), gap: 1.0, shift: 2.0, rise: 3.0, rotation: 4.0, turn: 5.0, tilt: 6.0, x: 7.0, y: 8.0 };
-        let value = serde_json::to_value(&fastener).unwrap();
-        assert_eq!(value["x"], 7.0);
-        assert_eq!(value["y"], 8.0);
-        let back: Puzzle5dFastener = serde_json::from_value(value).unwrap();
-        assert_eq!(back, fastener);
-    }
-
-    #[test]
-    fn part_anchor_defaults_to_fixed() {
-        let part: Puzzle5dPart = serde_json::from_value(serde_json::json!({ "id": "p1" })).unwrap();
-        assert_eq!(part.anchor, Puzzle5dPartAnchor::Fixed);
-        let derived: Puzzle5dPart = serde_json::from_value(serde_json::json!({ "id": "p2", "anchor": "derived" })).unwrap();
-        assert_eq!(derived.anchor, Puzzle5dPartAnchor::Derived);
-    }
-
-    #[test]
-    fn kind_compatibility_unifies_important_and_specificity() {
-        let row: Puzzle5dKindCompatibility = serde_json::from_value(serde_json::json!({
-            "source": "a",
-            "target": "b",
-            "bidirectional": true,
-            "important": true,
-            "specificity": "grip"
-        }))
-        .unwrap();
-        assert!(row.important);
-        assert_eq!(row.specificity, Puzzle5dCompatSpecificity::Grip);
-        let sparse: Puzzle5dKindCompatibility = serde_json::from_value(serde_json::json!({
-            "source": "a",
-            "target": "b"
-        }))
-        .unwrap();
-        assert!(!sparse.important);
-        assert_eq!(sparse.specificity, Puzzle5dCompatSpecificity::General);
-    }
-
-    #[test]
-    fn catalog_part_kind_carries_representations_and_grip_templates() {
-        let kind = Puzzle5dCatalogPartKind {
-            id: "hex".into(),
-            name: "Hex".into(),
-            label: "Hex".into(),
-            description: "cut".into(),
-            icon: "hexagon".into(),
-            image: "".into(),
-            unit: "m".into(),
-            is_abstract: false,
-            base_kinds: vec!["solid".into()],
-            representations: vec![Puzzle5dRepresentation { id: "lod0".into(), name: "mesh".into(), url: "/mesh/hex.glb".into(), mime: "model/gltf-binary".into(), tags: vec!["mesh".into()], lod: Some("0".into()), description: "".into() }],
-            grips: vec![Puzzle5dGripTemplate {
-                id: "g0".into(),
-                name: "north".into(),
-                label: "N".into(),
-                grip_kind: Some("b-l".into()),
-                point: [1.0, 2.0, 3.0],
-                direction: [0.0, 1.0, 0.0],
-                t: Some(0.25),
-                mandatory: Some(true),
-                radius: Some(0.36),
-                ..Default::default()
-            }],
-            attributes: vec![Puzzle5dAttribute { id: "a1".into(), key: "material".into(), value: "concrete".into(), definition: None }],
-            authors: vec![Puzzle5dAuthor { id: "u1".into(), name: "Ada".into(), email: "ada@semio.tech".into(), role: Some("author".into()), rank: Some(1) }],
-        };
-        let value = serde_json::to_value(&kind).unwrap();
-        assert_eq!(value["abstract"], false);
-        assert_eq!(value["representations"][0]["url"], "/mesh/hex.glb");
-        assert_eq!(value["grips"][0]["point"], serde_json::json!([1.0, 2.0, 3.0]));
-        let back: Puzzle5dCatalogPartKind = serde_json::from_value(value).unwrap();
-        assert_eq!(back.grips[0].direction, [0.0, 1.0, 0.0]);
-        assert_eq!(back.authors[0].name, "Ada");
-    }
-
-    #[test]
-    fn grip_template_direction_defaults_to_positive_z() {
-        let template: Puzzle5dGripTemplate = serde_json::from_value(serde_json::json!({ "id": "g0" })).unwrap();
-        assert_eq!(template.direction, [0.0, 0.0, 1.0]);
-    }
-
-    #[test]
-    fn catalog_grip_kind_is_port_like() {
-        let kind = Puzzle5dCatalogGripKind {
-            id: "b-l".into(),
-            code: Some("BL".into()),
-            label: Some("Long".into()),
-            order: Some(1),
-            compatible_with: vec!["b-l".into(), "b-s".into()],
-            description: "long bond".into(),
-            icon: "link".into(),
-            color: "hsl(206 52% 48%)".into(),
-            default_rope_kind: "cable.link".into(),
-        };
-        let value = serde_json::to_value(&kind).unwrap();
-        assert_eq!(value["compatibleWith"], serde_json::json!(["b-l", "b-s"]));
-        let back: Puzzle5dCatalogGripKind = serde_json::from_value(value).unwrap();
-        assert_eq!(back.order, Some(1));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[path = "."]
@@ -1952,68 +1855,7 @@ mod tests {
             }
         }
 
-        // ---- Shims: keep pre-migration module paths resolving for external callers ----
-        pub mod schema {
-            pub use super::standards::v1::subsets::any::schema::*;
-        }
-        pub mod io {
-            pub use super::standards::v1::subsets::any::io::*;
-        }
-        pub mod op {
-            pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-        }
-        pub mod dsl {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-        }
-        pub mod spr {
-            pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-        }
-        pub mod diff {
-            pub use crate::standards::v1::subsets::any::schema::diff::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::diff::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::diff::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-            }
-        }
-        pub mod mutations {
-            pub use crate::standards::v1::subsets::any::schema::mutations::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::mutations::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-            }
-        }
-        pub mod snapshot {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-            pub mod schema {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-            }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-            }
-        }
-        pub use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+                pub use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
         pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
         pub use crate::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;
 
@@ -2025,6 +1867,19 @@ pub mod editor {
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
+
+        #[path = "."]
+        pub mod examples {
+            #[path = "."]
+            pub mod demo_session {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[cfg(test)]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+        }
 
         #[path = "."]
         pub mod config {

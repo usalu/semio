@@ -150,7 +150,7 @@ class TestScript extends BundleScript {
     const { rest } = resolveTestLevel(segments);
     verifyAdminEntryGraph(this.root);
     verifyAdminStylesheetGraph(this.root);
-    await runVitest(this.root, rest, "🧪️tests/🟦️.ts");
+    await runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 

@@ -1,9 +1,12 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/vcs/vcs/inference.json",
   "title": "VcsInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["summary"],
+  "required": [
+    "summary"
+  ],
   "properties": {
     "summary": {
       "$ref": "#/$defs/VcsSummary",
@@ -14,11 +17,21 @@
     "VcsSummary": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["tagCount", "notesWordCount", "hasNotes"],
+      "required": [
+        "tagCount",
+        "notesWordCount",
+        "hasNotes"
+      ],
       "properties": {
-        "tagCount": { "type": "integer" },
-        "notesWordCount": { "type": "integer" },
-        "hasNotes": { "type": "boolean" }
+        "tagCount": {
+          "type": "integer"
+        },
+        "notesWordCount": {
+          "type": "integer"
+        },
+        "hasNotes": {
+          "type": "boolean"
+        }
       }
     }
   }

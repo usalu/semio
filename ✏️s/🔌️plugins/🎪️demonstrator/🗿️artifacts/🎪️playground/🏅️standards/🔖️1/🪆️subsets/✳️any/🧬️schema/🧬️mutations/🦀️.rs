@@ -16,52 +16,6 @@ pub enum PlaygroundMutation {
 
 //#region 🧪️StructuralCorrespondence
 #[cfg(test)]
-mod structural_correspondence_tests {
-    use super::*;
-    use protocol::SemanticMutation;
-
-    #[test]
-    fn direct_owner_descriptor_surfaces_and_catalog_correspond() {
-        let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
-        let owner = mutation_root.join("✒️change-schema");
-        let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
-        let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
-        let descriptor = dsl::os_pack::json::parse(&descriptor_source).expect("direct descriptor must be valid JSON");
-        let payload_schema_source = std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema");
-        let payload_schema = dsl::os_pack::json::parse(&payload_schema_source).expect("direct payload schema must be valid JSON");
-        let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔣️oracle.json")).expect("language-neutral oracle catalog");
-        let catalog = dsl::os_pack::json::parse(&catalog_source).expect("language-neutral oracle catalog must be valid JSON");
-        let descriptors = PlaygroundMutation::kinds();
-
-        assert_eq!(descriptors.len(), 1);
-        assert_eq!(descriptors[0].kind, "change-schema");
-        assert!(source.contains("protocol::MutationKind"));
-        assert!(!source.contains(concat!("::", "mutation::")));
-        assert_eq!(descriptor["semanticKind"], "change-schema");
-        assert_eq!(descriptor["aggregateVariant"], "ChangeSchema");
-        assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
-        assert_eq!(payload_schema["title"], "ChangeSchema");
-        {
-            let surface_source = std::fs::read_to_string(owner.join("🟦️.ts")).expect("direct mutation surface");
-            assert!(surface_source.contains("change-schema") || surface_source.contains("ChangeSchema"));
-        }
-        {
-            let surface_source = std::fs::read_to_string(owner.join("🔗️.graphql")).expect("direct mutation surface");
-            assert!(surface_source.contains("change-schema") || surface_source.contains("ChangeSchema"));
-        }
-        {
-            let surface_source = std::fs::read_to_string(owner.join("🛰️.proto")).expect("direct mutation surface");
-            assert!(surface_source.contains("change-schema") || surface_source.contains("ChangeSchema"));
-        }
-        {
-            let surface_source = std::fs::read_to_string(owner.join("📝️text/🦀️.rs")).expect("direct mutation surface");
-            assert!(surface_source.contains("change-schema") || surface_source.contains("ChangeSchema"));
-        }
-        {
-            let surface_source = std::fs::read_to_string(owner.join("💾️binary/🦀️.rs")).expect("direct mutation surface");
-            assert!(surface_source.contains("change-schema") || surface_source.contains("ChangeSchema"));
-        }
-        assert!(catalog["mutationCatalogs"][0]["kinds"].as_array().expect("catalog kinds").iter().any(|kind| kind.as_str() == Some("change-schema")));
-    }
-}
+#[path = "🧪️tests/🔬️structural-correspondence/🦀️.rs"]
+mod structural_correspondence_tests;
 //#endregion 🧪️StructuralCorrespondence

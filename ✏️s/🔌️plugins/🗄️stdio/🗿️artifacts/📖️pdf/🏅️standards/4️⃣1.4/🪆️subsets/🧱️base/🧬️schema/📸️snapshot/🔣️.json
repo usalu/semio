@@ -1,22 +1,45 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.pdf/snapshot.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.4/base/snapshot.json",
   "title": "PdfSnapshot",
   "$defs": {
     "PageDoc": {
       "description": "One resolved page of a PDF 1.4 document: its /MediaBox extent and its shown text.",
       "type": "object",
-      "required": ["width", "height", "text"],
+      "required": [
+        "width",
+        "height",
+        "text"
+      ],
       "properties": {
-        "width": { "type": "number" },
-        "height": { "type": "number" },
-        "text": { "type": "string" }
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "text": {
+          "type": "string"
+        }
       }
     }
   },
   "type": "object",
-  "required": ["schema", "pages"],
+  "required": [
+    "schema",
+    "pages"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "pages": { "type": "array", "items": { "$ref": "#/$defs/PageDoc" }, "x-semio-state": "artifact" }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PageDoc"
+      },
+      "x-semio-state": "artifact"
+    }
   }
 }

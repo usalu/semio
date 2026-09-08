@@ -6,7 +6,7 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { getWorkspaceRoot, ExactCargoLawError, exactExecutableFingerprint, runExactCargoLawProcess, runExactCargoLaws, type ExactCargoLawPort } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json", import.meta.url), "utf8"));
-const schema = JSON.parse(readFileSync(new URL("./🧬️schema.json", import.meta.url), "utf8"));
+const schema = JSON.parse(readFileSync(new URL("./🛂️schema.json", import.meta.url), "utf8"));
 
 test("exact executable fingerprint retains identity, exposes progress and refuses cancellation or path replacement", async () => {
   const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "executable-fingerprint-"));

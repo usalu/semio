@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.mesh/diff.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/diff.json",
   "title": "SemioMeshDiff",
   "description": "Sparse field-by-field diff over SemioMeshSnapshot. Collections (meshes/materials/textures/primitives) are id-keyed removed/modified/added triples.",
   "type": "object",
@@ -7,22 +8,79 @@
     "SemioPrimitiveDiff": {
       "type": "object",
       "properties": {
-        "topology": { "type": "string" },
-        "positions": { "type": "array" },
-        "normals": { "type": "array" },
-        "uvs": { "type": "array" },
-        "colors": { "type": "array" },
-        "indices": { "type": "array" },
-        "materialId": { "type": ["string", "null"], "description": "tri-state: absent=unchanged, null=cleared, string=set" }
+        "topology": {
+          "type": "string"
+        },
+        "positions": {
+          "type": "array"
+        },
+        "normals": {
+          "type": "array"
+        },
+        "uvs": {
+          "type": "array"
+        },
+        "colors": {
+          "type": "array"
+        },
+        "indices": {
+          "type": "array"
+        },
+        "materialId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "tri-state: absent=unchanged, null=cleared, string=set"
+        }
       }
     },
-    "SemioMeshItemDiff": { "type": "object", "properties": { "primitives": { "type": "object" } } },
-    "SemioMaterialDiff": { "type": "object", "properties": { "baseColor": { "type": "object" }, "metallic": { "type": "number" }, "roughness": { "type": "number" } } },
-    "SemioTextureDiff": { "type": "object", "properties": { "mime": { "type": "string" }, "bytes": { "type": "array" } } }
+    "SemioMeshItemDiff": {
+      "type": "object",
+      "properties": {
+        "primitives": {
+          "type": "object"
+        }
+      }
+    },
+    "SemioMaterialDiff": {
+      "type": "object",
+      "properties": {
+        "baseColor": {
+          "type": "object"
+        },
+        "metallic": {
+          "type": "number"
+        },
+        "roughness": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioTextureDiff": {
+      "type": "object",
+      "properties": {
+        "mime": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array"
+        }
+      }
+    }
   },
   "properties": {
-    "meshes": { "type": "object", "description": "NamedTripleDiff<string, SemioMeshItemDiff, SemioMesh>" },
-    "materials": { "type": "object", "description": "NamedTripleDiff<string, SemioMaterialDiff, SemioMaterial>" },
-    "textures": { "type": "object", "description": "NamedTripleDiff<string, SemioTextureDiff, SemioTexture>" }
+    "meshes": {
+      "type": "object",
+      "description": "NamedTripleDiff<string, SemioMeshItemDiff, SemioMesh>"
+    },
+    "materials": {
+      "type": "object",
+      "description": "NamedTripleDiff<string, SemioMaterialDiff, SemioMaterial>"
+    },
+    "textures": {
+      "type": "object",
+      "description": "NamedTripleDiff<string, SemioTextureDiff, SemioTexture>"
+    }
   }
 }

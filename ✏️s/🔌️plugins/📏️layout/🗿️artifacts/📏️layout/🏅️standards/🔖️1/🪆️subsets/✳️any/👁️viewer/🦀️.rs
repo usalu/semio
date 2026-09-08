@@ -81,19 +81,6 @@ pub fn create_layout_viewer() -> semio_framework_plugin::AppDefinition {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn create_layout_viewer_builds_a_definition_for_the_viewer_role() {
-        let def = create_layout_viewer();
-        assert_eq!(def.role, semio_framework::AppRole::Viewer);
-        assert_eq!(def.dialect, LAYOUT_DIALECT.into());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn viewer_dialect_matches_the_artifact_coordinate() {
-        assert_eq!(<LayoutViewer as ArtifactViewer>::DIALECT, LAYOUT_DIALECT);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

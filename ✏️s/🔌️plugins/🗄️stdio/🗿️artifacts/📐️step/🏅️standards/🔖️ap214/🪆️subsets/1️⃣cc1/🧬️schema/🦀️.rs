@@ -79,40 +79,7 @@ pub mod derived_construction {
     //#endregion 🔖️Builder
 
     #[cfg(test)]
-    mod tests {
-        use super::*;
-        use crate::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
-        use crate::standards::v_ap214::subsets::cc1::schema::CODE_SHAPE_REPRESENTATION_PRESENT;
-
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-        fn conforming_snapshot() -> StepSnapshot {
-            StepSnapshot::from_part21_document(&Part21Document {
-                header: Part21Header { file_schema: vec![Part21Value::List(vec![Part21Value::Str("AUTOMOTIVE_DESIGN".into())])], ..Part21Header::default() },
-                instances: vec![
-                    Part21Instance { id: 1, entities: vec![("PRODUCT".into(), vec![])] },
-                    Part21Instance { id: 2, entities: vec![("PRODUCT_DEFINITION_FORMATION".into(), vec![])] },
-                    Part21Instance { id: 3, entities: vec![("PRODUCT_DEFINITION".into(), vec![])] },
-                ],
-            })
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn conforming_construction_builds() {
-            let snapshot = StepCc1BuilderConstruction::from_snapshot(conforming_snapshot()).build().expect("conforming construction must build");
-            assert!(crate::standards::v_ap214::engine::ladder::has_product_definition_chain(&snapshot.to_part21_document()));
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
-            let mut snapshot = conforming_snapshot();
-            let mut doc = snapshot.to_part21_document();
-            doc.instances.push(Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
-            snapshot = StepSnapshot::from_part21_document(&doc);
-            let (mutated, _diff) = StepCc1BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepMutation::SetSnapshot(crate::standards::v_ap214::subsets::base::schema::mutations::set_snapshot::SetSnapshot { snapshot }));
-            let err = mutated.build().expect_err("CC1 allows no *_SHAPE_REPRESENTATION instance at all, so an ADVANCED_BREP_SHAPE_REPRESENTATION must fail build()");
-            assert!(err.iter().any(|d| d.code.0 == CODE_SHAPE_REPRESENTATION_PRESENT));
-        }
-    }
+    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
 }
 pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
@@ -203,66 +170,7 @@ pub mod derived_analysis {
     //#endregion 🔖️Analyzer
 
     #[cfg(test)]
-    mod tests {
-        use super::*;
-        use crate::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
-
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-        fn base_doc() -> Part21Document {
-            Part21Document {
-                header: Part21Header { file_schema: vec![Part21Value::List(vec![Part21Value::Str("AUTOMOTIVE_DESIGN".into())])], ..Part21Header::default() },
-                instances: vec![
-                    Part21Instance { id: 1, entities: vec![("PRODUCT".into(), vec![])] },
-                    Part21Instance { id: 2, entities: vec![("PRODUCT_DEFINITION_FORMATION".into(), vec![])] },
-                    Part21Instance { id: 3, entities: vec![("PRODUCT_DEFINITION".into(), vec![])] },
-                ],
-            }
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn conforming_config_only_document_reports_no_diagnostics() {
-            let snapshot = StepSnapshot::from_part21_document(&base_doc());
-            let diagnostics = check_cc1_conformance(&snapshot);
-            assert!(diagnostics.is_empty(), "got {diagnostics:?}");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn missing_file_schema_is_hard() {
-            let mut doc = base_doc();
-            doc.header.file_schema = vec![];
-            let snapshot = StepSnapshot::from_part21_document(&doc);
-            let diagnostics = check_cc1_conformance(&snapshot);
-            assert!(diagnostics.iter().any(|d| d.code.0 == CODE_FILE_SCHEMA && d.severity == Severity::Error), "got {diagnostics:?}");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn missing_product_chain_is_soft() {
-            let mut doc = base_doc();
-            doc.instances.clear();
-            let snapshot = StepSnapshot::from_part21_document(&doc);
-            let diagnostics = check_cc1_conformance(&snapshot);
-            assert!(diagnostics.iter().any(|d| d.code.0 == CODE_PRODUCT_CHAIN && d.severity == Severity::Warning), "got {diagnostics:?}");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn any_named_shape_representation_subtype_is_hard() {
-            let mut doc = base_doc();
-            doc.instances.push(Part21Instance { id: 4, entities: vec![("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION".into(), vec![])] });
-            let snapshot = StepSnapshot::from_part21_document(&doc);
-            let diagnostics = check_cc1_conformance(&snapshot);
-            assert!(diagnostics.iter().any(|d| d.code.0 == CODE_SHAPE_REPRESENTATION_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
-        }
-
-        #[semio_framework_async_macros::async_test]
-        async fn bare_shape_representation_base_type_is_also_hard() {
-            // Suffix match catches the un-subtyped base type too -- CC1 allows NO representation.
-            let mut doc = base_doc();
-            doc.instances.push(Part21Instance { id: 4, entities: vec![("SHAPE_REPRESENTATION".into(), vec![])] });
-            let snapshot = StepSnapshot::from_part21_document(&doc);
-            let diagnostics = check_cc1_conformance(&snapshot);
-            assert!(diagnostics.iter().any(|d| d.code.0 == CODE_SHAPE_REPRESENTATION_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
-        }
-    }
+    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
 }
 pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis

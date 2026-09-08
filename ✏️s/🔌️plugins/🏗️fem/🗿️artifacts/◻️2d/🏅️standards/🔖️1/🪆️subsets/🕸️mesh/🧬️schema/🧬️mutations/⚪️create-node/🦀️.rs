@@ -1,7 +1,7 @@
 //! 🌱️ Fem2d mutation — `CreateNode` payload + `MutationKind` impl.
 
 use crate::{Fem2dSnapshot, FemNode};
-use crate::mutations::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,7 +18,7 @@ pub struct CreateNode {
 impl MutationKind<Fem2dSnapshot, Fem2dMutation> for CreateNode {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "node", kind: "create-node", record: "CreatedNode" };
 
-    fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<crate::diff::Fem2dDiff> {
+    fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<crate::standards::v1::subsets::any::schema::diff::Fem2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {

@@ -1,13 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/gis/gismap/1/any/editor/presence/mutations.json",
+  "$id": "https://semio.tech/schema/app/gis/gis2d/presence/mutations.json",
   "title": "SGisGismap1AnyEditorPresenceMutation",
   "oneOf": [
     {
-      "$ref": "./🎥️set-camera/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/app/gis/gis2d/presence/mutation/set-camera/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "set-camera"
   ]
 }

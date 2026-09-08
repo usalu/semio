@@ -42,8 +42,5 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDoctypeMutat
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn semantic_identity_matches_descriptor() { assert_eq!(<SetDoctypeMutation as protocol::MutationKind<XmlSnapshot, super::super::XmlMutation>>::SEMANTICS.kind, "set-doctype"); }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

@@ -14,10 +14,11 @@
         {"required": ["state", "fact"], "properties": {"state": {"enum": ["accepted", "prepared"]}, "fact": {"const": "failed"}}, "type": "object"}
       ]
     },
-    "ArtifactCreationPhaseV1": {"enum": ["accepted", "preparing", "ready", "indeterminate", "failed", "cancelled"]},
-    "ArtifactCreationFactKindV1": {"enum": ["accepted", "prepared", "committed", "cancelled", "failed"]},
-    "ArtifactCreationOperationStateV1": {"enum": ["absent", "accepted", "prepared", "committed", "cancelled", "failed"]},
+    "ArtifactCreationPhaseV1": {"x-semio-formats": ["🔣️jsonschema"], "enum": ["accepted", "preparing", "ready", "indeterminate", "failed", "cancelled"]},
+    "ArtifactCreationFactKindV1": {"x-semio-formats": ["🔣️jsonschema"], "enum": ["accepted", "prepared", "committed", "cancelled", "failed"]},
+    "ArtifactCreationOperationStateV1": {"x-semio-formats": ["🔣️jsonschema"], "enum": ["absent", "accepted", "prepared", "committed", "cancelled", "failed"]},
     "ArtifactCreationTransitionV1": {
+      "x-semio-formats": ["🔣️jsonschema"],
       "type": "object",
       "additionalProperties": false,
       "required": ["state", "fact", "next"],
@@ -45,6 +46,7 @@
       ]
     },
     "ArtifactCreationCancellationDecisionV1": {
+      "x-semio-formats": ["🔣️jsonschema"],
       "type": "object",
       "additionalProperties": false,
       "required": ["state", "expectedRevision", "observedAtMs", "accepted", "phase"],
@@ -64,6 +66,7 @@
       ]
     },
     "ArtifactCreationTransactionKindV1": {
+      "x-semio-formats": ["🔣️jsonschema"],
       "enum": [
         "success",
         "ack-loss",
@@ -100,6 +103,7 @@
       ]
     },
     "ArtifactCreationTransactionOutcomeV1": {
+      "x-semio-formats": ["🔣️jsonschema"],
       "type": "object",
       "additionalProperties": false,
       "required": ["kind", "committed", "publicEvents", "terminal", "delivery"],
@@ -146,6 +150,7 @@
       ]
     },
     "ArtifactCreationAcceptedRecoveryV1": {
+      "x-semio-formats": ["🔣️jsonschema"],
       "type": "object",
       "additionalProperties": false,
       "required": ["kind", "recoveryCandidates", "terminal", "facts"],
@@ -171,6 +176,7 @@
       ]
     },
     "ArtifactCreationHttpLimitsV1": {
+      "x-semio-formats": ["🔣️jsonschema"],
       "type": "object",
       "additionalProperties": false,
       "required": ["bodyBytes", "liveOperations", "lifetimeMs"],
@@ -181,6 +187,7 @@
       }
     },
     "ArtifactCreationHttpRouteV1": {
+      "x-semio-formats": ["🔣️jsonschema"],
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "method", "path", "accepted"],
@@ -192,6 +199,7 @@
       }
     },
     "ArtifactCreationHttpAuthorityV1": {
+      "x-semio-formats": ["🔣️jsonschema"],
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "authenticated", "sessionCurrent", "member", "role", "backendAvailable", "expected"],
@@ -221,6 +229,7 @@
       ]
     },
     "ArtifactCreationHttpResponseV1": {
+      "x-semio-formats": ["🔣️jsonschema"],
       "type": "object",
       "additionalProperties": false,
       "required": ["phase", "status"],

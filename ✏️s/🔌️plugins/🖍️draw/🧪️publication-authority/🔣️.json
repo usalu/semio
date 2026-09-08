@@ -12,160 +12,160 @@
         {
           "id": "canvasPointerDown",
           "lanes": [
-            "Artifact",
-            "Config"
+            "artifact",
+            "config"
           ]
         },
         {
           "id": "canvasPointerMove",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "canvasPointerUp",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "canvasDoubleClick",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "canvasCommitDraft",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "canvasEscape",
           "lanes": [
-            "Artifact",
-            "Config"
+            "artifact",
+            "config"
           ]
         },
         {
           "id": "setSnapshot",
           "lanes": [
-            "HostOnly"
+            "host-only"
           ]
         },
         {
           "id": "commitDocument",
           "lanes": [
-            "HostOnly"
+            "host-only"
           ]
         },
         {
           "id": "setFixtureJson",
           "lanes": [
-            "HostOnly"
+            "host-only"
           ]
         },
         {
           "id": "setActiveExample",
           "lanes": [
-            "HostOnly"
+            "host-only"
           ]
         },
         {
           "id": "setSelectedOpacity",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "engagementSubmit",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "addLayer",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "dropLayerKind",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "moveLayer",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "deleteLayer",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "duplicateLayer",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "toggleLayerVisible",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "combineBoolean",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "patchLayer",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "patchLayers",
           "lanes": [
-            "Artifact"
+            "artifact"
           ]
         },
         {
           "id": "setActiveUtility",
           "lanes": [
-            "Config"
+            "config"
           ],
           "frameworkInjected": true
         },
         {
           "id": "setCamera",
           "lanes": [
-            "Config"
+            "config"
           ]
         },
         {
           "id": "setCameraZoom",
           "lanes": [
-            "Config"
+            "config"
           ]
         },
         {
           "id": "engagementInput",
           "lanes": [
-            "Config"
+            "config"
           ]
         },
         {
           "id": "setLocale",
           "lanes": [
-            "Config"
+            "config"
           ]
         }
       ],

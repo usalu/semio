@@ -1,22 +1,44 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/reasoning/wires/inference.json",
   "title": "WiresInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["topology"],
+  "required": [
+    "topology"
+  ],
   "properties": {
-    "topology": { "$ref": "#/$defs/WiresTopology", "x-semio-derived": true }
+    "topology": {
+      "$ref": "#/$defs/WiresTopology",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "WiresTopology": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["nodeCount", "edgeCount", "componentCount", "cycleFree"],
+      "required": [
+        "nodeCount",
+        "edgeCount",
+        "componentCount",
+        "cycleFree"
+      ],
       "properties": {
-        "nodeCount": { "type": "integer", "minimum": 0 },
-        "edgeCount": { "type": "integer", "minimum": 0 },
-        "componentCount": { "type": "integer", "minimum": 0 },
-        "cycleFree": { "type": "boolean" }
+        "nodeCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "edgeCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "componentCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cycleFree": {
+          "type": "boolean"
+        }
       }
     }
   }

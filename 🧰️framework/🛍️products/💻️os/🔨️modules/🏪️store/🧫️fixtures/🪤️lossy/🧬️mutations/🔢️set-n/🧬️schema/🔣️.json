@@ -3,9 +3,9 @@
   "$id": "https://semio.tech/schema/framework/os/store/fixtures/lossy/mutation/set-n/schema.json",
   "title": "SetN",
   "$defs": {
-    "payload": {
-      "$ref": "../../../../🧬️schema/🔣️.json#/$defs/I32"
+    "Payload": {
+      "$ref": "https://semio.tech/schema/os/store/fixtures/schema.json#/$defs/I32"
     }
   },
-  "$ref": "#/$defs/payload"
+  "$ref": "#/$defs/Payload"
 }

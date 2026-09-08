@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `CreateLoadCase` — always a `delete-load-case` of the created id.
 use super::CreateLoadCase;
-use crate::mutations::{delete_load_case, Fem2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{delete_load_case, Fem2dMutation};
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse

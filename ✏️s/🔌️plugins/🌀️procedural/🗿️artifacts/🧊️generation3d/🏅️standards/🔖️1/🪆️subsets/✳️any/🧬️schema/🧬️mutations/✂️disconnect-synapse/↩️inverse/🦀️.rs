@@ -1,9 +1,9 @@
 //! ↩️ `disconnect-synapse` inverse — reconstructs a `connect-synapse` from BASE state; an edge
 //! already absent from `base` has nothing to undo.
 
-use crate::mutations::connect_synapse::ConnectSynapse;
-use crate::mutations::disconnect_synapse::DisconnectSynapse;
-use crate::mutations::{synapse_index, Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::connect_synapse::ConnectSynapse;
+use crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse::DisconnectSynapse;
+use crate::standards::v1::subsets::any::schema::mutations::{synapse_index, Generation3dMutation};
 use crate::Generation3dSnapshot;
 
 /// ↩️ Missing id in `base` ⇒ `Vec::new()`.

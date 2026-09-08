@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutation/delete-rig-extrinsic/schema.json",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/mutation/delete-rig-extrinsic/schema.json",
   "title": "DeleteRigExtrinsic",
   "type": "object",
   "additionalProperties": false,

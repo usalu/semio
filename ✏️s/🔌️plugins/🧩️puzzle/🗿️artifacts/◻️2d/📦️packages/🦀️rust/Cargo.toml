@@ -27,6 +27,7 @@ semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+semio-s-artifact-puzzle-3d = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }

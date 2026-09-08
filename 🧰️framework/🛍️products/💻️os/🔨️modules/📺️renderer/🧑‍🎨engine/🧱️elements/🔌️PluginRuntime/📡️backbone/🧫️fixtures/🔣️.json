@@ -1,0 +1,21 @@
+{
+  "owner": { "actorId": "gis#1", "activationGeneration": "1", "instanceId": 1, "runtimeKey": "v1:7:3:space-amap", "clientInstanceId": "client-a", "scope": { "spaceId": "space-a", "documentId": "map" } },
+  "limits": { "messageBytes": 4, "pendingBytes": 6, "pendingMessages": 2 },
+  "cases": [
+    { "id": "current", "clientInstanceId": "client-a", "runtimeKey": "v1:7:3:space-amap", "spaceId": "space-a", "uri": "actor://v1:7:3:space-amap", "current": true, "activationActive": true, "retired": false, "outbound": true, "inbound": true },
+    { "id": "stale-client", "clientInstanceId": "client-b", "runtimeKey": "v1:7:3:space-amap", "spaceId": "space-a", "uri": "actor://v1:7:3:space-amap", "current": true, "activationActive": true, "retired": false, "outbound": true, "inbound": false },
+    { "id": "foreign-runtime", "clientInstanceId": "client-a", "runtimeKey": "v1:7:3:space-bmap", "spaceId": "space-a", "uri": "actor://v1:7:3:space-amap", "current": true, "activationActive": true, "retired": false, "outbound": true, "inbound": false },
+    { "id": "equal-document-foreign-space", "clientInstanceId": "client-a", "runtimeKey": "v1:7:3:space-amap", "spaceId": "space-b", "uri": "actor://v1:7:3:space-amap", "current": true, "activationActive": true, "retired": false, "outbound": true, "inbound": false },
+    { "id": "foreign-uri", "clientInstanceId": "client-a", "runtimeKey": "v1:7:3:space-amap", "spaceId": "space-a", "uri": "actor://v1:7:3:space-bmap", "current": true, "activationActive": true, "retired": false, "outbound": false, "inbound": true },
+    { "id": "authority-revoked", "clientInstanceId": "client-a", "runtimeKey": "v1:7:3:space-amap", "spaceId": "space-a", "uri": "actor://v1:7:3:space-amap", "current": false, "activationActive": true, "retired": false, "outbound": false, "inbound": false },
+    { "id": "activation-replaced", "clientInstanceId": "client-a", "runtimeKey": "v1:7:3:space-amap", "spaceId": "space-a", "uri": "actor://v1:7:3:space-amap", "current": true, "activationActive": false, "retired": false, "outbound": false, "inbound": false },
+    { "id": "retired", "clientInstanceId": "client-a", "runtimeKey": "v1:7:3:space-amap", "spaceId": "space-a", "uri": "actor://v1:7:3:space-amap", "current": true, "activationActive": true, "retired": true, "outbound": false, "inbound": false }
+  ],
+  "retirement": ["deliver:1", "finished:1", "retire"],
+  "bindingRetirement": [
+    { "result": "refused", "sequence": ["bind"] },
+    { "result": "transport", "sequence": ["bind", "retire"] },
+    { "result": "duplicate", "sequence": ["bind", "retire"] },
+    { "result": "replaced", "sequence": ["bind", "retire"] }
+  ]
+}

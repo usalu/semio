@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `EditPart3dLabel` — patches the one addressed part in place.
-use crate::diff::{Puzzle5dDiff, Puzzle5dPartPatch, Puzzle5dPartPatchEntry, Puzzle5dPartsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dPartPatch, Puzzle5dPartPatchEntry, Puzzle5dPartsDelta};
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

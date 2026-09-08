@@ -75,7 +75,7 @@
       ]
     },
     "word": {
-      "$ref": "https://semio.tech/schema/framework/actor/page/schema.json#/definitions/word"
+      "$ref": "https://semio.tech/schema/framework/actor/page/schema.json#/$defs/Word"
     }
   },
   "$defs": {

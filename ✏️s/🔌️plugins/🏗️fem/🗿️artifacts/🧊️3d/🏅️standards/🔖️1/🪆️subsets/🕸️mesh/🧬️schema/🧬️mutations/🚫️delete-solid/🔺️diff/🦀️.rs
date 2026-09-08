@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteSolid`.
 use super::DeleteSolid;
-use crate::diff::{Fem3dDiff, Fem3dSolidsDelta};
-use crate::mutations::{solid_referrers, target_referenced};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSolidsDelta};
+use crate::standards::v1::subsets::any::schema::mutations::{solid_referrers, target_referenced};
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff

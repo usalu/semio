@@ -49,45 +49,6 @@ pub fn handle(payload: &EditCalibration, doc: &ArtifactView<'_, RemodelingSnapsh
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::remodeling::commands::{add_gcp, calibrate_cameras, place_gcp_observation, remove_gcp};
-    use crate::editor::remodeling::testkit::{app, dispatch};
-    use crate::editor::remodeling::RemodelingCommand;
-
-    #[semio_framework_async_macros::async_test]
-    async fn edit_calibration_inserts_then_updates_the_same_camera_entry() {
-        let mut app = app().await;
-        let payload = |fx: f64| {
-            RemodelingCommand::EditCalibration(EditCalibration { camera_id: "cam-1".into(), label: "Front".into(), model: "pinhole".into(), fx, fy: fx, cx: 0.0, cy: 0.0, skew: 0.0, k1: 0.0, k2: 0.0, k3: 0.0, p1: 0.0, p2: 0.0, locked: false })
-        };
-        dispatch(&mut app, payload(1000.0)).await;
-        assert_eq!(app.snapshot().expect("projection").calibration.cameras.len(), 1);
-        dispatch(&mut app, payload(2000.0)).await;
-        let cameras = app.snapshot().expect("projection").calibration.cameras;
-        assert_eq!(cameras.len(), 1, "the same camera id is updated in place, never duplicated");
-        assert_eq!(cameras[0].fx, 2000.0);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn gcps_are_added_observed_and_removed() {
-        let mut app = app().await;
-        dispatch(&mut app, RemodelingCommand::AddGcp(add_gcp::AddGcp { name: "Corner".into(), world_x: 1.0, world_y: 2.0, world_z: 3.0 })).await;
-        let gcp_id = app.snapshot().expect("projection").gcps[0].id.clone();
-        dispatch(&mut app, RemodelingCommand::PlaceGcpObservation(place_gcp_observation::PlaceGcpObservation { gcp_id: gcp_id.clone(), stream_id: "stream-1".into(), frame_index: 0, pixel_x: 10.0, pixel_y: 20.0 })).await;
-        assert_eq!(app.snapshot().expect("projection").gcps[0].observations.len(), 1);
-        dispatch(&mut app, RemodelingCommand::RemoveGcp(remove_gcp::RemoveGcp { gcp_id })).await;
-        assert!(app.snapshot().expect("projection").gcps.is_empty());
-    }
-
-    /// 🎯️ `calibrateCameras` only derives intrinsics for stream-referenced cameras that have a decoded
-    /// first frame — a stream with no frames contributes nothing.
-    #[semio_framework_async_macros::async_test]
-    async fn calibrate_cameras_skips_streams_without_frames() {
-        let mut app = app().await;
-        dispatch(&mut app, RemodelingCommand::AddStream(crate::editor::remodeling::commands::add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: "cam-0".into() })).await;
-        dispatch(&mut app, RemodelingCommand::CalibrateCameras(calibrate_cameras::CalibrateCameras {})).await;
-        assert!(app.snapshot().expect("projection").calibration.cameras.is_empty());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -12,6 +12,6 @@ use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 
-pub fn standard() -> StandardDeclaration<crate::PuzzleApps> {
-    StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.puzzle3d+json"], extensions: &["puzzle3d-play"] }, subsets: vec![subsets::any::subset()] }
+pub fn standard<PA: crate::ArtifactApps>() -> StandardDeclaration<PA> {
+    StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.puzzle3d+json"], extensions: &["puzzle3d-play"] }, subsets: vec![subsets::any::subset::<PA>()] }
 }

@@ -10,7 +10,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     console.log(`[test] ${requireMcpBinary(this.repoRoot)}`);
-    await runVitest(this.root, rest, "🧪️tests/🟦️.ts");
+    await runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 
@@ -28,7 +28,7 @@ class InferenceBridgeCheckScript extends BundleScript {
     if (mode === "--process") {
       console.log(`[inference-bridge] ${requireMcpBinary(this.repoRoot)}`);
       resolveTestLevel(["long"]);
-      await runVitest(this.root, ["💡️inference-bridge.test.ts"], "🧪️tests/🟦️.ts");
+      await runVitest(this.root, ["💡️inference-bridge.test.ts"], "vitest.config.ts");
     }
     console.log(`inference-bridge-check ${mode}: no external model provider, no WGPU rendering, and no two-user authenticated journey is run or claimed here.`);
   }

@@ -3,7 +3,10 @@
 use std::sync::Arc;
 
 use super::{
-    schema::{InferenceBindingIdentityV1, InferenceIdentityV1, InferenceParentDialectV1, InferenceRequestV1, GIS_GRANTED_MODE, GIS_SERVICE_ID, INPUT_MAX_BYTES},
+    schema::{
+        GisMapFrozenArtifactV1, GisMapFrozenBindingV1, GisMapFrozenExecutionProtocolV1, GisMapFrozenGrantV1, GisMapFrozenPackageV1, GisMapFrozenSurfaceV1, InferenceBindingIdentityV1, InferenceCatalogServiceV1, InferenceIdentityV1, InferenceParentDialectV1,
+        InferenceRequestV1, GIS_GRANTED_MODE, GIS_SERVICE_ID, INPUT_MAX_BYTES,
+    },
     sha256, InferenceErrorV1, InferenceOperationControlV1, InferencePrivateBytesV1,
 };
 use crate::artifact_authority::{
@@ -14,98 +17,15 @@ use crate::directory::model::AuthSessionRecord;
 use directory::os_directory::{descriptor_digest_v1, hex_lower, ArtifactFrontier, DocumentDescriptor, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1, DocumentScope};
 use semio_framework::ContributedInferenceMetadata;
 use semio_framework_plugin::ArtifactInferenceService;
-use serde::{Deserialize, Serialize};
 
 const GIS_MAP_BINDING_DOMAIN: &[u8] = b"semio.hub.gis-map-frozen-binding/v1\0";
 const GIS_MAP_NATIVE_EXECUTABLE: &str = "semio_s_plugin_gis::gis_map_inference_service";
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct GisMapFrozenExecutionProtocolV1 {
-    app_channel_version: u32,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct GisMapFrozenPackageV1 {
-    plugin_id: String,
-    package_id: String,
-    version: String,
-    component_sha256: String,
-    component_blake3: String,
-    descriptor_byte_sha256: String,
-    execution_protocol: GisMapFrozenExecutionProtocolV1,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct GisMapFrozenArtifactV1 {
-    kind: String,
-    schema: String,
-    pack_schema_hash: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct GisMapFrozenDialectV1 {
-    artifact_kind: String,
-    standard: String,
-    subset: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct GisMapFrozenSurfaceV1 {
-    surface_id: String,
-    app_id: String,
-    window_kind_id: String,
-    role: String,
-    renderer_target: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct GisMapFrozenGrantV1 {
-    read: bool,
-    write: bool,
-    observe: bool,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct GisMapFrozenServiceV1 {
-    owner: String,
-    contributor: String,
-    artifact_kind: String,
-    artifact_schema: String,
-    artifact_schema_version: u32,
-    document_schema: String,
-    document_schema_version: u32,
-    inference_schema: String,
-    inference_schema_version: u32,
-    algorithm_version: u32,
-    policy_version: u32,
-    depends_on: Vec<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct GisMapFrozenBindingProjectionV1 {
-    catalog_generation_id: String,
-    package: GisMapFrozenPackageV1,
-    artifact: GisMapFrozenArtifactV1,
-    parent_dialect: GisMapFrozenDialectV1,
-    surface: GisMapFrozenSurfaceV1,
-    grant: GisMapFrozenGrantV1,
-    service: GisMapFrozenServiceV1,
-    native_executable: String,
-}
 
 /// 🧊️ One process-lifetime GIS Map editor selection pinned to its verified catalog and exact native executable.
 pub struct VerifiedGisMapArtifactBindingV1 {
     catalog: Arc<VerifiedTrustedCatalog>,
     selection: VerifiedDocumentOpenSelectionV1,
-    projection: GisMapFrozenBindingProjectionV1,
+    projection: GisMapFrozenBindingV1,
     service: ArtifactInferenceService,
     digest: String,
 }
@@ -142,7 +62,7 @@ impl VerifiedGisMapArtifactBindingV1 {
             component_blake3: self.projection.package.component_blake3.clone(),
             artifact_kind: self.projection.artifact.kind.clone(),
             document_schema: self.projection.artifact.schema.clone(),
-            parent_dialect: InferenceParentDialectV1 { artifact_kind: self.projection.parent_dialect.artifact_kind.clone(), standard: self.projection.parent_dialect.standard.clone(), subset: self.projection.parent_dialect.subset.clone() },
+            parent_dialect: self.projection.parent_dialect.clone(),
             surface_id: self.projection.surface.surface_id.clone(),
             granted_mode: GIS_GRANTED_MODE.to_owned(),
             service_id: self.projection.service.inference_schema.clone(),
@@ -156,7 +76,7 @@ fn valid_digest(value: &str) -> bool {
     value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
-fn validate_gis_map_binding_projection(projection: &GisMapFrozenBindingProjectionV1, native: ArtifactInferenceService) -> Result<(), InferenceErrorV1> {
+fn validate_gis_map_binding_projection(projection: &GisMapFrozenBindingV1, native: ArtifactInferenceService) -> Result<(), InferenceErrorV1> {
     let metadata = native.metadata();
     let expected = semio_s_artifact_gis_gismap::gis_map_inference_service();
     if !valid_digest(&projection.catalog_generation_id)
@@ -204,7 +124,7 @@ fn validate_gis_map_binding_projection(projection: &GisMapFrozenBindingProjectio
     Ok(())
 }
 
-fn gis_map_binding_digest(projection: &GisMapFrozenBindingProjectionV1) -> Result<String, InferenceErrorV1> {
+fn gis_map_binding_digest(projection: &GisMapFrozenBindingV1) -> Result<String, InferenceErrorV1> {
     let mut bytes = GIS_MAP_BINDING_DOMAIN.to_vec();
     bytes.extend(serde_json::to_vec(projection).map_err(|_| InferenceErrorV1::Invalid)?);
     Ok(sha256(&bytes))
@@ -241,7 +161,7 @@ fn verified_gis_map_binding_with_service(catalog: Arc<VerifiedTrustedCatalog>, n
         DocumentOpenRendererTargetV1::Wgpu => "wgpu",
         DocumentOpenRendererTargetV1::Wasm => "wasm",
     };
-    let projection = GisMapFrozenBindingProjectionV1 {
+    let projection = GisMapFrozenBindingV1 {
         catalog_generation_id: catalog.generation_id().to_owned(),
         package: GisMapFrozenPackageV1 {
             plugin_id: selection.package.plugin_id.clone(),
@@ -253,7 +173,7 @@ fn verified_gis_map_binding_with_service(catalog: Arc<VerifiedTrustedCatalog>, n
             execution_protocol: GisMapFrozenExecutionProtocolV1 { app_channel_version: selection.package.execution_protocol.app_channel_version },
         },
         artifact: GisMapFrozenArtifactV1 { kind: selection.artifact.kind.clone(), schema: selection.artifact.schema.clone(), pack_schema_hash: selection.artifact.pack_schema_hash.clone() },
-        parent_dialect: GisMapFrozenDialectV1 { artifact_kind: selection.parent_dialect.artifact_kind.clone(), standard: selection.parent_dialect.standard.clone(), subset: selection.parent_dialect.subset.clone() },
+        parent_dialect: InferenceParentDialectV1 { artifact_kind: selection.parent_dialect.artifact_kind.clone(), standard: selection.parent_dialect.standard.clone(), subset: selection.parent_dialect.subset.clone() },
         surface: GisMapFrozenSurfaceV1 {
             surface_id: selection.surface.surface_id.clone(),
             app_id: selection.surface.app_id.clone(),
@@ -262,7 +182,7 @@ fn verified_gis_map_binding_with_service(catalog: Arc<VerifiedTrustedCatalog>, n
             renderer_target: renderer_target.to_owned(),
         },
         grant: GisMapFrozenGrantV1 { read: selection.grant.read, write: selection.grant.write, observe: selection.grant.observe },
-        service: GisMapFrozenServiceV1 {
+        service: InferenceCatalogServiceV1 {
             owner: declared.owner.clone(),
             contributor: declared.contributor.clone(),
             artifact_kind: declared.artifact_kind.clone(),
@@ -396,62 +316,5 @@ pub(crate) async fn identity_from_frozen_binding(binding: &VerifiedGisMapArtifac
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn gis_map_verified_binding_freezes_catalog_selection_and_native_executable() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json")).unwrap();
-        let projection: GisMapFrozenBindingProjectionV1 = serde_json::from_value(fixture["binding"].clone()).unwrap();
-        let native = semio_s_artifact_gis_gismap::gis_map_inference_service();
-        assert_eq!(validate_gis_map_binding_projection(&projection, native), Ok(()));
-        assert_eq!(gis_map_binding_digest(&projection).unwrap(), fixture["expectedDigest"]);
-        for hostile in fixture["hostile"].as_array().unwrap() {
-            let mut candidate = fixture["binding"].clone();
-            let path = hostile["path"].as_array().unwrap();
-            let mut at = &mut candidate;
-            for segment in &path[..path.len() - 1] {
-                at = &mut at[segment.as_str().unwrap()];
-            }
-            at[path.last().unwrap().as_str().unwrap()] = hostile["value"].clone();
-            let admitted = serde_json::from_value::<GisMapFrozenBindingProjectionV1>(candidate)
-                .ok()
-                .is_some_and(|candidate| validate_gis_map_binding_projection(&candidate, native).is_ok() && gis_map_binding_digest(&candidate).ok().as_deref() == fixture["expectedDigest"].as_str());
-            assert_eq!(admitted, hostile["accepted"], "{}", hostile["name"]);
-        }
-
-        fn reject(_request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>) -> Result<semio_framework_plugin::ArtifactInferenceExecution, semio_framework_plugin::ArtifactInferenceExecutionError> {
-            Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("test.reject", "wrong executable"))
-        }
-        let substituted = ArtifactInferenceService::new(native.metadata(), reject);
-        assert_eq!(validate_gis_map_binding_projection(&projection, substituted), Err(InferenceErrorV1::Denied));
-    }
-
-    #[test]
-    fn inference_catalog_projection_requires_exact_scope_package_and_declared_service() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🎯️inference-catalog-selection-v1/🔣️.json")).unwrap();
-        for case in fixture["cases"].as_array().unwrap() {
-            let mut row = fixture.clone();
-            let path = case["path"].as_array().unwrap();
-            if !path.is_empty() {
-                let mut at = &mut row;
-                for segment in &path[..path.len() - 1] {
-                    at = if let Some(index) = segment.as_u64() { &mut at[index as usize] } else { &mut at[segment.as_str().unwrap()] };
-                }
-                at[path.last().unwrap().as_str().unwrap()] = case["value"].clone();
-            }
-            let scope = DocumentScope::new(row["scope"]["spaceId"].as_str().unwrap(), row["scope"]["documentId"].as_str().unwrap());
-            let descriptor: DocumentDescriptor = directory::os_pack::json::from_json_str(&row["descriptor"].to_string()).unwrap();
-            let services: Vec<ContributedInferenceMetadata> = serde_json::from_value(row["services"].clone()).unwrap();
-            let package = &row["package"];
-            let projection = PackageProjection {
-                plugin_id: package["pluginId"].as_str().unwrap(),
-                package_id: package["packageId"].as_str().unwrap(),
-                version: package["version"].as_str().unwrap(),
-                component_sha256: package["componentSha256"].as_str().unwrap(),
-                services: &services,
-            };
-            assert_eq!(exact_projection(&scope, &descriptor, &projection).is_ok(), case["accepted"].as_bool().unwrap(), "{}", case["name"]);
-        }
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

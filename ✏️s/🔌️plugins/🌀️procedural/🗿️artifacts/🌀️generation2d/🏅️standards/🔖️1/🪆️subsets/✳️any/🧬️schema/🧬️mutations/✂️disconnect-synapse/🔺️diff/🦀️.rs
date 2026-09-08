@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DisconnectSynapse` — a real id-keyed removal from the fixture's
 //! synapse collection helper (never a whole-snapshot capture).
 
-use crate::diff::{diff_fixture_from_helpers, LayoutDiff, Generation2dDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, Generation2dDiff, SynapsesDiff, WidgetsDiff};
 use crate::Generation2dSnapshot;
 
 pub fn diff(payload: &super::DisconnectSynapse, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {

@@ -1,8 +1,8 @@
 //! 💬 Block3d mutation — `ChangeMetaDescription`: the editing-session `meta.description`.
 
 use crate::Block3dSnapshot;
-use crate::diff::Block3dDiff;
-use crate::mutations::Block3dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
 
 //#region 🔖️Mutation
 /// 💬 `change-meta-description` payload.

@@ -2,7 +2,7 @@
 
 use crate::BlockRepresentation;
 use crate::Block5dSnapshot;
-use crate::diff::{Block5dDiff, Block5dRepresentationsDelta, Block5dRepresentationsPatch, Block5dRepresentationsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Block5dDiff, Block5dRepresentationsDelta, Block5dRepresentationsPatch, Block5dRepresentationsPatchEntry};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeRepresentationMeshUrl, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {

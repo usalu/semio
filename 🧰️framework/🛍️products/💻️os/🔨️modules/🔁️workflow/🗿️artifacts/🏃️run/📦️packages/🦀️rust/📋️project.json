@@ -1,5 +1,5 @@
 {
-  "name": "@semio-tech/workflow-run-rs",
+  "name": "@semio-tech/framework-workflow-run-rs",
   "$schema": "../../../../../../../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "tags": [

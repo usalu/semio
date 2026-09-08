@@ -17,145 +17,145 @@
   "routes": [
     {
       "id": "applyDirectoryEventPage",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "blocker": ""
     },
     {
       "id": "createStudio",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "bindSpaceFile",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "HostOnly"
+        "host-only"
       ],
       "blocker": ""
     },
     {
       "id": "importSpace",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "openSpace",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "HostOnly"
+        "host-only"
       ],
       "blocker": ""
     },
     {
       "id": "navigateVirtualFileSystemNode",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "HostOnly"
+        "host-only"
       ],
       "blocker": ""
     },
     {
       "id": "deleteVirtualFileSystemNode",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "blocker": ""
     },
     {
       "id": "goHome",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "HostOnly"
+        "host-only"
       ],
       "blocker": ""
     },
     {
       "id": "setActivePanelTab",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "blocker": ""
     },
     {
       "id": "createSpace",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "HostOnly"
+        "host-only"
       ],
       "blocker": ""
     },
     {
       "id": "deleteSpace",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "HostOnly"
+        "host-only"
       ],
       "blocker": ""
     },
     {
       "id": "renameSpace",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "HostOnly"
+        "host-only"
       ],
       "blocker": ""
     },
     {
       "id": "shareSpace",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "HostOnly"
+        "host-only"
       ],
       "blocker": ""
     },
     {
       "id": "manageSpace",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "HostOnly"
+        "host-only"
       ],
       "blocker": ""
     },
     {
       "id": "copyInviteLink",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "HostOnly"
+        "host-only"
       ],
       "blocker": ""
     },
     {
       "id": "foldDirectoryEvents",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "blocker": ""
     },
     {
       "id": "presenceHeartbeat",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "HostOnly"
+        "host-only"
       ],
       "blocker": ""
     },
     {
       "id": "setClient",
-      "disposition": "Migrated",
+      "disposition": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "blocker": ""
     }

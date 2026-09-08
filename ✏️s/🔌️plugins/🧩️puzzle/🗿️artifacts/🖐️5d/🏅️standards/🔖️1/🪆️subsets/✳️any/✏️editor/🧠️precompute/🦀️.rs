@@ -12,11 +12,11 @@ use semio_s_artifact_puzzle_3d::Puzzle3dError;
 use crate::Puzzle5dError;
 
 //#region 🔖️BrushEngine
-pub use semio_s_artifact_puzzle_3d::schema::BrushPlacePayload;
+pub use semio_s_artifact_puzzle_3d::BrushPlacePayload;
 
 /// 🧠️ A puzzle-5d brush/fill precompute session over the 3d app's retained solver and preview page.
 pub struct Puzzle5dPrecomputeSession {
-    inner: crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession,
+    inner: semio_s_artifact_puzzle_3d::Puzzle3dPrecomputeSession,
 }
 
 impl Default for Puzzle5dPrecomputeSession {
@@ -27,7 +27,7 @@ impl Default for Puzzle5dPrecomputeSession {
 
 impl Puzzle5dPrecomputeSession {
     pub fn new() -> Self {
-        Self { inner: crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession::new() }
+        Self { inner: semio_s_artifact_puzzle_3d::Puzzle3dPrecomputeSession::new() }
     }
 
     pub fn register_mesh(&mut self, url: &str, positions: &[f32], indices: &[u32]) {
@@ -65,9 +65,9 @@ impl Puzzle5dPrecomputeSession {
     /// string this node's own callers (the native `_rust` methods below, and the wasm-bindgen methods
     /// further down) expect — every dispatched command this file issues returns a `Fixture` outcome,
     /// so the `Unit`/`BrushPreview` arms are unreachable in practice.
-    fn fixture_outcome_json(outcome: semio_s_artifact_puzzle_3d::schema::Puzzle3dEngineOutcome) -> Result<String, Puzzle3dError> {
+    fn fixture_outcome_json(outcome: semio_s_artifact_puzzle_3d::Puzzle3dEngineOutcome) -> Result<String, Puzzle3dError> {
         match outcome {
-            semio_s_artifact_puzzle_3d::schema::Puzzle3dEngineOutcome::Fixture(fixture) => Ok(dsl::json::to_json_string(&fixture)),
+            semio_s_artifact_puzzle_3d::Puzzle3dEngineOutcome::Fixture(fixture) => Ok(dsl::json::to_json_string(&fixture)),
             _ => Err(Puzzle3dError::BrushPlacementRejected),
         }
     }
@@ -83,11 +83,11 @@ impl Puzzle5dPrecomputeSession {
 
     pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, Puzzle5dError> {
         let payload: BrushPlacePayload = dsl::json::from_json_str(payload_json).map_err(Puzzle3dError::from)?;
-        Ok(Self::fixture_outcome_json(self.inner.dispatch(semio_s_artifact_puzzle_3d::schema::Puzzle3dEngineCommand::ApplyBrushPlacement { payload })?)?)
+        Ok(Self::fixture_outcome_json(self.inner.dispatch(semio_s_artifact_puzzle_3d::Puzzle3dEngineCommand::ApplyBrushPlacement { payload })?)?)
     }
 
     pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, Puzzle5dError> {
-        Ok(Self::fixture_outcome_json(self.inner.dispatch(semio_s_artifact_puzzle_3d::schema::Puzzle3dEngineCommand::ApplyFillCount { count })?)?)
+        Ok(Self::fixture_outcome_json(self.inner.dispatch(semio_s_artifact_puzzle_3d::Puzzle3dEngineCommand::ApplyFillCount { count })?)?)
     }
 }
 
@@ -110,11 +110,11 @@ impl Puzzle5dPrecomputeSession {
 
     pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, Puzzle5dError> {
         let payload: BrushPlacePayload = dsl::json::from_json_str(payload_json).map_err(Puzzle3dError::from)?;
-        Ok(Self::fixture_outcome_json(self.inner.dispatch(semio_s_artifact_puzzle_3d::schema::Puzzle3dEngineCommand::ApplyBrushPlacement { payload })?)?)
+        Ok(Self::fixture_outcome_json(self.inner.dispatch(semio_s_artifact_puzzle_3d::Puzzle3dEngineCommand::ApplyBrushPlacement { payload })?)?)
     }
 
     pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, Puzzle5dError> {
-        Ok(Self::fixture_outcome_json(self.inner.dispatch(semio_s_artifact_puzzle_3d::schema::Puzzle3dEngineCommand::ApplyFillCount { count })?)?)
+        Ok(Self::fixture_outcome_json(self.inner.dispatch(semio_s_artifact_puzzle_3d::Puzzle3dEngineCommand::ApplyFillCount { count })?)?)
     }
 }
 //#endregion 🔖️BrushEngine

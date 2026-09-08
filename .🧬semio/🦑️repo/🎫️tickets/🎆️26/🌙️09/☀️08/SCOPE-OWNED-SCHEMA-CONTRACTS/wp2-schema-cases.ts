@@ -31,7 +31,7 @@ for (const row of cases.cases) {
       writeFileSync(abs, typeof body === "string" ? body : `${JSON.stringify(body, null, 2)}\n`);
     }
     const inventory = inventorySchemaScopes(root, taxonomy);
-    const scopes = Object.fromEntries(Object.entries(inventory.catalog.scopes).map(([id, scope]) => [id, { path: scope.path, level: scope.level, exports: [...scope.exports], dependsOn: [...scope.dependsOn] }]));
+    const scopes = Object.fromEntries(Object.entries(inventory.catalog.scopes).map(([id, scope]) => [id, { path: scope.path, level: scope.level, exports: Object.fromEntries(Object.entries(scope.exports).map(([exportId, declaration]) => [exportId, { file: declaration.file, facet: declaration.facet }])), dependsOn: [...scope.dependsOn] }]));
     check(`[${row.id}] scopes`, scopes, row.expected.scopes);
     check(`[${row.id}] diagnostic codes`, inventory.diagnostics.map(({ code }) => code).sort(), [...row.expected.diagnosticCodes].sort());
     check(`[${row.id}] placement paths`, inventory.placement.map(({ path }) => path).sort(), [...row.expected.placementPaths].sort());

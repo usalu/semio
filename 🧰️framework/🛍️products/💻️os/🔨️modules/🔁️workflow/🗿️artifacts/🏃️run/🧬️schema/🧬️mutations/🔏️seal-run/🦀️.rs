@@ -30,11 +30,5 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for SealRun {
 //#endregion ⚙️Semantics
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::MutationLeaf;
-    #[test]
-    fn metadata_has_the_canonical_seal_identity() {
-        assert_eq!(<SealRun as MutationLeaf>::DESCRIPTOR.semantic_kind, "seal-run");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

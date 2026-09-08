@@ -1,6 +1,6 @@
 //! 🔎️ 🔎️ Trinity Jack app command — `run-query`.
 
-use crate::op::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
 use crate::JackSnapshot;
 use crate::core;
 use crate::editor::jack::config::JackConfigMutation;

@@ -6,6 +6,27 @@ import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "j
 import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, DocumentAttachmentLaneV1, runDocumentOpeningAttemptV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 
 describe("Shell document opening", () => {
+  it("atomically retires, cold-loads and binds before a close can finish", async () => {
+    const sequence: string[] = [];
+    const validate = new Ajv({ strict: true }).addSchema(rendererSchema).compile({ type: "array", items: { $ref: `${rendererSchema.$id}#/$defs/DocumentOpeningAttachmentStepV1` } });
+    expect(validate(documentOpeningFixture.coldReplacement)).toBe(true);
+    let release!: () => void, started!: () => void;
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    const entered = new Promise<void>(resolve => { started = resolve; });
+    const lane = new DocumentAttachmentLaneV1(async () => { sequence.push("detach"); });
+    await lane.attach("a", () => true, async () => { sequence.push("attach-a"); });
+    const replacement = lane.replace("a", () => true, async () => {
+      sequence.push("load"); started(); await gate; sequence.push("bind");
+    });
+    await entered;
+    const closed = lane.close("a");
+    expect(lane.idle).toBe(false);
+    release();
+    await Promise.all([replacement, closed]);
+    expect(deepEqual(sequence, documentOpeningFixture.coldReplacement)).toBe(true);
+    expect(lane.idle).toBe(true);
+  });
+
   it("never lets a background admission replace an existing document or app instance", () => {
     for (const row of documentOpeningFixture.admissions) {
       const closed: string[] = [];

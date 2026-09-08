@@ -1,6 +1,6 @@
 //! 🏷️ 🏷️ Block 2D play app command command — `patch-node-kind`.
 
-use crate::op::Block2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Block2dMutation;
 use crate::Block2dSnapshot;
 use crate::editor::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -14,7 +14,7 @@ pub struct PatchNodeKind {
 }
 
 pub fn handle(payload: &PatchNodeKind, _doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
-    use crate::mutations as m;
+    use crate::standards::v1::subsets::any::schema::mutations as m;
     let optional = |value: &str| if value.is_empty() { None } else { Some(value.to_string()) };
     let mutation = match payload.field.as_str() {
         "name" => m::rename_node_kind(payload.value.clone()),

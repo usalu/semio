@@ -1,121 +1,91 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/puzzle/5d/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle5d/mutations.json",
   "title": "Puzzle5dMutation",
   "oneOf": [
     {
-      "$ref": "./➕add-part-grip/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/add-part-grip/schema.json"
     },
     {
-      "$ref": "./🗒️change-description/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/change-description/schema.json"
     },
     {
-      "$ref": "./🌐change-domain/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/change-domain/schema.json"
     },
     {
-      "$ref": "./🎯change-fastener-kind/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/change-fastener-kind/schema.json"
     },
     {
-      "$ref": "./⚓change-part-anchor/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/change-part-anchor/schema.json"
     },
     {
-      "$ref": "./🏗️change-part-kind/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/change-part-kind/schema.json"
     },
     {
-      "$ref": "./🙈change-part2d-hidden/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/change-part2d-hidden/schema.json"
     },
     {
-      "$ref": "./🎨change-part2d-icon/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/change-part2d-icon/schema.json"
     },
     {
-      "$ref": "./🔒change-part2d-locked/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/change-part2d-locked/schema.json"
     },
     {
-      "$ref": "./🧱change-part3d-mesh/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/change-part3d-mesh/schema.json"
     },
     {
-      "$ref": "./🪢️connect-grips/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/connect-grips/schema.json"
     },
     {
-      "$ref": "./🤝connect-kind-compatibility/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/connect-kind-compatibility/schema.json"
     },
     {
-      "$ref": "./🌱create-part/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/create-part/schema.json"
     },
     {
-      "$ref": "./🗑️delete-part/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/delete-part/schema.json"
     },
     {
-      "$ref": "./✂️disconnect-grips/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/disconnect-grips/schema.json"
     },
     {
-      "$ref": "./💔disconnect-kind-compatibility/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/disconnect-kind-compatibility/schema.json"
     },
     {
-      "$ref": "./✏️edit-part2d-text/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/edit-part2d-text/schema.json"
     },
     {
-      "$ref": "./🖋️edit-part3d-label/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/edit-part3d-label/schema.json"
     },
     {
-      "$ref": "./📍move-part2d/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/move-part2d/schema.json"
     },
     {
-      "$ref": "./🚀move-part3d/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/move-part3d/schema.json"
     },
     {
-      "$ref": "./➖remove-part-grip/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/remove-part-grip/schema.json"
     },
     {
-      "$ref": "./🏷️rename-puzzle5d/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/rename-puzzle5d/schema.json"
     },
     {
-      "$ref": "./🧮replace-fastener-geometry/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/replace-fastener-geometry/schema.json"
     },
     {
-      "$ref": "./📚replace-kind-catalogs/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/replace-kind-catalogs/schema.json"
     },
     {
-      "$ref": "./🔌replace-part-grip/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/replace-part-grip/schema.json"
     },
     {
-      "$ref": "./🧊replace-part2d-geometry/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/replace-part2d-geometry/schema.json"
     },
     {
-      "$ref": "./🔃rotate-part3d/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/rotate-part3d/schema.json"
     },
     {
-      "$ref": "./📏scale-part3d/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/scale-part3d/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "add-part-grip",
-    "change-description",
-    "change-domain",
-    "change-fastener-kind",
-    "change-part-anchor",
-    "change-part-kind",
-    "change-part2d-hidden",
-    "change-part2d-icon",
-    "change-part2d-locked",
-    "change-part3d-mesh",
-    "connect-grips",
-    "connect-kind-compatibility",
-    "create-part",
-    "delete-part",
-    "disconnect-grips",
-    "disconnect-kind-compatibility",
-    "edit-part2d-text",
-    "edit-part3d-label",
-    "move-part2d",
-    "move-part3d",
-    "remove-part-grip",
-    "rename-puzzle5d",
-    "replace-fastener-geometry",
-    "replace-kind-catalogs",
-    "replace-part-grip",
-    "replace-part2d-geometry",
-    "rotate-part3d",
-    "scale-part3d"
   ]
 }

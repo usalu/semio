@@ -110,8 +110,15 @@ the column is neither `NOT NULL` nor `PRIMARY KEY`). `🗄️.sql` declares no `
   `test-long`, `test-exhaustive` (the package was in the root `package.json` workspace list but was not
   an nx project and had no test host).
 - `💻️client/🪶️sqlite/📦️packages/🟦️typescript/📜️script.ts` — router, `test` only.
-- `💻️client/🪶️sqlite/📦️packages/🟦️typescript/🧪️tests/🟦️.ts` — vitest config, `passWithNoTests: false`.
-- `💻️client/🪶️sqlite/📦️packages/🟦️typescript/🔬️schema.test.ts` — the parity test (§5).
+- `💻️client/🪶️sqlite/📦️packages/🟦️typescript/🧪️tests/🟦️.ts` — vitest config, `passWithNoTests: false`,
+  `include: [resolve(root, "../../🧪️tests/*/🟦️.ts")]` (same shape as
+  `💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️tests/🟦️.ts`).
+- `💻️client/🪶️sqlite/🧪️tests/🔬️schema/🟦️.ts` — the parity test (§5). Written as
+  `📦️packages/🟦️typescript/🔬️schema.test.ts`; a concurrent repo-wide taxonomy sweep relocated it to the
+  owner module's `🧪️tests/<case>/🟦️.ts` slot mid-session (commit `9869c6e99b`, 17:55). That is the
+  taxonomy-correct home and matches contract §B's `🧪️tests` (`testsDirName`) rule, so it was kept there
+  and the vitest config was pointed at it rather than moved back. Its `moduleRoot` (`../../🧬️schema`)
+  resolves identically from both locations.
 
 ### Moved
 
@@ -179,9 +186,11 @@ outside this partition — cross-partition requests **A** and **F** in §7.
 
  Test Files  1 passed (1)
       Tests  12 passed (12)
-   Start at  17:05:23
-   Duration  1.99s (transform 368ms, setup 0ms, import 470ms, tests 811ms, environment 0ms)
+   Start at  17:58:23
+   Duration  1.60s (transform 388ms, setup 0ms, import 421ms, tests 603ms, environment 0ms)
 ```
+
+(Re-run at 17:58 after the peer sweep moved the spec — same 12 tests, same result as the 17:05 run.)
 
 The test mirrors `🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🔬️server-persistence.test.ts`:
 draft-07 identity, `$id`, one `<Table>Row` per `CREATE TABLE`, and per-table column-name + nullability
@@ -251,7 +260,103 @@ See §6.
 
 ## 6. Row 19 — `go test ./...` in `⌨️cli`
 
-<!-- ROW19 -->
+One attempt, foreground, no `-short`, full output in `🗑️generated/wp4b-cli-go-test.txt`:
+
+```
+$ cd 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli
+$ GOWORK=<repo>/go.work go test ./... -count=1 -timeout 40m
+```
+
+started 17:08:29, ended 17:50 (compile ≈ 7 min, then the test binary ran 40 min to its own timeout).
+
+**Baseline: not green, and it is not a load problem.** Three distinct failures, none of them caused by
+this ticket's changes:
+
+```
+--- FAIL: TestExhaustiveDevcontainerPostAttachGitKrakenWorkspaceBootstrap (6.51s)
+    --- FAIL: …/creates_workspace_from_root_and_submodules (3.78s)
+        🔬️component_test.go:369: bash [.devcontainer/post-attach.sh] failed: exit status 127
+            .devcontainer/post-attach.sh: line 320: mapfile: command not found
+    --- FAIL: …/updates_workspace_only_for_missing_repos (2.74s)
+        🔬️component_test.go:488: bash [.devcontainer/post-attach.sh] failed: exit status 127
+            .devcontainer/post-attach.sh: line 320: mapfile: command not found
+--- FAIL: TestExhaustiveBundlesNonEmpty (0.00s)
+    🔬️component_test.go:932: bundles collection should not be empty
+panic: test timed out after 40m0s
+	running tests:
+		TestExhaustiveFoldersNonEmpty (39m43s)
+…
+FAIL	github.com/usalu/semio/repo/client	2400.536s
+?   	github.com/usalu/semio/repo/client/cmd/repo	[no test files]
+ok  	github.com/usalu/semio/repo/client/internal/command	0.910s
+ok  	github.com/usalu/semio/repo/client/internal/eventstore	1.742s
+?   	…/internal/{glob,graphql,humanize,id,ignore,mcp,mcpserver,search,templatefunc,yaml}	[no test files]
+FAIL
+```
+
+1. **`TestExhaustiveFoldersNonEmpty` does not terminate.** It ran 39m43s of the 40m budget and was still
+   running when the alarm fired. The goroutine dump puts it in the real-monorepo scan, not in I/O wait:
+   `ExecuteJSON("{ folders { path } }")` → `graphql.Do` → `queryResolver.Folders` →
+   `repoContext.GetFolders` → `CodebaseContext.LoadFiles` → `ScopeToFiles`
+   (`🧩️component.go:36202`, `:21648`, `:17394`), with a runnable goroutine inside `unicode.SimpleFold`
+   — i.e. it is burning CPU in glob/scope matching over the whole tree. Peer `cargo` load slows the box
+   but does not explain a 2400× overrun of a query the `-short` suite skips. This is the real content of
+   ledger row 19: the exhaustive suite is **not** merely slow, one case is effectively non-terminating,
+   and an idle machine will not change that. The other two failures below prove the binary was making
+   progress and reached them long before the alarm.
+2. **`TestExhaustiveBundlesNonEmpty` fails in 0.00s** — the same executor answers
+   `{ bundles { name } }` with an empty collection. It is instant, so it is a resolver/discovery defect
+   against the current taxonomy layout, not a timeout.
+3. **`TestExhaustiveDevcontainerPostAttachGitKrakenWorkspaceBootstrap` is not portable to macOS.**
+   `.devcontainer/post-attach.sh:320` uses `mapfile`, a bash ≥ 4 builtin; `/bin/bash` on macOS is 3.2, so
+   the script exits 127 there. It would pass in the devcontainer and fail on every native macOS machine.
+   This one contradicts CLAUDE.md's "zero-touch and cross-platform for devcontainer, native windows,
+   native macos and native linux".
+
+Everything outside the root package is green: `internal/command` and `internal/eventstore` pass, the
+other eleven packages have no tests. **Note that `go test ./...` could not even load before §4** — the
+figures above are the first exhaustive baseline this module has had.
+
+All three failures are pre-existing and orthogonal to schema ownership: 1 and 2 are repo-scan/resolver
+defects in `🧩️component.go`, 3 is a devcontainer script portability defect. Fixing them is a separate
+ticket; I did not touch them, since row 19 asked for the baseline, not the repair. All three are
+`testing.Short()`-gated, so the nx `test` target skips them by design, which is why they stayed
+invisible.
+
+### 6.1 The default `-short` target is red too (67 tests)
+
+Because it costs ~70s I also ran what the nx target actually runs; full output in
+`🗑️generated/wp4b-cli-go-test-short.txt`:
+
+```
+$ GOWORK=<repo>/go.work go test . -short -count=1 -timeout 9m
+…
+FAIL	github.com/usalu/semio/repo/client	69.513s
+$ grep -c '^--- FAIL' → 67
+```
+
+The failures cluster into the same few root causes and none is schema-ownership work: the CLI's
+technology/bundle discovery no longer finds the current layout (`technology "repo" not found`,
+`technology "compose" not found`, `TestBundleListCommand`, `TestFolderTreeCommand`,
+`TestGraphQLBundlesQuery`, `TestToolTechnologyList`, … — same root cause as the exhaustive
+`TestExhaustiveBundlesNonEmpty`), the section/definition policy family
+(`TestSectionNewlineAfterRegion`, `TestDefinitionNativeDocstring`, …), the hook/track family, and
+`TestMcpStdioInitializeHandshake` (30s, `read initialize response: EOF`).
+
+One test in that suite **is** mine and now passes — `TestPostgresSchemaIncludesKitVersionControlTables`
+is not `-short`-gated, so its dead path (§3) had been failing the default target on every run:
+
+```
+$ go test . -short -run TestPostgresSchemaIncludesKitVersionControlTables -v
+=== RUN   TestPostgresSchemaIncludesKitVersionControlTables
+--- PASS: TestPostgresSchemaIncludesKitVersionControlTables (0.00s)
+ok  	github.com/usalu/semio/repo/client	0.399s
+```
+
+The 67 measured failures are with that fix already applied; before it the same run would also have
+reported this test (`os.ReadFile` of a path that exists nowhere in the tree → `t.Fatalf`). I did not
+measure the pre-fix count, so treat 67 as the post-fix baseline, not as a delta. The 67 predate this
+ticket and are untouched.
 
 ---
 
@@ -306,7 +411,7 @@ module is at `🔨️modules/💻️client/🪶️sqlite/README.md`.
 `TABLE_CONSTRAINTS.some(c => clause.toUpperCase().startsWith(c))` silently drops any column whose name
 starts with a constraint keyword (`check…`, `unique…`, `constraint…`, `primary…`). The postgres DDL has
 no such column today, so the test is green by luck; the fix is the word-boundary regex used in
-`🪶️sqlite/📦️packages/🟦️typescript/🔬️schema.test.ts`.
+`🪶️sqlite/🧪️tests/🔬️schema/🟦️.ts`.
 
 **E — WP2 catalog owner.** No taxonomy change is needed (verified in §5.3): the scope is already
 discovered at level `product-module`. It only has to be picked up by the next
@@ -372,5 +477,6 @@ ownership one; left for whoever owns the repo policy sweep.
 2. `🔣️.json` has no `🟦️.ts` / `🦀️.rs` sibling, matching `repo.server`. If WP2's catalog requires every
    scope to publish at least one programmatic format, this scope and `repo.server` need the same
    treatment at the same time.
-3. `💻️client/mcp` and `💻️client/client` are checked-in Mach-O arm64 binaries (12.6 MB and 10.5 MB) at
-   the module root — build outputs of the `build` targets, committed. Outside row 18/19; not touched.
+3. `💻️client/mcp` and `💻️client/client` are Mach-O arm64 binaries (12.6 MB and 10.5 MB) sitting at the
+   module root — outputs of the `build` targets. They are untracked (`git ls-files` does not know them),
+   so this is local build residue, not committed artefacts. Outside row 18/19; not touched.

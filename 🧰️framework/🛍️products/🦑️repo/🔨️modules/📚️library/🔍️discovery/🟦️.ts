@@ -16,7 +16,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 //#region 🔣️Taxonomy
 /** 🗺️ Repository-wide enforcement state; version 7 has no quiet or transitional area mode. */
-export type AreaState = "clean";
+/** 🧭️ `clean` is the enforced state of every production area; `exempt` names a subtree the discovery library itself skips. */
+export type AreaState = "clean" | "exempt";
 
 /** 📈️ Derived (never declared) state of one already-migrated owner: `clean` once nothing but the taxonomy shape is left, `mixed` while residuals survive — see `discoverOwners`. */
 export type PackageMaturity = "clean" | "mixed";
@@ -1057,6 +1058,9 @@ export interface Taxonomy {
     readonly excludedOwnerPathPatterns: readonly string[];
     readonly fixtureOwnerPathPatterns: readonly string[];
     readonly fixtureOwnerReason: string;
+    readonly moduleMemberDirName: string;
+    readonly mutationsFacetDirName: string;
+    readonly inertSchemaDataKeyword: string;
   };
   /** 🔗️ How a consumer names one schema export: `schema://<scope id>/<ExportId>`, resolved through the generated catalog. */
   readonly schemaExportResolution: {
@@ -1075,6 +1079,7 @@ export interface Taxonomy {
     readonly mutationScopeSegment: string;
     /** 🧬️ The facet filename a mutation leaf's own module declares. */
     readonly mutationLeafFacetFilename: string;
+    readonly mutationAggregateFacetFilename: string;
     readonly rootExportKeyword: string;
     readonly exportsKeyword: string;
     readonly catalogPath: string;
@@ -2759,8 +2764,12 @@ export interface SchemaScopeDocument {
   /** 🧩️ Segments of the `$id` before its facet filename; a facet document repeats its module's scope path and only appends facet segments. */
   readonly scopePath: readonly string[] | null;
   readonly id: string | null;
+  /** 🏷️ Filename of the `$id` without its `.json` suffix; the facet this document carries within its module. */
+  readonly facetFilename: string | null;
   readonly dialect: string | null;
   readonly exports: readonly string[];
+  /** 🗂️ Export id to the format ids its `x-semio-formats` annotation restricts it to; absent means every provided format. */
+  readonly exportFormats: Readonly<Record<string, readonly string[]>>;
   readonly references: readonly SchemaScopeReference[];
 }
 
@@ -2776,6 +2785,14 @@ export interface SchemaScopeModule {
   readonly hashes: Readonly<Record<string, string>>;
 }
 
+/** 🏷️ Where one export is declared: the module-relative file that carries it and the facet that file is. */
+export interface SchemaCatalogExport {
+  /** 🗂️ Module-relative path including every nested facet directory (`🔺️diff/📝️text/🔣️.json`); join with the scope `path`. */
+  readonly file: string;
+  /** 🏷️ Facet id derived from the declaring document's `$id` (`schema`, `snapshot`, `snapshot/text`, …). */
+  readonly facet: string;
+}
+
 /** 📇️ The generated scope catalog: one row per scope id, derived only from declared `$id`s. */
 export interface SchemaCatalogScope {
   readonly path: string;
@@ -2783,7 +2800,7 @@ export interface SchemaCatalogScope {
   readonly facetKind: string;
   /** 🗂️ Format id to module-relative leaf filename; join with `path` for the repository-relative source. */
   readonly formats: Readonly<Record<string, string>>;
-  readonly exports: readonly string[];
+  readonly exports: Readonly<Record<string, SchemaCatalogExport>>;
   readonly dependsOn: readonly string[];
   readonly hashes: Readonly<Record<string, string>>;
 }
@@ -2830,15 +2847,18 @@ function validateSchemaScopeVocabulary(taxonomy: Taxonomy): string[] {
     }
     if (!Array.isArray(levels.excludedOwnerPathPatterns) || levels.excludedOwnerPathPatterns.length === 0) problems.push("schemaScopeOwnerLevels.excludedOwnerPathPatterns must list the never-eligible owner shapes.");
     else for (const value of levels.excludedOwnerPathPatterns) try { void taxonomyPathPatternMatches("", value); } catch { problems.push(`schemaScopeOwnerLevels.excludedOwnerPathPatterns has an invalid path pattern ${JSON.stringify(value)}.`); }
-    if (!Array.isArray(levels.fixtureOwnerPathPatterns) || levels.fixtureOwnerPathPatterns.length === 0) problems.push("schemaScopeOwnerLevels.fixtureOwnerPathPatterns must list the test-owned trees whose schema files are data, not contracts.");
+    if (!Array.isArray(levels.fixtureOwnerPathPatterns) || levels.fixtureOwnerPathPatterns.length === 0) problems.push("schemaScopeOwnerLevels.fixtureOwnerPathPatterns must list the test and fixture collection roots.");
     else for (const value of levels.fixtureOwnerPathPatterns) try { void taxonomyPathPatternMatches("", value); } catch { problems.push(`schemaScopeOwnerLevels.fixtureOwnerPathPatterns has an invalid path pattern ${JSON.stringify(value)}.`); }
-    if (Array.isArray(levels.fixtureOwnerPathPatterns) && Array.isArray(levels.excludedOwnerPathPatterns) && levels.fixtureOwnerPathPatterns.some((value) => levels.excludedOwnerPathPatterns.includes(value))) problems.push("schemaScopeOwnerLevels.fixtureOwnerPathPatterns and excludedOwnerPathPatterns must be disjoint: a fixture tree is silent, an excluded placement is a finding.");
-    if (typeof levels.fixtureOwnerReason !== "string" || levels.fixtureOwnerReason.length < 16) problems.push("schemaScopeOwnerLevels.fixtureOwnerReason must state why a fixture tree is never a scope and never a finding.");
+    if (Array.isArray(levels.fixtureOwnerPathPatterns) && Array.isArray(levels.excludedOwnerPathPatterns) && levels.fixtureOwnerPathPatterns.some((value) => levels.excludedOwnerPathPatterns.includes(value))) problems.push("schemaScopeOwnerLevels.fixtureOwnerPathPatterns and excludedOwnerPathPatterns must be disjoint: a collection is recognized by its own ancestors with the module-member carve-out, an excluded owner shape by an exact pattern.");
+    if (typeof levels.fixtureOwnerReason !== "string" || levels.fixtureOwnerReason.length < 16) problems.push("schemaScopeOwnerLevels.fixtureOwnerReason must state why a collection is never a scope owner and why the schema documents inside it are findings.");
+    if (typeof levels.moduleMemberDirName !== "string" || !(taxonomy.pluginChildDirs ?? []).includes(levels.moduleMemberDirName)) problems.push("schemaScopeOwnerLevels.moduleMemberDirName must be the declared module-member directory a collection pattern never claims.");
+    if (typeof levels.mutationsFacetDirName !== "string" || !(taxonomy.schemaChildDirs ?? []).includes(levels.mutationsFacetDirName)) problems.push("schemaScopeOwnerLevels.mutationsFacetDirName must be a declared schema child directory.");
+    if (typeof levels.inertSchemaDataKeyword !== "string" || !/^[a-z][A-Za-z0-9]*$/u.test(levels.inertSchemaDataKeyword)) problems.push("schemaScopeOwnerLevels.inertSchemaDataKeyword must name the case-file key that declares schema-shaped test inputs.");
   }
   const resolution = taxonomy.schemaExportResolution;
   if (!resolution || typeof resolution !== "object") problems.push("schemaExportResolution must declare how a consumer names one schema export.");
   else {
-    const expected = ["catalogContractId", "catalogDocumentPath", "catalogPath", "exportIdPattern", "exportsKeyword", "forbiddenPlacementPatterns", "formatIds", "generator", "idBase", "idFacetFilenamePattern", "mutationLeafFacetFilename", "mutationScopeSegment", "placementExceptions", "rootExportKeyword", "rustEntriesContractId", "scopeIdPattern", "scopeIdSeparator", "uriPattern", "uriScheme"];
+    const expected = ["catalogContractId", "catalogDocumentPath", "catalogPath", "exportIdPattern", "exportsKeyword", "forbiddenPlacementPatterns", "formatIds", "generator", "idBase", "idFacetFilenamePattern", "mutationAggregateFacetFilename", "mutationLeafFacetFilename", "mutationScopeSegment", "placementExceptions", "rootExportKeyword", "rustEntriesContractId", "scopeIdPattern", "scopeIdSeparator", "uriPattern", "uriScheme"];
     if (Object.keys(resolution).sort().join("\0") !== expected.join("\0")) problems.push(`schemaExportResolution must declare exactly ${expected.join(", ")}.`);
     if (resolution.uriScheme !== "schema" || !resolution.uriPattern.includes(`${resolution.uriScheme}://`)) problems.push("schemaExportResolution.uriPattern must bind its own declared scheme.");
     for (const [key, value] of [["uriPattern", resolution.uriPattern], ["idFacetFilenamePattern", resolution.idFacetFilenamePattern], ["scopeIdPattern", resolution.scopeIdPattern], ["exportIdPattern", resolution.exportIdPattern]] as const) {
@@ -2862,18 +2882,36 @@ function validateSchemaScopeVocabulary(taxonomy: Taxonomy): string[] {
     if (typeof resolution.rustEntriesContractId !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(resolution.rustEntriesContractId)) problems.push("schemaExportResolution.rustEntriesContractId must be the kebab contract id of the Rust registry entry dump.");
     if (typeof resolution.mutationScopeSegment !== "string" || !new RegExp(resolution.scopeIdPattern, "u").test(resolution.mutationScopeSegment)) problems.push("schemaExportResolution.mutationScopeSegment must be one scope-id segment.");
     if (typeof resolution.mutationLeafFacetFilename !== "string" || !new RegExp(resolution.idFacetFilenamePattern, "u").test(resolution.mutationLeafFacetFilename)) problems.push("schemaExportResolution.mutationLeafFacetFilename must be a declared facet filename.");
+    if (typeof resolution.mutationAggregateFacetFilename !== "string" || !new RegExp(resolution.idFacetFilenamePattern, "u").test(resolution.mutationAggregateFacetFilename)) problems.push("schemaExportResolution.mutationAggregateFacetFilename must be a declared facet filename.");
   }
   return problems;
 }
 
-/** 🧫️ Test-owned trees whose schema files are the authority of fixture data: never a scope, never a finding. */
-export function schemaScopeOwnerFixture(ownerPath: string, taxonomy: Taxonomy = loadTaxonomy(), matcher: TaxonomyPathMatcher = createTaxonomyPathMatcher()): boolean {
-  return taxonomy.schemaScopeOwnerLevels.fixtureOwnerPathPatterns.some((pattern) => matcher.matches(ownerPath, pattern));
+/**
+ * 🧫️ Whether a repository-relative path lies inside a test or fixture COLLECTION.
+ *
+ * Only the self patterns (`**​/🧪️*`) name a collection root; every ancestor of the path is tested against
+ * them, so the `/**` siblings would only restate the walk. The one carve-out is `🔨️modules/<m>`: a module
+ * member is a module whatever emoji its name starts with, and without it the repository test platform
+ * (`🔨️modules/🧪️test`, which owns the test-protocol contract every host reads) would be classified as a
+ * collection of its own examples. A collection never owns a contract scope — and, since WP2c, a schema
+ * document inside one is a `schema-fixture-defines-schema` finding unless its case declares `inertSchemaData`.
+ */
+export function schemaScopeCollectionPath(path: string, taxonomy: Taxonomy = loadTaxonomy(), matcher: TaxonomyPathMatcher = createTaxonomyPathMatcher()): boolean {
+  const levels = taxonomy.schemaScopeOwnerLevels;
+  const roots = levels.fixtureOwnerPathPatterns.filter((pattern) => !pattern.endsWith("/**"));
+  const segments = path.split("/");
+  for (let index = 0; index < segments.length; index += 1) {
+    if (index > 0 && segments[index - 1] === levels.moduleMemberDirName) continue;
+    const prefix = segments.slice(0, index + 1).join("/");
+    if (roots.some((pattern) => matcher.matches(prefix, pattern))) return true;
+  }
+  return false;
 }
 
 /** 🚫️ Owner shapes that can never carry a schema module, regardless of the level patterns. */
 export function schemaScopeOwnerExcluded(ownerPath: string, taxonomy: Taxonomy = loadTaxonomy(), matcher: TaxonomyPathMatcher = createTaxonomyPathMatcher()): boolean {
-  return taxonomy.schemaScopeOwnerLevels.excludedOwnerPathPatterns.some((pattern) => matcher.matches(ownerPath, pattern)) || schemaScopeOwnerFixture(ownerPath, taxonomy, matcher);
+  return taxonomy.schemaScopeOwnerLevels.excludedOwnerPathPatterns.some((pattern) => matcher.matches(ownerPath, pattern)) || schemaScopeCollectionPath(ownerPath, taxonomy, matcher);
 }
 
 /** 🧭️ The declared owner level a schema module sits at, or `null` when no level admits it. */
@@ -2961,41 +2999,111 @@ function jsonRefOccurrences(value: unknown, pointer: string, out: { pointer: str
   }
 }
 
+/** 🚫️ Every pointer at which the document declares `enum: []`, a keyword no instance can ever satisfy. */
+function jsonEmptyEnumPointers(value: unknown, pointer: string, out: string[]): void {
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => jsonEmptyEnumPointers(item, `${pointer}/${index}`, out));
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    const next = `${pointer}/${key.replaceAll("~", "~0").replaceAll("/", "~1")}`;
+    if (key === "enum" && Array.isArray(child) && child.length === 0) out.push(next);
+    else jsonEmptyEnumPointers(child, next, out);
+  }
+}
+
+/** 🎯️ Whether one JSON pointer addresses an existing member of the document; the empty pointer is the document. */
+function jsonPointerResolves(root: unknown, pointer: string): boolean {
+  if (pointer === "") return true;
+  if (!pointer.startsWith("/")) return false;
+  let current: unknown = root;
+  for (const raw of pointer.slice(1).split("/")) {
+    const key = raw.replaceAll("~1", "/").replaceAll("~0", "~");
+    if (Array.isArray(current)) {
+      const index = Number(key);
+      if (!/^(?:0|[1-9][0-9]*)$/u.test(key) || index >= current.length) return false;
+      current = current[index];
+      continue;
+    }
+    if (!current || typeof current !== "object" || !Object.hasOwn(current as object, key)) return false;
+    current = (current as Record<string, unknown>)[key];
+  }
+  return true;
+}
+
+/** 🔎️ Whether one non-JSON format leaf declares the named export, by the declaration keywords of that language. */
+function schemaFormatDeclaresExport(formatId: string, source: string, exportId: string): boolean {
+  const name = exportId.replaceAll(/[\\^$.*+?()[\]{}|]/gu, "\\$&");
+  const keywords: Readonly<Record<string, readonly string[]>> = {
+    "🦀️rust": ["struct", "enum", "type", "trait", "fn"],
+    "🟦️typescript": ["interface", "type", "class", "enum", "const", "function"],
+    "🔗️graphql": ["type", "input", "enum", "union", "scalar", "interface"],
+    "🛰️protobuf": ["message", "enum", "service"],
+  };
+  const declared = keywords[formatId];
+  if (!declared) return false;
+  if (new RegExp(`\\b(?:${declared.join("|")})\\s+${name}\\b`, "u").test(source)) return true;
+  if (formatId === "🦀️rust") return new RegExp(`\\bpub\\s+use\\b[^;]*\\b${name}\\b`, "u").test(source);
+  if (formatId !== "🟦️typescript") return false;
+  return new RegExp(`\\bparse${name}\\b`, "u").test(source) || new RegExp(`\\bexport\\b(?:\\s+type)?\\s*\\{[^}]*\\b${name}\\b[^}]*\\}`, "u").test(source);
+}
+
 function readSchemaDocument(repoRoot: string, path: string, taxonomy: Taxonomy, diagnostics: SchemaScopeDiagnostic[]): SchemaScopeDocument | null {
   let parsed: Record<string, unknown>;
   try {
     parsed = JSON.parse(readFileSync(join(repoRoot, path), "utf8")) as Record<string, unknown>;
   } catch (error) {
-    diagnostics.push({ code: "document-unparseable", path, detail: (error as Error).message });
+    diagnostics.push({ code: "schema-document-unparseable", path, detail: (error as Error).message });
     return null;
   }
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    diagnostics.push({ code: "document-not-object", path, detail: "A schema module leaf must be a JSON Schema object." });
+    diagnostics.push({ code: "schema-document-not-object", path, detail: "A schema module leaf must be a JSON Schema object." });
     return null;
   }
   const resolution = taxonomy.schemaExportResolution;
   const id = typeof parsed.$id === "string" ? parsed.$id : null;
   const dialect = typeof parsed.$schema === "string" ? parsed.$schema : null;
-  if (!id) diagnostics.push({ code: "document-id-missing", path, detail: `Declare $id as ${resolution.idBase}<scope path>/<facet>.json.` });
+  if (!id) diagnostics.push({ code: "schema-module-id-missing", path, detail: `Declare $id as ${resolution.idBase}<scope path>/<facet>.json.` });
   const parts = id ? schemaDocumentIdParts(id, taxonomy) : null;
   const scopeId = parts ? parts.scopePath.join(resolution.scopeIdSeparator) : null;
-  if (id && !scopeId) diagnostics.push({ code: "document-id-unaddressable", path, detail: `$id ${JSON.stringify(id)} does not resolve to a dotted scope id under ${resolution.idBase}.` });
-  if (dialect !== taxonomy.schemaJsonDialect) diagnostics.push({ code: "document-dialect-unexpected", path, detail: `$schema must be ${taxonomy.schemaJsonDialect}, got ${JSON.stringify(dialect)}.` });
-  if (parsed["x-semio-mutationKinds"] !== undefined) diagnostics.push({ code: "mutation-aggregate-kinds-redundant", path, detail: "x-semio-mutationKinds restates the oneOf $ref union and has no reader; the aggregate's $refs are the identity." });
+  if (id && !scopeId) diagnostics.push({ code: "schema-module-id-unaddressable", path, detail: `$id ${JSON.stringify(id)} does not resolve to a dotted scope id under ${resolution.idBase}.` });
+  if (dialect !== taxonomy.schemaJsonDialect) diagnostics.push({ code: "schema-dialect-not-draft-07", path, detail: `$schema must be ${taxonomy.schemaJsonDialect}, got ${JSON.stringify(dialect)}.` });
+  if (parsed["x-semio-mutationKinds"] !== undefined) diagnostics.push({ code: "schema-mutation-aggregate-kinds-redundant", path, detail: "x-semio-mutationKinds restates the oneOf $ref union and has no reader; the aggregate's $refs are the identity." });
   const exportPattern = new RegExp(resolution.exportIdPattern, "u");
+  const formatKeys = Object.keys(taxonomy.schemaFormats).sort(byteSort);
   const exports: string[] = [];
+  const exportFormats: Record<string, readonly string[]> = {};
+  const restriction = (subject: unknown, exportId: string): void => {
+    const declared = subject && typeof subject === "object" ? (subject as Record<string, unknown>)["x-semio-formats"] : undefined;
+    if (declared === undefined) return;
+    if (!Array.isArray(declared) || declared.length === 0 || declared.some((entry) => typeof entry !== "string" || !formatKeys.includes(entry))) {
+      diagnostics.push({ code: "schema-export-formats-annotation-invalid", path, detail: `${exportId} declares x-semio-formats ${JSON.stringify(declared)}; restricted support is a non-empty subset of ${formatKeys.join(", ")}.` });
+      return;
+    }
+    exportFormats[exportId] = [...new Set(declared as string[])].sort(byteSort);
+  };
   const rootExport = typeof parsed[resolution.rootExportKeyword] === "string" ? String(parsed[resolution.rootExportKeyword]) : null;
   const rootIsObject = parsed.type === "object" || (parsed.type === undefined && typeof parsed.properties === "object" && parsed.properties !== null);
   if (rootExport && rootIsObject) {
-    if (exportPattern.test(rootExport)) exports.push(rootExport);
-    else diagnostics.push({ code: "export-id-invalid", path, detail: `Root ${resolution.rootExportKeyword} ${JSON.stringify(rootExport)} is not a PascalCase export id.` });
+    if (exportPattern.test(rootExport)) {
+      exports.push(rootExport);
+      restriction(parsed, rootExport);
+    } else diagnostics.push({ code: "schema-export-id-invalid", path, detail: `Root ${resolution.rootExportKeyword} ${JSON.stringify(rootExport)} is not a PascalCase export id.` });
   }
   const defs = parsed[resolution.exportsKeyword];
-  const defKeys = defs && typeof defs === "object" && !Array.isArray(defs) ? Object.keys(defs as Record<string, unknown>) : [];
+  const defRows = defs && typeof defs === "object" && !Array.isArray(defs) ? (defs as Record<string, unknown>) : {};
+  const defKeys = Object.keys(defRows);
   for (const key of defKeys) {
-    if (!exportPattern.test(key)) diagnostics.push({ code: "export-id-invalid", path, detail: `${resolution.exportsKeyword} key ${JSON.stringify(key)} is not a PascalCase export id.` });
-    else if (!exports.includes(key)) exports.push(key);
+    if (!exportPattern.test(key)) diagnostics.push({ code: "schema-export-id-invalid", path, detail: `${resolution.exportsKeyword} key ${JSON.stringify(key)} is not a PascalCase export id.` });
+    else if (!exports.includes(key)) {
+      exports.push(key);
+      restriction(defRows[key], key);
+    }
   }
+  const emptyEnums: string[] = [];
+  jsonEmptyEnumPointers(parsed, "", emptyEnums);
+  for (const pointer of emptyEnums) diagnostics.push({ code: "schema-enum-empty", path, detail: `${pointer} declares enum: [], which no instance can satisfy. State the intent instead: propertyNames: false or maxProperties: 0 for "no member is admitted", or delete the keyword.` });
   const occurrences: { pointer: string; ref: string }[] = [];
   jsonRefOccurrences(parsed, "", occurrences);
   const references: SchemaScopeReference[] = [];
@@ -3003,17 +3111,13 @@ function readSchemaDocument(repoRoot: string, path: string, taxonomy: Taxonomy, 
     if (ref.startsWith("#")) {
       const local = ref.slice(1);
       const prefix = `/${resolution.exportsKeyword}/`;
-      if (!local.startsWith(prefix)) {
-        diagnostics.push({ code: "ref-not-export-addressed", path, detail: `${pointer} uses ${JSON.stringify(ref)}; a reference resolves an export as #${prefix}<ExportId>.` });
-        continue;
-      }
-      const exportId = local.slice(prefix.length);
-      if (!defKeys.includes(exportId)) diagnostics.push({ code: "ref-unresolved", path, detail: `${pointer} references local export ${JSON.stringify(exportId)} that this document does not declare.` });
+      const exportId = local.startsWith(prefix) && !local.slice(prefix.length).includes("/") ? local.slice(prefix.length) : null;
+      if (!jsonPointerResolves(parsed, local)) diagnostics.push({ code: "schema-ref-unresolved", path, detail: `${pointer} references ${JSON.stringify(ref)}, which this document does not declare.` });
       references.push({ documentPath: path, pointer, ref, targetScopeId: scopeId, targetExportId: exportId, local: true });
       continue;
     }
     if (!ref.startsWith(resolution.idBase)) {
-      diagnostics.push({ code: "ref-not-catalog-addressable", path, detail: `${pointer} uses ${JSON.stringify(ref)}; a cross-scope reference names the target $id under ${resolution.idBase}.` });
+      diagnostics.push({ code: "schema-ref-unresolved", path, detail: `${pointer} uses ${JSON.stringify(ref)}; a cross-scope reference names the target $id under ${resolution.idBase}.` });
       continue;
     }
     const [base, fragment = ""] = ref.split("#");
@@ -3021,12 +3125,12 @@ function readSchemaDocument(repoRoot: string, path: string, taxonomy: Taxonomy, 
     const prefix = `/${resolution.exportsKeyword}/`;
     const exportId = fragment.startsWith(prefix) ? fragment.slice(prefix.length) : null;
     if (!targetScopeId || (fragment && !exportId)) {
-      diagnostics.push({ code: "ref-not-catalog-addressable", path, detail: `${pointer} uses ${JSON.stringify(ref)}; a cross-scope reference is <target $id>#${prefix}<ExportId>.` });
+      diagnostics.push({ code: "schema-ref-unresolved", path, detail: `${pointer} uses ${JSON.stringify(ref)}; a cross-scope reference is <target $id>#${prefix}<ExportId>.` });
       continue;
     }
     references.push({ documentPath: path, pointer, ref, targetScopeId, targetExportId: exportId, local: false });
   }
-  return { path, scopeId, scopePath: parts?.scopePath ?? null, id, dialect, exports, references };
+  return { path, scopeId, scopePath: parts?.scopePath ?? null, id, facetFilename: parts ? parts.facet.replace(/\.json$/u, "") : null, dialect, exports, exportFormats, references };
 }
 
 /** 🧬️ Walks every `🧬️schema` module, reads its documents and derives the scope catalog and every finding. */
@@ -3057,18 +3161,47 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
     return false;
   };
   const canonicalLeaves = new Set(formatLeaves.map(([, leaf]) => leaf));
+  const normativeFormatId = taxonomy.schemaFacetKinds![taxonomy.schemaDefaultFacetKind]!.normativeFormat;
+  const normativeJsonLeaf = canonicalPrimaryFilenameForKind(taxonomy.schemaFormats[normativeFormatId]!.fileKindId, taxonomy);
   const isFacetLeaf = (path: string, modulePath: string, leaves: ReadonlySet<string>): boolean => {
     const segments = path.slice(modulePath.length + 1).split("/");
     return leaves.has(segments.at(-1)!) && segments.slice(0, -1).every((segment) => facetChainDirs.has(segment));
   };
+  const descriptorLeafName = canonicalPrimaryFilenameForKind(taxonomy.mutationDescriptorFileKindId, taxonomy);
+  const inertDeclarations = new Map<string, ReadonlySet<string>>();
+  const inertSchemaData = (path: string): boolean => {
+    const segments = path.split("/");
+    for (let index = segments.length - 1; index > 0; index -= 1) {
+      const caseFile = `${segments.slice(0, index).join("/")}/${descriptorLeafName}`;
+      if (!fileSet.has(caseFile)) continue;
+      let declared = inertDeclarations.get(caseFile);
+      if (!declared) {
+        let named: string[] = [];
+        try {
+          const value = (JSON.parse(readFileSync(join(root, caseFile), "utf8")) as Record<string, unknown>)[taxonomy.schemaScopeOwnerLevels.inertSchemaDataKeyword];
+          if (Array.isArray(value)) named = value.filter((entry): entry is string => typeof entry === "string");
+        } catch {
+          named = [];
+        }
+        declared = new Set(named);
+        inertDeclarations.set(caseFile, declared);
+      }
+      if (declared.has(segments.slice(index).join("/"))) return true;
+    }
+    return false;
+  };
   const modules: SchemaScopeModule[] = [];
   const rootScopePaths = new Map<string, readonly string[] | null>();
   const rootDocuments = new Map<string, SchemaScopeDocument>();
+  const collectionModules: string[] = [];
   for (const [index, modulePath] of modulePaths.entries()) {
     const ownerPath = ownerPaths[index]!;
-    if (schemaScopeOwnerFixture(ownerPath, taxonomy, matcher)) continue;
+    if (schemaScopeCollectionPath(modulePath, taxonomy, matcher)) {
+      collectionModules.push(modulePath);
+      continue;
+    }
     const level = schemaScopeOwnerLevel(ownerPath, taxonomy, matcher);
-    if (!level) diagnostics.push({ code: "module-level-ineligible", path: modulePath, detail: `${ownerPath || "."} is not a declared schemaScopeOwnerLevels level.` });
+    if (!level) diagnostics.push({ code: "schema-owner-ineligible", path: modulePath, detail: `${ownerPath || "."} is not a declared schemaScopeOwnerLevels level.` });
     const owned = filesUnder(modulePath).filter((path) => !ownedByNestedScope(path, modulePath) && !schemaScopeOwnerExcluded(path, taxonomy, matcher) && isFacetLeaf(path, modulePath, canonicalLeaves));
     const hashes: Record<string, string> = {};
     for (const path of owned) hashes[path.slice(modulePath.length + 1)] = createHash("sha256").update(readFileSync(join(root, path))).digest("hex");
@@ -3082,78 +3215,148 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
     const rootScopePath = rootDocument?.scopePath ?? null;
     rootScopePaths.set(modulePath, rootScopePath);
     if (rootDocument) rootDocuments.set(modulePath, rootDocument);
-    if (documents.length > 0 && !rootScopeId) diagnostics.push({ code: "module-scope-id-missing", path: modulePath, detail: `${modulePath}/${jsonLeaf} must declare the $id that names this module's scope.` });
+    if (documents.length > 0 && !rootScopeId) diagnostics.push({ code: "schema-module-id-missing", path: modulePath, detail: `${modulePath}/${jsonLeaf} must declare the $id that names this module's scope.` });
+    const mutationsPrefix = `${taxonomy.schemaScopeOwnerLevels.mutationsFacetDirName}/`;
     if (rootScopeId && rootScopePath) for (const document of documents) {
       if (document === rootDocument || !document.scopePath) continue;
+      const relative = document.path.slice(modulePath.length + 1);
+      if (relative === `${mutationsPrefix}${jsonLeaf}` || relative.startsWith(mutationsPrefix + mutationsPrefix)) continue;
       if (document.scopePath.length >= rootScopePath.length && document.scopePath.slice(0, rootScopePath.length).join("/") === rootScopePath.join("/")) continue;
-      diagnostics.push({ code: "module-scope-id-inconsistent", path: document.path, detail: `$id ${JSON.stringify(document.id)} must keep this module's scope path ${resolution.idBase}${rootScopePath.join("/")}/ and vary only the facet filename; a facet document never deepens the scope.` });
+      diagnostics.push({ code: "schema-module-id-inconsistent", path: document.path, detail: `$id ${JSON.stringify(document.id)} must keep this module's scope path ${resolution.idBase}${rootScopePath.join("/")}/ and vary only the facet filename; a facet document never deepens the scope.` });
     }
     modules.push({ modulePath, ownerPath, level, facetKindId, scopeId: rootScopeId, formats, documents, hashes });
   }
-  const descriptorLeaf = canonicalPrimaryFilenameForKind(taxonomy.mutationDescriptorFileKindId, taxonomy);
+  for (const modulePath of collectionModules) {
+    for (const path of filesUnder(modulePath)) {
+      if (path.slice(path.lastIndexOf("/") + 1) !== normativeJsonLeaf || inertSchemaData(path)) continue;
+      diagnostics.push({ code: "schema-fixture-defines-schema", path, detail: `${modulePath} lies inside a test or fixture collection, which holds example data and never a contract. Move the contract into its owner's ${facetDir} module, or declare this file in the enclosing case's ${descriptorLeafName} under ${taxonomy.schemaScopeOwnerLevels.inertSchemaDataKeyword}.` });
+    }
+  }
   const declaredSemanticKind = (leafOwnerPath: string): string | null => {
-    if (!fileSet.has(`${leafOwnerPath}/${descriptorLeaf}`)) return null;
     try {
-      const kind = (JSON.parse(readFileSync(join(root, leafOwnerPath, descriptorLeaf), "utf8")) as { semanticKind?: unknown }).semanticKind;
+      const kind = (JSON.parse(readFileSync(join(root, leafOwnerPath, descriptorLeafName), "utf8")) as { semanticKind?: unknown }).semanticKind;
       return typeof kind === "string" && kind ? kind : null;
     } catch {
       return null;
     }
   };
-  for (const module of modules) {
-    if (module.level !== "mutation-leaf") continue;
-    const enclosingScopePath = rootScopePaths.get(module.ownerPath.split("/").slice(0, -2).join("/")) ?? null;
-    const document = rootDocuments.get(module.modulePath) ?? null;
-    if (!document?.id || !document.scopePath) continue;
-    const kind = declaredSemanticKind(module.ownerPath);
-    const actual = [...document.scopePath, document.id.slice(document.id.lastIndexOf("/") + 1)];
-    const shapeHolds = actual.length >= 3 && actual.at(-1) === resolution.mutationLeafFacetFilename && actual.at(-3) === resolution.mutationScopeSegment && (kind === null || actual.at(-2) === kind);
-    const prefixHolds = enclosingScopePath === null || (actual.length === enclosingScopePath.length + 3 && actual.slice(0, enclosingScopePath.length).join("/") === enclosingScopePath.join("/"));
-    if (shapeHolds && prefixHolds) continue;
-    const expected = `${resolution.idBase}${[...(enclosingScopePath ?? ["<enclosing scope path>"]), resolution.mutationScopeSegment, kind ?? "<semanticKind>", resolution.mutationLeafFacetFilename].join("/")}`;
-    diagnostics.push({ code: "mutation-leaf-id-grammar", path: document.path, detail: `$id ${JSON.stringify(document.id)} must be ${expected}: a mutation leaf is its own scope, not a facet of its enclosing module.` });
-  }
-  const documentsById = new Map<string, { readonly scopeId: string; readonly path: string; readonly exports: ReadonlySet<string> }>();
-  for (const module of modules) {
-    if (!module.scopeId || !module.level) continue;
-    for (const document of module.documents) {
-      if (!document.id) continue;
-      const existing = documentsById.get(document.id);
-      if (existing) {
-        diagnostics.push({ code: "document-id-duplicate", path: document.path, detail: `$id ${document.id} is already declared by ${existing.path}.` });
-        continue;
-      }
-      documentsById.set(document.id, { scopeId: module.scopeId, path: document.path, exports: new Set(document.exports) });
+  const mutationsDir = taxonomy.schemaScopeOwnerLevels.mutationsFacetDirName;
+  const mutationRootModule = (leafOwnerPath: string): { readonly module: string; readonly depth: number } | null => {
+    const segments = leafOwnerPath.split("/");
+    for (let index = segments.length - 1; index >= 1; index -= 1) {
+      if (segments[index] !== mutationsDir || segments[index - 1] !== facetDir) continue;
+      return { module: segments.slice(0, index).join("/"), depth: segments.length - index - 1 };
     }
+    return null;
+  };
+  const mutationLeafOwners: string[] = [];
+  for (const path of sortedFiles) {
+    if (path.slice(path.lastIndexOf("/") + 1) !== descriptorLeafName) continue;
+    const ownerPath = path.slice(0, path.lastIndexOf("/"));
+    const enclosing = mutationRootModule(ownerPath);
+    if (!enclosing || enclosing.depth < 1 || enclosing.depth > 2 || schemaScopeCollectionPath(ownerPath, taxonomy, matcher)) continue;
+    if (declaredSemanticKind(ownerPath) !== null) mutationLeafOwners.push(ownerPath);
+  }
+  for (const leafOwnerPath of mutationLeafOwners) {
+    const enclosing = mutationRootModule(leafOwnerPath)!;
+    const enclosingScopePath = rootScopePaths.get(enclosing.module) ?? null;
+    const kind = declaredSemanticKind(leafOwnerPath);
+    const expectedPath = [...(enclosingScopePath ?? ["<enclosing scope path>"]), resolution.mutationScopeSegment, kind ?? "<semanticKind>"];
+    const expected = `${resolution.idBase}${[...expectedPath, resolution.mutationLeafFacetFilename].join("/")}`;
+    const leafModulePath = `${leafOwnerPath}/${facetDir}`;
+    const document = rootDocuments.get(leafModulePath) ?? null;
+    if (!document) {
+      diagnostics.push({ code: "schema-mutation-leaf-schema-absent", path: leafModulePath, detail: `The leaf is the authority for its own payload, so ${leafModulePath}/${normativeJsonLeaf} must exist and declare $id ${expected}.` });
+      continue;
+    }
+    if (document.id === expected) continue;
+    diagnostics.push({ code: "schema-mutation-leaf-id", path: document.path, detail: `$id ${JSON.stringify(document.id)} must be ${expected}: a mutation leaf is its own scope, not a facet of its enclosing module.` });
+  }
+  for (const module of modules) {
+    const rootScopePath = rootScopePaths.get(module.modulePath) ?? null;
+    if (!rootScopePath) continue;
+    const aggregate = module.documents.find((document) => document.path === `${module.modulePath}/${mutationsDir}/${normativeJsonLeaf}`);
+    if (!aggregate) continue;
+    const expected = `${resolution.idBase}${[...rootScopePath, resolution.mutationAggregateFacetFilename].join("/")}`;
+    if (aggregate.id === expected) continue;
+    diagnostics.push({ code: "schema-mutation-aggregate-id", path: aggregate.path, detail: `$id ${JSON.stringify(aggregate.id)} must be ${expected}: an aggregate is the mutations facet of its own module and never deepens the scope.` });
+  }
+  const documentsById = new Map<string, { readonly scopeId: string | null; readonly path: string; readonly exports: ReadonlySet<string> }>();
+  for (const module of modules) for (const document of module.documents) {
+    if (!document.id) continue;
+    const existing = documentsById.get(document.id);
+    if (existing) {
+      diagnostics.push({ code: "schema-module-id-duplicate", path: document.path, detail: `$id ${document.id} is already declared by ${existing.path}; a document $id is the resolution key and is unique repository-wide.` });
+      continue;
+    }
+    documentsById.set(document.id, { scopeId: module.level ? module.scopeId : null, path: document.path, exports: new Set(document.exports) });
   }
   const byScope = new Map<string, SchemaScopeModule[]>();
   for (const module of modules) if (module.scopeId && module.level) byScope.set(module.scopeId, [...(byScope.get(module.scopeId) ?? []), module]);
   const scopes: Record<string, SchemaCatalogScope> = {};
   for (const [scopeId, claimants] of [...byScope.entries()].sort(([left], [right]) => byteSort(left, right))) {
     const owner = claimants[0]!;
-    if (claimants.length > 1) for (const claimant of claimants) diagnostics.push({ code: "scope-id-duplicate", path: claimant.modulePath, detail: `Scope ${scopeId} is declared by ${claimant.modulePath}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats[taxonomy.schemaFacetKinds![claimant.facetKindId]!.normativeFormat]!.fileKindId, taxonomy)} and by ${claimants.filter((other) => other !== claimant).map((other) => other.modulePath).join(", ")}; ${owner.modulePath} holds the catalog row.` });
-    const exports = [...new Set(owner.documents.flatMap((document) => document.exports))].sort(byteSort);
-    const dependsOn = [...new Set(owner.documents.flatMap((document) => document.references).filter((reference) => !reference.local).map((reference) => documentsById.get(reference.ref.split("#")[0]!)?.scopeId).filter((value): value is string => value !== undefined && value !== scopeId))].sort(byteSort);
+    if (claimants.length > 1) for (const claimant of claimants) diagnostics.push({ code: "schema-scope-ambiguous", path: claimant.modulePath, detail: `Scope ${scopeId} is declared by ${claimant.modulePath}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats[taxonomy.schemaFacetKinds![claimant.facetKindId]!.normativeFormat]!.fileKindId, taxonomy)} and by ${claimants.filter((other) => other !== claimant).map((other) => other.modulePath).join(", ")}; ${owner.modulePath} holds the catalog row.` });
+    const ownerScopePath = rootScopePaths.get(owner.modulePath) ?? null;
+    const exports: Record<string, SchemaCatalogExport> = {};
+    for (const document of [...owner.documents].sort((left, right) => byteSort(left.path, right.path))) {
+      const relative = document.path.slice(owner.modulePath.length + 1);
+      const suffix = ownerScopePath && document.scopePath && document.scopePath.length >= ownerScopePath.length ? document.scopePath.slice(ownerScopePath.length) : [];
+      const facet = document.facetFilename ? [...suffix, document.facetFilename].join("/") : relative.slice(0, Math.max(0, relative.lastIndexOf("/"))) || taxonomy.schemaDefaultFacetKind;
+      for (const exportId of document.exports) {
+        const existing = exports[exportId];
+        if (existing) {
+          if (existing.file !== relative) diagnostics.push({ code: "schema-export-id-duplicate", path: document.path, detail: `Export ${exportId} is already declared by ${owner.modulePath}/${existing.file}; one scope resolves each export id to exactly one file.` });
+          continue;
+        }
+        exports[exportId] = { file: relative, facet };
+      }
+    }
+    const dependsOn = [...new Set(owner.documents.flatMap((document) => document.references).filter((reference) => !reference.local).map((reference) => documentsById.get(reference.ref.split("#")[0]!)?.scopeId).filter((value): value is string => value !== null && value !== undefined && value !== scopeId))].sort(byteSort);
     const hashes = Object.fromEntries(Object.entries(owner.hashes).sort(([left], [right]) => byteSort(left, right)));
     const formats = Object.fromEntries(Object.entries(owner.formats).map(([formatId, path]) => [formatId, path.slice(owner.modulePath.length + 1)]));
-    scopes[scopeId] = { path: owner.modulePath, level: owner.level!, facetKind: owner.facetKindId, formats, exports, dependsOn, hashes };
+    scopes[scopeId] = { path: owner.modulePath, level: owner.level!, facetKind: owner.facetKindId, formats, exports: Object.fromEntries(Object.entries(exports).sort(([left], [right]) => byteSort(left, right))), dependsOn, hashes };
   }
   for (const module of modules) for (const document of module.documents) for (const reference of document.references) {
     if (reference.local) continue;
     const target = documentsById.get(reference.ref.split("#")[0]!);
-    if (!target) diagnostics.push({ code: "ref-unresolved", path: document.path, detail: `${reference.pointer} references ${JSON.stringify(reference.ref)}; no catalogued document declares that $id.` });
-    else if (reference.targetExportId && !target.exports.has(reference.targetExportId)) diagnostics.push({ code: "ref-unresolved", path: document.path, detail: `${reference.pointer} references export ${JSON.stringify(reference.targetExportId)}, which ${target.path} does not declare.` });
+    if (!target) diagnostics.push({ code: "schema-ref-unresolved", path: document.path, detail: `${reference.pointer} references ${JSON.stringify(reference.ref)}; no catalogued document declares that $id.` });
+    else if (reference.targetExportId && !target.exports.has(reference.targetExportId)) diagnostics.push({ code: "schema-ref-unresolved", path: document.path, detail: `${reference.pointer} references export ${JSON.stringify(reference.targetExportId)}, which ${target.path} does not declare.` });
+    else if (target.scopeId === null) diagnostics.push({ code: "schema-cross-scope-dependency-uncataloged", path: document.path, detail: `${reference.pointer} resolves into ${target.path}, which no catalogued scope owns; a module compiles only against the scopes its dependsOn names.` });
+    else if (module.scopeId && module.level && byScope.get(module.scopeId)?.[0] === module && target.scopeId !== module.scopeId && !(scopes[module.scopeId]?.dependsOn ?? []).includes(target.scopeId)) diagnostics.push({ code: "schema-cross-scope-dependency-forbidden", path: document.path, detail: `${reference.pointer} crosses into scope ${target.scopeId}, which ${module.scopeId} does not declare in dependsOn.` });
+  }
+  for (const [scopeId, scope] of Object.entries(scopes)) {
+    const provided = Object.keys(scope.formats).filter((formatId) => formatId !== normativeFormatId);
+    if (provided.length === 0) continue;
+    const sources = new Map<string, string>();
+    for (const formatId of provided) {
+      try {
+        sources.set(formatId, readFileSync(join(root, scope.path, scope.formats[formatId]!), "utf8"));
+      } catch {
+        sources.set(formatId, "");
+      }
+    }
+    const restrictions = new Map<string, readonly string[]>();
+    for (const module of byScope.get(scopeId) ?? []) for (const document of module.documents) for (const [exportId, formats] of Object.entries(document.exportFormats)) restrictions.set(exportId, formats);
+    for (const [exportId, declaration] of Object.entries(scope.exports)) {
+      const restricted = restrictions.get(exportId);
+      for (const formatId of provided) {
+        if (restricted && !restricted.includes(formatId)) continue;
+        if (schemaFormatDeclaresExport(formatId, sources.get(formatId) ?? "", exportId)) continue;
+        diagnostics.push({ code: "schema-export-incomplete", path: `${scope.path}/${scope.formats[formatId]!}`, detail: `${scopeId} declares export ${exportId} in ${declaration.file}; ${formatId} carries no declaration of it. Provide it, or annotate the export with x-semio-formats to declare restricted support honestly.` });
+      }
+    }
   }
   const placement: SchemaScopeDiagnostic[] = [];
   let reportedAncestor: string | null = null;
   for (const path of [...files, ...directories].sort(byteSort)) {
     if (Object.hasOwn(resolution.placementExceptions, path)) continue;
-    if (modulePathSet.has(path) || schemaScopeOwnerFixture(path, taxonomy, matcher)) continue;
+    if (modulePathSet.has(path) || inertSchemaData(path)) continue;
     if (reportedAncestor && path.startsWith(`${reportedAncestor}/`)) continue;
     const pattern = resolution.forbiddenPlacementPatterns.find((candidate) => matcher.matches(path, candidate));
     if (!pattern) continue;
     reportedAncestor = path;
-    placement.push({ code: "placement-retired-location", path, detail: `${pattern} ceases to exist: move the contract into its owner's ${facetDir} module.` });
+    placement.push({ code: "schema-placement-forbidden-filename", path, detail: `${pattern} ceases to exist: move the contract into its owner's ${facetDir} module.` });
   }
   const catalog: SchemaCatalog = {
     contractId: resolution.catalogContractId,
@@ -3187,7 +3390,7 @@ export function renderSchemaCatalogDocument(catalog: SchemaCatalog): string {
     "| --- | --- | --- | --- | --- |",
   ];
   for (const [scopeId, scope] of Object.entries(catalog.scopes)) {
-    lines.push(`| \`${scopeId}\` | ${scope.level} | \`${scope.path}\` | ${scope.exports.map((value) => `\`${value}\``).join(", ") || "—"} | ${scope.dependsOn.map((value) => `\`${value}\``).join(", ") || "—"} |`);
+    lines.push(`| \`${scopeId}\` | ${scope.level} | \`${scope.path}\` | ${Object.entries(scope.exports).map(([exportId, declaration]) => `\`${exportId}\` (\`${declaration.file}\`)`).join(", ") || "—"} | ${scope.dependsOn.map((value) => `\`${value}\``).join(", ") || "—"} |`);
   }
   lines.push("");
   return lines.join("\n");
@@ -3223,7 +3426,7 @@ export function schemaRustEntryDiagnostics(catalog: SchemaCatalog, dump: SchemaR
   const catalogTriples = new Set<string>();
   for (const [scopeId, scope] of Object.entries(catalog.scopes)) {
     if (!declared.has(scopeId)) continue;
-    for (const exportId of scope.exports) for (const formatKey of Object.keys(scope.formats)) if (asciiByKey[formatKey]) catalogTriples.add(`${scopeId}\0${exportId}\0${asciiByKey[formatKey]}`);
+    for (const exportId of Object.keys(scope.exports)) for (const formatKey of Object.keys(scope.formats)) if (asciiByKey[formatKey]) catalogTriples.add(`${scopeId}\0${exportId}\0${asciiByKey[formatKey]}`);
   }
   const rustTriples = new Set<string>();
   for (const entry of dump.entries) {
@@ -3231,7 +3434,7 @@ export function schemaRustEntryDiagnostics(catalog: SchemaCatalog, dump: SchemaR
     rustTriples.add(key);
     if (!known.has(entry.format)) diagnostics.push({ code: "rust-entry-format-unknown", path, detail: `${entry.scope}/${entry.export} registers format ${JSON.stringify(entry.format)}; the declared ids are ${[...known].sort().join(", ")}.` });
     else if (!catalog.scopes[entry.scope]) diagnostics.push({ code: "rust-scope-unknown", path, detail: `The registry declares scope ${entry.scope}, which the catalog does not contain.` });
-    else if (!catalog.scopes[entry.scope]!.exports.includes(entry.export)) diagnostics.push({ code: "rust-export-unknown", path, detail: `The registry declares ${entry.scope}/${entry.export}, which ${catalog.scopes[entry.scope]!.path} does not export.` });
+    else if (!Object.hasOwn(catalog.scopes[entry.scope]!.exports, entry.export)) diagnostics.push({ code: "rust-export-unknown", path, detail: `The registry declares ${entry.scope}/${entry.export}, which ${catalog.scopes[entry.scope]!.path} does not export.` });
     else if (!catalogTriples.has(key)) diagnostics.push({ code: "rust-entry-format-absent", path, detail: `The registry resolves ${entry.scope}/${entry.export} in ${entry.format}; ${catalog.scopes[entry.scope]!.path} declares no leaf for that format.` });
   }
   for (const key of [...catalogTriples].sort(byteSort)) {
@@ -3842,8 +4045,8 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       if ([...requiredKeys].sort().join("\0") !== expectedRequired.join("\0") || [...alternativeKeys].sort().join("\0") !== expectedAlternatives.join("\0")) problems.push("semanticDescendantContracts.mutation-scenario-bundle-v1 must encode the exact 13-node physical bundle and exclusive diff alternatives.");
     }
     if (id === "draw-editor-command-bundle-v1") {
-      const expectedRequired = ["directory:", "file:🦀️.rs", "directory:🔄️fsm", "file:🔄️fsm/🦀️.rs", "directory:🔄️fsm/📦️packages", "directory:🔄️fsm/📦️packages/🦀️rust", "file:🔄️fsm/📦️packages/🦀️rust/Cargo.toml", "file:🔄️fsm/📦️packages/🦀️rust/📋️project.json", "file:🔄️fsm/📦️packages/🦀️rust/📜️script.ts", "file:🔄️fsm/📦️packages/🦀️rust/📚️library/🦀️.rs", "directory:🔄️fsm/✨️macros", "file:🔄️fsm/✨️macros/🦀️.rs", "directory:🔄️fsm/✨️macros/📦️packages", "directory:🔄️fsm/✨️macros/📦️packages/🦀️rust", "file:🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml", "file:🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json", "file:🔄️fsm/✨️macros/📦️packages/🦀️rust/📜️script.ts", "file:🔄️fsm/✨️macros/📦️packages/🦀️rust/📚️library/🦀️.rs"].sort();
-      if ([...requiredKeys].sort().join("\0") !== expectedRequired.join("\0") || alternativeKeys.length !== 0 || contract.realizedNodeCount !== 20 || contract.pathBudgetReserve.bytes !== 78) problems.push("semanticDescendantContracts.draw-editor-command-bundle-v1 must encode the exact 20-node configurable-entry bundle and 78-byte reserve.");
+      const expectedRequired = ["directory:", "file:🦀️.rs", "directory:🔄️fsm", "file:🔄️fsm/🦀️.rs", "directory:🔄️fsm/📦️packages", "directory:🔄️fsm/📦️packages/🦀️rust", "file:🔄️fsm/📦️packages/🦀️rust/Cargo.toml", "file:🔄️fsm/📦️packages/🦀️rust/📋️project.json", "file:🔄️fsm/📦️packages/🦀️rust/📜️script.ts", "directory:🔄️fsm/✨️macros", "file:🔄️fsm/✨️macros/🦀️.rs", "directory:🔄️fsm/✨️macros/📦️packages", "directory:🔄️fsm/✨️macros/📦️packages/🦀️rust", "file:🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml", "file:🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json", "file:🔄️fsm/✨️macros/📦️packages/🦀️rust/📜️script.ts"].sort();
+      if ([...requiredKeys].sort().join("\0") !== expectedRequired.join("\0") || alternativeKeys.length !== 0 || contract.realizedNodeCount !== 16 || contract.pathBudgetReserve.bytes !== 72) problems.push("semanticDescendantContracts.draw-editor-command-bundle-v1 must encode the exact 16-node declaration-only package bundle and 72-byte reserve.");
     }
   }
 
@@ -4507,9 +4710,12 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   if (taxonomy.areaEnforcement?.requiredState !== "clean" || taxonomy.areaEnforcement?.undeclaredAreas !== "enforce") problems.push("areaEnforcement must enforce clean declared and undeclared areas.");
   ids(taxonomy.areaEnforcement?.opaquePathExclusionIds, taxonomy.pathExclusions, "areaEnforcement.opaquePathExclusionIds");
   if (taxonomy.areaEnforcement?.opaquePathExclusionIds?.join("\0") !== "compose\0temp-compose") problems.push('areaEnforcement.opaquePathExclusionIds must be exactly ["compose", "temp-compose"].');
+  const exemptAreaRoots = [...(taxonomy.pathEmojiPolicy?.reservedSubtreeDirectoryNames ?? []), ...Object.values(taxonomy.pathExclusions ?? {}).map((exclusion) => exclusion.path.replaceAll("\\", "/").replace(/\/+$/u, ""))];
   if (record(taxonomy.areas, "areas")) for (const [area, state] of Object.entries(taxonomy.areas)) {
     if (area === "compose" || area.startsWith("compose/") || area === "temp/compose" || area.startsWith("temp/compose/")) problems.push("Opaque compose prefixes must exist only in pathExclusions.");
-    if (state !== "clean") problems.push(`areas[${JSON.stringify(area)}] must be "clean".`);
+    if (state === "exempt") {
+      if (!exemptAreaRoots.some((root) => root.length > 0 && (area === root || area.startsWith(`${root}/`)))) problems.push(`areas[${JSON.stringify(area)}] may only be "exempt" inside a reserved subtree directory or a declared path exclusion, which discovery already skips.`);
+    } else if (state !== "clean") problems.push(`areas[${JSON.stringify(area)}] must be "clean" or "exempt".`);
   }
   if (record(taxonomy.areaLayers, "areaLayers")) for (const [area, layer] of Object.entries(taxonomy.areaLayers)) {
     if (area === "compose" || area.startsWith("compose/") || area === "temp/compose" || area.startsWith("temp/compose/")) problems.push("Opaque compose prefixes must not appear in areaLayers.");

@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/app/forms/forms/config.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/forms/forms/config/schema.json",
   "title": "FormsConfig",
   "type": "object",
   "additionalProperties": false,
@@ -17,7 +18,13 @@
     },
     "tryValues": {
       "type": "object",
-      "additionalProperties": { "type": "array", "items": { "type": "string", "maxLength": 4096 } },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "maxLength": 4096
+        }
+      },
       "x-semio-state": "config"
     },
     "locale": {

@@ -4,7 +4,7 @@
   "type": "object",
   "allOf": [
     {
-      "$ref": "./➕️add-value/🧬️schema/🔣️.json#/$defs/payload"
+      "$ref": "https://semio.tech/schema/framework/os/plugin/tests/contributed-mutation-wire/mutation/add-value/schema.json#/$defs/Payload"
     },
     {
       "properties": {

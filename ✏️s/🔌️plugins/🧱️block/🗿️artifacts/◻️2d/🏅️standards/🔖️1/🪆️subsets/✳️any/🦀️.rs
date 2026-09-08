@@ -31,13 +31,13 @@ fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInfere
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset() -> SubsetDeclaration<crate::BlockApps> {
+pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
     SubsetDeclaration {
         dialect: BLOCK2D_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::block2d_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::Block2dViewer, crate::BlockApps>(viewer::create_block2d_viewer()),
-        editor: editor_surface::<editor::Block2dPlayApp, crate::BlockApps>(editor::create_block2d_app()),
+        viewer: viewer_surface::<viewer::Block2dViewer, PA>(viewer::create_block2d_viewer()),
+        editor: editor_surface::<editor::Block2dPlayApp, PA>(editor::create_block2d_app()),
         examples: examples(),
     }
 }

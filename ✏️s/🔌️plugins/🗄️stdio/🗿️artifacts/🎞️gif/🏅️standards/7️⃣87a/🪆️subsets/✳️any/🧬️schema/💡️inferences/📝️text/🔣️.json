@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/gif/inference/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gif/87a/any/inference/text.json",
   "title": "Gif87aInferenceText",
   "type": "object"
 }

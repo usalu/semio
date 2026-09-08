@@ -9,11 +9,11 @@
   "routes": [
     {
       "toolId": "addPrimitive",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Config",
-        "Transient"
+        "artifact",
+        "config",
+        "transient"
       ],
       "preparation": [
         "Artifact",
@@ -23,9 +23,9 @@
     },
     {
       "toolId": "patchObject",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "preparation": [
         "Artifact"
@@ -34,10 +34,10 @@
     },
     {
       "toolId": "extrude",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -46,10 +46,10 @@
     },
     {
       "toolId": "inset",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -58,10 +58,10 @@
     },
     {
       "toolId": "bevel",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -70,10 +70,10 @@
     },
     {
       "toolId": "loopCut",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -82,10 +82,10 @@
     },
     {
       "toolId": "subdivide",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -94,10 +94,10 @@
     },
     {
       "toolId": "triangulate",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -106,10 +106,10 @@
     },
     {
       "toolId": "mirror",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -118,10 +118,10 @@
     },
     {
       "toolId": "decimate",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -130,10 +130,10 @@
     },
     {
       "toolId": "flipFaces",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -142,10 +142,10 @@
     },
     {
       "toolId": "merge",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -154,10 +154,10 @@
     },
     {
       "toolId": "dissolve",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -166,10 +166,10 @@
     },
     {
       "toolId": "snap",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -178,10 +178,10 @@
     },
     {
       "toolId": "toggleSmooth",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -190,10 +190,10 @@
     },
     {
       "toolId": "unwrapActive",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -202,10 +202,10 @@
     },
     {
       "toolId": "markUvSeam",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -214,10 +214,10 @@
     },
     {
       "toolId": "clearSeam",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -226,10 +226,10 @@
     },
     {
       "toolId": "translateSelection",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -238,10 +238,10 @@
     },
     {
       "toolId": "rotateSelection",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -250,10 +250,10 @@
     },
     {
       "toolId": "scaleSelection",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -262,9 +262,9 @@
     },
     {
       "toolId": "addPaintLayer",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "preparation": [
         "Artifact"
@@ -273,10 +273,10 @@
     },
     {
       "toolId": "paintStrokeEnd",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -285,9 +285,9 @@
     },
     {
       "toolId": "paintFill",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "preparation": [
         "Artifact"
@@ -296,9 +296,9 @@
     },
     {
       "toolId": "fillBucket",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact"
+        "artifact"
       ],
       "preparation": [
         "Artifact"
@@ -307,10 +307,10 @@
     },
     {
       "toolId": "transformEnd",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -319,28 +319,28 @@
     },
     {
       "toolId": "importSnapshotJson",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "HostOnly"
+        "host-only"
       ],
       "preparation": [],
       "blocker": null
     },
     {
       "toolId": "setFixtureJson",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "HostOnly"
+        "host-only"
       ],
       "preparation": [],
       "blocker": null
     },
     {
       "toolId": "engagementSubmit",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Artifact",
-        "Transient"
+        "artifact",
+        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -349,9 +349,9 @@
     },
     {
       "toolId": "setActiveObject",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "preparation": [
         "Config"
@@ -360,9 +360,9 @@
     },
     {
       "toolId": "setActivePaintLayer",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "preparation": [
         "Config"
@@ -371,9 +371,9 @@
     },
     {
       "toolId": "setUtilityParam",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "preparation": [
         "Config"
@@ -382,9 +382,9 @@
     },
     {
       "toolId": "engagementInput",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "preparation": [
         "Config"
@@ -393,9 +393,9 @@
     },
     {
       "toolId": "toggleShowEdges",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "preparation": [
         "Config"
@@ -404,9 +404,9 @@
     },
     {
       "toolId": "toggleSun",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "preparation": [
         "Config"
@@ -415,9 +415,9 @@
     },
     {
       "toolId": "setSunAzimuth",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "preparation": [
         "Config"
@@ -426,9 +426,9 @@
     },
     {
       "toolId": "setSunElevation",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "preparation": [
         "Config"
@@ -437,9 +437,9 @@
     },
     {
       "toolId": "setSunIntensity",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "preparation": [
         "Config"
@@ -448,9 +448,9 @@
     },
     {
       "toolId": "setCamera",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "preparation": [
         "Config"
@@ -459,18 +459,18 @@
     },
     {
       "toolId": "paintStrokeBegin",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Transient"
+        "transient"
       ],
       "preparation": [],
       "blocker": null
     },
     {
       "toolId": "paintSample",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config"
+        "config"
       ],
       "preparation": [
         "Config"
@@ -479,10 +479,10 @@
     },
     {
       "toolId": "paintStroke",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config",
-        "Transient"
+        "config",
+        "transient"
       ],
       "preparation": [
         "Config"
@@ -491,10 +491,10 @@
     },
     {
       "toolId": "paintAt",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config",
-        "Transient"
+        "config",
+        "transient"
       ],
       "preparation": [
         "Config"
@@ -503,10 +503,10 @@
     },
     {
       "toolId": "canvasPointerDown",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config",
-        "Transient"
+        "config",
+        "transient"
       ],
       "preparation": [
         "Config"
@@ -515,10 +515,10 @@
     },
     {
       "toolId": "canvasPointerMove",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config",
-        "Transient"
+        "config",
+        "transient"
       ],
       "preparation": [
         "Config"
@@ -527,19 +527,19 @@
     },
     {
       "toolId": "transformBegin",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Transient"
+        "transient"
       ],
       "preparation": [],
       "blocker": null
     },
     {
       "toolId": "setActiveUtility",
-      "classification": "Migrated",
+      "classification": "migrated",
       "lanes": [
-        "Config",
-        "Transient"
+        "config",
+        "transient"
       ],
       "preparation": [
         "Config"

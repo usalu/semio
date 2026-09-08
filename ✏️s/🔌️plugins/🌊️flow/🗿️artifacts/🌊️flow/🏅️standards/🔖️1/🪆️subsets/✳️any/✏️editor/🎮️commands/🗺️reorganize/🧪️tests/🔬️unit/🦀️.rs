@@ -1,0 +1,12 @@
+
+use super::*;
+use crate::editor::flow::FlowCommand;
+use crate::editor::flow::testkit::{dispatch, flow_app};
+
+#[semio_framework_async_macros::async_test]
+async fn reorganize_keeps_every_widget() {
+    let mut app = flow_app().await;
+    let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
+    dispatch(&mut app, FlowCommand::Reorganize(Reorganize {})).await;
+    assert_eq!(app.snapshot().expect("snapshot").to_fixture().widgets.len(), before);
+}

@@ -1,4 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
@@ -8,257 +11,30 @@ use semio_framework_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtens
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the procedural 2D and 3D surfaces.
     pub enum ProceduralApps: PluginApp {
-        Generation2dEditor(VcsArtifactApp<EditorApp<crate::editor::generation2d::Generation2dPlayApp>>),
-        Generation2dViewer(VcsArtifactApp<ViewerApp<crate::viewer::generation2d::Generation2dViewer>>),
-        Generation3dEditor(VcsArtifactApp<EditorApp<crate::editor::generation3d::Generation3dPlayApp>>),
-        Generation3dViewer(VcsArtifactApp<ViewerApp<crate::viewer::generation3d::Generation3dViewer>>),
+        Generation2dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp>>),
+        Generation2dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_procedural_generation2d::viewer::generation2d::Generation2dViewer>>),
+        Generation3dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp>>),
+        Generation3dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer>>),
     }
 }
 //#endregion 🗃️Apps
 
-//#region 🖼️SemanticUi
-fn ui_assembly_error(code: &'static str) -> PluginAssemblyError {
-    PluginAssemblyError::new(code, "fixed UI admission failed")
-}
-
-pub(crate) fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<UiText> {
-    UiText::try_from_str(value.as_ref()).ok_or_else(|| ui_assembly_error("ui.text"))
-}
-
-pub(crate) fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<Label> {
-    Label::try_from(value.as_ref()).map_err(|_| ui_assembly_error("ui.label"))
-}
-
-fn ui_id<B: HasBase>(builder: B, id: impl AsRef<str>) -> UiAssemblyResult<B> {
-    builder.try_id(id).map_err(|_| ui_assembly_error("ui.node.id"))
-}
-
-fn ui_child<B: HasChildren>(builder: B, child: impl Into<BuiltNode>) -> UiAssemblyResult<B> {
-    builder.try_child(child).map_err(|_| ui_assembly_error("ui.node.child"))
-}
-
-fn ui_build<B: Buildable>(builder: B) -> UiAssemblyResult<BuiltNode> {
-    builder.try_build().map_err(|_| ui_assembly_error("ui.node.build"))
-}
-
-pub(crate) fn ui_value_text(value: impl AsRef<str>) -> UiAssemblyResult<UiValue> {
-    UiText::try_from_str(value.as_ref()).map(UiValue::Text).ok_or_else(|| ui_assembly_error("ui.value.text"))
-}
-
-pub(crate) fn ui_value_list(values: impl IntoIterator<Item = UiValue>) -> UiAssemblyResult<UiValue> {
-    let mut builder = UiListBuilder::try_new().ok_or_else(|| ui_assembly_error("ui.value.list"))?;
-    for value in values {
-        builder.push(value).map_err(|_| ui_assembly_error("ui.value.list.item"))?;
-    }
-    Ok(UiValue::List(builder.finish()))
-}
-
-pub(crate) fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -> UiAssemblyResult<UiValue> {
-    let mut builder = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("ui.value.map"))?;
-    for (key, value) in values {
-        builder.push(key.to_owned(), value).map_err(|_| ui_assembly_error("ui.value.map.entry"))?;
-    }
-    Ok(UiValue::Map(builder.finish()))
-}
-
-pub(crate) fn ui_node_list(
-    values: impl IntoIterator<Item = UiAssemblyResult<BuiltNode>>,
-) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let mut nodes = UiFixedList::default();
-    for value in values {
-        nodes.try_push(value?).map_err(|_| ui_assembly_error("ui.node-list.item"))?;
-    }
-    Ok(nodes)
-}
-
-/// 🖼️ Encodes one typed scene into the renderer-neutral semantic surface contract.
-pub(crate) fn scene_surface<T: ui_wgpu::wgpu::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
-    let id = id.into();
-    semio_framework_plugin::scene_surface(&id, kind, scene)
-}
-
-/// 📖 Renders the shared generation list without routing through Flow's legacy renderer node.
-pub(crate) fn generation_tree(
-    controller_id: &'static str,
-    surface_prefix: &str,
-    generation: &semio_framework_artifact_playbook_playbook::GenerationPlayState,
-    locale: Locale,
-    terminology: Terminology,
-) -> UiAssemblyResult<BuiltNode> {
-    let _ = terminology;
-    let label = |key: &str| {
-        match (key, locale) {
-            ("remove", Locale::De) => "Entfernen",
-            ("remove", _) => "Remove",
-            ("rename", Locale::De) => "Umbenennen",
-            ("rename", _) => "Rename",
-            ("generations", Locale::De) => "Generierungen",
-            ("generations", _) => "Generations",
-            ("add", Locale::De) => "Generierung hinzufügen",
-            ("add", _) => "Add Generation",
-            ("empty", Locale::De) => "(keine Generierungen)",
-            ("empty", _) => "(no generations)",
-            ("actions", Locale::De) => "Aktionen",
-            ("actions", _) => "Actions",
-            _ => key,
-        }
-        .to_string()
-    };
-    let factory = ActionFactory::new(controller_id);
-    let mut items = UiFixedList::default();
-    for entry in &generation.generations {
-        let args = ui_value_map([("id", ui_value_text(&entry.id)?)])?;
-        let mut item = tree_item_with_action(format!("{surface_prefix}.generation.{}", entry.id), entry.name.clone(), Some(format!("{} values", entry.values.len())), factory.action("selectGeneration", Some(args))?)?;
-        if let Component::TreeItem(props) = &mut item.component {
-            props.icon = Some(ui_text("layers")?);
-            let mut row_actions = UiFixedList::default();
-            let rename_args = ui_value_map([("id", ui_value_text(&entry.id)?), ("name", ui_value_text(format!("{} copy", entry.name))?)])?;
-            let (rename_action, rename_args) = factory.action("renameGeneration", Some(rename_args))?;
-            row_actions
-                .try_push(RowAction {
-                    icon: ui_text("pencil")?,
-                    label: Some(ui_label(label("rename"))?),
-                    action: ActionBinding { trigger: Trigger::Activate, action: rename_action, args: rename_args, capability: None },
-                    placement: RowActionPlacement::Menu,
-                })
-                .map_err(|_| ui_assembly_error("ui.generation.row-actions"))?;
-            let remove_args = ui_value_map([("id", ui_value_text(&entry.id)?)])?;
-            let (remove_action, remove_args) = factory.action("removeGeneration", Some(remove_args))?;
-            row_actions
-                .try_push(RowAction {
-                    icon: ui_text("trash-2")?,
-                    label: Some(ui_label(label("remove"))?),
-                    action: ActionBinding { trigger: Trigger::Activate, action: remove_action, args: remove_args, capability: None },
-                    placement: RowActionPlacement::Menu,
-                })
-                .map_err(|_| ui_assembly_error("ui.generation.row-actions"))?;
-            props.row_actions = row_actions;
-        }
-        items.try_push(item).map_err(|_| ui_assembly_error("ui.generation.items"))?;
-    }
-    PanelTreeBuilder::new(surface_prefix)?
-        .section_or_placeholder(format!("{surface_prefix}.generations"), Some(ui_label(label("generations"))?), true, items, label("empty"))?
-        .section(format!("{surface_prefix}.actions"), Some(ui_label(label("actions"))?), true, ui_node_list([tree_item_with_action(format!("{surface_prefix}.add-generation"), label("add"), None, factory.action("addGeneration", None)?)])?)?
-        .build()
-}
-
-fn generation_control_action<B: HasBase>(builder: B, controller_id: &'static str, action: &str, args: UiValue) -> UiAssemblyResult<B> {
-    let (action, args) = ActionFactory::new(controller_id).action(action, Some(args))?;
-    match args {
-        Some(args) => builder.try_on_with(Trigger::Change, action, args).map_err(|_| ui_assembly_error("ui.control.binding")),
-        None => builder.try_on(Trigger::Change, action).map_err(|_| ui_assembly_error("ui.control.binding")),
-    }
-}
-
-fn generation_control_args(generation_id: &str, question_id: &str, field_index: Option<usize>) -> UiAssemblyResult<UiValue> {
-    let mut values = vec![("generationId", ui_value_text(generation_id)?), ("questionId", ui_value_text(question_id)?)];
-    if let Some(field_index) = field_index {
-        values.push(("fieldIndex", UiValue::Number(field_index as f64)));
-    }
-    ui_value_map(values)
-}
-
-/// 📝 Renders generation questions as semantic controls with typed change bindings.
-pub(crate) fn generation_form(
-    spec: &semio_framework_artifact_playbook_playbook::PlaybookSpec,
-    values: &semio_framework_artifact_playbook_playbook::PlaybookValues,
-    controller_id: &'static str,
-    action: &str,
-    generation_id: &str,
-) -> UiAssemblyResult<BuiltNode> {
-    let mut root = ui_id(column(), "generate.form")?;
-    let mut has_children = false;
-    for step in &spec.steps {
-        if !step.blocks.is_empty() {
-            let heading = ui_build(ui_id(text(ui_label(&step.title)?), format!("generate.step.{}", step.id))?)?;
-            root = ui_child(root, heading)?;
-            has_children = true;
-        }
-        for question in &step.blocks {
-            if !semio_framework_artifact_playbook_playbook::is_block_visible(question, values) {
-                continue;
-            }
-            let value = values.get(&question.id).cloned().unwrap_or_else(|| semio_framework_artifact_playbook_playbook::default_value_for_block(question));
-            let field_id = format!("generate.form.{}", question.id);
-            let args = || generation_control_args(generation_id, &question.id, None);
-            let control = match question.kind.as_str() {
-                "text" | "longText" => {
-                    let input = input(if question.kind == "longText" { InputKind::LongText } else { InputKind::Text }).value(ui_text(value.as_str().unwrap_or_default())?);
-                    ui_build(generation_control_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
-                }
-                "number" => {
-                    let value = value.as_f64().map(|number| number.to_string()).unwrap_or_default();
-                    let input = input(InputKind::Number).value(ui_text(value)?);
-                    ui_build(generation_control_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
-                }
-                "slider" => {
-                    let slider = slider(value.as_f64().unwrap_or_else(|| question.min.unwrap_or(0.0))).min(question.min.unwrap_or(0.0)).max(question.max.unwrap_or(100.0)).step(question.step.unwrap_or(1.0));
-                    ui_build(generation_control_action(ui_id(slider, format!("{field_id}.slider"))?, controller_id, action, args()?)?)?
-                }
-                "boolean" => {
-                    let toggle = toggle(value.as_bool().unwrap_or(false)).icon(ui_text("toggle-left")?).text(ui_label(&question.label)?);
-                    ui_build(generation_control_action(ui_id(toggle, format!("{field_id}.toggle"))?, controller_id, action, args()?)?)?
-                }
-                "single" => {
-                    let mut select = select(ui_text(value.as_str().unwrap_or_default())?);
-                    for option in question.options.as_deref().unwrap_or_default() {
-                        select = select.try_item(ui_text(&option.value)?, ui_label(&option.label)?).map_err(|_| ui_assembly_error("ui.select.item"))?;
-                    }
-                    ui_build(generation_control_action(ui_id(select, format!("{field_id}.select"))?, controller_id, action, args()?)?)?
-                }
-                "vector" => {
-                    let numbers = value.as_array().map(<[DslValue]>::to_vec).unwrap_or_else(|| question.fields.as_deref().unwrap_or_default().iter().map(|field| DslValue::float(field.value.unwrap_or(0.0))).collect());
-                    let labels: Vec<String> = question
-                        .fields
-                        .as_deref()
-                        .map(|fields| fields.iter().map(|field| field.label.clone().unwrap_or_else(|| field.key.clone())).collect())
-                        .unwrap_or_else(|| numbers.iter().enumerate().map(|(index, _)| format!("Field {}", index + 1)).collect());
-                    let mut vector = ui_id(column(), format!("{field_id}.vector"))?;
-                    for (index, number) in numbers.iter().enumerate() {
-                        let input = input(InputKind::Number).value(ui_text(number.as_f64().map(|entry| entry.to_string()).unwrap_or_default())?);
-                        let input = ui_id(input, format!("{field_id}.vector.{index}.input"))?;
-                        let input = ui_build(generation_control_action(input, controller_id, action, generation_control_args(generation_id, &question.id, Some(index))?)?)?;
-                        let label = labels.get(index).cloned().unwrap_or_else(|| format!("Field {}", index + 1));
-                        let field = ui_id(field(ui_label(label)?), format!("{field_id}.vector.{index}"))?;
-                        vector = ui_child(vector, ui_build(ui_child(field, input)?)?)?;
-                    }
-                    ui_build(vector)?
-                }
-                "note" => ui_build(ui_id(text(ui_label(question.text.clone().unwrap_or_default())?), format!("{field_id}.note"))?)?,
-                "image" => ui_build(ui_id(text(ui_label(question.src.clone().unwrap_or_else(|| "(no image)".into()))?), format!("{field_id}.image"))?)?,
-                _ => {
-                    let input = input(InputKind::Text).value(ui_text(Value::from(&value).to_string())?);
-                    ui_build(generation_control_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
-                }
-            };
-            let field = ui_id(field(ui_label(&question.label)?), field_id)?;
-            root = ui_child(root, ui_build(ui_child(field, control)?)?)?;
-            has_children = true;
-        }
-    }
-    if !has_children {
-        return ui_build(text(ui_label("No input widgets to generate from.")?));
-    }
-    ui_build(root)
-}
-//#endregion 🖼️SemanticUi
-
 /// 🔌️ Builds the plugin surface for host registration.
 pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
-    crate::artifacts::assembly::standards::v1::subsets::any::schema::inferences::register_assembly_inference_factory(&ActionBus::production())
+    semio_s_artifact_procedural_assembly::standards::v1::subsets::any::schema::inferences::register_assembly_inference_factory(&ActionBus::production())
         .map_err(|error| PluginAssemblyError::new("assembly-inference-factory", error.to_string()))?;
     Plugin::<ProceduralApps>::builder("procedural")
         .label("Procedural")
         .version("0.1.0")
         .package_id("semio:procedural")
-        .routed_inference(crate::artifacts::assembly::standards::v1::subsets::any::schema::inferences::assembly_inference_metadata())
-        .artifact(crate::artifacts::generation2d::declaration().map_err(PluginAssemblyError::definition)?)
-        .artifact(crate::artifacts::generation3d::declaration().map_err(PluginAssemblyError::definition)?)
+        .routed_inference(semio_s_artifact_procedural_assembly::standards::v1::subsets::any::schema::inferences::assembly_inference_metadata())
+        .artifact(semio_s_artifact_procedural_generation2d::declaration().map_err(PluginAssemblyError::definition)?)
+        .artifact(semio_s_artifact_procedural_generation3d::declaration().map_err(PluginAssemblyError::definition)?)
         .host_media_handler(HostMediaHandlerDeclaration::mesh_import(
             "s.procedural.host-media.mesh-import",
-            crate::artifacts::generation3d::artifact_kind(),
-            crate::artifacts::generation3d::GENERATION_3D_SCHEMA,
-            crate::editor::generation3d::generation3d_document_from_mesh,
+            semio_s_artifact_procedural_generation3d::artifact_kind(),
+            semio_s_artifact_procedural_generation3d::GENERATION_3D_SCHEMA,
+            semio_s_artifact_procedural_generation3d::editor::generation3d::generation3d_document_from_mesh,
         )?)
         .flow_extension(FlowExtensionDeclaration::new(
             "s.procedural.flow-extension.brep",
@@ -305,14 +81,14 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
             FlowExtensionManifest::new("bim", "Bim", "0.1.0")?,
             FlowExtensionExecutableIdentity::native("semio.s.plugin.flow.extension.bim", "semio.s.plugin.flow.extension.bim", "register")?,
         )?)
-        .editor_with_examples::<crate::editor::generation2d::Generation2dPlayApp>(crate::editor::generation2d::create_generation2d_app(), vec![crate::examples::art_generation2d_demo::source()])
-        .editor_mutation_roster::<crate::editor::generation2d::Generation2dPlayApp>()
-        .viewer::<crate::viewer::generation2d::Generation2dViewer>(crate::viewer::generation2d::create_generation2d_viewer())
-        .viewer_mutation_roster::<crate::viewer::generation2d::Generation2dViewer>()
-        .editor_with_examples::<crate::editor::generation3d::Generation3dPlayApp>(crate::editor::generation3d::create_generation3d_app(), crate::editor::generation3d::examples())
-        .editor_mutation_roster::<crate::editor::generation3d::Generation3dPlayApp>()
-        .viewer::<crate::viewer::generation3d::Generation3dViewer>(crate::viewer::generation3d::create_generation3d_viewer())
-        .viewer_mutation_roster::<crate::viewer::generation3d::Generation3dViewer>()
+        .editor_with_examples::<semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp>(semio_s_artifact_procedural_generation2d::editor::generation2d::create_generation2d_app(), vec![semio_s_artifact_procedural_generation2d::standards::v1::subsets::any::examples::demo::source()])
+        .editor_mutation_roster::<semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp>()
+        .viewer::<semio_s_artifact_procedural_generation2d::viewer::generation2d::Generation2dViewer>(semio_s_artifact_procedural_generation2d::viewer::generation2d::create_generation2d_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_procedural_generation2d::viewer::generation2d::Generation2dViewer>()
+        .editor_with_examples::<semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp>(semio_s_artifact_procedural_generation3d::editor::generation3d::create_generation3d_app(), semio_s_artifact_procedural_generation3d::editor::generation3d::examples())
+        .editor_mutation_roster::<semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp>()
+        .viewer::<semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer>(semio_s_artifact_procedural_generation3d::viewer::generation3d::create_generation3d_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer>()
         // 🚧️ assembly's editor/viewer are authored (`🗿️artifacts/🧩️assembly/…/{✏️editor,👁️viewer}/`) but
         // not yet mounted in `🦀️.rs` or registered here: `ArtifactEditor`/`ArtifactViewer`'s own
         // trait bounds (`Snapshot: ArtifactDsl + ArtifactPack`, `Mutation`/`Command`: `OpText`/`OpBinary`)
@@ -321,8 +97,8 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
         //
         // 🧬️ Assembly's editor remains unmounted, but its schema-owned `semio.infer` WFC factory
         // is registered above on the production action bus and needs no artifact surface.
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::generation2d::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::generation3d::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_procedural_generation2d::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_procedural_generation3d::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest {
             id: CapabilityId("documents.write".into()),
@@ -335,51 +111,9 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
 
 //#region 🧪️SurfaceTests
 #[cfg(test)]
-mod surface_tests {
-    use crate::editor::generation2d::Generation2dPlayApp;
-    use crate::editor::generation3d::Generation3dPlayApp;
-    use crate::viewer::generation2d::Generation2dViewer;
-    use crate::viewer::generation3d::Generation3dViewer;
-
-    #[test]
-    fn plugin_manifest_builds_synchronously() {
-        super::plugin().expect("procedural plugin manifest should build synchronously");
-    }
-
-    /// 👁️ A viewer instance never mutates the document store, even when dispatched.
-    #[semio_framework_async_macros::async_test]
-    async fn generation2d_viewer_never_mutates() {
-        semio_framework_plugin::testkit::assert_viewer_never_mutates::<Generation2dViewer>().await;
-    }
-    #[semio_framework_async_macros::async_test]
-    async fn generation3d_viewer_never_mutates() {
-        semio_framework_plugin::testkit::assert_viewer_never_mutates::<Generation3dViewer>().await;
-    }
-
-    /// 🤝️ Editor and viewer surfaces agree on the artifact dialect they address.
-    #[semio_framework_async_macros::async_test]
-    async fn generation2d_editor_and_viewer_share_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Generation2dPlayApp, Generation2dViewer>().await;
-    }
-    #[semio_framework_async_macros::async_test]
-    async fn generation3d_editor_and_viewer_share_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Generation3dPlayApp, Generation3dViewer>().await;
-    }
-
-    /// 📚️ Ticket 26/09/03/PROCEDURAL-3D-END-TO-END — `.editor_with_examples::<Generation3dPlayApp>`
-    /// must stamp the eight `crate::editor::generation3d::examples()` fixtures onto the manifest,
-    /// `app_id`-addressed to the gen3d editor surface, or the react shell's example dropdown
-    /// (`activePluginManifest.examples`) stays hidden for `generation3d`.
-    #[test]
-    fn generation3d_manifest_examples_are_registered_on_the_editor_surface() {
-        let plugin = super::plugin().expect("procedural plugin manifest should build synchronously");
-        let editor_app_id = crate::editor::generation3d::create_generation3d_app().id;
-        assert_eq!(editor_app_id, "s.procedural.generation3d@1/*#editor");
-        let registered_ids: Vec<&str> = plugin.manifest.examples.iter().filter(|example| example.app_id == editor_app_id).map(|example| example.id.as_str()).collect();
-        let expected_sources = crate::editor::generation3d::examples();
-        let expected_ids: Vec<&str> = expected_sources.iter().map(|source| source.id()).collect();
-        assert_eq!(registered_ids.len(), 8);
-        assert_eq!(registered_ids, expected_ids);
-    }
-}
+#[path = "🧪️tests/🔬️surface/🦀️.rs"]
+mod surface_tests;
 //#endregion 🧪️SurfaceTests
+
+#[cfg(feature = "plugin-entry")]
+semio_framework_plugin::plugin_exports!(plugin, ProceduralApps);

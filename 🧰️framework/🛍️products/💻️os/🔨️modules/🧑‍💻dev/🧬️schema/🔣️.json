@@ -1,0 +1,596 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/dev/component.json",
+  "title": "Development Product Contracts",
+  "$defs": {
+    "Sha256Digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "WasiProfileDirectory": {
+      "enum": [
+        "wasm-dev",
+        "wasm-release"
+      ]
+    },
+    "CanonicalBootstrapFolderMirrorFrontier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "headEditOrdinal",
+        "headEditId",
+        "lastCommitSeq",
+        "chainSha256"
+      ],
+      "properties": {
+        "documentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headEditOrdinal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "headEditId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lastCommitSeq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "chainSha256": {
+          "$ref": "#/$defs/Sha256Digest"
+        }
+      }
+    },
+    "CanonicalBootstrapFolderMirrorPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "packHex",
+        "sprHex",
+        "aggregateSha256"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "a",
+            "b"
+          ]
+        },
+        "packHex": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{2})+$"
+        },
+        "sprHex": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{2})+$"
+        },
+        "aggregateSha256": {
+          "$ref": "#/$defs/Sha256Digest"
+        }
+      }
+    },
+    "LinkedSessionEnginesV1": {
+      "title": "Linked Session Engine Declarations",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "module",
+          "engine"
+        ],
+        "properties": {
+          "module": {
+            "type": "string",
+            "minLength": 1
+          },
+          "engine": {
+            "type": "string",
+            "pattern": "^\\./(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$"
+          }
+        }
+      }
+    },
+    "BuildInspectionV1": {
+      "title": "Build Inspection Records",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "fileName",
+          "bytes",
+          "sha256",
+          "facadeModuleId",
+          "imports",
+          "dynamicImports",
+          "modules",
+          "originalFileNames",
+          "names"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "chunk",
+              "asset"
+            ]
+          },
+          "fileName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "facadeModuleId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "imports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dynamicImports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "modules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "originalFileNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "CatalogSmokeReportV1": {
+      "title": "Catalog Smoke Report",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseUrl",
+        "shellPluginId",
+        "startedAt",
+        "durationMs",
+        "boot",
+        "programs",
+        "failedPlugins",
+        "totals"
+      ],
+      "properties": {
+        "baseUrl": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shellPluginId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "startedAt": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T"
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "boot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "beacon",
+            "failure",
+            "phaseMs",
+            "bodyExcerpt",
+            "consoleErrors"
+          ],
+          "properties": {
+            "beacon": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "failure": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "phaseMs": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "commit",
+                "firstModule",
+                "beacon"
+              ],
+              "properties": {
+                "commit": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                },
+                "firstModule": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                },
+                "beacon": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            },
+            "bodyExcerpt": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "consoleErrors": {
+              "type": "array",
+              "maxItems": 20,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "programs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "pluginId",
+              "appId",
+              "label",
+              "status",
+              "durationMs",
+              "windowId",
+              "descendants",
+              "width",
+              "height",
+              "firstError"
+            ],
+            "properties": {
+              "pluginId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "appId": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "pass",
+                  "fail",
+                  "skipped"
+                ]
+              },
+              "durationMs": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "windowId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "descendants": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "firstError": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "failedPlugins": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "pluginId",
+              "status"
+            ],
+            "properties": {
+              "pluginId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "enum": [
+                  "failed",
+                  "crashed"
+                ]
+              }
+            }
+          }
+        },
+        "totals": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pass",
+            "fail",
+            "skipped"
+          ],
+          "properties": {
+            "pass": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fail": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "skipped": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "CanonicalBootstrapFolderMirrorCorpusV1": {
+      "title": "Canonical Bootstrap Folder Mirror Corpus",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "documentId",
+        "artifactSchema",
+        "descriptorDigestV1",
+        "baselineFrontier",
+        "pairs",
+        "hostile"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.backbone.canonical-bootstrap-folder-mirror-corpus/v1"
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "artifactSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/Sha256Digest"
+        },
+        "baselineFrontier": {
+          "$ref": "#/$defs/CanonicalBootstrapFolderMirrorFrontier"
+        },
+        "pairs": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/CanonicalBootstrapFolderMirrorPair"
+          }
+        },
+        "hostile": {
+          "type": "array",
+          "minItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "wrong-capability",
+                  "wrong-epoch",
+                  "mismatching-aggregate",
+                  "malformed-bundle",
+                  "max-plus-one",
+                  "stale-publish",
+                  "client-stale-stage",
+                  "client-stale-publish"
+                ]
+              },
+              "expected": {
+                "enum": [
+                  "invalid",
+                  "conflict",
+                  "too-large"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "WasiProfilePolicyV1": {
+      "title": "Wasi Codegen Profile Policy",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "runtimeDirectories",
+        "publicationProfile",
+        "developmentPackageOverrides",
+        "artifactPaths",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.build.wasi-profile-policy/v1"
+        },
+        "runtimeDirectories": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/WasiProfileDirectory"
+          }
+        },
+        "publicationProfile": {
+          "$ref": "#/$defs/WasiProfileDirectory"
+        },
+        "developmentPackageOverrides": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "opt-level"
+            ],
+            "properties": {
+              "opt-level": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              }
+            }
+          }
+        },
+        "artifactPaths": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "packageName",
+              "profile",
+              "expectedRelativePath"
+            ],
+            "properties": {
+              "packageName": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "profile": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/WasiProfileDirectory"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "expectedRelativePath": {
+                "type": "string",
+                "pattern": "^wasm32-wasip2/(wasm-dev|wasm-release)/[a-z0-9_]+\\.wasm$"
+              }
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "mode",
+              "override",
+              "expectedProfile",
+              "expectedDirectory"
+            ],
+            "properties": {
+              "mode": {
+                "enum": [
+                  "dev",
+                  "ship"
+                ]
+              },
+              "override": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 64
+              },
+              "expectedProfile": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/WasiProfileDirectory"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "expectedDirectory": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/WasiProfileDirectory"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

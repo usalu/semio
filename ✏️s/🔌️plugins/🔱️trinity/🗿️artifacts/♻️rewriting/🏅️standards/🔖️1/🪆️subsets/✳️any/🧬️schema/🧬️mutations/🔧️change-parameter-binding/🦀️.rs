@@ -1,7 +1,7 @@
 //! 🔧️ Direct rewriting mutation — `ChangeParameterBinding`: upserts one key on the `parameter_bindings` map.
 use semio_s_artifact_trinity_jack::PropertyValue;
-use crate::diff::RewritingDiff;
-use crate::mutations::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 
 //#region 🔖️Mutation

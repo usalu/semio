@@ -15,8 +15,8 @@
 //! raw Rust tuples, so the point is a two-field record on the wire (`{"x": .., "y": ..}`). This case
 //! pins the applied MOVE of a var that already has a point.
 
-use crate::diff::RewritingDiff;
-use crate::mutations::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::LayoutPoint;
 use crate::RewritingSnapshot;
 use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};

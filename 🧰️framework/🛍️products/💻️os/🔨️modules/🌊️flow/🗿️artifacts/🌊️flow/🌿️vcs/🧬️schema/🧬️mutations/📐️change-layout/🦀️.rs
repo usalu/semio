@@ -39,9 +39,6 @@ impl MutationKind<FlowFixture, FlowMutation> for ChangeLayout {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn direct_leaf_contract() { super::super::super::flow_direct_tests::assert_leaf_contract::<ChangeLayout>(8, FlowMutation::ChangeLayout, include_str!("🔣️.json")); }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

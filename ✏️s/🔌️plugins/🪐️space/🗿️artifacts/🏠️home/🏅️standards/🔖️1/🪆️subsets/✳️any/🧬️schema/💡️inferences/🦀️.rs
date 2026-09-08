@@ -12,7 +12,7 @@
 
 use crate::SHomeSnapshot;
 use protocol::Inference;
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::digest::compute_content_digest;
@@ -75,10 +75,10 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::HomeBuilde
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.space.home.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `home_artifact_schema_descriptor`'s registration.
-pub fn home_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn home_artifact_inference_descriptor() -> ::semio_framework_schema::ArtifactInferenceDescriptor {
+    ::semio_framework_schema::ArtifactInferenceDescriptor {
         id: "s.space.home.inference",
-        inference: schema::FacetLeaves {
+        inference: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -91,27 +91,6 @@ pub fn home_artifact_inference_descriptor() -> schema::ArtifactInferenceDescript
 
 #[cfg(test)]
 //#region 🧪️Tests
-mod tests {
-    use super::*;
-
-    //#region 🧪️InferenceLaws
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
-        let snapshot = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 7 };
-        assert_eq!(SHomeInference::infer(&snapshot), SHomeInference::infer(&snapshot));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
-        assert_eq!(SHomeInference::infer(&SHomeSnapshot::default()), SHomeInference::default());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn different_generations_yield_different_digests() {
-        let a = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 1 };
-        let b = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 2 };
-        assert_ne!(SHomeInference::infer(&a).content_digest, SHomeInference::infer(&b).content_digest);
-    }
-    //#endregion 🧪️InferenceLaws
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

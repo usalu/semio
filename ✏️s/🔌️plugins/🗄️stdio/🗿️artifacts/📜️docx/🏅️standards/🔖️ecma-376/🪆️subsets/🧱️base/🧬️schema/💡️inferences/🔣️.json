@@ -1,21 +1,37 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/docx/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/docx/ecma-376/base/inference.json",
   "title": "DocxInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["outline"],
+  "required": [
+    "outline"
+  ],
   "properties": {
-    "outline": { "$ref": "#/$defs/DocxOutline", "x-semio-derived": true }
+    "outline": {
+      "$ref": "#/$defs/DocxOutline",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "DocxOutline": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["paragraphCount", "tableCount", "wordCount"],
+      "required": [
+        "paragraphCount",
+        "tableCount",
+        "wordCount"
+      ],
       "properties": {
-        "paragraphCount": { "type": "integer" },
-        "tableCount": { "type": "integer" },
-        "wordCount": { "type": "integer" }
+        "paragraphCount": {
+          "type": "integer"
+        },
+        "tableCount": {
+          "type": "integer"
+        },
+        "wordCount": {
+          "type": "integer"
+        }
       }
     }
   }

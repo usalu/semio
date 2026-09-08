@@ -16,8 +16,8 @@
 //! panel is present in the mesh and absent from the structure. The same geometry bound
 //! `create-region` runs.
 
-use crate::mutations::Fem2dMutation;
-use crate::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -51,7 +51,7 @@ fn rejection_leaves_the_document_untouched() {
 #[test]
 fn the_refusal_is_the_declared_diagnostic() {
     let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &crate::diff::Fem2dDiff::default(), "replace-region/denies-zero-thick-7d805e: a rejecting replace-region must carry the empty diff, never a half-built delta");
+    assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "replace-region/denies-zero-thick-7d805e: a rejecting replace-region must carry the empty diff, never a half-built delta");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.invariant", "replace-region/denies-zero-thick-7d805e: the refusal is reported as mutation.invariant");

@@ -16,20 +16,28 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-os-infinite", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework", "dep:semio-framework-artifact-space-collection", "dep:semio-framework-artifact-space-space", "dep:semio-framework-dispatch-macros", "dep:semio-framework-os", "dep:semio-framework-os-infinite", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
 
 [dependencies]
+semio-framework = { workspace = true, optional = true }
+semio-framework-artifact-space-collection = { workspace = true, optional = true }
+semio-framework-artifact-space-space = { workspace = true, optional = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-semio-s-artifact-space-home = { workspace = true }
 pack = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true, optional = true }
 semio-framework-os-infinite = { workspace = true, optional = true }
 semio-framework-ui-contract = { workspace = true, optional = true }
 semio-framework-ui-scene = { workspace = true, optional = true }
+
+[target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
+semio-framework-os = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os", features = ["space-guest"], optional = true }
+
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+semio-framework-os = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os", features = ["os-host-full"], optional = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

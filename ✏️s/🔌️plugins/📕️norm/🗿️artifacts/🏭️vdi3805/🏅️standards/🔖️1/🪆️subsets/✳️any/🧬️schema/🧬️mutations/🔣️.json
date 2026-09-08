@@ -1,85 +1,64 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/vdi3805/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/norm/vdi3805/mutations.json",
   "title": "Vdi3805Mutation",
   "oneOf": [
     {
-      "$ref": "./🔌️add-geometry-connection/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/add-geometry-connection/schema.json"
     },
     {
-      "$ref": "./📅️change-correction-as-of/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/change-correction-as-of/schema.json"
     },
     {
-      "$ref": "./🔖️change-edition-profile/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/change-edition-profile/schema.json"
     },
     {
-      "$ref": "./🔒️change-strict-mode/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/change-strict-mode/schema.json"
     },
     {
-      "$ref": "./📈️create-curve/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/create-curve/schema.json"
     },
     {
-      "$ref": "./🧊️create-geometry/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/create-geometry/schema.json"
     },
     {
-      "$ref": "./📦️create-product/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/create-product/schema.json"
     },
     {
-      "$ref": "./📉️delete-curve/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/delete-curve/schema.json"
     },
     {
-      "$ref": "./🚮️delete-geometry/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/delete-geometry/schema.json"
     },
     {
-      "$ref": "./🗑️delete-product/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/delete-product/schema.json"
     },
     {
-      "$ref": "./🧹️remove-edition-profile/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/remove-edition-profile/schema.json"
     },
     {
-      "$ref": "./✂️remove-geometry-connection/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/remove-geometry-connection/schema.json"
     },
     {
-      "$ref": "./🏷️rename-product/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/rename-product/schema.json"
     },
     {
-      "$ref": "./📍️replace-curve-points/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/replace-curve-points/schema.json"
     },
     {
-      "$ref": "./🧮️replace-geometry-parameters/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/replace-geometry-parameters/schema.json"
     },
     {
-      "$ref": "./🎛️replace-product-configuration/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/replace-product-configuration/schema.json"
     },
     {
-      "$ref": "./📐️resize-geometry/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/resize-geometry/schema.json"
     },
     {
-      "$ref": "./🚧️update-limits/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/update-limits/schema.json"
     },
     {
-      "$ref": "./🏭️update-manufacturer-file/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/vdi3805/mutation/update-manufacturer-file/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "add-geometry-connection",
-    "change-correction-as-of",
-    "change-edition-profile",
-    "change-strict-mode",
-    "create-curve",
-    "create-geometry",
-    "create-product",
-    "delete-curve",
-    "delete-geometry",
-    "delete-product",
-    "remove-edition-profile",
-    "remove-geometry-connection",
-    "rename-product",
-    "replace-curve-points",
-    "replace-geometry-parameters",
-    "replace-product-configuration",
-    "resize-geometry",
-    "update-limits",
-    "update-manufacturer-file"
   ]
 }

@@ -231,19 +231,19 @@
     {
       "toolId": "importFrames",
       "lanes": [
-        "hostOnly"
+        "host-only"
       ]
     },
     {
       "toolId": "importVideo",
       "lanes": [
-        "hostOnly"
+        "host-only"
       ]
     },
     {
       "toolId": "exportQcReport",
       "lanes": [
-        "hostOnly"
+        "host-only"
       ]
     },
     {

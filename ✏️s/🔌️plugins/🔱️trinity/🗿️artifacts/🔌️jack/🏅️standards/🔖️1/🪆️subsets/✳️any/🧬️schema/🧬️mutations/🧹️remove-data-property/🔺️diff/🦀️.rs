@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `RemoveDataProperty` — clears the addressed node's or edge's
 //! property against the current scene off `base`.
-use crate::diff::{diff_replace_content, JackDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_replace_content, JackDiff};
 use crate::{EntityRef, JackSnapshot};
 
 //#region 🔖️Diff

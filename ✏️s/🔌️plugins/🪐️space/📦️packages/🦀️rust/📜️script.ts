@@ -132,7 +132,7 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
   const retainedFixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🧫️retained-command-limits/🔣️.json"), "utf8"));
   const validateRetained = compileRetainedCommandLimits(repoRoot, join(base, ".."), "HomeRetainedCommandLimits");
   assert(validateRetained(retainedFixture), JSON.stringify(validateRetained.errors));
-  assert.equal(retainedFixture.routes.find((route: any) => route.id === "applyDirectoryEventPage")?.lanes?.[0], "Config");
+  assert.equal(retainedFixture.routes.find((route: any) => route.id === "applyDirectoryEventPage")?.lanes?.[0], "config");
   const commandPath = join(base, "🎮️commands/📬️apply-directory-event-page/🦀️.rs");
   const command = existsSync(commandPath) ? readFileSync(commandPath, "utf8") : "";
   const receiptRoot = join(base, "🎮️commands/📬️apply-directory-event-page/🧬️receipt");
@@ -429,7 +429,7 @@ export function interactiveJobCatalogOracle(repoRoot: string): number {
     const validate = compileRetainedCommandLimits(repoRoot, surface.scope, surface.export);
     assert(validate(fixture), `${surface.appId} fixture violates ${surface.export}: ${JSON.stringify(validate.errors)}`);
     checks += 1;
-    const migrated: string[] = fixture.routes.filter((route: any) => (surface.shape === "status" ? route.status === "migrated" : route.disposition === "Migrated")).map((route: any) => route.id);
+    const migrated: string[] = fixture.routes.filter((route: any) => (surface.shape === "status" ? route.status === "migrated" : route.disposition === "migrated")).map((route: any) => route.id);
     const lanes = new Map<string, string[]>(
       surface.shape === "status" ? fixture.publicationContracts.map((entry: any) => [entry.toolId, entry.lanes]) : fixture.routes.map((route: any) => [route.id, route.lanes]),
     );

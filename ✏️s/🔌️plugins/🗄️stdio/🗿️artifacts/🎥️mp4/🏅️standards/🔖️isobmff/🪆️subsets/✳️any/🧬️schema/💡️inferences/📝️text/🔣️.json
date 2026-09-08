@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/mp4/inference/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/mp4/isobmff/any/inference/text.json",
   "title": "Mp4InferenceText",
   "type": "object"
 }

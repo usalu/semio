@@ -1,6 +1,6 @@
 //! 🤝 Puzzle3d mutation — `ConnectKindCompatibility`: allows one vortex-kind-id pair to attract.
-use crate::diff::Puzzle3dDiff;
-use crate::mutations::Puzzle3dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use crate::{Puzzle3dCompatSpecificity, Puzzle3dSnapshot};
 
 //#region 🔖️Mutation

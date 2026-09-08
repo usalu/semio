@@ -5,6 +5,7 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+#[cfg(test)]
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
@@ -26,7 +27,7 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
 //#region 🔖️ArtifactKind
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    crate::app_surface::artifact_kind_spec("en1994", "EN 1994")
+    app_surface::artifact_kind_spec("en1994", "EN 1994")
 }
 //#endregion 🔖️ArtifactKind
 
@@ -70,11 +71,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::document_schema::en1994_artifact_schema_descriptor())
-        .inferences([crate::standards::v1::subsets::any::schema::inferences::en1994_artifact_inference_descriptor()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
+        .schema(document_schema::en1994_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::en1994_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::en1994::En1994PlayApp>>()
+        .document_codec::<semio_framework_plugin::EditorApp<editor::en1994::En1994PlayApp>>()
         .try_build()
 }
 

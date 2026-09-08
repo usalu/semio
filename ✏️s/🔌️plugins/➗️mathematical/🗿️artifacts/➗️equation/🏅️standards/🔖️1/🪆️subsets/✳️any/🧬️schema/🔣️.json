@@ -282,7 +282,10 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "EquationSceneOwnerLaw": {
       "type": "object",
@@ -336,7 +339,10 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

@@ -17,11 +17,5 @@ pub fn standard() -> StandardDeclaration<crate::plugin::WriterApps> {
 //#endregion 🔖️Standard
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn standard_mounts_exactly_one_subset() {
-        assert_eq!(standard().subsets.len(), 1);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

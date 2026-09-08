@@ -1,8 +1,8 @@
 //! 🔺️ `update-camera` sparse diff construction.
 
-use crate::diff::Generation3dDiff;
-use crate::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::mutations::update_camera::UpdateCamera;
+use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
+use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::mutations::update_camera::UpdateCamera;
 use crate::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta touching only the camera field. Whole-artifact scope — there

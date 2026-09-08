@@ -1,23 +1,52 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/semio/text/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/text/inference.json",
   "title": "SemioTextInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["profile"],
+  "required": [
+    "profile"
+  ],
   "properties": {
-    "profile": { "$ref": "#/$defs/SemioTextProfile", "x-semio-derived": true }
+    "profile": {
+      "$ref": "#/$defs/SemioTextProfile",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "SemioTextProfile": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["wordCount", "charCount", "runCount", "markCount", "languages"],
+      "required": [
+        "wordCount",
+        "charCount",
+        "runCount",
+        "markCount",
+        "languages"
+      ],
       "properties": {
-        "wordCount": { "type": "integer", "minimum": 0 },
-        "charCount": { "type": "integer", "minimum": 0 },
-        "runCount": { "type": "integer", "minimum": 0 },
-        "markCount": { "type": "integer", "minimum": 0 },
-        "languages": { "type": "array", "items": { "type": "string" } }
+        "wordCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "charCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "runCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "markCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     }
   }

@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/din18599/snapshot.json",
   "title": "Din18599Snapshot",
   "type": "object",

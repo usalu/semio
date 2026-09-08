@@ -1,21 +1,45 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.zip/snapshot.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/zip/2.0/base/snapshot.json",
   "title": "ZipSnapshot",
   "$defs": {
     "ZipEntry": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
-        "name": { "type": "string" },
-        "data": { "type": "array", "items": { "type": "integer" } }
+        "name": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
       }
     }
   },
   "type": "object",
-  "required": ["schema"],
+  "required": [
+    "schema"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "entries": { "type": "array", "items": { "$ref": "#/$defs/ZipEntry" }, "x-semio-state": "artifact" },
-    "comment": { "type": "string", "x-semio-state": "artifact" }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ZipEntry"
+      },
+      "x-semio-state": "artifact"
+    },
+    "comment": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    }
   }
 }

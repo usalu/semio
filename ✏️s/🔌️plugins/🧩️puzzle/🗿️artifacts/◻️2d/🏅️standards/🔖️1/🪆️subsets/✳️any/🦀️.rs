@@ -5,8 +5,7 @@
 //! `crate::viewer::puzzle2d` stay mounted at the plugin's top-level `editor`/`viewer` modules
 //! (`🗒️note`/`🖍️draw` recipe §5 gotcha 1), not here. `examples` is TWO real fixtures
 //! (`crate::examples::puzzle2d::{nakagin_capsule_tower, concrete_forest}::SOURCE`, each a
-//! `LazyLock<ExampleSource>` cloned here) — a THIRD shape beyond note's deep path and trinity's
-//! plugin-root shim: puzzle2d's `🦀️.rs` mounts examples at the CRATE ROOT
+//! `LazyLock<ExampleSource>` cloned here). Puzzle 2D's artifact root mounts these examples at the crate root
 //! (`crate::examples::puzzle2d::…`), not under `artifacts::puzzle2d` at all.
 //!
 //! ⚠️ DEVIATION from the `🗒️note`/`🖍️draw` template (documented, not an oversight — same shape
@@ -62,13 +61,13 @@ fn io_declaration() -> IoDeclaration {
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset() -> SubsetDeclaration<crate::PuzzleApps> {
+pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
     SubsetDeclaration {
         dialect: PUZZLE2D_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::puzzle2d_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io_declaration(),
-        viewer: viewer_surface::<viewer::Puzzle2dViewer, crate::PuzzleApps>(viewer::create_puzzle2d_viewer()),
-        editor: editor_surface::<editor::Puzzle2dPlayApp, crate::PuzzleApps>(editor::create_puzzle2d_app()),
+        viewer: viewer_surface::<viewer::Puzzle2dViewer, PA>(viewer::create_puzzle2d_viewer()),
+        editor: editor_surface::<editor::Puzzle2dPlayApp, PA>(editor::create_puzzle2d_app()),
         examples: examples(),
     }
 }

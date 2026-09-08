@@ -13,14 +13,5 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 #[cfg(test)]
-mod semio_grammar_conformance {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn component_grammar_semio_is_grammar_dialect() {
-        let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
-        assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);
-        assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());
-        let _ = COMPONENT_GRAMMAR_PATH;
-    }
-}
+#[path = "🧪️tests/🔬️semio-grammar-conformance/🦀️.rs"]
+mod semio_grammar_conformance;

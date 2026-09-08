@@ -5,6 +5,7 @@
 //! `TrustedCatalogCurrentPointerV1`; these types are its Rust projection.
 
 use super::{catalog, catalog_error, decode_digest, AuthorityError, TRUSTED_IDENTITY_MAX_BYTES};
+use semio_framework::PackageRole;
 use serde::{Deserialize, Serialize};
 
 /// 🧬️ The draft-07 module every implementation of this contract is projected from.
@@ -27,6 +28,143 @@ pub fn publication_revision(value: &str) -> Result<u64, AuthorityError> {
         return Err(catalog("trusted publication revision is not canonical nonzero u64"));
     }
     Ok(revision)
+}
+
+/// 📛️ One bundle-relative path; the validating newtype lives in the sibling opened-root leaf.
+pub type TrustedCatalogRelativePathV1 = super::opened_root::TrustedCatalogRelativePathV1;
+
+/// 🌐️ The catalog actor location of one package; its decoder is the sibling browser-actor leaf.
+pub type TrustedBundleBrowserActorV1 = super::browser_actor::TrustedBundleBrowserActorV1;
+
+/// 🎭️ The parent dialect a bundle open target is closed over; the framework owns the shape.
+pub type TrustedBundleParentDialectV1 = semio_framework::ArtifactDialect;
+
+/// ⚙️ The app-channel protocol version a bundle package declares; the framework owns the shape.
+pub type TrustedBundleExecutionProtocolV1 = semio_framework::ExecutionProtocol;
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum TrustedBundlePackageRole {
+    Plugin,
+    Extension,
+}
+
+impl TrustedBundlePackageRole {
+    pub fn matches(self, role: PackageRole) -> bool {
+        matches!((self, role), (Self::Plugin, PackageRole::Plugin) | (Self::Extension, PackageRole::Extension))
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedBundleIdentityV1 {
+    pub plugin_id: String,
+    pub package_id: String,
+    pub version: String,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedBundleCodecV1 {
+    pub artifact_kind: String,
+    pub artifact_schema: String,
+    pub pack_schema_hash: String,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum TrustedBundleOpenRole {
+    Viewer,
+    Editor,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum TrustedBundleRendererTarget {
+    React,
+    Wgpu,
+    Wasm,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedBundleOpenTargetV1 {
+    pub artifact_kind: String,
+    pub artifact_schema: String,
+    pub pack_schema_hash: String,
+    pub surface_id: String,
+    pub app_id: String,
+    pub window_kind_id: String,
+    pub role: TrustedBundleOpenRole,
+    pub renderer_target: TrustedBundleRendererTarget,
+    pub parent_dialect: TrustedBundleParentDialectV1,
+    pub grant: TrustedBundleGrantV1,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedBundleGrantV1 {
+    pub read: bool,
+    pub write: bool,
+    pub observe: bool,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedBundleFileV1 {
+    pub path: String,
+    pub byte_length: u64,
+    pub sha256: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedBundleComponentV1 {
+    pub path: String,
+    pub byte_length: u64,
+    pub sha256: String,
+    pub blake3: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedBundlePackageV1 {
+    pub plugin_id: String,
+    pub package_id: String,
+    pub version: String,
+    pub role: TrustedBundlePackageRole,
+    pub execution_protocol: TrustedBundleExecutionProtocolV1,
+    pub dependencies: Vec<TrustedBundleIdentityV1>,
+    pub component: TrustedBundleComponentV1,
+    pub descriptor: TrustedBundleFileV1,
+    pub browser_actor: TrustedBundleBrowserActorV1,
+    pub native_codecs: Vec<TrustedBundleCodecV1>,
+    pub open_targets: Vec<TrustedBundleOpenTargetV1>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedBundleProfileV1 {
+    pub id: String,
+    pub selected_closure: Vec<TrustedBundleIdentityV1>,
+    pub selected_closure_sha256: String,
+    pub open_target: TrustedBundleProfileOpenTargetV1,
+    pub generation_id: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedBundleProfileOpenTargetV1 {
+    pub package: TrustedBundleIdentityV1,
+    pub target: TrustedBundleOpenTargetV1,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TrustedBundleV1 {
+    pub schema_version: u32,
+    pub profiles: Vec<TrustedBundleProfileV1>,
+    pub packages: Vec<TrustedBundlePackageV1>,
 }
 
 /// 📌️ The single durable selection token a hub start-up and every publisher agree on.

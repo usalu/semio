@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateLoadCase`.
 use super::CreateLoadCase;
-use crate::diff::{Fem3dDiff, Fem3dLoadCasesDelta};
-use crate::mutations::resolve_load;
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dLoadCasesDelta};
+use crate::standards::v1::subsets::any::schema::mutations::resolve_load;
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff

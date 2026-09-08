@@ -1,13 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/demonstrator/playground/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/demonstrator/playground/mutations.json",
   "title": "PlaygroundMutation",
   "oneOf": [
     {
-      "$ref": "./✒️change-schema/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/demonstrator/playground/mutation/change-schema/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-schema"
   ]
 }

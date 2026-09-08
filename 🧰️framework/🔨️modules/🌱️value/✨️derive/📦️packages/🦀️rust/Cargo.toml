@@ -46,3 +46,7 @@ path = "🧪️tests/🪗️flatten-with-skip.rs"
 [[test]]
 name = "newtype_transparent"
 path = "🧪️tests/🆔️newtype-transparent.rs"
+
+[[test]]
+name = "variant_field_casing"
+path = "🧪️tests/🐫️variant-field-casing.rs"

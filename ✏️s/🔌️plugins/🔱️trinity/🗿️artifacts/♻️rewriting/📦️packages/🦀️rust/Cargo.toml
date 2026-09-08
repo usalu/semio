@@ -16,7 +16,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract"]
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "semio-s-artifact-trinity-jack/component-app-assembly"]
 
 [dependencies]
 semio-framework-job = { workspace = true }

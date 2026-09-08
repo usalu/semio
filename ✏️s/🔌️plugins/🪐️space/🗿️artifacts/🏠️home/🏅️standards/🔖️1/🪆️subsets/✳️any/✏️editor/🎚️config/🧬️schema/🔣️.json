@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/app/space/home/config.json",
+  "$id": "https://semio.tech/schema/app/space/home/config/schema.json",
   "title": "HomeConfig",
   "type": "object",
   "additionalProperties": false,
@@ -147,7 +147,10 @@
         }
       },
       "title": "HomeProjectionPersistence",
-      "description": "The Home directory projection persistence wire law: the retained `directoryJson` read model must round-trip every document and indexed document, and corruption must be explicit rather than defaulted."
+      "description": "The Home directory projection persistence wire law: the retained `directoryJson` read model must round-trip every document and indexed document, and corruption must be explicit rather than defaulted.",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "HomeProjectionPersistenceSpaceView": {
       "type": "object",
@@ -219,7 +222,10 @@
           "type": "integer",
           "minimum": 0
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "HomeProjectionPersistenceMemberView": {
       "type": "object",
@@ -249,7 +255,10 @@
             "spectator"
           ]
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "HomeProjectionPersistenceUserView": {
       "type": "object",
@@ -277,7 +286,10 @@
           "type": "integer",
           "minimum": 0
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "HomeProjectionPersistenceIndexedDocument": {
       "type": "object",
@@ -349,7 +361,10 @@
           "type": "string",
           "minLength": 1
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "HomeProjectionPersistenceDocumentDescriptor": {
       "type": "object",
@@ -444,7 +459,49 @@
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "HomeDirectoryProjectionReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "sessionBindingSha256",
+        "authorizationGeneration",
+        "throughSeqInclusive",
+        "receiptSha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.space.home.directory-projection-receipt.v1"
+        },
+        "sessionBindingSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "authorizationGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "throughSeqInclusive": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "title": "HomeDirectoryProjectionReceipt",
+      "description": "🏠️ The directory-projection receipt the Home config surface publishes after applying one directory event page.",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

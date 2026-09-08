@@ -1,7 +1,7 @@
 //! 🏋️ 🏋️ Fem2d play app commands command — `add-load-case`.
 
-use crate::mutations::create_load_case;
-use crate::op::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::create_load_case;
+use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use crate::FemLoadCase;
 use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

@@ -35,11 +35,6 @@ impl crate::os_spr::MutationKind<DemoSnapshot, SeverityMutation> for SetErrorN {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn direct_fixture_leaf_contract() {
-        super::super::assert_fixture_descriptor::<SetErrorN>(include_str!("🔣️.json"));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

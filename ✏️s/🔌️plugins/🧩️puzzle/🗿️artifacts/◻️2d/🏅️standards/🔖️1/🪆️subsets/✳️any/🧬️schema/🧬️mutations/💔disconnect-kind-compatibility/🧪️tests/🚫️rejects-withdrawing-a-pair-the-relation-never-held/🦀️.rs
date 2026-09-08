@@ -6,8 +6,8 @@
 //! `🔺️diff/🚫️.absent` sentinel beside this file stands in its place, so nothing here invents an
 //! empty patch. The board is derived from the shipped `🏗️nakagin-capsule-tower` example, not invented.
 
-use crate::mutations::Puzzle2dMutation;
-use crate::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
 use crate::Puzzle2dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -44,7 +44,7 @@ fn the_refusal_is_the_declared_one() {
     let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     assert_eq!(
         produced.diff(),
-        &crate::diff::Puzzle2dDiff::default(),
+        &crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff::default(),
         "disconnect-kind-compatibility/rejects-withdrawing-a-pair-the-relation-never-held: a refusing diff builder answers the default diff, never a half-built delta"
     );
     let messages = produced.messages();

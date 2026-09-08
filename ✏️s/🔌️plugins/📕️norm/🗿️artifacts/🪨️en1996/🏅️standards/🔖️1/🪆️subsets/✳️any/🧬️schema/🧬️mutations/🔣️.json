@@ -1,97 +1,73 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1996/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/norm/en1996/mutations.json",
   "title": "En1996Mutation",
   "oneOf": [
     {
-      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "./📐️change-area-mm2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-area-mm2/schema.json"
     },
     {
-      "$ref": "./🥪️change-bed-joint-thickness-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-bed-joint-thickness-mm/schema.json"
     },
     {
-      "$ref": "./🎭️change-design-situation/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-design-situation/schema.json"
     },
     {
-      "$ref": "./💧️change-exposure/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-exposure/schema.json"
     },
     {
-      "$ref": "./✂️change-f-vk-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-f-vk-mpa/schema.json"
     },
     {
-      "$ref": "./🔥️change-fire-resistance-min/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-fire-resistance-min/schema.json"
     },
     {
-      "$ref": "./🗜️change-fk-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-fk-mpa/schema.json"
     },
     {
-      "$ref": "./↔️change-h-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-h-ed-kn/schema.json"
     },
     {
-      "$ref": "./↕️change-h-ef-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-h-ef-mm/schema.json"
     },
     {
-      "$ref": "./⤴️change-m-ed-knm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-m-ed-knm/schema.json"
     },
     {
-      "$ref": "./🏭️change-masonry-class/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-masonry-class/schema.json"
     },
     {
-      "$ref": "./🪣️change-mortar/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-mortar/schema.json"
     },
     {
-      "$ref": "./🧲️change-mu/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-mu/schema.json"
     },
     {
-      "$ref": "./🏋️change-n-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-n-ed-kn/schema.json"
     },
     {
-      "$ref": "./🧩️change-shear-area-mm2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-shear-area-mm2/schema.json"
     },
     {
-      "$ref": "./🏢️change-storeys/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-storeys/schema.json"
     },
     {
-      "$ref": "./📏️change-t-ef-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-t-ef-mm/schema.json"
     },
     {
-      "$ref": "./🧊️change-unit/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-unit/schema.json"
     },
     {
-      "$ref": "./🪚️change-v-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-v-ed-kn/schema.json"
     },
     {
-      "$ref": "./🧱️change-wall-thickness-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-wall-thickness-mm/schema.json"
     },
     {
-      "$ref": "./📊️change-z-mm3/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1996/mutation/change-z-mm3/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-annex",
-    "change-area-mm2",
-    "change-bed-joint-thickness-mm",
-    "change-design-situation",
-    "change-exposure",
-    "change-f-vk-mpa",
-    "change-fire-resistance-min",
-    "change-fk-mpa",
-    "change-h-ed-kn",
-    "change-h-ef-mm",
-    "change-m-ed-knm",
-    "change-masonry-class",
-    "change-mortar",
-    "change-mu",
-    "change-n-ed-kn",
-    "change-shear-area-mm2",
-    "change-storeys",
-    "change-t-ef-mm",
-    "change-unit",
-    "change-v-ed-kn",
-    "change-wall-thickness-mm",
-    "change-z-mm3"
   ]
 }

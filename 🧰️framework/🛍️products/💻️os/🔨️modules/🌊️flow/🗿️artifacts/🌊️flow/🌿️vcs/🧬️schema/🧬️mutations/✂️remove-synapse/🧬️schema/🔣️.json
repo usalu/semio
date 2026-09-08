@@ -1,9 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/os/flow/flow/vcs/mutation/remove-synapse/schema.json",
+  "$id": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/mutation/remove-synapse/schema.json",
   "title": "RemoveSynapse",
   "$defs": {
-    "payload": {
+    "Payload": {
       "type": "object",
       "properties": {
         "id": {
@@ -17,7 +17,7 @@
   },
   "allOf": [
     {
-      "$ref": "#/$defs/payload"
+      "$ref": "#/$defs/Payload"
     }
   ],
   "propertyNames": {

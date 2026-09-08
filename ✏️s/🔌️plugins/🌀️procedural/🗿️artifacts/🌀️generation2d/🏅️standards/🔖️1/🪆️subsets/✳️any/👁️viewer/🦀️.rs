@@ -36,7 +36,7 @@ pub struct Generation2dViewer;
 
 impl ArtifactViewer for Generation2dViewer {
     type Snapshot = Generation2dSnapshot;
-    type Mutation = crate::op::Generation2dMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -49,7 +49,7 @@ impl ArtifactViewer for Generation2dViewer {
     const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;
 
     fn initial_snapshot() -> Generation2dSnapshot {
-        crate::schema::default_snapshot()
+        crate::standards::v1::subsets::any::schema::default_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Generation2dViewCommand::Noop` variant never carries a
@@ -91,19 +91,6 @@ pub fn create_generation2d_viewer() -> semio_framework_plugin::AppDefinition {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn create_generation2d_viewer_builds_a_definition_for_the_viewer_role() {
-        let def = create_generation2d_viewer();
-        assert_eq!(def.role, semio_framework::AppRole::Viewer);
-        assert_eq!(def.dialect, GENERATION2D_DIALECT.into());
-    }
-
-    #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
-        assert_eq!(<Generation2dViewer as ArtifactViewer>::DIALECT, GENERATION2D_DIALECT);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

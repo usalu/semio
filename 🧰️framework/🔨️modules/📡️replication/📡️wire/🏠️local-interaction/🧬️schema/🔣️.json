@@ -7,11 +7,6 @@
       "type": "string",
       "minLength": 1
     },
-    "generation": {
-      "type": "string",
-      "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-4]|18446744073709551615)$",
-      "maxLength": 20
-    },
     "revision": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
@@ -21,36 +16,6 @@
         "single",
         "multiple"
       ]
-    },
-    "identity": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "appInstanceId",
-        "generation",
-        "revision",
-        "documentRevision",
-        "topologyRevision"
-      ],
-      "properties": {
-        "appInstanceId": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "generation": {
-          "$ref": "#/definitions/generation"
-        },
-        "revision": {
-          "$ref": "#/definitions/revision"
-        },
-        "documentRevision": {
-          "$ref": "#/definitions/revision"
-        },
-        "topologyRevision": {
-          "$ref": "#/definitions/revision"
-        }
-      }
     },
     "selection": {
       "type": "object",
@@ -75,85 +40,6 @@
         }
       }
     },
-    "state": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "selection",
-        "activeMode",
-        "activeGranularity"
-      ],
-      "properties": {
-        "selection": {
-          "type": "object",
-          "propertyNames": {
-            "$ref": "#/definitions/id"
-          },
-          "additionalProperties": {
-            "$ref": "#/definitions/selection"
-          }
-        },
-        "activeMode": {
-          "type": "object",
-          "propertyNames": {
-            "$ref": "#/definitions/id"
-          },
-          "additionalProperties": {
-            "$ref": "#/definitions/mode"
-          }
-        },
-        "activeGranularity": {
-          "type": "object",
-          "propertyNames": {
-            "$ref": "#/definitions/id"
-          },
-          "additionalProperties": {
-            "$ref": "#/definitions/id"
-          }
-        }
-      }
-    },
-    "domainPatch": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "selection",
-        "activeMode",
-        "activeGranularity"
-      ],
-      "properties": {
-        "selection": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/selection"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "activeMode": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/mode"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "activeGranularity": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/id"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
     "capture": {
       "type": "object",
       "additionalProperties": false,
@@ -163,10 +49,10 @@
       ],
       "properties": {
         "identity": {
-          "$ref": "#/definitions/identity"
+          "$ref": "#/$defs/Identity"
         },
         "state": {
-          "$ref": "#/definitions/state"
+          "$ref": "#/$defs/State"
         }
       }
     },
@@ -185,10 +71,10 @@
               "const": "full"
             },
             "base": {
-              "$ref": "#/definitions/identity"
+              "$ref": "#/$defs/Identity"
             },
             "state": {
-              "$ref": "#/definitions/state"
+              "$ref": "#/$defs/State"
             }
           }
         },
@@ -205,7 +91,7 @@
               "const": "domains"
             },
             "base": {
-              "$ref": "#/definitions/identity"
+              "$ref": "#/$defs/Identity"
             },
             "domains": {
               "type": "object",
@@ -213,50 +99,12 @@
                 "$ref": "#/definitions/id"
               },
               "additionalProperties": {
-                "$ref": "#/definitions/domainPatch"
+                "$ref": "#/$defs/DomainPatch"
               }
             }
           }
         }
       ]
-    },
-    "page": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "requestId",
-        "queryGeneration",
-        "identity",
-        "ordinal",
-        "terminal",
-        "bytes"
-      ],
-      "properties": {
-        "requestId": {
-          "$ref": "#/definitions/generation"
-        },
-        "queryGeneration": {
-          "$ref": "#/definitions/generation"
-        },
-        "identity": {
-          "$ref": "#/definitions/identity"
-        },
-        "ordinal": {
-          "$ref": "#/definitions/generation"
-        },
-        "terminal": {
-          "type": "boolean"
-        },
-        "bytes": {
-          "type": "array",
-          "maxItems": 4096,
-          "items": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 255
-          }
-        }
-      }
     }
   },
   "$defs": {
@@ -348,7 +196,7 @@
           "minItems": 1,
           "uniqueItems": true,
           "items": {
-            "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/id"
+            "$ref": "#/definitions/id"
           }
         },
         "cases": {
@@ -397,16 +245,16 @@
                 "minLength": 1
               },
               "before": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/state"
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/State"
               },
               "current": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/identity"
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/Identity"
               },
               "restore": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/restore"
+                "$ref": "#/definitions/restore"
               },
               "expected": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/state"
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/State"
               },
               "error": {
                 "const": "stale-authority"
@@ -416,7 +264,7 @@
               {
                 "properties": {
                   "expected": {
-                    "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/state"
+                    "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/State"
                   }
                 },
                 "required": [
@@ -585,10 +433,10 @@
                 "maximum": 255
               },
               "uiGeneration": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/generation"
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/Generation"
               },
               "expected": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/revision"
+                "$ref": "#/definitions/revision"
               }
             }
           }
@@ -613,9 +461,161 @@
           "$ref": "#/definitions/restore"
         },
         {
-          "$ref": "#/definitions/page"
+          "$ref": "#/$defs/Page"
         }
       ]
+    },
+    "Generation": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-4]|18446744073709551615)$",
+      "maxLength": 20
+    },
+    "Identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "appInstanceId",
+        "generation",
+        "revision",
+        "documentRevision",
+        "topologyRevision"
+      ],
+      "properties": {
+        "appInstanceId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "generation": {
+          "$ref": "#/$defs/Generation"
+        },
+        "revision": {
+          "$ref": "#/definitions/revision"
+        },
+        "documentRevision": {
+          "$ref": "#/definitions/revision"
+        },
+        "topologyRevision": {
+          "$ref": "#/definitions/revision"
+        }
+      }
+    },
+    "Page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "queryGeneration",
+        "identity",
+        "ordinal",
+        "terminal",
+        "bytes"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "#/$defs/Generation"
+        },
+        "queryGeneration": {
+          "$ref": "#/$defs/Generation"
+        },
+        "identity": {
+          "$ref": "#/$defs/Identity"
+        },
+        "ordinal": {
+          "$ref": "#/$defs/Generation"
+        },
+        "terminal": {
+          "type": "boolean"
+        },
+        "bytes": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "State": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selection",
+        "activeMode",
+        "activeGranularity"
+      ],
+      "properties": {
+        "selection": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/definitions/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/selection"
+          }
+        },
+        "activeMode": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/definitions/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/mode"
+          }
+        },
+        "activeGranularity": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/definitions/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/id"
+          }
+        }
+      }
+    },
+    "DomainPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selection",
+        "activeMode",
+        "activeGranularity"
+      ],
+      "properties": {
+        "selection": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/selection"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "activeMode": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/mode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "activeGranularity": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
     }
   }
 }

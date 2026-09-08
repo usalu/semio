@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `UpdateAnalysisSettings`.
 use super::UpdateAnalysisSettings;
-use crate::diff::Fem3dDiff;
-use crate::mutations::{analysis_breach, invariant};
+use crate::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::{analysis_breach, invariant};
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff

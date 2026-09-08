@@ -15,7 +15,7 @@ import { mutationCatalogProblems } from "../../../🧪️test/📦️packages/�
 
 const root = import.meta.dir;
 const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8"));
+const schema = JSON.parse(readFileSync(join(root, "🛂️schema/🔣️.json"), "utf8"));
 
 test("mutation catalogs resolve only explicitly registered same-artifact and same-standard source owners", () => {
   const contract = fixture.mutationCatalogSourceOwnership, sourceRoot = `${contract.source}/🧬️schema/🧬️mutations`;
@@ -279,13 +279,14 @@ test("TSV mutation payload schemas resolve with camel-case language-neutral cont
 
 test("payload schema authority rejects duplicate decoded JSON members", () => {
   const contract = fixture.mutationPayloadOwnership, ajv = new Ajv({ strict: false });
+  const payloadRelative = mutationPayloadSchemaRelativePath(loadCatalogTaxonomy());
   for (const row of contract.rawDocuments) {
     const errors: ParseError[] = [], tree = parseTree(row.content, errors, { disallowComments: true, allowTrailingComma: false });
     const uniqueMembers = (node: JsonNode): boolean => (node.type !== "object" || new Set(node.children?.map((child) => child.children?.[0]?.value)).size === node.children?.length) && (node.children ?? []).every(uniqueMembers);
     const oracle = errors.length === 0 && tree !== undefined && uniqueMembers(tree) && ajv.validateSchema(JSON.parse(row.content));
     expect(Boolean(oracle)).toBe(row.expected);
-    const target = `${contract.owner}/🧬️.schema.json`;
-    expect(mutationPayloadSchemaProblems(contract.owner, "🧬️.schema.json", (path) => path === target ? { kind: "file", content: row.content } : { kind: "directory" }).length === 0).toBe(row.expected);
+    const target = `${contract.owner}/${payloadRelative}`;
+    expect(mutationPayloadSchemaProblems(contract.owner, payloadRelative, (path) => path === target ? { kind: "file", content: row.content } : { kind: "directory" }).length === 0).toBe(row.expected);
   }
 });
 
@@ -325,11 +326,11 @@ test("normalization requires one exact descriptor authority per admitted mutatio
   const taxonomy = loadCatalogTaxonomy(), contract = fixture.mutationPayloadOwnership;
   const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
   const definition = source.match(/^function validateMutationPayloadSchemas\([\s\S]*?^\}/mu)![0];
-  const mutationRoot = "🗿️fixture/🧬️schema/🧬️mutations";
+  const mutationRoot = "🗿️fixture/🧬️schema/🧬️mutations", payloadRelative = mutationPayloadSchemaRelativePath(taxonomy);
   for (const owner of [`${mutationRoot}/🌱️create-access-rule`, `${mutationRoot}/🔑️access-rule/🌱️create`]) for (const row of contract.descriptors) {
     const discoverySchema = { ...taxonomy, mutationDomainOwners: owner.endsWith("/🌱️create") ? { [mutationRoot]: fixture.mutationDomainContract.domains } : {} };
-    const descriptorPath = `${owner}/🔣️.json`, target = `${owner}/🧬️.schema.json`, extra = `${owner}/🪪️descriptor.json`;
-    const descriptor = { schemaVersion: 1, owner, semanticKind: "create-access-rule", payloadSchema: "🧬️.schema.json", requiredLanguageSurfaces: ["json-schema"] };
+    const descriptorPath = `${owner}/🔣️.json`, target = `${owner}/${payloadRelative}`, extra = `${owner}/🪪️descriptor.json`;
+    const descriptor = { schemaVersion: 1, owner, semanticKind: "create-access-rule", payloadSchema: payloadRelative, requiredLanguageSurfaces: ["json-schema"] };
     const documents = new Map([[target, JSON.stringify(contract.document)]]);
     if (row.present) documents.set(descriptorPath, JSON.stringify(descriptor));
     if (row.extra !== "absent") documents.set(extra, JSON.stringify(row.extra === "descriptor" ? descriptor : contract.document));
@@ -340,6 +341,13 @@ test("normalization requires one exact descriptor authority per admitted mutatio
     for (let index = 1; index < segments.length; index++) {
       const path = segments.slice(0, index).join("/");
       entries.set(path, { sourcePath: path, normalizedPath: path, nodeKind: "directory", violations: [] });
+    }
+    for (const document of documents.keys()) {
+      const parts = document.split("/");
+      for (let index = segments.length + 1; index < parts.length; index++) {
+        const path = parts.slice(0, index).join("/");
+        entries.set(path, { sourcePath: path, normalizedPath: path, nodeKind: "directory", violations: [] });
+      }
     }
     const support = { basename, dirname, Buffer, jsonDocumentDuplicateKeys, mutationOwnerIdentity, mutationPayloadSchemaProblems, record: (value: unknown) => value, readFileSync: (path: string) => Buffer.from(documents.get(path)!), assertLexicalInputOutsideOpaque: (_root: string, path: string) => path, isExcluded: () => false, violation: (code: string, path: string, detail: string) => ({ code, path, detail }) };
     for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {

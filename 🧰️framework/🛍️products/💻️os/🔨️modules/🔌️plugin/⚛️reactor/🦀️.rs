@@ -44,17 +44,17 @@ use semio_framework_ui_contract as ui_contract;
 // are only named inside `wit_bridge::poll`'s intent-batching loop (M1, ticket 26/08/17
 // `design-unified.md`) — gated identically to that module so an ungated alias never warns as unused
 // on native.
+#[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
+use semio_framework::kernel::{RequestOutcome, UiPatchOp};
 /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): standalone — needs no `EntityStore`/`UiRuntime`, just
 /// `record_own`/`record_peer`/`expire`/`flush` — so unlike the two imports directly above, this one
 /// is ungated: the `PRESENCE` thread_local right below references it on EVERY build, matching how
 /// `patches::PatchTracker` (an equally wit_bridge-only consumer) is reached through the ungated
 /// `pub mod patches;` at this file's top.
 use semio_framework_ui_runtime::PresenceHub;
-use semio_framework_ui_runtime::{DEFAULT_REVISION_TOLERANCE, is_stale_intent};
 #[cfg(test)]
 use semio_framework_ui_runtime::SurfaceReconcileReadyPatch;
-#[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
-use semio_framework::kernel::{RequestOutcome, UiPatchOp};
+use semio_framework_ui_runtime::{is_stale_intent, DEFAULT_REVISION_TOLERANCE};
 use std::cell::{Cell, RefCell};
 // 🧵️ Turn-local command/intent grouping and the pre-admitted task-resume ring use these
 // collections; all identity and close authority is held by fixed direct registries below.
@@ -66,27 +66,12 @@ const RECONCILE_STEP_OPPORTUNITY_LIMIT: u64 = 1_024;
 fn shell_fault_effect(instance: u32, fault: &semio_framework::Fault) -> Effect {
     let fault = store::pack_rt::encode_wire_value(&dsl::to_dsl_value(fault).expect("shell diagnostic must serialize"));
     let frame = protocol::AppFrame::Error { in_reply_to: None, fault, report: Vec::new() };
-    Effect::SendMessage {
-        target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
-        payload: semio_framework::io::resolve_ready(protocol::encode_app_frame(&frame)),
-    }
+    Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: semio_framework::io::resolve_ready(protocol::encode_app_frame(&frame)) }
 }
 
 #[cfg(test)]
-mod shell_fault_frame_tests {
-    #[semio_framework_async_macros::async_test]
-    async fn shell_fault_frame_round_trips_the_language_neutral_diagnostic() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).unwrap();
-        let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-render"), fixture["wire"]["fault"].as_str().unwrap());
-        let semio_framework::kernel::Effect::SendMessage { target, payload } = super::shell_fault_effect(7, &fault) else { panic!("shell diagnostic effect") };
-        assert!(matches!(target, semio_framework::kernel::MessageEndpoint::Shell { instance } if instance.0 == "7"));
-        let protocol::AppFrame::Error { in_reply_to, fault: bytes, report } = protocol::decode_app_frame(&payload).await.expect("shell diagnostic must use the app frame protocol") else { panic!("shell diagnostic error frame") };
-        assert_eq!(in_reply_to, None);
-        assert!(report.is_empty());
-        let decoded: semio_framework::Fault = dsl::from_dsl_value(store::pack_rt::decode_wire_value(&bytes).unwrap()).unwrap();
-        assert_eq!(serde_json::Value::from(protocol::ToValue::to_value(&decoded)), serde_json::Value::from(protocol::ToValue::to_value(&fault)));
-    }
-}
+#[path = "🧪️tests/🔬️shell-fault-frame/🦀️.rs"]
+mod shell_fault_frame_tests;
 //#endregion 📬️ShellFaultFrame
 
 fn reconcile_step_opportunities(fuel: u64) -> usize {
@@ -226,32 +211,8 @@ impl JobRenderBindingRegistry {
 }
 
 #[cfg(test)]
-mod job_render_binding_tests {
-    use super::*;
-
-    #[test]
-    fn progress_accepts_only_the_current_instance_generation() {
-        let mut registry = JobRenderBindingRegistry::new();
-        let first = registry.bind(7, 41).expect("first binding");
-        assert_eq!(registry.accepted(41), Some(first));
-        let second = registry.bind(7, 42).expect("superseding binding");
-        assert_ne!(first.generation, second.generation);
-        assert_eq!(registry.accepted(41), None);
-        assert_eq!(registry.accepted(42), Some(second));
-        assert_eq!(registry.complete(41), None);
-        assert_eq!(registry.complete(42), Some(second));
-    }
-
-    #[test]
-    fn direct_slots_reject_collisions_and_close_exactly_one_instance() {
-        let mut registry = JobRenderBindingRegistry::new();
-        let binding = registry.bind(3, 9).expect("binding");
-        assert!(registry.bind(3 + REACTOR_TASK_SLOTS as u32, 10).is_err());
-        assert!(registry.bind(4, 9 + REACTOR_TASK_SLOTS as u64).is_err());
-        registry.close_instance(3);
-        assert_eq!(registry.accepted(binding.job), None);
-    }
-}
+#[path = "🧪️tests/🔬️job-render-binding/🦀️.rs"]
+mod job_render_binding_tests;
 
 struct ReactorFixedSlots<T> {
     values: Box<[std::mem::MaybeUninit<T>]>,
@@ -364,7 +325,11 @@ impl TaskRecordRegistry {
     #[cfg(test)]
     fn remove(&mut self, id: executor::TaskId) -> Option<TaskRecord> {
         let index = Self::index(id);
-        if self.slots.get(index).is_none_or(|(candidate, _)| *candidate != id) { None } else { self.slots.take(index).map(|(_, record)| record) }
+        if self.slots.get(index).is_none_or(|(candidate, _)| *candidate != id) {
+            None
+        } else {
+            self.slots.take(index).map(|(_, record)| record)
+        }
     }
 
     #[cfg(test)]
@@ -424,7 +389,6 @@ impl ReactorCloseRegistry {
     fn take_at(&mut self, index: usize) -> Option<ReactorCloseState> {
         self.slots.take(index)
     }
-
 }
 
 const PLUGIN_REACTOR_INSTANCE_SLOTS: usize = 1_024;
@@ -582,7 +546,11 @@ impl InstanceMetadataRegistry {
 
     fn remove(&mut self, instance: u32) -> Option<InstanceMetadata> {
         let index = Self::index(instance);
-        if self.slots.get(index).is_some_and(|entry| entry.instance == instance) { self.slots.take(index) } else { None }
+        if self.slots.get(index).is_some_and(|entry| entry.instance == instance) {
+            self.slots.take(index)
+        } else {
+            None
+        }
     }
 
     fn checkpoint_rows(&self) -> Vec<(u32, String)> {
@@ -598,7 +566,11 @@ impl InstanceMetadataRegistry {
 enum TaskResumeOutcome {
     Command(Vec<u8>),
     #[cfg(test)]
-    Emit { artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8> },
+    Emit {
+        artifact_ops: Vec<u8>,
+        config_ops: Vec<u8>,
+        draft_ops: Vec<u8>,
+    },
     #[cfg(test)]
     Fault(semio_framework::Fault),
 }
@@ -1079,43 +1051,8 @@ fn terminal_command_ingress(cursor: semio_framework::kernel::CommandPageCursor, 
 }
 
 #[cfg(test)]
-mod command_ingress_terminal_tests {
-    #[test]
-    fn accepted_final_page_completes_without_a_follow_up_turn() {
-        let cursor = semio_framework::kernel::CommandPageCursor { owner: 7, generation: 11, command_index: 0, command_count: 1, instance: 13, seq: 17, kind: 19, page_index: 0, page_count: 1, item_count: 0, metadata: 0 };
-
-        assert!(matches!(
-            super::terminal_command_ingress(cursor, None),
-            semio_framework::kernel::CommandIngressStatus::CommandComplete(terminal)
-                if terminal.owner == 7 && terminal.page_index == 1
-        ));
-    }
-
-    #[test]
-    fn accepted_final_page_preserves_a_terminal_fault() {
-        let cursor = semio_framework::kernel::CommandPageCursor { owner: 7, generation: 11, command_index: 0, command_count: 1, instance: 13, seq: 17, kind: 19, page_index: 0, page_count: 1, item_count: 0, metadata: 0 };
-
-        assert!(matches!(
-            super::terminal_command_ingress(cursor, Some(b"rejected".to_vec())),
-            semio_framework::kernel::CommandIngressStatus::Fault { cursor: terminal, fault }
-                if terminal.page_index == 1 && fault == b"rejected"
-        ));
-    }
-
-    #[test]
-    fn async_actor_poll_awaits_exchange_and_render_work() {
-        let source = include_str!("🔄️turn/🦀️.rs");
-        let start = source.find("pub async fn poll_kernel<").expect("native kernel poll");
-        let end = source[start..].find("fn route_exchange_output").map(|offset| start + offset).expect("poll implementation boundary");
-        let poll = &source[start..end];
-        assert!(poll.contains("pub async fn poll_kernel<"));
-        assert!(poll.contains("plugin_exchange(runtime, cursor.instance, None).await"));
-        assert!(poll.contains("plugin_exchange(runtime, cursor.instance, Some((cursor.seq, command))).await"));
-        assert!(poll.contains("plugin_render(runtime, instance, &body_key, \"{}\").await"));
-        assert!(!poll.contains("resolve_ready(crate::plugin_runtime::plugin_exchange"));
-        assert!(!poll.contains("resolve_ready(crate::plugin_runtime::plugin_render"));
-    }
-}
+#[path = "🧪️tests/🔬️command-ingress-terminal/🦀️.rs"]
+mod command_ingress_terminal_tests;
 //#endregion 🔁️CommandIngressTerminal
 
 /// 🧬️ Everything below crosses the wasm component boundary — gated identically to `component`
@@ -1703,171 +1640,8 @@ mod wit_bridge {
 /// park, get resolved by an injected completion, resume — is exercised end-to-end without needing
 /// a wasm32-wasip2 build. `pub(crate)`, `#[cfg(test)]`-gated: never part of the real API surface.
 #[cfg(test)]
-pub(crate) mod test_support {
-    use super::*;
-
-    pub(crate) fn queue_external_patch(patch: UiPatch) {
-        pending::with_state(|pending| pending.borrow_mut().push_external(patch)).unwrap();
-    }
-
-    pub(crate) fn patch_receipt_is_issued(receipt: ActorUiPatchReceipt) -> bool {
-        pending::with_state(|pending| pending.borrow().receipt_is_issued(receipt))
-    }
-
-    pub(crate) async fn poll_with_patch_output_fault<PA: crate::app::PluginApp>(
-        runtime: &crate::plugin_runtime::PluginRuntime<PA>,
-        events: Vec<Event>,
-        budget: semio_framework::kernel::Budget,
-        late_clock: bool,
-    ) -> (Result<(), semio_framework::Fault>, Option<ActorUiPatchReceipt>) {
-        let mut receipt = None;
-        let result = turn::poll_kernel_output(
-            runtime,
-            events,
-            None,
-            None,
-            budget,
-            |result| {
-                receipt = result.ui_patch_receipt;
-                if late_clock {
-                    std::thread::sleep(std::time::Duration::from_millis(9));
-                    Ok(())
-                } else {
-                    Err(reactor_close_fault("injected output conversion failure"))
-                }
-            },
-            |_, ()| (),
-        )
-        .await;
-        (result, receipt)
-    }
-
-    pub(crate) async fn poll_with_output_failure<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, events: Vec<Event>, budget: semio_framework::kernel::Budget) -> Result<(), semio_framework::Fault> {
-        turn::poll_kernel_output(runtime, events, None, None, budget, |_| Err(reactor_close_fault("injected output conversion failure")), |_, ()| ()).await
-    }
-
-    /// ▶️ The exact `run_until_idle` call `poll` makes after routing events, exposed directly.
-    pub(crate) async fn run_until_idle(max_iterations: u32) -> bool {
-        TEST_FUTURE_EXECUTOR.with(|executor| executor.run_until_idle(max_iterations))
-    }
-
-    /// ✅️ The exact `REGISTRY::resolve` call `poll`'s `Event::Completed` arm makes, exposed
-    /// directly — the native stand-in for "an injected `Event::Completed`".
-    pub(crate) async fn resolve_request(id: u64, result: Result<Vec<u8>, semio_framework::Fault>) {
-        REGISTRY.with(|registry| registry.resolve(semio_framework::kernel::RequestId(id), result));
-    }
-
-    /// 📬️ Pops one `TASK_RESUMES` entry, erased to `plugin_runtime::TaskResumeInput` (a `Fault`
-    /// resolution surfaces as `Err` here instead — `drain_task_resumes` frames that straight to
-    /// the shell without ever reaching `plugin_runtime`, so a test asserting on it never needs
-    /// `plugin_resume_task` at all).
-    pub(crate) async fn pop_task_resume() -> Option<(u32, crate::app::ActionMeta, Result<crate::plugin_runtime::TaskResumeInput, semio_framework::Fault>)> {
-        TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop()).map(|resume| {
-            let input = match resume.outcome {
-                TaskResumeOutcome::Command(bytes) => Ok(crate::plugin_runtime::TaskResumeInput::Command(bytes)),
-                #[cfg(test)]
-                TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => Ok(crate::plugin_runtime::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops }),
-                #[cfg(test)]
-                TaskResumeOutcome::Fault(fault) => Err(fault),
-            };
-            (resume.instance, resume.meta, input)
-        })
-    }
-
-    pub(crate) async fn task_count_for_instance(instance: u32) -> usize {
-        TASK_RECORDS.with(|records| records.borrow().count_instance(instance))
-    }
-
-    pub(crate) async fn task_key_is_live(instance: u32, key: &str) -> bool {
-        TASK_RECORDS.with(|records| records.borrow().find_key(instance, key).is_some())
-    }
-
-    pub(crate) async fn set_instance_quota(instance: u32, outstanding_requests: u64) {
-        INSTANCE_METADATA.with(|metadata| {
-            let mut metadata = metadata.borrow_mut();
-            if let Some(entry) = metadata.slots.get_mut(InstanceMetadataRegistry::index(instance)).filter(|entry| entry.instance == instance) {
-                entry.quota.outstanding_requests = Some(outstanding_requests);
-            } else {
-                let _ = metadata.insert(instance, "test".into(), semio_framework::kernel::QuotaSchema { outstanding_requests: Some(outstanding_requests), ..Default::default() });
-            }
-        });
-    }
-
-    pub(crate) async fn pending_request_count() -> usize {
-        REGISTRY.with(|registry| registry.pending_ids().len())
-    }
-
-    /// 🚫️ The exact `RequestRegistry::cancel_instance` call `poll`'s `Event::InstanceClose` arm
-    /// makes right after `cancel_instance_tasks`, exposed directly for a test to run the SAME
-    /// two-step sequence natively.
-    pub(crate) async fn cancel_instance_registry_requests(instance: u32) -> usize {
-        REGISTRY.with(|registry| {
-            let before = registry.pending_ids().len();
-            let mut cursor = registry.begin_cancel_instance(instance);
-            while registry.cancel_instance_step(&mut cursor) != requests::RequestCloseStep::Complete {}
-            before.saturating_sub(registry.pending_ids().len())
-        })
-    }
-
-    //#region 🔖️M2PresenceHooks
-    /// 🎯️ M1: the exact `PATCHES.revision` read `poll`'s intent-batching loop guards every
-    /// `UiIntent` against, exposed directly.
-    pub(crate) async fn patches_revision(surface: &str) -> ui_contract::UiRevision {
-        PATCHES.with(|patches| patches.revision(surface))
-    }
-
-    /// 🩹️ Test-only completion driver over the same retained mounted authority.
-    pub(crate) async fn patches_diff(surface: &str, tree: semio_framework_ui_runtime::ComponentTree) -> Option<UiPatch> {
-        PATCHES.with(|patches| {
-            if !patches.can_begin(surface) {
-                return None;
-            }
-            if let Err((surface, tree)) = patches.begin(surface.to_string(), tree) {
-                let _ = patches.retain_unadmitted(surface, tree);
-                return None;
-            }
-            for _ in 0..512 {
-                patches.drive_one();
-                if let Some(mut owner) = patches.take_ready_patch() {
-                    let mut payload = ui_contract::UiPendingPatch::default();
-                    let mut published = None;
-                    let bytes = owner.publish_into(&mut payload, &mut published, SurfaceReconcileReadyPatch::required_publish_bytes()).expect("test-owned publication grant");
-                    assert!(bytes > 0);
-                    let patch = payload.source_mut().expect("test-owned writable payload").take();
-                    while !owner.close_step_with_grant(1, 4096).expect("test ready close").complete {}
-                    if let Some(mut published) = published {
-                        while !published.close_step_with_grant(1, 4096).expect("test published close").complete {}
-                    }
-                    return patch;
-                }
-            }
-            None
-        })
-    }
-
-    /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): the exact `PRESENCE.record_own` call `poll`'s
-    /// dirty-render loop makes for each drained `PresenceUpdate`, exposed directly.
-    pub(crate) async fn presence_record_own(surface: &str, node_key: &str, own: ui_contract::OwnPresence, ttl_ms: u32) {
-        let surface = ui_contract::SurfaceId::try_from(surface).expect("bounded test surface");
-        PRESENCE.with(|hub| hub.borrow_mut().record_own(surface, node_key.to_string(), own, ttl_ms));
-    }
-
-    /// 👥️ M2: the exact `PRESENCE.record_peer` call, exposed directly.
-    pub(crate) async fn presence_record_peer(surface: &str, node_key: &str, mark: ui_contract::PeerMark, ttl_ms: u32, now_ms: u64) {
-        let surface = ui_contract::SurfaceId::try_from(surface).expect("bounded test surface");
-        PRESENCE.with(|hub| hub.borrow_mut().record_peer(surface, node_key.to_string(), mark, ttl_ms, now_ms));
-    }
-
-    /// 👥️ M2: the exact `expire`-then-`flush` sequence `poll` runs once per turn, exposed directly.
-    pub(crate) async fn presence_expire_and_flush(now_ms: u64) -> Vec<ui_contract::PresenceUpdate> {
-        PRESENCE.with(|hub| {
-            let mut hub = hub.borrow_mut();
-            hub.expire(now_ms);
-            hub.flush()
-        })
-    }
-    //#endregion 🔖️M2PresenceHooks
-}
+#[path = "🧪️tests/🔬️test-support/🦀️.rs"]
+pub(crate) mod test_support;
 
 //#region 🧪️M1M2ReactorTests
 /// 🎯️👥️ M1/M2 (ticket 26/08/17 `design-unified.md`) acceptance, driven through `test_support`'s
@@ -1875,119 +1649,10 @@ pub(crate) mod test_support {
 /// and dirty-render loops touch, exercised without needing a wasm32-wasip2 build (`poll` itself,
 /// gated to `wit_bridge`, cannot run under a native `cargo test` — see `test_support`'s own doc).
 #[cfg(test)]
-mod m1_m2_reactor_tests {
-    use super::test_support::*;
-    use semio_framework_ui_contract as ui_contract;
-    use semio_framework_ui_runtime::{ComponentTree, TreeNode};
-
-    fn leaf(key: &str) -> ComponentTree {
-        ComponentTree { root: TreeNode::try_new(key, ui_contract::Component::Separator(ui_contract::SeparatorProps {})).unwrap_or_else(|_| panic!("bounded test tree")) }
-    }
-
-    /// 🎯️ M1: `PATCHES.revision` reads 0 for a surface `poll` has never rendered, and
-    /// `ui_runtime::is_stale_intent` correctly classifies an intent at/behind/beyond the tolerance
-    /// against it — the exact two calls `poll`'s `Event::UiIntent` arm chains together.
-    #[semio_framework_async_macros::async_test]
-    async fn revision_guard_never_rejects_an_intent_at_the_never_rendered_default() {
-        let current = patches_revision("never-rendered").await;
-        assert_eq!(current, ui_contract::UiRevision(0));
-        assert!(!semio_framework_ui_runtime::is_stale_intent(ui_contract::UiRevision(0), current, semio_framework_ui_runtime::DEFAULT_REVISION_TOLERANCE));
-    }
-
-    /// 🎯️ M1: after one real render bumps `PATCHES`'s revision to 1, an intent stamped at revision
-    /// 0 (trailing by exactly the default tolerance of 1) is NOT stale — but one that trails by 2
-    /// (as if two more renders had happened since the client last saw the surface) IS. This is
-    /// exactly the acceptance criterion "an intent whose revision trails by 2 produces no patch and
-    /// no command" reduced to the guard `poll` evaluates before ever reaching dispatch.
-    #[semio_framework_async_macros::async_test]
-    async fn revision_guard_rejects_an_intent_trailing_by_more_than_the_tolerance() {
-        patches_diff("s", leaf("root")).await;
-        patches_diff("s", leaf("root2")).await;
-        patches_diff("s", leaf("root3")).await;
-        let current = patches_revision("s").await;
-        assert_eq!(current, ui_contract::UiRevision(3));
-        assert!(!semio_framework_ui_runtime::is_stale_intent(ui_contract::UiRevision(2), current, semio_framework_ui_runtime::DEFAULT_REVISION_TOLERANCE), "trailing by exactly the tolerance must still dispatch");
-        assert!(semio_framework_ui_runtime::is_stale_intent(ui_contract::UiRevision(1), current, semio_framework_ui_runtime::DEFAULT_REVISION_TOLERANCE), "trailing by 2 must be rejected — no patch, no command");
-    }
-
-    /// 👥️ M2 acceptance: a turn where only presence changed touches `PRESENCE` and leaves `PATCHES`
-    /// completely untouched — no revision bump, no patch, because the two channels share no code
-    /// path (by construction: `stamp_and_cache_interaction_ui` writes `pending_presence`, never
-    /// `PENDING_PATCHES`/`PATCHES`).
-    #[semio_framework_async_macros::async_test]
-    async fn a_presence_only_turn_emits_presence_and_zero_patches() {
-        let before = patches_revision("presence-only").await;
-        presence_record_own("presence-only", "row-1", ui_contract::OwnPresence { selected: true, ..Default::default() }, 4_000).await;
-        let updates = presence_expire_and_flush(0).await;
-        assert_eq!(updates.len(), 1);
-        assert!(updates[0].own.selected);
-        // 🩹️ Zero ui_patches: the surface's revision is EXACTLY what it was before — nothing was ever
-        // diffed against `PATCHES` for it, so there is nothing for a subsequent `poll` to have sent.
-        assert_eq!(patches_revision("presence-only").await, before);
-    }
-
-    /// 👥️ M2 acceptance: a burst of same-key presence writes between two flushes coalesces to ONE
-    /// update per `(surface, node_key)` — the property `PresenceHub` itself guarantees, exercised
-    /// here through the reactor's own `PRESENCE` wiring rather than the hub in isolation.
-    #[semio_framework_async_macros::async_test]
-    async fn a_burst_of_same_key_presence_writes_between_polls_coalesces_to_one_update() {
-        let mark = |selected: bool, hovered: bool| ui_contract::PeerMark { actor: "user:bob#s1".into(), color: Some(2), hovered, selected, label: "user:bob#s1".into() };
-        presence_record_peer("burst", "row-1", mark(false, true), 4_000, 0).await;
-        presence_record_peer("burst", "row-1", mark(true, true), 4_000, 10).await;
-        presence_record_peer("burst", "row-1", mark(true, false), 4_000, 20).await;
-        let updates = presence_expire_and_flush(20).await;
-        assert_eq!(updates.len(), 1, "a burst on one key must cost exactly one update, got {updates:?}");
-        assert_eq!(updates[0].peers.len(), 1);
-        assert!(updates[0].peers[0].selected);
-        assert!(!updates[0].peers[0].hovered, "must reflect the LAST write, not the first");
-    }
-
-    /// 👥️ M2 acceptance: a peer mark not refreshed within its TTL ages out with no goodbye message —
-    /// the flush after expiry reports the now-empty peer list once, then the slot is forgotten.
-    #[semio_framework_async_macros::async_test]
-    async fn ttl_expiry_drops_a_peer_mark_with_no_goodbye_message() {
-        let mark = ui_contract::PeerMark { actor: "user:carol#s1".into(), color: Some(4), hovered: true, selected: false, label: "user:carol#s1".into() };
-        presence_record_peer("ttl", "row-1", mark, 1_000, 0).await;
-        let first = presence_expire_and_flush(0).await;
-        assert_eq!(first[0].peers.len(), 1);
-        let after_expiry = presence_expire_and_flush(1_000).await;
-        assert_eq!(after_expiry.len(), 1, "expiry at the TTL boundary must surface as one more update");
-        assert!(after_expiry[0].peers.is_empty(), "the expired peer must be omitted, not sent as a goodbye");
-        assert!(presence_expire_and_flush(2_000).await.is_empty(), "the now-empty slot was garbage-collected");
-    }
-}
+#[path = "🧪️tests/🔬️m1-m2-reactor/🦀️.rs"]
+mod m1_m2_reactor_tests;
 //#endregion 🧪️M1M2ReactorTests
 
 #[cfg(test)]
-mod reconcile_budget_tests {
-    use super::*;
-
-    #[test]
-    fn patch_frame_limit_does_not_limit_internal_reconciliation_steps() {
-        assert_eq!(reconcile_step_opportunities(512), 512);
-        assert_eq!(reconcile_step_opportunities(15_640), RECONCILE_STEP_OPPORTUNITY_LIMIT as usize);
-        assert_eq!(reconcile_step_opportunities(0), 1);
-    }
-
-    #[test]
-    fn reactor_close_drains_requests_resumes_tasks_timers_and_metadata_in_bounded_steps() {
-        let instance = 991u32;
-        let key = instance_lifetime::NativeCloseKey::fixture(instance, 1);
-        reserve_reactor_close(key).expect("fixed reactor close admission");
-        activate_reactor_close(key).expect("all reservations admitted before activation");
-        let mut steps = 0usize;
-        loop {
-            REACTOR_CLOSE_CURSOR.with(|cursor| cursor.set(ReactorCloseRegistry::index(instance)));
-            assert!(step_reactor_close().expect("one bounded reactor close opportunity"));
-            steps += 1;
-            if reactor_close_complete(key).expect("exact retained receipt") {
-                break;
-            }
-            assert!(steps < 8_192, "fixed close cursor must terminate within its structural capacities");
-        }
-        assert!(steps > REACTOR_TASK_SLOTS + REACTOR_TIMER_SLOTS, "request, resume, task, timer, and metadata owners must retire across distinct opportunities");
-        assert!(reserve_reactor_close(instance_lifetime::NativeCloseKey::fixture(instance, 2)).is_err(), "terminal receipt holds its exact slot until ACK");
-        release_reactor_close(key).expect("final exact receipt release");
-        assert!(reactor_close_complete(key).is_err(), "absence is not a terminal receipt");
-    }
-}
+#[path = "🧪️tests/🔬️reconcile-budget/🦀️.rs"]
+mod reconcile_budget_tests;

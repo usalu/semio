@@ -14,10 +14,13 @@ export const policy = defineLint("@semio-tech/cad-js-modules", (_l: BundleLinter
   return dependencyBoundaryBreachesForBundleDir(repoRoot, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine");
 });
 
+/** 🔤️ The Rust variant name of one kebab lane/disposition from `framework.ui`'s shared vocabulary. */
+const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
+
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "🧪️tests/🟦️.ts");
+    runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 
@@ -25,7 +28,7 @@ class FixtureScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
     process.env.CAD_GENERATE_STEP_FIXTURES = "1";
-    runVitest(this.root, rest, "🧪️tests/🟦️.ts");
+    runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 
@@ -98,7 +101,7 @@ class RetainedAuditScript extends BundleScript {
     const semanticValid = (source: string): boolean => {
       const occurrences = (needle: string): number => source.split(needle).length - 1;
       const annotationPairs = [...source.matchAll(/\.action_interactive_job\("([^"]+)", semio_framework_plugin::InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => `${match[1]}:${match[2]}`);
-      const expectedPairs = fixture.routes.map((route) => `${route.id}:${route.disposition === "migrated" ? "Migrated" : "BatchOnlyPendingRewrite"}`).concat("setActiveUtility:Migrated");
+      const expectedPairs = fixture.routes.map((route) => `${route.id}:${variant(route.disposition)}`).concat("setActiveUtility:Migrated");
       return fixture.routeCount === 40
         && new Set(routeIds).size === 40
         && JSON.stringify(commandIds) === JSON.stringify(routeIds)

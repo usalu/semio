@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➕insert-triangle/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/stl/ascii/any/mutation/insert-triangle/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➖remove-triangle/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/stl/ascii/any/mutation/remove-triangle/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/stl/ascii/any/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏷️set-solid-name/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/stl/ascii/any/mutation/set-solid-name/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🧭set-triangle-normal/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/stl/ascii/any/mutation/set-triangle-normal/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📐set-triangle-vertices/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/stl/ascii/any/mutation/set-triangle-vertices/schema.json"
         },
         {
           "type": "object",

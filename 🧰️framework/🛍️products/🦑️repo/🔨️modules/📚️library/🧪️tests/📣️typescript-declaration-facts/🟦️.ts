@@ -3,7 +3,7 @@ import Ajv from "ajv/dist/2020";
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync } from "node:fs";
 import { join, parse, resolve, sep } from "node:path";
 import * as discovery from "../../🔍️discovery/🟦️.ts";
-import { compilerFacts, compilerParseDiagnostics, strictSourceDiagnostics, type Facts, type Vector } from "./🔮️oracle/🟦️.ts";
+import { compilerFacts, compilerParseDiagnostics, strictSourceDiagnostics, type Facts, type Vector } from "../🔮️typescript-declaration-facts-oracle/🟦️.ts";
 
 //#region 🔒️Inputs
 /** 🔒️ Reads one exact regular test asset after checking nonsymlink ancestors. */
@@ -29,7 +29,7 @@ function asset(relativePath: string): string {
   } finally { closeSync(fd); }
 }
 
-const schema = JSON.parse(asset("../📣️typescript-declaration-facts/🧬️schema/🔣️.json"));
+const schema = JSON.parse(asset("../📣️typescript-declaration-facts/🛂️schema/🔣️.json"));
 const vectors = JSON.parse(asset("../📣️typescript-declaration-facts/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly Vector[] };
 const ajv = new Ajv({ strict: true, allErrors: true });
 const validateVectors = ajv.compile(schema);
@@ -98,7 +98,7 @@ test("TypeScript declaration compiler oracle has strict source types", () => {
 //#endregion 🧪️Declarations
 
 //#region 🧪️MalformedDeclarations
-const malformedSchema = JSON.parse(asset("💥️malformed/🧬️schema/🔣️.json"));
+const malformedSchema = JSON.parse(asset("💥️malformed/🛂️schema/🔣️.json"));
 const malformed = JSON.parse(asset("💥️malformed/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly { readonly id: string; readonly language: "ts"; readonly source: string; readonly compilerDiagnostics: readonly { readonly code: number; readonly start: number; readonly length: number }[]; readonly expected: { readonly completeness: "incomplete"; readonly providerInference: "forbidden" } }[] };
 const validateMalformed = ajv.compile(malformedSchema);
 
@@ -129,7 +129,7 @@ for (const row of malformed.cases) {
 //#endregion 🧪️MalformedDeclarations
 
 //#region 🧪️UnsupportedDeclarations
-const unsupportedSchema = JSON.parse(asset("🚫️unsupported/🧬️schema/🔣️.json"));
+const unsupportedSchema = JSON.parse(asset("🚫️unsupported/🛂️schema/🔣️.json"));
 const unsupported = JSON.parse(asset("🚫️unsupported/🔣️.json")) as { readonly schemaVersion: 1; readonly cases: readonly { readonly id: string; readonly language: "ts"; readonly source: string; readonly compilerDiagnostics: readonly never[]; readonly expected: { readonly completeness: "incomplete"; readonly forbiddenDiagnosticCodes: readonly string[] } }[] };
 const validateUnsupported = ajv.compile(unsupportedSchema);
 

@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/flow/artifacts/flow/retained/copy/component.json",
+  "title": "Flow Typed Copy Contracts",
+  "$defs": {
+    "FlowTypedCopyV1": {
+      "title": "Flow Typed Copy Retirement",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "sourceFixture",
+        "grants",
+        "cases",
+        "cancelAfter",
+        "expected",
+        "allocationAdmission"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.flow.typed-copy.v1"
+        },
+        "sourceFixture": {
+          "type": "string",
+          "pattern": "^\\.\\./[^\\\\]+\\.json$"
+        },
+        "allocationAdmission": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "singleBytes",
+            "totalBytes",
+            "reservationCopiesBytes"
+          ],
+          "properties": {
+            "singleBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "totalBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "reservationCopiesBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 0
+            }
+          }
+        },
+        "grants": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4096
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "index",
+              "pointer"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "widget",
+                  "synapse",
+                  "fixture"
+                ]
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              },
+              "pointer": {
+                "type": "string",
+                "pattern": "^(/[^/]+)*$"
+              }
+            }
+          }
+        },
+        "cancelAfter": {
+          "type": "array",
+          "minItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1048576
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sameSourceAllocation",
+            "sourceMutation",
+            "invalidIndexPreservesOwner",
+            "framesBeforeRoot",
+            "unchangedMapAllocationShared",
+            "finalRootDrops",
+            "unclosedDropPreservesRoot"
+          ],
+          "properties": {
+            "sameSourceAllocation": {
+              "type": "boolean",
+              "const": true
+            },
+            "sourceMutation": {
+              "type": "boolean",
+              "const": false
+            },
+            "invalidIndexPreservesOwner": {
+              "type": "boolean",
+              "const": true
+            },
+            "framesBeforeRoot": {
+              "type": "boolean",
+              "const": true
+            },
+            "unchangedMapAllocationShared": {
+              "type": "boolean",
+              "const": true
+            },
+            "finalRootDrops": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1
+            },
+            "unclosedDropPreservesRoot": {
+              "type": "boolean",
+              "const": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

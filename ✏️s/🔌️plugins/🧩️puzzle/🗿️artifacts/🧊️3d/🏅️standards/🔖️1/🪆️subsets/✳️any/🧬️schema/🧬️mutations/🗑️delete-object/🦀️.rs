@@ -1,8 +1,8 @@
 //! 🗑 Puzzle3d mutation — `DeleteObject`: removes an id-keyed object (captures cascade — any
 //! attraction touching one of this object's vortices is severed too, re-`connect-vortices`ed by
 //! the inverse).
-use crate::diff::Puzzle3dDiff;
-use crate::mutations::Puzzle3dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation

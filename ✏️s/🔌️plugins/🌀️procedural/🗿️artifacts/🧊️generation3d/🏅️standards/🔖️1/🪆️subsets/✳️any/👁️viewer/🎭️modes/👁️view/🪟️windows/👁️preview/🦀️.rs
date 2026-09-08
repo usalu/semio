@@ -165,7 +165,7 @@ fn vector_marker_mesh(x: f64, y: f64, z: f64) -> semio_framework_plugin::MeshDat
 
 /// 👁️ Evaluates the whole fixture fresh (no session cache — see module doc comment) and tessellates
 /// every preview widget's geometry handles into meshes/instances at the world origin.
-fn evaluated_meshes_and_instances(fixture: &semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture) -> (String, String) {
+fn evaluated_meshes_and_instances(fixture: &semio_framework_artifact_flow_flow::FlowFixture) -> (String, String) {
     let mut host = semio_framework_os_flow::FlowHost::from_fixture(fixture.clone());
     host.set_neuron_kind_infos_json(&semio_framework_os_flow::flow_neuron_kind_infos_json());
     let eval_json = host.evaluate().unwrap_or_default();
@@ -176,7 +176,7 @@ fn evaluated_meshes_and_instances(fixture: &semio_framework_artifact_flow_semio_
     // the editor surface's own dedup rule.
     let mut mesh_id_by_handle: std::collections::HashMap<String, String> = std::collections::HashMap::new();
     for widget in &fixture.widgets {
-        let preview = matches!(widget, semio_framework_artifact_flow_semio_framework_os_flow::Widget::Neuron { preview: true, .. } | semio_framework_artifact_flow_semio_framework_os_flow::Widget::OutputPreview { .. });
+        let preview = matches!(widget, semio_framework_artifact_flow_flow::Widget::Neuron { preview: true, .. } | semio_framework_artifact_flow_flow::Widget::OutputPreview { .. });
         if !preview {
             continue;
         }
@@ -243,27 +243,6 @@ pub fn render(document: &Generation3dSnapshot) -> semio_framework_plugin::UiAsse
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn definition_declares_the_shared_mesh_window_kit() {
-        let def = definition();
-        assert_eq!(def.id, MeshWindowKit::KIND_ID);
-    }
-
-    #[test]
-    fn render_produces_a_scene_node_for_the_default_document() {
-        let document = crate::schema::default_snapshot();
-        let _node = render(&document);
-    }
-
-    #[test]
-    fn render_emits_real_tessellated_geometry_for_the_default_fixture() {
-        let document = crate::schema::default_snapshot();
-        let (meshes_json, instances_json) = evaluated_meshes_and_instances(&document.fixture);
-        assert_ne!(meshes_json, "[]", "default fixture should evaluate and tessellate at least one preview mesh");
-        assert_ne!(instances_json, "[]");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

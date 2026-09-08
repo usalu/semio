@@ -60,13 +60,13 @@ fn io_declaration() -> IoDeclaration {
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset() -> SubsetDeclaration<crate::PuzzleApps> {
+pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
     SubsetDeclaration {
         dialect: PUZZLE3D_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::puzzle3d_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io_declaration(),
-        viewer: viewer_surface::<viewer::Puzzle3dViewer, crate::PuzzleApps>(viewer::create_puzzle3d_viewer()),
-        editor: editor_surface::<editor::Puzzle3dPlayApp, crate::PuzzleApps>(editor::create_puzzle3d_app()),
+        viewer: viewer_surface::<viewer::Puzzle3dViewer, PA>(viewer::create_puzzle3d_viewer()),
+        editor: editor_surface::<editor::Puzzle3dPlayApp, PA>(editor::create_puzzle3d_app()),
         examples: examples(),
     }
 }

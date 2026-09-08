@@ -1,6 +1,6 @@
 //! 🧬️ schema leaf
-use semio_framework_artifact_flow_semio_framework_os_flow::CameraJson;
-use schema::ArtifactSchema;
+use semio_framework_artifact_flow_flow::CameraJson;
+use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]

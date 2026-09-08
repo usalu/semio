@@ -44,18 +44,8 @@ pub fn apply(snapshot: &mut GltfSnapshot, payload: &GltfChangeMaterialAlphaModeP
     Ok(())
 }
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[semio_framework_async_macros::async_test]
-    async fn changes_only_alpha_mode_and_rejects_identity() {
-        let mut snapshot = GltfSnapshot::default();
-        snapshot.document.materials.push(Default::default());
-        let payload = GltfChangeMaterialAlphaModePayload { material: 0, alpha_mode: GltfAlphaMode::Mask };
-        apply(&mut snapshot, &payload).unwrap();
-        assert_eq!(snapshot.document.materials[0].alpha_mode, GltfAlphaMode::Mask);
-        assert!(apply(&mut snapshot, &payload).is_err());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 
 //#region 🧬️DirectMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
@@ -100,12 +90,6 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMateria
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod direct_leaf_tests {
-    use super::*;
-
-    #[test]
-    fn semantic_identity_matches_the_language_neutral_descriptor() {
-        assert_eq!(<ChangeMaterialAlphaModeMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "change-material-alpha-mode");
-    }
-}
+#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
+mod direct_leaf_tests;
 //#endregion 🧪️Tests

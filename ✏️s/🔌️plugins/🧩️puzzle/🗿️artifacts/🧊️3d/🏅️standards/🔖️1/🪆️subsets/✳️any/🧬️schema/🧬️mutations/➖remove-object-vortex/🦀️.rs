@@ -1,7 +1,7 @@
 //! ➖ Puzzle3d mutation — `RemoveObjectVortex`: detaches a rim vortex from an object (captures
 //! cascade — any attraction whose `attracting`/`attracted` referenced this vortex is severed too).
-use crate::diff::Puzzle3dDiff;
-use crate::mutations::Puzzle3dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation

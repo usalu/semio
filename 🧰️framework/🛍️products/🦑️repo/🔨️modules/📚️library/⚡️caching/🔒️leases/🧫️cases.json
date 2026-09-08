@@ -1,0 +1,15 @@
+{
+  "repetitions": 20,
+  "cases": [
+    { "name": "shared-readers", "first": { "runtime": "bun", "mode": "shared", "resource": "output" }, "second": { "runtime": "node", "mode": "shared", "resource": "output" }, "action": "parallel" },
+    { "name": "python-reader-oracle", "first": { "runtime": "python", "mode": "shared", "resource": "output" }, "second": { "runtime": "bun", "mode": "shared", "resource": "output" }, "action": "parallel" },
+    { "name": "writer-blocks-readers", "first": { "runtime": "bun", "mode": "exclusive", "resource": "output" }, "second": { "runtime": "node", "mode": "shared", "resource": "output" }, "action": "release-first" },
+    { "name": "readers-block-writers", "first": { "runtime": "node", "mode": "shared", "resource": "output" }, "second": { "runtime": "bun", "mode": "exclusive", "resource": "output" }, "action": "release-first" },
+    { "name": "python-exclusive-oracle", "first": { "runtime": "python", "mode": "exclusive", "resource": "output" }, "second": { "runtime": "node", "mode": "exclusive", "resource": "output" }, "action": "release-first" },
+    { "name": "independent-resources", "first": { "runtime": "node", "mode": "exclusive", "resource": "output" }, "second": { "runtime": "bun", "mode": "exclusive", "resource": "installation" }, "action": "parallel" },
+    { "name": "cancel-waiter", "first": { "runtime": "bun", "mode": "exclusive", "resource": "output" }, "second": { "runtime": "node", "mode": "exclusive", "resource": "output" }, "action": "cancel-second" },
+    { "name": "kernel-releases-crashed-owner", "first": { "runtime": "python", "mode": "shared", "resource": "output" }, "second": { "runtime": "bun", "mode": "exclusive", "resource": "output" }, "action": "kill-first" },
+    { "name": "kernel-releases-bun-owner", "first": { "runtime": "bun", "mode": "exclusive", "resource": "output" }, "second": { "runtime": "node", "mode": "shared", "resource": "output" }, "action": "kill-first" },
+    { "name": "node-initializes-cold-store", "first": { "runtime": "node", "mode": "exclusive", "resource": "cold-node" }, "second": { "runtime": "bun", "mode": "shared", "resource": "cold-node" }, "action": "release-first" }
+  ]
+}

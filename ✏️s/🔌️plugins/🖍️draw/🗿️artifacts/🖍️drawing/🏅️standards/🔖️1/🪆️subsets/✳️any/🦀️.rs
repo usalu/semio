@@ -28,13 +28,13 @@ fn inference_descriptors() -> &'static [::framework_schema::ArtifactInferenceDes
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset() -> SubsetDeclaration<crate::DrawApps> {
+pub fn subset<A: crate::DrawingApplication>() -> SubsetDeclaration<A> {
     SubsetDeclaration {
         dialect: DRAWING_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::drawing_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::DrawingViewer, crate::DrawApps>(viewer::create_drawing_viewer()),
-        editor: editor_surface::<editor::DrawingPlayApp, crate::DrawApps>(editor::create_drawing_app()),
+        viewer: viewer_surface::<viewer::DrawingViewer, A>(viewer::create_drawing_viewer()),
+        editor: editor_surface::<editor::DrawingPlayApp, A>(editor::create_drawing_app()),
         examples: examples(),
     }
 }

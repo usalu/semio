@@ -6,7 +6,7 @@ import addFormats from "ajv-formats";
 import { describe, expect, it } from "vitest";
 
 /** 🧪️ Third-party draft-07 oracle for the owned Rust validator: the same
- * `🧫️fixtures/✅️draft07-validation-vectors.json` corpus that
+ * `../../🧫️fixtures/✅️draft07-validation-vectors.json` corpus that
  * `owned_validator_agrees_with_the_shared_draft07_vectors` drives must produce the same verdicts in
  * ajv. `ajv-formats` in its default "full" mode is the oracle for the seven asserted `format` values
  * pinned by `ASSERTED_STRING_FORMATS` in `✅️validator.rs`. Both are test-only oracles — no production
@@ -20,7 +20,7 @@ type Vector = {
   readonly invalid: readonly { readonly instance: unknown; readonly errorPath: string }[];
 };
 
-const vectorsPath = join(dirname(fileURLToPath(import.meta.url)), "🧫️fixtures", "✅️draft07-validation-vectors.json");
+const vectorsPath = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "🧫️fixtures", "✅️draft07-validation-vectors.json");
 const vectors = JSON.parse(readFileSync(vectorsPath, "utf8")) as { readonly dialect: string; readonly cases: readonly Vector[] };
 const ajvConstructor = (Ajv as unknown as { readonly default?: typeof Ajv }).default ?? Ajv;
 const applyFormats = (addFormats as unknown as { readonly default?: typeof addFormats }).default ?? addFormats;

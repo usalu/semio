@@ -47,9 +47,6 @@ pub mod examples {
     mod app_raster_demo_session_tests;
     #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
     pub mod art_raster_demo;
-    #[cfg(test)]
-    #[path = "../../🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
-    mod art_raster_demo_tests;
 }
 //#endregion 📚️Examples
 

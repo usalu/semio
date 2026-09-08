@@ -67,19 +67,6 @@ pub fn md_artifact_inference_descriptor() -> framework_schema::ArtifactInference
 
 #[cfg(test)]
 //#region 🧪️Tests
-mod tests {
-    use super::*;
-    use protocol::Inference;
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
-        let snapshot = MdSnapshot::default();
-        assert_eq!(MdInference::infer(&snapshot), MdInference::infer(&snapshot));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
-        assert_eq!(MdInference::infer(&MdSnapshot::default()), MdInference::default());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

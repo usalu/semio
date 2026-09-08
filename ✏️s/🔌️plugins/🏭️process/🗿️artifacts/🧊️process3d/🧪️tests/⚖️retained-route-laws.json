@@ -14,21 +14,37 @@
   },
   "groups": [
     {
-      "status": "Migrated",
+      "status": "migrated",
       "execution": "bounded",
-      "lanes": ["Config"],
-      "routes": ["engagementAbort", "setCamera"]
+      "lanes": [
+        "config"
+      ],
+      "routes": [
+        "engagementAbort",
+        "setCamera"
+      ]
     },
     {
-      "status": "Migrated",
+      "status": "migrated",
       "execution": "bounded",
-      "lanes": ["HostOnly"],
-      "routes": ["loadModelRequest", "setSnapshot", "setActiveExample", "setStock", "importModelFile", "exportModel"]
+      "lanes": [
+        "host-only"
+      ],
+      "routes": [
+        "loadModelRequest",
+        "setSnapshot",
+        "setActiveExample",
+        "setStock",
+        "importModelFile",
+        "exportModel"
+      ]
     },
     {
-      "status": "Migrated",
+      "status": "migrated",
       "execution": "bounded",
-      "lanes": ["Artifact"],
+      "lanes": [
+        "artifact"
+      ],
       "routes": [
         "addStep",
         "addWorkshopMachine",
@@ -49,24 +65,55 @@
       ]
     },
     {
-      "status": "Migrated",
+      "status": "migrated",
       "execution": "bounded",
-      "lanes": ["Artifact", "Config"],
-      "routes": ["engagementSubmit"]
+      "lanes": [
+        "artifact",
+        "config"
+      ],
+      "routes": [
+        "engagementSubmit"
+      ]
     },
     {
-      "status": "Migrated",
+      "status": "migrated",
       "execution": "resumable",
-      "lanes": ["Config"],
-      "routes": ["setActiveUtility", "engagementInput", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setLocale", "setContributions"]
+      "lanes": [
+        "config"
+      ],
+      "routes": [
+        "setActiveUtility",
+        "engagementInput",
+        "toggleSun",
+        "setSunAzimuth",
+        "setSunElevation",
+        "setSunIntensity",
+        "setLocale",
+        "setContributions"
+      ]
     }
   ],
   "oracleCases": [
-    { "bytes": 0, "expectedExtent": 1 },
-    { "bytes": 256, "expectedExtent": 1 },
-    { "bytes": 257, "expectedExtent": 2 },
-    { "bytes": 8192, "expectedExtent": 32 },
-    { "bytes": 8193, "expectedExtent": null }
+    {
+      "bytes": 0,
+      "expectedExtent": 1
+    },
+    {
+      "bytes": 256,
+      "expectedExtent": 1
+    },
+    {
+      "bytes": 257,
+      "expectedExtent": 2
+    },
+    {
+      "bytes": 8192,
+      "expectedExtent": 32
+    },
+    {
+      "bytes": 8193,
+      "expectedExtent": null
+    }
   ],
   "laws": {
     "exactRoutePartition": true,

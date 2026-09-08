@@ -107,8 +107,8 @@ class TestScript extends BundleScript {
 class SourceTestScript extends BundleScript {
   async run(): Promise<void> {
     await import("../../../🖥️host/🧹️retirement/📜️script.ts");
-    await import("../../../🕸️wasm/📦️packages/🟨️javascript/🧪️tests/🧬️flow-schema-oracle.test.js");
-    const { testFlowOpenOwnership } = await import("../../../🕸️wasm/📦️packages/🟨️javascript/🧪️tests/🧪️flow-open-ownership.test.ts");
+    await import("../../../🕸️wasm/🧪️tests/🧬️schema-oracle/🟨️.js");
+    const { testFlowOpenOwnership } = await import("../../../🕸️wasm/🧪️tests/🔓️open-ownership/🟦️.ts");
     const fixture = JSON.parse(readFileSync(join(BROWSER_BRIDGE_DIR, "../../🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json"), "utf8"));
     await testFlowOpenOwnership(fixture.openFailure);
   }
@@ -116,7 +116,7 @@ class SourceTestScript extends BundleScript {
 
 class BrowserTestScript extends BundleScript {
   async run(): Promise<void> {
-    await import("../../../🕸️wasm/📦️packages/🟨️javascript/🧪️tests/🧪️flow-host.test.js");
+    await import("../../../🕸️wasm/🧪️tests/🖥️host/🟨️.js");
     const outputs = await bundleBrowserModule(false);
     const module = await outputs[0]?.text();
     if (outputs.length !== 1 || !module?.includes('import("./flow_core.js")') || !module.includes('from "./🖥️flow-host.js"') || module.includes("../../../🫀️core/🕸️bindings")) throw new Error("Flow browser package lost its exact sibling module bindings");
@@ -126,7 +126,7 @@ class BrowserTestScript extends BundleScript {
 
 class BrowserClockTestScript extends BundleScript {
   async run(): Promise<void> {
-    const { testFlowBrowserClock } = await import("../../../🕸️wasm/📦️packages/🟨️javascript/🧪️tests/🟨️.js");
+    const { testFlowBrowserClock } = await import("../../../🕸️wasm/🧪️tests/⏱️consumed-browser-clock/🟨️.js");
     await testFlowBrowserClock();
   }
 }

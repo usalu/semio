@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/app/raster/raster/config.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/raster/raster/config/schema.json",
   "title": "RasterConfig",
   "type": "object",
   "additionalProperties": false,
@@ -43,7 +44,11 @@
       "title": "RasterCamera",
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y", "zoom"],
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
       "properties": {
         "x": {
           "type": "number",
@@ -63,7 +68,10 @@
       "title": "RasterConfigViewportSize",
       "type": "object",
       "additionalProperties": false,
-      "required": ["width", "height"],
+      "required": [
+        "width",
+        "height"
+      ],
       "properties": {
         "width": {
           "type": "number",

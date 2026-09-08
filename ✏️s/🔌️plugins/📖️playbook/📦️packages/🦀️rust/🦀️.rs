@@ -55,9 +55,6 @@ pub mod examples {
     pub mod app_playbook_demo_session;
     #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
     pub mod art_playbook_demo;
-    #[cfg(test)]
-    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
-    mod art_playbook_demo_tests;
 }
 //#endregion 📚️Examples
 

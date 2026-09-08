@@ -1,69 +1,52 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/mathematical/equation/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/equation/equation/mutations.json",
   "title": "EquationMutation",
   "oneOf": [
     {
-      "$ref": "./../../../🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph-directed/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/mathematical/equation/1/graph/mutation/change-graph-directed/schema.json"
     },
     {
-      "$ref": "./../../../🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/mathematical/equation/1/graph/mutation/update-graph-algorithm/schema.json"
     },
     {
-      "$ref": "./../../../🕸️graph/🧬️schema/🧬️mutations/🔁️replace-graph/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/mathematical/equation/1/graph/mutation/replace-graph/schema.json"
     },
     {
-      "$ref": "./../../../🕸️graph/🧬️schema/🧬️mutations/➕️create-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/mathematical/equation/1/graph/mutation/create-node/schema.json"
     },
     {
-      "$ref": "./../../../🕸️graph/🧬️schema/🧬️mutations/❌️delete-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/mathematical/equation/1/graph/mutation/delete-node/schema.json"
     },
     {
-      "$ref": "./../../../🕸️graph/🧬️schema/🧬️mutations/🗑️delete-nodes/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/mathematical/equation/1/graph/mutation/delete-nodes/schema.json"
     },
     {
-      "$ref": "./../../../🕸️graph/🧬️schema/🧬️mutations/🏷️change-node-label/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/mathematical/equation/1/graph/mutation/change-node-label/schema.json"
     },
     {
-      "$ref": "./../../../🕸️graph/🧬️schema/🧬️mutations/🕹️move-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/mathematical/equation/1/graph/mutation/move-node/schema.json"
     },
     {
-      "$ref": "./../../../🕸️graph/🧬️schema/🧬️mutations/🔗️connect-nodes/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/mathematical/equation/1/graph/mutation/connect-nodes/schema.json"
     },
     {
-      "$ref": "./../../../🕸️graph/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/mathematical/equation/1/graph/mutation/disconnect-nodes/schema.json"
     },
     {
-      "$ref": "./../../../📐️geometry/🧬️schema/🧬️mutations/🔄️replace-points/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/mathematical/equation/1/geometry/mutation/replace-points/schema.json"
     },
     {
-      "$ref": "./../../../📐️geometry/🧬️schema/🧬️mutations/➕️insert-point/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/mathematical/equation/1/geometry/mutation/insert-point/schema.json"
     },
     {
-      "$ref": "./../../../📐️geometry/🧬️schema/🧬️mutations/➖️remove-point/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/mathematical/equation/1/geometry/mutation/remove-point/schema.json"
     },
     {
-      "$ref": "./../../../📐️geometry/🧬️schema/🧬️mutations/🎯️move-point/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/mathematical/equation/1/geometry/mutation/move-point/schema.json"
     },
     {
-      "$ref": "./../../../➗️equation/🧬️schema/🧬️mutations/🎚️change-coefficient/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/mathematical/equation/1/equation/mutation/change-coefficient/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-graph-directed",
-    "update-graph-algorithm",
-    "replace-graph",
-    "create-node",
-    "delete-node",
-    "delete-nodes",
-    "change-node-label",
-    "move-node",
-    "connect-nodes",
-    "disconnect-nodes",
-    "replace-points",
-    "insert-point",
-    "remove-point",
-    "move-point",
-    "change-coefficient"
   ]
 }

@@ -1,14 +1,31 @@
 /** 📝️ Emits the browser ABI declarations from the owned operation schema and checks their runtime surface. */
+import Ajv from "ajv";
 import assert from "node:assert/strict";
 import { readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
+//#region 🧬️Contracts
+/** 🧬️ Owned draft-07 contract module for every Flow wasm bridge fixture.
+ * @see 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🔣️.json */
+export const FLOW_WASM_SCHEMA_URL = new URL("../../🧬️schema/🔣️.json", import.meta.url);
+
+/** 🔍️ Compiles one named export of the Flow wasm contract module under strict draft-07 Ajv. */
+export function flowWasmContract(exportId: string): (value: unknown) => boolean {
+  const document = JSON.parse(readFileSync(FLOW_WASM_SCHEMA_URL, "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(document);
+  const validate = ajv.getSchema(`${document.$id}#/$defs/${exportId}`);
+  if (!validate) throw new Error(`Flow wasm contract module has no export ${exportId}`);
+  return validate as (value: unknown) => boolean;
+}
+//#endregion 🧬️Contracts
 
 //#region 📝️Declarations
 type Field = { name: string; type: "utf8" | "optional-utf8" | "f64" | "u64" | "u32" | "u8" | "bool" | "bytes" };
 type Contract = { operations: Record<string, number>; arguments: Record<string, Field[]> };
 const excluded = new Set(["open", "attachSurface", "renderFrame"]);
 const fieldTypes: Record<Field["type"], string> = { utf8: "string", "optional-utf8": "string | null", f64: "number", u64: "number", u32: "number", u8: "number", bool: "boolean", bytes: "ArrayBufferView | readonly number[]" };
-const contractPath = join(import.meta.dir, "../../../🕸️wasm/🧬️schema/🔣️.json");
+const contractPath = join(import.meta.dir, "../../../🕸️wasm/🧪️fixtures/📡️abi.json");
 const declarationName = "../../../🕸️wasm/📦️packages/🟨️javascript/📝️flow-browser.d.ts";
 
 export function flowBrowserDeclaration(): string {
@@ -69,12 +86,10 @@ export function writeFlowBrowserDeclaration(): string {
 
 //#region 🧪️SchemaOracle
 export async function testFlowBrowserDeclaration(packageRoot: string): Promise<void> {
-  const { default: Ajv } = await import("ajv");
   const ts = await import("typescript");
   const { FlowSession } = await import("./🌐️flow-browser.js");
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️fixtures/📝️browser-types.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️fixtures/🧬️browser-types.schema.json"), "utf8"));
-  const validate = new Ajv({ strict: true }).compile(schema);
+  const validate = flowWasmContract("FlowBrowserTypesV1");
   assert.equal(validate(fixture), true);
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
   assert.equal(manifest.name, fixture.package.name);
@@ -109,7 +124,7 @@ export async function testFlowBrowserDeclaration(packageRoot: string): Promise<v
     assert.equal(method.type?.getText(parsed), fixture.result);
   }
   for (const name of fixture.excluded) assert.equal(names.includes(name), false);
-  for (const mutate of [(value: typeof fixture) => { value.operationMethods = 111; }, (value: typeof fixture) => { value.result = "void"; }, (value: typeof fixture) => { value.extra = true; }, (value: typeof fixture) => { delete value.package.exports["."]; }, (value: typeof fixture) => { value.package.files.pop(); }]) { const bad = structuredClone(fixture); mutate(bad); assert.equal(validate(bad), false); }
+  for (const mutate of [(value: typeof fixture) => { value.operationMethods = 111; }, (value: typeof fixture) => { value.result = "void"; }, (value: typeof fixture) => { value.extra = true; }, (value: typeof fixture) => { delete value.package.exports["."]; }, (value: typeof fixture) => { value.package.files.push(value.package.files[0]); }]) { const bad = structuredClone(fixture); mutate(bad); assert.equal(validate(bad), false); }
   assert.equal(readFileSync(join(import.meta.dir, declarationName), "utf8"), text);
   console.log(`[DEBUG] Flow browser declarations: ${fixture.operationMethods} schema methods, runtime prototype and TypeScript parser parity; 3 package exports and 2 TypeScript resolutions; 5 hostile fixtures rejected`);
 }

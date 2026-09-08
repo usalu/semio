@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `DisconnectKindCompatibility` — patches the whole `kindCompatibility` list.
-use crate::diff::{Puzzle5dDiff, Puzzle5dKindCompatibilityList};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dKindCompatibilityList};
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

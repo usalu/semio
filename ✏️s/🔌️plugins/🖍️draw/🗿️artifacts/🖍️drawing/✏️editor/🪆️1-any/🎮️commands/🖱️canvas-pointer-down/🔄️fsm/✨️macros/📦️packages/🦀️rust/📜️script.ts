@@ -4,7 +4,7 @@ import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted }
 
 class TestScript extends BundleScript {
   run(_segments: string[]): void {
-    runCargoTestBudgeted(["semio-s-plugin-drawing-fsm-macros"], this.repoRoot);
+    runCargoTestBudgeted(["semio-s-plugin-draw-fsm-macros"], this.repoRoot);
   }
 }
 

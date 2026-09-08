@@ -7,7 +7,6 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import type { Duplex } from "node:stream";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020";
 import { requireMcpBinary } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
 import { blake3Hex } from "../../../🧰️framework/🔨️modules/🔏️hash/🟦️.ts";
@@ -90,6 +89,7 @@ import {
   resolveTestLevel,
   readStableBuildFile,
 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { hubSchemaExport } from "../🟦️typescript/🟦️.ts";
 
 function exactCargoStageEnvironments() {
   return {
@@ -99,49 +99,6 @@ function exactCargoStageEnvironments() {
 }
 
 //#region 🧬️Scope-owned schema resolution
-
-/** 🧬️ Every scope-owned JSON Schema module `🌎️hub` fixtures may bind to, keyed by scope id. */
-export const HUB_SCHEMA_SCOPES: Readonly<Record<string, string>> = {
-  "hub.admin": "🌎️hub/🔨️modules/🛡️admin/🧬️schema/🔣️.json",
-  "hub.artifact-authority": "🌎️hub/🗿️artifact-authority/🧬️schema/🔣️.json",
-  "hub.artifact-authority.creation": "🌎️hub/🗿️artifact-authority/🌱️creation/🧬️schema/🔣️.json",
-  "hub.artifact-authority.native-openable-provider": "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧬️schema/🔣️.json",
-  "hub.artifact-authority.trusted-catalog": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧬️schema/🔣️.json",
-  "hub.auth": "🌎️hub/🔐️auth/🧬️schema/🔣️.json",
-  "hub.directory": "🌎️hub/📇️directory/🧬️schema/🔣️.json",
-  "hub.inference": "🌎️hub/💡️inference/🧬️schema/🔣️.json",
-  "hub.lag-rebootstrap": "🌎️hub/🛰️lag-rebootstrap/🧬️schema/🔣️.json",
-  "hub.local-bootstrap": "🌎️hub/🚀️local-bootstrap/🧬️schema/🔣️.json",
-};
-
-const hubSchemaModules = new Map<string, { readonly ajv: Ajv; readonly id: string }>();
-
-/** 📇️ Loads one scope's draft-07 module once and keeps its compiled exports for reuse. */
-function hubSchemaModule(repoRoot: string, scope: string): { readonly ajv: Ajv; readonly id: string } {
-  const cached = hubSchemaModules.get(scope);
-  if (cached) return cached;
-  const path = HUB_SCHEMA_SCOPES[scope];
-  if (path === undefined) throw new Error(`unknown hub schema scope ${scope}`);
-  const document = JSON.parse(readFileSync(join(repoRoot, path), "utf8")) as { $schema?: string; $id?: string };
-  if (document.$schema !== "http://json-schema.org/draft-07/schema#") throw new Error(`${scope} module must declare the draft-07 dialect`);
-  if (typeof document.$id !== "string" || !document.$id.startsWith("https://semio.tech/schema/hub/")) throw new Error(`${scope} module must declare a semio.tech $id`);
-  const ajv = new Ajv({ strict: true, allErrors: true });
-  ajv.addSchema(document);
-  const loaded = { ajv, id: document.$id };
-  hubSchemaModules.set(scope, loaded);
-  return loaded;
-}
-
-/** 🔗️ Resolves `schema://<scope id>/<ExportId>` to the owning module's compiled export validator. */
-export function hubSchemaExport(repoRoot: string, uri: string): (value: unknown) => boolean {
-  const match = /^schema:\/\/([a-z0-9.-]+)\/([A-Z][A-Za-z0-9]*)$/.exec(uri);
-  if (!match) throw new Error(`malformed schema export uri ${uri}`);
-  const [, scope, exportId] = match;
-  const module = hubSchemaModule(repoRoot, scope);
-  const validate = module.ajv.getSchema(`${module.id}#/$defs/${exportId}`);
-  if (!validate) throw new Error(`${scope} exports no ${exportId}`);
-  return (value: unknown): boolean => validate(value) as boolean;
-}
 
 /** 🧾️ One fixture-declared negative expectation: the stage that rejects it and the reason code. */
 export type HubFixtureExpectationV1 = { readonly stage: "contract" | "domain" | "bounds"; readonly result: "accepted" | "rejected"; readonly code: string };
@@ -2365,17 +2322,12 @@ type BrowserDocumentOpenFixture = {
   readonly hostile: readonly { readonly name: string; readonly stage: string; readonly replacePath?: string; readonly value?: unknown; readonly expected: string }[];
 };
 
-async function browserDocumentOpenFixture(repoRoot: string): Promise<BrowserDocumentOpenFixture> {
+function browserDocumentOpenFixture(repoRoot: string): BrowserDocumentOpenFixture {
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory");
-  const schema = JSON.parse(readFileSync(join(root, "🧬️browser-document-open-v1.schema.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(root, "🌐️browser-document-open-v1.json"), "utf8")) as BrowserDocumentOpenFixture;
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const ajv = new Ajv2020({ allErrors: true, strict: true });
-  ajv.addSchema(JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🔣️.schema.json"), "utf8")));
-  ajv.addSchema(schema);
-  const validate = ajv.getSchema(schema.$id)!;
-  if (!validate(fixture)) throw new Error(`browser document-open fixture invalid: ${JSON.stringify(validate.errors)}`);
-  const validatePlan = ajv.getSchema(`${schema.$id}#/$defs/plan`)!;
+  const validate = hubSchemaExport(repoRoot, "schema://os.directory/BrowserDocumentOpenTransportV1");
+  if (!validate(fixture)) throw new Error("browser document-open fixture violates its owning scope contract");
+  const validatePlan = hubSchemaExport(repoRoot, "schema://os.directory/BrowserDocumentOpenTransportPlan");
   for (const name of ["parent-standard-control", "parent-subset-trim"]) {
     const vector = fixture.hostile.find((row) => row.name === name)!;
     if (validatePlan(documentOpenMutation(fixture.plan, vector.replacePath!, vector.value))) throw new Error(`browser document-open schema admitted ${name}`);
@@ -2428,7 +2380,7 @@ function browserDocumentOpenAuthority(plan: Record<string, any>, fixture: Browse
 }
 
 async function proveBrowserDocumentOpenFixture(repoRoot: string): Promise<BrowserDocumentOpenFixture> {
-  const fixture = await browserDocumentOpenFixture(repoRoot);
+  const fixture = browserDocumentOpenFixture(repoRoot);
   const scope = fixture.intent.scope;
   const root = `/spaces/${encodeURIComponent(scope.spaceId)}/documents/${encodeURIComponent(scope.documentId)}`;
   const httpPaths = [`${root}/open-plan`, `${root}/socket-grants`];
@@ -3074,13 +3026,6 @@ function buildAdminSpa(repoRoot: string): void {
 class SetupScript extends BundleScript {
   run(): void {
     runCargo(["fetch", "--manifest-path", "Cargo.toml"], this.root);
-  }
-}
-
-class BuildScript extends BundleScript {
-  run(): void {
-    buildAdminSpa(this.repoRoot);
-    runCargo(["build", "--release", "--manifest-path", "Cargo.toml"], this.root);
   }
 }
 
@@ -4743,34 +4688,33 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
   for (const row of fixture.hostileCases) if (!admitsHostileExpectation(row)) throw new Error(`native-openable hostile expectation is malformed: ${row.name}`);
   const projectionPath = join(repoRoot, fixture.providerProjection);
   const projection = JSON.parse(readFileSync(projectionPath, "utf8")) as { schema: string; provider_id: string; plugin_id: string; package_id: string; receipts: NativeOpenableProjectionReceipt[] };
-  const projectionSchema = JSON.parse(readFileSync(join(projectionPath, "../🔣️.json"), "utf8"));
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const ajv = new Ajv2020({ allErrors: true, strict: true });
   const claimRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️fixtures/🧾️claim-authority");
   const surfaceRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️fixtures/📇️native-catalog-surface");
   const builderRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder");
   const builderFixture = JSON.parse(readFileSync(join(builderRoot, "🧪️fixtures/📇️topic-contributions/🔣️.json"), "utf8"));
-  const validateBuilder = ajv.compile(JSON.parse(readFileSync(join(builderRoot, "🧪️fixtures/📇️topic-contributions/🧬️.schema.json"), "utf8")));
-  if (!validateBuilder(builderFixture)) throw new Error(`builder topic fixture invalid: ${JSON.stringify(validateBuilder.errors)}`);
+  const validateBuilder = hubSchemaExport(repoRoot, "schema://os.plugin.builder/TopicContributionsV1");
+  if (!validateBuilder(builderFixture)) throw new Error("builder topic fixture violates its owning scope contract");
   if (!readFileSync(join(builderRoot, "🦀️.rs"), "utf8").includes("pub fn contributes_topic(")) throw new Error("plugin builder does not retain domain-neutral topic contributions before assembly");
   const surfaceFixture = JSON.parse(readFileSync(join(surfaceRoot, "🔣️.json"), "utf8"));
-  const validateSurface = ajv.compile(JSON.parse(readFileSync(join(surfaceRoot, "🧬️.schema.json"), "utf8")));
-  if (!validateSurface(surfaceFixture)) throw new Error(`native catalog surface fixture invalid: ${JSON.stringify(validateSurface.errors)}`);
+  const validateSurface = hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCatalogSurface");
+  if (!validateSurface(surfaceFixture)) throw new Error("native catalog surface fixture violates its owning scope contract");
   const commitmentFixture = JSON.parse(readFileSync(join(surfaceRoot, "🧪️commitment.json"), "utf8"));
-  const validateCommitmentCases = ajv.compile(JSON.parse(readFileSync(join(surfaceRoot, "🧬️commitment-cases.schema.json"), "utf8")));
-  if (!validateCommitmentCases(commitmentFixture)) throw new Error(`native catalog commitment fixture invalid: ${JSON.stringify(validateCommitmentCases.errors)}`);
-  ajv.compile(JSON.parse(readFileSync(join(surfaceRoot, "📌️commitment.schema.json"), "utf8")));
+  const validateCommitmentCases = hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCatalogSurfaceCommitmentCases");
+  if (!validateCommitmentCases(commitmentFixture)) throw new Error("native catalog commitment fixture violates its owning scope contract");
+  hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCatalogSurfaceCommitment");
   const importsFixture = JSON.parse(readFileSync(join(surfaceRoot, "🧪️imports.json"), "utf8"));
-  const validateImports = ajv.compile(JSON.parse(readFileSync(join(surfaceRoot, "🧬️imports.schema.json"), "utf8")));
-  if (!validateImports(importsFixture)) throw new Error(`native catalog imports fixture invalid: ${JSON.stringify(validateImports.errors)}`);
+  const validateImports = hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCatalogSurfaceImports");
+  if (!validateImports(importsFixture)) throw new Error("native catalog imports fixture violates its owning scope contract");
   const catalogSource = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs"), "utf8");
   if (!catalogSource.includes("pub fn native_artifact_catalog_dependency(") || !catalogSource.includes("pub fn validate_native_artifact_catalog_dependency(")) throw new Error("native catalog compiled dependency contract is absent");
   const inventory = JSON.parse(readFileSync(join(surfaceRoot, "../../🔣️.json"), "utf8")).artifact_definition_paths;
   const compiledInventory = [...catalogSource.slice(catalogSource.indexOf("const SOURCES: [&str; 36] = [")).split("];", 1)[0]!.matchAll(/include_str!\("([^"]+)"\)/gu)].map((match) => match[1]);
   if (!Array.isArray(inventory) || inventory.length !== 36 || new Set(inventory).size !== 36 || JSON.stringify(inventory) !== JSON.stringify(compiledInventory) || inventory.some((path: string) => !lstatSync(join(surfaceRoot, "../..", path)).isFile())) throw new Error("native Stdio indexed definition paths differ from the compiled complete source roster");
   const budgetFixture = JSON.parse(readFileSync(join(surfaceRoot, "🧪️budget.json"), "utf8"));
-  const validateBudget = ajv.compile(JSON.parse(readFileSync(join(surfaceRoot, "🧬️budget.schema.json"), "utf8")));
-  if (!validateBudget(budgetFixture)) throw new Error(`native catalog projection budget fixture invalid: ${JSON.stringify(validateBudget.errors)}`);
+  const validateBudget = hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCatalogSurfaceBudget");
+  if (!validateBudget(budgetFixture)) throw new Error("native catalog projection budget fixture violates its owning scope contract");
   for (const row of budgetFixture.cases) if (Buffer.byteLength(JSON.stringify(row.text), "utf8") !== row.encodedBytes) throw new Error(`native catalog JSON budget oracle differs: ${row.id}`);
   for (const row of budgetFixture.aggregateCases) {
     const accepted = row.projectionCharges.reduce((sum: number, value: number) => sum + value, 0) <= budgetFixture.projectionLimitBytes && row.descriptorCharges.reduce((sum: number, value: number) => sum + value, 0) <= budgetFixture.descriptorLimitBytes;
@@ -4781,8 +4725,8 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
   if (!catalogSource.includes("pub fn validate_native_codec_artifact_kinds(") || !providerSource.includes("validate_native_codec_artifact_kinds(&descriptor.manifest.artifact_kinds)")) throw new Error("native Stdio catalog is not bound to the complete decoded descriptor surface");
   if (!catalogSource.includes("pub fn validate_native_artifact_catalog_contributions(") || !providerSource.includes("validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions)")) throw new Error("native Stdio catalog omits its compiled guest semantic commitment");
   const claimFixture = JSON.parse(readFileSync(join(claimRoot, "🔣️.json"), "utf8"));
-  const validateClaims = ajv.compile(JSON.parse(readFileSync(join(claimRoot, "🧬️.schema.json"), "utf8")));
-  if (!validateClaims(claimFixture)) throw new Error(`native-openable claim fixture invalid: ${JSON.stringify(validateClaims.errors)}`);
+  const validateClaims = hubSchemaExport(repoRoot, "schema://s.stdio.registry/ClaimAuthority");
+  if (!validateClaims(claimFixture)) throw new Error("native-openable claim fixture violates its owning scope contract");
   const uniqueClaims = ajv.compile({ type: "array", items: { type: "string" }, uniqueItems: true });
   for (const row of claimFixture.cases) {
     for (const claim of row.claims) {
@@ -4798,8 +4742,8 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
     if (code !== row.code) throw new Error(`native-openable claim oracle differs for ${row.id}`);
   }
   console.log(`native-openable-claim-oracle cases=${claimFixture.cases.length}`);
-  const validateProjection = ajv.compile({ ...projectionSchema.$defs.NativeCodecFactories, $defs: projectionSchema.$defs });
-  if (!validateProjection(projection)) throw new Error(`native-openable projection schema invalid: ${JSON.stringify(validateProjection.errors)}`);
+  const validateProjection = hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCodecFactories");
+  if (!validateProjection(projection)) throw new Error("native-openable projection violates its owning scope contract");
   const definitionRoot = join(repoRoot, fixture.artifactDefinitionsRoot);
   const definitionFiles: string[] = [];
   const pending = [definitionRoot];
@@ -5191,9 +5135,8 @@ async function proveNativeStdioCommitmentSchema(repoRoot: string, receipt: Await
   const prefix = "[DEBUG] native-catalog-payload=";
   const lines = readFileSync(output, "utf8").split("\n").filter((line) => line.startsWith(prefix));
   if (lines.length !== 1 || Buffer.byteLength(lines[0]!.slice(prefix.length), "utf8") > 2 * 1024 * 1024) throw new Error("native Stdio commitment payload must be unique and at most 2 MiB");
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(JSON.parse(readFileSync(join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️fixtures/📇️native-catalog-surface/📌️commitment.schema.json"), "utf8")));
-  if (!validate(JSON.parse(lines[0]!.slice(prefix.length)))) throw new Error(`actual native Stdio commitment fails its closed JSON schema: ${JSON.stringify(validate.errors)}`);
+  const validate = hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCatalogSurfaceCommitment");
+  if (!validate(JSON.parse(lines[0]!.slice(prefix.length)))) throw new Error("actual native Stdio commitment violates its owning scope contract");
   console.log("[DEBUG] actual native Stdio commitment: AJV schema validated; no guest descriptor equality claim");
 }
 
@@ -5270,7 +5213,7 @@ class NativeCatalogSelectionCheckScript extends BundleScript {
     headlessStdioCommandRoots();
     proveHeadlessStdioLaunchIsolation(this.repoRoot);
     await proveTrustedCompiledDependenciesFixture(this.repoRoot);
-    runCmd("bun", [join(this.repoRoot, "📜️script.ts"), "nx", "run", "@semio-tech/plugin-registry:native-catalog-selection-check", "--skip-nx-cache"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:native-catalog-selection-check", "--skip-nx-cache"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     if (segments.includes("--oracle-only")) return;
     const receipts = await runExactCargoLaws({
       cwd: this.root,
@@ -5694,12 +5637,7 @@ function executionTargetLeaseInstall(
 async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as ExecutionTargetLeaseFixture;
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const ajv = new Ajv2020({ allErrors: true, strict: true });
-  ajv.addSchema(JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🔣️.schema.json"), "utf8")));
-  const canonical = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8"));
-  ajv.addSchema(canonical);
-  const validateFields = ajv.getSchema(`${canonical.$id}#/$defs/DocumentExecutionTargetLeaseFieldsV1`)!;
+  const validateFields = hubSchemaExport(repoRoot, "schema://os.directory/DocumentExecutionTargetLeaseFieldsV1");
   if (fixture.schema !== "semio.os.document-execution-target-lease-corpus/v1" || fixture.version !== 1) throw new Error("execution target lease corpus schema drift");
   if (Object.keys(fixture).sort().join(",") !== "componentHex,descriptorHex,expected,hostile,hubOrigin,intent,manifest,nowMs,plan,schema,socketGrant,version") throw new Error("execution target lease corpus envelope drift");
   if (!Number.isSafeInteger(fixture.nowMs) || fixture.nowMs < 1 || !/^https?:\/\/[^/]+$/u.test(fixture.hubOrigin)) throw new Error("execution target lease corpus clock/origin drift");
@@ -5730,8 +5668,8 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
     ["DocumentOpenPlanV1", fixture.plan],
     ["DocumentExecutionTargetLeaseFieldsV1", fixture.manifest],
   ] as const) {
-    const shape = ajv.getSchema(`${canonical.$id}#/$defs/${name}`)!;
-    if (!shape(row)) throw new Error(`canonical actor contract ${name}: ${JSON.stringify(shape.errors)}`);
+    const shape = hubSchemaExport(repoRoot, `schema://os.directory/${name}`);
+    if (!shape(row)) throw new Error(`canonical actor contract ${name} rejects its own corpus member`);
     const absent = structuredClone(row);
     delete absent.browserActor;
     if (shape(absent)) throw new Error(`canonical contract allows absent actor: ${name}`);
@@ -6601,19 +6539,13 @@ class BrowserActorDocumentReservationCheckScript extends BundleScript {
   async run(): Promise<void> {
     const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory");
     const fixture = JSON.parse(readFileSync(join(root, "🧵️browser-actor-reservation-v1.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(root, "🧬️browser-actor-reservation-v1.schema.json"), "utf8"));
-    const validate = new Ajv({ strict: true }).compile(schema);
-    if (!validate(fixture)) throw new Error("document child reservation fixture: " + JSON.stringify(validate.errors));
-    const bodyRoot = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory");
-    const bodySchema = JSON.parse(readFileSync(join(bodyRoot, "🧬️execution-target-body-read-v1.schema.json"), "utf8"));
-    const bodyFixture = JSON.parse(readFileSync(join(bodyRoot, "🧵️execution-target-body-read-v1.json"), "utf8"));
-    if (!new Ajv({ strict: true }).compile(bodySchema)(bodyFixture)) throw new Error("execution target body fixture");
+    if (!hubSchemaExport(this.repoRoot, "schema://os.directory/DocumentBrowserActorReservationV1")(fixture)) throw new Error("document child reservation fixture violates its owning scope contract");
+    const bodyFixture = JSON.parse(readFileSync(join(root, "🧵️execution-target-body-read-v1.json"), "utf8"));
+    if (!hubSchemaExport(this.repoRoot, "schema://os.directory/ExecutionTargetBodyReadV1")(bodyFixture)) throw new Error("execution target body fixture violates its owning scope contract");
     const sessionFixture = JSON.parse(readFileSync(join(root, "🧵️browser-actor-session-v1.json"), "utf8"));
-    const sessionSchema = JSON.parse(readFileSync(join(root, "🧬️browser-actor-session-v1.schema.json"), "utf8"));
-    if (!new Ajv({ strict: true }).compile(sessionSchema)(sessionFixture)) throw new Error("document actor session fixture");
+    if (!hubSchemaExport(this.repoRoot, "schema://os.directory/DocumentBrowserActorSessionV1")(sessionFixture)) throw new Error("document actor session fixture violates its owning scope contract");
     const bootstrapFixture = JSON.parse(readFileSync(join(root, "🧵️artifact-bootstrap-owner-v1.json"), "utf8"));
-    const bootstrapSchema = JSON.parse(readFileSync(join(root, "🧬️artifact-bootstrap-owner-v1.schema.json"), "utf8"));
-    if (!new Ajv({ strict: true }).compile(bootstrapSchema)(bootstrapFixture)) throw new Error("document bootstrap owner fixture");
+    if (!hubSchemaExport(this.repoRoot, "schema://os.directory/DirectoryArtifactBootstrapOwnerV1")(bootstrapFixture)) throw new Error("document bootstrap owner fixture violates its owning scope contract");
     runCmd(
       "bun",
       [
@@ -7263,11 +7195,16 @@ async function proveGisInferenceCheckpointControlFixture(repoRoot: string): Prom
   const runtime = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "🏃️runtime", "🦀️.rs"), "utf8");
   const hubBin = readFileSync(join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "🚀️bin.rs"), "utf8");
   const runner = readFileSync(join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "📜️script.ts"), "utf8");
+  // 🧬️The frame TYPE is a `hub.inference` scope export and is declared in the scope module; the
+  // runtime owns only the framing that reads and writes it over the inherited descriptor.
+  const scopeModule = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "🧬️schema", "🦀️.rs"), "utf8");
+  for (const symbol of ["pub struct GisInferenceCheckpointControlFrameV1", 'serde(deny_unknown_fields, rename_all = "camelCase")'])
+    if (!scopeModule.includes(symbol)) throw new Error(`hub.inference scope module is missing ${symbol}`);
   for (const symbol of [
     "pub fn open_inherited",
     "write_inference_checkpoint_control_frame",
     "read_inference_checkpoint_control_frame",
-    "serde(deny_unknown_fields, rename_all = \"camelCase\")",
+    "GisInferenceCheckpointControlFrameV1",
     "INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES: usize = 256",
     "control.checkpoint(control.progress().0)",
   ])
@@ -8280,10 +8217,8 @@ function trustedBootstrapPlanGenerationOutcome(issuedGenerationId: string, obser
 async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promise<void> {
   const integerRoot = join(repoRoot, "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️fixtures");
   const integerFixture = JSON.parse(readFileSync(join(integerRoot, "🔣️.json"), "utf8"));
-  const { default: IntegerAjv } = await import("ajv/dist/2020.js");
-  const integerSchema = JSON.parse(readFileSync(join(dirname(integerRoot), "🧬️schema/🔣️.json"), "utf8"));
-  const integerShape = new IntegerAjv({ strict: true, allErrors: true }).compile(integerSchema.$defs.CodecFixture);
-  if (!integerShape(integerFixture)) throw new Error(`exact integer schema: ${JSON.stringify(integerShape.errors)}`);
+  const integerShape = hubSchemaExport(repoRoot, "schema://framework.value.codec/CodecFixture");
+  if (!integerShape(integerFixture)) throw new Error("exact integer fixture violates its owning scope contract");
   let integerAccepted = 0;
   for (const target of integerFixture.targets) {
     if (target.name !== `${target.signed ? "i" : "u"}${target.bits}`) throw new Error("integer target policy mismatch");
@@ -8299,14 +8234,10 @@ async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promi
   console.log(`exact-integer-value-oracle: AJV=1 targets=${integerFixture.targets.length} raw=${integerFixture.raw.length} admitted=${integerAccepted} arithmetic=BigInt; native production parity is a separate exact group`);
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor");
   const fixture = JSON.parse(readFileSync(join(root, "🧪️fixtures/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(root, "../🔣️.json"), "utf8"));
-  const ajv = new Ajv({ allErrors: true, strict: true });
-  ajv.addSchema(schema);
   const validators = {
-    plan: ajv.getSchema(schema.$id + "#/$defs/DocumentBrowserActorPlan"),
-    lease: ajv.getSchema(schema.$id + "#/$defs/DocumentBrowserActorLease"),
+    plan: hubSchemaExport(repoRoot, "schema://os.directory/DocumentBrowserActorPlan"),
+    lease: hubSchemaExport(repoRoot, "schema://os.directory/DocumentBrowserActorLease"),
   };
-  if (!validators.plan || !validators.lease) throw new Error("directory schema omits browser actor plan or lease");
   const contract = await import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts");
   const source = { componentSha256: fixture.componentSha256, descriptorByteSha256: fixture.descriptorByteSha256 };
   const parsers = { plan: contract.parseDocumentOpenBrowserActorV1, lease: contract.parseDocumentExecutionTargetBrowserActorV1 };
@@ -8475,6 +8406,21 @@ async function proveTrustedBrowserActorCatalogFixture(repoRoot: string): Promise
   console.log(`trusted-browser-actor-catalog: scope-export=TrustedBundleBrowserActorV1 cases=${fixture.cases.length} bodies=${fixture.loadCases.length} raw-lengths=${fixture.rawLengths.length} WebCrypto=1; metadata/framing oracle only, no native loader/activation claim`);
 }
 
+/** 🦀️ Every Rust file of one module, so a law stays findable wherever the test layout puts it —
+ * production types and `#[cfg(test)]` law names are asserted against the module, not against a file. */
+function moduleRustSource(root: string): string {
+  const files: string[] = [];
+  const pending = [root];
+  while (pending.length > 0) {
+    const directory = pending.pop()!;
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      if (entry.isDirectory()) pending.push(join(directory, entry.name));
+      else if (entry.name.endsWith(".rs")) files.push(join(directory, entry.name));
+    }
+  }
+  return files.sort().map((file) => readFileSync(file, "utf8")).join("\n");
+}
+
 async function proveTrustedCatalogOpenedRootFixture(repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog");
@@ -8518,12 +8464,12 @@ async function proveTrustedCatalogOpenedRootFixture(repoRoot: string): Promise<v
     ["leaf-link", "intermediate-link", "actor-link", "data-root-link", "current-link", "generation-link", "reparse-point"],
   );
   assert(fixture.denials.every((row: any) => row.providerCalls === 0 && row.codecPublished === false));
-  const source = [readFileSync(join(root, "🦀️.rs"), "utf8"), readFileSync(join(root, "🛡️opened-root/🦀️.rs"), "utf8")].join("\n");
+  const source = moduleRustSource(root);
   const startup = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
   const required = [
     "TrustedCatalogDataRoot",
     "TrustedCatalogGenerationRoot",
-    "TrustedCatalogRelativePath",
+    "TrustedCatalogRelativePathV1",
     "TrustedCatalogOpenedFile",
     "open_server_owned",
     "open_current",
@@ -8942,7 +8888,6 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
 async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promise<void> {
   await (await import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/📜️script.ts")).proveWireValueMaterializationFixture(repoRoot);
   const { default: assert } = await import("node:assert/strict");
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🔗️compiled-dependencies");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validateIdentity = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleIdentityV1");
@@ -8981,9 +8926,8 @@ async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promis
   assert.equal(fixture.ordering.expected.length, 3);
   const kindRoot = join(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures");
   const kind = JSON.parse(readFileSync(join(kindRoot, "🗄️artifact-kind-formats.json"), "utf8"));
-  const kindSchema = JSON.parse(readFileSync(join(dirname(kindRoot), "🧬️schema/🔣️.json"), "utf8"));
-  const validateKind = new Ajv2020({ strict: true, allErrors: true }).compile(kindSchema.$defs.ArtifactKindFormatsFixture);
-  assert(validateKind(kind), JSON.stringify(validateKind.errors));
+  const validateKind = hubSchemaExport(repoRoot, "schema://framework.manifest/ArtifactKindFormatsFixture");
+  assert(validateKind(kind), "artifact kind formats fixture violates its owning scope contract");
   assert.deepEqual(packValueToExactJson(decodePackValue(encodePackValue(kind))), JSON.parse(JSON.stringify(kind)));
   for (const field of ["exportStdioKinds", "importStdioKinds"]) for (const invalid of [[1], "stdio.svg"]) assert.equal(validateKind({ ...kind, [field]: invalid }), false);
   assert.deepEqual(fixture.nativeCases.map((row: any) => row.id), ["exact", "missing", "duplicate", "foreign", "any", "caret", "tilde", "at-least", "wrong-version"]);
@@ -9200,7 +9144,7 @@ function captureTrustedBootstrapCodecsV1(repoRoot: string, check: (stage?: strin
   const admission = { remaining: 128 * 1024 };
   let stdio: Uint8Array | undefined, gis: Uint8Array | undefined;
   try {
-    stdio = readStableBuildFile(join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/📜️native-codec-factories.json"), 64 * 1024, admission, check);
+    stdio = readStableBuildFile(join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json"), 64 * 1024, admission, check);
     gis = readStableBuildFile(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json"), 64 * 1024, admission, check);
     check("project-codecs");
     const decoder = new TextDecoder("utf-8", { fatal: true });
@@ -9232,13 +9176,13 @@ async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promi
   for (const row of fixture.cases) assert.deepEqual(Object.keys(row), ["change", "accepted", "schemaAccepted"]);
   assert.equal(new Set(fixture.cases.map((row: any) => row.change)).size, fixture.cases.length);
   const sourcePaths = {
-    stdio: "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/📜️native-codec-factories.json",
+    stdio: "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
     gis: "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json",
   };
-  const schemaPaths = { stdio: "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/🔣️.json", gis: "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🧬️.schema.json" };
+  /** 🚧️ The GIS codec receipts have no scope module yet; `📇️native-codecs` is still a flat schema file. */
+  const gisSchemaPath = "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🧬️.schema.json";
   const originals = { stdio: JSON.parse(readFileSync(join(repoRoot, sourcePaths.stdio), "utf8")), gis: JSON.parse(readFileSync(join(repoRoot, sourcePaths.gis), "utf8")) };
-  const stdioSchema = JSON.parse(readFileSync(join(repoRoot, schemaPaths.stdio), "utf8"));
-  const schemas = { stdio: ajv.compile({ ...stdioSchema.$defs.NativeCodecFactories, $defs: stdioSchema.$defs }), gis: ajv.compile(JSON.parse(readFileSync(join(repoRoot, schemaPaths.gis), "utf8"))) };
+  const schemas = { stdio: hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCodecFactories"), gis: ajv.compile(JSON.parse(readFileSync(join(repoRoot, gisSchemaPath), "utf8"))) };
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   assert(artifactRoot?.includes("🗑️generated"));
   mkdirSync(artifactRoot, { recursive: true });
@@ -10874,9 +10818,8 @@ async function proveInferenceCommandFixture(repoRoot: string): Promise<void> {
 async function proveMemoryBackendBackingFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧪️fixtures/🧮️memory-backing");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`memory backing schema: ${JSON.stringify(validate.errors)}`);
+  const validate = hubSchemaExport(repoRoot, "schema://os.db.storage/MemoryBackingV1");
+  if (!validate(fixture)) throw new Error("memory backing fixture violates its owning scope contract");
   const hostile = [
     { ...fixture, maximumInlineBytes: fixture.maximumInlineBytes + 1 },
     { ...fixture, tables: fixture.tables.slice(1) },
@@ -12207,7 +12150,7 @@ class GisMapProposalCheckScript extends BundleScript {
     if (mode === "--process") {
       const nativeEnv = { ...process.env, RUST_MIN_STACK: "268435456" };
       runCargo(["build", "--manifest-path", "Cargo.toml", "-p", "semio-hub", "--bin", "os-hub", "--no-default-features", "--features", "sqlite,test-support,native-artifact-execution"], this.repoRoot, nativeEnv);
-      runCmd("bun", ["./📜️script.ts", "nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, env: nativeEnv, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, env: nativeEnv, ...orchestratorBudgetOpts() });
       await proveGisMapProposalProcess(this.repoRoot, this.root);
       console.log("gis-map-proposal-process-check: two real Author sockets and credential-FD MCP clients observed one exact paused owner-job cancellation, one later owner-private proposal, one peer-private denial boundary, one public approval, one owner-only durable undo with stale refusal and exact replay, four equal RebootstrapRequired controls, and four equal refreshed durable pairs; no external provider, Shell scene, WGPU render, or durable collaborative redo claim");
     }
@@ -13847,7 +13790,7 @@ function scopedPresenceBrowserCases(fixture: BrowserDocumentOpenFixture): readon
 
 /** 👥️ Runs the real browser Worker behind a mounted React Shell probe for interactive Chromium acceptance. */
 async function serveScopedPresenceBrowserRuntime(repoRoot: string): Promise<void> {
-  const fixture = await browserDocumentOpenFixture(repoRoot);
+  const fixture = browserDocumentOpenFixture(repoRoot);
   const cases = scopedPresenceBrowserCases(fixture);
   const capability = `session.v1.${"a".repeat(32)}.${"b".repeat(64)}`;
   const effects = {
@@ -14559,9 +14502,7 @@ class DirectoryCommandReceiptCheckScript extends BundleScript {
 async function proveCheckpointPublicationCommandV1(repoRoot: string): Promise<number> {
   const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📣️checkpoint-publication-command-v1");
   const source = readFileSync(join(fixtureRoot, "🔣️.json"), "utf8").trimEnd();
-  const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+  const validate = hubSchemaExport(repoRoot, "schema://os.directory/CheckpointPublicationCommandV1");
   const fixture = JSON.parse(source) as Record<string, unknown>;
   const semanticOracle = (value: unknown, canonical: string): boolean => {
     if (!validate(value) || JSON.stringify(value) !== canonical || Buffer.byteLength(canonical, "utf8") > 8 * 1024 || value === null || typeof value !== "object" || Array.isArray(value)) return false;
@@ -14649,14 +14590,14 @@ async function proveCheckpointPublicationCommandV1(repoRoot: string): Promise<nu
 function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
   const base = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1");
   const fixture = JSON.parse(readFileSync(join(base, "🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️.schema.json"), "utf8")));
+  const validate = hubSchemaExport(repoRoot, "schema://os.directory/SpaceArtifactCreationV1");
   let checks = 0;
   for (const row of [...fixture.requests, ...fixture.statuses, ...fixture.catalogs]) {
     const value = row.value;
     const independent = validate(value)
       && (value.phase !== "ready" || value.ready.kindId === value.ready.parentDialect.artifactKind)
       && (value.kinds === undefined || value.kinds.every((kind: any, index: number) => kind.kindId === kind.dialect.artifactKind && (index === 0 || value.kinds[index - 1].kindId < kind.kindId)));
-    if (Boolean(independent) !== row.accepted) throw new Error(`creation schema disagrees at ${row.id}: ${JSON.stringify(validate.errors)}`);
+    if (Boolean(independent) !== row.accepted) throw new Error(`creation schema disagrees at ${row.id}`);
     let own = false;
     try {
       const actual = row.value.kinds !== undefined ? parseSpaceArtifactCreationCatalogJsonV1(JSON.stringify(value)) : row.value.phase === undefined ? sealSpaceArtifactCreateV1(value) : parseSpaceArtifactCreationStatusJsonV1(JSON.stringify(value));
@@ -14697,7 +14638,7 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
     const expected = row.phase === "accepted" || row.phase === "preparing" ? 202 : 200;
     if (row.status !== expected) throw new Error(`creation HTTP response mapping differs: ${row.phase}`);
   }
-  const spaceEditor = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), "utf8");
+  const spaceEditor = moduleRustSource(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"));
   const createArtifact = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱create-artifact/🦀️.rs"), "utf8");
   if (!spaceEditor.includes('kind_choice: str_field("kindChoice").unwrap_or_default()')
     || spaceEditor.includes('kind_choice: str_field("kindId")')
@@ -14706,9 +14647,12 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
     || !createArtifact.includes('"kindChoice": payload.kind_choice')) throw new Error("ordinary Space creation dialog relay is not exact kindChoice-only");
   console.log(`[DEBUG] space artifact creation contract: cases=${checks} raw-json=${fixture.rawJson.length} relay=${httpFixture.routes.length} authority=${httpFixture.authorities.length} responses=${httpFixture.responses.length} AJV=1 scope-exports=4 TypeScript=1 Pack=1 ready-only-coordinate=1 ordinary-bridge=3; runtime genesis remains a separate gate`);
   const indexed = JSON.parse(readFileSync(join(base, "../📇️document-index-v1/🔣️.json"), "utf8"));
+  /** 🚧️ `schema://os.directory/DirectoryEventBody` is the owning export, but it carries the OpenAPI
+   * `discriminator` annotation, which the shared draft-07 validator rejects as an unknown keyword. Until
+   * `os.directory` drops it the `document.indexed` branch is compiled on its own, in the right dialect. */
   const directorySchema = JSON.parse(readFileSync(join(base, "../🔣️.json"), "utf8"));
   const indexedBodySchema = directorySchema.$defs.DirectoryEventBody.oneOf.find((row: any) => row.properties.kind.const === "document.indexed");
-  const validateIndex = new Ajv2020({ strict: true, allErrors: true }).compile({ ...indexedBodySchema, $defs: directorySchema.$defs });
+  const validateIndex = new Ajv({ strict: true, allErrors: true }).compile({ ...indexedBodySchema, $defs: directorySchema.$defs });
   for (const row of indexed.cases) {
     const client = foldDirectoryIndexEvents({ spaces: new Map(), users: new Map(), cursor: 0 }, row.events);
     if (client.spaces.get("space-fixture")?.indexedDocuments.length !== row.clientRows) throw new Error(`document index client order differs: ${row.id}`);
@@ -14727,10 +14671,8 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
   console.log(`[DEBUG] document index fixture: ordered-client=${indexed.cases.length} AJV=1 independent-node-SHA256=${indexed.cases.length}; backend transactions not executed`);
   const genesis = JSON.parse(readFileSync(join(base, "../🌱️artifact-genesis-v1/🔣️.json"), "utf8"));
   const openFixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), "utf8"));
-  const requiredCheckpointAjv = new Ajv2020({ strict: false });
-  requiredCheckpointAjv.addSchema(JSON.parse(readFileSync(join(base, "../🌐️browser-actor/🔣️.schema.json"), "utf8")));
-  const requiredPlan = requiredCheckpointAjv.compile({ $ref: "#/$defs/DocumentOpenPlanV1", $defs: directorySchema.$defs });
-  const requiredLease = requiredCheckpointAjv.compile({ $ref: "#/$defs/DocumentExecutionTargetLeaseFieldsV1", $defs: directorySchema.$defs });
+  const requiredPlan = hubSchemaExport(repoRoot, "schema://os.directory/DocumentOpenPlanV1");
+  const requiredLease = hubSchemaExport(repoRoot, "schema://os.directory/DocumentExecutionTargetLeaseFieldsV1");
   for (const row of openFixture.checkpointPresenceCases) {
     const plan = structuredClone(openFixture.validPlan);
     const lease = leaseFieldsFromPlanV1(parseDocumentOpenPlanV1(plan, openFixture.nowMs), { component: 1, descriptor: 1 });
@@ -14748,10 +14690,10 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
     if (planAccepted !== row.accepted || leaseAccepted !== row.accepted || neutralAccepted !== row.accepted || neutralLeaseAccepted !== row.accepted || Boolean(requiredPlan(plan)) !== row.accepted || Boolean(requiredLease(lease)) !== row.accepted) throw new Error(`required checkpoint presence differs: ${row.kind}`);
   }
   console.log(`[DEBUG] required committed checkpoint: TypeScript/AJV plan+lease cases=${openFixture.checkpointPresenceCases.length * 2}; protected HTTP endpoints not executed`);
-  const validateFrontier = new Ajv2020({ strict: true, allErrors: true }).compile({ $ref: "#/$defs/ArtifactFrontier", $defs: directorySchema.$defs });
+  const validateFrontier = hubSchemaExport(repoRoot, "schema://os.directory/ArtifactFrontier");
   for (const row of genesis.frontiers) {
     const independentFrontier = Boolean(validateFrontier(row.frontier) && row.scope.spaceId && row.scope.documentId === row.frontier.documentId);
-    if (independentFrontier !== (row.genesis || row.edited)) throw new Error(`genesis AJV frontier differs: ${row.id}: ${JSON.stringify(validateFrontier.errors)}`);
+    if (independentFrontier !== (row.genesis || row.edited)) throw new Error(`genesis AJV frontier differs: ${row.id}`);
     if (artifactFrontierIsGenesisForV1(row.scope, row.frontier) !== row.genesis || artifactFrontierIsEditedForV1(row.scope, row.frontier) !== row.edited) throw new Error(`genesis frontier differs: ${row.id}`);
     const plan = structuredClone(openFixture.validPlan);
     plan.scope = row.scope;
@@ -14762,7 +14704,7 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
   }
   const hash = (bytes: Uint8Array): number[] => Array.from(createHash("sha256").update(bytes).digest());
   const current = JSON.parse(readFileSync(join(base, "../🌱️artifact-genesis-v1/📤️current.json"), "utf8"));
-  const validateCurrent = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "../📣️checkpoint-publication-command-v1/🧬️.schema.json"), "utf8")));
+  const validateCurrent = hubSchemaExport(repoRoot, "schema://os.directory/CheckpointPublicationCommandV1");
   for (const row of current.cases) {
     let accepted = false;
     try { parseCheckpointPublicationCommandV1(JSON.stringify(row.command)); accepted = true; } catch {}
@@ -14886,7 +14828,7 @@ class CheckpointPublicationCheckScript extends BundleScript {
     if (phase === "process") {
       const nativeEnv = { ...process.env, RUST_MIN_STACK: "268435456" };
       runCargo(["build", "--manifest-path", "Cargo.toml", "-p", "semio-hub", "--bin", "os-hub", "--no-default-features", "--features", "sqlite,native-artifact-execution"], this.repoRoot, nativeEnv);
-      runCmd("bun", ["./📜️script.ts", "nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, env: nativeEnv, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, env: nativeEnv, ...orchestratorBudgetOpts() });
       await proveCheckpointPublicationMcpProcess(this.repoRoot, this.root);
       console.log("checkpoint-publication-process: real GIS Pack/SPR -> authenticated public Hub publication -> credential-FD MCP scoped resource passed; no GIS actor execution, inference, rendering, or commit claim");
     }
@@ -15191,16 +15133,14 @@ async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promis
 
   if (administrationMember({ ...fixture.members[0]!, unknown: true }) || hubSchemaExport(repoRoot, "schema://hub.directory/SpaceAdministrationSpaceV1")({ ...fixture.space, unknown: true }))
     throw new Error("space administration contracts admitted an unknown field");
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
 
   // 🧬️ Schema-first parity: the SHARED component JSON schema (the one the Rust and TypeScript twins are
   // both derived from) must itself admit every sealed vector and reject every structural hostile. Without
   // this the component `$defs` could drift away from both implementations unnoticed.
-  const componentSchema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8")) as { $defs: Record<string, unknown> };
-  const validatePage = new Ajv2020({ strict: false, allErrors: true }).compile({ $ref: "#/$defs/DirectorySpaceAdministrationPageV1", ...componentSchema });
+  const validatePage = hubSchemaExport(repoRoot, "schema://os.directory/DirectorySpaceAdministrationPageV1");
   for (const vector of fixture.vectors) {
     const { page } = seal(vector.access, vector.expected.memberRows, vector.expected.inviteRows);
-    if (!validatePage(page)) throw new Error(`component schema rejected the sealed ${vector.name} page: ${JSON.stringify(validatePage.errors)}`);
+    if (!validatePage(page)) throw new Error(`component schema rejected the sealed ${vector.name} page`);
   }
   for (const name of ["unknown-field", "window-row-max-plus-one", "invite-secret-field"]) {
     if (validatePage(JSON.parse(hostile(name)))) throw new Error(`component schema admitted hostile ${name}`);
@@ -16809,7 +16749,6 @@ class SpaceJourneyCheckScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir)
   .register("setup", SetupScript)
-  .register("build", BuildScript)
   .register("test", TestScript)
   .register("artifact-cas-check", ArtifactCasCheckScript)
   .register("socket-grant-check", SocketGrantCheckScript)

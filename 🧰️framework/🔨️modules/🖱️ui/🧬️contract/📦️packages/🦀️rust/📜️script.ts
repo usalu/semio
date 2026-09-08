@@ -186,7 +186,7 @@ export function conformanceCorpusSelfTests(): number {
   const catalog = JSON.parse(readFileSync(join(root, "📇️catalog.json"), "utf8")) as { version: number; roles: { snapshot: string; expect: string; patch: string }; groups: Record<string, { patch: boolean; cases: Record<string, string> }> };
   const Ajv = createRequire(import.meta.url)("ajv");
   const contractModule = JSON.parse(readFileSync(join(packageRoot, "../../🧬️schema/🔣️.json"), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).addSchema(contractModule).getSchema(`${contractModule.$id}#/$defs/ConformanceCatalogFixture`);
+  const validate = new Ajv({ strict: true, allErrors: true }).addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", minItems: 1, items: { type: "string" } } }).addSchema(contractModule).getSchema(`${contractModule.$id}#/$defs/ConformanceCatalogFixture`);
   assert(validate(catalog), JSON.stringify(validate.errors));
   assert(!validate({ ...catalog, roles: { ...catalog.roles, snapshot: "snapshot.json" } }));
   assert.deepEqual(readdirSync(root).sort(), [...Object.keys(catalog.groups), "📇️catalog.json"].sort());

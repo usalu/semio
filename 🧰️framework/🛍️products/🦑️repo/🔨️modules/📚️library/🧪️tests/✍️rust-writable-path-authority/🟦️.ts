@@ -60,7 +60,7 @@ test("exact writable route, package, and both launch registrations preserve the 
 });
 
 test("closed writable authority contract preserves the released finite checkpoint exactly", () => {
-  const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8")));
+  const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🛂️schema/🔣️.json"), "utf8")));
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
   expect(validate({ ...vector, semantics: { ...vector.semantics, failure: "writable-without-proof" } })).toBe(false);
   expect(createHash("sha256").update(prior).digest("hex")).toBe(vector.semantics.preservedFiniteCheckpoint.sha256);

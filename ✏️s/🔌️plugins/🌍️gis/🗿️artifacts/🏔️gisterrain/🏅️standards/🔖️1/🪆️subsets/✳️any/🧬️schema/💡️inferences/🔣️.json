@@ -1,9 +1,13 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/gis/gisterrain/inference.json",
   "title": "GisTerrainInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["positionCount", "bounds"],
+  "required": [
+    "positionCount",
+    "bounds"
+  ],
   "properties": {
     "positionCount": {
       "type": "integer",
@@ -11,7 +15,14 @@
       "x-semio-derived": true
     },
     "bounds": {
-      "oneOf": [{ "$ref": "#/$defs/GisTerrainBounds" }, { "type": "null" }],
+      "oneOf": [
+        {
+          "$ref": "#/$defs/GisTerrainBounds"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-derived": true
     }
   },
@@ -19,12 +30,25 @@
     "GisTerrainBounds": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["lonMin", "lonMax", "latMin", "latMax"],
+      "required": [
+        "lonMin",
+        "lonMax",
+        "latMin",
+        "latMax"
+      ],
       "properties": {
-        "lonMin": { "type": "number" },
-        "lonMax": { "type": "number" },
-        "latMin": { "type": "number" },
-        "latMax": { "type": "number" }
+        "lonMin": {
+          "type": "number"
+        },
+        "lonMax": {
+          "type": "number"
+        },
+        "latMin": {
+          "type": "number"
+        },
+        "latMax": {
+          "type": "number"
+        }
       }
     }
   }

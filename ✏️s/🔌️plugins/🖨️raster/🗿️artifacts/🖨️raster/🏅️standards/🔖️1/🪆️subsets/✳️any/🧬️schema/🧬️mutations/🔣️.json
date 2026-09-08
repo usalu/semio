@@ -1,57 +1,43 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/raster/raster/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/raster/raster/mutations.json",
   "title": "RasterMutation",
   "oneOf": [
     {
-      "$ref": "./🖇️add-layer-asset/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/raster/raster/mutation/add-layer-asset/schema.json"
     },
     {
-      "$ref": "./🎚️change-layer-adjustment-kind/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/raster/raster/mutation/change-layer-adjustment-kind/schema.json"
     },
     {
-      "$ref": "./🎨change-layer-blend-mode/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/raster/raster/mutation/change-layer-blend-mode/schema.json"
     },
     {
-      "$ref": "./🌫️change-layer-opacity/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/raster/raster/mutation/change-layer-opacity/schema.json"
     },
     {
-      "$ref": "./👁️change-layer-visible/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/raster/raster/mutation/change-layer-visible/schema.json"
     },
     {
-      "$ref": "./🌱create-layer/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/raster/raster/mutation/create-layer/schema.json"
     },
     {
-      "$ref": "./🗑️delete-layer/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/raster/raster/mutation/delete-layer/schema.json"
     },
     {
-      "$ref": "./↔️move-layer/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/raster/raster/mutation/move-layer/schema.json"
     },
     {
-      "$ref": "./🗂️remove-layer-asset/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/raster/raster/mutation/remove-layer-asset/schema.json"
     },
     {
-      "$ref": "./✏️rename-layer/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/raster/raster/mutation/rename-layer/schema.json"
     },
     {
-      "$ref": "./🔀reorder-layers/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/raster/raster/mutation/reorder-layers/schema.json"
     },
     {
-      "$ref": "./📐resize-layer/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/raster/raster/mutation/resize-layer/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "add-layer-asset",
-    "change-layer-adjustment-kind",
-    "change-layer-blend-mode",
-    "change-layer-opacity",
-    "change-layer-visible",
-    "create-layer",
-    "delete-layer",
-    "move-layer",
-    "remove-layer-asset",
-    "rename-layer",
-    "reorder-layers",
-    "resize-layer"
   ]
 }

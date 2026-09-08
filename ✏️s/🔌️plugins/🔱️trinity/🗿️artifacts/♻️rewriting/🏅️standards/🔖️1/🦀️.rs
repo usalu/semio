@@ -11,6 +11,6 @@ use semio_framework_plugin::StandardId;
 /// codec id `trinity.rewrite.rule:rewriting` and an extension `rewriting`, never a mime type), matching
 /// `🗒️note`/`🖍️draw`'s identical documented deviation. `extensions: ["rewriting"]` is the real,
 /// carried-over value (the codec row's own claim).
-pub fn standard() -> StandardDeclaration<crate::TrinityApps> {
-    StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.rewriting+json"], extensions: &["rewriting"] }, subsets: vec![subsets::any::subset()] }
+pub fn standard<PA: crate::ArtifactApps>() -> StandardDeclaration<PA> {
+    StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.rewriting+json"], extensions: &["rewriting"] }, subsets: vec![subsets::any::subset::<PA>()] }
 }

@@ -951,7 +951,10 @@
         }
       },
       "title": "Puzzle2dWasmSessionFactory",
-      "description": "The `s.puzzle2d` editor/viewer wasm BoardSession factory contract: which crate and artifacts the session module is built from, which failures it retries, how construction cancels in each phase, and how a session scope matches a plugin/app/instance triple."
+      "description": "The `s.puzzle2d` editor/viewer wasm BoardSession factory contract: which crate and artifacts the session module is built from, which failures it retries, how construction cancels in each phase, and how a session scope matches a plugin/app/instance triple.",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

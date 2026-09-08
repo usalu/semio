@@ -1,12 +1,86 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.zip/diff.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/zip/2.0/base/diff.json",
   "title": "ZipDiff",
   "type": "object",
   "$defs": {
-    "ZipEntry": { "type": "object", "required": ["name", "data"], "properties": { "name": { "type": "string" }, "data": { "type": "array", "items": { "type": "integer" } } } },
-    "ZipEntryDiff": { "type": "object", "properties": { "name": { "type": "string" }, "data": { "type": "array", "items": { "type": "integer" } } } },
-    "ZipEntryModified": { "type": "object", "required": ["name", "diff"], "properties": { "name": { "type": "string" }, "diff": { "$ref": "#/$defs/ZipEntryDiff" } } },
-    "ZipEntriesDiff": { "type": "object", "properties": { "removed": { "type": "array", "items": { "type": "string" } }, "modified": { "type": "array", "items": { "$ref": "#/$defs/ZipEntryModified" } }, "added": { "type": "array", "items": { "$ref": "#/$defs/ZipEntry" } } } }
+    "ZipEntry": {
+      "type": "object",
+      "required": [
+        "name",
+        "data"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "ZipEntryDiff": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "ZipEntryModified": {
+      "type": "object",
+      "required": [
+        "name",
+        "diff"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "diff": {
+          "$ref": "#/$defs/ZipEntryDiff"
+        }
+      }
+    },
+    "ZipEntriesDiff": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ZipEntryModified"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ZipEntry"
+          }
+        }
+      }
+    }
   },
-  "properties": { "comment": { "type": "string" }, "entries": { "$ref": "#/$defs/ZipEntriesDiff" } }
+  "properties": {
+    "comment": {
+      "type": "string"
+    },
+    "entries": {
+      "$ref": "#/$defs/ZipEntriesDiff"
+    }
+  }
 }

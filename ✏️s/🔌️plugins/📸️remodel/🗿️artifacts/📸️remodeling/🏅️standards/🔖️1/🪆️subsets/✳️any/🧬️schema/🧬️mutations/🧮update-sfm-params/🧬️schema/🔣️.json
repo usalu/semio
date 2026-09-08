@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutation/update-sfm-params/schema.json",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/mutation/update-sfm-params/schema.json",
   "title": "UpdateSfmParams",
   "type": "object",
   "additionalProperties": false,

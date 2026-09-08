@@ -1,6 +1,11 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.kit.mutations/text.json",
-  "title": "SemioKitMutationDsl",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutations/text.json",
+  "title": "SemioKitMutationText",
   "type": "object",
-  "properties": { "line": { "type": "string" } }
+  "properties": {
+    "line": {
+      "type": "string"
+    }
+  }
 }

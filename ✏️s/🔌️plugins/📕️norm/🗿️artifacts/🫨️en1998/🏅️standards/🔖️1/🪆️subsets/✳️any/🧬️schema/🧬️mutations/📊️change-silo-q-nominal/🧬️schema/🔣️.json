@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1998/1/any/mutation/change-silo-q-nominal/schema.json",
+  "$id": "https://semio.tech/schema/s/norm/en1998/mutation/change-silo-q-nominal/schema.json",
   "title": "ChangeSiloQNominal",
   "type": "object",
   "additionalProperties": false,

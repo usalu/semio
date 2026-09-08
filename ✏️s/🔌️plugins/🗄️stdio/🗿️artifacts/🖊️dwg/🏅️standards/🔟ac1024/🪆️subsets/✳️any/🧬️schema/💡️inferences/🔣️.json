@@ -1,25 +1,59 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/dwg/ac1024/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/inference.json",
   "title": "DwgInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["structure"],
+  "required": [
+    "structure"
+  ],
   "properties": {
-    "structure": { "$ref": "#/$defs/DwgStructure", "x-semio-derived": true }
+    "structure": {
+      "$ref": "#/$defs/DwgStructure",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "DwgStructure": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["layerCount", "entityCount", "geometryValueCount", "geometryIndexCount", "textCharacterCount", "codepage", "version"],
+      "required": [
+        "layerCount",
+        "entityCount",
+        "geometryValueCount",
+        "geometryIndexCount",
+        "textCharacterCount",
+        "codepage",
+        "version"
+      ],
       "properties": {
-        "layerCount": { "type": "integer", "minimum": 0 },
-        "entityCount": { "type": "integer", "minimum": 0 },
-        "geometryValueCount": { "type": "integer", "minimum": 0 },
-        "geometryIndexCount": { "type": "integer", "minimum": 0 },
-        "textCharacterCount": { "type": "integer", "minimum": 0 },
-        "codepage": { "type": "integer", "minimum": 0 },
-        "version": { "type": "string" }
+        "layerCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "entityCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "geometryValueCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "geometryIndexCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "textCharacterCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "codepage": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "version": {
+          "type": "string"
+        }
       }
     }
   }

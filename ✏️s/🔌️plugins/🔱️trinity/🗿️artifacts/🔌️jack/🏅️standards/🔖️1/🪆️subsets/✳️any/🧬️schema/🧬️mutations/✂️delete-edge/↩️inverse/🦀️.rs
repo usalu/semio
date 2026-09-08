@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeleteEdge` — reconstructs the removed edge from BASE. Missing target ⇒
 //! `Vec::new()`.
-use crate::mutations::{create_edge, TrinityGraphMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{create_edge, TrinityGraphMutation};
 use crate::JackSnapshot;
 
 //#region 🔖️Inverse

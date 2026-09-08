@@ -1634,7 +1634,10 @@
           "minimum": 1
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "RemodelingRetainedCommandLimits": {
       "type": "object",
@@ -1690,7 +1693,7 @@
                 "maxItems": 1,
                 "items": {
                   "enum": [
-                    "hostOnly",
+                    "host-only",
                     "artifact",
                     "config"
                   ]
@@ -1784,7 +1787,10 @@
           "additionalProperties": false
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

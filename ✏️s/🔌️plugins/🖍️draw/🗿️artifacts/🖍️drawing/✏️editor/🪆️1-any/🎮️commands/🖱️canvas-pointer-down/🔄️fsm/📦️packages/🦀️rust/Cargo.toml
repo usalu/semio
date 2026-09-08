@@ -16,7 +16,7 @@ wasm-opt = false
 
 [lib]
 crate-type = ["rlib", "cdylib"]
-path = "📚️library/🦀️.rs"
+path = "../../🦀️.rs"
 
 [features]
 default = ["macros"]

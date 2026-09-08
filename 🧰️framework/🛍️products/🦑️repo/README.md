@@ -124,12 +124,13 @@ Repo-wide settings live in [`.🧬semio/🦑️repo/config.toml`](../.🧬semio/
 
 Set `logging.session = true` to enable session-file logging for debugging or coordinator ingestion.
 
-# 📦️ Bundles
+# 🔨️ Modules
 
-- [cli](cli/README.md) – Command line tool for monorepo interactions
-- [go](go/README.md) – Go shared libraries or server components
-- [graphql](graphql/README.md) – GraphQL schema and core typings
-- [postgres](postgres/README.md) – PostgreSQL schema and configuration
-- [server](server/README.md) – MCP Server and backend services for repo tooling
-- [sqlite](sqlite/README.md) – SQLite schema and helpers
-- [vscode](vscode/README.md) – Visual Studio Code extension for compose
+- [`💻️client/⌨️cli`](🔨️modules/💻️client/⌨️cli) – Command line tool for monorepo interactions
+- [`💻️client/🔌️mcp`](🔨️modules/💻️client/🔌️mcp) – MCP server the agent clients speak to
+- [`💻️client/🧩️vscode`](🔨️modules/💻️client/🧩️vscode/README.md) – Visual Studio Code extension, owner of the technology catalog
+- [`💻️client/🪶️sqlite`](🔨️modules/💻️client/🪶️sqlite/README.md) – SQLite schema of the client's local-only entity store
+- [`🖥️server/🎛️coordinator`](🔨️modules/🖥️server/🎛️coordinator/README.md) – Coordinator REST API and event log
+- [`🖥️server/🧬️schema`](🔨️modules/🖥️server/🧬️schema) – PostgreSQL schema of the shared server state
+- [`📚️library`](🔨️modules/📚️library) – Taxonomy, discovery, normalization and the derived schema catalog
+- [`🧪️test`](🔨️modules/🧪️test/README.md) – Cross-module test harness

@@ -1,6 +1,6 @@
 //! 📍️ Block 3D play app command — `place-vortex`.
 
-use crate::op::Block3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Block3dMutation;
 use crate::{Block3dSnapshot, Block3dVortexTemplate};
 use crate::editor::block3d::config::{block3d_window_view, Block3dConfig, Block3dConfigMutation};
 use crate::editor::block3d::world::{default_vortex_kind, instance_offset_for_representation, resolve_brush_vortex_kind_id};
@@ -25,9 +25,9 @@ pub fn handle(payload: &PlaceVortex, doc: &ArtifactView<'_, Block3dSnapshot>, cf
     let vortex_kind_id = resolve_brush_vortex_kind_id(doc.snapshot, cfg.snapshot);
     let mut operations = Vec::new();
     if crate::vortex_kinds_of(doc.snapshot).is_empty() {
-        operations.push(crate::mutations::create_vortex_kind(default_vortex_kind()));
+        operations.push(crate::standards::v1::subsets::any::schema::mutations::create_vortex_kind(default_vortex_kind()));
     }
-    let id = crate::schema::next_id(doc.snapshot.vortices.iter().map(|vortex| vortex.id.as_str()), "vortex-");
-    operations.push(crate::mutations::create_vortex(Block3dVortexTemplate { id, vortex_kind: vortex_kind_id, position: local_position, direction, radius: cfg.snapshot.brush_radius, label: None }));
+    let id = crate::standards::v1::subsets::any::schema::next_id(doc.snapshot.vortices.iter().map(|vortex| vortex.id.as_str()), "vortex-");
+    operations.push(crate::standards::v1::subsets::any::schema::mutations::create_vortex(Block3dVortexTemplate { id, vortex_kind: vortex_kind_id, position: local_position, direction, radius: cfg.snapshot.brush_radius, label: None }));
     Ok(Emit { artifact_mutations: operations, config_mutations: vec![Block3dConfigMutation::SetBrushPreview { preview: None }], description: None, ..Default::default() })
 }

@@ -1,61 +1,46 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/din18599/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/norm/din18599/mutations.json",
   "title": "Din18599Mutation",
   "oneOf": [
     {
-      "$ref": "./🚦️change-annual-limit-kwh/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din18599/mutation/change-annual-limit-kwh/schema.json"
     },
     {
-      "$ref": "./🔋️change-energy-carrier/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din18599/mutation/change-energy-carrier/schema.json"
     },
     {
-      "$ref": "./📐️change-heated-area-m2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din18599/mutation/change-heated-area-m2/schema.json"
     },
     {
-      "$ref": "./🧱️change-ht/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din18599/mutation/change-ht/schema.json"
     },
     {
-      "$ref": "./🌬️change-hv/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din18599/mutation/change-hv/schema.json"
     },
     {
-      "$ref": "./🔥️change-internal-gains-wm2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din18599/mutation/change-internal-gains-wm2/schema.json"
     },
     {
-      "$ref": "./👥️change-occupants/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din18599/mutation/change-occupants/schema.json"
     },
     {
-      "$ref": "./🏢️change-reference-qp-kwh/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din18599/mutation/change-reference-qp-kwh/schema.json"
     },
     {
-      "$ref": "./♻️change-renewable-kwh/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din18599/mutation/change-renewable-kwh/schema.json"
     },
     {
-      "$ref": "./☀️change-solar-gains-kwh/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din18599/mutation/change-solar-gains-kwh/schema.json"
     },
     {
-      "$ref": "./📉️change-system-losses-kwh/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din18599/mutation/change-system-losses-kwh/schema.json"
     },
     {
-      "$ref": "./🏷️change-use-class/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din18599/mutation/change-use-class/schema.json"
     },
     {
-      "$ref": "./🌦️update-climate/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/din18599/mutation/update-climate/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-annual-limit-kwh",
-    "change-energy-carrier",
-    "change-heated-area-m2",
-    "change-ht",
-    "change-hv",
-    "change-internal-gains-wm2",
-    "change-occupants",
-    "change-reference-qp-kwh",
-    "change-renewable-kwh",
-    "change-solar-gains-kwh",
-    "change-system-losses-kwh",
-    "change-use-class",
-    "update-climate"
   ]
 }

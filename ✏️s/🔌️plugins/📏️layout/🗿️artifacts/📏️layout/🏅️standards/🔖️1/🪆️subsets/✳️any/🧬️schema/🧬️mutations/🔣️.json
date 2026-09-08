@@ -1,109 +1,82 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/layout/layout/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/layout/layout/mutations.json",
   "title": "LayoutMutation",
   "oneOf": [
     {
-      "$ref": "./🧾change-data-fields/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/change-data-fields/schema.json"
     },
     {
-      "$ref": "./🔢change-frame-columns/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/change-frame-columns/schema.json"
     },
     {
-      "$ref": "./🎨change-frame-fill/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/change-frame-fill/schema.json"
     },
     {
-      "$ref": "./🖊️change-frame-stroke/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/change-frame-stroke/schema.json"
     },
     {
-      "$ref": "./🔤change-frame-wrap-mode/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/change-frame-wrap-mode/schema.json"
     },
     {
-      "$ref": "./🛤️change-link-path/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/change-link-path/schema.json"
     },
     {
-      "$ref": "./↕️change-page-height/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/change-page-height/schema.json"
     },
     {
-      "$ref": "./↔️change-page-width/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/change-page-width/schema.json"
     },
     {
-      "$ref": "./🖨️change-print-target/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/change-print-target/schema.json"
     },
     {
-      "$ref": "./➕create-frame/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/create-frame/schema.json"
     },
     {
-      "$ref": "./🖇️create-link/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/create-link/schema.json"
     },
     {
-      "$ref": "./🌱create-page/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/create-page/schema.json"
     },
     {
-      "$ref": "./📖create-story/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/create-story/schema.json"
     },
     {
-      "$ref": "./➖delete-frame/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/delete-frame/schema.json"
     },
     {
-      "$ref": "./✂️delete-link/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/delete-link/schema.json"
     },
     {
-      "$ref": "./🗑️delete-page/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/delete-page/schema.json"
     },
     {
-      "$ref": "./📕delete-story/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/delete-story/schema.json"
     },
     {
-      "$ref": "./✍️edit-story/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/edit-story/schema.json"
     },
     {
-      "$ref": "./🕹️move-frame/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/move-frame/schema.json"
     },
     {
-      "$ref": "./✏️rename-layout/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/rename-layout/schema.json"
     },
     {
-      "$ref": "./🏷️rename-page/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/rename-page/schema.json"
     },
     {
-      "$ref": "./🔀reorder-pages/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/reorder-pages/schema.json"
     },
     {
-      "$ref": "./📏resize-frame/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/resize-frame/schema.json"
     },
     {
-      "$ref": "./🏛️update-page-columns/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/update-page-columns/schema.json"
     },
     {
-      "$ref": "./📐update-page-margins/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/layout/layout/mutation/update-page-margins/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-data-fields",
-    "change-frame-columns",
-    "change-frame-fill",
-    "change-frame-stroke",
-    "change-frame-wrap-mode",
-    "change-link-path",
-    "change-page-height",
-    "change-page-width",
-    "change-print-target",
-    "create-frame",
-    "create-link",
-    "create-page",
-    "create-story",
-    "delete-frame",
-    "delete-link",
-    "delete-page",
-    "delete-story",
-    "edit-story",
-    "move-frame",
-    "rename-layout",
-    "rename-page",
-    "reorder-pages",
-    "resize-frame",
-    "update-page-columns",
-    "update-page-margins"
   ]
 }

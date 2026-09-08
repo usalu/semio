@@ -181,7 +181,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "hostOnly"
+                        "host-only"
                       ]
                     }
                   },
@@ -253,7 +253,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "hostOnly"
+                        "host-only"
                       ]
                     }
                   },
@@ -271,7 +271,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "hostOnly"
+                        "host-only"
                       ]
                     }
                   },
@@ -289,7 +289,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "hostOnly"
+                        "host-only"
                       ]
                     }
                   },
@@ -343,7 +343,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "hostOnly"
+                        "host-only"
                       ]
                     }
                   },
@@ -361,7 +361,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "hostOnly"
+                        "host-only"
                       ]
                     }
                   },
@@ -379,7 +379,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "hostOnly"
+                        "host-only"
                       ]
                     }
                   },
@@ -397,7 +397,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "hostOnly"
+                        "host-only"
                       ]
                     }
                   },
@@ -415,7 +415,7 @@
                     },
                     "lanes": {
                       "const": [
-                        "hostOnly"
+                        "host-only"
                       ]
                     }
                   },
@@ -457,7 +457,7 @@
                       "status": {
                         "enum": [
                           "migrated",
-                          "batch-only"
+                          "batch-only-pending-rewrite"
                         ]
                       },
                       "feature": {
@@ -528,6 +528,9 @@
           "title": "SpaceIndexRetainedCommandLimits",
           "description": "The `s.space.space@1/*#editor` index app's retained-command execution law: its owned job factory, its bounded step budget, its fourteen publication contracts and its all-bounded fourteen-route census."
         }
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
       ]
     }
   }

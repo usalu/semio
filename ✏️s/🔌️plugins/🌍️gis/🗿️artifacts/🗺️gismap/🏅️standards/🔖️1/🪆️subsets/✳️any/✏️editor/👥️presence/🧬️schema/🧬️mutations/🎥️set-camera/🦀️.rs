@@ -39,12 +39,6 @@ impl MutationKind<Gis2dPresence, Gis2dPresenceMutation> for SetCamera {
 
 //#region 🧪️Contracts
 #[cfg(test)]
-mod tests {
-    
-
-    #[test]
-    fn direct_payload_metadata_text_binary_and_inverse_match_neutral_fixture() {
-        super::super::super::direct_mutation_tests::assert_set_camera_leaf(include_str!("🔣️.json"));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Contracts

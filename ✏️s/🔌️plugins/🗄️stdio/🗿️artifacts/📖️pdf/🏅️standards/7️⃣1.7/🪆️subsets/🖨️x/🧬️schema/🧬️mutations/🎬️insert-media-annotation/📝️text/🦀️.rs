@@ -22,13 +22,6 @@ pub fn parse(text: &str) -> Result<InsertMediaAnnotation, String> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn owned_payload_round_trips() {
-        let payload = InsertMediaAnnotation { subtype: "Movie".to_string(), title: "sample".to_string() };
-        assert_eq!(parse(&print(&payload).unwrap()).unwrap(), payload);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

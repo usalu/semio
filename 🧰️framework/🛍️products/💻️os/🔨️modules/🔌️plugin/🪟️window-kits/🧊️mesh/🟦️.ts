@@ -23,14 +23,8 @@ export function renderMesh(view: MeshView): UiComponentSceneNode {
 
 //#region 🧪️Tests
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-  describe("renderMesh", () => {
-    it("carries the JSON blobs into the world3d scene", () => {
-      const node = renderMesh({ cameraJson: "{}", meshesJson: "[]", instancesJson: "[]", selectionJson: "[]" });
-      if (node.type !== "componentScene") throw new Error("expected componentScene");
-      expect(node.world3d?.cameraJson).toBe("{}");
-    });
-  });
+  const { registerTests1 } = await import("./🧪️tests/🧪️rendermesh/🟦️.ts");
+  await registerTests1(import.meta.vitest, { renderMesh }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests
 // #endregion 🧊️MeshWindowKit

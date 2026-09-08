@@ -45,8 +45,5 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for InsertElementMu
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn semantic_identity_matches_descriptor() { assert_eq!(<InsertElementMutation as protocol::MutationKind<XmlSnapshot, super::super::XmlMutation>>::SEMANTICS.kind, "insert-element"); }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ReplacePartGrip` — patches one grip inside the owner part.
-use crate::diff::{Puzzle5dDiff, Puzzle5dPartPatch, Puzzle5dPartPatchEntry, Puzzle5dPartsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dPartPatch, Puzzle5dPartPatchEntry, Puzzle5dPartsDelta};
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

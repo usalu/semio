@@ -6,33 +6,64 @@
     "WireValueMaterialization": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "wire", "bridge", "cases"],
+      "required": [
+        "schema",
+        "wire",
+        "bridge",
+        "cases"
+      ],
       "properties": {
-        "schema": { "const": "semio.pack.value-record-materialization.v1" },
-        "wire": { "const": "SPK/1.0-record-body" },
-        "bridge": { "$ref": "#/$defs/WireValueMaterializationBridge" },
+        "schema": {
+          "const": "semio.pack.value-record-materialization.v1"
+        },
+        "wire": {
+          "const": "SPK/1.0-record-body"
+        },
+        "bridge": {
+          "$ref": "#/$defs/WireValueMaterializationBridge"
+        },
         "cases": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "$ref": "#/$defs/WireValueMaterializationCase" }
+          "items": {
+            "$ref": "#/$defs/WireValueMaterializationCase"
+          }
         }
       }
     },
     "WireValueMaterializationBridge": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["fieldId", "rootTag", "exact"],
+      "required": [
+        "fieldId",
+        "rootTag",
+        "exact"
+      ],
       "properties": {
-        "fieldId": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
-        "rootTag": { "type": "string", "pattern": "^[0-9a-f]{1,2}$" },
-        "exact": { "type": "boolean" }
+        "fieldId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "rootTag": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{1,2}$"
+        },
+        "exact": {
+          "type": "boolean"
+        }
       }
     },
     "WireValueMaterializationCase": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "rawHex", "limits", "expect"],
+      "required": [
+        "id",
+        "rawHex",
+        "limits",
+        "expect"
+      ],
       "properties": {
         "id": {
           "enum": [
@@ -59,12 +90,21 @@
             "symbol-bytes-over-materialization"
           ]
         },
-        "rawHex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
-        "limits": { "$ref": "#/$defs/WireValueMaterializationLimits" },
+        "rawHex": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{2})+$"
+        },
+        "limits": {
+          "$ref": "#/$defs/WireValueMaterializationLimits"
+        },
         "expect": {
           "oneOf": [
-            { "$ref": "#/$defs/WireValueMaterializationAccepted" },
-            { "$ref": "#/$defs/WireValueMaterializationRejected" }
+            {
+              "$ref": "#/$defs/WireValueMaterializationAccepted"
+            },
+            {
+              "$ref": "#/$defs/WireValueMaterializationRejected"
+            }
           ]
         }
       }
@@ -72,31 +112,351 @@
     "WireValueMaterializationLimits": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["maxFileLen", "maxSegmentLen", "maxSymbols", "maxDepth", "maxItems", "maxTotalAlloc"],
+      "required": [
+        "maxFileLen",
+        "maxSegmentLen",
+        "maxSymbols",
+        "maxDepth",
+        "maxItems",
+        "maxTotalAlloc"
+      ],
       "properties": {
-        "maxFileLen": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
-        "maxSegmentLen": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
-        "maxSymbols": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
-        "maxDepth": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "maxItems": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
-        "maxTotalAlloc": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+        "maxFileLen": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxSegmentLen": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxSymbols": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maxDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "maxItems": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxTotalAlloc": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
       }
     },
     "WireValueMaterializationAccepted": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["outcome", "value"],
+      "required": [
+        "outcome",
+        "value"
+      ],
       "properties": {
-        "outcome": { "const": "accepted" },
+        "outcome": {
+          "const": "accepted"
+        },
         "value": {}
       }
     },
     "WireValueMaterializationRejected": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["outcome"],
+      "required": [
+        "outcome"
+      ],
       "properties": {
-        "outcome": { "enum": ["limit", "malformed"] }
+        "outcome": {
+          "enum": [
+            "limit",
+            "malformed"
+          ]
+        }
+      }
+    },
+    "PackDynamicIntegerUintDecimal": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]{1}|1844674407370955161[0-4]|18446744073709551615)$"
+    },
+    "PackDynamicIntegerIntDecimal": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-6]|9223372036854775807|-([1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-7]|9223372036854775808))$"
+    },
+    "PackDynamicIntegerF64LeHex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$"
+    },
+    "PackDynamicIntegerWireHex": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{2}){1,256}$"
+    },
+    "PackDynamicIntegerScalar": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "uint": {
+          "$ref": "#/$defs/PackDynamicIntegerUintDecimal"
+        },
+        "int": {
+          "$ref": "#/$defs/PackDynamicIntegerIntDecimal"
+        },
+        "f64LeHex": {
+          "$ref": "#/$defs/PackDynamicIntegerF64LeHex"
+        }
+      }
+    },
+    "PackDynamicIntegerDepth3": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "uint": {
+          "$ref": "#/$defs/PackDynamicIntegerUintDecimal"
+        },
+        "int": {
+          "$ref": "#/$defs/PackDynamicIntegerIntDecimal"
+        },
+        "f64LeHex": {
+          "$ref": "#/$defs/PackDynamicIntegerF64LeHex"
+        }
+      }
+    },
+    "PackDynamicIntegerDepth2": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "uint": {
+          "$ref": "#/$defs/PackDynamicIntegerUintDecimal"
+        },
+        "int": {
+          "$ref": "#/$defs/PackDynamicIntegerIntDecimal"
+        },
+        "f64LeHex": {
+          "$ref": "#/$defs/PackDynamicIntegerF64LeHex"
+        },
+        "list": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/PackDynamicIntegerDepth3"
+          }
+        },
+        "map": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 32
+              },
+              {
+                "$ref": "#/$defs/PackDynamicIntegerDepth3"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "PackDynamicIntegerDepth1": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "uint": {
+          "$ref": "#/$defs/PackDynamicIntegerUintDecimal"
+        },
+        "int": {
+          "$ref": "#/$defs/PackDynamicIntegerIntDecimal"
+        },
+        "f64LeHex": {
+          "$ref": "#/$defs/PackDynamicIntegerF64LeHex"
+        },
+        "list": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/PackDynamicIntegerDepth2"
+          }
+        },
+        "map": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 32
+              },
+              {
+                "$ref": "#/$defs/PackDynamicIntegerDepth2"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "PackDynamicIntegerV1": {
+      "description": "Language-neutral byte corpus for the dynamic `Shape::Value` grammar's `TAG_INT` (0x03) and `TAG_UINT` (0x04) forms. Every integer is a decimal STRING anchored to the exact signed/unsigned 64-bit range so no host has to route it through a JSON number.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "accept",
+        "reject",
+        "nonclaims"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.pack.dynamic-integer/v1"
+        },
+        "version": {
+          "const": 1
+        },
+        "accept": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "variant",
+              "value",
+              "wireHex"
+            ],
+            "properties": {
+              "id": {
+                "enum": [
+                  "uint-zero",
+                  "uint-safe-plus-one",
+                  "uint-max",
+                  "int-min",
+                  "float-negative-zero",
+                  "nested"
+                ]
+              },
+              "variant": {
+                "enum": [
+                  "uint",
+                  "int",
+                  "float",
+                  "map"
+                ]
+              },
+              "value": {
+                "$ref": "#/$defs/PackDynamicIntegerDepth1"
+              },
+              "wireHex": {
+                "$ref": "#/$defs/PackDynamicIntegerWireHex"
+              }
+            }
+          }
+        },
+        "reject": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "outcome",
+              "wireHex"
+            ],
+            "properties": {
+              "id": {
+                "enum": [
+                  "truncated-u64",
+                  "u64-overflow",
+                  "nonminimal-u64",
+                  "nonminimal-zigzag-i64"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "decode-error",
+                  "noncanonical"
+                ]
+              },
+              "decodes": {
+                "$ref": "#/$defs/PackDynamicIntegerScalar"
+              },
+              "wireHex": {
+                "$ref": "#/$defs/PackDynamicIntegerWireHex"
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "outcome": {
+                      "const": "noncanonical"
+                    }
+                  },
+                  "required": [
+                    "outcome"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "decodes": {
+                      "$ref": "#/$defs/PackDynamicIntegerScalar"
+                    }
+                  },
+                  "required": [
+                    "decodes"
+                  ]
+                },
+                "else": {
+                  "properties": {
+                    "decodes": false
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "nonclaims": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
       }
     }
   }

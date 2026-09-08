@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteHandleKind`.
 
 use crate::Block2dSnapshot;
-use crate::mutations::Block2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::DeleteHandleKind, base: &Block2dSnapshot) -> Vec<Block2dMutation> {

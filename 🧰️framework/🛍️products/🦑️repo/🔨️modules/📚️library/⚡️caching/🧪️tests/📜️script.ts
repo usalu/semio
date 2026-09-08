@@ -7,6 +7,7 @@ import { testGraphCoalescing } from "./🕸️daemon/📜️script.ts";
 import { testBrowserDistribution } from "./🌐️browser/📜️script.ts";
 import { testContinuousServices } from "./🖥️services/📜️script.ts";
 import { testServiceReadiness } from "./🖥️services/🌐️readiness/📜️script.ts";
+import { testResourceLeases } from "../🔒️leases/🧪️tests/📜️script.ts";
 
 /** 🧪️ Verifies native source and command ownership against compiler and bundler input oracles. */
 export async function testCommandInputs(workspace: string, output: string): Promise<void> {
@@ -15,6 +16,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   testNxDaemonRetention(workspace, output);
   await testGraphCoalescing(workspace);
   await testContinuousServices(workspace, output);
+  await testResourceLeases(output);
   testWorkspaceRoots(workspace, output);
   await testRuntimeComponents(workspace);
   await testDemonstratorRuntime(workspace);
@@ -27,7 +29,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   const root = mkdtempSync(join(output, "native-inputs-"));
   try {
     const cases = JSON.parse(readFileSync(join(fixtures, "native-inputs/🧫️cases.json"), "utf8"));
-    assert.equal(require("jsonschema").validate(cases, JSON.parse(readFileSync(join(fixtures, "native-inputs/🧬️schema.json"), "utf8"))).valid, true);
+    assert.equal(require("jsonschema").validate(cases, JSON.parse(readFileSync(join(fixtures, "native-inputs/🛂️schema.json"), "utf8"))).valid, true);
     for (const [path, content] of Object.entries(cases.files)) { const file = join(root, path); mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, String(content)); }
     const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
     const { cacheInternals } = await import(pathToFileURL(join(workspace, library, "🟨️.mjs")).href);
@@ -50,7 +52,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
     console.log("[DEBUG] Native input closure preserves rustc-consumed assets, excludes frontend and separate tests, and matches the esbuild command import oracle PASS");
     
     const boundaries = JSON.parse(readFileSync(join(fixtures, "command-boundaries/🧫️cases.json"), "utf8"));
-    assert.equal(require("jsonschema").validate(boundaries, JSON.parse(readFileSync(join(fixtures, "command-boundaries/🧬️schema.json"), "utf8"))).valid, true);
+    assert.equal(require("jsonschema").validate(boundaries, JSON.parse(readFileSync(join(fixtures, "command-boundaries/🛂️schema.json"), "utf8"))).valid, true);
     for (const row of boundaries.cases) {
       const artifact = await require("esbuild").build({ entryPoints: [resolve(workspace, row.entry)], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
       const paths = Object.keys(artifact.metafile.inputs).sort();
@@ -159,7 +161,7 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
 export async function testRuntimeComponents(workspace: string): Promise<void> {
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/runtime-components");
   const fixture = JSON.parse(readFileSync(join(fixtures, "🔣️.json"), "utf8"));
-  assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(fixtures, "🧬️schema.json"), "utf8")), fixture));
+  assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(fixtures, "🛂️schema.json"), "utf8")), fixture));
   const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
   assert.equal(typeof cacheInternals.runtimeComponentClosure, "function", "Runtime preparation needs transitive component consumption");
   const oracle = (rows: any[], roots: string[]) => {
@@ -218,7 +220,7 @@ export function testWorkspaceRoots(workspace: string, output: string): void {
 export async function testBunDependencies(workspace: string, output: string): Promise<void> {
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/bun-dependencies");
   const cases = JSON.parse(readFileSync(join(fixtures, "🔣️.json"), "utf8"));
-  assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(fixtures, "🧬️schema.json"), "utf8")), cases));
+  assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(fixtures, "🛂️schema.json"), "utf8")), cases));
   const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
   assert.equal(typeof cacheInternals.bunLockGraph, "function", "Bun inputs require resolved-location dependency identity");
   const graph = cacheInternals.bunLockGraph(cases.lock, cases.patches);
@@ -272,7 +274,7 @@ export async function testBunDependencies(workspace: string, output: string): Pr
 export async function testNativePreparation(workspace: string, output: string): Promise<void> {
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/native-preparation");
   const cases = JSON.parse(readFileSync(join(fixtures, "🧫️cases.json"), "utf8"));
-  assert.equal(require("jsonschema").validate(cases, JSON.parse(readFileSync(join(fixtures, "🧬️schema.json"), "utf8"))).valid, true);
+  assert.equal(require("jsonschema").validate(cases, JSON.parse(readFileSync(join(fixtures, "🛂️schema.json"), "utf8"))).valid, true);
   const native = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts")).href);
   assert.equal(typeof native.validateNativeCargoArguments, "function");
   for (const row of cases.arguments) if (row.valid) assert.doesNotThrow(() => native.validateNativeCargoArguments(row.operation, row.args)); else assert.throws(() => native.validateNativeCargoArguments(row.operation, row.args), /input contract/);

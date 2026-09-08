@@ -1,14 +1,34 @@
 //! 🧬️ Schema leaf: canonical Rust mirror of `🔣️.json` for the 🕹️interaction module.
-//! Every type here is `pub use`d from the module root (`super`) rather than redefined — `super`
+//! Every type here is published from the module root (`super`) rather than redefined — `super`
 //! itself re-exports `PresenceInteraction`/`PresenceDomain`/`InteractionState`/friends from
 //! `semio-framework-replication`, where `PresencePeer.interaction: Option<PresenceInteraction>`
 //! is wired directly beside `PresencePeer` in `🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs` without this
 //! leaf owning the type.
+//!
+//! Each of the module's sixteen `$defs` exports is published as its own named `pub type`, because
+//! execution contract §A defines Rust export presence as a same-named `pub struct|enum|type` in the
+//! format leaf: a grouped `pub use` publishes the same items but names none of them, so a reader —
+//! and the `schema check` gate — cannot tell which exports this leaf claims to carry.
+//! `InteractionRef`/`InteractionTopology` are NOT `$defs` exports and stay a plain re-export.
 
-pub use super::{
-    DomainHover, DomainSelection, DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionState, InteractionTarget, InteractionTopology, MergeMode, PresenceDomain, PresenceInteraction,
-    SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
-};
+pub use super::{InteractionRef, InteractionTopology};
+
+pub type InteractionDefinition = super::InteractionDefinition;
+pub type GranularityDefinition = super::GranularityDefinition;
+pub type HierarchyProvider = super::HierarchyProvider;
+pub type HoverSpec = super::HoverSpec;
+pub type SelectionSpec = super::SelectionSpec;
+pub type SelectionMode = super::SelectionMode;
+pub type SelectionMethod = super::SelectionMethod;
+pub type MergeMode = super::MergeMode;
+pub type InteractionTarget = super::InteractionTarget;
+pub type DomainSelection = super::DomainSelection;
+pub type DomainHover = super::DomainHover;
+pub type InteractionState = super::InteractionState;
+pub type TopologyNode = super::TopologyNode;
+pub type DomainTopology = super::DomainTopology;
+pub type PresenceDomain = super::PresenceDomain;
+pub type PresenceInteraction = super::PresenceInteraction;
 
 //#region 🔖️ScopeSchemaExports
 
@@ -50,22 +70,7 @@ pub fn register_scope_exports() {
 //#region 🔖️Tests
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn every_named_export_resolves_in_every_declared_format() {
-        register_scope_exports();
-        for export in EXPORTS {
-            for format in [semio_framework_schema::SchemaFormat::JsonSchema, semio_framework_schema::SchemaFormat::Rust, semio_framework_schema::SchemaFormat::Typescript, semio_framework_schema::SchemaFormat::Graphql] {
-                let leaf = semio_framework_schema::resolve_schema_export("framework.interaction", export.id, format).expect("resolve");
-                assert!(!leaf.is_empty());
-            }
-            assert!(semio_framework_schema::resolve_schema_export("framework.interaction", export.id, semio_framework_schema::SchemaFormat::Protobuf).is_err());
-            assert!(LEAVES.json_schema.contains(export.id));
-        }
-        assert!(semio_framework_schema::scope_schema_exports_registered("framework.interaction"));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 
 //#endregion 🔖️Tests

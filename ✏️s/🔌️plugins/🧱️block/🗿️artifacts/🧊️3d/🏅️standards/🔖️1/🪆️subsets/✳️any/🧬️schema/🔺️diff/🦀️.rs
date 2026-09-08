@@ -3,7 +3,7 @@
 use crate::{Block3dBrushPreview, Block3dWindowView};
 use crate::{Block3dVortexKind, Block3dVortexTemplate};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the block3d artifact.
@@ -12,7 +12,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.block.block3d")]
 pub struct Block3dDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::schema::Block3dArtifact>>,
+    pub artifact: Option<Box<crate::standards::v1::subsets::any::schema::Block3dArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

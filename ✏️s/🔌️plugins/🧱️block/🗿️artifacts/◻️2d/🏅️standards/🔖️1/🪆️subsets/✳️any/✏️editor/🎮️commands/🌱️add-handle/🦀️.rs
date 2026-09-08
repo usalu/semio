@@ -1,6 +1,6 @@
 //! 🌱️ 🌱️ Block 2D play app commands command — `add-handle`.
 
-use crate::op::Block2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Block2dMutation;
 use crate::{Block2dHandleTemplate, Block2dSnapshot};
 use crate::editor::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -14,7 +14,7 @@ pub fn handle(_payload: &AddHandle, doc: &ArtifactView<'_, Block2dSnapshot>, _cf
     let Some(handle_kind_id) = doc.snapshot.handle_kinds.first().map(|kind| kind.id.clone()) else {
         return Ok(Emit::default());
     };
-    let id = crate::schema::next_id(doc.snapshot.handles.iter().map(|handle| handle.id.as_str()), "handle-");
+    let id = crate::standards::v1::subsets::any::schema::next_id(doc.snapshot.handles.iter().map(|handle| handle.id.as_str()), "handle-");
     let handle = Block2dHandleTemplate { id, handle_kind: handle_kind_id, angle: 0.0, radius: 0.36 };
-    Ok(Emit::mutations(vec![crate::mutations::create_handle(handle)]))
+    Ok(Emit::mutations(vec![crate::standards::v1::subsets::any::schema::mutations::create_handle(handle)]))
 }

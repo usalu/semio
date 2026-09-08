@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.video/diff.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/video/diff.json",
   "title": "SemioVideoDiff",
   "description": "Sparse diff: streams is an index-keyed removed/modified/added triple; a modified stream's samples is, recursively, the same triple shape.",
   "type": "object",
@@ -8,46 +9,102 @@
       "title": "SemioVideoStreamsDiff",
       "type": "object",
       "properties": {
-        "removed": { "type": "array", "items": { "type": "integer" } },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
         "modified": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "index": { "type": "integer" },
+              "index": {
+                "type": "integer"
+              },
               "diff": {
                 "title": "SemioVideoStreamDiff",
                 "type": "object",
                 "properties": {
-                  "kind": { "enum": ["video", "audio", "subtitle"] },
-                  "codec": { "type": "string" },
-                  "width": { "type": "integer" },
-                  "height": { "type": "integer" },
-                  "rate": { "type": "object", "properties": { "num": { "type": "integer" }, "den": { "type": "integer" } } },
+                  "kind": {
+                    "enum": [
+                      "video",
+                      "audio",
+                      "subtitle"
+                    ]
+                  },
+                  "codec": {
+                    "type": "string"
+                  },
+                  "width": {
+                    "type": "integer"
+                  },
+                  "height": {
+                    "type": "integer"
+                  },
+                  "rate": {
+                    "type": "object",
+                    "properties": {
+                      "num": {
+                        "type": "integer"
+                      },
+                      "den": {
+                        "type": "integer"
+                      }
+                    }
+                  },
                   "samples": {
                     "title": "SemioVideoSamplesDiff",
                     "type": "object",
                     "properties": {
-                      "removed": { "type": "array", "items": { "type": "integer" } },
+                      "removed": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        }
+                      },
                       "modified": {
                         "type": "array",
                         "items": {
                           "type": "object",
                           "properties": {
-                            "index": { "type": "integer" },
+                            "index": {
+                              "type": "integer"
+                            },
                             "diff": {
                               "title": "SemioVideoSampleDiff",
                               "type": "object",
                               "properties": {
-                                "pts": { "type": "integer" },
-                                "key": { "type": "boolean" },
-                                "data": { "type": "string", "contentEncoding": "hex" }
+                                "pts": {
+                                  "type": "integer"
+                                },
+                                "key": {
+                                  "type": "boolean"
+                                },
+                                "data": {
+                                  "type": "string",
+                                  "contentEncoding": "hex"
+                                }
                               }
                             }
                           }
                         }
                       },
-                      "added": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "item": { "type": "object" } } } }
+                      "added": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "index": {
+                              "type": "integer"
+                            },
+                            "item": {
+                              "type": "object"
+                            }
+                          }
+                        }
+                      }
                     }
                   }
                 }
@@ -55,7 +112,20 @@
             }
           }
         },
-        "added": { "type": "array", "items": { "type": "object", "properties": { "index": { "type": "integer" }, "item": { "type": "object" } } } }
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "integer"
+              },
+              "item": {
+                "type": "object"
+              }
+            }
+          }
+        }
       }
     }
   }

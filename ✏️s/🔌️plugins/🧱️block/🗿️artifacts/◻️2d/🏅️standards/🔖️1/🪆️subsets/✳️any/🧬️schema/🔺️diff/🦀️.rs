@@ -2,7 +2,7 @@
 
 use crate::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta};
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the block2d artifact.
@@ -13,7 +13,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.block.block2d")]
 pub struct Block2dDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::schema::Block2dArtifact>>,
+    pub artifact: Option<Box<crate::standards::v1::subsets::any::schema::Block2dArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

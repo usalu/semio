@@ -18,15 +18,11 @@ extern crate infinite_canvas as infinite_board_port_directed;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+mod art_wires_demo_tests;
 extern crate semio_framework_schema as framework_schema;
-// 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<WiresMutation, WiresConfigMutation>, Fault>`, the exact signature
-// `ArtifactApp::handle` and `app_commands!`'s generated `dispatch` require. `Fault` is a
-// framework-owned error type; boxing it here would diverge from the trait it must satisfy, and the
-// lint does not fire on the trait impl itself (only on the free functions the taxonomy split creates),
-// so this is a pure artefact of decomposition.
-#[allow(clippy::result_large_err)]
-extern crate self as semio_s_artifact_reasoning_wires;
 
 use dsl::DslValue;
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
@@ -266,79 +262,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    trait WiresChildOwnerOracle {
-        fn expected() -> serde_json::Value;
-    }
-
-    struct SerdeJsonWiresChildOwnerOracle;
-
-    impl WiresChildOwnerOracle for SerdeJsonWiresChildOwnerOracle {
-        fn expected() -> serde_json::Value {
-            serde_json::from_str(include_str!("🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Wires child-owner fixture")
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn artifact_kind_uses_the_wires_fixture_schema() {
-        assert_eq!(artifact_kind().schema, MINDMAP_WIRES_SCHEMA);
-        assert_eq!(artifact_kind().id, "graph.wires");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn empty_snapshot_has_empty_fixtures() {
-        let snapshot = empty_wires_snapshot();
-        assert_eq!(snapshot.wires_fixture.get("identities").and_then(|value| value.as_array()).map(|items| items.len()), Some(0));
-        assert_eq!(wires_working_board(&snapshot).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(0));
-    }
-
-    /// 🧪️ Round-trip law: every board node/edge field survives `wires_content_snapshot_from_scene`
-    /// → `scene_from_wires_content_snapshot`, including fields the neutral `SemioGraphNode`/
-    /// `SemioGraphEdge` shape has no native slot for (`radius`/`root`/`edgeKind`/...).
-    #[semio_framework_async_macros::async_test]
-    async fn node_edge_content_round_trips_through_the_composed_child_snapshot() {
-        let node = dsl::to_dsl_value(&dsl::json!({
-            "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 3.0, "y": 4.0,
-            "radius": 24.0, "text": "Alpha", "root": true, "handles": []
-        }))
-        .unwrap();
-        let edge = dsl::to_dsl_value(&dsl::json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
-        let content = wires_content_snapshot_from_scene(std::slice::from_ref(&node), std::slice::from_ref(&edge));
-        assert_eq!(content.nodes.len(), 1);
-        assert_eq!(content.nodes[0].id.value, "node-1");
-        assert_eq!(content.nodes[0].label, "Alpha");
-        assert_eq!(content.edges[0].source.value, "node-1");
-        let (nodes, edges) = scene_from_wires_content_snapshot(&content);
-        assert_eq!(nodes, vec![node]);
-        assert_eq!(edges, vec![edge]);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn content_child_handle_is_content_addressed_and_deterministic() {
-        let node = dsl::to_dsl_value(&dsl::json!({ "id": "a", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "text": "A", "handles": [] })).unwrap();
-        let handle_a = wires_content_child_handle(std::slice::from_ref(&node), &[]);
-        let handle_b = wires_content_child_handle(std::slice::from_ref(&node), &[]);
-        assert_eq!(handle_a.child_id, handle_b.child_id, "same content must mint the same handle");
-        let handle_c = wires_content_child_handle(&[], &[]);
-        assert_ne!(handle_a.child_id, handle_c.child_id, "different content must mint a different handle");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn wires_working_scene_is_owned_by_the_exact_snapshot_child() {
-        let owned = wires_content_child_with_owner(Vec::new(), Vec::new());
-        let wire = dsl::os_pack::to_json_string(&owned);
-        let reconstructed: WiresContentChild = dsl::os_pack::from_json_str(&wire).expect("Wires child wire roundtrip");
-        let observed = serde_json::json!({
-            "ownedHasScene": owned.local_owner::<WiresWorkingScene>().is_some(),
-            "wireIdentityMatches": owned == reconstructed,
-            "wireHasScene": reconstructed.local_owner::<WiresWorkingScene>().is_some(),
-        });
-
-        assert_eq!(observed, SerdeJsonWiresChildOwnerOracle::expected());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 //#region 🔖️Declaration
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
@@ -405,11 +330,27 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `definition()`'s `ArtifactCapability` rows above (kept, per debt D1) — wiring them into this
 /// field is real follow-up work, not required for this pass (mirrors `📓️w4-sequence-report.md`
 /// `## openQuestions` #2).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::plugin::ReasoningApps> {
+pub fn artifact<A: WiresApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.reasoning.wires").expect("canonical reasoning.wires kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
 }
+
+/// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
+pub trait WiresApplication:
+    semio_framework_plugin::PluginApp
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::wires::ReasoningWiresPlayApp>>>
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::wires::WiresViewer>>>
+{
+}
+
+impl<A> WiresApplication for A where
+    A: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::wires::ReasoningWiresPlayApp>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::wires::WiresViewer>>>
+{
+}
+
 //#endregion 🔖️Declaration
 
 #[path = "."]

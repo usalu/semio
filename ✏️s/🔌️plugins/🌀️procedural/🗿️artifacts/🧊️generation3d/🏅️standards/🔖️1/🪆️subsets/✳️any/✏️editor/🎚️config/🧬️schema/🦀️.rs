@@ -1,7 +1,7 @@
 //! 🧬️ schema leaf
 use super::Generation3dPreviewCamera;
-use semio_framework_artifact_flow_semio_framework_os_flow::CameraJson;
-use schema::ArtifactSchema;
+use semio_framework_artifact_flow_flow::CameraJson;
+use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -31,17 +31,17 @@ pub struct Generation3dConfig {
 
 //region 📎 App-schema descriptor
 /// 📎 Returns the `s.generation.3d` app-schema descriptor for `ArtifactApp::app_schema`.
-pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
-    ::schema::AppSchemaDescriptor {
+pub fn app_schema_descriptor() -> ::semio_framework_schema::AppSchemaDescriptor {
+    ::semio_framework_schema::AppSchemaDescriptor {
         id: "s.generation.3d",
-        config: ::schema::FacetLeaves {
+        config: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        presence: ::schema::FacetLeaves {
+        presence: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
             graphql: include_str!("../../👥️presence/🧬️schema/🔗️.graphql"),

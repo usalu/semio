@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/vdi3805/diff.json",
   "title": "Vdi3805Diff",
   "type": "object",

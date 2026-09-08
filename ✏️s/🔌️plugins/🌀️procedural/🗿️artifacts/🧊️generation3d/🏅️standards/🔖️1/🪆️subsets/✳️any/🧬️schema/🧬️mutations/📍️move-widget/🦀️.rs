@@ -4,10 +4,10 @@
 //! Directory kept at its pre-migration `🎛set-layout` path — see `➖remove-widget/🦠️mutation`'s
 //! docstring for why.
 
-use crate::diff::Generation3dDiff;
-use crate::mutations::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::Generation3dSnapshot;
-use semio_framework_artifact_flow_semio_framework_os_flow::WidgetLayout;
+use semio_framework_artifact_flow_flow::WidgetLayout;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️MoveWidget
 /// 📍 Places `id`'s position at `layout`, upserting the per-widget override entry.
@@ -23,11 +23,11 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Move
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "widget", kind: "move-widget", record: "MovedWidget" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::mutations::move_widget::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::move_widget::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-        crate::mutations::move_widget::inverse::inverse(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::move_widget::inverse::inverse(self, base)
     }
 
     fn label(&self) -> String {

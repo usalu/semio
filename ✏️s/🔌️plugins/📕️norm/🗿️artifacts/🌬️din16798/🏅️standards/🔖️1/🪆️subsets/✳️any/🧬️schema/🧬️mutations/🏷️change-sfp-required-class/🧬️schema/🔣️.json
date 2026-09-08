@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/din16798/1/any/mutation/change-sfp-required-class/schema.json",
+  "$id": "https://semio.tech/schema/s/norm/din16798/mutation/change-sfp-required-class/schema.json",
   "title": "ChangeSfpRequiredClass",
   "type": "object",
   "additionalProperties": false,

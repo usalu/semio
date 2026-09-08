@@ -1,32 +1,69 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/semio/presentation/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/presentation/inference.json",
   "title": "SemioPresentationInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["outline"],
+  "required": [
+    "outline"
+  ],
   "properties": {
-    "outline": { "$ref": "#/$defs/SemioPresentationOutline", "x-semio-derived": true }
+    "outline": {
+      "$ref": "#/$defs/SemioPresentationOutline",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "SemioPresentationOutline": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sectionOutline", "slideCount", "shapeCount", "blockCount", "wordCount"],
+      "required": [
+        "sectionOutline",
+        "slideCount",
+        "shapeCount",
+        "blockCount",
+        "wordCount"
+      ],
       "properties": {
-        "sectionOutline": { "type": "array", "items": { "$ref": "#/$defs/SemioPresentationHeadingEntry" } },
-        "slideCount": { "type": "integer", "minimum": 0 },
-        "shapeCount": { "type": "integer", "minimum": 0 },
-        "blockCount": { "type": "integer", "minimum": 0 },
-        "wordCount": { "type": "integer", "minimum": 0 }
+        "sectionOutline": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioPresentationHeadingEntry"
+          }
+        },
+        "slideCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shapeCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blockCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wordCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "SemioPresentationHeadingEntry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["level", "text"],
+      "required": [
+        "level",
+        "text"
+      ],
       "properties": {
-        "level": { "type": "integer", "minimum": 0 },
-        "text": { "type": "string" }
+        "level": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "text": {
+          "type": "string"
+        }
       }
     }
   }

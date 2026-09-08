@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ResizeReference` — patches the one addressed reference in place.
-use crate::diff::{Puzzle3dDiff, Puzzle3dReferencePatch, Puzzle3dReferencePatchEntry, Puzzle3dReferencesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dReferencePatch, Puzzle3dReferencePatchEntry, Puzzle3dReferencesDelta};
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

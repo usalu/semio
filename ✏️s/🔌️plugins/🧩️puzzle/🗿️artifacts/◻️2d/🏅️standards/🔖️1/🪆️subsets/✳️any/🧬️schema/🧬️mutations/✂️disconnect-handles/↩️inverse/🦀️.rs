@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DisconnectHandles` — reconstructs a `connect-handles` of the captured BASE
 //! edge. Missing target ⇒ `Vec::new()`.
-use crate::mutations::Puzzle2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Inverse
@@ -8,7 +8,7 @@ pub fn inverse(payload: &super::DisconnectHandles, base: &Puzzle2dSnapshot) -> V
     let Some(edge) = base.edges.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
-    vec![crate::mutations::connect_handles::connect_handles(
+    vec![crate::standards::v1::subsets::any::schema::mutations::connect_handles::connect_handles(
         edge.id.clone(),
         edge.source.clone(),
         edge.target.clone(),

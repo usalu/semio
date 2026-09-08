@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📥insert-array-element/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/insert-array-element/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📤remove-array-element/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/remove-array-element/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➖remove-member/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/remove-member/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏷️rename-member/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/rename-member/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔢set-safe-number/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/set-safe-number/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🔤set-string/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/set-string/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🌳set-top-level/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/set-top-level/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "./➕upsert-member/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/upsert-member/schema.json"
         },
         {
           "type": "object",

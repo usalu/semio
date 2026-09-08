@@ -31,11 +31,5 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for UnbindOutput
 //#endregion ⚙️Semantics
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::MutationLeaf;
-    #[test]
-    fn metadata_has_the_canonical_identity() {
-        assert_eq!(<UnbindOutput as MutationLeaf>::DESCRIPTOR.semantic_kind, "unbind-output");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

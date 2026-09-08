@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `ResizeReference` — restores the BASE field value. Missing target ⇒ `Vec::new()`.
-use crate::mutations::Puzzle3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Inverse
@@ -7,6 +7,6 @@ pub fn inverse(payload: &super::mutation::ResizeReference, base: &Puzzle3dSnapsh
     let Some(item) = base.references.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
-    vec![crate::mutations::resize_reference::mutation::resize_reference(item.id.clone(), item.width_world)]
+    vec![crate::standards::v1::subsets::any::schema::mutations::resize_reference::mutation::resize_reference(item.id.clone(), item.width_world)]
 }
 //#endregion 🔖️Inverse

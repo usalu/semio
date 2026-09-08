@@ -1,7 +1,7 @@
 //! 🧬️ Puzzle3d snapshot schema — artifact-lane fields only.
 
 use crate::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, PUZZLE_3D_SCHEMA};
-use artifact_schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted puzzle3d document snapshot (persistent fields of the artifact).

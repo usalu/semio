@@ -3,7 +3,7 @@
   "cases": [
     {"widgetId": "column-height", "value": 4.25},
     {"widgetId": "profile-radius", "value": 0.4, "surfaceId": "generator.flow"},
-    {"widgetId": "side-count", "value": 8}
+    {"widgetId": "side-count", "value": 8.0}
   ],
   "longWidgetId": {"unit": "🌊", "repetitions": 2048, "value": 4, "expectedBytes": 8192},
   "retirement": {"grants": [0, 1, 4096], "surfaceUnit": "🎛️", "surfaceRepetitions": 1024, "cancelAt": [0, 1, 4, 4097], "terminalEmpty": true},

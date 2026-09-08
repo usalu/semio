@@ -6,7 +6,7 @@
 //! converter/handle/cache machinery this field depends on.
 
 use crate::{Camera, JackContentChild, Manifest};
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted trinity graph document snapshot (persistent fields of the artifact).

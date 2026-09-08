@@ -6,15 +6,11 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+mod art_cad_demo_tests;
 extern crate semio_framework_schema as framework_schema;
-// 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<CadMutation, CadConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
-// and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing
-// it here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl
-// itself (only on the free functions the taxonomy split creates), so this is a pure artefact of
-// decomposition.
-#[allow(clippy::result_large_err)]
-extern crate self as semio_s_artifact_cad_cad;
 
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
@@ -83,21 +79,21 @@ pub type CadDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
 #[value(rename_all = "camelCase")]
 pub struct CadWorkingScene {
     #[value(default)]
-    pub(crate) objects: Vec<crate::standards::v1::subsets::any::io::geometry_import::CadObject>,
+    pub(crate) objects: Vec<standards::v1::subsets::any::io::geometry_import::CadObject>,
     #[value(default)]
-    pub(crate) building_objects: Vec<crate::standards::v1::subsets::any::io::geometry_import::CadObject>,
+    pub(crate) building_objects: Vec<standards::v1::subsets::any::io::geometry_import::CadObject>,
     #[value(default)]
-    pub(crate) energy_objects: Vec<crate::standards::v1::subsets::any::io::geometry_import::CadObject>,
+    pub(crate) energy_objects: Vec<standards::v1::subsets::any::io::geometry_import::CadObject>,
     #[value(default)]
-    pub(crate) structure_classic_objects: Vec<crate::standards::v1::subsets::any::io::geometry_import::CadObject>,
+    pub(crate) structure_classic_objects: Vec<standards::v1::subsets::any::io::geometry_import::CadObject>,
     #[value(default)]
-    pub(crate) geometry: Option<crate::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+    pub(crate) geometry: Option<standards::v1::subsets::any::io::geometry_import::CadGeometry>,
     #[value(default)]
-    pub(crate) building_geometry: Option<crate::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+    pub(crate) building_geometry: Option<standards::v1::subsets::any::io::geometry_import::CadGeometry>,
     #[value(default)]
-    pub(crate) energy_geometry: Option<crate::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+    pub(crate) energy_geometry: Option<standards::v1::subsets::any::io::geometry_import::CadGeometry>,
     #[value(default)]
-    pub(crate) structure_classic_geometry: Option<crate::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+    pub(crate) structure_classic_geometry: Option<standards::v1::subsets::any::io::geometry_import::CadGeometry>,
 }
 
 /// 🌉 READ direction: resolved `s.stdio.semio.model` child content (once a real resolver hands it
@@ -372,8 +368,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "cad.document",
                     extension: Some("cad"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::document_dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::document_dsl::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("cad.document"),
@@ -382,8 +378,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "cad.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("cad.op"),
@@ -392,8 +388,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "cad.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("cad.diff"),
@@ -466,11 +462,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::schema::cad_artifact_schema_descriptor())
-        .inferences([crate::standards::v1::subsets::any::schema::inferences::cad_artifact_inference_descriptor()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
+        .schema(schema::cad_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::cad_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::app::EditorApp<crate::editor::cad::CadPlayApp>>()
+        .document_codec::<semio_framework_plugin::app::EditorApp<editor::cad::CadPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️ArtifactKind
@@ -479,44 +475,8 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 /// 🧪️ Shared sample records for every cad artifact node's tests (diff/op/dsl/pack/spr) — one
 /// definition instead of the four byte-identical copies the old per-module crates each carried.
 #[cfg(test)]
-pub(crate) mod testkit {
-    use super::*;
-
-    /// 🧩️ A sample composed `s.stdio.semio.model` CHILD HANDLE — `child_id` + `target` only, per
-    /// `🔖️Composition`'s "a child handle is two strings" rule; never the resolved model content
-    /// (that lives in the child's own document, out of `CadSnapshot`'s reach).
-    pub fn sample_model_child(child_id: &str) -> CadModelChild {
-        store::ArtifactChild::new(
-            child_id.into(),
-            store::os_io::ArtifactRef { artifact_id: format!("crate-{child_id}"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() } },
-        )
-    }
-
-    pub fn sample_reference() -> CadReference {
-        CadReference {
-            id: "ref-1".into(),
-            source_url: "https://example.test/plan.png".into(),
-            media_kind: "image".into(),
-            origin: [0.0, 0.0, 0.0],
-            orientation: None,
-            scale: Some(1.5),
-            width_world: 8.0,
-            hidden: false,
-            locked: true,
-            opacity: Some(0.8),
-        }
-    }
-
-    pub fn sample_scene() -> CadSnapshot {
-        let mut scene = empty_cad_snapshot();
-        scene.shape_model = Some(sample_model_child("shape-model-1"));
-        scene.building_model = Some(sample_model_child("building-model-1"));
-        scene.nodes.push(CadNode { id: "node-1".into(), label: "Root".into(), kind: "group".into() });
-        scene.references_by_model_definition_id.insert(CadPaneId::Shape.model_definition_id().to_string(), vec![sample_reference()]);
-        scene.active_model_definition_id = CadPaneId::Shape.model_definition_id().to_string();
-        scene
-    }
-}
+#[path = "🧪️tests/🔬️testkit/🦀️.rs"]
+pub(crate) mod testkit;
 //#endregion 🧪️Testkit
 
 #[path = "🎬️interaction-spec/🦀️.rs"]

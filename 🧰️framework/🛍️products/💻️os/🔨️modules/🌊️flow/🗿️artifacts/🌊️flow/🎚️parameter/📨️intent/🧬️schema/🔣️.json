@@ -1,0 +1,140 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/flow/artifacts/flow/parameter/intent/component.json",
+  "title": "Flow Graph Parameter Intent Contracts",
+  "$defs": {
+    "SetGraphParameterCommandV1": {
+      "title": "Set Graph Parameter Command",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "widgetId",
+        "value"
+      ],
+      "properties": {
+        "widgetId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "number"
+        },
+        "surfaceId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "SetGraphParameterFixtureV1": {
+      "title": "Set Graph Parameter Command Fixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases",
+        "longWidgetId",
+        "retirement",
+        "rejected"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.flow.command.set-graph-parameter"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "$ref": "#/$defs/SetGraphParameterCommandV1"
+          }
+        },
+        "longWidgetId": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "unit",
+            "repetitions",
+            "value",
+            "expectedBytes"
+          ],
+          "properties": {
+            "unit": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8
+            },
+            "repetitions": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "value": {
+              "type": "number"
+            },
+            "expectedBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16777216
+            }
+          }
+        },
+        "retirement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "grants",
+            "surfaceUnit",
+            "surfaceRepetitions",
+            "cancelAt",
+            "terminalEmpty"
+          ],
+          "properties": {
+            "grants": {
+              "type": "array",
+              "minItems": 3,
+              "uniqueItems": true,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4096
+              }
+            },
+            "surfaceUnit": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8
+            },
+            "surfaceRepetitions": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "cancelAt": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1048576
+              }
+            },
+            "terminalEmpty": {
+              "type": "boolean",
+              "const": true
+            }
+          }
+        },
+        "rejected": {
+          "type": "array",
+          "minItems": 7,
+          "items": {
+            "type": "object",
+            "not": {
+              "$ref": "#/$defs/SetGraphParameterCommandV1"
+            }
+          }
+        }
+      }
+    }
+  }
+}

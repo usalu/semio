@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/energy/model/diff.json",
   "title": "EnergyModelDiff",
   "type": "object",
@@ -17,10 +18,22 @@
       "type": "object",
       "x-semio-state": "artifact"
     },
-    "structure": { "type": "object", "x-semio-state": "artifact" },
-    "zones": { "type": "object", "x-semio-state": "artifact" },
-    "referencedModel": { "$ref": "#/$defs/EnergyLinkSlotDelta", "x-semio-state": "artifact" },
-    "weatherLink": { "$ref": "#/$defs/EnergyLinkSlotDelta", "x-semio-state": "artifact" },
+    "structure": {
+      "type": "object",
+      "x-semio-state": "artifact"
+    },
+    "zones": {
+      "type": "object",
+      "x-semio-state": "artifact"
+    },
+    "referencedModel": {
+      "$ref": "#/$defs/EnergyLinkSlotDelta",
+      "x-semio-state": "artifact"
+    },
+    "weatherLink": {
+      "$ref": "#/$defs/EnergyLinkSlotDelta",
+      "x-semio-state": "artifact"
+    },
     "resultsJson": {
       "type": "string",
       "x-semio-state": "artifact"
@@ -30,8 +43,34 @@
     "EnergyLinkSlotDelta": {
       "title": "EnergyLinkSlotDelta",
       "oneOf": [
-        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "detached" } } },
-        { "type": "object", "additionalProperties": false, "required": ["kind", "link"], "properties": { "kind": { "const": "attached" }, "link": { "type": "object" } } }
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "detached"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "link"
+          ],
+          "properties": {
+            "kind": {
+              "const": "attached"
+            },
+            "link": {
+              "type": "object"
+            }
+          }
+        }
       ]
     },
     "EnergyModelArtifact": {
@@ -49,9 +88,15 @@
         "schema": {
           "type": "string"
         },
-        "model": { "type": "object" },
-        "structure": { "type": "object" },
-        "zones": { "type": "object" },
+        "model": {
+          "type": "object"
+        },
+        "structure": {
+          "type": "object"
+        },
+        "zones": {
+          "type": "object"
+        },
         "referencedModel": {},
         "weatherLink": {},
         "resultsJson": {

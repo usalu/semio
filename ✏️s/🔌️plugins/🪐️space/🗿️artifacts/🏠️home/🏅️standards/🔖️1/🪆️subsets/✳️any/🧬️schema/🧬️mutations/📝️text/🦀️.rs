@@ -1,6 +1,6 @@
 //! ⚡️ SHome artifact — OpText/OpBinary codecs + grammar for `SHomeMutation`.
 
-pub use crate::schema::mutations::SHomeMutation;
+pub use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 
 pub const TEXT_OPCODES: &[(&str, &str)] = &[("ChangeCatalogGeneration", super::change_catalog_generation::text::TEXT_OPCODE)];
 

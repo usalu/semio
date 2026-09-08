@@ -6,10 +6,13 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 //#region 🔖️InteractiveJobFixture
+/** 🔤️ The Rust variant name of one kebab lane/disposition from `framework.ui`'s shared vocabulary. */
+const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
+
 type Route = {
   toolId: string;
-  classification: "Migrated" | "BatchOnlyPendingRewrite";
-  lanes: ("HostOnly" | "Artifact" | "Config" | "Transient")[];
+  classification: "migrated" | "batch-only-pending-rewrite";
+  lanes: ("host-only" | "artifact" | "config" | "transient")[];
   preparation: ("Artifact" | "Config")[];
   blocker: string | null;
 };
@@ -38,11 +41,11 @@ const validateOwnedFixture = (value: unknown): value is Fixture => {
   for (const route of fixture.routes) {
     if (typeof route !== "object" || route === null || !ownKeys(route, ["toolId", "classification", "lanes", "preparation", "blocker"]) || typeof route.toolId !== "string" || route.toolId.length === 0 || ids.has(route.toolId) || !Array.isArray(route.lanes) || !Array.isArray(route.preparation)) return false;
     ids.add(route.toolId);
-    if (route.classification === "Migrated") {
+    if (route.classification === "migrated") {
       migrated += 1;
       const signature = `${route.lanes.join("+")}|${route.preparation.join("+")}`;
       if (!["Artifact|Artifact", "Config|Config", "HostOnly|", "Transient|", "Config+Transient|Config", "Artifact+Transient|Artifact", "Artifact+Config|Artifact+Config", "Artifact+Config+Transient|Artifact+Config"].includes(signature) || route.blocker !== null) return false;
-    } else if (route.classification === "BatchOnlyPendingRewrite") {
+    } else if (route.classification === "batch-only-pending-rewrite") {
       batch += 1;
       if (route.lanes.length !== 0 || route.preparation.length !== 0 || typeof route.blocker !== "string" || route.blocker.length === 0) return false;
     } else {
@@ -60,7 +63,7 @@ const reject = (condition: boolean, message: string): void => {
 //#region 🧪️InteractiveJobSourceTest
 class TestScript extends BundleScript {
   run(): void {
-    runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️.ts","✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
+    runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
 
     const root = resolve(import.meta.dir, "../..");
     const module = JSON.parse(readFileSync(resolve(root, "🧬️schema/🔣️.json"), "utf8")) as { $id: string };
@@ -73,8 +76,8 @@ class TestScript extends BundleScript {
     reject(registered.length === 47, "Lowpoly source must register exactly 47 classified actions");
     for (const route of fixture.routes) {
       reject(registered.some((row) => row.toolId === route.toolId && row.classification === route.classification), `Lowpoly source classification drift: ${route.toolId}`);
-      if (route.classification === "Migrated") {
-        const lanes = route.lanes.map((lane) => `semio_framework_plugin::ArtifactToolPublicationLane::${lane}`).join(", ");
+      if (route.classification === "migrated") {
+        const lanes = route.lanes.map((lane) => `semio_framework_plugin::ArtifactToolPublicationLane::${variant(lane)}`).join(", ");
         reject(source.includes(`ArtifactToolPublicationContract { tool_id: "${route.toolId}", lanes: &[${lanes}] }`), `Lowpoly publication lane drift: ${route.toolId}`);
         reject(source.includes(`"${route.toolId}" => semio_framework::ToolExecutionContract::resumable`), `Lowpoly proof drift: ${route.toolId}`);
       }
@@ -113,7 +116,7 @@ class TestScript extends BundleScript {
     reject(validateOracle(fixture), `Ajv oracle rejected canonical fixture: ${ajv.errorsText(validateOracle.errors)}`);
     const hostiles: Fixture[] = [
       { ...structuredClone(fixture), routes: fixture.routes.map((route, index) => index === 1 ? structuredClone(fixture.routes[0]!) : route) },
-      { ...structuredClone(fixture), routes: fixture.routes.map((route) => route.classification === "Migrated" ? { ...route, lanes: [] } : route) },
+      { ...structuredClone(fixture), routes: fixture.routes.map((route) => route.classification === "migrated" ? { ...route, lanes: [] } : route) },
       // 🧬️ Every route is now Migrated (0 BatchOnlyPendingRewrite) — a non-null blocker on a Migrated
       // route is the equivalent hostile mutation the old "empty blocker on BatchOnly" case exercised.
       { ...structuredClone(fixture), routes: fixture.routes.map((route, index) => index === 0 ? { ...route, blocker: "unexpected" } : route) },

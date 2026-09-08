@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schemas/os/browser-actor-child-v1.json",
+  "$id": "https://semio.tech/schema/os/plugin/browser-bundle/child/component.json",
   "title": "Browser Actor Child Containment V1",
   "description": "One dedicated child, fixed first-party entrypoint, bounded child-local WASI diagnostics and clock, no document or network host authority. These are intentional buffer limits, not a browser heap quota or a security sandbox.",
   "type": "object",

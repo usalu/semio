@@ -42,9 +42,6 @@ semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ArchitectApps);
 pub mod examples {
     #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_architect_demo_session;
-    #[cfg(test)]
-    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
-    mod art_program_demo_tests;
 }
 //#endregion 📚️Examples
 

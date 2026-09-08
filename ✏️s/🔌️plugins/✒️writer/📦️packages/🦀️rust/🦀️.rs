@@ -32,27 +32,9 @@ mod editor { pub use semio_s_artifact_writer_writer::editor::*; }
 mod viewer { pub use semio_s_artifact_writer_writer::viewer::*; }
 //#endregion 👁️Viewer
 
-//#region 🌉️WasmBridge
-/// 🌉️ `WriterHost` (all targets) — see `editor::writer::wasm` for the type; this re-export just
-/// surfaces it at the crate root, matching the old bundle crate's `🦀️.rs` surface. The
-/// wasm-bindgen document VCS bridge that used to live in `editor::writer::wasm` was deleted (never
-/// built by any `wasm32-unknown-unknown` target — 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION).
-pub use editor::writer::wasm::*;
-//#endregion 🌉️WasmBridge
-
 //#region 🔖️Plugin
 #[path = "../../🦀️.rs"]
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::WriterApps);
-
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-    pub mod app_writer_demo_session;
-    #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_writer_demo;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

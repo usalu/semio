@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.tsv/mutations/text.tsv",
-  "title": "TsvMutationText",
-  "type": "object"
-}

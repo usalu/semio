@@ -10,9 +10,10 @@
     "generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
     "hexBytes": { "type": "string", "pattern": "^(?:[0-9a-f]{2})*$" },
 
-    "InferenceServerIdV1": { "$ref": "#/$defs/serverId" },
+    "InferenceServerIdV1": { "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"], "$ref": "#/$defs/serverId" },
 
     "InferenceDocumentScopeV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["spaceId", "documentId"],
@@ -89,9 +90,10 @@
 
     "InferenceJobStateV1": { "enum": ["accepted", "running", "succeeded", "failed", "cancelled"] },
     "InferenceProposalStateV1": { "enum": ["none", "offered", "approved", "stale", "cancelled"] },
-    "InferenceLifecycleKindV1": { "enum": ["accepted", "running", "succeeded", "failed", "cancelled", "cancel-requested", "proposal-cancelled", "proposal-stale", "approval-prepared", "approved"] },
+    "InferenceLifecycleKindV1": { "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"], "enum": ["accepted", "running", "succeeded", "failed", "cancelled", "cancel-requested", "proposal-cancelled", "proposal-stale", "approval-prepared", "approved"] },
 
     "InferenceLimitsV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["requestMaxBytes", "inputMaxBytes", "resultMaxBytes", "proposalMaxBytes", "commandMaxBytes", "identityJsonMaxBytes", "jobCapacity", "operationCapacity", "documentGateCapacity", "progressMaxCursor", "eventPageMaxItems", "claimLeaseMaxMs", "jobMaxLifetimeMs", "workUnitLimit", "recursionDepth", "allocationBytes", "approvalMaxRecords"],
@@ -144,6 +146,7 @@
     },
 
     "InferenceApprovalOutboxV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["proposal", "commandHex", "jobId", "proposalHash", "commandHash", "mutationId", "preparedCount", "reconciledCount"],
@@ -209,6 +212,7 @@
     },
 
     "GisMapApprovalUndoTargetV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["schema", "targetId", "scope", "originalJobId", "originalMutationId", "originalCommandHash", "proposalHash", "committedWitnessDigest", "beforeFrontier", "afterFrontier", "ownerUserId", "ownerSessionId", "authorizationGeneration"],
@@ -242,7 +246,7 @@
       }
     },
 
-    "GisInferenceCheckpointControlDirectionV1": { "enum": ["hub-to-runner", "runner-to-hub"] },
+    "GisInferenceCheckpointControlDirectionV1": { "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"], "enum": ["hub-to-runner", "runner-to-hub"] },
 
     "GisMapInferencePreviewV1": {
       "type": "object",
@@ -263,6 +267,7 @@
     },
 
     "InferenceMapBoundsV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["lonMin", "lonMax", "latMin", "latMax"],
@@ -275,6 +280,7 @@
     },
 
     "InferenceMapSummaryV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["positionCount", "routeCount", "regionCount", "bounds"],
@@ -326,7 +332,7 @@
       "additionalProperties": false,
       "required": ["schema", "jobId", "state", "proposalState", "cancelRequested", "stale", "proposalHash", "events", "progress", "nextCursor"],
       "properties": {
-        "schema": { "const": "semio.hub.inference-event-page/v1" },
+        "schema": { "const": "semio.hub.inference-job-events/v1" },
         "jobId": { "$ref": "#/$defs/id" },
         "state": { "$ref": "#/$defs/InferenceJobStateV1" },
         "proposalState": { "$ref": "#/$defs/InferenceProposalStateV1" },
@@ -341,6 +347,7 @@
     },
 
     "InferenceHybridLogicalTimestampV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["actor", "physicalMs", "logical"],
@@ -348,6 +355,7 @@
     },
 
     "InferenceCommandPayloadV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["schema", "payloadHex"],
@@ -355,6 +363,7 @@
     },
 
     "InferenceCommandV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["mutationId", "documentId", "actor", "dependencies", "diff", "inverse", "timestamp"],
@@ -370,6 +379,7 @@
     },
 
     "InferenceCommandLimitsV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["commandBytes", "textBytes", "dependencyCount", "payloadBytes", "integerMaximum"],
@@ -383,6 +393,7 @@
     },
 
     "InferenceWalChainPolicyV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["hashAlgorithm", "requiredFlags", "recordDigest", "commitDigest"],
@@ -395,6 +406,7 @@
     },
 
     "InferenceWalTargetV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["scope", "documentKey", "generation", "jobId", "proposalHash", "maximumRecords"],
@@ -409,6 +421,7 @@
     },
 
     "InferenceCatalogOwnerV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["pluginId", "packageId", "version", "packageHash"],
@@ -416,6 +429,7 @@
     },
 
     "InferenceCatalogFrontierV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["headSeq", "commitSeq", "epoch"],
@@ -423,6 +437,7 @@
     },
 
     "InferenceCatalogDescriptorV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["spaceId", "documentId", "artifactKind", "artifactSchema", "owner", "packSchemaHash", "bootstrapVersion", "bootstrapFrontier", "bootstrapSnapshotHash"],
@@ -440,6 +455,7 @@
     },
 
     "InferenceCatalogPackageV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["pluginId", "packageId", "version", "componentSha256"],
@@ -467,6 +483,7 @@
     },
 
     "InferenceCatalogSelectionV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
       "required": ["scope", "descriptor", "package", "services"],

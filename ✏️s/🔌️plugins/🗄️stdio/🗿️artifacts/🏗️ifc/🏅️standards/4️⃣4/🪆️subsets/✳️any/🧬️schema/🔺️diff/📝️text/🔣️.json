@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/stdio.ifc/diff/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/ifc/4/any/diff/text.json",
   "title": "IfcDiffText",
   "type": "object"
 }

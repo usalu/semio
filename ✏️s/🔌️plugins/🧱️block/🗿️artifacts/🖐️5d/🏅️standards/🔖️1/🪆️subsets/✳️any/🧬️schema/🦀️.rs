@@ -2,7 +2,7 @@
 
 use crate::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, Block5dSnapshot};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full block5d artifact state across the artifact, presence and config lanes.
@@ -114,31 +114,31 @@ impl Block5dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.block.block5d` — twenty handcrafted schema leaves.
-pub fn block5d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn block5d_artifact_schema_descriptor() -> ::semio_framework_schema::ArtifactSchemaDescriptor {
+    ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.block.block5d",
-        artifact: schema::FacetLeaves {
+        artifact: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -297,25 +297,6 @@ pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> Str
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn empty_definition_matches_default() {
-        assert_eq!(empty_block5d_snapshot(), Block5dSnapshot::default());
-    }
-
-    /// 📄️ The boot document is a real part kind with a mesh, so the board window has a label to show
-    /// and the World3d window has a `mesh_url` to render before the first command.
-    #[semio_framework_async_macros::async_test]
-    async fn default_definition_boots_on_the_forest_left_example() {
-        let booted = default_block5d_snapshot();
-        assert_ne!(booted, empty_block5d_snapshot());
-        assert_eq!(booted.part_kind.id, "Hexagonal Cut Concrete Forest Left");
-        assert_eq!(booted.part_kind.label, "Hexagonal Cut Concrete Forest Left");
-        assert_eq!(booted.representations.first().and_then(|representation| representation.mesh_url.as_deref()), Some("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb"));
-        assert_eq!(booted.grip_kinds.len(), 1);
-        assert_eq!(booted.grips.len(), 1);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

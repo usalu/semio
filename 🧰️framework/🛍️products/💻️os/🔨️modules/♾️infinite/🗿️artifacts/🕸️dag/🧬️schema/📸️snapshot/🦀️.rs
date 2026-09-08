@@ -196,9 +196,9 @@ pub enum DagNodeKind {
     Computation {
         inputs: Vec<IoPortSpec>,
         outputs: Vec<IoPortSpec>,
-        #[value(default)]
+        #[value(default, rename = "variadic_inputs")]
         variadic_inputs: bool,
-        #[value(default)]
+        #[value(default, rename = "variadic_outputs")]
         variadic_outputs: bool,
     },
     Slider {
@@ -693,3 +693,16 @@ pub fn port_label_text_width(label: &str, px: f64) -> f64 {
 pub const DAG_EDGE_STROKE_SCREEN_PX: f64 = ui_styling::strokes::DAG_EDGE;
 
 pub const DAG_EDGE_STROKE_MINIMAP_SCREEN_PX: f64 = ui_styling::strokes::DAG_EDGE_MINIMAP;
+
+/// 🔀️ Advances a persisted select node to its next valid option.
+pub fn advance_select_option(node: &mut DagNodeSpec) -> Option<String> {
+    let DagNodeKind::Select { options, selected, .. } = &mut node.kind else {
+        return None;
+    };
+    if options.is_empty() {
+        return None;
+    }
+    let count = dag_index_to_wire(options.len());
+    *selected = ((*selected % count).checked_add(1)?) % count;
+    options.get(usize::try_from(*selected).ok()?).cloned()
+}

@@ -4,7 +4,7 @@
 //! composed `content: JackContentChild` slot, matching `DagArtifact`'s own field swap exactly.
 
 use crate::{Camera, JackContentChild, Manifest};
-use schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
 //#region 🔖️Artifact
@@ -198,31 +198,31 @@ impl JackArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.trinity.jack` — twenty handcrafted schema leaves.
-pub fn jack_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn jack_artifact_schema_descriptor() -> ::semio_framework_schema::ArtifactSchemaDescriptor {
+    ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.trinity.jack",
-        artifact: schema::FacetLeaves {
+        artifact: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -242,16 +242,8 @@ pub fn empty_jack_document() -> crate::JackSnapshot {
 
 //#region 🧪️EmptyDocumentTests
 #[cfg(test)]
-mod empty_document_tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn empty_jack_document_has_no_nodes_or_edges() {
-        let fixture = empty_jack_document();
-        assert!(fixture.nodes().is_empty());
-        assert!(fixture.edges().is_empty());
-    }
-}
+#[path = "🧪️tests/🔬️empty-document/🦀️.rs"]
+mod empty_document_tests;
 //#endregion 🧪️EmptyDocumentTests
 
 //#region 🏗️DerivedConstruction

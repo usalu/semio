@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.las/mutations/text.json",
-  "title": "LasMutationsText",
-  "type": "object"
-}

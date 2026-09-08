@@ -81,19 +81,6 @@ pub fn wav_artifact_inference_descriptor() -> framework_schema::ArtifactInferenc
 
 #[cfg(test)]
 //#region 🧪️Tests
-mod tests {
-    use super::*;
-    use protocol::Inference;
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
-        let snapshot = WavSnapshot::default();
-        assert_eq!(WavInference::infer(&snapshot), WavInference::infer(&snapshot));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
-        assert_eq!(WavInference::infer(&WavSnapshot::default()), WavInference::default());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -12,7 +12,7 @@
       ],
       "properties": {
         "AddDesign": {
-          "$ref": "./🆕add-design/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/add-design/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "AddType": {
-          "$ref": "./➕add-type/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/add-type/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "BindRepresentation": {
-          "$ref": "./🪢️bind-representation/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/bind-representation/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "ChangeRepresentationPin": {
-          "$ref": "./📌change-representation-pin/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/change-representation-pin/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "CreateModel": {
-          "$ref": "./🏛️create-model/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/create-model/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "CreateObject": {
-          "$ref": "./🏗️create-object/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/create-object/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "CreateProperties": {
-          "$ref": "./🏷️create-properties/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/create-properties/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "DeleteModel": {
-          "$ref": "./💣delete-model/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/delete-model/schema.json"
         }
       }
     },
@@ -108,7 +108,7 @@
       ],
       "properties": {
         "DeleteObject": {
-          "$ref": "./🪓delete-object/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/delete-object/schema.json"
         }
       }
     },
@@ -120,7 +120,7 @@
       ],
       "properties": {
         "DeleteProperties": {
-          "$ref": "./🚫delete-properties/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/delete-properties/schema.json"
         }
       }
     },
@@ -132,7 +132,7 @@
       ],
       "properties": {
         "EditDesign": {
-          "$ref": "./🖊️edit-design/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/edit-design/schema.json"
         }
       }
     },
@@ -144,7 +144,7 @@
       ],
       "properties": {
         "RemoveDesign": {
-          "$ref": "./🗑️remove-design/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/remove-design/schema.json"
         }
       }
     },
@@ -156,7 +156,7 @@
       ],
       "properties": {
         "RemoveType": {
-          "$ref": "./➖remove-type/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/remove-type/schema.json"
         }
       }
     },
@@ -168,7 +168,7 @@
       ],
       "properties": {
         "RenameType": {
-          "$ref": "./✏️rename-type/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/rename-type/schema.json"
         }
       }
     },
@@ -180,7 +180,7 @@
       ],
       "properties": {
         "UnbindRepresentation": {
-          "$ref": "./✂️unbind-representation/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/unbind-representation/schema.json"
         }
       }
     }

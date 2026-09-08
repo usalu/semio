@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/stdio.svg/diff/text.svg",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/base/diff/text.json",
   "title": "SvgDiffText",
   "description": "Structured tagged/hex text emitted by SvgDiff::print_diff.",
   "type": "string"

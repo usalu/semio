@@ -1,23 +1,51 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/architect/program/inference.json",
   "title": "ProgramInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["topology"],
+  "required": [
+    "topology"
+  ],
   "properties": {
-    "topology": { "$ref": "#/$defs/ProgramTopology", "x-semio-derived": true }
+    "topology": {
+      "$ref": "#/$defs/ProgramTopology",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "ProgramTopology": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["nodeCount", "rootCount", "maxDepth", "cycleFree", "topoOrder"],
+      "required": [
+        "nodeCount",
+        "rootCount",
+        "maxDepth",
+        "cycleFree",
+        "topoOrder"
+      ],
       "properties": {
-        "nodeCount": { "type": "integer", "minimum": 0 },
-        "rootCount": { "type": "integer", "minimum": 0 },
-        "maxDepth": { "type": "integer", "minimum": 0 },
-        "cycleFree": { "type": "boolean" },
-        "topoOrder": { "type": "array", "items": { "type": "string" } }
+        "nodeCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rootCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxDepth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cycleFree": {
+          "type": "boolean"
+        },
+        "topoOrder": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     }
   }

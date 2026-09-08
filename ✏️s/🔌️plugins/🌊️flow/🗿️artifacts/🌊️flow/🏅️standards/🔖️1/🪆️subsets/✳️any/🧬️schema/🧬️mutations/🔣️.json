@@ -1,49 +1,37 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/flow/flow/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/flow/flow/mutations.json",
   "title": "FlowMutation",
   "oneOf": [
     {
-      "$ref": "./🔌️connect-widgets/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/flow/flow/mutation/connect-widgets/schema.json"
     },
     {
-      "$ref": "./➕️create-widget/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/flow/flow/mutation/create-widget/schema.json"
     },
     {
-      "$ref": "./🗑️delete-widget/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/flow/flow/mutation/delete-widget/schema.json"
     },
     {
-      "$ref": "./✂️disconnect-widgets/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/flow/flow/mutation/disconnect-widgets/schema.json"
     },
     {
-      "$ref": "./👯️duplicate-widget/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/flow/flow/mutation/duplicate-widget/schema.json"
     },
     {
-      "$ref": "./📍️move-widgets/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/flow/flow/mutation/move-widgets/schema.json"
     },
     {
-      "$ref": "./🔀️reorder-synapses/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/flow/flow/mutation/reorder-synapses/schema.json"
     },
     {
-      "$ref": "./🔢️reorder-widgets/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/flow/flow/mutation/reorder-widgets/schema.json"
     },
     {
-      "$ref": "./🔁️replace-widget/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/flow/flow/mutation/replace-widget/schema.json"
     },
     {
-      "$ref": "./🔄️update-synapse-endpoints/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/flow/flow/mutation/update-synapse-endpoints/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "connect-widgets",
-    "create-widget",
-    "delete-widget",
-    "disconnect-widgets",
-    "duplicate-widget",
-    "move-widgets",
-    "reorder-synapses",
-    "reorder-widgets",
-    "replace-widget",
-    "update-synapse-endpoints"
   ]
 }

@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/stdio.dwg/diff/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/diff/text.json",
   "title": "DwgDiffText",
   "type": "object"
 }

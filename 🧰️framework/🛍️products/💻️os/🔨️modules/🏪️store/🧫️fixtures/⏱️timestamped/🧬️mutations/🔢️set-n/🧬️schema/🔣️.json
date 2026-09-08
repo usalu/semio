@@ -4,14 +4,14 @@
   "title": "SetN",
   "type": "object",
   "$defs": {
-    "payload": {
+    "Payload": {
       "type": "object",
       "properties": {
         "n": {
-          "$ref": "../../../../🧬️schema/🔣️.json#/$defs/I32"
+          "$ref": "https://semio.tech/schema/os/store/fixtures/schema.json#/$defs/I32"
         },
         "physicalMs": {
-          "$ref": "../../../../🧬️schema/🔣️.json#/$defs/U64"
+          "$ref": "https://semio.tech/schema/os/store/fixtures/schema.json#/$defs/U64"
         }
       },
       "required": [
@@ -22,7 +22,7 @@
   },
   "allOf": [
     {
-      "$ref": "#/$defs/payload"
+      "$ref": "#/$defs/Payload"
     }
   ],
   "propertyNames": {

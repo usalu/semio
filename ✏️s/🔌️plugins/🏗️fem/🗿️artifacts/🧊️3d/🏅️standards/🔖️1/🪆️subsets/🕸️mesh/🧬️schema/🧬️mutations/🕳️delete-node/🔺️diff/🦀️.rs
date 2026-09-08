@@ -8,7 +8,7 @@
 //! so the asymmetry is recorded here rather than silently removed. `node_referrers` in
 //! `🌐️any/🧬️schema/🧬️mutations/🦀️.rs` is the scan a future cascade would use.
 use super::DeleteNode;
-use crate::diff::{Fem3dDiff, Fem3dNodesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dNodesDelta};
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff

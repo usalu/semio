@@ -14,7 +14,7 @@ type Row = { id: string; source: string; reason: string; selectedValues: string[
 const root = resolve(import.meta.dir, "../../../../../../../"), ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
 const vectorPath = join(import.meta.dir, "../↪️rust-divergence-callback/🔣️.json"), vector = JSON.parse(readFileSync(vectorPath, "utf8"));
 const rows = vector.cases as Row[], hash = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
-const inputs = [vectorPath, join(import.meta.dir, "../↪️rust-divergence-callback/🧬️schema/🔣️.json"), join(import.meta.dir, "../↪️rust-divergence-callback/🟦️.ts")];
+const inputs = [vectorPath, join(import.meta.dir, "../↪️rust-divergence-callback/🛂️schema/🔣️.json"), join(import.meta.dir, "../↪️rust-divergence-callback/🟦️.ts")];
 const identities = inputs.map((path) => ({ path, sha256: hash(readFileSync(path)) }));
 const runParent = join(ticket, ...vector.retention.parentSegments);
 let helpers: Promise<typeof import("../../🔍️discovery/🟦️.ts")> | undefined;
@@ -105,7 +105,7 @@ afterAll(() => {
 });
 
 test("closed divergence callback contract preserves candidate-only and physical-proof separation", () => {
-  const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8")));
+  const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🛂️schema/🔣️.json"), "utf8")));
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
   expect(rows).toHaveLength(38);
   expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);

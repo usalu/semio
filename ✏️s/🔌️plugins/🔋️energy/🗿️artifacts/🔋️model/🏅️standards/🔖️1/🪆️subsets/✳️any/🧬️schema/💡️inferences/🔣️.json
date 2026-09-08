@@ -1,9 +1,12 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/energy/model/inference.json",
   "title": "EnergyModelInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["entries"],
+  "required": [
+    "entries"
+  ],
   "properties": {
     "entries": {
       "$ref": "#/$defs/EnergyModelEntries",
@@ -14,11 +17,21 @@
     "EnergyModelEntries": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["entryCount", "byteSize", "contentDigest"],
+      "required": [
+        "entryCount",
+        "byteSize",
+        "contentDigest"
+      ],
       "properties": {
-        "entryCount": { "type": "integer" },
-        "byteSize": { "type": "integer" },
-        "contentDigest": { "type": "string" }
+        "entryCount": {
+          "type": "integer"
+        },
+        "byteSize": {
+          "type": "integer"
+        },
+        "contentDigest": {
+          "type": "string"
+        }
       }
     }
   }

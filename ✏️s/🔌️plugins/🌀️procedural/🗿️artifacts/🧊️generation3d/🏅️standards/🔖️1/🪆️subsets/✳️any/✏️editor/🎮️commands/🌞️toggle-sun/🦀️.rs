@@ -1,6 +1,6 @@
 //! 🌞️ 🌞️ Generation3d play app commands command — `toggle-sun`.
 
-use crate::op::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use semio_framework_os_flow::FlowEvalSession;
@@ -19,18 +19,6 @@ pub fn handle(_payload: &ToggleSun, _doc: &ArtifactView<'_, Generation3dSnapshot
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::generation3d::testkit::{app, dispatch};
-    use crate::editor::generation3d::Generation3dCommand;
-
-    #[semio_framework_async_macros::async_test]
-    async fn toggle_sun_never_mutates_the_document() {
-        let _serial = crate::editor::generation3d::test_support::lock();
-        let mut app = app().await;
-        let before = app.snapshot().expect("snapshot");
-        dispatch(&mut app, Generation3dCommand::ToggleSun(ToggleSun {})).await;
-        assert_eq!(app.snapshot().expect("snapshot"), before, "toggleSun must not mutate the document");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -2,8 +2,8 @@
 
 use semio_s_artifact_trinity_jack::PropertyValue;
 use crate::rewriting_snapshot_mutations;
-use crate::op::RewriteRuleMutation;
-use crate::schema::{ParameterKind, Rhs};
+use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::{ParameterKind, Rhs};
 use crate::RewritingSnapshot;
 use crate::editor::rewriting::config::RewritingConfigMutation;
 use semio_framework_plugin::Emit;

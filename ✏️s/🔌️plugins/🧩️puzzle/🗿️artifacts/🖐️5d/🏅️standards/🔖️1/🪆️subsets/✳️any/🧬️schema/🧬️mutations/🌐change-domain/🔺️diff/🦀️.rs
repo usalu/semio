@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ChangeDomain` — patches the document `domain`.
-use crate::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

@@ -12,7 +12,7 @@
       ],
       "properties": {
         "InsertFrameComponent": {
-          "$ref": "./🧩️insert-frame-component/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/baseline/mutation/insert-frame-component/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "InsertHuffmanTable": {
-          "$ref": "./🌳️insert-huffman-table/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/baseline/mutation/insert-huffman-table/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "RemoveFrameComponent": {
-          "$ref": "./✂️remove-frame-component/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/baseline/mutation/remove-frame-component/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "RemoveHuffmanTable": {
-          "$ref": "./🪓️remove-huffman-table/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/baseline/mutation/remove-huffman-table/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "SetArithmetic": {
-          "$ref": "./➗️set-arithmetic/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/baseline/mutation/set-arithmetic/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "SetComponentSampling": {
-          "$ref": "./🎨️set-component-sampling/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/baseline/mutation/set-component-sampling/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "SetSamplePrecision": {
-          "$ref": "./🎯️set-sample-precision/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/baseline/mutation/set-sample-precision/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "SetSnapshot": {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/baseline/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -108,7 +108,7 @@
       ],
       "properties": {
         "SetSofMarker": {
-          "$ref": "./🏁️set-sof-marker/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/baseline/mutation/set-sof-marker/schema.json"
         }
       }
     }

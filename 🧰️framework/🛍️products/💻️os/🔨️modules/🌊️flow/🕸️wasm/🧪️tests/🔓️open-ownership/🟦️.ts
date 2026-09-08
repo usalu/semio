@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createFlowBrowserRuntime } from "../../📦️packages/🟨️javascript/🌐️flow-browser.js";
-import { MockFlowBridge } from "../../📦️packages/🟨️javascript/🧪️tests/mock-flow-bridge.ts";
+import { MockFlowBridge } from "../🎭️mock-flow-bridge/🟦️.ts";
 
 interface FlowOpenFailureFixture {
   readonly verifiedRejection: { readonly nativeSession: "absent"; readonly entry: "released" };

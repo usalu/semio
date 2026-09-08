@@ -8,15 +8,15 @@ const root = process.cwd(), ticket = dirname(dirname(fileURLToPath(import.meta.u
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const put = (path: string, value: unknown): void => { const target = join(fixture, path); mkdirSync(dirname(target), { recursive: true }); writeFileSync(target, typeof value === "string" ? value : JSON.stringify(value)); };
 put("nx.json", { useDaemonProcess: true, plugins: [{ plugin: `./${library}/🟨️.mjs` }], cacheDirectory: ".nx/cache", namedInputs: { sharedGlobals: [] } });
-put("package.json", { name: "development-coordinator-proof", private: true, nx: { includedScripts: [] } });
+put("package.json", { name: "development-coordinator-proof", private: true, scripts: { nx: "bun ./📜️script.ts nx" }, nx: { includedScripts: [] } });
 put(".gitignore", "node_modules\n.nx\nstate\n**/dist\n*.log\n");
-put(".nxignore", `!🔨️core/source.json\n!🧩️app/source.json\n!${library}/🟨️.mjs\n!${library}/⚡️caching/🔣️policy.json\n!${library}/🕸️dependencies/🧩️runtime/🟨️.mjs\n`);
-for (const path of ["🟨️.mjs", "⚡️caching/🔣️policy.json", "🕸️dependencies/🧩️runtime/🟨️.mjs"]) put(`${library}/${path}`, readFileSync(join(root, library, path), "utf8"));
+put(".nxignore", `!🔨️core/source.json\n!🧩️app/source.json\n!${library}/🟨️.mjs\n!${library}/⚡️caching/🔣️policy.json\n!${library}/🔣️taxonomy.json\n!${library}/🕸️dependencies/🧩️runtime/🟨️.mjs\n`);
+for (const path of ["🟨️.mjs", "🔣️taxonomy.json", "⚡️caching/🔣️policy.json", "🕸️dependencies/🧩️runtime/🟨️.mjs"]) put(`${library}/${path}`, readFileSync(join(root, library, path), "utf8"));
 for (const [name, directory, dependencies] of [["probe-core", "🔨️core", []], ["probe-app", "🧩️app", ["probe-core"]]] as const) {
   put(`${directory}/📋️project.json`, { name, implicitDependencies: dependencies, targets: { build: { cache: true, inputs: ["default", "^default"], outputs: ["{projectRoot}/dist"], dependsOn: ["^build"], options: { command: `bun ./📜️script.ts build ${directory}`, cwd: "." } }, ...(name === "probe-app" ? { serve: { cache: false, continuous: true, outputs: [], dependsOn: ["build"], options: { command: "bun ./📜️script.ts server", cwd: "." } } } : {}) } });
   put(`${directory}/source.json`, { value: 42 });
 }
-const source = ts.createSourceFile("root.ts", readFileSync(join(root, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+const source = ts.createSourceFile("root.ts", readFileSync(join(root, library, "⚡️caching/🚀️bootstrap/📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
 const declaration = source.statements.find((node) => ts.isClassDeclaration(node) && node.name?.text === "NxScript")!;
 const wrapper = ts.transpileModule(declaration.getText(source).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
 put("📜️script.ts", String.raw`import { createRequire } from "node:module";

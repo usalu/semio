@@ -1,7 +1,7 @@
 //! 🏋️ 🏋️ FEM 3D app commands command — `add-combination`.
 
-use crate::mutations::create_combination;
-use crate::op::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::create_combination;
+use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
 use crate::Fem3dSnapshot;
 use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

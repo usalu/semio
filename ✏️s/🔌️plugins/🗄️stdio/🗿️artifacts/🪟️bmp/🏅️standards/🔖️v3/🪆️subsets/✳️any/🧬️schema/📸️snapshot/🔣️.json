@@ -1,50 +1,144 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.bmp/snapshot.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/bmp/v3/any/snapshot.json",
   "title": "BmpSnapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema", "headerSize", "width", "height", "rowOrder", "planes", "bitsPerPixel",
-    "compression", "imageSize", "xPixelsPerMeter", "yPixelsPerMeter", "colorsUsed",
-    "colorsImportant", "palette", "pixels"
+    "schema",
+    "headerSize",
+    "width",
+    "height",
+    "rowOrder",
+    "planes",
+    "bitsPerPixel",
+    "compression",
+    "imageSize",
+    "xPixelsPerMeter",
+    "yPixelsPerMeter",
+    "colorsUsed",
+    "colorsImportant",
+    "palette",
+    "pixels"
   ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "headerSize": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
-    "width": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
-    "height": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
-    "rowOrder": { "$ref": "#/$defs/BmpRowOrder", "x-semio-state": "artifact" },
-    "planes": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
-    "bitsPerPixel": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
-    "compression": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
-    "imageSize": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
-    "xPixelsPerMeter": { "type": "integer", "x-semio-state": "artifact" },
-    "yPixelsPerMeter": { "type": "integer", "x-semio-state": "artifact" },
-    "colorsUsed": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
-    "colorsImportant": { "type": "integer", "minimum": 0, "x-semio-state": "artifact" },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "headerSize": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "rowOrder": {
+      "$ref": "#/$defs/BmpRowOrder",
+      "x-semio-state": "artifact"
+    },
+    "planes": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "bitsPerPixel": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "compression": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "imageSize": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "xPixelsPerMeter": {
+      "type": "integer",
+      "x-semio-state": "artifact"
+    },
+    "yPixelsPerMeter": {
+      "type": "integer",
+      "x-semio-state": "artifact"
+    },
+    "colorsUsed": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
+    "colorsImportant": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "artifact"
+    },
     "palette": {
       "type": "array",
       "x-semio-state": "artifact",
-      "items": { "$ref": "#/$defs/BmpPaletteEntry" }
+      "items": {
+        "$ref": "#/$defs/BmpPaletteEntry"
+      }
     },
     "pixels": {
       "type": "array",
       "x-semio-state": "artifact",
       "description": "Canonical 8-bit RGBA, width*height*4 bytes, row 0 = image top.",
-      "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
     }
   },
   "$defs": {
-    "BmpRowOrder": { "type": "string", "enum": ["bottomUp", "topDown"] },
+    "BmpRowOrder": {
+      "type": "string",
+      "enum": [
+        "bottomUp",
+        "topDown"
+      ]
+    },
     "BmpPaletteEntry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["b", "g", "r", "reserved"],
+      "required": [
+        "b",
+        "g",
+        "r",
+        "reserved"
+      ],
       "properties": {
-        "b": { "type": "integer", "minimum": 0, "maximum": 255 },
-        "g": { "type": "integer", "minimum": 0, "maximum": 255 },
-        "r": { "type": "integer", "minimum": 0, "maximum": 255 },
-        "reserved": { "type": "integer", "minimum": 0, "maximum": 255 }
+        "b": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "g": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "r": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "reserved": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
       }
     }
   }

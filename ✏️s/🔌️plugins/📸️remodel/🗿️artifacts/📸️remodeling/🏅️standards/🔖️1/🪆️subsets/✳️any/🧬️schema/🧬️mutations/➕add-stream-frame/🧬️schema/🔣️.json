@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutation/add-stream-frame/schema.json",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/mutation/add-stream-frame/schema.json",
   "title": "AddStreamFrame",
   "type": "object",
   "additionalProperties": false,

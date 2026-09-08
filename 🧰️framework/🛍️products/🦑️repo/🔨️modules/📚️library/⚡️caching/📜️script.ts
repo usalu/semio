@@ -11,6 +11,7 @@ import { EventEmitter } from "node:events";
 import { BundleScript, ScriptRouter, runBundleScriptMain, getWorkspaceRoot, runCmdStatus, wasmBuildEnvironment, wasmBindgenVersion, wasmBuildArguments, devToolingEnv } from "../📦️packages/🟦️typescript/🟦️.ts";
 import plugin, { cacheInternals } from "../🟨️.mjs";
 import { stageArtifacts } from "./📦️artifacts/🟦️.ts";
+import { createArtifactRegistry, measureArtifactRegistry, artifactBudgets, type ArtifactRegistry } from "./📦️artifacts/📇️registry/🟦️.ts";
 
 const SCRIPT_ROOT = dirname(fileURLToPath(import.meta.url));
 const POLICY = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🔣️policy.json"), "utf8"));
@@ -47,7 +48,7 @@ function sourceFiles(root: string): string[] {
 }
 
 /** 🧭️ Produces a reviewable inventory from the same project normalizer used by Nx. */
-function inventory(root: string): { projects: Project[]; commands: any[]; artifacts: any[]; violations: Finding[] } {
+function inventory(root: string): { projects: Project[]; commands: any[]; artifacts: any[]; artifactRegistry: ArtifactRegistry; violations: Finding[] } {
   const files = sourceFiles(root);
   const defaults = JSON.parse(readFileSync(join(root, "nx.json"), "utf8")).targetDefaults ?? {};
   const projects = plugin.createNodesV2[1](files.filter((file) => file.endsWith("📋️project.json") || file.endsWith("Cargo.toml")), {}, { workspaceRoot: root }).flatMap(([, result]: any) => Object.values(result.projects)) as Project[];
@@ -80,29 +81,29 @@ function inventory(root: string): { projects: Project[]; commands: any[]; artifa
     if (Object.keys(json.scripts ?? {}).length && projects.some((project) => project.root === dirname(file) || project.root === "." && file === "package.json") && JSON.stringify(json.nx?.includedScripts) !== "[]") report("ORCH-05", file, "nx.includedScripts", "Nx re-infers forwarding scripts and replaces their implementation targets", "Set nx.includedScripts to [] for forwarding package scripts");
     for (const [name, command] of Object.entries(json.scripts ?? {})) {
       commands.push({ file, script: name, command, cwd: dirname(file) });
-      if (file === "package.json" && name === "nx" && command === "bun ./📜️script.ts nx") continue;
+      if (file === "package.json" && name === "nx" && command === `bun ./${slash(relative(root, join(SCRIPT_ROOT, "🚀️bootstrap/📜️script.ts")))} nx`) continue;
       if (!/^(?:bun )?nx\b/.test(String(command))) report("ORCH-01", file, name, String(command), "Forward the public command to an independently implemented Nx target");
     }
   }
-  return { projects, commands, artifacts, violations };
-}
-
-/** 📏️ Counts retained files without double-counting hard links or following symbolic links. */
-function directoryBytes(path: string): { apparent: number; allocated: number; files: number } {
-  const seen = new Set<string>();
-  const result = { apparent: 0, allocated: 0, files: 0 };
-  const walk = (file: string): void => {
-    let stat;
-    try { stat = lstatSync(file); } catch { return; }
-    if (stat.isSymbolicLink()) return;
-    const key = `${stat.dev}:${stat.ino}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    if (stat.isDirectory()) for (const child of readdirSync(file)) walk(join(file, child));
-    else if (stat.isFile()) { result.apparent += stat.size; result.allocated += (stat.blocks ?? Math.ceil(stat.size / 512)) * 512; result.files++; }
-  };
-  walk(path);
-  return result;
+  const consumers = new Map<string, Set<string>>();
+  for (const command of commands.filter(command => command.target)) for (const dependency of command.dependsOn) {
+    const target = typeof dependency === "string" ? dependency : dependency.target;
+    const selectors = typeof dependency === "object" ? dependency.projects : undefined;
+    const selected = selectors ? (Array.isArray(selectors) ? selectors : [selectors]) : [command.project];
+    if (typeof target !== "string" || target.startsWith("^") || /[*?{}]/.test(target)) continue;
+    for (const project of selected) {
+      if (!projects.some(candidate => candidate.name === project)) continue;
+      const producer = target.includes(":") ? target : `${project}:${target}`;
+      if (!consumers.has(producer)) consumers.set(producer, new Set());
+      consumers.get(producer)!.add(`${command.project}:${command.target}`);
+    }
+  }
+  const artifactRegistry = createArtifactRegistry(artifacts.map(artifact => ({ ...artifact, consumers: [...(consumers.get(artifact.owner) ?? [])] })));
+  for (const finding of artifactRegistry.findings) {
+    const command = commands.find(command => `${command.project}:${command.target}` === finding.owner);
+    if (command) report(finding.rule, command.file, finding.owner, finding.evidence, "Declare one exclusive deliverable owner and use explicit target prerequisites for consumers");
+  }
+  return { projects, commands, artifacts: artifactRegistry.entries, artifactRegistry, violations };
 }
 
 class AuditScript extends BundleScript {
@@ -145,15 +146,23 @@ class GraphScript extends BundleScript {
 }
 
 class DiskScript extends BundleScript {
-  run(args: string[]): void {
+  async run(args: string[]): Promise<void> {
     const output = ticketOutput(this.repoRoot, args);
-    const stores = [
-      { owner: "nx", path: ".nx/cache", category: "task-results", budget: 8 * 1024 ** 3, retention: "Nx maxCacheSize", cleanup: "Nx-managed eviction" },
-      { owner: "cargo-workspace", path: "target", category: "compiler-state", budget: 20 * 1024 ** 3, retention: "native incrementality; explicit maintenance only", cleanup: "exclusive native maintenance" },
-      { owner: "repo", path: ".🧬semio/🦑️repo/⚡️cache", category: "derived-state", budget: 2 * 1024 ** 3, retention: "owner-specific leases and retention", cleanup: "owner-marked inactive outputs only" },
-    ].map((store) => ({ ...store, ...directoryBytes(join(this.repoRoot, store.path)) }));
-    writeFileSync(join(output, "disk.json"), JSON.stringify(stores, null, 2) + "\n");
-    for (const store of stores) console.log(`[nx-disk] ${store.owner}: ${(store.allocated / 1024 ** 3).toFixed(2)} GiB allocated; ${(store.apparent / 1024 ** 3).toFixed(2)} GiB apparent`);
+    const controller = new AbortController(), cancel = (): void => controller.abort(new Error("Storage accounting cancelled"));
+    process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
+    try {
+      const registry = inventory(this.repoRoot).artifactRegistry;
+      const result = await measureArtifactRegistry(this.repoRoot, registry, { signal: controller.signal, onProgress: progress => console.log(`[nx-disk] measured ${progress.files} files; ${progress.path}`) });
+      const budgets = Object.entries(artifactBudgets).map(([group, budget]) => {
+        const allocated = result.entries.filter(entry => entry.retention.budgetGroup === group).reduce<number | null>((total, entry) => total === null || entry.allocated === null ? null : total + entry.allocated, 0);
+        return { group, budget, allocated, overBudget: allocated === null ? null : allocated > budget };
+      });
+      writeFileSync(join(output, "disk.json"), JSON.stringify({ ...result, budgets, findings: registry.findings }, null, 2) + "\n");
+      const allocation = (value: number | null): string => value === null ? "allocation unavailable" : `${(value / 1024 ** 3).toFixed(2)} GiB allocated`;
+      for (const entry of result.entries.filter(entry => entry.present && entry.files > 0)) console.log(`[nx-disk] ${entry.owner}: ${allocation(entry.allocated)}; ${entry.path}`);
+      console.log(`[nx-disk] ${result.complete ? "Complete" : "Incomplete"}: ${result.totals.files} unique files; ${allocation(result.totals.allocated)}`);
+      if (!result.complete) throw new Error(`Storage accounting is incomplete: ${result.errors.length} read errors; ${registry.findings.length} ownership violations`);
+    } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
   }
 }
 
@@ -346,7 +355,7 @@ export async function testCacheContracts(): Promise<void> {
   assert.equal(wasmBuildEnvironment(root, {}).CARGO_TARGET_DIR, join(root, ".🧬semio/🦑️repo/⚡️cache/cargo/browser"));
   assert.equal(wasmBuildEnvironment(root, { CARGO_TARGET_DIR: "chosen-cache" }).CARGO_TARGET_DIR, join(root, "chosen-cache"));
   const vectors = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧫️fixtures/nx-contract/🔣️.json"), "utf8"));
-  assert.equal(validate(vectors, JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧫️fixtures/nx-contract/🧬️.schema.json"), "utf8"))).valid, true);
+  assert.equal(validate(vectors, JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧫️fixtures/nx-contract/🛂️schema.json"), "utf8"))).valid, true);
   const loggingKeys = Object.keys(vectors.daemonEnvironment), savedLogging = Object.fromEntries(loggingKeys.map((key) => [key, process.env[key]]));
   const quiet = devToolingEnv(Object.fromEntries(loggingKeys.map((key) => [key, undefined])));
   try {
@@ -406,6 +415,9 @@ export async function testCacheContracts(): Promise<void> {
     assert.throws(() => selectionApi.loadFrameworkOsPlaygroundSelections(selectionFixture, ["../Cargo.toml"]), /outside/i);
   } finally { rmSync(selectionFixture, { recursive: true }); }
   await (await import("./🧪️tests/📜️script.ts")).testCommandInputs(root, ticketOutput(root, []));
+  await (await import("./🧪️tests/🚀️bootstrap/📜️script.ts")).testNxBootstrap(root, ticketOutput(root, []));
+  await (await import("./🧪️tests/📇️artifacts/📜️script.ts")).testArtifactRegistry(root, ticketOutput(root, []));
+  await (await import("./🧪️tests/🌎️hub/📜️script.ts")).testHubBuild(root);
   console.log("[DEBUG] Native command contracts passed; collecting project inventory");
   const result = inventory(root), contracts = result.projects;
   console.log(`[DEBUG] Project inventory collected: ${contracts.length} projects`);
@@ -452,7 +464,8 @@ export async function testCacheContracts(): Promise<void> {
   const activation = await import(join(activationRoot, "🟦️.ts"));
   const activationCases = JSON.parse(readFileSync(join(activationRoot, "🧫️cases.json"), "utf8"));
   const ActivationAjv = createRequire(import.meta.url)("ajv");
-  const validateActivation = new ActivationAjv().compile(JSON.parse(readFileSync(join(activationRoot, "🧬️.schema.json"), "utf8")));
+  const activationSchema = JSON.parse(readFileSync(join(activationRoot, "🧬️schema/🔣️.json"), "utf8"));
+  const validateActivation = new ActivationAjv().addSchema(activationSchema).getSchema(`${activationSchema.$id}#/$defs/DevActivationV1`)!;
   const { keyBy, sortBy } = createRequire(import.meta.url)("lodash");
   let activationReceipt: any;
   for (const cycle of activationCases.cycles) {
@@ -596,8 +609,9 @@ export async function testCacheContracts(): Promise<void> {
     assert.deepEqual(outputs, [row.directory]);
   }
   const source = ts.createSourceFile("📜️script.ts", readFileSync(join(root, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
-  const coordinator = source.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "NxScript");
-  const coordinatorCode = ts.transpileModule(coordinator.getText(source).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const nxSource = ts.createSourceFile("nx.ts", readFileSync(join(SCRIPT_ROOT, "🚀️bootstrap/📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+  const coordinator = nxSource.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "NxScript");
+  const coordinatorCode = ts.transpileModule(coordinator.getText(nxSource).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
   const coordinatorFixture = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧫️fixtures/🛑️cancellation.json"), "utf8"));
   assert.equal(validate(coordinatorFixture, schema.$defs.NxCoordinatorFixture).valid, true);
   for (const vector of coordinatorFixture.cases) {
@@ -617,8 +631,8 @@ export async function testCacheContracts(): Promise<void> {
     assert.equal(runtime.listenerCount("SIGTERM"), 0);
   }
   console.log("[DEBUG] Nx coordinator preserves explicit workspace data paths and stops owned launch processes after malformed or unavailable snapshots PASS");
-  const invocation = source.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "resolveNxInvocation");
-  const route = ts.transpileModule(invocation.getText(source).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const invocation = nxSource.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "resolveNxInvocation");
+  const route = ts.transpileModule(invocation.getText(nxSource).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
   const resolveInvocation = new Function("process", `${route}; return resolveNxInvocation;`)({ env: {} });
   const resolvePrint = new Function("process", "readFileSync", "join", "WORKSPACE_ROOT", `${route}; return resolveNxInvocation;`)({ env: {} }, readFileSync, join, root);
   for (const path of ["🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🧫️invocations.json", "♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🧫️invocations.json", "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧫️invocations.json"]) {
@@ -787,7 +801,7 @@ export async function testCacheContracts(): Promise<void> {
   assert.ok(existsSync(testApi.fixtureBlobPath(fixture, pendingBlob)), "An active run may not yet have published its blob references");
   writeFileSync(join(active, "🗝️run.json"), "incomplete");
   assert.throws(() => testApi.markReferencedBlobs(fixture, { contributions: [] } as any), /Cannot determine/);
-  const { resolveNxInvocation } = await import(join(root, "📜️script.ts"));
+  const { resolveNxInvocation } = await import("./🚀️bootstrap/📜️script.ts");
   assert.deepEqual(resolveNxInvocation(["run", "workspace:build", "--graph=stdout", "--", "assets"]).args, ["run", "@semio-tech/assets:build", "--graph=stdout"]);
   assert.deepEqual(resolveNxInvocation(["run", "workspace:dev", "--", "storybook", "ui"]).args, ["run", "workspace:dev-storybook", "--", "ui"]);
   assert.deepEqual(resolveNxInvocation(["show", "projects"]).args, ["show", "projects"]);
@@ -803,8 +817,8 @@ export async function testCacheContracts(): Promise<void> {
   assert.ok(!rootTest.includes("run-many"), "The root test target cannot schedule a second Nx graph");
   for (const level of ["fundamental", "quick", "long", "exhaustive"]) assert.ok(workspace.targets[`test-${level}`].dependsOn.length > 0);
   assert.equal(resolveNxInvocation(["run", "workspace:dev", "--", "s"]).args[1], "@semio-tech/framework-os-dev:dev");
-  assert.ok(invocation.getText(source).includes("loadFrameworkOsPlaygroundSelections()"));
-  assert.ok(!invocation.getText(source).includes("loadFrameworkOsPlaygroundCatalog()"));
+  assert.ok(invocation.getText(nxSource).includes("loadFrameworkOsPlaygroundSelections()"));
+  assert.ok(!invocation.getText(nxSource).includes("loadFrameworkOsPlaygroundCatalog()"));
   assert.equal(root.length > 0, true);
   rmSync(fixture, { recursive: true });
   console.log("[cache-contract] schema, graph ownership, source-byte discovery, native dependency oracles and materializer cancellation passed");
@@ -849,7 +863,9 @@ function artifactPackageInventory(root: string): { schemaVersion: 1; packages: A
     const rustProject = projects.get(rustRoot);
     assert.ok(rustProject, `Nx omitted ${rustRoot}`);
     assert.ok(rustProject.tags?.includes("role:artifact"), `${rustProject.name} must declare role:artifact`);
-    assert.ok(rustProject.namedInputs?.nativeSources?.includes(`{workspaceRoot}/${source}`), `${rustProject.name} does not hash its taxonomy source`);
+    const nativeSources = rustProject.namedInputs?.nativeSources ?? [];
+    const ownsSource = nativeSources.some((input: unknown) => typeof input === "string" && input.startsWith("{workspaceRoot}/") && !input.startsWith("!") && new Bun.Glob(input.slice("{workspaceRoot}/".length)).match(source));
+    assert.ok(ownsSource, `${rustProject.name} does not hash its taxonomy source`);
     assert.deepEqual(rustProject.targets?.build?.outputs, ["{projectRoot}/dist/build"], `${rustProject.name} has an invalid build output contract`);
     const record: ArtifactPackageRecord = { root: owner, source, rust: { cargoName: cargo.package.name, nxName: rustProject.name, manifest: rustManifest } };
     const typescriptSource = `${owner}/🟦️.ts`;
@@ -875,12 +891,16 @@ function artifactPackageInventory(root: string): { schemaVersion: 1; packages: A
 /** 🏃️ Captures a bounded subprocess while retaining progress and cancellation. */
 async function captureArtifactContract(command: string, args: string[], cwd: string, timeoutMs: number): Promise<string> {
   const child = spawn(command, args, { cwd, env: process.env, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
-  let stdout = "", stderr = "", stopped = "";
+  let stdout = "", stderr = "", stopped = "", forceKill: ReturnType<typeof setTimeout> | undefined;
   const terminate = (reason: string): void => {
     stopped ||= reason;
     if (!child.pid) return;
     if (process.platform === "win32") child.kill("SIGTERM");
-    else try { process.kill(-child.pid, "SIGTERM"); } catch {}
+    else {
+      try { process.kill(-child.pid, "SIGTERM"); } catch {}
+      forceKill ??= setTimeout(() => { try { process.kill(-child.pid!, "SIGKILL"); } catch {} }, 2000);
+      forceKill.unref();
+    }
   };
   child.stdout.on("data", (chunk) => { stdout += chunk; if (stdout.length > 64 * 1024 * 1024) terminate("output limit"); });
   child.stderr.on("data", (chunk) => { stderr += chunk; if (stderr.length > 64 * 1024 * 1024) terminate("output limit"); });
@@ -899,6 +919,7 @@ async function captureArtifactContract(command: string, args: string[], cwd: str
   } finally {
     clearInterval(progress);
     clearTimeout(timeout);
+    if (forceKill) clearTimeout(forceKill);
     process.off("SIGINT", interrupt);
     process.off("SIGTERM", stop);
   }
@@ -908,7 +929,7 @@ async function captureArtifactContract(command: string, args: string[], cwd: str
 class ArtifactPackageContractScript extends BundleScript {
   async run(): Promise<void> {
     const fixtureRoot = join(SCRIPT_ROOT, "🧫️fixtures/artifact-packages");
-    const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️schema.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(fixtureRoot, "🛂️schema.json"), "utf8"));
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const { default: Ajv2020 } = await import("ajv/dist/2020.js");
     const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);

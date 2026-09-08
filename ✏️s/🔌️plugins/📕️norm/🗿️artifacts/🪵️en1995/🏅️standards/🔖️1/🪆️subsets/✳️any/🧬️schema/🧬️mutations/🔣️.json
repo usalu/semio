@@ -1,89 +1,67 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1995/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/norm/en1995/mutations.json",
   "title": "En1995Mutation",
   "oneOf": [
     {
-      "$ref": "./🧩️change-a-ef-mm2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-a-ef-mm2/schema.json"
     },
     {
-      "$ref": "./📐️change-a-mm2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-a-mm2/schema.json"
     },
     {
-      "$ref": "./🦶️change-a-vert-ms2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-a-vert-ms2/schema.json"
     },
     {
-      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "./↔️change-b-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-b-mm/schema.json"
     },
     {
-      "$ref": "./🔩️change-f-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-f-ed-kn/schema.json"
     },
     {
-      "$ref": "./🗜️change-fc0-k/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-fc0-k/schema.json"
     },
     {
-      "$ref": "./🔥️change-fire-duration-min/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-fire-duration-min/schema.json"
     },
     {
-      "$ref": "./🛡️change-fmk/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-fmk/schema.json"
     },
     {
-      "$ref": "./✂️change-fvk/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-fvk/schema.json"
     },
     {
-      "$ref": "./↕️change-h-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-h-mm/schema.json"
     },
     {
-      "$ref": "./⏳️change-load-duration/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-load-duration/schema.json"
     },
     {
-      "$ref": "./⚠️change-m-crit-knm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-m-crit-knm/schema.json"
     },
     {
-      "$ref": "./⤴️change-m-ed-knm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-m-ed-knm/schema.json"
     },
     {
-      "$ref": "./🔁️change-n-cycles-bridge/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-n-cycles-bridge/schema.json"
     },
     {
-      "$ref": "./🏋️change-n-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-n-ed-kn/schema.json"
     },
     {
-      "$ref": "./📏️change-section-depth-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-section-depth-mm/schema.json"
     },
     {
-      "$ref": "./🌧️change-service-class/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-service-class/schema.json"
     },
     {
-      "$ref": "./🪚️change-v-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-v-ed-kn/schema.json"
     },
     {
-      "$ref": "./📊️change-w-mm3/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1995/mutation/change-w-mm3/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-a-ef-mm2",
-    "change-a-mm2",
-    "change-a-vert-ms2",
-    "change-annex",
-    "change-b-mm",
-    "change-f-ed-kn",
-    "change-fc0-k",
-    "change-fire-duration-min",
-    "change-fmk",
-    "change-fvk",
-    "change-h-mm",
-    "change-load-duration",
-    "change-m-crit-knm",
-    "change-m-ed-knm",
-    "change-n-cycles-bridge",
-    "change-n-ed-kn",
-    "change-section-depth-mm",
-    "change-service-class",
-    "change-v-ed-kn",
-    "change-w-mm3"
   ]
 }

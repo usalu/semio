@@ -1,7 +1,7 @@
 //! 🗺️ 🗺️ Trinity Jack app command — `delete-selection`.
 
-use crate::mutations::delete_node;
-use crate::op::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::delete_node;
+use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
 use crate::JackSnapshot;
 use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::Emit;

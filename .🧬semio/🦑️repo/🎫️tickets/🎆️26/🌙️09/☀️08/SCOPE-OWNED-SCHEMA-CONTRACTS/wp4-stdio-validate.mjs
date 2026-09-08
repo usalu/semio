@@ -1,7 +1,12 @@
 /**
- * ✅️ Compiles every `🗄️stdio` mutation-module aggregate together with the leaf payload schemas it
- * `$ref`s, then replays each leaf's committed `🧪️tests/…/🦠️mutation/🔣️.json` wire object through both
- * the aggregate and the leaf's own schema.
+ * ✅️ Compiles every `🗄️stdio` mutation-module aggregate against a single Ajv registry that holds every
+ * mutation leaf payload schema and every mutation codec facet document keyed by its own `$id`, then
+ * replays each leaf's committed `🧪️tests/…/🦠️mutation/🔣️.json` wire object through both the aggregate
+ * and the leaf's own schema.
+ *
+ * Cross-partition row 79: aggregate `oneOf` branches name the leaf's absolute `$id`, resolved through
+ * the catalog — never a filesystem-relative path — so the oracle must be a catalog too: one Ajv, every
+ * document added under its declared `$id`, no re-keying and no disk resolution of `$ref`s.
  *
  * ajv is the third-party oracle here, not a runtime dependency of the repository: it is only ever
  * asked whether the handcrafted draft-07 documents accept the handcrafted fixtures.
@@ -16,6 +21,7 @@ const REPO = new URL("../../../../../../../", import.meta.url).pathname;
 const ARTIFACTS = join(REPO, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts");
 const MUTATIONS = "🧬️mutations";
 const SCHEMA = "🧬️schema";
+const FACETS = ["📝️text", "💾️binary"];
 
 /** 🗂️ Every directory under `root`, depth-first. */
 function* directories(root) {
@@ -28,6 +34,14 @@ function* directories(root) {
 }
 
 const read = (path) => JSON.parse(readFileSync(path, "utf8"));
+const exists = (path) => {
+  try {
+    statSync(path);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 /** 🔗️ Collects every `$ref` string in a document. */
 function references(node, out = []) {
@@ -51,90 +65,67 @@ function branchShape(branch) {
   return { kind: "adjacent", pick: (value) => value?.[content] };
 }
 
+const failures = [];
+
 const aggregates = [];
+const leafSchemas = [];
+const facetDocuments = [];
 for (const directory of directories(ARTIFACTS)) {
-  if (basename(directory) !== MUTATIONS) continue;
-  if (basename(dirname(directory)) !== SCHEMA) continue;
   const path = join(directory, "🔣️.json");
-  try {
-    statSync(path);
-  } catch {
+  const name = basename(directory);
+  const parent = basename(dirname(directory));
+  if (name === MUTATIONS && parent === SCHEMA && exists(path)) aggregates.push({ directory, path, document: read(path) });
+  else if (name === SCHEMA && directory.includes(`${MUTATIONS}/`) && exists(path)) leafSchemas.push(path);
+  else if (FACETS.includes(name) && parent === MUTATIONS && basename(dirname(dirname(directory))) === SCHEMA && exists(path)) facetDocuments.push(path);
+}
+
+// 📇️ One registry, every document under its declared `$id` — the oracle's stand-in for the catalog.
+const registry = new Ajv7({ strict: false, allErrors: true, validateFormats: false });
+const leavesById = new Map();
+let registered = 0;
+for (const [path, kind] of [...leafSchemas.map((path) => [path, "leaf"]), ...facetDocuments.map((path) => [path, "facet"])]) {
+  const document = read(path);
+  if (typeof document.$id !== "string") {
+    failures.push(`${relative(REPO, path)}: ${kind} declares no $id, so no aggregate can address it`);
     continue;
   }
-  aggregates.push({ directory, path, document: read(path) });
+  try {
+    registry.addSchema(document);
+    registered += 1;
+  } catch (error) {
+    failures.push(`${relative(REPO, path)}: not addable to the registry (${error.message})`);
+    continue;
+  }
+  if (kind === "leaf") leavesById.set(document.$id, { target: path, leaf: document });
 }
 
 let compiled = 0;
 let leavesChecked = 0;
 let fixturesChecked = 0;
-const failures = [];
 
 for (const aggregate of aggregates) {
-  const ajv = new Ajv7({ strict: false, allErrors: true, validateFormats: false });
-  // 🔗️ The on-disk `$ref` is a RELATIVE FILE PATH; resolving it is the filesystem's job, not a URI
-  // resolver's (percent-encoding every emoji segment only invents a second, unrelated identity). Each
-  // reference is read from disk and re-keyed onto a `urn:` the compiler can resolve unambiguously.
-  const registered = new Map();
-  const keyed = new Map();
-  let broken = false;
-  const rekey = (node) => {
-    if (Array.isArray(node)) return node.map(rekey);
-    if (node === null || typeof node !== "object") return node;
-    const out = {};
-    for (const [property, value] of Object.entries(node)) {
-      if (property === "$ref" && typeof value === "string" && !value.startsWith("#")) {
-        const target = join(aggregate.directory, value);
-        if (!keyed.has(target)) {
-          let leaf;
-          try {
-            leaf = read(target);
-          } catch (error) {
-            failures.push(`${relative(REPO, aggregate.path)}: $ref ${value} does not resolve (${error.message})`);
-            broken = true;
-            keyed.set(target, null);
-            continue;
-          }
-          const key = `urn:semio-stdio-leaf:${keyed.size}`;
-          const clone = { ...leaf };
-          delete clone.$id;
-          try {
-            ajv.addSchema(clone, key);
-          } catch (error) {
-            failures.push(`${relative(REPO, target)}: not addable to ajv (${error.message})`);
-            broken = true;
-          }
-          keyed.set(target, key);
-          registered.set(key, { target, leaf });
-        }
-        const key = keyed.get(target);
-        if (key !== null) out.$ref = key;
-        continue;
-      }
-      out[property] = rekey(value);
-    }
-    return out;
-  };
-  const rekeyed = rekey(aggregate.document);
-  if (broken) continue;
-  delete rekeyed.$id;
   let validate;
   try {
-    validate = ajv.compile(rekeyed);
+    validate = registry.compile(aggregate.document);
     compiled += 1;
   } catch (error) {
     failures.push(`${relative(REPO, aggregate.path)}: does not compile (${error.message})`);
     continue;
   }
 
-  const branches = Array.isArray(rekeyed.oneOf) ? rekeyed.oneOf : [];
+  const branches = Array.isArray(aggregate.document.oneOf) ? aggregate.document.oneOf : [];
   for (const [index, branch] of branches.entries()) {
     const shape = branchShape(branch);
     if (shape === null) {
       failures.push(`${relative(REPO, aggregate.path)}: oneOf[${index}] carries no leaf $ref`);
       continue;
     }
-    const entry = registered.get(references(branch)[0]);
-    if (entry === undefined) continue;
+    const reference = references(branch)[0];
+    const entry = leavesById.get(reference);
+    if (entry === undefined) {
+      failures.push(`${relative(REPO, aggregate.path)}: oneOf[${index}] $ref ${reference} names no registered leaf $id`);
+      continue;
+    }
     leavesChecked += 1;
     const leafAjv = new Ajv7({ strict: false, allErrors: true, validateFormats: false });
     let leafValidate;
@@ -159,7 +150,7 @@ for (const aggregate of aggregates) {
         continue;
       }
       fixturesChecked += 1;
-      if (!validate(value)) failures.push(`${relative(REPO, fixture)}: rejected by ${relative(REPO, aggregate.path)} :: ${ajv.errorsText(validate.errors).slice(0, 240)}`);
+      if (!validate(value)) failures.push(`${relative(REPO, fixture)}: rejected by ${relative(REPO, aggregate.path)} :: ${registry.errorsText(validate.errors).slice(0, 240)}`);
       const payload = shape.pick(value);
       if (payload === undefined) {
         failures.push(`${relative(REPO, fixture)}: carries no ${shape.kind} payload for ${relative(REPO, entry.target)}`);
@@ -171,18 +162,6 @@ for (const aggregate of aggregates) {
 }
 
 // 🧬️ Every leaf schema on its own: draft-07 dialect, resolvable, compilable.
-const leafSchemas = [];
-for (const directory of directories(ARTIFACTS)) {
-  if (basename(directory) !== SCHEMA) continue;
-  if (!directory.includes(`${MUTATIONS}/`)) continue;
-  const path = join(directory, "🔣️.json");
-  try {
-    statSync(path);
-  } catch {
-    continue;
-  }
-  leafSchemas.push(path);
-}
 let standalone = 0;
 for (const path of leafSchemas) {
   const document = read(path);
@@ -196,7 +175,21 @@ for (const path of leafSchemas) {
   }
 }
 
-console.log(`aggregates=${aggregates.length} compiled=${compiled} leaf-branches=${leavesChecked} leaf-schemas=${leafSchemas.length} compiled-standalone=${standalone} fixtures=${fixturesChecked} failures=${failures.length}`);
+// 🎨️ Every codec facet document on its own: same dialect, same compilability bar.
+let facetsCompiled = 0;
+for (const path of facetDocuments) {
+  const document = read(path);
+  if (document.$schema !== "http://json-schema.org/draft-07/schema#") failures.push(`${relative(REPO, path)}: dialect is ${document.$schema}`);
+  const ajv = new Ajv7({ strict: false, allErrors: true, validateFormats: false });
+  try {
+    ajv.compile(document);
+    facetsCompiled += 1;
+  } catch (error) {
+    failures.push(`${relative(REPO, path)}: does not compile (${error.message})`);
+  }
+}
+
+console.log(`aggregates=${aggregates.length} compiled=${compiled} leaf-branches=${leavesChecked} leaf-schemas=${leafSchemas.length} compiled-standalone=${standalone} facets=${facetDocuments.length} facets-compiled=${facetsCompiled} registered=${registered} fixtures=${fixturesChecked} failures=${failures.length}`);
 const limit = process.argv.includes("--all") ? failures.length : 40;
 for (const failure of failures.slice(0, limit)) console.log("  FAIL", failure);
 if (failures.length > limit) console.log(`  … ${failures.length - limit} more`);

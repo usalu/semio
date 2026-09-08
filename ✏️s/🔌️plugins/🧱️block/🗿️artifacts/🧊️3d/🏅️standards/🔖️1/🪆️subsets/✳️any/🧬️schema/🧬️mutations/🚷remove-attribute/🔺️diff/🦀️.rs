@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `RemoveAttribute`.
 
 use crate::Block3dSnapshot;
-use crate::diff::{Block3dAttributesDelta, Block3dDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Block3dAttributesDelta, Block3dDiff};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RemoveAttribute, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {

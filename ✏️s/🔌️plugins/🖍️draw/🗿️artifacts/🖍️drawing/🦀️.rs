@@ -18,7 +18,6 @@ extern crate semio_framework_schema as framework_schema;
 // limitation, not a real conditional-compilation bug here) — this crate declares no `serde` feature
 // at all (the dependency is always-on), so rustc flags the value as unrecognized. Harmless, but a
 // hard error under `-D warnings` without this crate-wide allow.
-extern crate self as semio_s_artifact_draw_drawing;
 
 pub use store::ArtifactDsl;
 
@@ -548,11 +547,27 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// because `🦀️.rs`'s own `.activation(...)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) still reads `artifact_kind().id`; neither has
 /// any caller left in this function.
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::DrawApps> {
+pub fn artifact<A: DrawingApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.draw.drawing").expect("canonical drawing kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.draw.drawing").expect("canonical drawing kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
+
+/// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
+pub trait DrawingApplication:
+    semio_framework_plugin::PluginApp
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::drawing::DrawingPlayApp>>>
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::drawing::DrawingViewer>>>
+{
+}
+
+impl<A> DrawingApplication for A where
+    A: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::drawing::DrawingPlayApp>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::drawing::DrawingViewer>>>
+{
+}
+
 //#endregion 🔖️ArtifactKind
 
 #[path = "."]

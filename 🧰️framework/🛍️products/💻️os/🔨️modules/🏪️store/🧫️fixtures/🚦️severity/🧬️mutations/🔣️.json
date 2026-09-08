@@ -6,7 +6,7 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "🔢️set-n/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/framework/os/store/fixtures/severity/mutation/set-n/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -31,7 +31,7 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "⚠️set-warning-n/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/framework/os/store/fixtures/severity/mutation/set-warning-n/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -56,7 +56,7 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "🚫️set-error-n/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/framework/os/store/fixtures/severity/mutation/set-error-n/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -81,7 +81,7 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "🛑️set-fatal-n/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/framework/os/store/fixtures/severity/mutation/set-fatal-n/schema.json#/$defs/Payload"
         },
         {
           "type": "object",
@@ -106,7 +106,7 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "↩️restore-n/🧬️schema/🔣️.json#/$defs/payload"
+          "$ref": "https://semio.tech/schema/framework/os/store/fixtures/severity/mutation/restore-n/schema.json#/$defs/Payload"
         },
         {
           "type": "object",

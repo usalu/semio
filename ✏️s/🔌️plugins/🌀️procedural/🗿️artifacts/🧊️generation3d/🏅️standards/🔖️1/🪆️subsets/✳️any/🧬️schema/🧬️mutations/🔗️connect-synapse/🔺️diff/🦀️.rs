@@ -1,9 +1,9 @@
 //! 🔺️ `connect-synapse` sparse diff construction.
 
-use crate::diff::Generation3dDiff;
-use crate::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::mutations::connect_synapse::ConnectSynapse;
-use crate::mutations::{synapse_index, widget_index};
+use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
+use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::mutations::connect_synapse::ConnectSynapse;
+use crate::standards::v1::subsets::any::schema::mutations::{synapse_index, widget_index};
 use crate::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta for one new synapse edge.

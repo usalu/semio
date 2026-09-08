@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ChangeDataProperty` — the OLD value looked up from BASE: `change-data-property`
 //! back to it if it existed, `remove-data-property` if the key was previously absent.
-use crate::mutations::{change_data_property, remove_data_property, TrinityGraphMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{change_data_property, remove_data_property, TrinityGraphMutation};
 use crate::{EntityRef, JackSnapshot};
 
 //#region 🔖️Inverse

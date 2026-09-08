@@ -108,62 +108,10 @@ pub use mutations::*;
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn writer_config_dsl_round_trips_default_and_populated() {
-        store::os_store::test_support::assert_config_round_trip(&WriterConfig::default());
-        let populated = WriterConfig { editor_selection: Some(WriterEditorSelection { start: 3, end: 7 }), format_signal: 2, lint_signal: 1, revision: 9, engagement_input: "format".into(), locale: "de-DE".into(), ..WriterConfig::default() };
-        store::os_store::test_support::assert_config_round_trip(&populated);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn writer_config_operation_backwards_restores_pre_state() {
-        let pre = WriterConfig::default();
-        store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetLocale(SetLocale { value: "de-DE".into() })).await;
-        store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetEditorSelection(SetEditorSelection { selection: Some(WriterEditorSelection { start: 1, end: 2 }) })).await;
-        store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetCamera(SetCamera { camera: WriterCamera { x: 5.0, y: -2.0, zoom: 1.5 } })).await;
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn writer_config_operation_binary_matches_text() {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&WriterConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
-        store::os_store::test_support::assert_op_text_binary_equivalence(&WriterConfigMutation::ReplaceConfig(ReplaceConfig { config: WriterConfig::default() }));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn writer_config_pack_round_trips() {
-        let config = WriterConfig { locale: "de-DE".into(), engagement_input: "format".into(), ..WriterConfig::default() };
-        let bytes = store::ArtifactPack::encode_pack(&config);
-        let decoded = <WriterConfig as store::ArtifactPack>::decode_pack(&bytes).expect("decode writer config pack");
-        assert_eq!(decoded, config);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-mod contract_vectors {
-    use super::*;
-    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
-    use dsl::os_pack as pack;
-    #[test]
-    fn writer_configuration_contract_vectors_match_the_json_oracle() {
-        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).unwrap();
-        let base: WriterConfig = pack::from_json_str(&vectors["base"].to_string()).unwrap();
-        assert_eq!(<WriterConfigMutation as Mutation<WriterConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().unwrap().len());
-        for vector in vectors["cases"].as_array().unwrap() {
-            let mutation: WriterConfigMutation = pack::from_json_str(&vector["mutation"].to_string()).unwrap();
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).unwrap(), vector["mutation"]);
-            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());
-            assert_eq!(WriterConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
-            assert_eq!(WriterConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
-            let outcome = mutation.diff(&base);
-            assert!(outcome.messages().is_empty());
-            let next = outcome.diff().apply(&base).unwrap();
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).unwrap(), vector["expected"]);
-            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
-            assert_eq!(restored, base);
-        }
-    }
-}
+#[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
+mod contract_vectors;

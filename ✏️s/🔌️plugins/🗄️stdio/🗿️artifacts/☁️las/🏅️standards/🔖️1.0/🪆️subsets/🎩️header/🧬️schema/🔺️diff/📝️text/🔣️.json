@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/stdio.las/diff/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/las/1.0/header/diff/text.json",
   "title": "LasDiffText",
   "type": "object"
 }

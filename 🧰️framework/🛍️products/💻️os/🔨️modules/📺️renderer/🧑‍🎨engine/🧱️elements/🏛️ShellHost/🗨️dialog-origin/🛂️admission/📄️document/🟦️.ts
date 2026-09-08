@@ -96,6 +96,20 @@ export class DocumentAttachmentLaneV1 {
     });
   }
 
+  replace(owner: string, current: () => boolean, apply: () => Promise<void>): Promise<void> {
+    this.#desired = owner;
+    return this.#append(async () => {
+      if (this.#desired !== owner || !current()) return;
+      if (this.#attached !== null) {
+        await this.#detach();
+        this.#attached = null;
+        if (this.#desired !== owner || !current()) return;
+      }
+      this.#attached = owner;
+      await apply();
+    });
+  }
+
   #append(operation: () => Promise<void>): Promise<void> {
     this.#pending++;
     const result = this.#tail.then(operation, operation).finally(() => { this.#pending--; });

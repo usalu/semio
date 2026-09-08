@@ -2,7 +2,7 @@
 
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 
-use crate::op::SHomeMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
 use crate::SHomeSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 

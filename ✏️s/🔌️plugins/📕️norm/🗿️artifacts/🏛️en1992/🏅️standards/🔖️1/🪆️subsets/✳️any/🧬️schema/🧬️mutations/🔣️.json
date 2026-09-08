@@ -1,149 +1,112 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1992/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/norm/en1992/mutations.json",
   "title": "En1992Mutation",
   "oneOf": [
     {
-      "$ref": "./📐️change-ac-mm2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-ac-mm2/schema.json"
     },
     {
-      "$ref": "./🔩️change-anchor-as-mm2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-as-mm2/schema.json"
     },
     {
-      "$ref": "./📍️change-anchor-c1-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-c1-mm/schema.json"
     },
     {
-      "$ref": "./💥️change-anchor-cracked/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-cracked/schema.json"
     },
     {
-      "$ref": "./⭕️change-anchor-d-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-d-mm/schema.json"
     },
     {
-      "$ref": "./💪️change-anchor-f-uk-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-f-uk-mpa/schema.json"
     },
     {
-      "$ref": "./🛡️change-anchor-f-yk-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-f-yk-mpa/schema.json"
     },
     {
-      "$ref": "./⚓️change-anchor-h-ef-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-h-ef-mm/schema.json"
     },
     {
-      "$ref": "./🪝️change-anchor-n-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-n-ed-kn/schema.json"
     },
     {
-      "$ref": "./✂️change-anchor-v-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-v-ed-kn/schema.json"
     },
     {
-      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "./🪜️change-as-mm2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-as-mm2/schema.json"
     },
     {
-      "$ref": "./↔️change-b-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-b-mm/schema.json"
     },
     {
-      "$ref": "./🔁️change-bridge-delta-sigma-s-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-bridge-delta-sigma-s-mpa/schema.json"
     },
     {
-      "$ref": "./🛣️change-bridge-sigma-c-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-bridge-sigma-c-mpa/schema.json"
     },
     {
-      "$ref": "./↕️change-d-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-d-mm/schema.json"
     },
     {
-      "$ref": "./🪨️change-f-ck/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-f-ck/schema.json"
     },
     {
-      "$ref": "./🔧️change-f-yk/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-f-yk/schema.json"
     },
     {
-      "$ref": "./🔥️change-fire-rating/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-fire-rating/schema.json"
     },
     {
-      "$ref": "./🌊️change-hd-over-h/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-hd-over-h/schema.json"
     },
     {
-      "$ref": "./🌀️change-liquid-es-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-liquid-es-mpa/schema.json"
     },
     {
-      "$ref": "./🧱️change-liquid-f-ct-eff-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-liquid-f-ct-eff-mpa/schema.json"
     },
     {
-      "$ref": "./🧷️change-liquid-rho-p-eff/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-liquid-rho-p-eff/schema.json"
     },
     {
-      "$ref": "./🧲️change-liquid-sigma-s-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-liquid-sigma-s-mpa/schema.json"
     },
     {
-      "$ref": "./🕳️change-liquid-sr-max-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-liquid-sr-max-mm/schema.json"
     },
     {
-      "$ref": "./⤴️change-m-ed-knm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-m-ed-knm/schema.json"
     },
     {
-      "$ref": "./🏋️change-n-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-n-ed-kn/schema.json"
     },
     {
-      "$ref": "./🏹️change-p-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-p-kn/schema.json"
     },
     {
-      "$ref": "./📏️change-provided-axis-distance-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-provided-axis-distance-mm/schema.json"
     },
     {
-      "$ref": "./🧮️change-rho-l/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-rho-l/schema.json"
     },
     {
-      "$ref": "./🌉️change-span-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-span-m/schema.json"
     },
     {
-      "$ref": "./💧️change-tightness-class/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-tightness-class/schema.json"
     },
     {
-      "$ref": "./⬇️change-udl-kn-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-udl-kn-m/schema.json"
     },
     {
-      "$ref": "./🕸️change-use-fem/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-use-fem/schema.json"
     },
     {
-      "$ref": "./🪚️change-v-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-v-ed-kn/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-ac-mm2",
-    "change-anchor-as-mm2",
-    "change-anchor-c1-mm",
-    "change-anchor-cracked",
-    "change-anchor-d-mm",
-    "change-anchor-f-uk-mpa",
-    "change-anchor-f-yk-mpa",
-    "change-anchor-h-ef-mm",
-    "change-anchor-n-ed-kn",
-    "change-anchor-v-ed-kn",
-    "change-annex",
-    "change-as-mm2",
-    "change-b-mm",
-    "change-bridge-delta-sigma-s-mpa",
-    "change-bridge-sigma-c-mpa",
-    "change-d-mm",
-    "change-f-ck",
-    "change-f-yk",
-    "change-fire-rating",
-    "change-hd-over-h",
-    "change-liquid-es-mpa",
-    "change-liquid-f-ct-eff-mpa",
-    "change-liquid-rho-p-eff",
-    "change-liquid-sigma-s-mpa",
-    "change-liquid-sr-max-mm",
-    "change-m-ed-knm",
-    "change-n-ed-kn",
-    "change-p-kn",
-    "change-provided-axis-distance-mm",
-    "change-rho-l",
-    "change-span-m",
-    "change-tightness-class",
-    "change-udl-kn-m",
-    "change-use-fem",
-    "change-v-ed-kn"
   ]
 }

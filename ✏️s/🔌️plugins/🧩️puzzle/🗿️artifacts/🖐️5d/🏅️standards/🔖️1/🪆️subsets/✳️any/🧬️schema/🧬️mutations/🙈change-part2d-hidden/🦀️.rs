@@ -1,6 +1,6 @@
 //! Puzzle5d mutation — `ChangePart2dHidden`: changes a part's 2D-projection hidden flag.
-use crate::diff::Puzzle5dDiff;
-use crate::mutations::Puzzle5dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation

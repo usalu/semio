@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `DisconnectKindCompatibility` — patches `meta.kindCompatibility`.
-use crate::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Diff

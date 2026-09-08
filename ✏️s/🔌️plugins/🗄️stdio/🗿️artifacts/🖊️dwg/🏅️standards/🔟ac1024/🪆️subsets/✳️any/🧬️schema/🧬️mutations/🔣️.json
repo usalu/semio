@@ -7,7 +7,7 @@
     {
       "allOf": [
         {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "./🏷️set-version-info/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/mutation/set-version-info/schema.json"
         },
         {
           "type": "object",

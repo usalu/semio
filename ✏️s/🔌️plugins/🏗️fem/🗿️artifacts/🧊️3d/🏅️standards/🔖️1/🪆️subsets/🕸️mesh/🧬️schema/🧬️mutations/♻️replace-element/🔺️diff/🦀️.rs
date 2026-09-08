@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceElement`.
 use super::ReplaceElement;
-use crate::diff::{Fem3dDiff, Fem3dElementsDelta, Fem3dElementsPatchEntry};
-use crate::mutations::{id_mismatch, resolve_element};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dElementsDelta, Fem3dElementsPatchEntry};
+use crate::standards::v1::subsets::any::schema::mutations::{id_mismatch, resolve_element};
 use crate::{element_id, Fem3dSnapshot};
 
 //#region 🔖️Diff

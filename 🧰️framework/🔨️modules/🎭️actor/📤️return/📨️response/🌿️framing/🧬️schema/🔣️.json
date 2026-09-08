@@ -16,7 +16,7 @@
           "const": "page"
         },
         "receipt": {
-          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/definitions/pageReceipt"
+          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/PageReceipt"
         },
         "payloadOffset": {
           "type": "integer",

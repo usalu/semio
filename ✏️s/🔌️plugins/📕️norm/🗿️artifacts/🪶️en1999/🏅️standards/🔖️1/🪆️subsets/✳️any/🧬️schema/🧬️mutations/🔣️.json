@@ -1,113 +1,85 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1999/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/norm/en1999/mutations.json",
   "title": "En1999Mutation",
   "oneOf": [
     {
-      "$ref": "./📐️change-a-mm2/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-a-mm2/schema.json"
     },
     {
-      "$ref": "./⚗️change-alloy/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-alloy/schema.json"
     },
     {
-      "$ref": "./🌍️change-annex/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "./🧮️change-beta-w/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-beta-w/schema.json"
     },
     {
-      "$ref": "./⬇️change-chi/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-chi/schema.json"
     },
     {
-      "$ref": "./🏷️change-delta-sigma-c/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-delta-sigma-c/schema.json"
     },
     {
-      "$ref": "./↕️change-delta-sigma-ed/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-delta-sigma-ed/schema.json"
     },
     {
-      "$ref": "./📉️change-fatigue-m/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-fatigue-m/schema.json"
     },
     {
-      "$ref": "./🌀️change-it-mm4/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-it-mm4/schema.json"
     },
     {
-      "$ref": "./📏️change-l-cr-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-l-cr-mm/schema.json"
     },
     {
-      "$ref": "./⤴️change-m-ed-knm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-m-ed-knm/schema.json"
     },
     {
-      "$ref": "./🔁️change-n-cycles/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-n-cycles/schema.json"
     },
     {
-      "$ref": "./🏋️change-n-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-n-ed-kn/schema.json"
     },
     {
-      "$ref": "./↔️change-sheet-b-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-sheet-b-mm/schema.json"
     },
     {
-      "$ref": "./🎚️change-sheet-k-sigma/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-sheet-k-sigma/schema.json"
     },
     {
-      "$ref": "./🌊️change-sheet-m-ed-knm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-sheet-m-ed-knm/schema.json"
     },
     {
-      "$ref": "./📑️change-sheet-t-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-sheet-t-mm/schema.json"
     },
     {
-      "$ref": "./📊️change-sheet-w-el-mm3/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-sheet-w-el-mm3/schema.json"
     },
     {
-      "$ref": "./⭕️change-shell-r-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-shell-r-mm/schema.json"
     },
     {
-      "$ref": "./🐚️change-shell-t-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-shell-t-mm/schema.json"
     },
     {
-      "$ref": "./🗜️change-sigma-ed-shell-mpa/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-sigma-ed-shell-mpa/schema.json"
     },
     {
-      "$ref": "./🌡️change-theta-c/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-theta-c/schema.json"
     },
     {
-      "$ref": "./✂️change-v-weld-ed-kn/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-v-weld-ed-kn/schema.json"
     },
     {
-      "$ref": "./🧊️change-w-el-mm3/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-w-el-mm3/schema.json"
     },
     {
-      "$ref": "./🧵️change-weld-length-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-weld-length-mm/schema.json"
     },
     {
-      "$ref": "./🔥️change-weld-throat-mm/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/norm/en1999/mutation/change-weld-throat-mm/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-a-mm2",
-    "change-alloy",
-    "change-annex",
-    "change-beta-w",
-    "change-chi",
-    "change-delta-sigma-c",
-    "change-delta-sigma-ed",
-    "change-fatigue-m",
-    "change-it-mm4",
-    "change-l-cr-mm",
-    "change-m-ed-knm",
-    "change-n-cycles",
-    "change-n-ed-kn",
-    "change-sheet-b-mm",
-    "change-sheet-k-sigma",
-    "change-sheet-m-ed-knm",
-    "change-sheet-t-mm",
-    "change-sheet-w-el-mm3",
-    "change-shell-r-mm",
-    "change-shell-t-mm",
-    "change-sigma-ed-shell-mpa",
-    "change-theta-c",
-    "change-v-weld-ed-kn",
-    "change-w-el-mm3",
-    "change-weld-length-mm",
-    "change-weld-throat-mm"
   ]
 }

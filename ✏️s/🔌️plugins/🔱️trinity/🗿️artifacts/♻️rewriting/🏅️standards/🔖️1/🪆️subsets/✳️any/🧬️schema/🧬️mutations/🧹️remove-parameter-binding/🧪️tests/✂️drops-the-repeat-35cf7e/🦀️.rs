@@ -16,8 +16,8 @@
 //! branch at all. This case pins the applied removal of a key that really is present.
 
 use semio_s_artifact_trinity_jack::PropertyValue;
-use crate::diff::RewritingDiff;
-use crate::mutations::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
 

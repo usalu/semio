@@ -1,8 +1,8 @@
 //! 🔺️ Block 5D artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::schema::diff::*;
+use crate::standards::v1::subsets::any::schema::diff::*;
 
-use crate::schema::Block5dArtifact;
+use crate::standards::v1::subsets::any::schema::Block5dArtifact;
 use crate::{Block5dGripKind, Block5dGripTemplate, Block5dSnapshot};
 use crate::{BlockAttribute, BlockCompatibilityRule, BlockRepresentation};
 use protocol::MutationDiff;

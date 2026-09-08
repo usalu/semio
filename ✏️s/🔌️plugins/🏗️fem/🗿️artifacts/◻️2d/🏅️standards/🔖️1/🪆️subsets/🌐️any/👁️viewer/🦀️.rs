@@ -37,7 +37,7 @@ pub struct Fem2dViewer;
 
 impl ArtifactViewer for Fem2dViewer {
     type Snapshot = Fem2dSnapshot;
-    type Mutation = crate::op::Fem2dMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -51,9 +51,9 @@ impl ArtifactViewer for Fem2dViewer {
 
     /// 🌱️ A real, non-empty default scene: the artifact-side boot document (the bundled `fem2d`
     /// example DSL, falling back to the empty document on a parse error) the sibling editor boots on
-    /// too — no editor import, this is `crate::schema`.
+    /// too — no editor import, this is `crate::standards::v1::subsets::any::schema`.
     fn initial_snapshot() -> Fem2dSnapshot {
-        crate::schema::default_fem2d_snapshot()
+        crate::standards::v1::subsets::any::schema::default_fem2d_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Fem2dViewCommand::Noop` variant never carries a config
@@ -89,25 +89,6 @@ pub fn create_fem2d_viewer() -> semio_framework_plugin::AppDefinition {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn create_fem2d_viewer_builds_a_definition_for_the_viewer_role() {
-        let def = create_fem2d_viewer();
-        assert_eq!(def.role, semio_framework::AppRole::Viewer);
-        assert_eq!(def.dialect, FEM2D_DIALECT.into());
-    }
-
-    #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
-        assert_eq!(<Fem2dViewer as ArtifactViewer>::DIALECT, FEM2D_DIALECT);
-    }
-
-    #[test]
-    fn initial_snapshot_is_non_empty() {
-        let snapshot = <Fem2dViewer as ArtifactViewer>::initial_snapshot();
-        assert!(!snapshot.nodes.is_empty(), "expected the bundled example fixture's nodes");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

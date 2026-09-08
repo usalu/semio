@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.document/diff.text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/document/diff/text.json",
   "title": "SemioDocumentDiffText",
   "description": "Space-separated key=value tokens (styles=/images=/blocks=), each value a [removed];[modified];[added] triple.",
   "type": "string",

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `UpdateCamera` — a real scalar-facet write on the fixture (never a
 //! whole-snapshot capture).
 
-use crate::diff::{diff_fixture_from_helpers, LayoutDiff, Generation2dDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, Generation2dDiff, SynapsesDiff, WidgetsDiff};
 use crate::Generation2dSnapshot;
 
 pub fn diff(payload: &super::UpdateCamera, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {

@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `DeleteRepresentation`.
 
 use crate::Block5dSnapshot;
-use crate::diff::{Block5dDiff, Block5dRepresentationsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Block5dDiff, Block5dRepresentationsDelta};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteRepresentation, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {

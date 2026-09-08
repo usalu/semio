@@ -1,7 +1,7 @@
 //! 🏷 Puzzle5d mutation — `RenamePuzzle5d`: changes the document's display label (the closest
 //! thing this fixture has to an identity field).
-use crate::diff::Puzzle5dDiff;
-use crate::mutations::Puzzle5dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation

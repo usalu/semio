@@ -87,19 +87,6 @@ pub fn render(document: &LowpolySnapshot) -> semio_framework_plugin::UiAssemblyR
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn definition_declares_the_shared_mesh_window_kit() {
-        let def = definition();
-        assert_eq!(def.id, MeshWindowKit::KIND_ID);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn render_produces_a_scene_node_for_the_default_document() {
-        let document = crate::schema::default_snapshot();
-        let _node = render(&document);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

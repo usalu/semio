@@ -4,8 +4,10 @@ import { strict as assert } from "node:assert";
 
 //#region 🧬️ExportRoster
 const fixture = await Bun.file(new URL("./🔣️.json", import.meta.url)).json();
-const schema = await Bun.file(new URL("./📐️.schema.json", import.meta.url)).json();
-const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+const document = await Bun.file(new URL("../../🧬️schema/🔣️.json", import.meta.url)).json();
+const ajv = new Ajv({ strict: true, allErrors: true });
+ajv.addSchema(document);
+const validate = ajv.getSchema(`${document.$id}#/$defs/MacroExportsV1`)!;
 assert(validate(fixture), JSON.stringify(validate.errors));
 const facade = await Bun.file(new URL("../../../🦀️.rs", import.meta.url)).text();
 const exports = /pub use dsl_derive::\{([^}]+)\};/.exec(facade)?.[1].split(",").map((name) => name.trim()).filter(Boolean).sort();

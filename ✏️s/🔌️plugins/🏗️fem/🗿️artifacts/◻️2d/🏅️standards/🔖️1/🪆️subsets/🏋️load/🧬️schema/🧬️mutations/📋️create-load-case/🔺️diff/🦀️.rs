@@ -5,8 +5,8 @@
 //! (`mutation.target-missing`, Error). `add-load` calls the SAME guard, so the two doors into a
 //! case's `loads` cannot drift apart.
 use super::CreateLoadCase;
-use crate::diff::{Fem2dDiff, Fem2dLoadCasesDelta};
-use crate::mutations::guards;
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasesDelta};
+use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff

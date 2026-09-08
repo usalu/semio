@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ReplaceWidget`, reconstructed from BASE.
 use super::ReplaceWidget;
-use crate::mutations::Generation2dMutation;
-use crate::mutations::{replace_widget, widget_index};
+use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{replace_widget, widget_index};
 use crate::{widget_id, Generation2dSnapshot};
 
 //#region 🔖️Inverse

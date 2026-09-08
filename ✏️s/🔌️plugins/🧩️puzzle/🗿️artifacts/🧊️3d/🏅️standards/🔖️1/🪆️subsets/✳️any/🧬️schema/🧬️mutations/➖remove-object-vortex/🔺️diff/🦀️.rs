@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `RemoveObjectVortex` — patches the owner object's `vortices` list
 //! and severs any attraction referencing the removed vortex (full id `object_id:vortex_id`).
-use crate::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta};
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

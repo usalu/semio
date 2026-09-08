@@ -1,6 +1,6 @@
 //! Puzzle5d mutation — `ChangePartAnchor`: changes whether a part keeps its stored plane or resets to default XY.
-use crate::diff::Puzzle5dDiff;
-use crate::mutations::Puzzle5dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation

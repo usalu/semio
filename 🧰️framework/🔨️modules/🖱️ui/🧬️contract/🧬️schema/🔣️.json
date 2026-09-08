@@ -4,6 +4,10 @@
   "title": "Ui Contract Schema Module",
   "$defs": {
     "ConformanceCatalogFixture": {
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust"
+      ],
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -68,6 +72,10 @@
       }
     },
     "ContractFixture": {
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust"
+      ],
       "type": "object",
       "additionalProperties": false,
       "required": [

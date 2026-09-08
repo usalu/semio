@@ -69,21 +69,8 @@ pub fn din18599_artifact_inference_descriptor() -> framework_schema::ArtifactInf
 
 #[cfg(test)]
 //#region 🧪️Tests
-mod tests {
-    use super::*;
-    use protocol::Inference;
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
-        let snapshot = Din18599Snapshot::default();
-        assert_eq!(Din18599Inference::infer(&snapshot), Din18599Inference::infer(&snapshot));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
-        assert_eq!(Din18599Inference::infer(&Din18599Snapshot::default()), Din18599Inference::default());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
@@ -131,29 +118,6 @@ pub fn evaluate(document: &Din18599Snapshot) -> CheckReport {
 
 //#region 🧪️ComplianceReportTests
 #[cfg(test)]
-mod compliance_report_tests {
-    use super::*;
-    use crate::standards::v1::subsets::any::schema::{from_building, reference_wall_layers};
-    use crate::document::ClimateZoneDe;
-
-    fn reference_100m2_inputs() -> BalancingInputs {
-        from_building(&reference_wall_layers(), 100.0, 4, ClimateZoneDe::Zone2, 0.0).unwrap()
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn balance_annual_includes_all_parts() {
-        let inputs = reference_100m2_inputs();
-        let report = balance_annual(&inputs).unwrap();
-        assert_eq!(report.checks.len(), 12);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn part_1_check_reached_via_balance_annual() {
-        let inputs = reference_100m2_inputs();
-        let check = part_1::check(&inputs).unwrap();
-        assert_eq!(check.clause.family, "DIN V 18599-1");
-        let report = balance_annual(&inputs).unwrap();
-        assert!(report.checks.iter().any(|c| c.clause.family == "DIN V 18599-1" && c.clause.part == "§6"));
-    }
-}
+#[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
+mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests

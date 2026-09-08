@@ -1,72 +1,250 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.xml/snapshot.xml",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/xml/1.0/base/snapshot.json",
   "title": "XmlSnapshot",
   "type": "object",
-  "required": ["schema", "doc"],
+  "required": [
+    "schema",
+    "doc"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "doc": { "$ref": "#/$defs/XmlDocument" }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "doc": {
+      "$ref": "#/$defs/XmlDocument"
+    }
   },
   "$defs": {
     "XmlAttr": {
       "type": "object",
-      "required": ["name", "value"],
-      "properties": { "name": { "type": "string" }, "value": { "type": "string" } }
+      "required": [
+        "name",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
     },
     "XmlNode": {
       "oneOf": [
         {
           "type": "object",
-          "required": ["kind", "name", "attrs", "children"],
+          "required": [
+            "kind",
+            "name",
+            "attrs",
+            "children"
+          ],
           "properties": {
-            "kind": { "const": "element" },
-            "name": { "type": "string" },
-            "attrs": { "type": "array", "items": { "$ref": "#/$defs/XmlAttr" } },
-            "children": { "type": "array", "items": { "$ref": "#/$defs/XmlNode" } }
+            "kind": {
+              "const": "element"
+            },
+            "name": {
+              "type": "string"
+            },
+            "attrs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlAttr"
+              }
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlNode"
+              }
+            }
           }
         },
-        { "type": "object", "required": ["kind", "text"], "properties": { "kind": { "const": "text" }, "text": { "type": "string" } } },
-        { "type": "object", "required": ["kind", "text"], "properties": { "kind": { "const": "cData" }, "text": { "type": "string" } } },
-        { "type": "object", "required": ["kind", "text"], "properties": { "kind": { "const": "comment" }, "text": { "type": "string" } } },
         {
           "type": "object",
-          "required": ["kind", "target", "data"],
-          "properties": { "kind": { "const": "processingInstruction" }, "target": { "type": "string" }, "data": { "type": "string" } }
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cData"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "comment"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "target",
+            "data"
+          ],
+          "properties": {
+            "kind": {
+              "const": "processingInstruction"
+            },
+            "target": {
+              "type": "string"
+            },
+            "data": {
+              "type": "string"
+            }
+          }
         }
       ]
     },
     "XmlDeclaration": {
       "type": "object",
-      "required": ["version"],
+      "required": [
+        "version"
+      ],
       "properties": {
-        "version": { "type": "string" },
-        "encoding": { "type": "string" },
-        "standalone": { "type": "boolean" }
+        "version": {
+          "type": "string"
+        },
+        "encoding": {
+          "type": "string"
+        },
+        "standalone": {
+          "type": "boolean"
+        }
       }
     },
     "XmlExternalId": {
       "oneOf": [
-        { "type": "object", "required": ["kind", "systemId"], "properties": { "kind": { "const": "system" }, "systemId": { "type": "string" } } },
-        { "type": "object", "required": ["kind", "publicId", "systemId"], "properties": { "kind": { "const": "public" }, "publicId": { "type": "string" }, "systemId": { "type": "string" } } }
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "systemId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "system"
+            },
+            "systemId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "publicId",
+            "systemId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "public"
+            },
+            "publicId": {
+              "type": "string"
+            },
+            "systemId": {
+              "type": "string"
+            }
+          }
+        }
       ]
     },
     "XmlDtdDeclaration": {
       "type": "object",
-      "required": ["kind", "parameter", "name", "value"],
-      "properties": { "kind": { "const": "entity" }, "parameter": { "type": "boolean" }, "name": { "type": "string" }, "value": { "type": "string" } }
+      "required": [
+        "kind",
+        "parameter",
+        "name",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "entity"
+        },
+        "parameter": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
     },
     "XmlDoctype": {
       "type": "object",
-      "required": ["name"],
-      "properties": { "name": { "type": "string" }, "externalId": { "$ref": "#/$defs/XmlExternalId" }, "declarations": { "type": "array", "items": { "$ref": "#/$defs/XmlDtdDeclaration" } } }
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "externalId": {
+          "$ref": "#/$defs/XmlExternalId"
+        },
+        "declarations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlDtdDeclaration"
+          }
+        }
+      }
     },
     "XmlDocument": {
       "type": "object",
       "properties": {
-        "root": { "$ref": "#/$defs/XmlNode" },
-        "doctype": { "$ref": "#/$defs/XmlDoctype" },
-        "declaration": { "$ref": "#/$defs/XmlDeclaration" },
-        "prolog": { "type": "array", "items": { "$ref": "#/$defs/XmlNode" } }
+        "root": {
+          "$ref": "#/$defs/XmlNode"
+        },
+        "doctype": {
+          "$ref": "#/$defs/XmlDoctype"
+        },
+        "declaration": {
+          "$ref": "#/$defs/XmlDeclaration"
+        },
+        "prolog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlNode"
+          }
+        }
       }
     }
   }

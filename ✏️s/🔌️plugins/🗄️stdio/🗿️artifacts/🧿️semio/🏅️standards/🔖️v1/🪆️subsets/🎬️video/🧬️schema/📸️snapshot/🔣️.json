@@ -1,10 +1,14 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.video/snapshot.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/video/snapshot.json",
   "title": "SemioVideoSnapshot",
   "description": "streams{kind,codec,width,height,rate,samples{pts,key,data}} — container-typed, payload-opaque.",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
     "streams": {
       "type": "array",
       "x-semio-state": "artifact",
@@ -12,15 +16,39 @@
         "title": "SemioVideoStream",
         "type": "object",
         "properties": {
-          "kind": { "enum": ["video", "audio", "subtitle"] },
-          "codec": { "type": "string" },
-          "width": { "type": "integer", "minimum": 0 },
-          "height": { "type": "integer", "minimum": 0 },
+          "kind": {
+            "enum": [
+              "video",
+              "audio",
+              "subtitle"
+            ]
+          },
+          "codec": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 0
+          },
           "rate": {
             "title": "SemioRational",
             "type": "object",
-            "properties": { "num": { "type": "integer" }, "den": { "type": "integer" } },
-            "required": ["num", "den"]
+            "properties": {
+              "num": {
+                "type": "integer"
+              },
+              "den": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "num",
+              "den"
+            ]
           },
           "samples": {
             "type": "array",
@@ -28,17 +56,40 @@
               "title": "SemioVideoSample",
               "type": "object",
               "properties": {
-                "pts": { "type": "integer", "minimum": 0 },
-                "key": { "type": "boolean" },
-                "data": { "type": "string", "contentEncoding": "hex", "description": "opaque compressed payload" }
+                "pts": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "key": {
+                  "type": "boolean"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "hex",
+                  "description": "opaque compressed payload"
+                }
               },
-              "required": ["pts", "key", "data"]
+              "required": [
+                "pts",
+                "key",
+                "data"
+              ]
             }
           }
         },
-        "required": ["kind", "codec", "width", "height", "rate", "samples"]
+        "required": [
+          "kind",
+          "codec",
+          "width",
+          "height",
+          "rate",
+          "samples"
+        ]
       }
     }
   },
-  "required": ["schema", "streams"]
+  "required": [
+    "schema",
+    "streams"
+  ]
 }

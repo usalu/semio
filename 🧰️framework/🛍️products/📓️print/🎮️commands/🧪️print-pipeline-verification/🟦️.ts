@@ -1,7 +1,7 @@
 import { verifyVisualizationCoverage } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
-import { verifyPrintVisualizationBuild } from "./🧪️tests/🟦️.ts";
+import { verifyPrintVisualizationBuild } from "./🧪️tests/🖨️pipeline/🟦️.ts";
 import { BundleScript, TEST_LEVELS, resolveTestLevel } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { verifyPrintPipelineLong, verifyPrintPipelineQuick } from "./🧪️tests/🟦️.ts";
+import { verifyPrintPipelineLong, verifyPrintPipelineQuick } from "./🧪️tests/🖨️pipeline/🟦️.ts";
 
 //#region 🧪️PrintPipelineVerification
 /** 🧪️ Verifies pure print transformations and, at long level, every template PDF output. */

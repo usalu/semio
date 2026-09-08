@@ -1,5 +1,0 @@
-{
-  "$id": "https://semio.tech/schema/stdio.semio.audio/mutations/text.json",
-  "title": "SemioAudioMutationsText",
-  "type": "object"
-}

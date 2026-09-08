@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/space/artifacts/collection/component.json",
+  "title": "Collection",
+  "$defs": {
+    "CollectionArtifactDefinitionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "definition_version",
+        "id",
+        "artifact",
+        "directory",
+        "rust_package",
+        "nx_project",
+        "dependencies"
+      ],
+      "properties": {
+        "definition_version": {
+          "const": 1
+        },
+        "id": {
+          "const": "os.collection"
+        },
+        "artifact": {
+          "const": "collection"
+        },
+        "directory": {
+          "const": "🗂️collection"
+        },
+        "rust_package": {
+          "const": "semio-framework-artifact-space-collection"
+        },
+        "nx_project": {
+          "const": "@semio-tech/framework-space-collection-rs"
+        },
+        "dependencies": {
+          "type": "array",
+          "maxItems": 0
+        }
+      }
+    }
+  }
+}

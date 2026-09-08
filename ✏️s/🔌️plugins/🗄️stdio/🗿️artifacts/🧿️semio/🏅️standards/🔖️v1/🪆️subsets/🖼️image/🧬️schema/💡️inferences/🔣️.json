@@ -1,24 +1,54 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/semio/image/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/image/inference.json",
   "title": "SemioImageInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["dimensions"],
+  "required": [
+    "dimensions"
+  ],
   "properties": {
-    "dimensions": { "$ref": "#/$defs/SemioImageDimensions", "x-semio-derived": true }
+    "dimensions": {
+      "$ref": "#/$defs/SemioImageDimensions",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "SemioImageDimensions": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["width", "height", "bitDepth", "hasAlpha", "pixelCount", "frameCount"],
+      "required": [
+        "width",
+        "height",
+        "bitDepth",
+        "hasAlpha",
+        "pixelCount",
+        "frameCount"
+      ],
       "properties": {
-        "width": { "type": "integer", "minimum": 0 },
-        "height": { "type": "integer", "minimum": 0 },
-        "bitDepth": { "type": "integer", "minimum": 0 },
-        "hasAlpha": { "type": "boolean" },
-        "pixelCount": { "type": "integer", "minimum": 0 },
-        "frameCount": { "type": "integer", "minimum": 0 }
+        "width": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bitDepth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hasAlpha": {
+          "type": "boolean"
+        },
+        "pixelCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "frameCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

@@ -6,6 +6,9 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
+#[path = "♻️retirement/🦀️.rs"]
+mod retirement;
+
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Roles
@@ -820,7 +823,7 @@ pub const SPACE_ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/�
 /// 📦️ Parses and validates the builtin space package declaration.
 pub fn space_package_from_schema(source: &str) -> Result<SpaceArtifactPackage, SpacePackageSchemaError> {
     let parsed = store::os_pack::json::from_json_str::<SpacePackageSource>(source).map_err(|error| SpacePackageSchemaError(error.to_string()))?;
-    if parsed.definition_version != 1 || parsed.id != "os.space" || parsed.artifact != "space" || parsed.directory != "🪐️space" || parsed.rust_package != "semio-framework-artifact-space-space" || parsed.nx_project != "@semio-tech/space-space-rs" || !parsed.dependencies.is_empty() {
+    if parsed.definition_version != 1 || parsed.id != "os.space" || parsed.artifact != "space" || parsed.directory != "🪐️space" || parsed.rust_package != "semio-framework-artifact-space-space" || parsed.nx_project != "@semio-tech/framework-space-space-rs" || !parsed.dependencies.is_empty() {
         return Err(SpacePackageSchemaError("builtin space package identity does not match its canonical declaration".into()));
     }
     Ok(SpaceArtifactPackage {

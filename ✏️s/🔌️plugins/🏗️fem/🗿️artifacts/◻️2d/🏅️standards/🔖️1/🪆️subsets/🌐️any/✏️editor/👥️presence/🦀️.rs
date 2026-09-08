@@ -60,7 +60,7 @@ impl Mutation<Fem2dPresence> for Fem2dPresenceMutation {
         display_name: "Presence Noop",
         emoji: "🚫",
         aggregate_variant: "Noop",
-        payload_schema: "🔣️.schema.json",
+        payload_schema: "🧬️schema/🔣️.json",
         text_opcode: None,
         binary_tag: None,
         invertibility: protocol::MutationInvertibility::ExplicitMutation,
@@ -123,16 +123,6 @@ impl protocol::OpBinary for Fem2dPresenceMutation {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// 🧷️ LAW: the single `Fem2dPresenceMutation` variant owns exactly one `MutationLeafDescriptor`.
-    #[test]
-    fn the_presence_mutation_variant_has_its_own_descriptor() {
-        assert_eq!(<Fem2dPresenceMutation as Mutation<Fem2dPresence>>::DESCRIPTORS.len(), 1);
-        let descriptor = Fem2dPresenceMutation::Noop.descriptor();
-        assert_eq!(descriptor.aggregate_variant, "Noop");
-        assert_eq!(descriptor.schema_version, 1);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

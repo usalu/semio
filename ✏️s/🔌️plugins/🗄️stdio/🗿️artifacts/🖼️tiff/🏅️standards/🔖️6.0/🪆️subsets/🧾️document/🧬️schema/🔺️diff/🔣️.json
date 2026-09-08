@@ -1,73 +1,170 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.tiff/diff.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/tiff/6.0/document/diff.json",
   "title": "TiffDiff",
   "type": "object",
   "$defs": {
     "TiffTagModified": {
       "type": "object",
-      "required": ["tag", "kind", "values"],
+      "required": [
+        "tag",
+        "kind",
+        "values"
+      ],
       "properties": {
-        "tag": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "kind": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffFieldType" },
-        "values": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffValues" }
+        "tag": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "kind": {
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffFieldType"
+        },
+        "values": {
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffValues"
+        }
       }
     },
     "TiffTagAdded": {
       "type": "object",
-      "required": ["tag", "kind", "values"],
+      "required": [
+        "tag",
+        "kind",
+        "values"
+      ],
       "properties": {
-        "tag": { "type": "integer", "minimum": 0, "maximum": 65535 },
-        "kind": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffFieldType" },
-        "values": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffValues" }
+        "tag": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "kind": {
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffFieldType"
+        },
+        "values": {
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffValues"
+        }
       }
     },
     "TiffTagsDiff": {
       "type": "object",
       "description": "Tag-id-keyed entries triple for one IFD.",
       "properties": {
-        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 65535 } },
-        "modified": { "type": "array", "items": { "$ref": "#/$defs/TiffTagModified" } },
-        "added": { "type": "array", "items": { "$ref": "#/$defs/TiffTagAdded" } }
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TiffTagModified"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TiffTagAdded"
+          }
+        }
       }
     },
     "TiffIfdDiff": {
       "type": "object",
       "description": "One IFD's own delta: the recursive tag triple plus a whole-value slot for that directory's raw strip payload.",
       "properties": {
-        "entries": { "$ref": "#/$defs/TiffTagsDiff" },
-        "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+        "entries": {
+          "$ref": "#/$defs/TiffTagsDiff"
+        },
+        "pixels": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
       }
     },
     "TiffIfdModified": {
       "type": "object",
-      "required": ["index", "diff"],
+      "required": [
+        "index",
+        "diff"
+      ],
       "properties": {
-        "index": { "type": "integer", "minimum": 0 },
-        "diff": { "$ref": "#/$defs/TiffIfdDiff" }
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "diff": {
+          "$ref": "#/$defs/TiffIfdDiff"
+        }
       }
     },
     "TiffIfdAdded": {
       "type": "object",
-      "required": ["index", "ifd"],
+      "required": [
+        "index",
+        "ifd"
+      ],
       "properties": {
-        "index": { "type": "integer", "minimum": 0 },
-        "ifd": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffIfd" }
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ifd": {
+          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffIfd"
+        }
       }
     },
     "TiffIfdsDiff": {
       "type": "object",
       "description": "Index-keyed ifds triple (TIFF's IFD chain is positional).",
       "properties": {
-        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
-        "modified": { "type": "array", "items": { "$ref": "#/$defs/TiffIfdModified" } },
-        "added": { "type": "array", "items": { "$ref": "#/$defs/TiffIfdAdded" } }
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TiffIfdModified"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TiffIfdAdded"
+          }
+        }
       }
     }
   },
   "description": "Sparse diff for stdio.tiff. Every field present = changed to a value. No tri-state fields at this level.",
   "properties": {
-    "byteOrder": { "$ref": "https://semio.tech/schema/s.stdio.tiff/snapshot.json#/$defs/TiffByteOrder", "x-semio-state": "artifact" },
-    "ifds": { "$ref": "#/$defs/TiffIfdsDiff", "x-semio-state": "artifact" },
-    "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "x-semio-state": "artifact" }
+    "byteOrder": {
+      "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffByteOrder",
+      "x-semio-state": "artifact"
+    },
+    "ifds": {
+      "$ref": "#/$defs/TiffIfdsDiff",
+      "x-semio-state": "artifact"
+    },
+    "pixels": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "x-semio-state": "artifact"
+    }
   }
 }

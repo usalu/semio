@@ -138,98 +138,8 @@ impl En1995Mutation {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::Mutation;
-
-    /// ⚖️ One value per `En1995Mutation` variant — the closed set the semantics/round-trip tests
-    /// iterate, mirroring this ticket's `en1992`/`en1993` precedent's own `every_mutation()` fixture.
-    fn every_mutation() -> Vec<En1995Mutation> {
-        vec![
-            En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
-            En1995Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 999.0 }),
-            En1995Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: 111.0 }),
-            En1995Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 77.0 }),
-            En1995Mutation::ChangeWMm3(change_w_mm3::ChangeWMm3 { new_w_mm3: 2_000_000.0 }),
-            En1995Mutation::ChangeAMm2(change_a_mm2::ChangeAMm2 { new_a_mm2: 30_000.0 }),
-            En1995Mutation::ChangeBMm(change_b_mm::ChangeBMm { new_b_mm: 250.0 }),
-            En1995Mutation::ChangeHMm(change_h_mm::ChangeHMm { new_h_mm: 400.0 }),
-            En1995Mutation::ChangeFMK(change_f_m_k::ChangeFMK { new_f_m_k: 28.0 }),
-            En1995Mutation::ChangeFC0K(change_f_c_0_k::ChangeFC0K { new_f_c_0_k: 24.0 }),
-            En1995Mutation::ChangeServiceClass(change_service_class::ChangeServiceClass { new_service_class: "sc2".into() }),
-            En1995Mutation::ChangeLoadDuration(change_load_duration::ChangeLoadDuration { new_load_duration: "short".into() }),
-            En1995Mutation::ChangeMCritKnm(change_m_crit_knm::ChangeMCritKnm { new_m_crit_knm: 95.0 }),
-            En1995Mutation::ChangeFEdKn(change_f_ed_kn::ChangeFEdKn { new_f_ed_kn: 22.0 }),
-            En1995Mutation::ChangeAEfMm2(change_a_ef_mm2::ChangeAEfMm2 { new_a_ef_mm2: 14_000.0 }),
-            En1995Mutation::ChangeFVK(change_f_v_k::ChangeFVK { new_f_v_k: 4.5 }),
-            En1995Mutation::ChangeFireDurationMin(change_fire_duration_min::ChangeFireDurationMin { new_fire_duration_min: 60.0 }),
-            En1995Mutation::ChangeSectionDepthMm(change_section_depth_mm::ChangeSectionDepthMm { new_section_depth_mm: 350.0 }),
-            En1995Mutation::ChangeAVertMS2(change_a_vert_m_s2::ChangeAVertMS2 { new_a_vert_m_s2: 0.5 }),
-            En1995Mutation::ChangeNCyclesBridge(change_n_cycles_bridge::ChangeNCyclesBridge { new_n_cycles_bridge: 750_000.0 }),
-        ]
-    }
-
-    fn round_trip(base: &En1995Snapshot, mutation: &En1995Mutation) -> En1995Snapshot {
-        let forward = vcs::apply_mutation(base, mutation).expect("valid mutation").0;
-        let mut restored = forward.clone();
-        for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation").0;
-        }
-        assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
-        forward
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn every_variant_registers_an_approved_semantic_descriptor() {
-        for mutation in every_mutation() {
-            let descriptor = protocol::SemanticMutation::semantics(&mutation);
-            assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
-        }
-        assert_eq!(<En1995Mutation as protocol::SemanticMutation<En1995Snapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn every_variant_round_trips_via_inverse() {
-        let base = En1995Snapshot::default();
-        for mutation in every_mutation() {
-            round_trip(&base, &mutation);
-        }
-    }
-
-    //#region 🧪️MutationLaws
-    /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
-    /// (reachable here as `protocol::testkit`), exercised against the three most structurally
-    /// distinct variants: the enum-typed scalar (`change-annex`), a typical `f64` scalar
-    /// (`change-m-ed-knm`), and a `String` scalar (`change-service-class`).
-    #[semio_framework_async_macros::async_test]
-    async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
-        let base = En1995Snapshot::default();
-        let mutation = En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
-        let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1995Mutation::ChangeServiceClass(change_service_class::ChangeServiceClass { new_service_class: "sc2".into() }).diff(&base).diff().clone();
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
-    }
-    #[semio_framework_async_macros::async_test]
-    async fn change_m_ed_knm_satisfies_the_inverse_and_absorb_laws() {
-        let base = En1995Snapshot::default();
-        let mutation = En1995Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 999.0 });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
-        let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1995Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 77.0 }).diff(&base).diff().clone();
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
-    }
-    #[semio_framework_async_macros::async_test]
-    async fn change_service_class_satisfies_the_inverse_and_absorb_laws() {
-        let base = En1995Snapshot::default();
-        let mutation = En1995Mutation::ChangeServiceClass(change_service_class::ChangeServiceClass { new_service_class: "sc2".into() });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
-        let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1995Mutation::ChangeLoadDuration(change_load_duration::ChangeLoadDuration { new_load_duration: "short".into() }).diff(&base).diff().clone();
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
-    }
-    //#endregion 🧪️MutationLaws
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 //#region 🧪️FixtureTests
@@ -238,49 +148,8 @@ mod tests {
 /// running concurrently, and a `#[path]` on a module declared at the top level of this non-mod-rs
 /// file already resolves relative to this very directory.
 #[cfg(test)]
-#[path = "."]
-mod fixture_tests {
-    #[path = "🧩️change-a-ef-mm2/🧪️tests/🧩️enlarges-the-b5acc3/🦀️.rs"]
-    mod tests_change_a_ef_mm2_enlarges_the_effective_connection_area_to_16000_mm2;
-    #[path = "📐️change-a-mm2/🧪️tests/📐️enlarges-the-gross-fa8811/🦀️.rs"]
-    mod tests_change_a_mm2_enlarges_the_gross_area_to_72000_mm2;
-    #[path = "🦶️change-a-vert-ms2/🧪️tests/🦶️doubles-the-c2dea2/🦀️.rs"]
-    mod tests_change_a_vert_ms2_doubles_the_vertical_footfall_acceleration_to_0_5_m_s2;
-    #[path = "🌍️change-annex/🧪️tests/🌍️switches-from-the-d62a98/🦀️.rs"]
-    mod tests_change_annex_switches_from_the_german_na_to_the_recommended_en_annex;
-    #[path = "↔️change-b-mm/🧪️tests/↔️widens-the-beam-to-240-mm/🦀️.rs"]
-    mod tests_change_b_mm_widens_the_beam_to_240_mm;
-    #[path = "🔩️change-f-ed-kn/🧪️tests/🔩️raises-the-design-329177/🦀️.rs"]
-    mod tests_change_f_ed_kn_raises_the_design_fastener_force_to_24_kn;
-    #[path = "🗜️change-fc0-k/🧪️tests/🗜️raises-the-parallel-48aac4/🦀️.rs"]
-    mod tests_change_fc0_k_raises_the_parallel_compressive_strength_to_26_5_mpa;
-    #[path = "🔥️change-fire-duration-min/🧪️tests/🔥️raises-the-fire-adf04e/🦀️.rs"]
-    mod tests_change_fire_duration_min_raises_the_fire_exposure_from_r30_to_r60;
-    #[path = "🛡️change-fmk/🧪️tests/🛡️upgrades-the-bending-8c4599/🦀️.rs"]
-    mod tests_change_fmk_upgrades_the_bending_strength_class_to_28_mpa;
-    #[path = "✂️change-fvk/🧪️tests/✂️lowers-the-characteristic-eb6d5a/🦀️.rs"]
-    mod tests_change_fvk_lowers_the_characteristic_shear_strength_to_3_5_mpa;
-    #[path = "↕️change-h-mm/🧪️tests/↕️deepens-the-beam-to-360-mm/🦀️.rs"]
-    mod tests_change_h_mm_deepens_the_beam_to_360_mm;
-    #[path = "⏳️change-load-duration/🧪️tests/⏳️shortens-the-load-7daaa6/🦀️.rs"]
-    mod tests_change_load_duration_shortens_the_load_duration_class_from_medium_to_short;
-    #[path = "⚠️change-m-crit-knm/🧪️tests/⚠️raises-the-e228a0/🦀️.rs"]
-    mod tests_change_m_crit_knm_raises_the_critical_buckling_moment_to_96_knm;
-    #[path = "⤴️change-m-ed-knm/🧪️tests/⤴️raises-the-design-278a0e/🦀️.rs"]
-    mod tests_change_m_ed_knm_raises_the_design_bending_moment_to_32_knm;
-    #[path = "🔁️change-n-cycles-bridge/🧪️tests/🌉️quadruples-the-585733/🦀️.rs"]
-    mod tests_change_n_cycles_bridge_quadruples_the_bridge_fatigue_cycles_to_2000000;
-    #[path = "🏋️change-n-ed-kn/🧪️tests/🏋️raises-the-design-4170c3/🦀️.rs"]
-    mod tests_change_n_ed_kn_raises_the_design_axial_force_to_75_kn;
-    #[path = "📏️change-section-depth-mm/🧪️tests/📏️raises-the-size-5a1a3d/🦀️.rs"]
-    mod tests_change_section_depth_mm_raises_the_size_effect_depth_to_360_mm;
-    #[path = "🌧️change-service-class/🧪️tests/🌧️moves-the-beam-ef95d3/🦀️.rs"]
-    mod tests_change_service_class_moves_the_beam_from_service_class_1_to_service_class_2;
-    #[path = "🪚️change-v-ed-kn/🧪️tests/🪚️raises-the-design-83679e/🦀️.rs"]
-    mod tests_change_v_ed_kn_raises_the_design_shear_force_to_22_5_kn;
-    #[path = "📊️change-w-mm3/🧪️tests/📊️raises-the-section-d3cebf/🦀️.rs"]
-    mod tests_change_w_mm3_raises_the_section_modulus_to_4000000_mm3;
-}
+#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
+mod fixture_tests;
 //#endregion 🧪️FixtureTests
 
 
@@ -318,25 +187,6 @@ pub fn inverse_en1995_mutation(mutation: &En1995Mutation, base: &En1995Snapshot)
 
 //#region 🧪️KindsCatalog
 #[cfg(test)]
-mod kinds_catalog {
-    use super::*;
-
-    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
-    /// `#[derive(dsl::Mutations)]` assigns, and every one of those spellings must also appear in the
-    /// committed `en1995-1-any` catalog. The framework never parses Rust, so this is the only thing
-    /// standing between a renamed variant and a completeness gate that silently measures the wrong
-    /// set.
-    #[test]
-    fn kinds_match_the_enum_and_the_catalog() {
-        let descriptors = <En1995Mutation as protocol::SemanticMutation<En1995Snapshot>>::kinds();
-        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared En1995Mutation variant");
-        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
-            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
-        }
-        let manifest = include_str!("../../🔮️oracle/🔣️.json");
-        for kind in KINDS {
-            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
-        }
-    }
-}
+#[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
+mod kinds_catalog;
 //#endregion 🧪️KindsCatalog

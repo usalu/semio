@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `DeleteReference` — a real removal, never a whole-snapshot capture.
-use crate::diff::{Puzzle3dDiff, Puzzle3dReferencesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dReferencesDelta};
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

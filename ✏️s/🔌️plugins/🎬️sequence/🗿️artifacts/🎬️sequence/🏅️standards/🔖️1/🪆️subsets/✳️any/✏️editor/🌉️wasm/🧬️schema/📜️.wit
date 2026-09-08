@@ -1,0 +1,141 @@
+package semio:sequence-browser-abi@1.0.0;
+
+/// 🌉️ The browser ABI the sequence editor's wasm bridge exposes to its JavaScript host.
+/// The numeric operation and event codes live in the two producers this interface names —
+/// `📦️packages/🟨️javascript/🖥️sequence-host.js` (`SequenceOperation`) and `📡️protocol.rs` —
+/// and are never restated here; this facet is the language-neutral surface itself.
+interface abi {
+    /// 🧵️ The ten feature groups every operation belongs to exactly once.
+    enum feature {
+        lifetime,
+        document,
+        editing,
+        execution,
+        viewport,
+        input,
+        layout,
+        selection,
+        preview,
+        playback,
+    }
+
+    /// 🔢️ Every operation the host may issue (47 in the contiguous range 2300..=2346).
+    enum operation {
+        // lifetime
+        open,
+        // document
+        load-fixture-json,
+        fixture-json,
+        catalogue-json,
+        // editing
+        add-step,
+        add-step-dropped,
+        add-step-to-slot,
+        set-step-collapsed,
+        pick-step-id-at-screen,
+        build-path-json,
+        remove-step,
+        set-step-params-json,
+        connect-steps,
+        disconnect-steps,
+        // execution
+        compile-text,
+        compiled-wire-literal,
+        run,
+        // viewport
+        attach-surface,
+        gpu-ready,
+        set-size,
+        render-frame,
+        // input
+        world-from-screen,
+        pointer-down-screen,
+        pointer-move-screen,
+        pointer-up-screen,
+        wheel-screen,
+        // layout
+        reorganize,
+        lod-scale-json,
+        set-automatic-lod,
+        set-forced-draw-lod-label,
+        draw-lod-label,
+        set-canvas-theme-json,
+        // selection
+        selected-node-ids,
+        set-selection,
+        label-overlay-paint-state-json,
+        hovered-node-id,
+        // preview
+        preselect-node-ids-json,
+        selection-preview-points-json,
+        selection-preview-crossing,
+        selection-preview-method,
+        selection-union-bounds-screen-json,
+        set-selection-options,
+        set-ghost-step,
+        clear-ghost-step,
+        // playback
+        play,
+        pause,
+        stop,
+    }
+
+    /// 📣️ Every event the bridge may emit (8 in the contiguous range 2400..=2407).
+    enum event {
+        admitted,
+        progress,
+        checkpoint,
+        surface,
+        render,
+        playback,
+        output,
+        terminal,
+    }
+
+    /// 🪪️ A slot/generation identity pair; a stale generation is refused, never reused.
+    record identity {
+        slot: u32,
+        generation: u32,
+    }
+
+    /// 📐️ The bounds every request, reply, page and transfer is measured against.
+    record limits {
+        request-bytes: u32,
+        inline-reply-bytes: u32,
+        page-bytes: u32,
+        transfer-bytes: u32,
+        resources: u32,
+        requests: u32,
+        outbound: u32,
+        events-in-flight: u32,
+    }
+
+    /// 📦️ The `A1-AbiMessage-v1` framing: little-endian request bodies and paged outputs.
+    record framing {
+        message: string,
+        byte-order: string,
+    }
+
+    /// 🖥️ A surface and a canvas are addressed by a non-zero handle, never by index.
+    type surface-handle = u32;
+    type canvas-handle = u32;
+
+    /// 🪟️ The negotiated ABI of one open session.
+    record browser-abi {
+        version: u32,
+        session: identity,
+        operation-identity: identity,
+        surface: surface-handle,
+        canvas: canvas-handle,
+        bounds: limits,
+        wire: framing,
+    }
+
+    /// 🧭️ The feature group that owns one operation; total over `operation`.
+    owner: func(op: operation) -> feature;
+}
+
+/// 🌍️ The world the sequence editor's browser bridge component exports.
+world sequence-browser {
+    export abi;
+}

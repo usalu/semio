@@ -4,8 +4,8 @@
 //! `mutation.id-mismatch` (Fatal) when the replacement renames it, the SAME `material_id`
 //! resolution and meshability bounds `create-region` runs, and finally `mutation.no-op`.
 use super::ReplaceRegion;
-use crate::diff::{Fem2dDiff, Fem2dRegionsDelta, Fem2dRegionsPatchEntry};
-use crate::mutations::guards;
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dRegionsDelta, Fem2dRegionsPatchEntry};
+use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff

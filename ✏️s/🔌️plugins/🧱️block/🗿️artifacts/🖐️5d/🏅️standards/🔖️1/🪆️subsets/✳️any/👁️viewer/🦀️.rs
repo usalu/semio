@@ -42,7 +42,7 @@ pub struct Block5dViewer;
 
 impl ArtifactViewer for Block5dViewer {
     type Snapshot = Block5dSnapshot;
-    type Mutation = crate::op::Block5dMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::text::Block5dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -57,9 +57,9 @@ impl ArtifactViewer for Block5dViewer {
     /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document so the view's
     /// mesh window renders a real representation instead of the fallback mesh kind — the
     /// artifact-side `default_block5d_snapshot` the editor boots on too (no editor import: this is
-    /// `crate::schema`).
+    /// `crate::standards::v1::subsets::any::schema`).
     fn initial_snapshot() -> Block5dSnapshot {
-        crate::schema::default_block5d_snapshot()
+        crate::standards::v1::subsets::any::schema::default_block5d_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Block5dViewCommand::Noop` variant never carries a config
@@ -102,19 +102,6 @@ pub fn create_block5d_viewer() -> semio_framework_plugin::AppDefinition {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn create_block5d_viewer_builds_a_definition_for_the_viewer_role() {
-        let def = create_block5d_viewer();
-        assert_eq!(def.role, semio_framework::AppRole::Viewer);
-        assert_eq!(def.dialect, BLOCK5D_DIALECT.into());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn viewer_dialect_matches_the_artifact_coordinate() {
-        assert_eq!(<Block5dViewer as ArtifactViewer>::DIALECT, BLOCK5D_DIALECT);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

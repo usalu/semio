@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1991/1/any/mutation/change-silo-hydraulic-radius-m/schema.json",
+  "$id": "https://semio.tech/schema/s/norm/en1991/mutation/change-silo-hydraulic-radius-m/schema.json",
   "title": "ChangeSiloHydraulicRadiusM",
   "type": "object",
   "additionalProperties": false,

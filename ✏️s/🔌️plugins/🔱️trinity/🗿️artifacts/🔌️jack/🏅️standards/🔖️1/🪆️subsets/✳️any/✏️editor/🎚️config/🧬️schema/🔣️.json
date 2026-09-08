@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/app/trinity/jack/config.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/trinity/jack/config/schema.json",
   "title": "JackConfig",
   "type": "object",
   "additionalProperties": false,
@@ -57,7 +58,9 @@
     },
     "lodModeByWindow": {
       "type": "object",
-      "additionalProperties": { "type": "string" },
+      "additionalProperties": {
+        "type": "string"
+      },
       "x-semio-state": "config"
     },
     "revision": {
@@ -75,21 +78,43 @@
       "title": "Camera",
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y", "zoom"],
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
       "properties": {
-        "x": { "type": "number", "format": "double" },
-        "y": { "type": "number", "format": "double" },
-        "zoom": { "type": "number", "format": "double" }
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "double"
+        }
       }
     },
     "JackEditorSelection": {
       "title": "JackEditorSelection",
       "type": "object",
       "additionalProperties": false,
-      "required": ["start", "end"],
+      "required": [
+        "start",
+        "end"
+      ],
       "properties": {
-        "start": { "type": "integer", "format": "int64" },
-        "end": { "type": "integer", "format": "int64" }
+        "start": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "end": {
+          "type": "integer",
+          "format": "int64"
+        }
       }
     }
   }

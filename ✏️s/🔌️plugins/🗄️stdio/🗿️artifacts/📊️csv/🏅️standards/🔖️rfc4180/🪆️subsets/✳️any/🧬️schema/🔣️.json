@@ -1,29 +1,49 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.csv/artifact.csv",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/csv/rfc4180/any/artifact.json",
   "title": "CsvArtifact",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "hasHeader", "records"],
+  "required": [
+    "schema",
+    "hasHeader",
+    "records"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "hasHeader": { "type": "boolean", "x-semio-state": "artifact" },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "hasHeader": {
+      "type": "boolean",
+      "x-semio-state": "artifact"
+    },
     "records": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["fields"],
+        "required": [
+          "fields"
+        ],
         "properties": {
           "fields": {
             "type": "array",
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["value", "quoted"],
+              "required": [
+                "value",
+                "quoted"
+              ],
               "properties": {
-                "value": { "type": "string" },
-                "quoted": { "type": "boolean" }
+                "value": {
+                  "type": "string"
+                },
+                "quoted": {
+                  "type": "boolean"
+                }
               }
             }
           }

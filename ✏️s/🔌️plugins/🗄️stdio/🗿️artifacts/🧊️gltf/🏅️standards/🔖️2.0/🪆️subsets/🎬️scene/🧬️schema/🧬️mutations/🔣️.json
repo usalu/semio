@@ -16,7 +16,7 @@
           "const": "bindDefaultScene"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🏠️default-scene/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-default-scene/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "bindNodeCamera"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/📷️node-camera/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-node-camera/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "bindNodeChild"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌿️node-child/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-node-child/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "bindNodeMesh"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🏗️node-mesh/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-node-mesh/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "bindNodeSkin"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🩻️node-skin/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-node-skin/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
           "const": "bindSceneRootNode"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌲️scene-root/🔗️bind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-scene-root-node/schema.json"
         }
       }
     },
@@ -112,7 +112,7 @@
           "const": "changeNodeExtensionData"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/🧩️change-extensions/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-node-extension-data/schema.json"
         }
       }
     },
@@ -128,7 +128,7 @@
           "const": "changeNodeExtraData"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/📝️change-extras/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-node-extra-data/schema.json"
         }
       }
     },
@@ -144,7 +144,7 @@
           "const": "changeNodeMorphWeights"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/⚖️change-weights/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-node-morph-weights/schema.json"
         }
       }
     },
@@ -160,7 +160,7 @@
           "const": "changeNodeName"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/🏷️rename/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-node-name/schema.json"
         }
       }
     },
@@ -176,7 +176,7 @@
           "const": "changeSceneExtensionData"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎬️scene/🧩️change-extensions/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-scene-extension-data/schema.json"
         }
       }
     },
@@ -192,7 +192,7 @@
           "const": "changeSceneExtraData"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎬️scene/📝️change-extras/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-scene-extra-data/schema.json"
         }
       }
     },
@@ -208,7 +208,7 @@
           "const": "changeSceneName"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎬️scene/🏷️rename/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-scene-name/schema.json"
         }
       }
     },
@@ -224,7 +224,7 @@
           "const": "createNode"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-node/schema.json"
         }
       }
     },
@@ -240,7 +240,7 @@
           "const": "createScene"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎬️scene/🌱️create/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-scene/schema.json"
         }
       }
     },
@@ -256,7 +256,7 @@
           "const": "deleteNode"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-node/schema.json"
         }
       }
     },
@@ -272,7 +272,7 @@
           "const": "deleteScene"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎬️scene/🗑️delete/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-scene/schema.json"
         }
       }
     },
@@ -288,7 +288,7 @@
           "const": "moveNode"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-node/schema.json"
         }
       }
     },
@@ -304,7 +304,7 @@
           "const": "moveNodeChild"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌿️node-child/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-node-child/schema.json"
         }
       }
     },
@@ -320,7 +320,7 @@
           "const": "moveScene"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎬️scene/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-scene/schema.json"
         }
       }
     },
@@ -336,7 +336,7 @@
           "const": "moveSceneRootNode"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌲️scene-root/🚚️move/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-scene-root-node/schema.json"
         }
       }
     },
@@ -352,7 +352,7 @@
           "const": "reorderNodeChildren"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌿️node-child/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-node-children/schema.json"
         }
       }
     },
@@ -368,7 +368,7 @@
           "const": "reorderNodes"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-nodes/schema.json"
         }
       }
     },
@@ -384,7 +384,7 @@
           "const": "reorderSceneRootNodes"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌲️scene-root/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-scene-root-nodes/schema.json"
         }
       }
     },
@@ -400,7 +400,7 @@
           "const": "reorderScenes"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🎬️scene/🔀️reorder/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-scenes/schema.json"
         }
       }
     },
@@ -416,7 +416,7 @@
           "const": "moveNodeParent"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/🌿️reparent/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-node-parent/schema.json"
         }
       }
     },
@@ -432,7 +432,7 @@
           "const": "changeNodeTransform"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌳️node/📐️transform/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-node-transform/schema.json"
         }
       }
     },
@@ -448,7 +448,7 @@
           "const": "unbindDefaultScene"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🏠️default-scene/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-default-scene/schema.json"
         }
       }
     },
@@ -464,7 +464,7 @@
           "const": "unbindNodeCamera"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/📷️node-camera/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-node-camera/schema.json"
         }
       }
     },
@@ -480,7 +480,7 @@
           "const": "unbindNodeChild"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌿️node-child/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-node-child/schema.json"
         }
       }
     },
@@ -496,7 +496,7 @@
           "const": "unbindNodeMesh"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🏗️node-mesh/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-node-mesh/schema.json"
         }
       }
     },
@@ -512,7 +512,7 @@
           "const": "unbindNodeSkin"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🩻️node-skin/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-node-skin/schema.json"
         }
       }
     },
@@ -528,7 +528,7 @@
           "const": "unbindSceneRootNode"
         },
         "payload": {
-          "$ref": "../../../♾️any/🧬️schema/🧬️mutations/🌲️scene-root/✂️unbind/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-scene-root-node/schema.json"
         }
       }
     }

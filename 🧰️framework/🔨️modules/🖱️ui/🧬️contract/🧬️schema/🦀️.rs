@@ -1,12 +1,144 @@
-//! 🧬️ Versioned semantic UI wire-type metadata and its owned TypeScript projection — extracted
-//! from owner `📦️packages/🦀️rust/🦀️.rs` (`#[cfg(feature = "typegen")] mod schema_metadata;`)
-//! so that file stays pure wiring (no `struct`/`impl` of its own), which keeps its taxonomy
-//! package role classified as thin delegation rather than implementation — otherwise it competes
-//! with `🦀️.rs` for the crate's one canonical implementation slot.
+//! 🧬️ The `framework.ui.contract` schema leaf: this scope's named-export registration, the Rust half
+//! of the two exports `🔣️.json` declares (`ConformanceCatalogFixture`, `ContractFixture` — contract
+//! §B: a `🧬️schema/🦀️.rs` carries the scope's pub types and `include_str!`s its siblings), plus the
+//! versioned semantic UI wire-type metadata and its owned TypeScript projection — the latter
+//! extracted from owner `📦️packages/🦀️rust/🦀️.rs` so that file stays pure wiring (no
+//! `struct`/`impl` of its own), which keeps its taxonomy package role classified as thin
+//! delegation rather than implementation — otherwise it competes with `🦀️.rs` for the crate's one
+//! canonical implementation slot.
+//!
+//! The module itself mounts unconditionally (the registration below must run in every build); only
+//! the TypeScript projection stays behind `feature = "typegen"`, which is the only thing that ever
+//! needed gating.
 
+//#region 🔖️ScopeSchemaExports
+
+use semio_framework_schema_registry::{register_scope_schema_exports, FacetLeaves, SchemaExport, SchemaFormat, ScopeSchemaExports};
+
+/// 🗂️ The formats every export of this scope exists in, which is every format this module carries a
+/// file for. It is the single source of the `"x-semio-formats"` annotation each `$defs` entry of
+/// `🔣️.json` declares (contract §A: the annotation lists every format the export exists in,
+/// including the normative one) — `restricted_formats_match_the_annotation` below asserts the two
+/// cannot drift. Public so a boot call site or a conformance checker reads the declared set from the
+/// scope itself instead of restating it.
+pub const DECLARED_FORMATS: [SchemaFormat; 2] = [SchemaFormat::JsonSchema, SchemaFormat::Rust];
+
+/// 🍃 The two leaves `DECLARED_FORMATS` names. `semio-framework-schema-registry` is the os-kernel-free
+/// leaf crate (`📋️execution-contract.md` §C), so registering from here does not reintroduce the
+/// os-kernel/`dsl` edge this crate's header docstring forbids — which is what blocked WP4b row 40.
+/// The other three fields are the registry's spelling of "not provided": no `🟦️.ts`/`🔗️.graphql`/
+/// `🛰️.proto` leaf exists in this module, and no export claims one.
+const LEAVES: FacetLeaves = FacetLeaves { rust: include_str!("🦀️.rs"), typescript: "", graphql: "", json_schema: include_str!("🔣️.json"), proto: "" };
+
+/// 🏷️ `$defs` of `🔣️.json`, in declaration order.
+const EXPORTS: [SchemaExport; 2] = [SchemaExport { id: "ConformanceCatalogFixture", leaves: LEAVES }, SchemaExport { id: "ContractFixture", leaves: LEAVES }];
+
+/// 📌️ Registers `framework.ui.contract`'s named exports into the process-wide export catalog.
+/// See `📋️execution-contract.md` §C and `semio_framework_schema_registry::resolve_schema_export`.
+// 🚫️async: E1 pure registration helper (no I/O) — see R9
+pub fn register_scope_exports() {
+    register_scope_schema_exports(ScopeSchemaExports { scope: "framework.ui.contract", exports: &EXPORTS }).expect("framework.ui.contract scope schema exports");
+}
+
+/// 🔬 Proves the registration at runtime rather than by inspection: it registers, resolves every
+/// export in exactly the formats `DECLARED_FORMATS` names and in no other, asserts the scope is
+/// visible in the process-wide catalog, and asserts each export's `"x-semio-formats"` annotation is
+/// the taxonomy spelling of that same set.
+#[cfg(test)]
+mod scope_schema_export_law {
+    use semio_framework_schema_registry::{resolve_schema_export, scope_schema_exports_registered, SchemaFormat};
+
+    #[test]
+    fn registers_and_resolves_exactly_the_declared_formats() {
+        super::register_scope_exports();
+        assert!(scope_schema_exports_registered("framework.ui.contract"));
+        for export in super::EXPORTS.map(|declaration| declaration.id) {
+            for format in SchemaFormat::ALL {
+                let resolved = resolve_schema_export("framework.ui.contract", export, format);
+                assert_eq!(resolved.is_ok(), super::DECLARED_FORMATS.contains(&format), "{export} resolves {format} but x-semio-formats declares {:?}", super::DECLARED_FORMATS);
+            }
+            assert!(resolve_schema_export("framework.ui.contract", export, SchemaFormat::JsonSchema).is_ok_and(|leaf| leaf.contains("framework/ui/contract/schema.json")));
+            assert!(resolve_schema_export("framework.ui.contract", export, SchemaFormat::Rust).is_ok_and(|leaf| leaf.contains("register_scope_exports")));
+        }
+        assert!(resolve_schema_export("framework.ui.contract", "NotAnExport", SchemaFormat::JsonSchema).is_err());
+    }
+
+    #[test]
+    fn restricted_formats_match_the_annotation() {
+        let module: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).expect("module json");
+        let expected: Vec<&str> = super::DECLARED_FORMATS.iter().map(|format| format.taxonomy_key()).collect();
+        let defs = module["$defs"].as_object().expect("$defs");
+        assert_eq!(defs.len(), super::EXPORTS.len());
+        for export in super::EXPORTS.map(|declaration| declaration.id) {
+            let declared: Vec<&str> = defs[export]["x-semio-formats"].as_array().expect("x-semio-formats").iter().map(|entry| entry.as_str().expect("format id")).collect();
+            assert_eq!(declared, expected, "{export} must declare exactly the formats this module registers");
+        }
+    }
+}
+
+//#endregion 🔖️ScopeSchemaExports
+
+//#region 🔖️Exports
+
+use serde::Deserialize;
+use std::collections::BTreeMap;
+
+/// 🧫 `📚️examples/🧪️conformance/📇️catalog.json`: the language-neutral conformance corpus index — the
+/// case identities and the per-role filenames every renderer's conformance run reads, so a directory
+/// glyph is never an identity. The Rust half of the `ConformanceCatalogFixture` export its
+/// `"x-semio-formats"` declares; `🧪️tests/🔬️conformance-unit/🦀️.rs` decodes the file through it.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ConformanceCatalogFixture {
+    pub version: u32,
+    pub roles: BTreeMap<String, String>,
+    pub groups: BTreeMap<String, ConformanceCatalogFixtureGroup>,
+}
+
+/// 🗂️ One corpus group: whether its cases carry a patch role, and the case id → directory map.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ConformanceCatalogFixtureGroup {
+    pub patch: bool,
+    pub cases: BTreeMap<String, String>,
+}
+
+/// 🧫 `🧪️fixtures/👥️presence-overlay.json`: the four presence-overlay cases proving that one update's
+/// `selected`/`hovered`/`previewed` flags stay separate through a round trip. The Rust half of the
+/// `ContractFixture` export; `🧪️tests/🔬️presence-unit/🦀️.rs` decodes the file through it.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ContractFixture {
+    pub cases: Vec<ContractFixtureCase>,
+}
+
+/// 🧩️ One presence-overlay case: the update as it travels the wire, and the flags it must resolve to.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ContractFixtureCase {
+    pub name: String,
+    pub update: crate::PresenceUpdate,
+    pub expected: ContractFixtureFlags,
+}
+
+/// 🚩️ The three own-presence flags a case expects after the update is applied.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ContractFixtureFlags {
+    pub selected: bool,
+    pub hovered: bool,
+    pub previewed: bool,
+}
+
+//#endregion 🔖️Exports
+
+//#region 🔖️TypescriptProjection
+
+#[cfg(feature = "typegen")]
 use std::collections::HashSet;
 
 /// 🧬️ One versioned semantic UI wire type and its owned TypeScript projection.
+#[cfg(feature = "typegen")]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SchemaMetadata {
     pub name: &'static str,
@@ -14,6 +146,7 @@ pub struct SchemaMetadata {
     pub typescript: &'static str,
 }
 
+#[cfg(feature = "typegen")]
 pub const TYPES: &[SchemaMetadata] = &[
     SchemaMetadata {
         name: "AbsoluteLayout",
@@ -946,6 +1079,7 @@ export type WindowStackCorner = "topLeft" | "topRight" | "bottomLeft" | "bottomR
 ];
 
 /// 🔍️ Rejects unversioned, duplicate, or name-mismatched schema rows before generation.
+#[cfg(feature = "typegen")]
 pub fn validate() -> Result<(), String> {
     let mut names = HashSet::with_capacity(TYPES.len());
     for metadata in TYPES {
@@ -965,6 +1099,7 @@ pub fn validate() -> Result<(), String> {
 }
 
 /// 🟦️ Renders the stable language projection consumed by every semantic UI host.
+#[cfg(feature = "typegen")]
 pub fn render_typescript() -> String {
     let mut output = String::from("/** @generated by `bun nx run @semio-tech/ui-contract-rs:generate` from versioned owned UI schema metadata. Do not edit. */\n\n");
     for (index, metadata) in TYPES.iter().enumerate() {
@@ -973,3 +1108,5 @@ pub fn render_typescript() -> String {
     }
     output
 }
+
+//#endregion 🔖️TypescriptProjection

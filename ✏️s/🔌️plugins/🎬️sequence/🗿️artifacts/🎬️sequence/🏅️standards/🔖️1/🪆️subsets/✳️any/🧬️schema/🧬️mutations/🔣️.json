@@ -1,41 +1,31 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/sequence/sequence/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/sequence/sequence/mutations.json",
   "title": "SequenceMutation",
   "oneOf": [
     {
-      "$ref": "./../../../🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/1/step/mutation/create-step/schema.json"
     },
     {
-      "$ref": "./../../../🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/1/step/mutation/delete-step/schema.json"
     },
     {
-      "$ref": "./../../../🪜️step/🧬️schema/🧬️mutations/📍️move-step/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/1/step/mutation/move-step/schema.json"
     },
     {
-      "$ref": "./../../../🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/1/step/mutation/edit-step-params/schema.json"
     },
     {
-      "$ref": "./../../../🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/1/step/mutation/change-step-collapsed/schema.json"
     },
     {
-      "$ref": "./../../../🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/1/dependency/mutation/connect-steps/schema.json"
     },
     {
-      "$ref": "./../../../🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/1/dependency/mutation/disconnect-steps/schema.json"
     },
     {
-      "$ref": "./../../../🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/1/step/mutation/duplicate-step/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "create-step",
-    "delete-step",
-    "move-step",
-    "edit-step-params",
-    "change-step-collapsed",
-    "connect-steps",
-    "disconnect-steps",
-    "duplicate-step"
   ]
 }

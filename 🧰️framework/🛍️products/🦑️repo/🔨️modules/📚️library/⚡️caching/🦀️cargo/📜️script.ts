@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import assert from "node:assert/strict";
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
@@ -8,9 +8,43 @@ import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 import { BundleScript, ScriptRouter } from "../../🏃️process/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
-import { runCmdStatus } from "../../🏃️process/🟦️.ts";
+import { buildBudgetMs, runCmdStatus } from "../../🏃️process/🟦️.ts";
 import { stageArtifacts } from "../📦️artifacts/🟦️.ts";
 const slash = (path: string): string => path.split(sep).join("/");
+
+/** 🏃️ Runs a bounded owned command with progress and process-tree cancellation. */
+async function runOwnedCommand(command: string, args: string[], cwd: string, label: string, timeoutMs = buildBudgetMs()): Promise<void> {
+  const child = spawn(command, args, { cwd, env: process.env, detached: process.platform !== "win32", stdio: "inherit", windowsHide: true });
+  let stopped = "", forceKill: ReturnType<typeof setTimeout> | undefined;
+  const terminate = (reason: string): void => {
+    stopped ||= reason;
+    if (!child.pid) return;
+    if (process.platform === "win32") Bun.spawnSync(["taskkill", "/pid", String(child.pid), "/t", "/f"], { stdout: "ignore", stderr: "ignore" });
+    else {
+      try { process.kill(-child.pid, "SIGTERM"); } catch {}
+      forceKill ??= setTimeout(() => { try { process.kill(-child.pid!, "SIGKILL"); } catch {} }, 2000);
+      forceKill.unref();
+    }
+  };
+  const interrupt = (): void => terminate("SIGINT");
+  const stop = (): void => terminate("SIGTERM");
+  process.once("SIGINT", interrupt);
+  process.once("SIGTERM", stop);
+  const started = Date.now();
+  const progress = setInterval(() => console.log(`[${label}] running elapsedMs=${Date.now() - started}`), 10_000);
+  const timeout = timeoutMs > 0 ? setTimeout(() => terminate(`timeout ${timeoutMs}ms`), timeoutMs) : undefined;
+  try {
+    const status = await new Promise<number>((accept) => { child.once("error", (error) => { console.error(error.message); accept(1); }); child.once("close", (code) => accept(code ?? 1)); });
+    if (stopped) throw new Error(`${label} stopped: ${stopped}`);
+    if (status !== 0) throw new Error(`${label} failed (${status})`);
+  } finally {
+    clearInterval(progress);
+    if (timeout) clearTimeout(timeout);
+    if (forceKill) clearTimeout(forceKill);
+    process.off("SIGINT", interrupt);
+    process.off("SIGTERM", stop);
+  }
+}
 
 /** 🎯️ Keeps caller arguments within the selected Nx leaf's package and production/test input contract. */
 export function validateNativeCargoArguments(operation: "build" | "check" | "test", args: readonly string[]): void {
@@ -80,18 +114,16 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
     }
   }
   class CheckScript extends BundleScript {
-    run(segments: string[]): void {
-      const status = runCmdStatus("cargo", ["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml"), ...segments], { cwd: this.repoRoot });
-      if (status) throw new Error(`cargo check failed (${status})`);
+    async run(segments: string[]): Promise<void> {
+      await runOwnedCommand("cargo", ["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml"), ...segments], this.repoRoot, `artifact-rust:${cargoName}:check`);
     }
   }
   class TestScript extends BundleScript {
-    run(segments: string[]): void {
+    async run(segments: string[]): Promise<void> {
       const levels = new Set(["fundamental", "quick", "long", "exhaustive"]), [first, ...rest] = segments;
       const extra = first && levels.has(first) ? rest : segments;
       if (first && levels.has(first)) process.env.SEMIO_TEST_LEVEL = first;
-      const status = runCmdStatus("cargo", ["test", "--locked", "-p", cargoName, ...extra], { cwd: this.repoRoot, env: process.env });
-      if (status) throw new Error(`cargo test failed (${status})`);
+      await runOwnedCommand("cargo", ["test", "--locked", "-p", cargoName, ...extra], this.repoRoot, `artifact-rust:${cargoName}:test`);
     }
   }
   const packageRouter = new ScriptRouter(packageRoot).register("build", BuildScript).register("check", CheckScript).register("test", TestScript);
@@ -102,34 +134,49 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
 /** 🟦️ Builds and resolves a declaration-only TypeScript artifact package from its taxonomy source. */
 export async function runArtifactTypeScriptPackageMain(packageRoot: string, packageName: string): Promise<void> {
   const source = resolve(packageRoot, "../../🟦️.ts"), output = resolve(packageRoot, "dist");
-  const typeScript = (entry: string, args: string[]): void => {
-    const result = Bun.spawnSync([process.execPath, "x", "tsc", entry, ...args, "--module", "ESNext", "--moduleResolution", "Bundler", "--resolveJsonModule", "--allowSyntheticDefaultImports", "--strict", "--skipLibCheck", "--target", "ES2022"], { cwd: getWorkspaceRoot(), stdout: "inherit", stderr: "inherit", timeout: 120_000 });
-    if (result.exitCode !== 0) throw new Error(`TypeScript compiler failed (${result.exitCode})`);
+  const typeScript = async (entry: string, args: string[], skipLibraries = true): Promise<void> => {
+    await runOwnedCommand(process.execPath, ["x", "tsc", entry, ...args, "--module", "ESNext", "--moduleResolution", "Bundler", "--resolveJsonModule", "--allowSyntheticDefaultImports", "--strict", ...(skipLibraries ? ["--skipLibCheck"] : []), "--target", "ES2022"], getWorkspaceRoot(), `artifact-typescript:${packageName}:tsc`, 120_000);
+  };
+  const copyDeclarationAssets = (): number => {
+    const declaration = join(output, "🟦️.d.ts"), compiler = createRequire(import.meta.url)("typescript");
+    let count = 0;
+    for (const imported of compiler.preProcessFile(readFileSync(declaration, "utf8"), true, true).importedFiles) {
+      if (!imported.fileName.startsWith(".") || !imported.fileName.endsWith(".json")) continue;
+      const from = resolve(dirname(source), imported.fileName), to = resolve(dirname(declaration), imported.fileName), local = relative(output, to);
+      if (local === ".." || local.startsWith(`..${sep}`)) throw new Error(`Declaration asset escapes ${packageName}: ${imported.fileName}`);
+      mkdirSync(dirname(to), { recursive: true });
+      copyFileSync(from, to);
+      count++;
+    }
+    return count;
   };
   const build = async (): Promise<void> => {
     rmSync(output, { recursive: true, force: true });
     mkdirSync(output, { recursive: true });
     const result = await Bun.build({ entrypoints: [source], outdir: output, naming: "🟦️.js", target: "bun", format: "esm", minify: false });
     if (!result.success) throw new AggregateError(result.logs, `Failed to build ${packageName}`);
-    typeScript(source, ["--declaration", "--emitDeclarationOnly", "--outDir", output]);
-    console.log(`[artifact-typescript] built ${packageName} outputs=${result.outputs.length + 1}`);
+    await typeScript(source, ["--declaration", "--emitDeclarationOnly", "--outDir", output]);
+    const assets = copyDeclarationAssets();
+    console.log(`[artifact-typescript] built ${packageName} outputs=${result.outputs.length + 1 + assets}`);
   };
   class BuildScript extends BundleScript { async run(): Promise<void> { await build(); } }
   class CheckScript extends BundleScript {
     async run(): Promise<void> {
       const result = await Bun.build({ entrypoints: [source], write: false, target: "bun", format: "esm" });
       if (!result.success) throw new AggregateError(result.logs, `Failed to check ${packageName}`);
-      typeScript(source, ["--noEmit"]);
+      await typeScript(source, ["--noEmit"]);
       console.log(`[artifact-typescript] checked ${packageName}`);
     }
   }
   class TestScript extends BundleScript {
     async run(): Promise<void> {
       await build();
-      const probe = join(output, "🧪️consumer.ts");
-      writeFileSync(probe, `import * as artifact from ${JSON.stringify(packageName)};\nvoid artifact;\n`);
-      try { typeScript(probe, ["--noEmit"]); } finally { rmSync(probe, { force: true }); }
       const artifact = await import(packageName);
+      const probe = join(output, "🧪️consumer.ts"), typeRoots = join(output, "🧪️types");
+      mkdirSync(typeRoots);
+      const assertion = Object.hasOwn(artifact, "definition") ? "const definitionId: typeof artifact.definition.id = artifact.definition.id;\nvoid definitionId;" : `const artifactModule: typeof import(${JSON.stringify(packageName)}) = artifact;\nvoid artifactModule;`;
+      writeFileSync(probe, `import * as artifact from ${JSON.stringify(packageName)};\n${assertion}\n`);
+      try { await typeScript(probe, ["--noEmit", "--typeRoots", typeRoots], false); } finally { rmSync(probe, { force: true }); rmSync(typeRoots, { recursive: true, force: true }); }
       assert.equal(typeof artifact, "object", `${packageName} did not resolve as an ES module`);
       console.log(`[artifact-typescript] tested ${packageName} exports=${Object.keys(artifact).length}`);
     }

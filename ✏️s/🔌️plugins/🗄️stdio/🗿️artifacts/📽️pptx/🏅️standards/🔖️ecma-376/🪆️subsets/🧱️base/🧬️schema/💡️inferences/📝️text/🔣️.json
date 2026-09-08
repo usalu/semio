@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/pptx/inference/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/pptx/ecma-376/base/inference/text.json",
   "title": "PptxInferenceText",
   "type": "object"
 }

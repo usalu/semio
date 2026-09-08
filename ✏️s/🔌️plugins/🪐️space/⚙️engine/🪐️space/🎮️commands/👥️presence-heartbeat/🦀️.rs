@@ -21,25 +21,6 @@ pub fn handle(payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, WorkflowSnaps
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn space_command_op_text_round_trips_every_variant() {
-        use crate::engine::space::SpaceCommand;
-        store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PresenceHeartbeat(PresenceHeartbeat { client_id: "c1".into(), name: "Ada".into() }));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn presence_heartbeat_declares_none_ui_scope() {
-        use crate::demo_space_projection;
-        use crate::engine::space::testkit::studio_emit;
-        use crate::engine::space::SpaceCommand;
-        use semio_framework::kernel::UiDirtyScope;
-        let projection = demo_space_projection().await;
-        let config = SpaceConfig::default();
-        let emit = studio_emit(&projection, &config, &SpaceCommand::PresenceHeartbeat(PresenceHeartbeat { client_id: "client-test-c".into(), name: "Cass".into() })).await.expect("handle");
-        assert!(matches!(emit.ui_scope, UiDirtyScope::None), "presenceHeartbeat must declare None, got {:?}", emit.ui_scope);
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -3,7 +3,7 @@
 import { strict as assert } from "node:assert";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv from "ajv";
 import {
   BundleScript,
   ScriptRouter,
@@ -351,7 +351,7 @@ class TestScript extends BundleScript {
     assertRendererCacheHome();
     const { rest } = resolveTestLevel(segments);
     await runCargoTestBudgeted([crateName], this.repoRoot, rest);
-    await runVitest(this.root, rest, "🟦️typescript/🧪️test/🟦️s.ts");
+    await runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 
@@ -366,10 +366,13 @@ class NativeTestScript extends BundleScript {
 /** 🏠️ Independently executes the neutral retained-Home bootstrap trace and audits the native mount. */
 function directoryRetainedHomeBootstrapOracle(): number {
   const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🚀️event-page-bootstrap-v1.json");
-  const schemaPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🔗️event-page-bootstrap-v1.schema.json");
+  const schemaPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json");
   const fixture = JSON.parse(readFileSync(fixturePath, "utf8"));
-  const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+  const schemaModule = JSON.parse(readFileSync(schemaPath, "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(schemaModule);
+  const validate = ajv.getSchema(`${schemaModule.$id}#/$defs/DirectoryEventPageBootstrapTraceV1`);
+  assert(validate, "os.directory schema module must export DirectoryEventPageBootstrapTraceV1");
   let checks = 0;
   const check = (condition: unknown, message: string): void => {
     assert(condition, message);
@@ -553,7 +556,7 @@ class NormalizedPresenceRowsNativeCheckScript extends BundleScript {
 /** @emoji 🧵️ Runs the browser Worker transport protocol without invoking Cargo. */
 class BrowserWorkerTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runVitest(this.root, ["🧪️tests/📨️browser-frame-transport.ts", "🧪️tests/🎮️browser-interactive-job-port.ts", ...segments], "🟦️typescript/🧪️test/🟦️s.ts");
+    await runVitest(this.root, ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", ...segments], "vitest.config.ts");
   }
 }
 
@@ -564,7 +567,7 @@ class BrowserWorkerTestScript extends BundleScript {
 class PreviewGeneratedTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments, "long");
-    await runVitest(this.root, ["🧪️tests/🧩️package-integration.ts", ...rest], "🟦️typescript/🧪️test/🟦️s.ts");
+    await runVitest(this.root, ["🧪️tests/🧩️package-integration/🟦️.ts", ...rest], "vitest.config.ts");
   }
 }
 

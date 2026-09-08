@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ChangeNodeAnchor` — restores the BASE field value on the addressed node. Missing
 //! target ⇒ `Vec::new()`.
-use crate::mutations::Puzzle2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Inverse
@@ -8,6 +8,6 @@ pub fn inverse(payload: &super::ChangeNodeAnchor, base: &Puzzle2dSnapshot) -> Ve
     let Some(node) = base.nodes.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
-    vec![crate::mutations::change_node_anchor::change_node_anchor(node.id.clone(), node.anchor)]
+    vec![crate::standards::v1::subsets::any::schema::mutations::change_node_anchor::change_node_anchor(node.id.clone(), node.anchor)]
 }
 //#endregion 🔖️Inverse

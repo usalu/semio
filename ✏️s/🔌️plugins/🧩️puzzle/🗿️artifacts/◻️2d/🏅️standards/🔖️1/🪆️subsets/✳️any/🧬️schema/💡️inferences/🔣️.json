@@ -1,9 +1,12 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/inference.json",
   "title": "Puzzle2dInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["flatPosition"],
+  "required": [
+    "flatPosition"
+  ],
   "properties": {
     "flatPosition": {
       "$ref": "#/$defs/Puzzle2dFlatPosition",
@@ -14,20 +17,31 @@
     "Puzzle2dFlatPositionXy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y"],
+      "required": [
+        "x",
+        "y"
+      ],
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" }
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
       }
     },
     "Puzzle2dFlatPosition": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["positions"],
+      "required": [
+        "positions"
+      ],
       "properties": {
         "positions": {
           "type": "object",
-          "additionalProperties": { "$ref": "#/$defs/Puzzle2dFlatPositionXy" }
+          "additionalProperties": {
+            "$ref": "#/$defs/Puzzle2dFlatPositionXy"
+          }
         }
       }
     }

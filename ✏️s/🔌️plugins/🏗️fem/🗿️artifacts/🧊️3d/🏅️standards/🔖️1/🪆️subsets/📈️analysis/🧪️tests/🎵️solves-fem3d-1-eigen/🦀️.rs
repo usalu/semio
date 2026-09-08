@@ -95,7 +95,7 @@ fn significant(value: f64) -> Json {
 mod decode {
     use super::{flag, number, numbers};
     use semio_repo_test_host::Json;
-    use semio_s_artifact_fem_3d::{Fem3dSnapshot, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+    use crate::{Fem3dSnapshot, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
     use std::collections::BTreeMap;
 
     /// 🔒️ One degree-of-freedom tag, as this artifact spells it on the wire.
@@ -273,7 +273,7 @@ mod subject {
     pub fn modal(needle: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
             let document = decode::snapshot(&fixture(ctx, needle)?)?;
-            let solved = semio_s_plugin_fem::fem3d_engine::modal_buckling::fem3d_modal(&document).map_err(|error| error.to_string())?;
+            let solved = crate::fem3d_engine::modal_buckling::fem3d_modal(&document).map_err(|error| error.to_string())?;
             let (material, section) = (&document.materials[0], &document.sections[0]);
             let length = document.nodes[document.nodes.len() - 1].x;
             let mut closed: Vec<f64> = Vec::new();
@@ -307,7 +307,7 @@ mod subject {
         move |ctx: &Context| {
             let document = decode::snapshot(&fixture(ctx, needle)?)?;
             let case_id = document.load_cases[0].id.clone();
-            let solved = semio_s_plugin_fem::fem3d_engine::modal_buckling::fem3d_buckling(&document, &case_id).map_err(|error| error.to_string())?;
+            let solved = crate::fem3d_engine::modal_buckling::fem3d_buckling(&document, &case_id).map_err(|error| error.to_string())?;
             let (material, section) = (&document.materials[0], &document.sections[0]);
             let height = document.nodes[document.nodes.len() - 1].z;
             let critical = std::f64::consts::PI * std::f64::consts::PI * material.e * section.iz / (effective_length_factor * height).powi(2);

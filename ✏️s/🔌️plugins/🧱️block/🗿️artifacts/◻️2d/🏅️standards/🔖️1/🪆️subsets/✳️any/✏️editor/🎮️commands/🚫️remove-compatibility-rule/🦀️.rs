@@ -1,6 +1,6 @@
 //! 🚫️ Block 2D play app command — `remove-compatibility-rule`.
 
-use crate::op::Block2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Block2dMutation;
 use crate::Block2dSnapshot;
 use crate::editor::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -13,5 +13,5 @@ pub struct RemoveCompatibilityRule {
 }
 
 pub fn handle(payload: &RemoveCompatibilityRule, _doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
-    Ok(Emit::mutations(vec![crate::mutations::remove_compatibility_rule(payload.id.clone())]))
+    Ok(Emit::mutations(vec![crate::standards::v1::subsets::any::schema::mutations::remove_compatibility_rule(payload.id.clone())]))
 }

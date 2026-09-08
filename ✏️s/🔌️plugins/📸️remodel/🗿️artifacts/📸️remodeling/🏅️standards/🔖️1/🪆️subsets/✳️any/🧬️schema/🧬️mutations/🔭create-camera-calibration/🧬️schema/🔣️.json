@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutation/create-camera-calibration/schema.json",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/mutation/create-camera-calibration/schema.json",
   "title": "CreateCameraCalibration",
   "type": "object",
   "additionalProperties": false,

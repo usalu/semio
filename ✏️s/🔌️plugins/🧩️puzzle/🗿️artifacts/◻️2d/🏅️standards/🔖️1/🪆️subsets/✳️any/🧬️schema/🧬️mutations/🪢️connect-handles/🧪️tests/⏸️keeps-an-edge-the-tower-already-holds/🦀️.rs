@@ -6,8 +6,8 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`); the board is derived from the shipped
 //! `🏗️nakagin-capsule-tower` example, not invented.
 
-use crate::mutations::Puzzle2dMutation;
-use crate::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
 use crate::Puzzle2dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -45,7 +45,7 @@ fn declared_outcome_holds() {
     let message = produced.messages().first().expect("a no-op vector carries a diagnostic");
     assert_eq!(message.code.0, "mutation.no-op", "connect-handles/keeps-an-edge-the-tower-already-holds: a duplicate id is reported as a no-op, never as an error");
     assert_eq!(message.level, protocol::Severity::Warning, "connect-handles/keeps-an-edge-the-tower-already-holds: mutation.no-op is a warning — nothing to do is not a breach");
-    assert_eq!(produced.diff(), &crate::diff::Puzzle2dDiff::default(), "connect-handles/keeps-an-edge-the-tower-already-holds: a no-op answers the default diff");
+    assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff::default(), "connect-handles/keeps-an-edge-the-tower-already-holds: a no-op answers the default diff");
 }
 
 /// ↩️ `connect-handles`'s inverse is PAYLOAD-derived, so it is emitted even for a no-op — and it does NOT
@@ -92,7 +92,7 @@ fn produces_committed_diff() {
 /// 🩹 Applying the committed no-op diff to `before` yields `before` again.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::diff::Puzzle2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::diff::Puzzle2dDiff as protocol::MutationDiff<Puzzle2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff as protocol::MutationDiff<Puzzle2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "connect-handles/keeps-an-edge-the-tower-already-holds: committed diff did not carry before to after");
 }

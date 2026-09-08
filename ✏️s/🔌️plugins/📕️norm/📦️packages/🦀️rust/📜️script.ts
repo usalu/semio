@@ -129,16 +129,14 @@ class ConfigMutationSourceScript extends BundleScript {
     const fixture = JSON.parse(readFileSync(join(configRoot, "🧪️tests", "🔣️.json"), "utf8"));
     const aggregate = JSON.parse(readFileSync(join(configRoot, "🧬️schema", "🧬️mutations", "🔣️.json"), "utf8"));
     const ajv = new Ajv({ allErrors: true, strict: true });
-    ajv.addVocabulary(["x-semio-mutationKinds"]);
     const module = JSON.parse(readFileSync(join(this.root, "..", "..", "🧬️schema", "🔣️.json"), "utf8")) as { $id: string };
     ajv.addSchema(module);
     const validateFixture = ajv.compile({ $ref: `${module.$id}#/$defs/NormConfigMutationCases` });
     if (!validateFixture(fixture)) throw new Error(`config fixture schema failed: ${JSON.stringify(validateFixture.errors)}`);
-    const payloadRef = aggregate.oneOf[0].$ref;
-    if (decodeURI(payloadRef) !== "./☑️change-selected-check-index/🧬️schema/🔣️.json") throw new Error("config aggregate schema does not reference its owned payload");
+    if (aggregate.oneOf[0].$ref !== schema.$id) throw new Error("config aggregate schema does not reference its owned payload by $id");
     ajv.addSchema(schema);
     const validate = ajv.getSchema(schema.$id)!;
-    const validateMutation = ajv.compile({ ...aggregate, oneOf: [{ $ref: schema.$id }] });
+    const validateMutation = ajv.compile(aggregate);
     for (const test of fixture.cases) {
       if (!validate(test.payload) || !validateMutation(test.payload)) throw new Error(`config fixture ${test.id} failed AJV: ${JSON.stringify(validate.errors ?? validateMutation.errors)}`);
       if ((test.payload.index ?? null) !== test.after || (test.before === test.after) !== test.warning) throw new Error(`config fixture ${test.id} has inconsistent results`);
@@ -246,9 +244,11 @@ class MutationLeafTaxonomyGenerateScript extends BundleScript {
 class MutationLeafTaxonomyCheckScript extends BundleScript {
   run(): void {
     const actual = taxonomy(this.root);
-    const schema = JSON.parse(readFileSync(join(this.root, "🧬️mutation-leaf-taxonomy-v1.schema.json"), "utf8"));
+    const module = JSON.parse(readFileSync(join(this.root, "../../🧬️schema/🔣️.json"), "utf8"));
     const fixture = JSON.parse(readFileSync(join(this.root, "📇️mutation-leaf-taxonomy-v1.json"), "utf8")) as MutationLeafTaxonomy;
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
+    const ajv = new Ajv({ allErrors: true, strict: true });
+    ajv.addSchema(module);
+    const validate = ajv.compile({ $ref: `${module.$id}#/$defs/NormMutationLeafTaxonomy` });
     if (!validate(fixture)) throw new Error(`norm mutation-leaf taxonomy schema failed: ${JSON.stringify(validate.errors)}`);
     if (!validateUniqueTaxonomy(fixture)) throw new Error("norm mutation-leaf taxonomy contains a duplicate source or aggregate variant");
     if (JSON.stringify(actual) !== JSON.stringify(fixture)) throw new Error("norm mutation-leaf taxonomy is stale; run the registered generate target");

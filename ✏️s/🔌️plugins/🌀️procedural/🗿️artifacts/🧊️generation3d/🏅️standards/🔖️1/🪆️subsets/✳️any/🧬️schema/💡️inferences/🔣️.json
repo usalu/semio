@@ -1,9 +1,12 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/procedural/generation3d/inference.json",
   "title": "Generation3dInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["topology"],
+  "required": [
+    "topology"
+  ],
   "properties": {
     "topology": {
       "$ref": "#/$defs/Generation3dTopology",
@@ -14,13 +17,35 @@
     "Generation3dTopology": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["nodeCount", "edgeCount", "topoOrder", "depth", "cycleFree"],
+      "required": [
+        "nodeCount",
+        "edgeCount",
+        "topoOrder",
+        "depth",
+        "cycleFree"
+      ],
       "properties": {
-        "nodeCount": { "type": "integer", "minimum": 0 },
-        "edgeCount": { "type": "integer", "minimum": 0 },
-        "topoOrder": { "type": "array", "items": { "type": "string" } },
-        "depth": { "type": "integer", "minimum": 0 },
-        "cycleFree": { "type": "boolean" }
+        "nodeCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "edgeCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "topoOrder": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cycleFree": {
+          "type": "boolean"
+        }
       }
     }
   }

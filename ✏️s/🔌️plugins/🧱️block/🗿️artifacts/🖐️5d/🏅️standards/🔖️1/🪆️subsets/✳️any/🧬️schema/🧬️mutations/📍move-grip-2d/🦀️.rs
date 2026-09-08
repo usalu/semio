@@ -1,8 +1,8 @@
 //! 📍 Block5d mutation — `MoveGrip2d`: a grip's 2D polar position (`angle`+`radius2d` together).
 
 use crate::Block5dSnapshot;
-use crate::diff::Block5dDiff;
-use crate::mutations::Block5dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
 
 //#region 🔖️Mutation
 /// 📍 `move-grip-2d` payload.

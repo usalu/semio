@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/delete-solar-thermal-system/schema.json",
+  "$id": "https://semio.tech/schema/s/energy/model/mutation/delete-solar-thermal-system/schema.json",
   "title": "DeleteSolarThermalSystem",
   "type": "object",
   "additionalProperties": false,

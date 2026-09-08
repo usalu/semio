@@ -1,39 +1,98 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.pptx/snapshot.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/pptx/ecma-376/base/snapshot.json",
   "title": "PptxSnapshot",
   "type": "object",
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "opc": { "$ref": "#/$defs/opcPackage", "x-semio-state": "artifact" },
-    "xmlParts": { "type": "array", "items": { "$ref": "#/$defs/xmlPart" }, "x-semio-state": "artifact" },
-    "presentation": { "$ref": "#/$defs/presentation", "x-semio-state": "artifact" }
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "opc": {
+      "$ref": "#/$defs/opcPackage",
+      "x-semio-state": "artifact"
+    },
+    "xmlParts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/xmlPart"
+      },
+      "x-semio-state": "artifact"
+    },
+    "presentation": {
+      "$ref": "#/$defs/presentation",
+      "x-semio-state": "artifact"
+    }
   },
-  "required": ["schema", "opc", "xmlParts", "presentation"],
+  "required": [
+    "schema",
+    "opc",
+    "xmlParts",
+    "presentation"
+  ],
   "$defs": {
     "nameValue": {
       "type": "array",
-      "prefixItems": [{ "type": "string" }, { "type": "string" }],
+      "items": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "minItems": 2,
       "maxItems": 2
     },
     "relationship": {
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "relType": { "type": "string" },
-        "target": { "type": "string" },
-        "targetMode": { "enum": ["internal", "external"] }
+        "id": {
+          "type": "string"
+        },
+        "relType": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "targetMode": {
+          "enum": [
+            "internal",
+            "external"
+          ]
+        }
       },
-      "required": ["id", "relType", "target", "targetMode"]
+      "required": [
+        "id",
+        "relType",
+        "target",
+        "targetMode"
+      ]
     },
     "opcPart": {
       "type": "object",
       "properties": {
-        "path": { "type": "string" },
-        "contentType": { "type": "string" },
-        "bytes": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+        "path": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
       },
-      "required": ["path", "contentType", "bytes"]
+      "required": [
+        "path",
+        "contentType",
+        "bytes"
+      ]
     },
     "opcPackage": {
       "type": "object",
@@ -41,76 +100,245 @@
         "contentTypes": {
           "type": "object",
           "properties": {
-            "defaults": { "type": "array", "items": { "$ref": "#/$defs/nameValue" } },
-            "overrides": { "type": "array", "items": { "$ref": "#/$defs/nameValue" } }
+            "defaults": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/nameValue"
+              }
+            },
+            "overrides": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/nameValue"
+              }
+            }
           },
-          "required": ["defaults", "overrides"]
+          "required": [
+            "defaults",
+            "overrides"
+          ]
         },
-        "parts": { "type": "array", "items": { "$ref": "#/$defs/opcPart" } },
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/opcPart"
+          }
+        },
         "relationships": {
           "type": "object",
-          "additionalProperties": { "type": "array", "items": { "$ref": "#/$defs/relationship" } }
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/relationship"
+            }
+          }
         }
       },
-      "required": ["contentTypes", "parts", "relationships"]
+      "required": [
+        "contentTypes",
+        "parts",
+        "relationships"
+      ]
     },
     "xmlNode": {
       "type": "object",
       "properties": {
-        "kind": { "enum": ["element", "text", "cData", "comment", "processingInstruction"] },
-        "name": { "type": "string" },
-        "attrs": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "value": { "type": "string" } }, "required": ["name", "value"] } },
-        "children": { "type": "array", "items": { "$ref": "#/$defs/xmlNode" } },
-        "text": { "type": "string" },
-        "target": { "type": "string" },
-        "data": { "type": "string" }
+        "kind": {
+          "enum": [
+            "element",
+            "text",
+            "cData",
+            "comment",
+            "processingInstruction"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "attrs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ]
+          }
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/xmlNode"
+          }
+        },
+        "text": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string"
+        }
       },
-      "required": ["kind"]
+      "required": [
+        "kind"
+      ]
     },
     "xmlDocument": {
       "type": "object",
       "properties": {
         "declaration": {
           "type": "object",
-          "properties": { "version": { "type": "string" }, "encoding": { "type": "string" }, "standalone": { "type": "boolean" } },
-          "required": ["version"]
+          "properties": {
+            "version": {
+              "type": "string"
+            },
+            "encoding": {
+              "type": "string"
+            },
+            "standalone": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "version"
+          ]
         },
-        "prolog": { "type": "array", "items": { "$ref": "#/$defs/xmlNode" } },
-        "root": { "$ref": "#/$defs/xmlNode" }
+        "prolog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/xmlNode"
+          }
+        },
+        "root": {
+          "$ref": "#/$defs/xmlNode"
+        }
       },
-      "required": ["prolog"]
+      "required": [
+        "prolog"
+      ]
     },
     "xmlPart": {
       "type": "object",
-      "properties": { "path": { "type": "string" }, "contentType": { "type": "string" }, "document": { "$ref": "#/$defs/xmlDocument" } },
-      "required": ["path", "contentType", "document"]
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "document": {
+          "$ref": "#/$defs/xmlDocument"
+        }
+      },
+      "required": [
+        "path",
+        "contentType",
+        "document"
+      ]
     },
     "transform": {
       "type": "object",
-      "properties": { "x": { "type": "integer" }, "y": { "type": "integer" }, "cx": { "type": "integer" }, "cy": { "type": "integer" } },
-      "required": ["x", "y", "cx", "cy"]
+      "properties": {
+        "x": {
+          "type": "integer"
+        },
+        "y": {
+          "type": "integer"
+        },
+        "cx": {
+          "type": "integer"
+        },
+        "cy": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "cx",
+        "cy"
+      ]
     },
     "run": {
       "type": "object",
-      "properties": { "text": { "type": "string" }, "bold": { "type": "boolean" }, "italic": { "type": "boolean" }, "fontSize": { "type": "integer", "minimum": 0 } },
-      "required": ["text", "bold", "italic"]
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "fontSize": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "text",
+        "bold",
+        "italic"
+      ]
     },
     "paragraph": {
       "type": "object",
-      "properties": { "runs": { "type": "array", "items": { "$ref": "#/$defs/run" } } },
-      "required": ["runs"]
+      "properties": {
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/run"
+          }
+        }
+      },
+      "required": [
+        "runs"
+      ]
     },
     "shape": {
       "type": "object",
       "properties": {
-        "shapeKind": { "enum": ["textBox", "picture", "placeholder", "other"] },
-        "textFrame": { "type": "array", "items": { "$ref": "#/$defs/paragraph" } },
-        "position": { "$ref": "#/$defs/transform" },
-        "blipRelId": { "type": "string" },
-        "kind": { "type": "string" },
-        "node": { "$ref": "#/$defs/xmlNode" }
+        "shapeKind": {
+          "enum": [
+            "textBox",
+            "picture",
+            "placeholder",
+            "other"
+          ]
+        },
+        "textFrame": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/paragraph"
+          }
+        },
+        "position": {
+          "$ref": "#/$defs/transform"
+        },
+        "blipRelId": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "node": {
+          "$ref": "#/$defs/xmlNode"
+        }
       },
-      "required": ["shapeKind"]
+      "required": [
+        "shapeKind"
+      ]
     },
     "presentation": {
       "type": "object",
@@ -119,12 +347,23 @@
           "type": "array",
           "items": {
             "type": "object",
-            "properties": { "shapes": { "type": "array", "items": { "$ref": "#/$defs/shape" } } },
-            "required": ["shapes"]
+            "properties": {
+              "shapes": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/shape"
+                }
+              }
+            },
+            "required": [
+              "shapes"
+            ]
           }
         }
       },
-      "required": ["slides"]
+      "required": [
+        "slides"
+      ]
     }
   }
 }

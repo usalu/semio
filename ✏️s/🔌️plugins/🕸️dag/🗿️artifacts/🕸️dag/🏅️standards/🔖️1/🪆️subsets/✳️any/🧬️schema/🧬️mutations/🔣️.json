@@ -1,65 +1,49 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/dag/dag/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/dag/dag/mutations.json",
   "title": "DagMutation",
   "oneOf": [
     {
-      "$ref": "./🔡change-node-abbreviation/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/change-node-abbreviation/schema.json"
     },
     {
-      "$ref": "./🖼️change-node-icon/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/change-node-icon/schema.json"
     },
     {
-      "$ref": "./🔤change-node-name/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/change-node-name/schema.json"
     },
     {
-      "$ref": "./🧮change-node-operator-kind/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/change-node-operator-kind/schema.json"
     },
     {
-      "$ref": "./🤝️connect-nodes/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/connect-nodes/schema.json"
     },
     {
-      "$ref": "./🌱create-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/create-node/schema.json"
     },
     {
-      "$ref": "./🗑️delete-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/delete-node/schema.json"
     },
     {
-      "$ref": "./✂️disconnect-nodes/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/disconnect-nodes/schema.json"
     },
     {
-      "$ref": "./↔️move-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/move-node/schema.json"
     },
     {
-      "$ref": "./🏷️rename-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/rename-node/schema.json"
     },
     {
-      "$ref": "./🔀reorder-nodes/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/reorder-nodes/schema.json"
     },
     {
-      "$ref": "./🔁replace-node-kind/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/replace-node-kind/schema.json"
     },
     {
-      "$ref": "./🗃️replace-node-properties/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/replace-node-properties/schema.json"
     },
     {
-      "$ref": "./📐resize-node/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/resize-node/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-node-abbreviation",
-    "change-node-icon",
-    "change-node-name",
-    "change-node-operator-kind",
-    "connect-nodes",
-    "create-node",
-    "delete-node",
-    "disconnect-nodes",
-    "move-node",
-    "rename-node",
-    "reorder-nodes",
-    "replace-node-kind",
-    "replace-node-properties",
-    "resize-node"
   ]
 }

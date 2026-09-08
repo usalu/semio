@@ -44,9 +44,6 @@ pub mod examples {
     pub mod app_forms_demo_session;
     #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
     pub mod art_forms_demo;
-    #[cfg(test)]
-    #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
-    mod art_forms_demo_tests;
 }
 //#endregion 📚️Examples
 

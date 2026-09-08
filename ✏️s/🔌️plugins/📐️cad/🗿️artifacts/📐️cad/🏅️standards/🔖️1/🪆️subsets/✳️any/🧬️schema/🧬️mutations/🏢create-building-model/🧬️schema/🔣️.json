@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/cad/cad/1/any/mutation/create-building-model/schema.json",
+  "$id": "https://semio.tech/schema/s/cad/cad/mutation/create-building-model/schema.json",
   "title": "CreateBuildingModel",
   "type": "object",
   "additionalProperties": false,

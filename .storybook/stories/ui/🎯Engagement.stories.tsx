@@ -5,7 +5,7 @@
 import { Engagement, Search, Window } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
-import { expect, within } from "storybook/test";
+import { searchStandalonePlay, standalonePlay, withControlPlay } from "../../../🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎯️engagement-story-interaction/🟦️.ts";
 
 const meta = {
   title: "🖱️ui⚛️react/Engagement",
@@ -20,10 +20,7 @@ type Story = StoryObj<typeof meta>;
 
 export const SearchStandalone: Story = {
   render: () => <Search input={{ placeholder: "Ask or action…", onSubmit: () => {} }} />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByPlaceholderText("Ask or action…")).toBeTruthy();
-  },
+  play: searchStandalonePlay,
 };
 
 export const Standalone: Story = {
@@ -39,10 +36,7 @@ export const Standalone: Story = {
       ]}
     />
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText("Ready")).toBeTruthy();
-  },
+  play: standalonePlay,
 };
 
 export const WithControl: Story = {
@@ -62,11 +56,7 @@ export const WithControl: Story = {
       }}
     />
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText("Height")).toBeTruthy();
-    expect(canvasElement.querySelector('[data-slot="engagement-control"][data-control-kind="stepper"]')).toBeTruthy();
-  },
+  play: withControlPlay,
 };
 
 export const InWindow: Story = {

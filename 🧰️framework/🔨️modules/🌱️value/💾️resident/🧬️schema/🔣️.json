@@ -7,26 +7,6 @@
       "type": "integer",
       "minimum": 0,
       "maximum": 9007199254740991
-    },
-    "resources": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "bytes",
-        "slots",
-        "owners"
-      ],
-      "properties": {
-        "bytes": {
-          "$ref": "#/definitions/count"
-        },
-        "slots": {
-          "$ref": "#/definitions/count"
-        },
-        "owners": {
-          "$ref": "#/definitions/count"
-        }
-      }
     }
   },
   "$defs": {
@@ -110,10 +90,10 @@
           ],
           "properties": {
             "envelope": {
-              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
             },
             "intrinsic": {
-              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
             },
             "cases": {
               "type": "array",
@@ -144,7 +124,7 @@
                 ]
               },
               "control": {
-                "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+                "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
               }
             }
           }
@@ -258,19 +238,19 @@
           ],
           "properties": {
             "owner": {
-              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
             },
             "storage": {
-              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
             },
             "reader": {
-              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
             },
             "witness": {
-              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
             },
             "pageBacking": {
-              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/resources"
+              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
             }
           }
         },
@@ -290,7 +270,7 @@
                 "type": "string"
               },
               "bytes": {
-                "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/definitions/count"
+                "$ref": "#/definitions/count"
               },
               "posted": {
                 "type": "boolean"
@@ -349,7 +329,27 @@
           "$ref": "#/definitions/count"
         },
         "control": {
-          "$ref": "#/definitions/resources"
+          "$ref": "#/$defs/Resources"
+        }
+      }
+    },
+    "Resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "slots",
+        "owners"
+      ],
+      "properties": {
+        "bytes": {
+          "$ref": "#/definitions/count"
+        },
+        "slots": {
+          "$ref": "#/definitions/count"
+        },
+        "owners": {
+          "$ref": "#/definitions/count"
         }
       }
     }

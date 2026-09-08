@@ -13,6 +13,7 @@
     "SocketGrantCapabilityV1": { "type": "string", "minLength": 107, "maxLength": 107, "pattern": "^socket\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
 
     "SocketGrantReceiptV1": {
+      "x-semio-formats": ["🔣️jsonschema"],
       "type": "object",
       "additionalProperties": false,
       "required": ["schema", "protocol", "grant", "actorId", "expiresAtMs"],
@@ -94,6 +95,7 @@
     },
 
     "AuthLimitsV1": {
+      "x-semio-formats": ["🔣️jsonschema"],
       "type": "object",
       "additionalProperties": false,
       "required": ["selectorBytes", "secretBytes", "ttlSecondsMax", "deviceIdentityBytesMax", "assertionBytesMax"],
@@ -107,6 +109,7 @@
     },
 
     "AuthCapabilityVectorsV1": {
+      "x-semio-formats": ["🔣️jsonschema"],
       "type": "object",
       "additionalProperties": false,
       "required": ["session", "share", "invite", "socket", "identity", "revocation", "audit", "limits"],

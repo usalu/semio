@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1993/1/any/mutation/update-weld-inputs/schema.json",
+  "$id": "https://semio.tech/schema/s/norm/en1993/mutation/update-weld-inputs/schema.json",
   "title": "UpdateWeldInputs",
   "type": "object",
   "additionalProperties": false,

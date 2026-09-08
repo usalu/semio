@@ -16,7 +16,7 @@
           "const": "insertElement"
         },
         "payload": {
-          "$ref": "./📥️insert-element/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/insert-element/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "removeElement"
         },
         "payload": {
-          "$ref": "./🗑️remove-element/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/remove-element/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "setAttribute"
         },
         "payload": {
-          "$ref": "./🏷️set-attribute/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/set-attribute/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "setDeclaration"
         },
         "payload": {
-          "$ref": "./📣️set-declaration/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/set-declaration/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "setDoctype"
         },
         "payload": {
-          "$ref": "./📜️set-doctype/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/set-doctype/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
           "const": "setElementName"
         },
         "payload": {
-          "$ref": "./🔤️set-element-name/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/set-element-name/schema.json"
         }
       }
     },
@@ -112,7 +112,7 @@
           "const": "setText"
         },
         "payload": {
-          "$ref": "./✍️set-text/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/set-text/schema.json"
         }
       }
     },
@@ -128,7 +128,7 @@
           "const": "setTransform"
         },
         "payload": {
-          "$ref": "./🔄️set-transform/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/set-transform/schema.json"
         }
       }
     },
@@ -144,7 +144,7 @@
           "const": "setViewBox"
         },
         "payload": {
-          "$ref": "./🖼️set-view-box/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/set-view-box/schema.json"
         }
       }
     }

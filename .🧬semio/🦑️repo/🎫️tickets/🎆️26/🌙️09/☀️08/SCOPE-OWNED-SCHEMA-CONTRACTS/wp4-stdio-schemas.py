@@ -14,6 +14,7 @@ Subcommands
   aggregates  — rewrite `🧬️mutations/🔣️.json` as a pure `$ref` union over its leaves
   ids         — rewrite every leaf/aggregate `$id` to the contract §A grammar, proving id uniqueness
   casing      — plan the camelCase conformance change: containers to annotate + fixtures it re-cases
+  facets      — dialect / `$id` / `$defs` / export-id repair of the `📝️text`+`💾️binary` codec facets
   verify      — descriptor-path / dialect / `$id` / `title` structural check
 """
 
@@ -828,6 +829,19 @@ class Projector:
 # ───────────────────────────── leaf discovery ─────────────────────────────
 
 
+def leaf_identity(directory: str, descriptor: dict) -> str:
+    """🆔 The execution-contract §A `$id` of one mutation leaf, derived from its path's artifact /
+    standard / subset and the descriptor's `semanticKind` — never from the leaf directory name (gltf
+    nests `<domain>/<verb>`). Single source of truth for `leaves()`, the aggregate `$ref`s and the
+    per-subset projections, so an aggregate branch can never name an id no leaf declares."""
+    segments = os.path.relpath(directory, REPO).split(os.sep)
+    artifact_index = segments.index("🗿️artifacts")
+    artifact = strip_leading_emoji(segments[artifact_index + 1])
+    standard = strip_leading_emoji(segments[artifact_index + 3])
+    subset = strip_leading_emoji(segments[artifact_index + 5])
+    return f"{ID_ROOT}/{artifact}/{standard}/{subset}/mutation/{descriptor['semanticKind']}/schema.json"
+
+
 def leaves() -> list[dict]:
     """📇 Every stdio mutation leaf carrying a descriptor, with its resolved schema paths."""
     found: list[dict] = []
@@ -862,9 +876,7 @@ def leaves() -> list[dict]:
                 "standard": standard,
                 "subset": subset,
                 "leaf": leaf,
-                # 🆔 Execution contract §A: a mutation leaf is its own scope, keyed by the descriptor's
-                # `semanticKind` — never by the leaf directory path (gltf nests `<domain>/<verb>`).
-                "id": f"{ID_ROOT}/{artifact}/{standard}/{subset}/mutation/{descriptor['semanticKind']}/schema.json",
+                "id": leaf_identity(directory, descriptor),
                 "declared": os.path.join(directory, *descriptor["payloadSchema"].split("/")),
                 "canonical": os.path.join(directory, SCHEMA_DIR, "🔣️.json"),
                 "module": os.path.join(REPO, os.sep.join(segments[: mutation_index + 1])),
@@ -961,12 +973,6 @@ def attach_discriminator(document: dict, leaf: dict) -> bool:
         return False
     document["properties"] = OrderedDict([*document["properties"].items(), (tag, {"const": discriminator(leaf, representation), "description": f"Aggregate discriminator spliced in by {representation['title']}; absent when the payload stands alone."})])
     return True
-
-
-def reference_to(target: str, base: str) -> str:
-    """🔗 A relative `$ref` from one schema file's directory to another, `./`-anchored when it descends."""
-    relative = os.path.relpath(target, base).replace(os.sep, "/")
-    return relative if relative.startswith("..") else f"./{relative}"
 
 
 def dump(path: str, document: dict) -> None:
@@ -1209,14 +1215,17 @@ def command_aggregates(write: bool) -> None:
         kinds[representation["kind"]] += 1
         branches = []
         for leaf in sorted(members, key=lambda item: item["leaf"]):
-            relative = reference_to(leaf["canonical"], root)
+            # 🔗 Cross-partition row 79: a branch names the leaf's absolute `$id` and is resolved
+            # through the catalog. No leaf declares `$defs.Payload` — the leaf root IS the payload —
+            # so the bare `$id` is the reference, never `<$id>#/$defs/Payload`.
+            target = leaf["id"]
             wire = discriminator(leaf, representation)
             if representation["kind"] == "adjacent":
-                branches.append({"type": "object", "additionalProperties": False, "required": [representation["tag"], representation["content"]], "properties": {representation["tag"]: {"const": wire}, representation["content"]: {"$ref": relative}}})
+                branches.append({"type": "object", "additionalProperties": False, "required": [representation["tag"], representation["content"]], "properties": {representation["tag"]: {"const": wire}, representation["content"]: {"$ref": target}}})
             elif representation["kind"] == "external":
-                branches.append({"type": "object", "additionalProperties": False, "required": [wire], "properties": {wire: {"$ref": relative}}})
+                branches.append({"type": "object", "additionalProperties": False, "required": [wire], "properties": {wire: {"$ref": target}}})
             else:
-                branches.append({"allOf": [{"$ref": relative}, {"type": "object", "required": [representation["tag"]], "properties": {representation["tag"]: {"const": wire}}}]})
+                branches.append({"allOf": [{"$ref": target}, {"type": "object", "required": [representation["tag"]], "properties": {representation["tag"]: {"const": wire}}}]})
         document = ordered(
             {
                 "$schema": DIALECT,
@@ -1234,10 +1243,28 @@ def command_aggregates(write: bool) -> None:
         print("  SKIPPED", entry)
 
 
+def branch_reference(branch) -> str | None:
+    """🔗 The single leaf `$ref` an aggregate branch carries, whatever the tagging shape (adjacent and
+    external nest it under a property, internal puts it first in an `allOf`). Shape-agnostic so a
+    catalogue can be re-read after its branches were rewritten to absolute `$id`s."""
+    if not isinstance(branch, dict):
+        return None
+    for entry in branch.get("allOf", []) if isinstance(branch.get("allOf"), list) else []:
+        if isinstance(entry, dict) and isinstance(entry.get("$ref"), str):
+            return entry["$ref"]
+    for value in branch.get("properties", {}).values() if isinstance(branch.get("properties"), dict) else []:
+        if isinstance(value, dict) and isinstance(value.get("$ref"), str):
+            return value["$ref"]
+    return None
+
+
 def command_projections(write: bool) -> None:
     """🪞 Rewrites the per-subset gltf mutation catalogues: they own no leaves of their own, they are
-    views over another subset's leaves, and their `$ref`s pointed at leaf paths that do not exist here."""
+    views over another subset's leaves, and their `$ref`s pointed at leaf paths that do not exist here.
+    Cross-partition row 79: a view branch names the owning leaf's absolute `$id`, exactly like an owning
+    aggregate, so a view never encodes a filesystem traversal into a sibling subset."""
     owners = {root: members for root, members in aggregate_roots().items()}
+    by_id = {leaf["id"]: leaf for leaf in leaves()}
     rewritten = 0
     skipped: list[str] = []
     for directory, subdirectories, files in os.walk(ARTIFACTS):
@@ -1247,7 +1274,7 @@ def command_projections(write: bool) -> None:
             continue
         path = os.path.join(directory, "🔣️.json")
         document = json.load(open(path, encoding="utf8"))
-        references = [branch.get("properties", {}).get("payload", {}).get("$ref") for branch in document.get("oneOf", [])]
+        references = [branch_reference(branch) for branch in document.get("oneOf", [])]
         references = [reference for reference in references if isinstance(reference, str)]
         if not references:
             skipped.append(f"{os.path.relpath(directory, REPO)} :: no leaf $refs to repoint")
@@ -1256,6 +1283,11 @@ def command_projections(write: bool) -> None:
         resolved: list[tuple[str, dict]] = []
         owner_module = None
         for reference in references:
+            if reference in by_id:
+                owner = by_id[reference]
+                owner_module = owner["module"]
+                resolved.append((owner["dir"], owner["descriptor"]))
+                continue
             parts = [part for part in reference.split("/") if part not in ("", ".")]
             leaf_rel = "/".join(parts[:-2] if len(parts) >= 2 and parts[-2] == SCHEMA_DIR else parts[:-1])
             for sibling in sorted(os.listdir(subsets_root)):
@@ -1279,14 +1311,14 @@ def command_projections(write: bool) -> None:
         artifact_index = segments.index("🗿️artifacts")
         branches = []
         for candidate, descriptor in resolved:
-            relative = reference_to(os.path.join(candidate, SCHEMA_DIR, "🔣️.json"), directory)
+            target = leaf_identity(candidate, descriptor)
             wire = variant_wire_name(descriptor["aggregateVariant"], None, representation["renameAll"])
             if representation["kind"] == "adjacent":
-                branches.append({"type": "object", "additionalProperties": False, "required": [representation["tag"], representation["content"]], "properties": {representation["tag"]: {"const": wire}, representation["content"]: {"$ref": relative}}})
+                branches.append({"type": "object", "additionalProperties": False, "required": [representation["tag"], representation["content"]], "properties": {representation["tag"]: {"const": wire}, representation["content"]: {"$ref": target}}})
             elif representation["kind"] == "external":
-                branches.append({"type": "object", "additionalProperties": False, "required": [wire], "properties": {wire: {"$ref": relative}}})
+                branches.append({"type": "object", "additionalProperties": False, "required": [wire], "properties": {wire: {"$ref": target}}})
             else:
-                branches.append({"allOf": [{"$ref": relative}, {"type": "object", "required": [representation["tag"]], "properties": {representation["tag"]: {"const": wire}}}]})
+                branches.append({"allOf": [{"$ref": target}, {"type": "object", "required": [representation["tag"]], "properties": {representation["tag"]: {"const": wire}}}]})
         view = ordered(
             {
                 "$schema": DIALECT,
@@ -1380,6 +1412,14 @@ def has_free_map(document) -> bool:
     return False
 
 
+def object_keys(node) -> list[str]:
+    if isinstance(node, dict):
+        return [key for entry in node.items() for key in (entry[0], *object_keys(entry[1]))]
+    if isinstance(node, list):
+        return [key for value in node for key in object_keys(value)]
+    return []
+
+
 def recase(node, renames: dict[str, str]):
     if isinstance(node, dict):
         return OrderedDict((renames.get(key, key), recase(value, renames)) for key, value in node.items())
@@ -1429,7 +1469,7 @@ def command_casing() -> None:
         renames = rename_map(before, after) if after is not None else {}
         for fixture in fixtures:
             data = json.load(open(fixture, encoding="utf8"), object_pairs_hook=OrderedDict)
-            touched = sorted(name for name in renames if name in json.dumps(data, ensure_ascii=False))
+            touched = sorted(set(object_keys(data)) & set(renames))
             if not touched:
                 continue
             relative = os.path.relpath(fixture, REPO)
@@ -1505,6 +1545,95 @@ def command_ids(write: bool) -> None:
         print("   MISSING", path)
 
 
+MUTATION_FACETS = {"📝️text": "text", "💾️binary": "binary"}
+
+
+def aggregate_title(module: str) -> str:
+    """🏷️ The `title` of a mutations module's aggregate document — the export id every codec facet of
+    that module is named after."""
+    document = json.load(open(os.path.join(module, "🔣️.json"), encoding="utf8"))
+    return document["title"]
+
+
+def facet_documents() -> list[dict]:
+    """🧾 The codec facet documents of a mutations module (`🧬️schema/🧬️mutations/📝️text|💾️binary/🔣️.json`).
+    They are facets of the SUBSET scope, so contract §A gives them the module's own scope path with a
+    two-segment facet filename (`mutations/text.json`), never a scope of their own. A `🚪️io/🧬️mutations`
+    tree is an io collection descriptor, not a schema module, and is out of this partition."""
+    found: list[dict] = []
+    for directory, subdirectories, files in os.walk(ARTIFACTS):
+        subdirectories[:] = [name for name in subdirectories if name not in ("target", "node_modules")]
+        segments = os.path.relpath(directory, REPO).split(os.sep)
+        if MUTATIONS_DIR not in segments or "🔣️.json" not in files:
+            continue
+        mutation_index = segments.index(MUTATIONS_DIR)
+        if mutation_index == 0 or segments[mutation_index - 1] != SCHEMA_DIR:
+            continue
+        tail = segments[mutation_index + 1 :]
+        if len(tail) != 1 or tail[0] not in MUTATION_FACETS:
+            continue
+        artifact_index = segments.index("🗿️artifacts")
+        artifact = strip_leading_emoji(segments[artifact_index + 1])
+        standard = strip_leading_emoji(segments[artifact_index + 3])
+        subset = strip_leading_emoji(segments[artifact_index + 5])
+        facet = MUTATION_FACETS[tail[0]]
+        found.append(
+            {
+                "path": os.path.join(directory, "🔣️.json"),
+                "rel": os.path.relpath(os.path.join(directory, "🔣️.json"), REPO),
+                "artifact": artifact,
+                "subset": subset,
+                "facet": facet,
+                "id": f"{ID_ROOT}/{artifact}/{standard}/{subset}/mutations/{facet}.json",
+                # 🏷️ Cross-partition row 81: one spelling, derived from the aggregate this document is a
+                # codec facet of — `<AggregateTitle>Text` / `<AggregateTitle>Binary`, and every stdio
+                # aggregate title already ends in `Mutation`, so the result is `<…>MutationText`.
+                "title": f"{aggregate_title(os.path.dirname(directory))}{facet.capitalize()}",
+            }
+        )
+    return sorted(found, key=lambda entry: entry["rel"])
+
+
+def command_facets(write: bool) -> None:
+    """🧷 Brings the mutation codec facet documents onto the contract: draft-07 dialect, one `$id` per
+    document under the module's scope path, `$defs` instead of draft-07's `definitions`, and a
+    PascalCase export id where the title is still a generator slug."""
+    dialects = ids = defs = titles = 0
+    for entry in facet_documents():
+        document = json.load(open(entry["path"], encoding="utf8"), object_pairs_hook=OrderedDict)
+        touched = False
+        if document.get("$schema") != DIALECT:
+            migrate_dialect(document)
+            document["$schema"] = DIALECT
+            dialects += 1
+            touched = True
+        if document.get("$id") != entry["id"]:
+            document["$id"] = entry["id"]
+            ids += 1
+            touched = True
+        # 🧩 Cross-partition row 77: a codec facet document exports exactly one thing — its `title` —
+        # so every named subschema in it is a module-internal helper and belongs in `definitions`.
+        # Leaving them in `$defs` makes them exports of the subset scope and collides with the
+        # same-named export of a sibling facet (`SemioFlowSnapshot`, semio/flow).
+        if "$defs" in document:
+            document["definitions"] = document.pop("$defs")
+            body = json.dumps(document, ensure_ascii=False).replace("#/$defs/", "#/definitions/")
+            document = json.loads(body, object_pairs_hook=OrderedDict)
+            defs += 1
+            touched = True
+        if document.get("title") != entry["title"]:
+            document["title"] = entry["title"]
+            titles += 1
+            touched = True
+        if touched and write:
+            dump(entry["path"], ordered(document))
+    print(f"facet-documents={len(facet_documents())} dialect-fixed={dialects} id-fixed={ids} defs-to-definitions={defs} title-fixed={titles} (write={write})")
+    claimed: dict[str, list[str]] = defaultdict(list)
+    for entry in facet_documents():
+        claimed[entry["id"]].append(entry["rel"])
+    print(f"distinct-facet-ids={len(claimed)} collisions={len([one for one in claimed.values() if len(one) > 1])}")
+
+
 def command_verify() -> None:
     inventory = leaves()
     problems: list[str] = []
@@ -1560,6 +1689,8 @@ def main() -> int:
         command_ids(write)
     elif command == "casing":
         command_casing()
+    elif command == "facets":
+        command_facets(write)
     elif command == "verify":
         command_verify()
     else:

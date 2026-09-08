@@ -1,6 +1,6 @@
 //! 👁️ 👁️ Trinity Jack app command — `set-viewport`.
 
-use crate::op::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
 use crate::Camera;
 use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::Emit;

@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/stdio.bmp/snapshot/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/bmp/v3/any/snapshot/text.json",
   "title": "BmpSnapshotText",
   "type": "string",
   "pattern": "^([0-9a-f]{2})*$",

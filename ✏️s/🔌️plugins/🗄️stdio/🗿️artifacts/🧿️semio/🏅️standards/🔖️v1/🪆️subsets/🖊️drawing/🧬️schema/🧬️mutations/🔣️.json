@@ -12,7 +12,7 @@
       ],
       "properties": {
         "ChangeStrokeColor": {
-          "$ref": "./🖌️change-stroke-color/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/change-stroke-color/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "ChangeStrokeWidth": {
-          "$ref": "./📐change-stroke-width/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/change-stroke-width/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "CreateLayer": {
-          "$ref": "./🌱create-layer/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/create-layer/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "CreateNode": {
-          "$ref": "./➕create-node/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/create-node/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "DeleteLayer": {
-          "$ref": "./🗑️delete-layer/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/delete-layer/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "DeleteNode": {
-          "$ref": "./➖delete-node/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/delete-node/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "DragNodes": {
-          "$ref": "./🖐️drag-nodes/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/drag-nodes/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "FlattenNode": {
-          "$ref": "./🫓flatten-node/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/flatten-node/schema.json"
         }
       }
     },
@@ -108,7 +108,7 @@
       ],
       "properties": {
         "GroupNodes": {
-          "$ref": "./🧷group-nodes/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/group-nodes/schema.json"
         }
       }
     },
@@ -120,7 +120,7 @@
       ],
       "properties": {
         "MoveNode": {
-          "$ref": "./📍move-node/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/move-node/schema.json"
         }
       }
     },
@@ -132,7 +132,7 @@
       ],
       "properties": {
         "ReorderNodes": {
-          "$ref": "./🔀reorder-nodes/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/reorder-nodes/schema.json"
         }
       }
     },
@@ -144,7 +144,7 @@
       ],
       "properties": {
         "ReplaceFill": {
-          "$ref": "./🪣replace-fill/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/replace-fill/schema.json"
         }
       }
     },
@@ -156,7 +156,7 @@
       ],
       "properties": {
         "ReplacePath": {
-          "$ref": "./🛤️replace-path/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/replace-path/schema.json"
         }
       }
     },
@@ -168,7 +168,7 @@
       ],
       "properties": {
         "RotateNode": {
-          "$ref": "./🔄rotate-node/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/rotate-node/schema.json"
         }
       }
     },
@@ -180,7 +180,7 @@
       ],
       "properties": {
         "ScaleNode": {
-          "$ref": "./📏scale-node/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/scale-node/schema.json"
         }
       }
     },
@@ -192,7 +192,7 @@
       ],
       "properties": {
         "UnflattenNode": {
-          "$ref": "./🎈unflatten-node/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/unflatten-node/schema.json"
         }
       }
     },
@@ -204,7 +204,7 @@
       ],
       "properties": {
         "UngroupNode": {
-          "$ref": "./💫ungroup-node/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/ungroup-node/schema.json"
         }
       }
     }

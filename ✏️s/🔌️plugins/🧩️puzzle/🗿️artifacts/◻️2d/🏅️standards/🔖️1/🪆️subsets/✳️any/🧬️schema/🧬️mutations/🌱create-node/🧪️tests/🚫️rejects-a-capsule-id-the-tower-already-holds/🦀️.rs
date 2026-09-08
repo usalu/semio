@@ -6,8 +6,8 @@
 //! `🔺️diff/🚫️.absent` sentinel beside this file stands in its place, so nothing here invents an
 //! empty patch. The board is derived from the shipped `🏗️nakagin-capsule-tower` example, not invented.
 
-use crate::mutations::Puzzle2dMutation;
-use crate::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
 use crate::Puzzle2dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -42,7 +42,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 fn the_refusal_is_the_declared_one() {
     assert!(DIFF_ABSENT.is_empty(), "create-node/rejects-a-capsule-id-the-tower-already-holds: the D6 sentinel 🔺️diff/🚫️.absent must stay empty");
     let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &crate::diff::Puzzle2dDiff::default(), "create-node/rejects-a-capsule-id-the-tower-already-holds: a refusing diff builder answers the default diff, never a half-built delta");
+    assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff::default(), "create-node/rejects-a-capsule-id-the-tower-already-holds: a refusing diff builder answers the default diff, never a half-built delta");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "create-node/rejects-a-capsule-id-the-tower-already-holds: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.duplicate-id", "create-node/rejects-a-capsule-id-the-tower-already-holds: the refusal code is fixed by this vector");

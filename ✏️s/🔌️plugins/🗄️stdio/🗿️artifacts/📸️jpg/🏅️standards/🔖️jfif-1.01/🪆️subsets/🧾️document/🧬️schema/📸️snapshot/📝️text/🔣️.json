@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/stdio.jpg/snapshot/text.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/document/snapshot/text.json",
   "title": "JpgSnapshotText",
   "type": "object"
 }

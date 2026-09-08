@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `RenameNode` — the OLD `name` looked up from BASE. Missing target ⇒ `Vec::new()`.
-use crate::mutations::{rename_node, TrinityGraphMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{rename_node, TrinityGraphMutation};
 use crate::JackSnapshot;
 
 //#region 🔖️Inverse

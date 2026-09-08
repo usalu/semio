@@ -1,26 +1,60 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/en1990/inference.json",
   "title": "En1990Inference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["outline"],
+  "required": [
+    "outline"
+  ],
   "properties": {
-    "outline": { "$ref": "#/$defs/En1990Outline", "x-semio-derived": true }
+    "outline": {
+      "$ref": "#/$defs/En1990Outline",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "En1990Outline": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sectionOutline", "fieldCount", "entryCount", "checkCount", "passCount", "allPass", "governingClause", "governingUtilization"],
+      "required": [
+        "sectionOutline",
+        "fieldCount",
+        "entryCount",
+        "checkCount",
+        "passCount",
+        "allPass",
+        "governingClause",
+        "governingUtilization"
+      ],
       "properties": {
-        "sectionOutline": { "type": "array", "items": { "type": "string" } },
-        "fieldCount": { "type": "integer" },
-        "entryCount": { "type": "integer" },
-        "checkCount": { "type": "integer" },
-        "passCount": { "type": "integer" },
-        "allPass": { "type": "boolean" },
-        "governingClause": { "type": "string" },
-        "governingUtilization": { "type": "number" }
+        "sectionOutline": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fieldCount": {
+          "type": "integer"
+        },
+        "entryCount": {
+          "type": "integer"
+        },
+        "checkCount": {
+          "type": "integer"
+        },
+        "passCount": {
+          "type": "integer"
+        },
+        "allPass": {
+          "type": "boolean"
+        },
+        "governingClause": {
+          "type": "string"
+        },
+        "governingUtilization": {
+          "type": "number"
+        }
       }
     }
   }

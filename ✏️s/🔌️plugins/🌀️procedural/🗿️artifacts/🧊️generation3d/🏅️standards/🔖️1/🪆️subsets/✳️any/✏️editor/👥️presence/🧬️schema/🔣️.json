@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/app/procedural/3d/presence.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/procedural/3d/presence/schema.json",
   "title": "Generation3dPresence",
   "type": "object",
   "additionalProperties": false,

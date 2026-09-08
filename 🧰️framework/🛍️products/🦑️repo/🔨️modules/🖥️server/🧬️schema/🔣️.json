@@ -376,6 +376,7 @@
         "ordinal_on_main_backbone",
         "message",
         "hash",
+        "checkpointed_at",
         "release_marked_at",
         "created_at"
       ],
@@ -401,6 +402,16 @@
         "hash": {
           "type": "string"
         },
+        "checkpointed_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "release_marked_at": {
           "anyOf": [
             {
@@ -421,10 +432,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "checkpoint_id",
         "author_id",
         "ordinal"
       ],
       "properties": {
+        "checkpoint_id": {
+          "type": "string"
+        },
         "author_id": {
           "type": "string"
         },
@@ -439,6 +454,7 @@
       "additionalProperties": false,
       "required": [
         "id",
+        "checkpoint_id",
         "ordinal",
         "change_kind",
         "author",
@@ -448,6 +464,9 @@
       ],
       "properties": {
         "id": {
+          "type": "string"
+        },
+        "checkpoint_id": {
           "type": "string"
         },
         "ordinal": {
@@ -512,10 +531,14 @@
       "additionalProperties": false,
       "required": [
         "alternative_id",
+        "checkpoint_id",
         "ordinal"
       ],
       "properties": {
         "alternative_id": {
+          "type": "string"
+        },
+        "checkpoint_id": {
           "type": "string"
         },
         "ordinal": {
@@ -711,12 +734,16 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "checkpoint_id",
         "initial_snapshot_id",
         "materialized_snapshot_id",
         "change_list_json",
         "released_at"
       ],
       "properties": {
+        "checkpoint_id": {
+          "type": "string"
+        },
         "initial_snapshot_id": {
           "type": [
             "string",
@@ -2605,6 +2632,7 @@
         "ticket_id",
         "file_name",
         "file_size",
+        "checksum",
         "mime_kind",
         "blob_path",
         "uploaded_at"
@@ -2621,6 +2649,9 @@
         },
         "file_size": {
           "type": "integer"
+        },
+        "checksum": {
+          "type": "string"
         },
         "mime_kind": {
           "type": "string"

@@ -44,14 +44,8 @@ export function renderMedia(view: MediaView): BuiltNode {
 
 //#region 🧪️Tests
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-  describe("renderMedia", () => {
-    it("renders duration, position, and kind as key-value entries", () => {
-      const node = renderMedia({ durationMs: 60_000, positionMs: 1_500, kind: "video" });
-      if (node.component.type !== "keyValueList") throw new Error("expected keyValueList");
-      expect(node.component.entries.map((entry) => entry.value)).toEqual(["60000", "1500", "video"]);
-    });
-  });
+  const { registerTests1 } = await import("./🧪️tests/🧪️rendermedia/🟦️.ts");
+  await registerTests1(import.meta.vitest, { renderMedia }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests
 // #endregion 🎬️MediaWindowKit

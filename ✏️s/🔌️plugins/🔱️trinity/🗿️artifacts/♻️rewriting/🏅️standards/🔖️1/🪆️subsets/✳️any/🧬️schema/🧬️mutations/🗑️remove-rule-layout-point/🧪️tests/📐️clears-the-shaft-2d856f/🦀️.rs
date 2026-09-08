@@ -15,8 +15,8 @@
 //! already-absent key as `mutation.no-op` rather than `mutation.target-missing`. This case pins the
 //! applied removal of a var that really is pinned.
 
-use crate::diff::RewritingDiff;
-use crate::mutations::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::LayoutPoint;
 use crate::RewritingSnapshot;
 use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};

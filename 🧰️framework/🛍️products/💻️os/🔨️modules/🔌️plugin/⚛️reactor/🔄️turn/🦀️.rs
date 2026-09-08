@@ -162,6 +162,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
         }
     }
     let mut close_instances: Vec<u32> = events.iter().filter_map(|event| if let Event::InstanceClose(request) = event { Some(request.lifetime.instance_id) } else { None }).collect();
+    let mut document_backbone_effects = Vec::new();
     let _ = step_reactor_close()?;
     let _ = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().advance_close_one());
     PATCHES.with(|patches| {
@@ -301,7 +302,20 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
                     if instance.0.parse::<u32>().ok() == Some(token.receiver) {
                         let _ = crate::plugin_runtime::plugin_acknowledge_typed_operation_result(runtime, token).await?;
                     }
+                } else if let Some(effects) = crate::plugin_runtime::plugin_handle_document_backbone_binding(runtime, &instance.0, &payload).await? {
+                    document_backbone_effects.extend(effects);
                 }
+            }
+            Event::Message { source: MessageEndpoint::Backbone { uri }, payload } => {
+                let output = crate::plugin_runtime::plugin_receive_document_backbone(runtime, &uri, &payload).await?;
+                let surface = ui_contract::UiText::try_format(format_args!("{}:window", output.instance_id))
+                    .map(ui_contract::SurfaceId)
+                    .ok_or_else(|| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
+                dirty.try_surface(output.instance_id, surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
+                for frame in output.frames {
+                    route_app_frame(output.instance_id, &frame, &mut document_backbone_effects);
+                }
+                document_backbone_effects.extend(output.effects);
             }
             Event::Message { .. } => {}
             Event::Timer { id } => {
@@ -317,7 +331,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
         }
     }
 
-    let mut effects: Vec<Effect> = Vec::new();
+    let mut effects: Vec<Effect> = document_backbone_effects;
     let mut cold_pair_ingress = semio_framework::kernel::ColdPairIngressStatus::Idle;
     if let Some(page) = cold_pair_page {
         let lifetime = page.header.lifetime;
@@ -784,6 +798,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     // executor may have fresh ready work by the time this returns — folded into `more_work` below
     // rather than requiring a second `run_until_idle` pass this turn (the next `poll` picks it up).
     let resumes_remain = drain_task_resumes(runtime, &mut effects, 64);
+    effects.extend(crate::plugin_runtime::plugin_drain_document_backbones(runtime)?);
     let more_work = more_work
         || close_cleanup_work
         || typed_operation_work

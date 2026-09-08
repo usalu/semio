@@ -83,7 +83,7 @@ fn significant(value: f64) -> Json {
 mod decode {
     use super::{flag, number, numbers};
     use semio_repo_test_host::Json;
-    use semio_s_artifact_fem_3d::{Fem3dSnapshot, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+    use crate::{Fem3dSnapshot, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
     use std::collections::BTreeMap;
 
     /// 🔒️ One degree-of-freedom tag, as this artifact spells it on the wire.
@@ -209,7 +209,7 @@ mod decode {
 mod subject {
     use super::{decode, significant, GRAVITY, PRESSURE_TOLERANCE, SELF_WEIGHT_TOLERANCE};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_fem::model::Dof;
+    use crate::model::Dof;
 
     /// 🧫️ The one declared fixture URI of this scenario's steps containing `needle`.
     fn uri_in(ctx: &Context, needle: &str) -> Result<String, String> {
@@ -250,7 +250,7 @@ mod subject {
     /// (`{solidId}_m{index}`) and their ids carry no elevation, so the same resolution is asked for
     /// the positions — which is also what makes the comparison mesh-independent, since scikit-fem
     /// averages over the top face of its own, entirely different mesh.
-    fn top_shortening(answer: &semio_s_plugin_fem::model::StaticResult, top_nodes: &[String]) -> Result<f64, String> {
+    fn top_shortening(answer: &crate::model::StaticResult, top_nodes: &[String]) -> Result<f64, String> {
         let mut total = 0.0;
         let mut count = 0usize;
         for entry in &answer.displacements {
@@ -269,18 +269,18 @@ mod subject {
     pub fn prism(needle: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
             let document = decode::snapshot(&fixture(ctx, needle)?)?;
-            let solved = semio_s_plugin_fem::fem3d_engine::fem3d_solve_all(&document).map_err(|error| error.to_string())?;
+            let solved = crate::fem3d_engine::fem3d_solve_all(&document).map_err(|error| error.to_string())?;
             let solid = document.solids.first().ok_or_else(|| "the solid fixture declares no solid".to_string())?;
             let material = document.materials.iter().find(|material| material.id == solid.material_id).ok_or_else(|| "the solid names a material the document does not carry".to_string())?;
             let top = solid.base_z + solid.height;
-            let (nodes, _elements, _solids, _supports) = semio_s_plugin_fem::fem3d_engine::meshing::resolve_geometry(&document).map_err(|error| error.to_string())?;
+            let (nodes, _elements, _solids, _supports) = crate::fem3d_engine::meshing::resolve_geometry(&document).map_err(|error| error.to_string())?;
             let top_nodes: Vec<String> = nodes.iter().filter(|node| (node.pos[2] - top).abs() < 1e-9).map(|node| node.id.clone()).collect();
             let pressure: f64 = document
                 .load_cases
                 .iter()
                 .flat_map(|case| case.loads.iter())
                 .filter_map(|load| match load {
-                    semio_s_artifact_fem_3d::FemLoad::Area { pressure, .. } => Some(*pressure),
+                    crate::FemLoad::Area { pressure, .. } => Some(*pressure),
                     _ => None,
                 })
                 .sum();

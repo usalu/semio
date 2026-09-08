@@ -2,7 +2,7 @@
 
 ## Required Observable Results
 
-- All 36 artifact directories have a declared independent Rust package; existing other-language implementations have an appropriate package declaration without moving implementation into package directories.
+- All 99 production artifact owners have independent Rust packages, with two additional shared contract packages. The 39 existing TypeScript entry points have appropriate package declarations without moving their implementation into package directories.
 - Each artifact Cargo library entry resolves to its own domain tree outside `📦️packages`.
 - No artifact package depends directly or transitively on the stdio plugin assembly package. Cross-artifact dependencies form a DAG and use shared public types rather than duplicated implementation mounts.
 - Shared helpers and schema/assembly contracts have a domain-neutral owner. No dependency on a registry that compiles the entire artifact catalog is introduced.

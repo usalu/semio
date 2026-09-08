@@ -1,150 +1,113 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/mutations.json",
   "title": "RemodelingMutation",
   "description": "One handcrafted semantic mutation kind per $defs entry - the tagged union RemodelingMutation dispatches on.",
   "oneOf": [
     {
-      "$ref": "./🔎add-gcp-observation/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/add-gcp-observation/schema.json"
     },
     {
-      "$ref": "./➕add-stream-frame/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/add-stream-frame/schema.json"
     },
     {
-      "$ref": "./⏱️change-stream-sync/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/change-stream-sync/schema.json"
     },
     {
-      "$ref": "./🏁commit-reconstruction/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/commit-reconstruction/schema.json"
     },
     {
-      "$ref": "./🧷create-asset/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/create-asset/schema.json"
     },
     {
-      "$ref": "./🔭create-camera-calibration/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/create-camera-calibration/schema.json"
     },
     {
-      "$ref": "./🧿create-gcp/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/create-gcp/schema.json"
     },
     {
-      "$ref": "./⛓️create-rig-extrinsic/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/create-rig-extrinsic/schema.json"
     },
     {
-      "$ref": "./🌱create-stream/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/create-stream/schema.json"
     },
     {
-      "$ref": "./🗞️delete-asset/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/delete-asset/schema.json"
     },
     {
-      "$ref": "./🚫delete-camera-calibration/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/delete-camera-calibration/schema.json"
     },
     {
-      "$ref": "./🚮delete-gcp/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/delete-gcp/schema.json"
     },
     {
-      "$ref": "./✂️delete-rig-extrinsic/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/delete-rig-extrinsic/schema.json"
     },
     {
-      "$ref": "./🪓delete-stream/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/delete-stream/schema.json"
     },
     {
-      "$ref": "./🚷remove-gcp-observation/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/remove-gcp-observation/schema.json"
     },
     {
-      "$ref": "./➖remove-stream-frame/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/remove-stream-frame/schema.json"
     },
     {
-      "$ref": "./☁️replace-dense/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/replace-dense/schema.json"
     },
     {
-      "$ref": "./🗾replace-geo-products/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/replace-geo-products/schema.json"
     },
     {
-      "$ref": "./🏗️replace-job/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/replace-job/schema.json"
     },
     {
-      "$ref": "./🧱replace-mesh-result/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/replace-mesh-result/schema.json"
     },
     {
-      "$ref": "./🧾replace-qc/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/replace-qc/schema.json"
     },
     {
-      "$ref": "./⭐replace-sparse/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/replace-sparse/schema.json"
     },
     {
-      "$ref": "./🔁replace-stream-source/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/replace-stream-source/schema.json"
     },
     {
-      "$ref": "./🚂replace-tracks/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/replace-tracks/schema.json"
     },
     {
-      "$ref": "./🛣️replace-trajectory/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/replace-trajectory/schema.json"
     },
     {
-      "$ref": "./🛠️update-camera-calibration/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/update-camera-calibration/schema.json"
     },
     {
-      "$ref": "./🌁update-dense-params/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/update-dense-params/schema.json"
     },
     {
-      "$ref": "./🌠update-feature-params/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/update-feature-params/schema.json"
     },
     {
-      "$ref": "./🌐update-geo-params/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/update-geo-params/schema.json"
     },
     {
-      "$ref": "./🥣update-ingest-params/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/update-ingest-params/schema.json"
     },
     {
-      "$ref": "./🪢update-match-params/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/update-match-params/schema.json"
     },
     {
-      "$ref": "./🕸️update-mesh-params/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/update-mesh-params/schema.json"
     },
     {
-      "$ref": "./🏎️update-motion-params/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/update-motion-params/schema.json"
     },
     {
-      "$ref": "./🔩update-rig-extrinsic/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/update-rig-extrinsic/schema.json"
     },
     {
-      "$ref": "./🧮update-sfm-params/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/remodel/remodeling/mutation/update-sfm-params/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "add-gcp-observation",
-    "add-stream-frame",
-    "change-stream-sync",
-    "commit-reconstruction",
-    "create-asset",
-    "create-camera-calibration",
-    "create-gcp",
-    "create-rig-extrinsic",
-    "create-stream",
-    "delete-asset",
-    "delete-camera-calibration",
-    "delete-gcp",
-    "delete-rig-extrinsic",
-    "delete-stream",
-    "remove-gcp-observation",
-    "remove-stream-frame",
-    "replace-dense",
-    "replace-geo-products",
-    "replace-job",
-    "replace-mesh-result",
-    "replace-qc",
-    "replace-sparse",
-    "replace-stream-source",
-    "replace-tracks",
-    "replace-trajectory",
-    "update-camera-calibration",
-    "update-dense-params",
-    "update-feature-params",
-    "update-geo-params",
-    "update-ingest-params",
-    "update-match-params",
-    "update-mesh-params",
-    "update-motion-params",
-    "update-rig-extrinsic",
-    "update-sfm-params"
   ]
 }

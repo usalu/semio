@@ -37,7 +37,7 @@ pub struct Fem3dViewer;
 
 impl ArtifactViewer for Fem3dViewer {
     type Snapshot = Fem3dSnapshot;
-    type Mutation = crate::op::Fem3dMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -67,9 +67,9 @@ impl ArtifactViewer for Fem3dViewer {
 
     /// 👁️ Real, non-empty default scene: the artifact's own shared boot document (the bundled `default`
     /// example DSL), the very same one `Fem3dPlayApp::initial_snapshot` boots — see
-    /// `crate::dsl::fem3d_boot_snapshot`.
+    /// `crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot`.
     fn initial_snapshot() -> Fem3dSnapshot {
-        let snapshot = crate::dsl::fem3d_boot_snapshot();
+        let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot();
         eprintln!("[DEBUG] fem3d viewer boot snapshot: nodes={} elements={} solids={}", snapshot.nodes.len(), snapshot.elements.len(), snapshot.solids.len());
         snapshot
     }
@@ -114,25 +114,6 @@ pub fn create_fem3d_viewer() -> semio_framework_plugin::AppDefinition {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn create_fem3d_viewer_builds_a_definition_for_the_viewer_role() {
-        let def = create_fem3d_viewer();
-        assert_eq!(def.role, semio_framework::AppRole::Viewer);
-        assert_eq!(def.dialect, crate::FEM3D_DIALECT.into());
-    }
-
-    #[test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
-        assert_eq!(<Fem3dViewer as ArtifactViewer>::DIALECT, crate::FEM3D_DIALECT);
-    }
-
-    #[test]
-    fn initial_snapshot_is_the_bundled_example_not_empty() {
-        let snapshot = <Fem3dViewer as ArtifactViewer>::initial_snapshot();
-        assert!(!snapshot.nodes.is_empty(), "expected the bundled default example's nodes");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

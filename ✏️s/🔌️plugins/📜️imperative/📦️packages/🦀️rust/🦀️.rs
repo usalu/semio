@@ -40,19 +40,7 @@ mod viewer { pub use semio_s_artifact_imperative_procedure::viewer::*; }
 //#endregion 👁️Viewer
 
 //#region 🧩️Extensions
-#[path = "."]
-pub mod extensions {
-    #[path = "../../🧩️extensions/🎮️control/🦀️.rs"]
-    pub mod control;
-    #[path = "../../🧩️extensions/📣️effect/🦀️.rs"]
-    pub mod effect;
-    #[path = "../../🧩️extensions/🧠️logic/🦀️.rs"]
-    pub mod logic;
-    #[path = "../../🧩️extensions/🧮️math/🦀️.rs"]
-    pub mod math;
-    #[path = "../../🧩️extensions/📝️text/🦀️.rs"]
-    pub mod text;
-}
+pub use semio_s_artifact_imperative_procedure::extensions;
 //#endregion 🧩️Extensions
 
 //#region 🕸️Wasm
@@ -70,9 +58,6 @@ semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ImperativeApps);
 pub mod examples {
     #[path = "../../🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
     pub mod app_procedure_demo_session;
-    #[cfg(test)]
-    #[path = "../../🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
-    mod art_procedure_demo_tests;
 }
 //#endregion 📚️Examples
 

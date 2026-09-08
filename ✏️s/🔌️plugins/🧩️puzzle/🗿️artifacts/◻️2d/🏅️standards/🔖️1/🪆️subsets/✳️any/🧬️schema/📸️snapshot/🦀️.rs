@@ -1,7 +1,7 @@
 //! 🧬️ Puzzle2d snapshot schema — artifact-lane fields only.
 
 use crate::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, PUZZLE_2D_SCHEMA};
-use artifact_schema::ArtifactSchema;
+use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted puzzle2d document snapshot (persistent fields of the artifact).

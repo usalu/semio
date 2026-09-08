@@ -1,74 +1,252 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.html/diff.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/html/5/any/diff.json",
   "title": "HtmlDiff",
   "type": "object",
   "properties": {
-    "doctype": { "$ref": "#/$defs/NullableString" },
-    "root": { "$ref": "#/$defs/HtmlNodeDiff" }
+    "doctype": {
+      "$ref": "#/$defs/NullableString"
+    },
+    "root": {
+      "$ref": "#/$defs/HtmlNodeDiff"
+    }
   },
   "$defs": {
-    "HtmlNode": { "description": "Mirrors the sibling snapshot facet's HtmlNode.", "type": "object" },
+    "HtmlNode": {
+      "description": "Mirrors the sibling snapshot facet's HtmlNode.",
+      "type": "object"
+    },
     "NullableString": {
       "description": "Tri-state: absent key = unchanged, null = cleared, string = set.",
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "NullableAttrValue": {
       "description": "Tri-state attribute value: absent key = unchanged, null = valueless, string = set.",
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "HtmlAttrModified": {
       "type": "object",
-      "required": ["name"],
-      "properties": { "name": { "type": "string" }, "value": { "$ref": "#/$defs/NullableAttrValue" } }
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/NullableAttrValue"
+        }
+      }
     },
     "HtmlAttrAdded": {
       "type": "object",
-      "required": ["index", "name"],
-      "properties": { "index": { "type": "integer", "minimum": 0 }, "name": { "type": "string" }, "value": { "$ref": "#/$defs/NullableAttrValue" } }
+      "required": [
+        "index",
+        "name"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/NullableAttrValue"
+        }
+      }
     },
     "HtmlAttributesDiff": {
       "type": "object",
-      "required": ["removed", "modified", "added"],
+      "required": [
+        "removed",
+        "modified",
+        "added"
+      ],
       "properties": {
-        "removed": { "type": "array", "items": { "type": "string" } },
-        "modified": { "type": "array", "items": { "$ref": "#/$defs/HtmlAttrModified" } },
-        "added": { "type": "array", "items": { "$ref": "#/$defs/HtmlAttrAdded" } }
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HtmlAttrModified"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HtmlAttrAdded"
+          }
+        }
       }
     },
     "HtmlChildModified": {
       "type": "object",
-      "required": ["index", "diff"],
-      "properties": { "index": { "type": "integer", "minimum": 0 }, "diff": { "$ref": "#/$defs/HtmlNodeDiff" } }
+      "required": [
+        "index",
+        "diff"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "diff": {
+          "$ref": "#/$defs/HtmlNodeDiff"
+        }
+      }
     },
     "HtmlChildAdded": {
       "type": "object",
-      "required": ["index", "item"],
-      "properties": { "index": { "type": "integer", "minimum": 0 }, "item": { "$ref": "#/$defs/HtmlNode" } }
+      "required": [
+        "index",
+        "item"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "item": {
+          "$ref": "#/$defs/HtmlNode"
+        }
+      }
     },
     "HtmlChildrenDiff": {
       "type": "object",
-      "required": ["removed", "modified", "added"],
+      "required": [
+        "removed",
+        "modified",
+        "added"
+      ],
       "properties": {
-        "removed": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
-        "modified": { "type": "array", "items": { "$ref": "#/$defs/HtmlChildModified" } },
-        "added": { "type": "array", "items": { "$ref": "#/$defs/HtmlChildAdded" } }
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HtmlChildModified"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HtmlChildAdded"
+          }
+        }
       }
     },
     "HtmlElementDiff": {
       "type": "object",
       "properties": {
-        "name": { "type": "string" },
-        "attributes": { "$ref": "#/$defs/HtmlAttributesDiff" },
-        "children": { "$ref": "#/$defs/HtmlChildrenDiff" }
+        "name": {
+          "type": "string"
+        },
+        "attributes": {
+          "$ref": "#/$defs/HtmlAttributesDiff"
+        },
+        "children": {
+          "$ref": "#/$defs/HtmlChildrenDiff"
+        }
       }
     },
     "HtmlNodeDiff": {
       "oneOf": [
-        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "element" } }, "allOf": [{ "$ref": "#/$defs/HtmlElementDiff" }] },
-        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "text" }, "text": { "type": "string" } } },
-        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "comment" }, "text": { "type": "string" } } },
-        { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "rawText" }, "parentKind": { "enum": ["script", "style"] }, "text": { "type": "string" } } },
-        { "type": "object", "required": ["kind", "node"], "properties": { "kind": { "const": "replace" }, "node": { "$ref": "#/$defs/HtmlNode" } } }
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "element"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/HtmlElementDiff"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "comment"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "rawText"
+            },
+            "parentKind": {
+              "enum": [
+                "script",
+                "style"
+              ]
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "node"
+          ],
+          "properties": {
+            "kind": {
+              "const": "replace"
+            },
+            "node": {
+              "$ref": "#/$defs/HtmlNode"
+            }
+          }
+        }
       ]
     }
   }

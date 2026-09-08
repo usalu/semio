@@ -3,7 +3,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { FileLinter } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter, buildBudgetMs, defineLint, resolveCliBin, runBundleScriptMain, runCmd, runTestBudgeted } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, defineLint, goLevelTestArgs, resolveCliBin, resolveTestLevel, runBundleScriptMain, runCanonicalGoTests, runCmd } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 export const policyFile = "🐹️.go";
 
@@ -57,9 +57,9 @@ class BuildScript extends BundleScript {
 
 /** ⏱️Default `test` MUST stay ≤30s — `-short` skips the `testing.Short()`-gated real-monorepo-scan tests in `main_test.go`; run `bun ./📜️script.ts test -- -run TestX` or drop `-short` for the full suite. */
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
-    runTestBudgeted("go", ["test", `./${REPO_CLI_GO}`, "-short", ...segments], {
-      cwd: this.repoRoot,
+  async run(segments: string[]): Promise<void> {
+    const { level, rest } = resolveTestLevel(segments);
+    await runCanonicalGoTests(join(this.repoRoot, REPO_CLI_GO), [...goLevelTestArgs(level), ...rest], {
       env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
     });
   }

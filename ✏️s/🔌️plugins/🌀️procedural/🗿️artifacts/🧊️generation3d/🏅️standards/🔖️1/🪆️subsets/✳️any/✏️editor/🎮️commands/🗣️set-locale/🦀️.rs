@@ -1,6 +1,6 @@
 //! 🗣️ 🗣️ Generation3d play app commands command — `set-locale`.
 
-use crate::op::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use semio_framework_os_flow::FlowEvalSession;
@@ -19,16 +19,6 @@ pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, Generation3dSnapshot>
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::generation3d::testkit::{app, dispatch};
-    use crate::editor::generation3d::Generation3dCommand;
-
-    #[semio_framework_async_macros::async_test]
-    async fn set_locale_updates_config_locale() {
-        let _serial = crate::editor::generation3d::test_support::lock();
-        let mut app = app().await;
-        dispatch(&mut app, Generation3dCommand::SetLocale(SetLocale { value: "de-DE".into() })).await;
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -1,7 +1,7 @@
 //! 🧬️ 🧬️ Generation3d play app commands command — `rename-generation`.
 
-use crate::op::{generation_mutation_to_generation3d, Generation3dMutation};
-use crate::schema::evaluate_generation_preview;
+use crate::standards::v1::subsets::any::schema::mutations::text::{generation_mutation_to_generation3d, Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::evaluate_generation_preview;
 use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use semio_framework_os_flow::forms_bridge::flow_fixture_to_form_spec;

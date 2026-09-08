@@ -1,16 +1,16 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/os/flow/flow/vcs/mutation/add-synapse/schema.json",
+  "$id": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/mutation/add-synapse/schema.json",
   "title": "AddSynapse",
   "$defs": {
-    "payload": {
+    "Payload": {
       "type": "object",
       "properties": {
         "index": {
-          "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/index"
+          "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Index"
         },
         "synapse": {
-          "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/synapse"
+          "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Synapse"
         }
       },
       "required": [
@@ -21,7 +21,7 @@
   },
   "allOf": [
     {
-      "$ref": "#/$defs/payload"
+      "$ref": "#/$defs/Payload"
     }
   ],
   "propertyNames": {

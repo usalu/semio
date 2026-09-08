@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/app/puzzle/puzzle2d/config.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/puzzle/puzzle2d/config/schema.json",
   "title": "Puzzle2dConfig",
   "type": "object",
   "additionalProperties": false,
@@ -123,7 +124,20 @@
     },
     "fillJobLifecycle": {
       "type": "string",
-      "enum": ["idle", "capturing", "queued", "running", "checkpointReady", "applying", "awaitingAdoption", "closing", "completed", "cancelled", "faulted", "discarded"],
+      "enum": [
+        "idle",
+        "capturing",
+        "queued",
+        "running",
+        "checkpointReady",
+        "applying",
+        "awaitingAdoption",
+        "closing",
+        "completed",
+        "cancelled",
+        "faulted",
+        "discarded"
+      ],
       "x-semio-state": "config"
     },
     "fillJobFaultCode": {

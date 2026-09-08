@@ -2,7 +2,7 @@
 
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 
-use crate::op::SHomeMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
 use crate::SHomeSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
@@ -21,15 +21,6 @@ pub fn handle(payload: &NavigateVirtualFileSystemNode, _doc: &ArtifactView<'_, S
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn home_command_op_text_round_trips_every_variant() {
-        use crate::editor::home::HomeCommand;
-        store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::NavigateVirtualFileSystemNode(NavigateVirtualFileSystemNode { node_id: "studio:s1".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::DeleteVirtualFileSystemNode(crate::editor::home::commands::delete_virtual_file_system_node::DeleteVirtualFileSystemNode { node_id: "studio:s1".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::GoHome(crate::editor::home::commands::go_home::GoHome {}));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -39,14 +39,8 @@ export function renderDocument(view: DocumentView): BuiltNode {
 
 //#region 🧪️Tests
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-  describe("renderDocument", () => {
-    it("renders one child per page", () => {
-      const node = renderDocument({ pages: [{ text: "p1" }, { text: "p2" }] });
-      if (node.component.type !== "container") throw new Error("expected container");
-      expect(node.children.length).toBe(2);
-    });
-  });
+  const { registerTests1 } = await import("./🧪️tests/🧪️renderdocument/🟦️.ts");
+  await registerTests1(import.meta.vitest, { renderDocument }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests
 // #endregion 📄️DocumentWindowKit

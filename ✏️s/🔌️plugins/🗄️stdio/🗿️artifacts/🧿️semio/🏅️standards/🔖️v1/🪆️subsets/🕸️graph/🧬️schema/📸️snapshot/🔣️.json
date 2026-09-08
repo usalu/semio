@@ -1,31 +1,80 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.semio.graph/snapshot.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/snapshot.json",
   "title": "SemioGraphSnapshot",
   "description": "The neutral typed property graph: id-keyed nodes and edges with ports and properties.",
   "type": "object",
-  "required": ["schema", "nodes", "edges"],
+  "required": [
+    "schema",
+    "nodes",
+    "edges"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
     "nodes": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
         "type": "object",
         "properties": {
-          "id": { "type": "object", "properties": { "value": { "type": "string" } } },
-          "kind": { "type": "string", "description": "freeform node-type tag" },
-          "label": { "type": "string" },
-          "position": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" } } },
+          "id": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string"
+              }
+            }
+          },
+          "kind": {
+            "type": "string",
+            "description": "freeform node-type tag"
+          },
+          "label": {
+            "type": "string"
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            }
+          },
           "ports": {
             "type": "array",
             "items": {
               "type": "object",
-              "properties": { "name": { "type": "string" }, "kind": { "enum": ["in", "out", "inOut"] } }
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "in",
+                    "out",
+                    "inOut"
+                  ]
+                }
+              }
             }
           },
           "properties": {
             "type": "array",
-            "items": { "type": "object", "properties": { "key": { "type": "string" }, "value": {} } }
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "value": {}
+              }
+            }
           }
         }
       }
@@ -37,11 +86,36 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": { "type": "object", "properties": { "value": { "type": "string" } } },
-          "source": { "type": "object", "properties": { "value": { "type": "string" } } },
-          "target": { "type": "object", "properties": { "value": { "type": "string" } } },
-          "kind": { "type": "string" },
-          "label": { "type": "string" }
+          "id": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string"
+              }
+            }
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string"
+              }
+            }
+          },
+          "target": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string"
+              }
+            }
+          },
+          "kind": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
         }
       }
     }

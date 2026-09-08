@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ChangeFastenerKind` — patches the one addressed fastener in place.
-use crate::diff::{Puzzle5dDiff, Puzzle5dFastenerPatch, Puzzle5dFastenerPatchEntry, Puzzle5dFastenersDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dFastenerPatch, Puzzle5dFastenerPatchEntry, Puzzle5dFastenersDelta};
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/puzzle/5d/1/any/mutation/connect-kind-compatibility/schema.json",
+  "$id": "https://semio.tech/schema/s/puzzle/puzzle5d/mutation/connect-kind-compatibility/schema.json",
   "title": "ConnectKindCompatibility",
   "type": "object",
   "additionalProperties": false,

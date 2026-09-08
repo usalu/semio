@@ -226,7 +226,10 @@
         "subset": {
           "const": "flow"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowChildAddWidgetChild": {
       "type": "object",
@@ -259,7 +262,10 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowChildAddWidgetPoint": {
       "type": "object",
@@ -275,7 +281,10 @@
         "y": {
           "type": "number"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowChildAddWidgetParam": {
       "type": "object",
@@ -293,7 +302,10 @@
           "type": "string",
           "maxLength": 3072
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowChildAddWidgetNode": {
       "type": "object",
@@ -330,7 +342,10 @@
         "position": {
           "$ref": "#/$defs/FlowChildAddWidgetPoint"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowChildAddWidgetEdge": {
       "type": "object",
@@ -344,7 +359,10 @@
           "minLength": 1,
           "maxLength": 256
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowChildAddWidgetSnapshot": {
       "type": "object",
@@ -372,7 +390,10 @@
             "$ref": "#/$defs/FlowChildAddWidgetEdge"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowChildAddWidget": {
       "type": "object",
@@ -501,7 +522,10 @@
           "const": 1
         }
       },
-      "title": "FlowChildAddWidget"
+      "title": "FlowChildAddWidget",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowTreeProjectionNode": {
       "type": "object",
@@ -560,7 +584,10 @@
             "$ref": "#/$defs/FlowTreeProjectionNode"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowTreeProjection": {
       "type": "object",
@@ -674,7 +701,10 @@
           }
         }
       },
-      "title": "FlowTreeProjection"
+      "title": "FlowTreeProjection",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowHostWire": {
       "type": "object",
@@ -806,7 +836,10 @@
           }
         }
       },
-      "title": "FlowHostWire"
+      "title": "FlowHostWire",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowArtifactRecipesLayout": {
       "type": "object",
@@ -822,7 +855,10 @@
         "y": {
           "type": "number"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowArtifactRecipes": {
       "type": "object",
@@ -1041,7 +1077,10 @@
           "const": true
         }
       },
-      "title": "FlowArtifactRecipes"
+      "title": "FlowArtifactRecipes",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowGrantFrontier": {
       "type": "object",
@@ -1150,7 +1189,10 @@
           }
         }
       },
-      "title": "FlowGrantFrontier"
+      "title": "FlowGrantFrontier",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowSliderLabels": {
       "type": "object",
@@ -1219,7 +1261,10 @@
           }
         }
       },
-      "title": "FlowSliderLabels"
+      "title": "FlowSliderLabels",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowArtifactCanonicalValue": {
       "oneOf": [
@@ -1238,13 +1283,19 @@
         {
           "$ref": "#/$defs/FlowArtifactCanonicalDictionary"
         }
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
       ]
     },
     "FlowArtifactCanonicalDictionary": {
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/FlowArtifactCanonicalValue"
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowArtifactCanonicalLayout": {
       "type": "object",
@@ -1260,7 +1311,10 @@
         "y": {
           "type": "number"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowArtifactCanonicalOptionalLayout": {
       "oneOf": [
@@ -1270,6 +1324,9 @@
         {
           "type": "null"
         }
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
       ]
     },
     "FlowArtifactCanonicalEntry": {
@@ -1286,7 +1343,10 @@
         "layout": {
           "$ref": "#/$defs/FlowArtifactCanonicalOptionalLayout"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowArtifactCanonicalTree": {
       "type": "object",
@@ -1308,7 +1368,10 @@
             "$ref": "#/$defs/FlowArtifactCanonicalSynapse"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowArtifactCanonicalNeuron": {
       "type": "object",
@@ -1338,7 +1401,10 @@
             }
           ]
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowArtifactCanonicalSynapse": {
       "type": "object",
@@ -1366,7 +1432,10 @@
         "toPort": {
           "type": "string"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowArtifactCanonicalGui": {
       "type": "object",
@@ -1422,7 +1491,10 @@
             "$ref": "#/$defs/FlowArtifactCanonicalPreview"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowArtifactCanonicalPreview": {
       "type": "object",
@@ -1477,7 +1549,10 @@
         "layout": {
           "$ref": "#/$defs/FlowArtifactCanonicalOptionalLayout"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowArtifactCanonicalChrome": {
       "oneOf": [
@@ -1581,6 +1656,9 @@
             }
           }
         }
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
       ]
     },
     "FlowArtifactCanonicalWidget": {
@@ -1822,6 +1900,9 @@
             }
           }
         }
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
       ]
     },
     "FlowArtifactCanonicalMutation": {
@@ -2061,6 +2142,9 @@
             }
           }
         }
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
       ]
     },
     "FlowArtifactCanonical": {
@@ -2092,7 +2176,10 @@
           "maxItems": 10
         }
       },
-      "title": "FlowArtifactCanonical"
+      "title": "FlowArtifactCanonical",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowDeleteCascade": {
       "type": "object",
@@ -2177,7 +2264,10 @@
           ]
         }
       },
-      "title": "FlowDeleteCascade"
+      "title": "FlowDeleteCascade",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowContentIdentity": {
       "type": "object",
@@ -2261,7 +2351,10 @@
           }
         }
       },
-      "title": "FlowContentIdentity"
+      "title": "FlowContentIdentity",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowStoreOwners": {
       "type": "object",
@@ -2330,7 +2423,10 @@
           }
         }
       },
-      "title": "FlowStoreOwners"
+      "title": "FlowStoreOwners",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowPresenceOwnersText": {
       "type": "object",
@@ -2349,7 +2445,10 @@
           "minimum": 0,
           "maximum": 4096
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowPresenceOwners": {
       "type": "object",
@@ -2434,7 +2533,10 @@
           }
         }
       },
-      "title": "FlowPresenceOwners"
+      "title": "FlowPresenceOwners",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowTransientOwners": {
       "type": "object",
@@ -2502,7 +2604,10 @@
           }
         }
       },
-      "title": "FlowTransientOwners"
+      "title": "FlowTransientOwners",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowAddWidgetRetainedCoordinate": {
       "oneOf": [
@@ -2516,6 +2621,9 @@
             "negative-infinity"
           ]
         }
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
       ]
     },
     "FlowAddWidgetRetainedDialect": {
@@ -2542,7 +2650,10 @@
           "minLength": 1,
           "maxLength": 256
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowAddWidgetRetainedCommand": {
       "type": "object",
@@ -2569,7 +2680,10 @@
         "y": {
           "$ref": "#/$defs/FlowAddWidgetRetainedCoordinate"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowAddWidgetRetainedRequest": {
       "type": "object",
@@ -2691,7 +2805,10 @@
         "duplicateTarget": {
           "type": "boolean"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowAddWidgetRetainedOutcome": {
       "type": "object",
@@ -2725,7 +2842,10 @@
           "minimum": 0,
           "maximum": 1
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowAddWidgetRetained": {
       "type": "object",
@@ -2939,7 +3059,10 @@
           }
         }
       },
-      "title": "FlowAddWidgetRetained"
+      "title": "FlowAddWidgetRetained",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowViewerOwners": {
       "type": "object",
@@ -2994,7 +3117,10 @@
           }
         }
       },
-      "title": "FlowViewerOwners"
+      "title": "FlowViewerOwners",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "FlowSceneOwnerLaw": {
       "type": "object",
@@ -3049,7 +3175,10 @@
           }
         }
       },
-      "title": "FlowSceneOwnerLaw"
+      "title": "FlowSceneOwnerLaw",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

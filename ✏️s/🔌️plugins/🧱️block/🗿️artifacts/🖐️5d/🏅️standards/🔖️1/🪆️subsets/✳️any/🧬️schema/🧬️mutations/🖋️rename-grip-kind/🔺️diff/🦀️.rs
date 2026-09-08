@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `RenameGripKind`.
 
 use crate::{Block5dGripKind, Block5dSnapshot};
-use crate::diff::{Block5dDiff, Block5dGripKindsDelta, Block5dGripKindsPatch, Block5dGripKindsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Block5dDiff, Block5dGripKindsDelta, Block5dGripKindsPatch, Block5dGripKindsPatchEntry};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RenameGripKind, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {

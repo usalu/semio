@@ -135,59 +135,7 @@ pub mod config {
     }
 
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        fn quality_presets_have_expected_resolution() {
-            assert_eq!(QualityPreset::High.resolution(), (1920, 1080));
-            assert_eq!(QualityPreset::FourK.resolution(), (3840, 2160));
-        }
-
-        #[test]
-        fn config_frame_duration_matches_rate() {
-            let cfg = AnimateConfig::default().with_frame_rate(30.0);
-            assert!((cfg.frame_duration() - 1.0 / 30.0).abs() < 1e-9);
-        }
-
-        #[test]
-        fn all_quality_presets_report_frame_rate_and_resolution() {
-            assert_eq!(QualityPreset::Low.frame_rate(), 15.0);
-            assert_eq!(QualityPreset::Medium.frame_rate(), 15.0);
-            assert_eq!(QualityPreset::High.frame_rate(), 60.0);
-            assert_eq!(QualityPreset::FourK.frame_rate(), 60.0);
-            assert_eq!(QualityPreset::Production.frame_rate(), 60.0);
-            assert_eq!(QualityPreset::Low.resolution(), (854, 480));
-            assert_eq!(QualityPreset::Medium.resolution(), (1280, 720));
-            assert_eq!(QualityPreset::Production.resolution(), (2560, 1440));
-            assert_eq!(QualityPreset::High.pixel_height(), 1080);
-        }
-
-        #[test]
-        fn config_builder_methods_apply() {
-            let cfg = AnimateConfig::from_quality(QualityPreset::Low).with_resolution(0, 0).with_output_dir("out").with_media_dir("media2").with_audio_track("track.wav").with_subtitles_path("subs.srt");
-            assert_eq!(cfg.width, 1);
-            assert_eq!(cfg.height, 1);
-            assert_eq!(cfg.output_dir, PathBuf::from("out"));
-            assert_eq!(cfg.media_dir, PathBuf::from("media2"));
-            assert_eq!(cfg.audio_track, Some(PathBuf::from("track.wav")));
-            assert_eq!(cfg.subtitles_path, Some(PathBuf::from("subs.srt")));
-        }
-
-        #[test]
-        fn config_with_frame_rate_clamps_to_minimum() {
-            let cfg = AnimateConfig::default().with_frame_rate(-5.0);
-            assert_eq!(cfg.frame_rate, 1.0);
-        }
-
-        #[test]
-        fn config_aspect_ratio_and_default_cache() {
-            let cfg = AnimateConfig::from_quality(QualityPreset::Medium);
-            assert!(cfg.cache.enabled);
-            assert_eq!(cfg.cache.max_entries, 10_000);
-            assert!((cfg.aspect_ratio() - 1280.0 / 720.0).abs() < 1e-9);
-        }
-    }
+    include!("🧪️tests/🔬️config-unit/🦀️.rs");
 }
 
 pub mod hash {
@@ -248,41 +196,7 @@ pub mod hash {
     }
 
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        fn animation_hash_is_stable() {
-            let input = AnimationHashInput::new("FadeIn", 1.0).with_targets(vec![42]);
-            let a = hash_animation(&input);
-            let b = hash_animation(&input);
-            assert_eq!(a, b);
-        }
-
-        #[test]
-        fn timeline_merkle_orders_children() {
-            let h = hash_animation_timeline(vec!["a".into(), "b".into()]);
-            assert!(!h.is_empty());
-        }
-
-        #[test]
-        fn hash_scene_config_is_stable_and_sensitive_to_inputs() {
-            let a = hash_scene_config(60.0, 1920, 1080, 3);
-            let b = hash_scene_config(60.0, 1920, 1080, 3);
-            assert_eq!(a, b);
-            let c = hash_scene_config(30.0, 1920, 1080, 3);
-            assert_ne!(a, c);
-        }
-
-        #[test]
-        fn hash_animation_differs_by_rate_and_extras() {
-            let base = AnimationHashInput::new("Fade", 1.0);
-            let with_rate = base.clone().with_rate("smooth");
-            let with_extra = base.clone().with_extra("scale=2");
-            assert_ne!(hash_animation(&base), hash_animation(&with_rate));
-            assert_ne!(hash_animation(&base), hash_animation(&with_extra));
-        }
-    }
+    include!("🧪️tests/🔬️hash-unit/🦀️.rs");
 }
 
 pub mod graph {
@@ -434,27 +348,5 @@ pub mod graph {
     }
 
     #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        fn graph_has_node_and_edge_children() {
-            let g = Graph::new(vec![1, 2, 3], vec![(1, 2), (2, 3)], 2.0, Point::ZERO, Color::BLUE);
-            assert_eq!(g.nodes.len(), 3);
-            assert!(!g.group.children.is_empty());
-        }
-
-        #[test]
-        fn digraph_uses_arrows_and_labels() {
-            let dg = DiGraph::new(vec![1, 2], vec![(1, 2)], 2.0, Point::ZERO, Color::WHITE);
-            assert_eq!(dg.edges.len(), 1);
-            let mut positions = HashMap::new();
-            positions.insert(1, Point::new(-1.0, 0.0));
-            positions.insert(2, Point::new(1.0, 0.0));
-            let mut labels = HashMap::new();
-            labels.insert((1, 2), "edge".into());
-            let labeled = dg.with_edge_labels(&labels, &positions, Color::WHITE);
-            assert!(labeled.group.children.len() > 2);
-        }
-    }
+    include!("🧪️tests/🔬️graph-unit/🦀️.rs");
 }

@@ -12,7 +12,7 @@
       "const": "changePublicationTransient"
     },
     "payload": {
-      "$ref": "📝️change-publication-transient/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/framework/os/plugin/tests/publication-fixtures/transient/mutation/change-publication-transient/schema.json"
     }
   }
 }

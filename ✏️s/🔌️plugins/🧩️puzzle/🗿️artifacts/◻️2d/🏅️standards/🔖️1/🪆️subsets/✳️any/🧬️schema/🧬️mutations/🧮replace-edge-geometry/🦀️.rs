@@ -1,8 +1,8 @@
 //! 🧮 Puzzle2d mutation — `ReplaceEdgeGeometry`: whole-value swap of an edge's connection-pose —
 //! `gap`+`shift`+`rise`+`rotation`+`turn`+`tilt`+`x`+`y` together are the one connection geometry.
 
-use crate::diff::Puzzle2dDiff;
-use crate::mutations::Puzzle2dMutation;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation

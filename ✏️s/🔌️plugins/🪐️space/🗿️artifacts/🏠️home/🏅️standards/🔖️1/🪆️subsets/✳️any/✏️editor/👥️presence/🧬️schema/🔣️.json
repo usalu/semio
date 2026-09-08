@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/app/space/home/presence.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/space/home/presence/schema.json",
   "title": "HomePresence",
   "type": "object",
   "additionalProperties": false,

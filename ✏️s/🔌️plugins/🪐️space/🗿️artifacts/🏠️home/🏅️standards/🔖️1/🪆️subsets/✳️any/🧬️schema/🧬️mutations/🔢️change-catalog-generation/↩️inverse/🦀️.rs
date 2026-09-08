@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ChangeCatalogGeneration` — the OLD counter value looked up from BASE (never a
 //! structural inversion of the diff).
-use crate::mutations::SHomeMutation;
+use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 
 //#region 🔖️Inverse

@@ -37,14 +37,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemovePage {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn semantic_identity_is_owned_by_this_leaf() {
-        assert_eq!(<RemovePage as MutationKind<PdfSnapshot, PdfMutation>>::SEMANTICS.kind, "remove-page");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[path = "💾️binary/🦀️.rs"]

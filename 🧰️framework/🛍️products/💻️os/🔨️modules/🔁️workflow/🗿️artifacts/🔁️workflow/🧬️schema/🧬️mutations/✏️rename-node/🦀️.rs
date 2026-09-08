@@ -32,11 +32,5 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RenameNode {
 //#endregion ⚙️Semantics
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::MutationLeaf;
-    #[test]
-    fn metadata_has_the_canonical_identity() {
-        assert_eq!(<RenameNode as MutationLeaf>::DESCRIPTOR.semantic_kind, "rename-node");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

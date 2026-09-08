@@ -1,21 +1,37 @@
 {
-  "$id": "https://semio.tech/schema/s/stdio/pptx/inference.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/pptx/ecma-376/base/inference.json",
   "title": "PptxInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["outline"],
+  "required": [
+    "outline"
+  ],
   "properties": {
-    "outline": { "$ref": "#/$defs/PptxOutline", "x-semio-derived": true }
+    "outline": {
+      "$ref": "#/$defs/PptxOutline",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "PptxOutline": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["slideCount", "shapeCount", "wordCount"],
+      "required": [
+        "slideCount",
+        "shapeCount",
+        "wordCount"
+      ],
       "properties": {
-        "slideCount": { "type": "integer" },
-        "shapeCount": { "type": "integer" },
-        "wordCount": { "type": "integer" }
+        "slideCount": {
+          "type": "integer"
+        },
+        "shapeCount": {
+          "type": "integer"
+        },
+        "wordCount": {
+          "type": "integer"
+        }
       }
     }
   }

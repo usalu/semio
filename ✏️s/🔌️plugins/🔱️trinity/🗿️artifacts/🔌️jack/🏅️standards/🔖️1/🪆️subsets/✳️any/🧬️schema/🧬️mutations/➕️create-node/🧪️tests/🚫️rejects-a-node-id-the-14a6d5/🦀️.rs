@@ -16,7 +16,7 @@
 //! with the very node the committed mutation payload carries, so the id collision the Fatal guards
 //! against is reachable. Nothing here is invented: the seeded node IS the mutation JSON's own `node`.
 
-use crate::mutations::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
 use crate::{materialize_jack_content, jack_working_scene, JackDiff, JackSnapshot};
 

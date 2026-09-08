@@ -12,8 +12,8 @@
 //!
 //! 🔁️ The dead case already carries self-weight, so this is `change-load-case-self-weight`'s no-op branch: APPLIED with a Warning, an empty diff, and a document that does not move. `change-load-case-self-weight` has no Fatal branch at all.
 
-use crate::mutations::Fem2dMutation;
-use crate::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
 use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -48,7 +48,7 @@ fn no_op_leaves_the_document_untouched() {
 #[test]
 fn the_no_op_is_a_warning_not_a_rejection() {
     let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &crate::diff::Fem2dDiff::default(), "change-load-case-self-weight/keeps-self-weight-ff696b: a no-op change-load-case-self-weight must carry the empty diff");
+    assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "change-load-case-self-weight/keeps-self-weight-ff696b: a no-op change-load-case-self-weight must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.no-op", "change-load-case-self-weight/keeps-self-weight-ff696b: an unchanged value is reported as no-op");
@@ -108,15 +108,15 @@ fn produces_committed_diff() {
     let produced = dsl::ToValue::to_value(outcome.diff());
     let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-load-case-self-weight/keeps-self-weight-ff696b: produced diff differs from the committed 🔺️diff/🔣️.json");
-    let typed: crate::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes into Fem2dDiff");
-    assert_eq!(typed, crate::diff::Fem2dDiff::default(), "change-load-case-self-weight/keeps-self-weight-ff696b: a no-op delta is the artifact's Default diff");
+    let typed: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes into Fem2dDiff");
+    assert_eq!(typed, crate::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "change-load-case-self-weight/keeps-self-weight-ff696b: a no-op delta is the artifact's Default diff");
 }
 
 /// 🔣️ The committed diff is itself canonical. `Fem2dDiff` carries a container-level `default` and no
 /// per-field skip, so all seventeen sparse slots must be present as `null`.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-load-case-self-weight/keeps-self-weight-ff696b: committed diff JSON is not canonical");
@@ -128,7 +128,7 @@ fn committed_diff_is_canonical() {
 /// is the identity — and still a real assertion: `apply` must leave every other member alone too.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::standards::v1::subsets::any::schema::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-load-case-self-weight/keeps-self-weight-ff696b: committed diff did not carry before to after");
 }

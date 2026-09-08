@@ -249,11 +249,11 @@ class PresencePeerCodecScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("presence-peer-codec-check accepts only --oracle-only");
     const { default: assert } = await import("node:assert/strict");
-    const { default: Ajv } = await import("ajv/dist/2020.js");
+    const { default: Ajv } = await import("ajv");
     const owner = join(this.root, "../../🧫️fixtures/👥️presence-peer-codec-v1");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixture/🔣️.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true }).compile(schema);
+    const fixture = JSON.parse(readFileSync(join(owner, "🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(this.root, "../../🧬️schema/🔣️.json"), "utf8"));
+    const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/PresencePeerCodecFixture`)!;
     assert(validate(fixture), validate.errors?.map(error => `${error.instancePath} ${error.message}`).join("; "));
     const codec = await import(join(this.root, "../../🟦️.ts"));
     assert.deepEqual(codec.PRESENCE_PEER_WIRE_LIMITS_V1, fixture.limits);

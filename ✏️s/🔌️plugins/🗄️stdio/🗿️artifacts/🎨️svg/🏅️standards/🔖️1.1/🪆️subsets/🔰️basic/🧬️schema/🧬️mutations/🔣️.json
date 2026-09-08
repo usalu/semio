@@ -12,7 +12,7 @@
       ],
       "properties": {
         "InsertBasicElement": {
-          "$ref": "./➕insert-basic-element/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/basic/mutation/insert-basic-element/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "InsertClipPathShape": {
-          "$ref": "./📎insert-clip-path-shape/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/basic/mutation/insert-clip-path-shape/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "RemoveElement": {
-          "$ref": "./➖remove-element/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/basic/mutation/remove-element/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "SetBasicAttribute": {
-          "$ref": "./🏷️set-basic-attribute/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/basic/mutation/set-basic-attribute/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "SetClipPathReference": {
-          "$ref": "./✂️set-clip-path-reference/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/basic/mutation/set-clip-path-reference/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "SetSnapshot": {
-          "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/basic/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "SetText": {
-          "$ref": "./✍️set-text/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/basic/mutation/set-text/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "SetTransform": {
-          "$ref": "./🔄set-transform/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/basic/mutation/set-transform/schema.json"
         }
       }
     },
@@ -108,7 +108,7 @@
       ],
       "properties": {
         "SetViewBox": {
-          "$ref": "./🖼️set-view-box/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/basic/mutation/set-view-box/schema.json"
         }
       }
     },
@@ -120,7 +120,7 @@
       ],
       "properties": {
         "StampBaseProfile": {
-          "$ref": "./🪧stamp-base-profile/🧬️schema/🔣️.json"
+          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/basic/mutation/stamp-base-profile/schema.json"
         }
       }
     }

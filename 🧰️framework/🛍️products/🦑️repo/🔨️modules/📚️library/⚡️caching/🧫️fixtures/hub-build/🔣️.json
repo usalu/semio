@@ -1,0 +1,9 @@
+{
+  "project": "os-hub",
+  "projectRoot": "🌎️hub/📦️packages/🦀️rust",
+  "prerequisite": "os-hub-admin:build",
+  "prerequisiteRoot": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
+  "output": "{projectRoot}/dist/build",
+  "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
+  "arguments": ["native", "cargo", "build", "--manifest", "🌎️hub/📦️packages/🦀️rust/Cargo.toml", "--release", "--bin", "os-hub"]
+}

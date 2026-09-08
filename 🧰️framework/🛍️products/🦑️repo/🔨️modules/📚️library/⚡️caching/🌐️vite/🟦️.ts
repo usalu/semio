@@ -51,7 +51,7 @@ export type ViteService = {
   readonly host: string;
   readonly port: number;
   readonly signal: AbortSignal;
-  readonly ready: (url: string) => void;
+  readonly ready: (url: string) => void | Promise<void>;
   readonly session?: ServiceSession;
 };
 
@@ -86,7 +86,7 @@ export async function serveVite(options: ViteService): Promise<void> {
     const address = listener.address();
     if (!address || typeof address === "string") throw new Error("Vite did not bind a TCP listener");
     const host = options.host === "0.0.0.0" ? "127.0.0.1" : options.host.includes(":") ? `[${options.host}]` : options.host;
-    options.ready(`http://${host}:${address.port}/`);
+    await options.ready(`http://${host}:${address.port}/`);
     await new Promise<void>(resolve => {
       if (options.signal.aborted) resolve();
       else options.signal.addEventListener("abort", () => resolve(), { once: true });

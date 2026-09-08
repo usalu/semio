@@ -1880,25 +1880,7 @@ const __actionsTestRuntime = import.meta.vitest ? await import("../🏃️runtim
 const __actionsTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️.ts") : null;
 
 if (import.meta.vitest) {
-  __actionsTestRuntime!.bootstrapCadModules();
-  const { preciseSpatialKernelMath } = __actionsTestKernel!;
-  const M = preciseSpatialKernelMath;
-  const { describe, expect, it } = import.meta.vitest;
-
-  describe("@semio-tech/cad-js/core box display committed", () => {
-    it("keeps box-preview visible for committed state", () => {
-      const spec = buildBoxInteractionSpec();
-      const ctx: Record<string, unknown> = {
-        origin: [0, 0, 0] as Vec3,
-        corner: [2, 3, 0] as Vec3,
-        height: 4,
-      };
-      const d = resolveDisplay(spec, "committed", ctx, M);
-      const prev = d.items.find((i) => i.kind === "box-preview" && i.id === "preview-committed");
-      expect(prev?.params?.cornerA).toEqual([0, 0, 0]);
-      expect(prev?.params?.cornerB).toEqual([2, 3, 0]);
-      expect(prev?.params?.height).toBe(4);
-    });
-  });
+  const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-core-box-display-committed/🟦️.ts");
+  await registerTests1(import.meta.vitest, { __actionsTestKernel, __actionsTestRuntime, buildBoxInteractionSpec, resolveDisplay }, { directory: import.meta.dir, url: import.meta.url });
 }
 // #endregion 🧪️Tests

@@ -1733,9 +1733,7 @@ class OwnedActorTurnOutputs {
     this.#closed = true;
   }
 }
-if (undefined) {
-  async function fixtureOutput(queue) {}
-}
+if (undefined) {}
 
 /* ../../../../../../../../../🔨️modules/🎭️actor/📃️page/🟦️.ts */
 var ACTOR_BYTE_PAGE_BYTES = 4096;
@@ -5454,9 +5452,7 @@ class RetainedUiChildIdsCursor {
     return this.#closing && !this.#input && !this.#output && !this.#payload && !this.#retirement;
   }
 }
-if (undefined) {
-  let prepared = function(kind, value) {};
-}
+if (undefined) {}
 
 /* ../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/🟦️.ts */
 var MINT3 = Symbol("owned-ui-operation");
@@ -17249,19 +17245,7 @@ class ShardClient {
     }
   }
 }
-if (undefined) {
-  let prepareWorkerFixture = function(client, rows) {}, prepareResidentFixture = function(client, ledger, bytes) {}, harness = function(shardCount = 2, extra) {}, bindFixtureHost = function(lease) {}, fixtureRetirement = function(lease) {}, makeEnvelope = function(to, lane, seq, kind = "wake") {}, makeEffectRequestFrame = function(actorId, effect, requestId, params, activationGeneration = 1n) {}, findEffectReply = function(sent, requestId, kind) {}, flushMicrotasks = function() {};
-  async function workerPreparationFixture() {}
-  async function fixtureResidentPool(client, ledger) {}
-  async function fixtureResidentScope(pool, ledger, lease) {}
-  async function fixtureResidentPayload(scope, ledger, field) {}
-  async function fixtureResidentBuilder(ledger, field, resident) {}
-  async function answerLifecycle(worker, pending2, receipt) {}
-  async function captureFixtureInstance(client, worker, actorId, instanceId = 7, guestLifetime = 13n) {}
-  async function retireFixtureInstance(worker, lease) {}
-  async function fixtureOutputReservation(queue) {}
-  async function activateActor(client, workers, actorId, shardIndex = 0) {}
-}
+if (undefined) {}
 
 /* ../../../../../../../../../🔨️modules/🎭️actor/📬️mailbox/🟦️.ts */
 var MAILBOX_LANE_ORDER = ["Interactive", "UserVisible", "Background", "Maintenance"];
@@ -17428,9 +17412,7 @@ class TurnScheduler {
     }
   }
 }
-if (undefined) {
-  let deferred = function() {}, harness = function(mailboxCapacity = 10) {};
-}
+if (undefined) {}
 
 /* ../../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts */
 class OsTransient {
@@ -17628,7 +17610,7 @@ var DEFAULT_MAX_RESIDENT_ACTORS = 24;
 var MIN_MAX_RESIDENT_ACTORS = 4;
 var MAX_MAX_RESIDENT_ACTORS = 96;
 var RESIDENT_ACTORS_PER_DEVICE_MEMORY_GIB = 6;
-var BYTES_PER_RESIDENT_ACTOR = 64 * 1024 * 1024;
+var BYTES_PER_RESIDENT_ACTOR = 67108864;
 function clampResidentActors(value) {
   return Math.min(MAX_MAX_RESIDENT_ACTORS, Math.max(MIN_MAX_RESIDENT_ACTORS, Math.round(value)));
 }
@@ -17886,10 +17868,7 @@ function runtimeMetricsDue(lastPublishedMs, nowMs) {
     return true;
   return nowMs - lastPublishedMs >= RUNTIME_METRICS_PUBLISH_INTERVAL_MS;
 }
-if (undefined) {
-  let createAutoReplyWorker = function() {}, fakeShardClient = function(shardCount = 1) {}, fixtureResidentLedger = function() {}, catalogWithOneExtension = function() {};
-  async function flushMicrotasks(n = 10) {}
-}
+if (undefined) {}
 function findPlaygroundVariant(catalog, playgroundPluginId) {
   return catalog.playgrounds.find((entry) => entry.variant === playgroundPluginId || entry.aliases.includes(playgroundPluginId));
 }
@@ -18849,9 +18828,7 @@ function routeCommand(host, snapshot, actor, command) {
       return;
   }
 }
-if (undefined) {
-  let flatEvent = function(kind, branch = 0) {}, buildTrafficLight = function() {}, buildBranching = function() {};
-}
+if (undefined) {}
 /* ../../../../../../../../../📦️packages/🟦️typescript/🟦️.ts */
 if (undefined) {}
 /* ../../../../../../🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json */
@@ -18941,7 +18918,7 @@ var __default = {
             required: ["pluginId", "directoryName"],
             properties: {
               pluginId: { type: "string", pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$", maxLength: 128 },
-              directoryName: { $ref: "semio:installation-directory-v1" }
+              directoryName: { $ref: "https://semio.tech/schema/os/extension/component.json#/$defs/InstallationDirectoryV1" }
             }
           }
         }
@@ -22216,7 +22193,7 @@ function decodeInvocationResultPacks(frame) {
   return { mutations: mutations.map((entry, index) => invocationResultMutation(entry, `invocation.mutations[${index}]`)), inverseGroup: invocationResultUndoGroup(decodePackWire(new Uint8Array(frame.inverse_group), "invocation.inverseGroup"), "invocation.inverseGroup") };
 }
 var SCENE_PACK_UNIT = Symbol("scene-pack-unit");
-var INVOCATION_RESULT_PACK_MAXIMUM_BYTES = 4096 * 64;
+var INVOCATION_RESULT_PACK_MAXIMUM_BYTES = 262144;
 function readOptU64(bytes, pos) {
   return readBool(bytes, pos) ? readVarintU64(bytes, pos) : null;
 }
@@ -22973,11 +22950,7 @@ class AppChannelClient {
 }
 if (undefined) {}
 if (undefined) {}
-if (undefined) {
-  let sampleDirectoryEvent = function(seq) {}, administrationResponse = function(canonical) {};
-  async function sampleCanonicalDirectoryEventPage(after = 3) {}
-  async function sampleCanonicalAdministrationPage(access, overrides = {}) {}
-}
+if (undefined) {}
 /* ../../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts */
 var SHARD_WORKER_URL = "/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js";
 var DEFAULT_SHARD_BUDGET = { fuel: 50000000, wallMs: 100, memoryBytes: 256 * 1024 * 1024, uiNodes: 20000, mailboxLen: 64, maxEffects: 64, maxPatchBytes: 1 << 20 };

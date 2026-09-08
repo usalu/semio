@@ -9,28 +9,39 @@ import {
 
 //#region 🧬️SchemaLaws
 
-const schemaUrl = new URL("../../🧬️schema/🔣️.json", import.meta.url);
-const schema = JSON.parse(readFileSync(fileURLToPath(schemaUrl), "utf8"));
-const operationCodes = Object.values(schema.operations);
-const eventCodes = Object.values(schema.events);
-const featureOperations = Object.values(schema.features).flat();
+/** 🥄️ Reads one `enum <name> { … }` body out of the interface facet without a WIT parser. */
+const witEnum = (text, name) => {
+  const body = new RegExp(`enum ${name} \\{([^}]*)\\}`, "u").exec(text)?.[1];
+  if (body === undefined) throw new Error(`Sequence interface facet declares no enum ${name}`);
+  return body.split("\n").map((line) => line.replace(/\/\/.*$/u, "").trim().replace(/,$/u, "")).filter(Boolean);
+};
 
-if (schema.version !== 1) throw new Error("Sequence schema instance version drift");
-if (schema.properties.version.const !== 1) throw new Error("Sequence ABI schema version drift");
-if (JSON.stringify(schema.operations) !== JSON.stringify(SequenceOperation)) throw new Error("Sequence JS operation ledger drift");
+const kebab = (name) => name.replace(/(?<!^)(?=[A-Z])/gu, "-").toLowerCase();
+
+const wit = readFileSync(fileURLToPath(new URL("../../🧬️schema/📜️.wit", import.meta.url)), "utf8");
+const operations = witEnum(wit, "operation");
+const events = witEnum(wit, "event");
+const features = witEnum(wit, "feature");
+const operationCodes = Object.values(SequenceOperation);
+
+if (!wit.startsWith("package semio:sequence-browser-abi@1.0.0;")) throw new Error("Sequence interface facet package identity drift");
+if (!/^world sequence-browser \{$/mu.test(wit) || !/^\s+export abi;$/mu.test(wit)) throw new Error("Sequence interface facet world drift");
+if (operations.length !== 47 || new Set(operations).size !== 47) throw new Error("Sequence operation surface must be unique and complete");
+if (JSON.stringify(operations) !== JSON.stringify(Object.keys(SequenceOperation).map(kebab))) throw new Error("Sequence JS operation ledger drift");
 if (operationCodes.length !== 47 || new Set(operationCodes).size !== 47) throw new Error("Sequence operation ledger must be unique and complete");
 if (Math.min(...operationCodes) !== 2300 || Math.max(...operationCodes) !== 2346) throw new Error("Sequence operation range drift");
-if (Object.keys(schema.features).length !== 10 || Math.max(...Object.values(schema.features).map((operations) => operations.length)) > 10) throw new Error("Sequence feature taxonomy must remain small");
-if (featureOperations.length !== 47 || new Set(featureOperations).size !== 47) throw new Error("Sequence feature taxonomy must own every operation exactly once");
-if (JSON.stringify([...featureOperations].sort()) !== JSON.stringify(Object.keys(schema.operations).sort())) throw new Error("Sequence feature taxonomy drift");
-if (eventCodes.length !== 8 || new Set(eventCodes).size !== 8) throw new Error("Sequence event ledger must be unique and complete");
-if (Math.min(...eventCodes) !== 2400 || Math.max(...eventCodes) !== 2407) throw new Error("Sequence event range drift");
-if (schema.limits.requestBytes !== SEQUENCE_MAX_REQUEST_BYTES) throw new Error("Sequence request bound drift");
-if (schema.limits.pageBytes !== SEQUENCE_MAX_PAGE_BYTES) throw new Error("Sequence page bound drift");
-if (schema.limits.transferBytes !== SEQUENCE_MAX_TRANSFER_BYTES) throw new Error("Sequence transfer bound drift");
-if (schema.identities.surface !== "nonzero-u32" || schema.identities.canvas !== "nonzero-u32") throw new Error("Sequence browser identity drift");
-if (schema.framing.byteOrder !== "little-endian" || schema.framing.message !== "A1-AbiMessage-v1") throw new Error("Sequence framing drift");
+if (features.length !== 10 || new Set(features).size !== 10) throw new Error("Sequence feature taxonomy must remain small");
+const grouped = [...wit.matchAll(/^\s+\/\/ ([a-z-]+)\n((?:\s+[a-z0-9-]+,\n)+)/gmu)].map(([, feature, block]) => [feature, block.trim().split("\n").map((line) => line.trim().replace(/,$/u, ""))]);
+if (JSON.stringify(grouped.map(([feature]) => feature)) !== JSON.stringify(features)) throw new Error("Sequence feature taxonomy drift");
+if (grouped.flatMap(([, members]) => members).join(",") !== operations.join(",")) throw new Error("Sequence feature taxonomy must own every operation exactly once");
+if (Math.max(...grouped.map(([, members]) => members.length)) > 10) throw new Error("Sequence feature groups must remain small");
+if (events.length !== 8 || new Set(events).size !== 8) throw new Error("Sequence event surface must be unique and complete");
+if (!/record limits \{[^}]*request-bytes: u32,[^}]*page-bytes: u32,[^}]*transfer-bytes: u32,[^}]*\}/su.test(wit)) throw new Error("Sequence limits record drift");
+if (SEQUENCE_MAX_REQUEST_BYTES !== 1_048_576 || SEQUENCE_MAX_PAGE_BYTES !== 65_536 || SEQUENCE_MAX_TRANSFER_BYTES !== 16_777_216) throw new Error("Sequence host bound drift");
+if (!/record identity \{\s+slot: u32,\s+generation: u32,\s+\}/su.test(wit)) throw new Error("Sequence identity record drift");
+if (!/type surface-handle = u32;/u.test(wit) || !/type canvas-handle = u32;/u.test(wit)) throw new Error("Sequence browser handle drift");
+if (!wit.includes("A1-AbiMessage-v1")) throw new Error("Sequence framing drift");
 
-console.log(JSON.stringify({ schema: "valid", features: 10, operations: 47, events: 8, framing: "A1-AbiMessage-v1" }));
+console.log(JSON.stringify({ facet: "📜️interface", features: features.length, operations: operations.length, events: events.length, framing: "A1-AbiMessage-v1" }));
 
 //#endregion 🧬️SchemaLaws

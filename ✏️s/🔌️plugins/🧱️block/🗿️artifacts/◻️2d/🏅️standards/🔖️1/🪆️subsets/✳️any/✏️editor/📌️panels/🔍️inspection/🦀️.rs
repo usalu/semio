@@ -65,17 +65,6 @@ pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiAssembl
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::editor::block2d::testkit::{new_app, render as render_body};
-
-    #[semio_framework_async_macros::async_test]
-    async fn renders_inspector_fields() {
-        let mut app = new_app().await;
-        let json = render_body(&mut app, BLOCK2D_BODY_INSPECTOR).await;
-        assert!(json.contains("\"type\":\"tree\""), "inspection body must be a tree like document");
-        assert!(json.contains("Name"));
-        assert!(!json.contains("\"type\":\"stack\""), "inspection body must not be a free-form stack");
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

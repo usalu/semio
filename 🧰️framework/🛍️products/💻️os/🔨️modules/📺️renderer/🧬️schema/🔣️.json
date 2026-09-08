@@ -4,6 +4,61 @@
   "title": "Renderer",
   "description": "Renderer-owned presentation contracts: shell dialog/effect origin admission, tutorial drive and playback, document opening and instance admission, host identity bootstrap, extension invocation, mounted probe projection, and the runtime/graph/helper element contracts. Renderer elements (🧱️elements/*) and rendering targets (🎯️targets/*) are consumers; this module is the sole owner.",
   "$defs": {
+    "ActorDocumentPortFixtureV1": {
+      "type": "object", "additionalProperties": false,
+      "required": ["owner", "limits", "cases", "retirement", "bindingRetirement"],
+      "properties": {
+        "owner": { "$ref": "#/$defs/ActorDocumentPortOwnerV1" },
+        "limits": {
+          "type": "object", "additionalProperties": false,
+          "required": ["messageBytes", "pendingBytes", "pendingMessages"],
+          "properties": {
+            "messageBytes": { "type": "integer", "minimum": 1 },
+            "pendingBytes": { "type": "integer", "minimum": 1 },
+            "pendingMessages": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "cases": {
+          "type": "array", "minItems": 8,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["id", "clientInstanceId", "runtimeKey", "spaceId", "uri", "current", "activationActive", "retired", "outbound", "inbound"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "clientInstanceId": { "type": "string", "minLength": 1 },
+              "runtimeKey": { "type": "string", "minLength": 1 },
+              "spaceId": { "type": "string", "minLength": 1 },
+              "uri": { "type": "string", "minLength": 1 },
+              "current": { "type": "boolean" }, "activationActive": { "type": "boolean" },
+              "retired": { "type": "boolean" }, "outbound": { "type": "boolean" }, "inbound": { "type": "boolean" }
+            }
+          }
+        },
+        "retirement": { "type": "array", "items": { "type": "string" } },
+        "bindingRetirement": {
+          "type": "array", "minItems": 4, "maxItems": 4,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["result", "sequence"],
+            "properties": {
+              "result": { "enum": ["refused", "transport", "duplicate", "replaced"] },
+              "sequence": { "type": "array", "minItems": 1, "maxItems": 2, "items": { "enum": ["bind", "retire"] } }
+            }
+          }
+        }
+      }
+    },
+    "ActorDocumentPortOwnerV1": {
+      "type": "object", "additionalProperties": false,
+      "required": ["actorId", "activationGeneration", "instanceId", "runtimeKey", "clientInstanceId", "scope"],
+      "properties": {
+        "actorId": { "type": "string", "minLength": 1 },
+        "activationGeneration": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+        "instanceId": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "runtimeKey": { "type": "string", "minLength": 1 },
+        "clientInstanceId": { "type": "string", "minLength": 1 },
+        "scope": { "anyOf": [{ "$ref": "#/$defs/ShellScopeV1" }, { "type": "null" }] }
+      }
+    },
     "ShellScopeV1": {
       "type": "object",
       "additionalProperties": false,
@@ -274,7 +329,9 @@
         "attach-a",
         "attached-a",
         "detach",
-        "attach-b"
+        "attach-b",
+        "load",
+        "bind"
       ]
     },
     "DocumentOpeningCloseFailureV1": {
@@ -1363,6 +1420,9 @@
         "artifacts"
       ],
       "properties": {
+        "$schema": {
+          "const": "https://semio.tech/schema/os/renderer/component.json#/$defs/RendererPackageCatalogV1"
+        },
         "schemaVersion": {
           "const": 1
         },
@@ -1480,7 +1540,7 @@
     "RendererResidentPolicyV1": {
       "allOf": [
         {
-          "$ref": "semio.value.resident.capacity.v1"
+          "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident"
         },
         {
           "const": {
@@ -1787,7 +1847,7 @@
         "activeMode": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "https://semio.tech/schema/framework/interaction/component.json#/$defs/SelectionMode"
+            "$ref": "https://semio.tech/schema/framework/interaction/schema.json#/$defs/SelectionMode"
           }
         },
         "activeGranularity": {
@@ -1802,7 +1862,7 @@
     "TutorialInteractionCaptureSelection": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "https://semio.tech/schema/framework/interaction/component.json#/$defs/DomainSelection"
+        "$ref": "https://semio.tech/schema/framework/interaction/schema.json#/$defs/DomainSelection"
       }
     },
     "TutorialInteractionCaptureChange": {
@@ -1852,10 +1912,10 @@
           "$ref": "#/$defs/TutorialInteractionCaptureCapture"
         },
         "observed": {
-          "$ref": "https://semio.tech/schema/framework/interaction/component.json#/$defs/InteractionState"
+          "$ref": "https://semio.tech/schema/framework/interaction/schema.json#/$defs/InteractionState"
         },
         "playbackBefore": {
-          "$ref": "https://semio.tech/schema/framework/interaction/component.json#/$defs/InteractionState"
+          "$ref": "https://semio.tech/schema/framework/interaction/schema.json#/$defs/InteractionState"
         },
         "snapshotSelection": {
           "$ref": "#/$defs/TutorialInteractionCaptureSelection"
@@ -1864,13 +1924,13 @@
           "$ref": "#/$defs/TutorialInteractionCaptureChange"
         },
         "afterDelta": {
-          "$ref": "https://semio.tech/schema/framework/interaction/component.json#/$defs/InteractionState"
+          "$ref": "https://semio.tech/schema/framework/interaction/schema.json#/$defs/InteractionState"
         },
         "clearDelta": {
           "$ref": "#/$defs/TutorialInteractionCaptureChange"
         },
         "afterClear": {
-          "$ref": "https://semio.tech/schema/framework/interaction/component.json#/$defs/InteractionState"
+          "$ref": "https://semio.tech/schema/framework/interaction/schema.json#/$defs/InteractionState"
         }
       }
     },

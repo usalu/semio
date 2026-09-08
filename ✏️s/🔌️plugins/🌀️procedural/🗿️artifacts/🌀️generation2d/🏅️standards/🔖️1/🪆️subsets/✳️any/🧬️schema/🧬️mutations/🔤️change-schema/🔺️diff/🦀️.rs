@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeSchema` — a real scalar-field write on the fixture (never a
 //! whole-snapshot capture).
 
-use crate::diff::{diff_fixture_from_helpers, LayoutDiff, Generation2dDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, Generation2dDiff, SynapsesDiff, WidgetsDiff};
 use crate::Generation2dSnapshot;
 
 pub fn diff(payload: &super::ChangeSchema, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {

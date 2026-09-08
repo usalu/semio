@@ -41,17 +41,11 @@ semio-framework-pixels = { path = "../../../../../../../🧰️framework/🔨️
 
 [features]
 # 🧪️ Optional: CAD fixture round-trip tests in `⚙️engine/🧵️media` (Wave 4 must keep CAD compilable).
-cad-fixtures = ["dep:cad_plugin"]
+cad-fixtures = ["dep:semio-s-artifact-cad-cad"]
 
-[dependencies.cad_plugin]
-path = "../../../../../../../✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust"
-package = "semio-s-plugin-cad"
+[dependencies.semio-s-artifact-cad-cad]
+workspace = true
 optional = true
-# 🔌️ Embeds cad as a LIBRARY, so cad's WASM component entry point must stay off: both crates call
-# `plugin_exports!`, which emits `#[no_mangle] semio_plugin_install_bundle`, and two definitions in
-# one component is a `rust-lld: duplicate symbol` link error. Only surfaces at link time — never in
-# `cargo check`/`cargo test` — so it stays invisible until something actually builds the component.
-default-features = false
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

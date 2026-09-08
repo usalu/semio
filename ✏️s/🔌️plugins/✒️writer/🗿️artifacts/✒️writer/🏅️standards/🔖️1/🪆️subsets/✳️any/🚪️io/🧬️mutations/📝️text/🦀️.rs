@@ -42,34 +42,10 @@ impl protocol::OpBinary for WriterMutation {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// ✍️ Hand-built representative document — used across the artifact's own component tests.
-    fn jack_snapshot() -> crate::WriterSnapshot {
-        crate::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn writer_op_text_round_trips_every_variant() {
-        let jack = jack_snapshot();
-        store::os_store::test_support::assert_op_line_round_trip(&WriterMutation::EditText(EditText { text: "line one\nline two".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&WriterMutation::RenameWriter(RenameWriter { new_id: jack.id.clone() }));
-        store::os_store::test_support::assert_op_line_round_trip(&WriterMutation::ChangeUri(ChangeUri { new_uri: jack.uri.clone() }));
-        store::os_store::test_support::assert_op_line_round_trip(&WriterMutation::ChangeLanguage(ChangeLanguage { new_language_id: jack.language_id.clone() }));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-mod semio_grammar_conformance {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn component_grammar_semio_is_grammar_dialect() {
-        let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
-        assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);
-        assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());
-        let _ = COMPONENT_GRAMMAR_PATH;
-    }
-}
+#[path = "🧪️tests/🔬️semio-grammar-conformance/🦀️.rs"]
+mod semio_grammar_conformance;

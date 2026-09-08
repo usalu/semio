@@ -1,6 +1,6 @@
 //! 🗺️ 🗺️ Trinity Jack app command — `set-fixture-json`.
 
-use crate::op::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
 use crate::JackSnapshot;
 use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::Emit;

@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/stdio.xml/snapshot/text.xml",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/xml/1.0/base/snapshot/text.json",
   "title": "XmlSnapshotText",
   "description": "Well-formed XML document text: optional XML declaration, optional DOCTYPE, root element.",
   "type": "string"

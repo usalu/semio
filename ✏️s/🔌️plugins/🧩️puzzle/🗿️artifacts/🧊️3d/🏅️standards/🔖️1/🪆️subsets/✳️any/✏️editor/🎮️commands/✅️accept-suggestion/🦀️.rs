@@ -1,6 +1,6 @@
 //! 🖌️ `accept-suggestion` command.
 
-use crate::schema::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
+use crate::standards::v1::subsets::any::schema::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
 use crate::editor::puzzle3d::drive_precompute;
 use crate::editor::puzzle3d::fixture_from_engine_fixture;
 use crate::editor::puzzle3d::puzzle3d_brush_target_vortex;

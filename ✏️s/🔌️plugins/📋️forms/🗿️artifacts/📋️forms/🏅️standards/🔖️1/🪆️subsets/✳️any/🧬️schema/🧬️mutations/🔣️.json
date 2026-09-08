@@ -1,49 +1,37 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/forms/forms/1/any/mutations.json",
+  "$id": "https://semio.tech/schema/s/forms/forms/mutations.json",
   "title": "FormsMutation",
   "oneOf": [
     {
-      "$ref": "./🏷️change-form-title/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/forms/forms/mutation/change-form-title/schema.json"
     },
     {
-      "$ref": "./📝change-step-description/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/forms/forms/mutation/change-step-description/schema.json"
     },
     {
-      "$ref": "./➕create-block/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/forms/forms/mutation/create-block/schema.json"
     },
     {
-      "$ref": "./🌱create-step/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/forms/forms/mutation/create-step/schema.json"
     },
     {
-      "$ref": "./➖delete-block/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/forms/forms/mutation/delete-block/schema.json"
     },
     {
-      "$ref": "./🗑️delete-step/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/forms/forms/mutation/delete-step/schema.json"
     },
     {
-      "$ref": "./📦move-block-to-step/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/forms/forms/mutation/move-block-to-step/schema.json"
     },
     {
-      "$ref": "./✏️rename-step/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/forms/forms/mutation/rename-step/schema.json"
     },
     {
-      "$ref": "./🔀reorder-step/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/forms/forms/mutation/reorder-step/schema.json"
     },
     {
-      "$ref": "./🔁replace-block/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/s/forms/forms/mutation/replace-block/schema.json"
     }
-  ],
-  "x-semio-mutationKinds": [
-    "change-form-title",
-    "change-step-description",
-    "create-block",
-    "create-step",
-    "delete-block",
-    "delete-step",
-    "move-block-to-step",
-    "rename-step",
-    "reorder-step",
-    "replace-block"
   ]
 }

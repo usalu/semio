@@ -5,7 +5,7 @@
   "type": "object",
   "properties": {
     "SetValue": {
-      "$ref": "./📝️set-value/🧬️schema/🔣️.json"
+      "$ref": "https://semio.tech/schema/framework/os/plugin/tests/declaration-channels/standard-1/strict/mutation/set-value/schema.json"
     }
   },
   "required": [

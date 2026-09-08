@@ -907,25 +907,8 @@ fn dashed_line_segments(x0: f32, y0: f32, x1: f32, y1: f32, dash: f32, gap: f32)
 }
 
 #[cfg(test)]
-mod selection_marquee_tests {
-    use super::*;
-    use crate::wgpu::theme::Theme;
-
-    #[test]
-    fn dashed_line_segments_emit_dashes_along_segment() {
-        let segments = dashed_line_segments(0.0, 0.0, 20.0, 0.0, 5.0, 4.0);
-        assert!(!segments.is_empty());
-        let span: f32 = segments.iter().map(|(x0, _, x1, _)| x1 - x0).sum();
-        assert!(span > 0.0 && span <= 20.0);
-    }
-
-    #[test]
-    fn selection_marquee_colors_use_active_token_only() {
-        let theme = Theme::default();
-        assert_eq!(selection_marquee_stroke(&theme), theme.selected);
-        assert_eq!(selection_marquee_fill(&theme).a, SELECTION_MARQUEE_FILL_ALPHA);
-    }
-}
+#[path = "../../../../🧪️tests/🔬️targets-wgpu-draw-types-selection-marquee/🦀️.rs"]
+mod selection_marquee_tests;
 
 #[allow(clippy::too_many_arguments, reason = "one arg per line endpoint/style attribute; grouping into a struct is a T2 restructure, out of scope")]
 fn push_marquee_segment(draw: &mut DrawList, overlay: bool, x0: f32, y0: f32, x1: f32, y1: f32, stroke: Rgba, dashed: bool) {

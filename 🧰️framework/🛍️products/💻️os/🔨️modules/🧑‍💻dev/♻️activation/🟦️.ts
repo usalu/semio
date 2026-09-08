@@ -14,7 +14,7 @@ export type ActivationReceipt = {
 const identity = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const keys = (value: unknown, expected: readonly string[]): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).sort().join() === [...expected].sort().join();
 
-/** 🧾️ Validates the completed runtime receipt defined by {@link ./🧬️.schema.json}. */
+/** 🧾️ Validates the completed runtime receipt defined by {@link ./🧬️schema/🔣️.json} `#/$defs/DevActivationV1`. */
 export function parseActivationReceipt(value: unknown): ActivationReceipt {
   if (!keys(value, ["schema", "variant", "profile", "plugins"]) || value.schema !== "semio.dev.activation/v1" || typeof value.variant !== "string" || !identity.test(value.variant) || !["dev", "release"].includes(String(value.profile)) || !Array.isArray(value.plugins)) throw new Error("Invalid activation receipt");
   const seen = new Set<string>();

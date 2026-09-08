@@ -1,74 +1,331 @@
-[
-  { "id": "technology-user", "emoji": "👤️", "iconId": "user", "label": "User", "filterable": true },
-  { "id": "technology-infrastructure", "emoji": "🧰️", "iconId": "cloud", "label": "Infrastructure", "filterable": true },
-  { "id": "technology-research", "emoji": "🔬️", "iconId": "graduation-cap", "label": "Research", "filterable": true },
-  { "id": "technology-mono", "emoji": "🌱️", "iconId": "combine", "label": "Mono", "filterable": true },
-
-  { "id": "bundle-library", "emoji": "📚️", "iconId": "library", "label": "Library", "filterable": true },
-  { "id": "bundle-schema", "emoji": "🛂️", "iconId": "shapes", "label": "Schema", "filterable": true },
-  { "id": "bundle-binary", "emoji": "⌨️", "iconId": "box", "label": "Binary", "filterable": true },
-  { "id": "bundle-ui", "emoji": "🖱️", "iconId": "layout", "label": "UI", "filterable": true },
-  { "id": "bundle-example", "emoji": "📔️", "iconId": "book-open", "label": "Example", "filterable": true },
-  { "id": "bundle-site", "emoji": "🌐️", "iconId": "globe", "label": "Site", "filterable": true },
-  { "id": "bundle-assets", "emoji": "🏪️", "iconId": "image", "label": "Assets", "filterable": true },
-  { "id": "bundle-repo", "emoji": "🪆️", "iconId": "git-branch", "label": "Repo", "filterable": true },
-
-  { "id": "folder-organization", "emoji": "🗃️", "iconId": "folder", "label": "Organization Folder", "filterable": true },
-  { "id": "folder-required", "emoji": "🛅️", "iconId": "folder-open", "label": "Required Folder", "filterable": true },
-
-  { "id": "file-code", "emoji": "💻️", "iconId": "file-code", "label": "Code", "filterable": true },
-  { "id": "file-lab", "emoji": "🥼️", "iconId": "sparkles", "label": "Lab", "filterable": true },
-  { "id": "file-script", "emoji": "📜️", "iconId": "code", "label": "Script", "filterable": true },
-  { "id": "file-docs", "emoji": "📃️", "iconId": "file-text", "label": "Docs", "filterable": true },
-  { "id": "file-config", "emoji": "⚙️", "iconId": "settings", "label": "Config", "filterable": true },
-  { "id": "file-artifact", "emoji": "💾️", "iconId": "hard-drive", "label": "Resource", "filterable": true },
-  { "id": "file-template", "emoji": "📋️", "iconId": "clipboard-list", "label": "Template", "filterable": true },
-  { "id": "file-license", "emoji": "⚖️", "iconId": "landmark", "label": "License", "filterable": true },
-
-  { "id": "line", "emoji": "📌️", "iconId": "hash", "label": "Line", "filterable": true },
-
-  { "id": "section", "emoji": "🔖️", "iconId": "tags", "label": "Section", "filterable": true },
-
-  { "id": "definition-implementation", "emoji": "🛠️", "iconId": "wrench", "label": "Implementation", "filterable": true },
-  { "id": "definition-interface", "emoji": "✂️", "iconId": "scissors", "label": "Interface", "filterable": true },
-  { "id": "definition-constant", "emoji": "🪨️", "iconId": "hexagon", "label": "Constant", "filterable": true },
-  { "id": "definition-test", "emoji": "🧪️", "iconId": "check-circle-2", "label": "Test", "filterable": true },
-
-  { "id": "year", "emoji": "🎆️", "iconId": "calendar-days", "label": "Year", "filterable": true },
-  { "id": "month", "emoji": "🌙️", "iconId": "moon", "label": "Month", "filterable": true },
-  { "id": "day", "emoji": "☀️", "iconId": "sun", "label": "Day", "filterable": true },
-  { "id": "hour", "emoji": "⏰️", "iconId": "clock", "label": "Hour", "filterable": true },
-  { "id": "minute", "emoji": "⌚️", "iconId": "circle-dot", "label": "Minute", "filterable": true },
-  { "id": "second", "emoji": "⏱️", "iconId": "zoom-in", "label": "Second", "filterable": true },
-
-  { "id": "goal", "emoji": "🎯️", "iconId": "crosshair", "label": "Goal", "filterable": true },
-  { "id": "ticket", "emoji": "🎫️", "iconId": "award", "label": "Ticket", "filterable": true },
-  { "id": "draft", "emoji": "📝️", "iconId": "pen-tool", "label": "Draft", "filterable": true },
-  { "id": "todo", "emoji": "📝️", "iconId": "list", "label": "Todo", "filterable": true },
-
-  { "id": "policy", "emoji": "👮️", "iconId": "hand", "label": "Policy", "filterable": true },
-  { "id": "breach", "emoji": "🚫️", "iconId": "triangle-alert", "label": "Breach", "filterable": true },
-  { "id": "breach-scope", "emoji": "🔍️", "iconId": "search", "label": "Breach Scope", "filterable": true },
-
-  { "id": "contributor", "emoji": "🧑️‍💻️", "iconId": "users", "label": "Contributor", "filterable": true },
-
-  { "id": "checkpoint", "emoji": "🔀️", "iconId": "git-commit", "label": "Checkpoint", "filterable": true },
-
-  { "id": "interaction-started", "emoji": "🌱️", "iconId": "play", "label": "Started", "filterable": true },
-  { "id": "interaction-edited", "emoji": "✏️", "iconId": "pen-tool", "label": "Edited", "filterable": true },
-  { "id": "interaction-finished", "emoji": "✅️", "iconId": "check", "label": "Finished", "filterable": true },
-  { "id": "interaction-restarted", "emoji": "🔁️", "iconId": "rotate-cw", "label": "Restarted", "filterable": true },
-  { "id": "interaction-deleted", "emoji": "🗑️", "iconId": "trash-2", "label": "Deleted", "filterable": true },
-
-  { "id": "session", "emoji": "⚪️", "iconId": "circle", "label": "Session", "filterable": true },
-  { "id": "session-running", "emoji": "🟡️", "iconId": "loader-2", "label": "Running", "filterable": true },
-  { "id": "session-completed", "emoji": "🟢️", "iconId": "check-circle-2", "label": "Completed", "filterable": true },
-  { "id": "session-interrupted", "emoji": "🔴️", "iconId": "alert-circle", "label": "Interrupted", "filterable": true },
-
-  { "id": "codebase", "emoji": "🖥️", "iconId": "monitor", "label": "Codebase", "filterable": false },
-  { "id": "technologies", "emoji": "🏗️", "iconId": "hammer", "label": "Technologies", "filterable": false },
-  { "id": "bundles", "emoji": "📦️", "iconId": "layers", "label": "Bundles", "filterable": false },
-  { "id": "folders", "emoji": "📁️", "iconId": "grid-3x3", "label": "Folders", "filterable": false },
-  { "id": "files", "emoji": "📄️", "iconId": "file-archive", "label": "Files", "filterable": false },
-  { "id": "definitions", "emoji": "🏷️", "iconId": "list-tree", "label": "Definitions", "filterable": false }
-]
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/schema/schema.json",
+  "title": "FrameworkSchema",
+  "description": "🧬️ The `framework.schema` scope: the `(scope id, export id, format id)` resolution contract every scope and every catalog tool speaks, plus the entity-kind catalog the `schema-entity-catalog` generator projects into TypeScript, Rust and Go. The root is a `oneOf` of the two instance documents this scope serializes to disk — the `schema-export-registry-entries-v1` dump (an object) and `🔣️entity-kinds.json` (an array) — which are disjoint by JSON type, so exactly one branch can ever match.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/SchemaExportEntries"
+    },
+    {
+      "$ref": "#/$defs/EntityKindCatalog"
+    }
+  ],
+  "$defs": {
+    "SchemaFormat": {
+      "title": "SchemaFormat",
+      "description": "🗂️ One of the five schema formats a scope publishes, spelled with the ascii id the derived catalog and the `schema://` resolver use. `SCHEMA_FORMAT_TAXONOMY_KEYS` maps each to its taxonomy `schemaFormats` emoji key.",
+      "type": "string",
+      "enum": [
+        "rust",
+        "typescript",
+        "graphql",
+        "jsonschema",
+        "protobuf"
+      ]
+    },
+    "FacetLeaves": {
+      "title": "FacetLeaves",
+      "description": "🍃 The five handcrafted leaf bodies one facet or one named export is carried by. An empty body means the scope does not provide that format and resolution answers `format-absent`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rust",
+        "typescript",
+        "graphql",
+        "jsonSchema",
+        "proto"
+      ],
+      "properties": {
+        "rust": {
+          "type": "string"
+        },
+        "typescript": {
+          "type": "string"
+        },
+        "graphql": {
+          "type": "string"
+        },
+        "jsonSchema": {
+          "type": "string"
+        },
+        "proto": {
+          "type": "string"
+        }
+      }
+    },
+    "SchemaExport": {
+      "title": "SchemaExport",
+      "description": "🏷️ One named export of a scope — the `(export id, five format leaves)` pair the resolution key needs beyond the four fixed facets of an artifact schema descriptor.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "leaves"
+      ],
+      "properties": {
+        "id": {
+          "description": "PascalCase key of the module's `$defs`; never one of the reserved facet ids `artifact`/`snapshot`/`diff`/`mutations`.",
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]*$"
+        },
+        "leaves": {
+          "$ref": "#/$defs/FacetLeaves"
+        }
+      }
+    },
+    "ScopeSchemaExports": {
+      "title": "ScopeSchemaExports",
+      "description": "🧬️ A scope's named exports, declared as a SIBLING to the four fixed facets of an artifact schema descriptor rather than as a field on it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "exports"
+      ],
+      "properties": {
+        "scope": {
+          "description": "Dotted scope id derived from the module `$id` path after `https://semio.tech/schema/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9.-]*$"
+        },
+        "exports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SchemaExport"
+          }
+        }
+      }
+    },
+    "SchemaExportEntry": {
+      "title": "SchemaExportEntry",
+      "description": "📇️ One resolvable `(scope id, export id, format id)` triple. A triple exists only when the leaf for that format is non-empty.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "export",
+        "format"
+      ],
+      "properties": {
+        "scope": {
+          "description": "Dotted scope id derived from the module `$id` path after `https://semio.tech/schema/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9.-]*$"
+        },
+        "export": {
+          "description": "A resolvable export id: a PascalCase `$defs` key or one of the four reserved facet ids of an artifact schema descriptor.",
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9]*$"
+        },
+        "format": {
+          "$ref": "#/$defs/SchemaFormat"
+        }
+      }
+    },
+    "SchemaExportEntries": {
+      "title": "SchemaExportEntries",
+      "description": "📤️ The `schema-export-registry-entries-v1` dump of the runtime export registry, read by `schema verify --rust-entries`. Entries are sorted and deduplicated by `(scope, export, format)`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractId",
+        "generator",
+        "entries"
+      ],
+      "properties": {
+        "contractId": {
+          "description": "Taxonomy `schemaExportResolution.rustEntriesContractId`; any other value is refused by the consumer.",
+          "const": "schema-export-registry-entries-v1"
+        },
+        "generator": {
+          "description": "The exact command that produced this dump.",
+          "type": "string",
+          "minLength": 1
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SchemaExportEntry"
+          }
+        }
+      }
+    },
+    "SchemaResolveError": {
+      "title": "SchemaResolveError",
+      "description": "⚠️ Why a `(scope id, export id, format id)` triple did not resolve. Resolution is exact: no nearest-parent search, no glob, no fixture-local fallback.",
+      "type": "object",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "scope"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown-scope"
+            },
+            "scope": {
+              "description": "Dotted scope id derived from the module `$id` path after `https://semio.tech/schema/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9.-]*$"
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "scope",
+            "export"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown-export"
+            },
+            "scope": {
+              "description": "Dotted scope id derived from the module `$id` path after `https://semio.tech/schema/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9.-]*$"
+            },
+            "export": {
+              "description": "A resolvable export id: a PascalCase `$defs` key or one of the four reserved facet ids of an artifact schema descriptor.",
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9]*$"
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "scope",
+            "export",
+            "format"
+          ],
+          "properties": {
+            "kind": {
+              "const": "format-absent"
+            },
+            "scope": {
+              "description": "Dotted scope id derived from the module `$id` path after `https://semio.tech/schema/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9.-]*$"
+            },
+            "export": {
+              "description": "A resolvable export id: a PascalCase `$defs` key or one of the four reserved facet ids of an artifact schema descriptor.",
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9]*$"
+            },
+            "format": {
+              "$ref": "#/$defs/SchemaFormat"
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "scope",
+            "export"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ambiguous-scope"
+            },
+            "scope": {
+              "description": "Dotted scope id derived from the module `$id` path after `https://semio.tech/schema/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9.-]*$"
+            },
+            "export": {
+              "description": "A resolvable export id: a PascalCase `$defs` key or one of the four reserved facet ids of an artifact schema descriptor.",
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9]*$"
+            }
+          }
+        }
+      ]
+    },
+    "ValidationDiagnostic": {
+      "title": "ValidationDiagnostic",
+      "description": "🩺 One structural validation failure as the owned draft-07 validator renders it: the instance path the failure is attributed to and the reason, joined by `\": \"` in the emitted message.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instancePath",
+        "reason"
+      ],
+      "properties": {
+        "instancePath": {
+          "description": "Instance location in the validator's own rendering: `$`, `$.name`, `$.items[0]`.",
+          "type": "string",
+          "pattern": "^\\$"
+        },
+        "reason": {
+          "description": "Why the instance was rejected, without the path prefix.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "EntityKindCatalog": {
+      "title": "EntityKindCatalog",
+      "description": "📚️ The ordered entity-kind catalog, the single source `🔣️entity-kinds.json` carries and the `schema-entity-catalog` generator projects into `🤖️generated/🟦️entity-kinds.ts`, `🤖️generated.rs` and `⌨️cli/🐹️entity_kinds.g.go`. Declaration order is contract twice over: `id` is unique catalog-wide, `emoji` is NOT, and every projection's emoji index keeps the FIRST entry of a repeated emoji (`technology-mono` wins 🌱️ over `interaction-started`, `draft` wins 📝️ over `todo`). `uniqueItems` only forbids two byte-identical entries; uniqueness of `id` and of `label` alone is not expressible in draft-07 and is asserted against the data by the owning tests instead.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/EntityKind"
+      }
+    },
+    "EntityKind": {
+      "title": "EntityKind",
+      "description": "🏷️ One entity kind: the identifier every consumer switches on, the emoji that prefixes its ids in source and ticket text, the icon a tree item renders, the label a filter view shows, and whether the filter view offers it at all.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "emoji",
+        "iconId",
+        "label",
+        "filterable"
+      ],
+      "properties": {
+        "id": {
+          "description": "🔑️ Kebab-case entity kind id, unique across the catalog. Multi-part ids are `<family>-<variant>` and consumers read the family prefix (the VS Code extension's `isDefinitionEntityId` tests `definition-`; its filter commands are registered per family).",
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "emoji": {
+          "description": "😀️ VS16-normalized emoji prefix of the kind's ids. NOT unique: two kinds may share one emoji, and every projection's emoji index then resolves it to the first declared kind.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8,
+          "pattern": "^\\S+$"
+        },
+        "iconId": {
+          "description": "🖼️ Kebab-case icon id a tree item renders. Not unique: `pen-tool` and `check-circle-2` each serve two kinds.",
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "label": {
+          "description": "🔤️ Human-readable name shown in filter and monorepo views, unique across the catalog and free of leading or trailing whitespace.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32,
+          "pattern": "^\\S(?:.*\\S)?$"
+        },
+        "filterable": {
+          "description": "🔎️ Whether a filter view offers this kind as a toggle. The six aggregate kinds (`codebase`, `technologies`, `bundles`, `folders`, `files`, `definitions`) are tree roots and are not filterable.",
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

@@ -1,22 +1,47 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/sequence/sequence/inference.json",
   "title": "SequenceInference",
   "type": "object",
   "additionalProperties": false,
-  "required": ["topology"],
+  "required": [
+    "topology"
+  ],
   "properties": {
-    "topology": { "$ref": "#/$defs/SequenceTopology", "x-semio-derived": true }
+    "topology": {
+      "$ref": "#/$defs/SequenceTopology",
+      "x-semio-derived": true
+    }
   },
   "$defs": {
     "SequenceTopology": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["topoOrder", "depth", "cycleFree", "nodeCount"],
+      "required": [
+        "topoOrder",
+        "depth",
+        "cycleFree",
+        "nodeCount"
+      ],
       "properties": {
-        "topoOrder": { "type": "array", "items": { "type": "string" } },
-        "depth": { "type": "object", "additionalProperties": { "type": "integer" } },
-        "cycleFree": { "type": "boolean" },
-        "nodeCount": { "type": "integer" }
+        "topoOrder": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "depth": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        },
+        "cycleFree": {
+          "type": "boolean"
+        },
+        "nodeCount": {
+          "type": "integer"
+        }
       }
     }
   }

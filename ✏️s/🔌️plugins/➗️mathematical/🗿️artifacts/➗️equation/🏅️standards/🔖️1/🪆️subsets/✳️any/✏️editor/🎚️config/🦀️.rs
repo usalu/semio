@@ -89,72 +89,10 @@ pub use mutations::{EquationConfigMutation, SetCamera, SetLocale};
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn math_config_default_is_the_identity_camera_and_english_locale() {
-        let config = EquationConfig::default();
-        assert_eq!(config.camera, EquationCamera::default());
-        assert_eq!(config.locale, "en-US");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn math_config_dsl_round_trips() {
-        let config = EquationConfig { camera: EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 }, locale: "de-DE".into() };
-        store::os_store::test_support::assert_dsl_round_trip(&config);
-        store::os_store::test_support::assert_dsl_pack_equivalence(&config);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn config_operation_set_camera_diff_writes_the_targeted_field() {
-        let base = EquationConfig::default();
-        let camera = EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 };
-        let operation = EquationConfigMutation::SetCamera(SetCamera { camera: camera.clone() });
-        assert_eq!(Mutation::diff(&operation, &base).diff().camera, camera);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn config_operation_set_camera_round_trips() {
-        let base = EquationConfig::default();
-        let camera = EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 };
-        let operation = EquationConfigMutation::SetCamera(SetCamera { camera: camera.clone() });
-        let next = Mutation::diff(&operation, &base).diff().clone();
-        assert_eq!(next.camera, camera);
-        let backwards = Mutation::inverse(&operation, &base);
-        assert_eq!(backwards, vec![EquationConfigMutation::SetCamera(SetCamera { camera: base.camera.clone() })]);
-        assert_eq!(Mutation::diff(&backwards[0], &next).diff().clone(), base);
-        store::os_store::test_support::assert_op_line_round_trip(&operation);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn config_operation_set_locale_round_trips() {
-        store::os_store::test_support::assert_op_line_round_trip(&EquationConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-mod mutation_vectors {
-    use super::*;
-    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
-
-    #[test]
-    fn language_neutral_mutations_match_json_oracle_and_restore_base() {
-        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutations.json")).unwrap();
-        for vector in vectors.as_array().unwrap() {
-            let base: EquationConfig = dsl::json::from_json_str(&vector["base"].to_string()).unwrap();
-            let mutation: EquationConfigMutation = dsl::json::from_json_str(&vector["mutation"].to_string()).unwrap();
-            let oracle: EquationConfigMutation = serde_json::from_value(vector["mutation"].clone()).unwrap();
-            assert_eq!(mutation, oracle);
-            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());
-            let next = mutation.diff(&base).diff().apply(&base).unwrap();
-            assert_eq!(serde_json::to_value(&next).unwrap(), vector["after"]);
-            assert_eq!(EquationConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
-            assert_eq!(EquationConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
-            let mut restored = next;
-            for inverse in mutation.inverse(&base) { restored = inverse.diff(&restored).diff().apply(&restored).unwrap(); }
-            assert_eq!(restored, base);
-        }
-    }
-}
+#[path = "🧪️tests/🔬️mutation-vectors/🦀️.rs"]
+mod mutation_vectors;

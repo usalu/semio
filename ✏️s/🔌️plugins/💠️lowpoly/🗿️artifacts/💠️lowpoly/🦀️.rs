@@ -5,14 +5,11 @@ extern crate semio_framework_value_derive as value_derive;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+mod art_lowpoly_demo_tests;
 extern crate semio_framework_schema as framework_schema;
-// 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
-// `Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
-// and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
-// here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
-// (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
-#[allow(clippy::result_large_err)]
-extern crate self as semio_s_artifact_lowpoly_lowpoly;
 
 use protocol::{Identified, Patchable};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
@@ -221,7 +218,7 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
 }
 
 /// 🖌️ Applies a paint-layers sub-delta onto one object.
-pub fn apply_paint_layers_delta(object: &mut LowpolyObject, delta: &crate::diff::schema::LowpolyPaintLayersDelta) -> protocol::MutationApplyResult<()> {
+pub fn apply_paint_layers_delta(object: &mut LowpolyObject, delta: &diff::schema::LowpolyPaintLayersDelta) -> protocol::MutationApplyResult<()> {
     let mut layers = object.paint_layers.clone();
     let mut removed = std::collections::BTreeSet::new();
     for (position, index) in delta.removed.iter().copied().enumerate() {
@@ -374,11 +371,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::schema::lowpoly_artifact_schema_descriptor())
-        .inferences([crate::standards::v1::subsets::any::schema::inferences::lowpoly_artifact_inference_descriptor()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
+        .schema(schema::lowpoly_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::lowpoly_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::lowpoly::LowpolyPlayApp>>()
+        .document_codec::<semio_framework_plugin::EditorApp<editor::lowpoly::LowpolyPlayApp>>()
         .try_build()
 }
 
@@ -394,8 +391,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "lowpoly.document",
                     extension: Some("lowpoly"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::document_dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::document_dsl::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("lowpoly.document"),
@@ -404,8 +401,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "lowpoly.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("lowpoly.op"),
@@ -414,8 +411,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "lowpoly.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("lowpoly.diff"),
@@ -448,56 +445,13 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🧪️Tests
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[semio_framework_async_macros::async_test]
-    async fn object_patch_apply_mutates_and_inverse_restores_all_fields() {
-        let mesh_workspace = "{}".to_string();
-        let original_mesh = mesh_child_handle("obj-1", &mesh_workspace);
-        let mut object = LowpolyObject { id: "obj-1".into(), name: "Original".into(), transform: LowpolyTransform::default(), smooth_shading: false, mesh: Some(original_mesh), paint_layers: vec![LowpolyPaintLayer::new("Base")] };
-        let original = object.clone();
-        let new_mesh_workspace = "{\"changed\":true}".to_string();
-        let new_mesh = mesh_child_handle("obj-1", &new_mesh_workspace);
-        let patch = LowpolyObjectPatch { name: Some("Renamed".into()), smooth_shading: Some(true), transform: Some(LowpolyTransform { position: [1.0, 2.0, 3.0], ..LowpolyTransform::default() }), mesh: Some(Some(new_mesh.clone())) };
-        object.apply_patch(&patch);
-        assert_eq!(object.name, "Renamed");
-        assert!(object.smooth_shading);
-        assert_eq!(object.transform.position, [1.0, 2.0, 3.0]);
-        assert_eq!(object.mesh, Some(new_mesh));
-        let inverse = object.diff_patch(&original).expect("patch changed state");
-        object.apply_patch(&inverse);
-        assert_eq!(object, original);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn snapshot_from_mesh_json_builds_single_object_with_base_layer() {
-        let mesh_json = "{}".to_string();
-        let snapshot = snapshot_from_mesh_json(&mesh_json, "obj-42", "Widget");
-        assert_eq!(snapshot.schema, LOWPOLY_DOCUMENT_SCHEMA);
-        assert_eq!(snapshot.objects.len(), 1);
-        assert_eq!(snapshot.objects[0].id, "obj-42");
-        assert_eq!(snapshot.objects[0].name, "Widget");
-        assert_eq!(snapshot.objects[0].mesh, Some(mesh_child_handle("obj-42", &mesh_json)));
-        assert_eq!(snapshot.objects[0].paint_layers.len(), 1);
-        assert_eq!(snapshot.objects[0].paint_layers[0].name, "Base");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn lowpoly_selection_defaults_target_whole_mesh() {
-        let targets = LowpolySelectionTargets::default();
-        assert!(targets.mesh);
-        assert!(!targets.vertex && !targets.edge && !targets.face);
-        let selection = LowpolySelection::default();
-        assert_eq!(selection.mode, "mesh");
-        assert!(selection.ids.is_empty());
-    }
-}
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 
 #[cfg(test)]
 #[semio_framework_async_macros::async_test]
 async fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot_json() {
-    use schema::{parse_state_class_kebab, ArtifactSchemaFields};
+    use framework_schema::{parse_state_class_kebab, ArtifactSchemaFields};
     let descriptor = crate::schema::lowpoly_artifact_schema_descriptor();
     assert_eq!(descriptor.id, "s.lowpoly.lowpoly");
     let schema: dsl::os_pack::json::Value = dsl::os_pack::json::from_json_str(descriptor.snapshot.json_schema).expect("snapshot json");

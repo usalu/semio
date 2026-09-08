@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `ChangeVortexKindColor`.
 
 use crate::{Block3dSnapshot, Block3dVortexKind};
-use crate::diff::{Block3dDiff, Block3dVortexKindsDelta, Block3dVortexKindsPatch, Block3dVortexKindsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Block3dDiff, Block3dVortexKindsDelta, Block3dVortexKindsPatch, Block3dVortexKindsPatchEntry};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeVortexKindColor, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {

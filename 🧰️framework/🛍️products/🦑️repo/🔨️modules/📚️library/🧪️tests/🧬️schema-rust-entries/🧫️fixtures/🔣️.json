@@ -11,9 +11,12 @@
             "🔣️jsonschema": "🔣️.json",
             "🦀️rust": "🦀️.rs"
           },
-          "exports": [
-            "ThingArtifact"
-          ]
+          "exports": {
+            "ThingArtifact": {
+              "file": "🔣️.json",
+              "facet": "schema"
+            }
+          }
         }
       },
       "dump": {
@@ -45,9 +48,12 @@
             "🔣️jsonschema": "🔣️.json",
             "🦀️rust": "🦀️.rs"
           },
-          "exports": [
-            "ThingArtifact"
-          ]
+          "exports": {
+            "ThingArtifact": {
+              "file": "🔣️.json",
+              "facet": "schema"
+            }
+          }
         }
       },
       "dump": {
@@ -76,9 +82,12 @@
             "🔣️jsonschema": "🔣️.json",
             "🦀️rust": "🦀️.rs"
           },
-          "exports": [
-            "ThingArtifact"
-          ]
+          "exports": {
+            "ThingArtifact": {
+              "file": "🔣️.json",
+              "facet": "schema"
+            }
+          }
         }
       },
       "dump": {
@@ -123,9 +132,12 @@
             "🔣️jsonschema": "🔣️.json",
             "🦀️rust": "🦀️.rs"
           },
-          "exports": [
-            "ThingArtifact"
-          ]
+          "exports": {
+            "ThingArtifact": {
+              "file": "🔣️.json",
+              "facet": "schema"
+            }
+          }
         }
       },
       "dump": {
@@ -156,9 +168,12 @@
             "🔣️jsonschema": "🔣️.json",
             "🦀️rust": "🦀️.rs"
           },
-          "exports": [
-            "ThingArtifact"
-          ]
+          "exports": {
+            "ThingArtifact": {
+              "file": "🔣️.json",
+              "facet": "schema"
+            }
+          }
         }
       },
       "dump": {
@@ -197,18 +212,24 @@
             "🔣️jsonschema": "🔣️.json",
             "🦀️rust": "🦀️.rs"
           },
-          "exports": [
-            "ThingArtifact"
-          ]
+          "exports": {
+            "ThingArtifact": {
+              "file": "🔣️.json",
+              "facet": "schema"
+            }
+          }
         },
         "hub.inference": {
           "path": "🌎️hub/💡️inference/🧬️schema",
           "formats": {
             "🔣️jsonschema": "🔣️.json"
           },
-          "exports": [
-            "InferenceApproval"
-          ]
+          "exports": {
+            "InferenceApproval": {
+              "file": "🔣️.json",
+              "facet": "schema"
+            }
+          }
         }
       },
       "dump": {
